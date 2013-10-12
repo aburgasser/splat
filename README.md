@@ -1,4 +1,4 @@
-splat
+SPLAT
 =====
 
-SpeX Prism Spectral Analysis Toolkit
+SpeX Prism Library Analysis Toolkit
