@@ -1,0 +1,8 @@
+This is the Analysis Toolkit for the SpeX Prism Library, 
+currently under development at UCSD.  These routines (will) 
+allow the user to read, visualize, analyze and fit SpeX prism 
+data of ultracool dwarfs contained in the Library and compare 
+to user supplied data.  This is obviously still in development.
+        
+Documentation can be found at:
+https://docs.google.com/document/d/1AilTRIJfyf5bfusxXCYsFqZWE4P-y7dPYiHEWvhpJT4/edit?usp=sharing
