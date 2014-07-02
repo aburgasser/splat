@@ -25,6 +25,7 @@ import sys
 import os
 import numpy
 import scipy
+import scipy.stats
 from astropy import constants as const		# physical constants in SI units
 import astropy
 from astropy.io import ascii, fits			# for reading in spreadsheet
