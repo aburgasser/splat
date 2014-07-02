@@ -116,6 +116,7 @@ class Spectrum(object):
 			self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)
 			self.fscale = 'Surface'
 		self.history = ['Loaded']
+# initialize the wavelength and flux ranges
 		a = self._wrange
 		a = self._frange
 				
@@ -123,7 +124,6 @@ class Spectrum(object):
 		'''A simple representation of an object is to just give it a name'''
 		return 'Spectra Object for {}'.format(self.name)
 
-	 
 	 @lazyprop
 	 def _wrange(self):
 		ii = numpy.where(self.flux > 0)
@@ -185,16 +185,6 @@ class Spectrum(object):
 	 	pass
 	 	return
 
-	 def absolute(self,band):
-	 	'''Convert to absolute fluxes given absolute magnitude'''
-	 	pass
-	 	return
-
-	 def apparent(self,band):
-	 	'''Convert to apparent fluxes given absolute magnitude'''
-	 	pass
-	 	return
-
 	 def surface(self,radius):
 	 	'''Convert to surface fluxes given a radius, assuming at absolute fluxes'''
 	 	pass
@@ -214,6 +204,7 @@ class Spectrum(object):
 # FUNCTIONS FOR SPLAT
 def checkFile(filename):
 	'''Check if a particular file is present in the online database'''
+	url = kwargs.get('url',SPLAT_URL)
 	flag = checkOnline()
 	if (flag):
 		try:
@@ -360,6 +351,7 @@ def fetchDatabase(*args, **kwargs):
 
 
 def filenameToNameDate(filename):
+	'''Extract from a SPLAT filename the source name and observation date'''
 	ind = filename.rfind('.')
 	base = filename[:ind]
 	spl = base.split('_')
@@ -379,13 +371,11 @@ def filenameToNameDate(filename):
 
 
 
-def filterMag(sp,*args,**kwargs):
+def filterMag(sp,filter,*args,**kwargs):
 	'''Compute the magnitudes of a spectrum given a filter name'''
 # keyword parameters
 	filterFolder = kwargs.get('filterFolder',SPLAT_URL+'Filters/')
 	vegaFile = kwargs.get('vegaFile','vega_kurucz.txt')
-	filter = kwargs.get('filter','2MASS J')
-	filterName = kwargs.get('filterName','2MASS J')
 	info = kwargs.get('info',False)
 	units = kwargs.get('units',sp.funit)
 	custom = kwargs.get('custom',False)
@@ -398,7 +388,11 @@ def filterMag(sp,*args,**kwargs):
 	filters = { \
 		'2MASS J': {'file': 'j_2mass.txt', 'description': '2MASS J-band'}, \
 		'2MASS H': {'file': 'h_2mass.txt', 'description': '2MASS H-band'}, \
-		'2MASS Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band'} \
+		'2MASS Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band'}, \
+		'MKO J': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere'}, \
+		'MKO H': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere'}, \
+		'MKO K': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere'}, \
+		'MKO Ks': {'file': 'k_atm_mko.txt', 'description': 'MKO Ks-band'} \
 		}
 
 # check that requested filter is in list
@@ -422,23 +416,22 @@ def filterMag(sp,*args,**kwargs):
 	else:
 		fwave,ftrans = custom[0],custom[1]
 	fnu = const.c.to('micron/s').value/fwave
-	fwave = fwave[~numpy.isnan(fwave)]			# temporary fix
+	fwave = fwave[~numpy.isnan(ftrans)]			# temporary fix
 	ftrans = ftrans[~numpy.isnan(ftrans)]
-			
-# Read in Vega spectrum
-	vwave,vtrans = numpy.genfromtxt(filterFolder+vegaFile, comments='#', unpack=True, \
-		missing_values = ('NaN','nan'), filling_values = (numpy.nan))
-	vwave = vwave[~numpy.isnan(vwave)]			# temporary fix
-	vtrans = vtrans[~numpy.isnan(vtrans)]
-	
+				
 # interpolate spectrum and vega spectrum onto filter wavelength function
 	d = interp1d(sp.wave,sp.flux)
 	v = interp1d(vwave,vtrans)
 		
 # compute relevant quantity
 	if (vega):
+# Read in Vega spectrum
+		vwave,vtrans = numpy.genfromtxt(filterFolder+vegaFile, comments='#', unpack=True, \
+			missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+		vwave = vwave[~numpy.isnan(vtrans)]			# temporary fix
+		vtrans = vtrans[~numpy.isnan(vtrans)]
 		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fwave)/trapz(ftrans*v(fwave),fwave))
-	elif (flux):
+	elif (energy):
 		result = trapz(ftrans*d(fwave),fwave)
 	elif (photons):
 		convert = const.h.to('erg s')*const.c.to('micron/s')
@@ -452,7 +445,7 @@ def filterMag(sp,*args,**kwargs):
 #		sp.fnuToFlam()
 #		spVega.fnuToFlam()
 	else:
-		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fwave)/trapz(ftrans*v(fwave),fwave))
+		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fwave)/trapz(ftrans,fwave))
 	
 	return result
 
@@ -470,7 +463,7 @@ def getSpectrum(*args, **kwargs):
 
 	result = []
 	kwargs['output'] = 'data_file'
-	files = getSpectrumRef(*args, **kwargs)
+	files = getSpectrumFilename(*args, **kwargs)
 	if len(files) > 0:
 		for x in files:
 			result.append(loadSpectrum(x))
@@ -479,7 +472,7 @@ def getSpectrum(*args, **kwargs):
 	return result
 		
 
-def getSpectrumKey(*args, **kwargs):
+def getSpectrumFilename(*args, **kwargs):
 	'''Search the SpeX database to extract the key reference for that Spectrum
 		Note that this is currently only and AND search - need to figure out
 		how to a full SQL style search'''
@@ -487,7 +480,7 @@ def getSpectrumKey(*args, **kwargs):
 # get database
 	data = fetchDatabase(**kwargs)
 	sql = Table()
-	ref = kwargs.get('output','key')
+	ref = kwargs.get('output','data_file')
 
 # search parameters
 	if kwargs.get('name',False) != False:
@@ -741,7 +734,7 @@ def loadSpectrum(*args, **kwargs):
 			open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
 			kwargs['filename'] = os.path.basename(kwargs['filename'])
 			sp = Spectrum(**kwargs)
-			os.remove(os.path.basename)
+			os.remove(os.path.basename(kwargs['filename']))
 			return sp
 		except urllib2.URLError, ex:
 			sys.stderr.write('\nCould not find data file '+kwargs['filename']+' at '+url+'\n\n')
