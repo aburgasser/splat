@@ -202,7 +202,7 @@ class Spectrum(object):
 									 
 
 # FUNCTIONS FOR SPLAT
-def checkFile(filename):
+def checkFile(filename,**kwargs):
 	'''Check if a particular file is present in the online database'''
 	url = kwargs.get('url',SPLAT_URL)
 	flag = checkOnline()
@@ -436,14 +436,13 @@ def filterMag(sp,filter,*args,**kwargs):
 	elif (photons):
 		convert = const.h.to('erg s')*const.c.to('micron/s')
 		result = trapz(ftrans*d(fwave)*fwave,fwave) / convert.value
-#	elif (ab):
-#		sp.flamToFnu()
-#		spVega.flamToFnu()
-#		dp = interp1d(sp.nu,sp.flux)
-#		vp = interp1d(spVega.nu,spVega.flux)
-#		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fnu)/trapz(ftrans*v(fwave),fwave))
-#		sp.fnuToFlam()
-#		spVega.fnuToFlam()
+	elif (ab):
+		sp.flamToFnu()
+		dd = interp1d(sp.nu,sp.flux)
+		a = trapz(ftrans*dd(fnu),numpy.log10(fnu))
+		b = trapz(ftrans,numpy.log10(fnu))
+		result = -2.5*numpy.log10(a/b)-48.6
+		sp.fnuToFlam()
 	else:
 		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fwave)/trapz(ftrans,fwave))
 	
@@ -1078,7 +1077,7 @@ def plotSpectrum(*args, **kwargs):
 	return
 
 
-def readSpectrum(filename, **kwargs):
+def readSpectrum(**kwargs):
 
 # TO BE DONE:
 # FIX IF THERE IS NO NOISE CHANNEL
@@ -1089,7 +1088,7 @@ def readSpectrum(filename, **kwargs):
 	catchSN = kwargs.get('catchSN',True)
 	model = kwargs.get('model',False)
 	uncertainty = kwargs.get('uncertainty',not model)
-	file = filename
+	file = kwargs.get('filename','')
 	if (os.path.exists(file) == False):
 		file = folder+os.path.basename(filename)
 	if (os.path.exists(file) == False):
