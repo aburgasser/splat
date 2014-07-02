@@ -25,26 +25,23 @@ import sys
 import os
 import numpy
 import scipy
+from astropy import constants as const		# physical constants in SI units
 import astropy
 from astropy.io import ascii, fits			# for reading in spreadsheet
 from astropy.table import Table, join			# for reading in table files
 import matplotlib.pyplot as plt
 from scipy.integrate import trapz		# for numerical integration
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d, griddata
 import re
 import urllib2
 from astropy import units as u			# standard units
 from astropy.coordinates import ICRS, Galactic		# coordinate conversion
 
 
-############ PARAMETERS - PLEASE SET THESE TO LOCAL FOLDERS ###############
-SplatFolder = '~/splat/code/'
+############ PARAMETERS ############
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
-###########################################################################
-
-
-# some "universal" constants
-Months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+parameter_names = ['teff','logg','z','fsed','kzz']
 
 # helper functions from Alex
 def lazyprop(fn):
@@ -78,48 +75,66 @@ def Copy(fn):
 # define the Spectrum class which contains the relevant information
 class Spectrum(object):
 	 @Show
-	 def __init__(self, filename, **kwargs):
-		  '''Load the file'''
-		  self.model = False
-		  self.filename = filename
-		  self.wlabel = 'Wavelength'
-		  self.wunit = u.micron
-		  self.flabel = 'F_lambda'
-		  self.fscale = 'Arbitrary'
-		  self.funit = u.erg/(u.cm**2 * u.s * u.micron)
-		  self.simplefilename = os.path.basename(filename)
-		  self.wave, self.flux, self.noise = readSpectrum(filename,**kwargs)
-		  if not (kwargs.get('model',False)):
-		  	x,y = filenameToNameDate(filename)
-		  	self.name = kwargs.get('name',x)
-		  	self.date = kwargs.get('date',y)
-		  else:
-		  	self.model = True
-		  	self.teff = kwargs.get('teff',numpy.nan)
-		  	self.logg = kwargs.get('logg',numpy.nan)
-		  	self.z = kwargs.get('z',numpy.nan)
-		  	self.cloud = kwargs.get('cloud',numpy.nan)
-		  	self.modelset = kwargs.get('set','')
-		  	self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)
-		  	self.fscale = 'Surface'
-		  self.history = ['Loaded']
+	 def __init__(self, **kwargs):
+	 	'''Load the file'''
+		self.model = False
+		self.filename = kwargs.get('filename','')
+		self.wlabel = kwargs.get('wlabel','Wavelength')
+		self.wunit = kwargs.get('wunit',u.micron)
+		self.flabel = kwargs.get('flabel','F_lambda')
+		self.fscale = kwargs.get('fscale''Arbitrary')
+		self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.micron))
+		self.simplefilename = os.path.basename(self.filename)
+# wave and flux given
+		if len(kwargs.get('wave','')) > 0 and len(kwargs.get('flux','')) > 0:
+			self.wave = kwargs['wave']
+			self.flux = kwargs['flux']
+			if len(kwargs.get('noise','')) > 0:
+				self.noise = kwargs['noise']
+			else:
+				self.noise = [numpy.nan for i in self.wave]
+		else:
+# filename given
+			try:
+				self.wave, self.flux, self.noise = readSpectrum(**kwargs)
+			except:
+				raise NameError('\nCould not load up spectral file')
+		self.nu = const.c.to('micron/s').value/self.wave
+# information on source spectrum
+		if not (kwargs.get('model',False)):
+			x,y = filenameToNameDate(self.filename)
+			self.name = kwargs.get('name',x)
+			self.date = kwargs.get('date',y)
+		else:
+# information on model
+			self.model = True
+			self.teff = kwargs.get('teff',numpy.nan)
+			self.logg = kwargs.get('logg',numpy.nan)
+			self.z = kwargs.get('z',numpy.nan)
+			self.cloud = kwargs.get('cloud',numpy.nan)
+			self.modelset = kwargs.get('set','')
+			self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)
+			self.fscale = 'Surface'
+		self.history = ['Loaded']
+		a = self._wrange
+		a = self._frange
 				
 	 def __repr__(self):
-		  '''A simple representation of an object is to just give it a name'''
-		  return 'Spectra Object for {}'.format(self.name)
+		'''A simple representation of an object is to just give it a name'''
+		return 'Spectra Object for {}'.format(self.name)
 
 	 
 	 @lazyprop
 	 def _wrange(self):
-		  ii = numpy.where(self.flux > 0)
-		  xr = [numpy.nanmin(self.wave[ii]), numpy.nanmax(self.wave[ii])]
-		  return xr
+		ii = numpy.where(self.flux > 0)
+		xr = [numpy.nanmin(self.wave[ii]), numpy.nanmax(self.wave[ii])]
+		return xr
 	 
 	 @lazyprop
 	 def _frange(self):
-		  ii = numpy.where(numpy.logical_and(self.wave > 0.8,self.wave < 2.3))
-		  yr = [0, numpy.nanmax(self.flux[ii])]
-		  return yr
+		ii = numpy.where(numpy.logical_and(self.wave > 0.8,self.wave < 2.3))
+		yr = [0, numpy.nanmax(self.flux[ii])]
+		return yr
 
 	 def normalize(self):
 	 	'''Normalize spectrum'''
@@ -127,24 +142,42 @@ class Spectrum(object):
 		self.fscale = 'Normalized'
 		return
 
+	 def fluxCalibrate(self,filter,mag,**kwargs):
+	 	'''Calibrate spectrum to input magnitude'''
+		absolute = kwargs.get('absolute',False)
+		apparent = kwargs.get('apparent',False)
+	 	self.normalize()
+	 	apmag = filterMag(self,filter=filter)
+	 	if (~numpy.isnan(apmag)):
+	 		self.scale(10.**(0.4*(apmag-mag)))
+			if (absolute):
+				self.fscale = 'Absolute'
+			if (apparent):
+				self.fscale = 'Apparent'
+		return
+
 	 def scale(self,factor):
 	 	'''Scale spectrum and noise by a constant factor'''
 	 	self.flux = self.flux*factor
-	 	self.noise = self.noise*factor
-	 	self.fscale = 'Arbitrary'
+	 	self.noise = [n*factor for n in self.noise]
+	 	self.fscale = 'Scaled'
 	 	self._frange[1] = self._frange[1]*factor
 	 	return
 		
-	 def flamTofnu(self):
+	 def flamToFnu(self):
 	 	'''Convert flux density from F_lam to F_nu, the later in Jy'''
-	 	self.flux.to(u.Jy,equivalencies=u.spectral_density(self.wave))
-	 	self.noise.to(u.Jy,equivalencies=u.spectral_density(self.wave))
+	 	self.funit = u.Jy
 	 	self.flabel = 'F_nu'
+	 	self.flux.to(funit,equivalencies=u.spectral_density(self.wave))
+	 	self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
 	 	return
 
-	 def fnuToflam(self):
+	 def fnuToFlam(self):
 	 	'''Convert flux density from F_nu to F_lam, the later in erg/s/cm2/Hz'''
-	 	pass
+	 	self.funit = u.erg/(u.cm**2 * u.s * u.micron)
+	 	self.flabel = 'F_lam'
+	 	self.flux.to(funit,equivalencies=u.spectral_density(self.wave))
+	 	self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
 	 	return
 
 	 def snr(self):
@@ -179,12 +212,25 @@ class Spectrum(object):
 									 
 
 # FUNCTIONS FOR SPLAT
+def checkFile(filename):
+	'''Check if a particular file is present in the online database'''
+	flag = checkOnline()
+	if (flag):
+		try:
+			open(os.path.basename(dataFile), 'wb').write(urllib2.urlopen(url+dataFile).read())
+		except urllib2.URLError, ex:
+			flag = False
+	return flag
+
+
 def checkOnline():
+	'''Check if you are online'''
 	try:
 		urllib2.urlopen(SPLAT_URL)
 		return True
 	except urllib2.URLError, ex:
 		return False
+
 
 def coordinateToDesignation(c):
 	'''Convert RA, Dec into designation string'''
@@ -255,11 +301,12 @@ def designationToShortName(value):
 	else:
 		raise ValueError('\nMust provide a string value for designation\n\n')
 
+		
 
 def fetchDatabase(*args, **kwargs):	
 	'''Get the SpeX Database from either online repository or local drive'''
 	dataFile = kwargs.get('dataFile','db_spexprism.txt')
-	folder = kwargs.get('folder',SplatFolder)
+	folder = kwargs.get('folder','~/')
 	url = kwargs.get('url',SPLAT_URL)
 	local = kwargs.get('local',False)
 
@@ -313,7 +360,6 @@ def fetchDatabase(*args, **kwargs):
 
 
 def filenameToNameDate(filename):
-	months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 	ind = filename.rfind('.')
 	base = filename[:ind]
 	spl = base.split('_')
@@ -330,6 +376,86 @@ def filenameToNameDate(filename):
 			date = d
 		
 		return name, date
+
+
+
+def filterMag(sp,*args,**kwargs):
+	'''Compute the magnitudes of a spectrum given a filter name'''
+# keyword parameters
+	filterFolder = kwargs.get('filterFolder',SPLAT_URL+'Filters/')
+	vegaFile = kwargs.get('vegaFile','vega_kurucz.txt')
+	filter = kwargs.get('filter','2MASS J')
+	filterName = kwargs.get('filterName','2MASS J')
+	info = kwargs.get('info',False)
+	units = kwargs.get('units',sp.funit)
+	custom = kwargs.get('custom',False)
+	vega = kwargs.get('vega',True)
+	ab = kwargs.get('ab',False)
+	photons = kwargs.get('photons',False)
+	energy = kwargs.get('energy',False)
+
+# filter file assignments
+	filters = { \
+		'2MASS J': {'file': 'j_2mass.txt', 'description': '2MASS J-band'}, \
+		'2MASS H': {'file': 'h_2mass.txt', 'description': '2MASS H-band'}, \
+		'2MASS Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band'} \
+		}
+
+# check that requested filter is in list
+	if (filter not in filters.keys()):
+		print 'Filter '+filter+' not included in filterMag'
+		info = True
+		
+# print out what's available
+	if (info):
+		print 'Filter names:'
+		for x in filters.keys():
+			print x+': '+filters[x]['description']	
+		return numpy.nan
+
+# convert units to erg/cm2/s/um if needed - TO BE DONE
+
+# Read in filter
+	if (custom == False):
+		fwave,ftrans = numpy.genfromtxt(filterFolder+filters[filter]['file'], comments='#', unpack=True, \
+			missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+	else:
+		fwave,ftrans = custom[0],custom[1]
+	fnu = const.c.to('micron/s').value/fwave
+	fwave = fwave[~numpy.isnan(fwave)]			# temporary fix
+	ftrans = ftrans[~numpy.isnan(ftrans)]
+			
+# Read in Vega spectrum
+	vwave,vtrans = numpy.genfromtxt(filterFolder+vegaFile, comments='#', unpack=True, \
+		missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+	vwave = vwave[~numpy.isnan(vwave)]			# temporary fix
+	vtrans = vtrans[~numpy.isnan(vtrans)]
+	
+# interpolate spectrum and vega spectrum onto filter wavelength function
+	d = interp1d(sp.wave,sp.flux)
+	v = interp1d(vwave,vtrans)
+		
+# compute relevant quantity
+	if (vega):
+		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fwave)/trapz(ftrans*v(fwave),fwave))
+	elif (flux):
+		result = trapz(ftrans*d(fwave),fwave)
+	elif (photons):
+		convert = const.h.to('erg s')*const.c.to('micron/s')
+		result = trapz(ftrans*d(fwave)*fwave,fwave) / convert.value
+#	elif (ab):
+#		sp.flamToFnu()
+#		spVega.flamToFnu()
+#		dp = interp1d(sp.nu,sp.flux)
+#		vp = interp1d(spVega.nu,spVega.flux)
+#		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fnu)/trapz(ftrans*v(fwave),fwave))
+#		sp.fnuToFlam()
+#		spVega.fnuToFlam()
+	else:
+		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fwave)/trapz(ftrans*v(fwave),fwave))
+	
+	return result
+
 
 
 def getSourceKey(*args, **kwargs):
@@ -353,7 +479,7 @@ def getSpectrum(*args, **kwargs):
 	return result
 		
 
-def getSpectrumRef(*args, **kwargs):
+def getSpectrumKey(*args, **kwargs):
 	'''Search the SpeX database to extract the key reference for that Spectrum
 		Note that this is currently only and AND search - need to figure out
 		how to a full SQL style search'''
@@ -418,53 +544,171 @@ def isNumber(s):
 		return False
 
 
+def loadInterpolatedModel(*args,**kwargs):
+# interpolates within a 2x2 grid of teff and logg ONLY
+	set = kwargs.get('set','btsettl08')
+	kwargs['set'] = set
+	teff = kwargs.get('teff',1000)
+	kwargs['teff'] = teff
+	logg = kwargs.get('logg',5.0)
+	kwargs['logg'] = logg
+	url = kwargs.get('folder',SPLAT_URL+'/Models/')
+#	local = kwargs.get('local',False)
+	kwargs['model'] = True
+
+# first get model parameters
+	param = loadModelParameters(set)
+#	print param
+	
+# check if input parameters are within range
+#	for t in param.colnames:
+#		flg = kwargs.get(t,False)
+#		if flg != False:
+#			if (flg < param[t][0] or flg > param[t][1]):
+#				raise ValueError('\n\nValue {}={} outside model range'.format(t,str(flg)))
+
+# try simply loading model (on grid)
+#	try:
+#		return loadModel(**kwargs)
+#	except:
+#		sys.stderr.write('\nCalculating interpolated model\n')
+
+# identify grid points around input parameters
+# NOTE: THIS IS JUST FOR TEFF AND LOGG GRIDDING FOR NOW
+
+	t = teff - teff%param['teff'][2]
+	trng = [t,t+param['teff'][2]]
+	g = logg - logg%param['logg'][2]
+	grng = [g,g+param['logg'][2]]
+	x,y = numpy.meshgrid(trng,grng)
+
+	mkwargs = kwargs
+	try:
+		mkwargs['teff'] = trng[0]
+		mkwargs['logg'] = grng[0]
+		md11 = loadModel(**mkwargs)
+		mkwargs['teff'] = trng[1]
+		md21 = loadModel(**mkwargs)
+		mkwargs['teff'] = trng[0]
+		mkwargs['logg'] = grng[1]
+		md12 = loadModel(**mkwargs)
+		mkwargs['teff'] = trng[1]
+		md22 = loadModel(**mkwargs)
+	except:
+		raise NameError('\nProblem loading grid of models in loadInterpolatedModel\n\n')
+
+	mflx = numpy.zeros(len(md11.wave))
+	val = numpy.array([[None]*2]*2)
+	for i,w in enumerate(md11.wave):
+		val = numpy.array([ \
+			[numpy.log10(md11.flux[i]),numpy.log10(md21.flux[i])], \
+			[numpy.log10(md12.flux[i]),numpy.log10(md22.flux[i])]])
+		mflx[i] = 10.**(griddata((x.flatten(),y.flatten()),val.flatten(),(teff,logg),'linear'))
+
+	return Spectrum(wave=md11.wave,flux=mflx,**kwargs)
+
+
 def loadModel(*args, **kwargs):
 	'''load up a model spectrum based on parameters'''
 # keyword parameters
-	set = kwargs.get('set','BTSettl')
+	set = kwargs.get('set','btsettl08')
 	teff = kwargs.get('teff',1000)
 	logg = kwargs.get('logg',5.0)
 	z = kwargs.get('z',0.0)
-	kzz = kwargs.get('kzz',2)
+	kzz = kwargs.get('kzz',0)
+	fsed = kwargs.get('fsed',0)
 	folder = kwargs.get('folder','')
 	url = kwargs.get('folder',SPLAT_URL+'/Models/')
 	local = kwargs.get('local',False)
 	kwargs['model'] = True
-
+	fileFlag = False
+	
 # check if online
 	local = local or (not checkOnline())
-		
-# determine model set
-	if (set.lower() == 'btsettl'):
-		mFold = folder+'/BTSettl/'
-		url = url+'/BTSettl/'
-		mFile = 'lte'+'{:5.3f}'.format(teff/100000.)[2:]+'-'+str(logg)[0:3]+'-0.0.BT-Settl.7_r120.txt'
-	else: 
-		print 'Currently only have BTSettl models'
 
-# a filename has been passed
+# a filename has been passed - simply read this file
 	if (len(args) > 0):
-		mFile = args[0]
+		kwargs['filename'] = args[0]
+		fileFlag = True
 
-# first try online
-	if not local:
-		try:
-			open(os.path.basename(mFile), 'wb').write(urllib2.urlopen(url+mFile).read())
-			sp = Spectrum(os.path.basename(mFile),**kwargs)
-			os.remove(os.path.basename(mFile))
-			return sp
-		except urllib2.URLError, ex:
-			sys.stderr.write('\nCould not find model file '+mFile+' on SPLAT website\n\n')
-			local = True
+# determine model set
+	else:
+
+# get model parameters
+		param = loadModelParameters(set)
+
+		if (set == 'btsettl08'):
+			url = url+'/'+set+'/'
+			kwargs['filename'] = set+'_'+str(teff)+'_'+str(logg)+'_-0.0_nc_nc_eq_0.5.txt'
+#			kwargs['filename'] = 'lte'+'{:5.3f}'.format(teff/100000.)[2:]+'-'+str(logg)[0:3]+'-0.0.BT-Settl.7_r120.txt'		
+		else: 
+			raise NameError('\nCurrently only have BTSettl models\n\n')
+
+		if (teff < param['teff'][0] or teff > param['teff'][1]):
+			raise NameError('\nInput Teff out of range\n\n')
+
+		if (logg < param['logg'][0] or logg > param['logg'][1]):
+			raise NameError('\nInput logg out of range\n\n')
+
 	
-# now try local drive
-	file = mFile
-	if (os.path.exists(file) == False):
-		file = mFold+os.path.basename(file)
-		if (os.path.exists(file) == False):
-			raise NameError('\nCould not find '+file+' locally\n\n')
+# if model is on grid read in that model
+	if (teff in numpy.arange(param['teff'][0],param['teff'][1],param['teff'][2]) and \
+		logg in numpy.arange(param['logg'][0],param['logg'][1],param['logg'][2])):
+		fileFlag = True
+
+# simple read in a file
+	if fileFlag:
+	
+# first try online
+		if not local:
+			try:
+				open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
+				kwargs['filename'] = os.path.basename(kwargs['filename'])
+				sp = Spectrum(**kwargs)
+				os.remove(kwargs['filename'])
+				return sp
+			except urllib2.URLError, ex:
+				sys.stderr.write('\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
+				os.remove(os.path.basename(kwargs['filename']))
+				local = True
+	
+	# now try local drive
+		if (os.path.exists(kwargs['filename']) == False):
+			kwargs['filename'] = folder+os.path.basename(kwargs['filename'])
+			if (os.path.exists(kwargs['filename']) == False):
+				raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
+			else:
+				return Spectrum(**kwargs)
 		else:
-			return Spectrum(file,**kwargs)
+			return Spectrum(**kwargs)
+
+# or do an interpolated Model
+	else:
+		return loadInterpolatedModel(**kwargs)
+		
+
+
+def loadModelParameters(*args, **kwargs):
+	'''Load up Model Parameters based on help file'''
+# keyword parameters
+	set = args[0]
+	pfile = kwargs.get('parameterFile','parameters.txt')
+	
+# check if online
+	if not checkOnline():
+		raise urllib2.URLError('\n\nCannot access online models\n\n')
+
+	url = kwargs.get('folder',SPLAT_URL+'/Models/'+set+'/')
+	try:
+		open(os.path.basename(pfile), 'wb').write(urllib2.urlopen(url+pfile).read())
+		parameters = ascii.read(pfile)
+		os.remove(os.path.basename(pfile))
+	except urllib2.URLError, ex:
+		raise urllib2.URLError('\n\nCannot access models from SPLAT website\n\n')
+	
+	return parameters
+
+
 
 
 # test code
@@ -478,7 +722,6 @@ def loadSpectrum(*args, **kwargs):
 	tempfilename = 'temp_model.txt'
 	folder = kwargs.get('folder','')
 	url = kwargs.get('folder',SPLAT_URL+'/Spectra/')
-	local = kwargs.get('local',False)
 	kwargs['model'] = False
 
 # check if online
@@ -488,30 +731,31 @@ def loadSpectrum(*args, **kwargs):
 	
 # a filename has been passed
 	if (len(args) > 0):
-		dFile = args[0]
+		kwargs['filename'] = args[0]
 	else:
 		raise NameError('\nNeed to pass in filename for spectral data')
 
 # first try online
 	if not local:
 		try:
-			open(os.path.basename(dFile), 'wb').write(urllib2.urlopen(url+dFile).read())
-			sp = Spectrum(os.path.basename(dFile),**kwargs)
-			os.remove(os.path.basename(dFile))
+			open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
+			kwargs['filename'] = os.path.basename(kwargs['filename'])
+			sp = Spectrum(**kwargs)
+			os.remove(os.path.basename)
 			return sp
 		except urllib2.URLError, ex:
-			sys.stderr.write('\nCould not find data file '+dFile+' at '+url+'\n\n')
+			sys.stderr.write('\nCould not find data file '+kwargs['filename']+' at '+url+'\n\n')
 			local = True
 	
 # now try local drive
-	file = dFile
-	if (os.path.exists(file) == False):
-		file = folder+os.path.basename(file)
-		if (os.path.exists(file) == False):
-			raise NameError('\nCould not find '+file+' locally\n\n')
+	if (os.path.exists(kwargs['filename']) == False):
+		kwargs['filename'] = folder+os.path.basename(kwargs['filename'])
+		if (os.path.exists(kwargs['filename']) == False):
+			raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
 		else:
-			return Spectrum(file,**kwargs)
-
+			return Spectrum(**kwargs)
+	else:
+		return Spectrum(**kwargs)
 
 
 # code to measure a defined index from a spectrum using Monte Carlo noise estimate
@@ -635,7 +879,7 @@ def measureIndexSet(sp,**kwargs):
 		inds[0],errs[0] = measureIndex(sp,[1.55,1.56],[1.492,1.502],method='ratio',sample='average',**kwargs)
 		inds[1],errs[1] = measureIndex(sp,[0.99135,1.00465],[0.97335,0.98665],[1.01535,1.02865],method='allers',sample='average',**kwargs)
 		inds[2],errs[2] = measureIndex(sp,[1.05095,1.06505],[1.02795,1.04205],[1.07995,1.09405],method='allers',sample='average',**kwargs)
-		inds[3],errs[3] = measureIndex(sp,[1.19880,1.20120],[1.19320,1.19080],[1.20920,1.20680],method='allers',sample='average',**kwargs)
+		inds[3],errs[3] = measureIndex(sp,[1.19880,1.20120],[1.19080,1.19320],[1.20680,1.20920],method='allers',sample='average',**kwargs)
 		inds[4],errs[4] = measureIndex(sp,[1.23570,1.25230],[1.21170,1.22830],[1.26170,1.27830],method='allers',sample='average',**kwargs)
 		inds[5],errs[5] = measureIndex(sp,[1.54960,1.57040],[1.45960,1.48040],[1.65960,1.68040],method='allers',sample='average',**kwargs)
 	elif (set.lower() == 'slesnick'):
@@ -732,7 +976,7 @@ def measureIndexSpT(sp, *args, **kwargs):
 		coeffs[index]['spt'] = numpy.nanmean(vals)+sptoffset
 		coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
 		
-	print indices[index][0], numpy.polyval(coeffs[index]['coeff'],indices[index][0]), coeffs[index]
+#	print indices[index][0], numpy.polyval(coeffs[index]['coeff'],indices[index][0]), coeffs[index]
 	mask = numpy.ones(len(coeffs.keys()))
 	result = numpy.zeros(2)
 	for i in numpy.arange(nloop):
@@ -778,8 +1022,9 @@ def plotSpectrum(*args, **kwargs):
 	xlabel = kwargs.get('xlabel','{} ({})'.format(args[0].wlabel,args[0].wunit))
 	ylabel = kwargs.get('ylabel','{} {} ({})'.format(args[0].fscale,args[0].flabel,args[0].funit))
 	xrange = kwargs.get('xrange',args[0]._wrange)
-	yrange = kwargs.get('yrange',args[0]._frange)
 	bound = xrange
+	ymax = [args[i]._frange[1] for i in numpy.arange(len(args))]
+	yrange = kwargs.get('yrange',[args[0]._frange[0],numpy.nanmax(ymax)])
 	bound.extend(yrange)
 	grid = kwargs.get('grid',False)
 	colors = kwargs.get('colors',['k' for x in range(len(args))])
@@ -807,6 +1052,7 @@ def plotSpectrum(*args, **kwargs):
 	mask = kwargs.get('mask',False)				# not yet implemented
 	labels = kwargs.get('labels','')			# not yet implemented
 	features = kwargs.get('features','')		# not yet implemented
+
 
 #	plt.clf()
 # loop through sources
@@ -855,7 +1101,7 @@ def readSpectrum(filename, **kwargs):
 		file = folder+os.path.basename(filename)
 	if (os.path.exists(file) == False):
 		raise NameError('\nCould not find ' + filename+'\n\n')
-
+	
 # determine which type of file
 	ftype = file.split('.')[-1]
 
@@ -879,9 +1125,11 @@ def readSpectrum(filename, **kwargs):
 	 				missing_values = ('NaN','nan'), filling_values = (numpy.nan))
 	 	if (uncertainty == False):
 	 		try:
-	 			wave,flux = numpy.genfromtxt(file, comments='#', unpack=True,missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+	 			wave,flux = numpy.genfromtxt(file, comments='#', unpack=True, \
+	 				missing_values = ('NaN','nan'), filling_values = (numpy.nan))
 	 		except ValueError:
-	 			wave,flux = numpy.genfromtxt(file, comments=';', unpack=True, missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+	 			wave,flux = numpy.genfromtxt(file, comments=';', unpack=True, \
+	 				missing_values = ('NaN','nan'), filling_values = (numpy.nan))
 
 # add in fake uncertainty vector if needed
 	if (not uncertainty):
@@ -896,11 +1144,11 @@ def readSpectrum(filename, **kwargs):
 # fix to catch badly formatted files where noise column is S/N	 			
 #	print flux, numpy.median(flux)
 	if (catchSN):
-  		w = numpy.where(flux > numpy.median(flux))
-  		if (numpy.median(flux[w]/noise[w]) < 1.):
+  		w = numpy.where(flux > scipy.stats.nanmedian(flux))
+  		if (scipy.stats.nanmedian(flux[w]/noise[w]) < 1.):
   			noise = flux/noise
   			w = numpy.where(numpy.isnan(noise))
-  			noise[w] = numpy.median(noise)
+  			noise[w] = scipy.stats.nanmedian(noise)
 
 	return wave, flux, noise
 
