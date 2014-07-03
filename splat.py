@@ -37,6 +37,7 @@ import re
 import urllib2
 from astropy import units as u			# standard units
 from astropy.coordinates import ICRS, Galactic		# coordinate conversion
+import string
 
 
 ############ PARAMETERS ############
@@ -106,6 +107,7 @@ class Spectrum(object):
 			x,y = filenameToNameDate(self.filename)
 			self.name = kwargs.get('name',x)
 			self.date = kwargs.get('date',y)
+			self.caldate = dateToCaldate(self.date)
 		else:
 # information on model
 			self.model = True
@@ -148,7 +150,7 @@ class Spectrum(object):
 		absolute = kwargs.get('absolute',False)
 		apparent = kwargs.get('apparent',False)
 	 	self.normalize()
-	 	apmag = filterMag(self,filter=filter)
+	 	apmag = filterMag(self,filter,**kwargs)
 	 	if (~numpy.isnan(apmag)):
 	 		self.scale(10.**(0.4*(apmag-mag)))
 			if (absolute):
@@ -195,21 +197,26 @@ class Spectrum(object):
 	 def info(self):
 		  '''Report some information about this spectrum'''
 		  if (self.model):
-		  	print '''{0:s} model with Teff = {1:i} and log g = {2:i}'''.format(self.modelset, self.teff, self.logg)
+		  	print '''{0} model with Teff = {1} and log g = {2}'''.format(self.modelset, self.teff, self.logg)
 		  else:
-		  	print '''Spectrum of {0:s} taken on {1:s}'''.format(self.name, self.date)
+		  	print '''Spectrum of {0} taken on {1}'''.format(self.name, self.date)
 		  return
 
 									 
 
 # FUNCTIONS FOR SPLAT
+def caldateToDate(d):
+	'''Convert from numeric date to calendar date'''
+	return d[:4]+str((months.index(d[5:8])+1)/100.)[2:4]+d[-2:]
+
+
 def checkFile(filename,**kwargs):
 	'''Check if a particular file is present in the online database'''
-	url = kwargs.get('url',SPLAT_URL)
+	url = kwargs.get('url',SPLAT_URL)+'/Spectra/'
 	flag = checkOnline()
 	if (flag):
 		try:
-			open(os.path.basename(dataFile), 'wb').write(urllib2.urlopen(url+dataFile).read())
+			open(os.path.basename(filename), 'wb').write(urllib2.urlopen(url+filename).read())
 		except urllib2.URLError, ex:
 			flag = False
 	return flag
@@ -224,57 +231,184 @@ def checkOnline():
 		return False
 
 
+
+def classifyByIndex(sp, *args, **kwargs):
+	'''Classify a spectrum based on its spectral indices'''
+	
+	str_flag = kwargs.get('string', False)
+	rnd_flag = kwargs.get('round', False)
+	rem_flag = kwargs.get('remeasure', True)
+	nsamples = kwargs.get('nsamples', 100)
+	nloop = kwargs.get('nloop', 5)
+	set = kwargs.get('set','burgasser')
+	allowed_sets = ['burgasser','reid','testi','allers']
+
+# measure indices if necessary
+	if (rem_flag or len(args) == 0):
+		indices = measureIndexSet(sp, **kwargs)
+	else:
+		indices = args[0]
+
+# Burgasser (2007, ApJ, 659, 655) calibration
+	if (set.lower() == 'burgasser'):
+		sptoffset = 20.
+		sptfact = 1.
+		coeffs = { \
+			'H2O-J': {'fitunc': 0.8, 'range': [20,38], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
+			'H2O-H': {'fitunc': 1.0, 'range': [20,38], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+			'coeff': [9.087e-1, -3.221e1, 2.527e1, -1.978e1, 2.098e1]}, \
+			'CH4-J': {'fitunc': 0.7, 'range': [30,38], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+			'coeff': [1.491e2, -3.381e2, 2.424e2, -8.450e1, 2.708e1]}, \
+			'CH4-H': {'fitunc': 0.3, 'range': [31,38], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+			'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
+			'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+			'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
+
+# Reid et al. (2001, AJ, 121, 1710)
+	elif (set.lower() == 'reid'):
+		sptoffset = 20.
+		sptfact = 1.
+		coeffs = { \
+			'H2O-A': {'fitunc': 1.18, 'range': [18,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'coeff': [-32.1, 23.4]}, \
+			'H2O-B': {'fitunc': 1.02, 'range': [18,28], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'coeff': [-24.9, 20.7]}}
+
+# Testi et al. (2001, ApJ, 522, L147)
+	elif (set.lower() == 'testi'):
+		sptoffset = 20.
+		sptfact = 10.
+		coeffs = { \
+			'sHJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'coeff': [-1.87, 1.67]}, \
+			'sKJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'coeff': [-1.20, 2.01]}, \
+			'sH2O_J': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'coeff': [1.54, 0.98]}, \
+			'sH2O_H1': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'coeff': [1.27, 0.76]}, \
+			'sH2O_H2': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'coeff': [2.11, 0.29]}, \
+			'sH2O_K': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'coeff': [2.36, 0.60]}}
+
+# Allers et al. (2007, ApJ, 657, 511)
+	elif (set.lower() == 'allers'):
+		sptoffset = 10.
+		sptfact = 1.
+		coeffs = { \
+			'H2O': {'fitunc': 0.7, 'range': [15,25], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'coeff': [25,-19.25]}}
+	else:
+		sys.stderr.write('\nWarning: '+set.lower()+' SpT-index relation not in measureSpT code\n\n')
+		return numpy.nan, numpy.nan
+
+
+	for index in coeffs.keys():
+		vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))*sptfact
+		coeffs[index]['spt'] = numpy.nanmean(vals)+sptoffset
+		coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
+		
+#	print indices[index][0], numpy.polyval(coeffs[index]['coeff'],indices[index][0]), coeffs[index]
+	mask = numpy.ones(len(coeffs.keys()))
+	result = numpy.zeros(2)
+	for i in numpy.arange(nloop):
+		wts = [coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in coeffs.keys()]
+		if (numpy.nansum(wts) == 0.):
+			sys.stderr.write('\nIndices do not fit within allowed ranges\n\n')
+			return numpy.nan, numpy.nan			
+		vals = [coeffs[index]['mask']*coeffs[index]['spt']/coeffs[index]['sptunc']**2 \
+			for index in coeffs.keys()]
+		sptn = numpy.nansum(vals)/numpy.nansum(wts)
+		sptn_e = 1./numpy.nansum(wts)**0.5
+		for index in coeffs.keys():
+			coeffs[index]['mask'] = numpy.where( \
+				coeffs[index]['range'][0] <= sptn <= coeffs[index]['range'][1],1,0)
+
+# round off to nearest 0.5 subtypes if desired
+	if (rnd_flag):
+		sptn = 0.5*numpy.around(sptn*2.)
+
+# change to string if desired
+	if (str_flag):
+		spt = typeToNum(sptn,uncertainty=sptn_e)
+	else:
+		spt = sptn
+
+	return spt, sptn_e
+
+
+def classifyByStandard(sp, *args, **kwargs):
+	'''Classify a spectrum by comparing to spectral standards'''
+	return numpy.nan, numpy.nan
+	
+
+def classifyByTemplate(sp, *args, **kwargs):
+	'''Classify a spectrum by comparing to spectral templates'''
+	return numpy.nan, numpy.nan
+	
+	
+def compareSpectra(sp1, sp2, *args, **kwargs):
+	'''Compare two spectra against each other'''
+	return numpy.nan, numpy.nan
+	
+	
+
 def coordinateToDesignation(c):
 	'''Convert RA, Dec into designation string'''
-	if isinstance(value,ICRS):
-		return 'J'+c.to_string(sep='',pad=True,precision=2,alwayssign=True)
+# input is ICRS
+	if isinstance(c,ICRS):
+		return string.replace('J{0}{1}'.format(c.ra.to_string(u.hour, sep='', precision=2, pad=True), \
+			c.dec.to_string(u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
+# input is [RA,Decl] pair in degrees
+	elif isinstance(c,list):
+		cc = ICRS(ra=c[0],dec=c[1],unit=(u.deg,u.deg))
+		return string.replace('J{0}{1}'.format(cc.ra.to_string(u.hour, sep='', precision=2, pad=True), \
+			cc.dec.to_string(u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
+# input is sexigessimal string
+	elif isinstance(c,str):
+		cc = ICRS(c)
+		return string.replace('J{0}{1}'.format(cc.ra.to_string(u.hour, sep='', precision=2, pad=True), \
+			cc.dec.to_string(u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
 	else:
-		raise ValueError('\nMust provide an ICRS coordinate instance\n\n')
+		raise ValueError('\nCould not parse input format\n\n')
 
+
+def dateToCaldate(d):
+	'''Convert from numeric date to calendar date'''
+	return d[:4]+' '+months[int(d[5:6])-1]+' '+d[-2:]
 
 
 def designationToCoordinate(value, **kwargs):
-	'''Convert a designation into a RA, Dec tuple or vice-versa'''
-	icrsflag = kwargs.get('ICRS',False)
-	if isinstance(value,str):
-		if value[0].lower() != 'j':
-#			raise ValueError('\nDesignation values must start with J\n\n')
-			sys.stderr.write('\nDesignation values must start with J\n\n')
-			return [0.,0.]
-		a = re.sub('[j.:hms]','',value.lower())
-		fact = 1.
-		spl = a.split('+')
-		if len(spl) == 1:
-			spl = a.split('-')
-			fact = -1.
-		ra = 15.*float(spl[0][0:2])
-		if (len(spl[0]) > 2):
-			ra+=15.*float(spl[0][2:4])/60.
-		if (len(spl[0]) > 4):
-			ra+=15.*float(spl[0][4:6])/3600.
-		if (len(spl[0]) > 6):
-			ra+=15.*float(spl[0][6:8])/360000.
-		dec = float(spl[1][0:2])
-		if (len(spl[0]) > 2):
-			dec+=float(spl[1][2:4])/60.
-		if (len(spl[0]) > 4):
-			dec+=float(spl[1][4:6])/3600.
-		if (len(spl[1]) > 6): 
-			dec+=float(spl[1][6:8])/360000.
-		dec = dec*fact
-		if icrsflag:
-			return ICRS(ra=ra, dec=dec, unit=(u.degree, u.degree))
-		else:
-			return [ra,dec]
-	elif isinstance(value,ICRS):
-		return re.sub('[.]','','J{0}{1}'.format(value.ra.to_string(u.hour, sep='', precision=2, pad=True), \
-			value.dec.to_string(sep='', precision=2, alwayssign=True, pad=True)))
-	elif (len(value) == 2 and isinstance(value[0],float)):
-		c = ICRS(ra=value[0], dec=value[1], unit=(u.degree, u.degree))
-		return re.sub('[.]','','J{0}{1}'.format(c.ra.to_string(u.hour, sep='', precision=2, pad=True), \
-			c.dec.to_string(sep='', precision=2, alwayssign=True, pad=True)))
+	'''Convert a designation into a RA, Dec tuple or ICRS'''
+	icrsflag = kwargs.get('ICRS',True)
+
+	a = re.sub('[j.:hms]','',value.lower())
+	fact = 1.
+	spl = a.split('+')
+	if len(spl) == 1:
+		spl = a.split('-')
+		fact = -1.
+	ra = 15.*float(spl[0][0:2])
+	if (len(spl[0]) > 2):
+		ra+=15.*float(spl[0][2:4])/60.
+	if (len(spl[0]) > 4):
+		ra+=15.*float(spl[0][4:6])/3600.
+	if (len(spl[0]) > 6):
+		ra+=15.*float(spl[0][6:8])/360000.
+	dec = float(spl[1][0:2])
+	if (len(spl[0]) > 2):
+		dec+=float(spl[1][2:4])/60.
+	if (len(spl[0]) > 4):
+		dec+=float(spl[1][4:6])/3600.
+	if (len(spl[1]) > 6): 
+		dec+=float(spl[1][6:8])/360000.
+	dec = dec*fact
+	if icrsflag:
+		return ICRS(ra=ra, dec=dec, unit=(u.degree, u.degree))
 	else:
-		raise ValueError('\nMust provide a string value for designation\n\n')
+		return [ra,dec]
 
 
 def designationToShortName(value):
@@ -331,7 +465,7 @@ def fetchDatabase(*args, **kwargs):
 	ra = []
 	dec = []
 	for x in data['designation']:
-		c = designationToCoordinate(x)
+		c = designationToCoordinate(x,ICRS=False)
 		ra.append(c[0])
 		dec.append(c[1])
 	data['ra'] = ra
@@ -363,7 +497,7 @@ def filenameToNameDate(filename):
 		d = spl[-1]
 		try:
 			float(d)
-			date = '20'+d[:2]+' '+months[int(d[3:4])-1]+' '+d[-2:]
+			date = '20'+d
 		except ValueError:
 			print filename+' does not contain a date'
 			date = d
@@ -422,8 +556,8 @@ def filterMag(sp,filter,*args,**kwargs):
 				
 # interpolate spectrum and vega spectrum onto filter wavelength function
 	d = interp1d(sp.wave,sp.flux)
-	v = interp1d(vwave,vtrans)
-		
+	result = numpy.nan
+	
 # compute relevant quantity
 	if (vega):
 # Read in Vega spectrum
@@ -431,21 +565,21 @@ def filterMag(sp,filter,*args,**kwargs):
 			missing_values = ('NaN','nan'), filling_values = (numpy.nan))
 		vwave = vwave[~numpy.isnan(vtrans)]			# temporary fix
 		vtrans = vtrans[~numpy.isnan(vtrans)]
+		v = interp1d(vwave,vtrans)
 		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fwave)/trapz(ftrans*v(fwave),fwave))
-	elif (energy):
+	if (energy):
 		result = trapz(ftrans*d(fwave),fwave)
-	elif (photons):
+	if (photons):
 		convert = const.h.to('erg s')*const.c.to('micron/s')
 		result = trapz(ftrans*d(fwave)*fwave,fwave) / convert.value
-	elif (ab):
+	if (ab):
+# NOTE: THIS IS CURRENTLY NOT WORKING
 		sp.flamToFnu()
 		dd = interp1d(sp.nu,sp.flux)
 		a = trapz(ftrans*dd(fnu),numpy.log10(fnu))
 		b = trapz(ftrans,numpy.log10(fnu))
 		result = -2.5*numpy.log10(a/b)-48.6
 		sp.fnuToFlam()
-	else:
-		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fwave)/trapz(ftrans,fwave))
 	
 	return result
 
@@ -459,11 +593,11 @@ def getSourceKey(*args, **kwargs):
 
 
 def getSpectrum(*args, **kwargs):
-	'''Get a specific spectrum from online library'''
+	'''Get specific spectrs from online library'''
 
 	result = []
 	kwargs['output'] = 'data_file'
-	files = getSpectrumFilename(*args, **kwargs)
+	files = searchLibrary(*args, **kwargs)
 	if len(files) > 0:
 		for x in files:
 			result.append(loadSpectrum(x))
@@ -472,60 +606,6 @@ def getSpectrum(*args, **kwargs):
 	return result
 		
 
-def getSpectrumFilename(*args, **kwargs):
-	'''Search the SpeX database to extract the key reference for that Spectrum
-		Note that this is currently only and AND search - need to figure out
-		how to a full SQL style search'''
-
-# get database
-	data = fetchDatabase(**kwargs)
-	sql = Table()
-	ref = kwargs.get('output','data_file')
-
-# search parameters
-	if kwargs.get('name',False) != False:
-		nm = kwargs['name']
-		if isinstance(nm,str):
-			nm = [nm]
-		sql['name'] = nm
-	if kwargs.get('designation',False) != False:
-		desig = kwargs['designation']
-		if isinstance(desig,str):
-			desig = [desig]
-		sql['designation'] = desig
-	if kwargs.get('shortname',False) != False:
-		sname = kwargs['shortname']
-		if isinstance(sname,str):
-			sname = [sname]
-		for i,sn in enumerate(sname):
-			if sn[0].lower() != 'j':
-				sname[i] = 'J'+sname[i]
-		sql['shortname'] = sname
-	if kwargs.get('date',False) != False:
-		sql['observation_date'] = [kwargs['date']]
-	if kwargs.get('young',False) != False:
-		sql['young'] = [True]
-	if kwargs.get('subdwarf',False) != False:
-		sql['subdwarf'] = [True]
-	if kwargs.get('binary',False) != False:
-		sql['binary'] = [True]
-	if kwargs.get('spbin',False) != False:
-		sql['spbin'] = [True]
-	if kwargs.get('red',False) != False:
-		sql['red'] = [True]
-	if kwargs.get('blue',False) != False:
-		sql['blue'] = [True]
-
-# NEED TO ADD IN SEARCH IN AREA, MAGNITUDE RANGE, OBS DATE RANGE, REFERENCES
-
-	if len(sql) > 0:
-		result = join(data,sql)
-	else:
-		result = data
-		
-	return result[ref]
-
-	
 
 # simple number checker
 def isNumber(s):
@@ -575,7 +655,7 @@ def loadInterpolatedModel(*args,**kwargs):
 	grng = [g,g+param['logg'][2]]
 	x,y = numpy.meshgrid(trng,grng)
 
-	mkwargs = kwargs
+	mkwargs = kwargs.copy()
 	try:
 		mkwargs['teff'] = trng[0]
 		mkwargs['logg'] = grng[0]
@@ -597,7 +677,7 @@ def loadInterpolatedModel(*args,**kwargs):
 			[numpy.log10(md11.flux[i]),numpy.log10(md21.flux[i])], \
 			[numpy.log10(md12.flux[i]),numpy.log10(md22.flux[i])]])
 		mflx[i] = 10.**(griddata((x.flatten(),y.flatten()),val.flatten(),(teff,logg),'linear'))
-
+	
 	return Spectrum(wave=md11.wave,flux=mflx,**kwargs)
 
 
@@ -703,8 +783,6 @@ def loadModelParameters(*args, **kwargs):
 
 
 
-
-# test code
 def loadSpectrum(*args, **kwargs):
 	'''load up a SpeX spectrum based name, shortname and/or date'''
 # keyword parameters
@@ -756,7 +834,7 @@ def loadSpectrum(*args, **kwargs):
 # index method can be ratio = 1/2, valley = 1-2/3, OTHERS
 # output is index value and uncertainty
 def measureIndex(sp,*args,**kwargs):
-	'''measure an index on a spectrum based on defined methodology'''
+	'''Measure an index on a spectrum based on defined methodology'''
 
 # keyword parameters
 	method = kwargs.get('method','ratio')
@@ -892,112 +970,6 @@ def measureIndexSet(sp,**kwargs):
 	return result
 
 
-def measureIndexSpT(sp, *args, **kwargs):
-
-	str_flag = kwargs.get('string', False)
-	rnd_flag = kwargs.get('round', False)
-	rem_flag = kwargs.get('remeasure', True)
-	nsamples = kwargs.get('nsamples', 100)
-	nloop = kwargs.get('nloop', 5)
-	set = kwargs.get('set','burgasser')
-	allowed_sets = ['burgasser','reid','testi','allers']
-
-# measure indices if necessary
-	if (rem_flag or len(args) == 0):
-		indices = measureIndexSet(sp, **kwargs)
-	else:
-		indices = args[0]
-
-# Burgasser (2007, ApJ, 659, 655) calibration
-	if (set.lower() == 'burgasser'):
-		sptoffset = 20.
-		sptfact = 1.
-		coeffs = { \
-			'H2O-J': {'fitunc': 0.8, 'range': [20,38], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-			'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
-			'H2O-H': {'fitunc': 1.0, 'range': [20,38], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-			'coeff': [9.087e-1, -3.221e1, 2.527e1, -1.978e1, 2.098e1]}, \
-			'CH4-J': {'fitunc': 0.7, 'range': [30,38], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-			'coeff': [1.491e2, -3.381e2, 2.424e2, -8.450e1, 2.708e1]}, \
-			'CH4-H': {'fitunc': 0.3, 'range': [31,38], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-			'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
-			'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-			'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
-
-# Reid et al. (2001, AJ, 121, 1710)
-	elif (set.lower() == 'reid'):
-		sptoffset = 20.
-		sptfact = 1.
-		coeffs = { \
-			'H2O-A': {'fitunc': 1.18, 'range': [18,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-			'coeff': [-32.1, 23.4]}, \
-			'H2O-B': {'fitunc': 1.02, 'range': [18,28], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-			'coeff': [-24.9, 20.7]}}
-
-# Testi et al. (2001, ApJ, 522, L147)
-	elif (set.lower() == 'testi'):
-		sptoffset = 20.
-		sptfact = 10.
-		coeffs = { \
-			'sHJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-			'coeff': [-1.87, 1.67]}, \
-			'sKJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-			'coeff': [-1.20, 2.01]}, \
-			'sH2O_J': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-			'coeff': [1.54, 0.98]}, \
-			'sH2O_H1': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-			'coeff': [1.27, 0.76]}, \
-			'sH2O_H2': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-			'coeff': [2.11, 0.29]}, \
-			'sH2O_K': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-			'coeff': [2.36, 0.60]}}
-
-# Allers et al. (2007, ApJ, 657, 511)
-	elif (set.lower() == 'allers'):
-		sptoffset = 10.
-		sptfact = 1.
-		coeffs = { \
-			'H2O': {'fitunc': 0.7, 'range': [15,25], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-			'coeff': [25,-19.25]}}
-	else:
-		sys.stderr.write('\nWarning: '+set.lower()+' SpT-index relation not in measureSpT code\n\n')
-		return numpy.nan, numpy.nan
-
-
-	for index in coeffs.keys():
-		vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))*sptfact
-		coeffs[index]['spt'] = numpy.nanmean(vals)+sptoffset
-		coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
-		
-#	print indices[index][0], numpy.polyval(coeffs[index]['coeff'],indices[index][0]), coeffs[index]
-	mask = numpy.ones(len(coeffs.keys()))
-	result = numpy.zeros(2)
-	for i in numpy.arange(nloop):
-		wts = [coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in coeffs.keys()]
-		if (numpy.nansum(wts) == 0.):
-			sys.stderr.write('\nIndices do not fit within allowed ranges\n\n')
-			return numpy.nan, numpy.nan			
-		vals = [coeffs[index]['mask']*coeffs[index]['spt']/coeffs[index]['sptunc']**2 \
-			for index in coeffs.keys()]
-		sptn = numpy.nansum(vals)/numpy.nansum(wts)
-		sptn_e = 1./numpy.nansum(wts)**0.5
-		for index in coeffs.keys():
-			coeffs[index]['mask'] = numpy.where( \
-				coeffs[index]['range'][0] <= sptn <= coeffs[index]['range'][1],1,0)
-
-# round off to nearest 0.5 subtypes if desired
-	if (rnd_flag):
-		sptn = 0.5*numpy.around(sptn*2.)
-
-# change to string if desired
-	if (str_flag):
-		spt = typeToNum(sptn,uncertainty=sptn_e)
-	else:
-		spt = sptn
-
-	return spt, sptn_e
-
-
 
 # To do:
 # 	masking telluric regions
@@ -1029,8 +1001,8 @@ def plotSpectrum(*args, **kwargs):
 	linestyle = kwargs.get('linestyle',['steps' for x in range(len(args))])
 	if (len(linestyle) < len(args)):
 		linestyle.extend(['steps' for x in range(len(args)-len(linestyle))])
-	file = kwargs.get('file','')
-	format = kwargs.get('format',file.split('.')[-1])
+	filename = kwargs.get('filename','')
+	format = kwargs.get('format',filename.split('.')[-1])
 	zeropoint = kwargs.get('zeropoint',[0. for x in range(len(args))])
 	showNoise = kwargs.get('showNoise',[False for x in range(len(args))])
 	if not isinstance(showNoise, tuple):
@@ -1067,9 +1039,9 @@ def plotSpectrum(*args, **kwargs):
 	plt.axis(bound)
 	plt.title(title)
 	
-# save to file or display
-	if (len(file) > 0): 
-		plt.savefig(file, format=format)
+# save to filen or display
+	if (len(filename) > 0): 
+		plt.savefig(filename, format=format)
 	
 	else:
 		plt.show()
@@ -1146,6 +1118,63 @@ def readSpectrum(**kwargs):
 	return wave, flux, noise
 
 
+
+def searchLibrary(*args, **kwargs):
+	'''Search the SpeX database to extract the key reference for that Spectrum
+		Note that this is currently only and AND search - need to figure out
+		how to a full SQL style search'''
+
+# get database
+	data = fetchDatabase(**kwargs)
+	sql = Table()
+	ref = kwargs.get('output','data_file')
+
+# search parameters
+	if kwargs.get('name',False) != False:
+		nm = kwargs['name']
+		if isinstance(nm,str):
+			nm = [nm]
+		sql['name'] = nm
+	if kwargs.get('designation',False) != False:
+		desig = kwargs['designation']
+		if isinstance(desig,str):
+			desig = [desig]
+		sql['designation'] = desig
+	if kwargs.get('shortname',False) != False:
+		sname = kwargs['shortname']
+		if isinstance(sname,str):
+			sname = [sname]
+		for i,sn in enumerate(sname):
+			if sn[0].lower() != 'j':
+				sname[i] = 'J'+sname[i]
+		sql['shortname'] = sname
+	if kwargs.get('date',False) != False:
+		sql['observation_date'] = [kwargs['date']]
+	if kwargs.get('young',False) != False:
+		sql['young'] = [True]
+	if kwargs.get('subdwarf',False) != False:
+		sql['subdwarf'] = [True]
+	if kwargs.get('binary',False) != False:
+		sql['binary'] = [True]
+	if kwargs.get('spbin',False) != False:
+		sql['spbin'] = [True]
+	if kwargs.get('red',False) != False:
+		sql['red'] = [True]
+	if kwargs.get('blue',False) != False:
+		sql['blue'] = [True]
+
+# NEED TO ADD IN SEARCH IN AREA, MAGNITUDE RANGE, OBS DATE RANGE, REFERENCES
+
+	if len(sql) > 0:
+		result = join(data,sql)
+	else:
+		result = data
+		
+	return result[ref]
+
+	
+
+
 def typeToNum(input, **kwargs):
 	'''convert between string and numeric spectral types'''
 # keywords	 
@@ -1207,6 +1236,3 @@ def typeToNum(input, **kwargs):
 			print 'Only spectral classes {} are handled with this routine'.format(spletter)
 			output = numpy.nan
 	return output
-
-
-	 
