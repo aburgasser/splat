@@ -27,6 +27,7 @@
 # imports
 import sys
 import os
+import copy
 import numpy
 import scipy
 import scipy.stats
@@ -81,9 +82,9 @@ def Copy(fn):
 
 # define the Spectrum class which contains the relevant information
 class Spectrum(object):
-	 @Show
-	 def __init__(self, **kwargs):
-	 	'''Load the file'''
+	@Show
+	def __init__(self, **kwargs):
+		'''Load the file'''
 		self.model = False
 		self.filename = kwargs.get('filename','')
 		self.wlabel = kwargs.get('wlabel','Wavelength')
@@ -107,6 +108,12 @@ class Spectrum(object):
 			except:
 				raise NameError('\nCould not load up spectral file')
 		self.nu = const.c.to('micron/s').value/self.wave
+
+# preserve original arrays
+		self.wave_original = copy.deepcopy(self.wave)
+		self.flux_original = copy.deepcopy(self.flux)
+		self.noise_original = copy.deepcopy(self.noise)
+		
 # information on source spectrum
 		if not (kwargs.get('model',False)):
 			x,y = filenameToNameDate(self.filename)
@@ -128,29 +135,77 @@ class Spectrum(object):
 		a = self._wrange
 		a = self._frange
 				
-	 def __repr__(self):
+	def __repr__(self):
 		'''A simple representation of an object is to just give it a name'''
 		return 'Spectra Object for {}'.format(self.name)
 
-	 @lazyprop
-	 def _wrange(self):
+	def __add__(self,other):
+		'''A simple representation of an object is to just give it a name'''
+		sp = copy.deepcopy(self)
+		f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
+		n = interp1d(other.wave,other.noise,bounds_error=False,fill_value=0.)
+		sp.flux = self.flux+f(self.wave)
+		sp.noise = numpy.power(numpy.power(sp.noise,2)+numpy.power(n(self.wave),2),0.5)
+		return sp
+
+	def __sub__(self,other):
+		'''A simple representation of an object is to just give it a name'''
+		sp = copy.deepcopy(self)
+		f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
+		sp.flux = self.flux-f(self.wave)
+		sp.noise = numpy.power(numpy.power(sp.noise,2)+numpy.power(n(self.wave),2),0.5)
+		return sp
+
+	def __mul__(self,other):
+		'''A simple representation of an object is to just give it a name'''
+		sp = copy.deepcopy(self)
+		f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
+		sp.flux = numpy.multiply(self.flux,f(self.wave))
+		n = interp1d(other.wave,other.noise,bounds_error=False,fill_value=0.)
+		sp.noise = numpy.multiply(sp.flux,numpy.power(\
+			numpy.power(numpy.divide(sp.noise,sp.flux),2)+\
+			numpy.power(numpy.divide(n(self.wave),f(self.wave)),2),0.5))
+		return sp
+
+	def __div__(self,other):
+		'''A simple representation of an object is to just give it a name'''
+		sp = copy.deepcopy(self)
+		f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
+		sp.flux = numpy.divide(self.flux,f(self.wave))
+		n = interp1d(other.wave,other.noise,bounds_error=False,fill_value=0.)
+		sp.noise = numpy.multiply(sp.flux,numpy.power(\
+			numpy.power(numpy.divide(sp.noise,sp.flux),2)+\
+			numpy.power(numpy.divide(n(self.wave),f(self.wave)),2),0.5))
+		return sp
+
+	@lazyprop
+	def _wrange(self):
 		ii = numpy.where(self.flux > 0)
 		xr = [numpy.nanmin(self.wave[ii]), numpy.nanmax(self.wave[ii])]
 		return xr
 	 
-	 @lazyprop
-	 def _frange(self):
+	@lazyprop
+	def _frange(self):
 		ii = numpy.where(numpy.logical_and(self.wave > 0.8,self.wave < 2.3))
 		yr = [0, numpy.nanmax(self.flux[ii])]
 		return yr
 
-	 def normalize(self):
+	def reset(self):
+	 	'''Normalize spectrum'''
+		self.wave = copy.deepcopy(self.wave_original)
+		self.flux = copy.deepcopy(self.flux_original)
+		self.noise = copy.deepcopy(self.noise_original)
+		scale(1./self._frange[1])
+		self.fscale = 'Normalized'
+		return
+
+	def normalize(self):
 	 	'''Normalize spectrum'''
 		self.scale(1./self._frange[1])
 		self.fscale = 'Normalized'
 		return
 
-	 def fluxCalibrate(self,filter,mag,**kwargs):
+	def fluxCalibrate(self,filter,mag,**kwargs):
 	 	'''Calibrate spectrum to input magnitude'''
 		absolute = kwargs.get('absolute',False)
 		apparent = kwargs.get('apparent',False)
@@ -164,7 +219,7 @@ class Spectrum(object):
 				self.fscale = 'Apparent'
 		return
 
-	 def scale(self,factor):
+	def scale(self,factor):
 	 	'''Scale spectrum and noise by a constant factor'''
 	 	self.flux = self.flux*factor
 	 	self.noise = [n*factor for n in self.noise]
@@ -172,7 +227,7 @@ class Spectrum(object):
 	 	self._frange[1] = self._frange[1]*factor
 	 	return
 		
-	 def flamToFnu(self):
+	def flamToFnu(self):
 	 	'''Convert flux density from F_lam to F_nu, the later in Jy'''
 	 	self.funit = u.Jy
 	 	self.flabel = 'F_nu'
@@ -180,7 +235,7 @@ class Spectrum(object):
 	 	self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
 	 	return
 
-	 def fnuToFlam(self):
+	def fnuToFlam(self):
 	 	'''Convert flux density from F_nu to F_lam, the later in erg/s/cm2/Hz'''
 	 	self.funit = u.erg/(u.cm**2 * u.s * u.micron)
 	 	self.flabel = 'F_lam'
@@ -188,18 +243,18 @@ class Spectrum(object):
 	 	self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
 	 	return
 
-	 def snr(self):
+	def snr(self):
 	 	'''Compute a representative S/N value'''
 	 	pass
 	 	return
 
-	 def surface(self,radius):
+	def surface(self,radius):
 	 	'''Convert to surface fluxes given a radius, assuming at absolute fluxes'''
 	 	pass
 	 	return
 
 		
-	 def info(self):
+	def info(self):
 		  '''Report some information about this spectrum'''
 		  if (self.model):
 		  	print '''{0} model with Teff = {1} and log g = {2}'''.format(self.modelset, self.teff, self.logg)
