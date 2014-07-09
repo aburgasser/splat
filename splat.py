@@ -1,11 +1,15 @@
 # WORKING COPY OF SPLAT CODE LIBRARY
 # based on routines developed by:
+#	Christian Aganze
 #	Daniella Bardalez Gagliuffi
 # 	Adam Burgasser
 #	Caleb Choban
-#	Aisha Iyer
+#	Aishwarya Iyer
 # 	Yuhui Jin
+#	Michael Lopez
 #	Alex Mendez
+#	Julian Pilate-Hutcherson
+#	Maitrayee Sahi
 #	Melisa Tallis
 
 #
@@ -44,6 +48,7 @@ import string
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 parameter_names = ['teff','logg','z','fsed','kzz']
+####################################
 
 # helper functions from Alex
 def lazyprop(fn):
@@ -254,13 +259,13 @@ def classifyByIndex(sp, *args, **kwargs):
 		sptoffset = 20.
 		sptfact = 1.
 		coeffs = { \
-			'H2O-J': {'fitunc': 0.8, 'range': [20,38], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+			'H2O-J': {'fitunc': 0.8, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., \
 			'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
-			'H2O-H': {'fitunc': 1.0, 'range': [20,38], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+			'H2O-H': {'fitunc': 1.0, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
 			'coeff': [9.087e-1, -3.221e1, 2.527e1, -1.978e1, 2.098e1]}, \
-			'CH4-J': {'fitunc': 0.7, 'range': [30,38], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+			'CH4-J': {'fitunc': 0.7, 'range': [30,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
 			'coeff': [1.491e2, -3.381e2, 2.424e2, -8.450e1, 2.708e1]}, \
-			'CH4-H': {'fitunc': 0.3, 'range': [31,38], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+			'CH4-H': {'fitunc': 0.3, 'range': [31,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
 			'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
 			'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
 			'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
@@ -982,54 +987,62 @@ def plotSpectrum(*args, **kwargs):
 		print 'plotSpectrum needs at least on Spectrum object to plot'
 		return
 
+# this loop solves issues if a list of spectrum objects is provided accidentally
+	sp = []
+	for i,a in enumerate(args):
+		if (type(a) == list):
+			sp.append(a[0])
+		else:
+			sp.append(a)
+
 # keyword parameters
 	title = kwargs.get('title','')
-	xlabel = kwargs.get('xlabel','{} ({})'.format(args[0].wlabel,args[0].wunit))
-	ylabel = kwargs.get('ylabel','{} {} ({})'.format(args[0].fscale,args[0].flabel,args[0].funit))
-	xrange = kwargs.get('xrange',args[0]._wrange)
+	xlabel = kwargs.get('xlabel','{} ({})'.format(sp[0].wlabel,sp[0].wunit))
+	ylabel = kwargs.get('ylabel','{} {} ({})'.format(sp[0].fscale,sp[0].flabel,sp[0].funit))
+	xrange = kwargs.get('xrange',sp[0]._wrange)
 	bound = xrange
-	ymax = [args[i]._frange[1] for i in numpy.arange(len(args))]
-	yrange = kwargs.get('yrange',[args[0]._frange[0],numpy.nanmax(ymax)])
+	ymax = [sp[i]._frange[1] for i in numpy.arange(len(sp))]
+	yrange = kwargs.get('yrange',[sp[0]._frange[0],numpy.nanmax(ymax)])
 	bound.extend(yrange)
 	grid = kwargs.get('grid',False)
-	colors = kwargs.get('colors',['k' for x in range(len(args))])
+	colors = kwargs.get('colors',['k' for x in range(len(sp))])
 	if (len(colors) < len(args)):
-		colors.extend(['k' for x in range(len(args)-len(colors))])
-	colorsUnc = kwargs.get('colors',['k' for x in range(len(args))])
-	if (len(colorsUnc) < len(args)):
-		colorsUnc.extend(['k' for x in range(len(args)-len(colorsUnc))])
-	linestyle = kwargs.get('linestyle',['steps' for x in range(len(args))])
-	if (len(linestyle) < len(args)):
-		linestyle.extend(['steps' for x in range(len(args)-len(linestyle))])
+		colors.extend(['k' for x in range(len(sp)-len(colors))])
+	colorsUnc = kwargs.get('colors',['k' for x in range(len(sp))])
+	if (len(colorsUnc) < len(sp)):
+		colorsUnc.extend(['k' for x in range(len(sp)-len(colorsUnc))])
+	linestyle = kwargs.get('linestyle',['steps' for x in range(len(sp))])
+	if (len(linestyle) < len(sp)):
+		linestyle.extend(['steps' for x in range(len(sp)-len(linestyle))])
 	filename = kwargs.get('filename','')
 	format = kwargs.get('format',filename.split('.')[-1])
-	zeropoint = kwargs.get('zeropoint',[0. for x in range(len(args))])
-	showNoise = kwargs.get('showNoise',[False for x in range(len(args))])
+	zeropoint = kwargs.get('zeropoint',[0. for x in range(len(sp))])
+	showNoise = kwargs.get('showNoise',[False for x in range(len(sp))])
 	if not isinstance(showNoise, tuple):
 		showNoise = [showNoise]
-	if (len(showNoise) < len(args)):
-		showNoise.extend(['k' for x in range(len(args)-len(showNoise))])
-	showZero = kwargs.get('showZero',[False for x in range(len(args))])
+	if (len(showNoise) < len(sp)):
+		showNoise.extend(['k' for x in range(len(sp)-len(showNoise))])
+	showZero = kwargs.get('showZero',[False for x in range(len(sp))])
 	if not isinstance(showZero, tuple):
 		showZero = [showZero]
-	if (len(showZero) < len(args)):
-		showZero.extend(['k' for x in range(len(args)-len(showZero))])
-	mask = kwargs.get('mask',False)				# not yet implemented
-	labels = kwargs.get('labels','')			# not yet implemented
-	features = kwargs.get('features','')		# not yet implemented
+	if (len(showZero) < len(sp)):
+		showZero.extend(['k' for x in range(len(sp)-len(showZero))])
+#	mask = kwargs.get('mask',False)				# not yet implemented
+#	labels = kwargs.get('labels','')			# not yet implemented
+#	features = kwargs.get('features','')		# not yet implemented
 
 
 #	plt.clf()
 # loop through sources
 	plt.subplots(1)
-	for ii,sp in enumerate(args):
-		plt.plot(sp.wave,sp.flux,color=colors[ii],linestyle=linestyle[ii])
+	for ii,a in enumerate(sp):
+		plt.plot(a.wave,a.flux,color=colors[ii],linestyle=linestyle[ii])
 # show noise
 		if (showNoise[ii]):
-			plt.plot(sp.wave,sp.noise,color=colorsUnc[ii],linestyle=linestyle[ii],alpha=0.3)
+			plt.plot(a.wave,a.noise,color=colorsUnc[ii],linestyle=linestyle[ii],alpha=0.3)
 # zeropoint
-		if (showZero[ii]):
-			plt.plot(args[0].wave,args[0].flux*0.+zeropoint[ii],color='k',linestyle='-')
+	if (showZero[ii]):
+		plt.plot(sp[0].wave,sp[0].flux*0.+zeropoint[ii],color='k',linestyle='-')
 # grid
 	if (grid):
 		plt.grid()
