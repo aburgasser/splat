@@ -1102,7 +1102,7 @@ def measureIndexSet(sp,**kwargs):
 # determine combine method
 	if (set.lower() == 'burgasser'):
 		reference = 'Indices from Burgasser et al. (2006)'
-		names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K/J']
+		names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J']
 		inds = numpy.zeros(len(names))
 		errs = numpy.zeros(len(names))
 		inds[0],errs[0] = measureIndex(sp,[1.14,1.165],[1.26,1.285],method='ratio',sample='integrate',**kwargs)
@@ -1283,10 +1283,14 @@ def readSpectrum(**kwargs):
 # fits file	
 	if (ftype == 'fit' or ftype == 'fits'):
 		data = fits.open(file)
-		wave = data[0].data[0,:]
-		flux = data[0].data[1,:]
-		if (len(data[0].data[:,0]) > 2):
-			noise = data[0].data[2,:]
+		if 'NAXIS3' in data[0].header.keys():
+			d = data[0].data[0,:,:]
+		else:
+			d = data[0].data
+		wave = d[0,:]
+		flux = d[1,:]
+		if (len(d[:,0]) > 2):
+			noise = d[2,:]
 		data.close()
 
 # ascii file	
@@ -1446,3 +1450,59 @@ def typeToNum(input, **kwargs):
 			print 'Only spectral classes {} are handled with this routine'.format(spletter)
 			output = numpy.nan
 	return output
+
+
+def typeToTeff(input, **kwargs):
+	'''return Teff for a given SpT'''
+# keywords	 
+	nsamples = kwargs.get('nsamples',100)
+	unc = kwargs.get('uncertainty',0.)
+	unc = kwargs.get('unc',unc)
+	unc = kwargs.get('spt_e',unc)
+	ref = kwargs.get('ref','looper')
+	ref = kwargs.get('set',ref)
+	ref = kwargs.get('method',ref)
+
+# convert spectral type string to number
+	if (type(input) == str):
+		spt = typeToNum(input,uncertainty=unc)
+	else:
+		spt = copy.deepcopy(input)
+
+# choose among possible options
+# Stephens et al. (2009, ApJ, 702, 1545); using OPT/IR relation for M6-T8
+# plus alternate coefficients for L3-T8
+	if (ref.lower() == 'stephens'):
+		reference = 'Teff/SpT relation from Stephens et al. (2009)'
+		sptoffset = 10.
+		coeff = [-0.0025492,0.17667,-4.4727,54.67,-467.26,4400.]
+		range = [16.,38.]
+		fitunc = 100.
+		coeff_alt = [-0.011997,1.2315,-50.472,1031.9,-10560.,44898.]
+		range_alt = [23.,38.]
+
+# Looper et al. (2008, ApJ, 685, 1183)
+	elif (ref.lower() == 'looper'):
+		reference = 'Teff/SpT relation from Looper et al. (2008)'
+		sptoffset = 20.
+		coeff = [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92]
+		range = [20.,38.]
+		fitunc = 87.
+# Looper is default
+	else:
+		reference = 'Teff/SpT relation from Looper et al. (2008)'
+		sptoffset = 20.
+		coeff = [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92]
+		range = [20.,38.]
+		fitunc = 87.
+
+	if (range[0] <= spt <= range[1]):
+		vals = numpy.polyval(coeff,numpy.random.normal(spt-sptoffset,unc,nsamples))
+		if (ref.lower() == 'stephens' and (range_alt[0] <= spt <= range_alt[1])):
+			vals = numpy.polyval(coeff_alt,numpy.random.normal(spt-sptoffset,unc,nsamples))
+		teff = numpy.nanmean(vals)
+		teff_e = (numpy.nanstd(vals)**2+fitunc**2)**0.5
+		return teff, teff_e
+	else:
+		sys.stderr.write('\nSpectral Type is out of range for {:s} Teff/SpT relation\n'.format(reference))
+		return numpy.nan, numpy.nan
