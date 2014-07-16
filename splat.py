@@ -46,6 +46,7 @@ from astropy import units as u			# standard units
 from astropy import constants as const		# physical constants in SI units
 
 numpy.seterr(divide='warn')		# this is probably not an entirely safe approach
+#from splat._version import __version__
 
 ############ PARAMETERS ############
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -86,10 +87,16 @@ def Copy(fn):
 # define the Spectrum class which contains the relevant information
 class Spectrum(object):
 	@Show
-	def __init__(self, **kwargs):
+	def __init__(self, filename, **kwargs):
 		'''Load the file'''
 		self.model = False
-		self.filename = kwargs.get('filename','')
+# various options for setting the filename
+		self.filename = filename
+		if kwargs.get('filename','') != '':
+			self.filename = kwargs.get('filename','')
+		if kwargs.get('file','') != '':
+			self.filename = kwargs.get('file','')
+		kwargs['filename'] = self.filename
 		self.wlabel = kwargs.get('wlabel','Wavelength')
 		self.wunit = kwargs.get('wunit',u.micron)
 		self.flabel = kwargs.get('flabel','F_lambda')
@@ -109,10 +116,10 @@ class Spectrum(object):
 				self.noise = [numpy.nan for i in self.wave]
 		else:
 # filename given
-			try:
-				self.wave, self.flux, self.noise = readSpectrum(**kwargs)
-			except:
-				raise NameError('\nCould not load up spectral file')
+#			try:
+			self.wave, self.flux, self.noise = readSpectrum(**kwargs)
+#			except:
+#			raise NameError('\nCould not load up spectral file {:s}'.format(kwargs.get('filename','')))
 		self.nu = const.c.to('micron/s').value/self.wave
 # calculate variance
 		self.variance = self.noise
@@ -691,8 +698,8 @@ def filenameToNameDate(filename):
 			float(d)
 			date = '20'+d
 		except ValueError:
-			print filename+' does not contain a date'
-			date = d
+#			print filename+' does not contain a date'
+			date = ''
 		
 		return name, date
 
@@ -785,11 +792,17 @@ def getSourceKey(*args, **kwargs):
 
 
 def getSpectrum(*args, **kwargs):
-	'''Get specific spectrs from online library'''
+	'''Get specific spectra from online library'''
 
 	result = []
 	kwargs['output'] = 'data_file'
+	list = kwargs.get('list',False)
 	files = searchLibrary(*args, **kwargs)
+
+# return just the filenames
+	if (list):
+		return files
+	
 	if len(files) > 0:
 		for x in files:
 			result.append(loadSpectrum(x))
@@ -999,16 +1012,18 @@ def loadSpectrum(*args, **kwargs):
 		raise NameError('\nNeed to pass in filename for spectral data')
 
 # first try online
+	print kwargs['filename']
 	if not local:
-		try:
-			open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
-			kwargs['filename'] = os.path.basename(kwargs['filename'])
-			sp = Spectrum(**kwargs)
-			os.remove(os.path.basename(kwargs['filename']))
-			return sp
-		except urllib2.URLError, ex:
-			sys.stderr.write('\nCould not find data file '+kwargs['filename']+' at '+url+'\n\n')
-			local = True
+#		try:
+		open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
+		kwargs['filename'] = os.path.basename(kwargs['filename'])
+		print kwargs['filename']
+		sp = Spectrum(**kwargs)
+		os.remove(os.path.basename(kwargs['filename']))
+		return sp
+#		except urllib2.URLError, ex:
+		sys.stderr.write('\nCould not find data file '+kwargs['filename']+' at '+url+'\n\n')
+		local = True
 	
 # now try local drive
 	if (os.path.exists(kwargs['filename']) == False):
@@ -1276,6 +1291,7 @@ def readSpectrum(**kwargs):
 		file = folder+os.path.basename(filename)
 	if (os.path.exists(file) == False):
 		raise NameError('\nCould not find ' + filename+'\n\n')
+	print file
 	
 # determine which type of file
 	ftype = file.split('.')[-1]
@@ -1287,38 +1303,36 @@ def readSpectrum(**kwargs):
 			d = data[0].data[0,:,:]
 		else:
 			d = data[0].data
+		data.close()
 		wave = d[0,:]
 		flux = d[1,:]
-		if (len(d[:,0]) > 2):
-			noise = d[2,:]
-		data.close()
 
 # ascii file	
 	else:
 		if (uncertainty == True):
 			try:
-				wave,flux,noise = numpy.genfromtxt(file, comments='#', unpack=True, \
-					missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+				d = numpy.genfromtxt(file, comments='#', unpack=False, \
+					missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
 			except ValueError:
-				wave,flux,noise = numpy.genfromtxt(file, comments=';', unpack=True, \
-	 				missing_values = ('NaN','nan'), filling_values = (numpy.nan))
-	 	if (uncertainty == False):
-	 		try:
-	 			wave,flux = numpy.genfromtxt(file, comments='#', unpack=True, \
-	 				missing_values = ('NaN','nan'), filling_values = (numpy.nan))
-	 		except ValueError:
-	 			wave,flux = numpy.genfromtxt(file, comments=';', unpack=True, \
-	 				missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+				d = numpy.genfromtxt(file, comments=';', unpack=False, \
+	 				missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
 
-# add in fake uncertainty vector if needed
-	if (not uncertainty):
+# assign arrays to wave, flux, noise
+	wave = d[0,:]
+	flux = d[1,:]
+	if len(d[:,0]) > 2:
+		noise = d[2,:]
+	else:
 		noise = numpy.zeros(len(flux))
-		noise[:] = numpy.nan
-  			
+		noise[:] = numpy.nan		
 
 # fix places where noise is claimed to be 0
 	w = numpy.where(noise == 0.)
 	noise[w] = numpy.nan
+
+# fix nans in flux
+	w = numpy.where(flux == numpy.nan)
+	flux[w] = 0.
 
 # fix to catch badly formatted files where noise column is S/N	 			
 #	print flux, numpy.median(flux)
@@ -1392,9 +1406,8 @@ def test():
 	sp = loadSpectrum('spex_prism_0415-0935_030917.txt')
 	sp.info()
 	sys.stderr.write('...loadSpectrum successful\n\n')
-	sp = getSpectrum(shortname='0415-0935')[0]
-	sp.info()
-	sys.stderr.write('...getSpectrum successful\n\n')
+	sp = getSpectrum(young=True,list=True)
+	sys.stderr.write('{} young spectra...getSpectrum successful\n\n'.format(len(sp)))
 	ind = measureIndexSet(sp,set='burgasser')
 	sys.stderr.write('Spectral indices:\n')
 	for k in ind.keys():
