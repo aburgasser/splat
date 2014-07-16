@@ -1,6 +1,0 @@
-README
-setup.py
-splat.egg-info/PKG-INFO
-splat.egg-info/SOURCES.txt
-splat.egg-info/dependency_links.txt
-splat.egg-info/top_level.txt
