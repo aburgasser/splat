@@ -1439,10 +1439,10 @@ def test():
 	sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag))
 #	mdl = loadModel(teff=750,logg=4.5,set='btsettl08')
 #	sys.stderr.write('\n...subsampled model generation successful\n')
-	mdl.normalize()
+#	mdl.normalize()
 	sp.normalize()
 	sys.stderr.write('\n...normalization successful\n')
-	plotSpectrum(sp,mdl,colors=['k','r'],title='If this appears everything is OK: close window')
+	plotSpectrum(sp,colors=['k'],title='If this appears everything is OK: close window')
 	sys.stderr.write('\n...plotting successful\n')
 	sys.stderr.write('\n>>>>>>>>>>>> SPLAT TEST SUCCESSFUL; HAVE FUN! <<<<<<<<<<<<\n\n')
 
