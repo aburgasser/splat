@@ -52,7 +52,8 @@ numpy.seterr(divide='warn')		# this is probably not an entirely safe approach
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 parameter_names = ['teff','logg','z','fsed','kzz']
-spex_pixel_scale = 0.15		# spatial scale in arcseconds per pixel
+spex_pixel_scale = 0.15			# spatial scale in arcseconds per pixel
+spex_wave_range = [0.65,2.45]	# default wavelength range
 ####################################
 
 # helper functions from Alex
@@ -116,15 +117,20 @@ class Spectrum(object):
 				self.noise = [numpy.nan for i in self.wave]
 		else:
 # filename given
-#			try:
-			self.wave, self.flux, self.noise = readSpectrum(**kwargs)
-#			except:
-#			raise NameError('\nCould not load up spectral file {:s}'.format(kwargs.get('filename','')))
+			try:
+				self.wave, self.flux, self.noise = readSpectrum(**kwargs)
+			except:
+				raise NameError('\nCould not load up spectral file {:s}'.format(kwargs.get('filename','')))
+		self.wave = numpy.array(self.wave)
+		self.flux = numpy.array(self.flux)
+		self.noise = numpy.array(self.noise)
 		self.nu = const.c.to('micron/s').value/self.wave
+#		w = numpy.where(numpy.isnan(self.flux))
+#		self.flux[w] = 0.
 # calculate variance
-		self.variance = self.noise
-		if (self.variance[0] != numpy.nan):
-			self.variance = [n**2 for n in self.noise]
+#		self.variance = self.noise
+#		if (self.variance[0] != numpy.nan):
+		self.variance = [n**2 for n in self.noise]
 
 # preserve original values
 		self.wave_original = copy.deepcopy(self.wave)
@@ -164,7 +170,7 @@ class Spectrum(object):
 		'''Adding two spectra '''
 		sp = copy.deepcopy(self)
 		f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
-		n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=0.)
+		n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
 		sp.flux = numpy.add(self.flux,f(self.wave))
 		sp.variance = sp.variance+n(self.wave)
 		sp.noise = [n**0.5 for n in sp.variance]
@@ -177,7 +183,7 @@ class Spectrum(object):
 		'''Subtracting two spectra '''
 		sp = copy.deepcopy(self)
 		f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
-		n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=0.)
+		n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
 		sp.flux = numby.subtract(self.flux,f(self.wave))
 		sp.variance = sp.variance+n(self.wave)
 		sp.noise = [n**0.5 for n in sp.variance]
@@ -190,7 +196,7 @@ class Spectrum(object):
 		'''Multiplying two spectra'''
 		sp = copy.deepcopy(self)
 		f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
-		n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=0.)
+		n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
 		sp.flux = numpy.multiply(self.flux,f(self.wave))
 		sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
 			numpy.divide(self.variance,numpy.power(sp.flux,2))+\
@@ -205,7 +211,7 @@ class Spectrum(object):
 		'''Dividing two spectra'''
 		sp = copy.deepcopy(self)
 		f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
-		n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=0.)
+		n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
 		sp.flux = numpy.divide(self.flux,f(self.wave))
 		sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
 			numpy.divide(self.variance,numpy.power(sp.flux,2))+\
@@ -320,7 +326,7 @@ class Spectrum(object):
 		 	npix = numpy.floor(numpy.log(waveRng[1]/waveRng[0])/numpy.log(1.+1./r))
 		 	wave_sample = [waveRng[0]*(1.+1./r)**i for i in numpy.arange(npix)]
 		 	f = interp1d(self.wave,self.flux,bounds_error=False,fill_value=0.)
-		 	v = interp1d(self.wave,self.variance,bounds_error=False,fill_value=0.)
+		 	v = interp1d(self.wave,self.variance,bounds_error=False,fill_value=numpy.nan)
 		 	flx_sample = f(wave_sample)
 		 	var_sample = v(wave_sample)
 # now convolve a function to smooth resampled spectrum
@@ -550,7 +556,25 @@ def classifyByTemplate(sp, *args, **kwargs):
 	
 def compareSpectra(sp1, sp2, *args, **kwargs):
 	'''Compare two spectra against each other'''
-	return numpy.nan, numpy.nan
+	weights = kwargs.get('weights',numpy.zeros(len(sp1.wave)))
+	wave_ranges = kwargs.get('wave_ranges',[spex_wave_range])
+	
+# create interpolation function for second spectrum
+	f = interp1d(sp2.wave,sp2.flux,bounds_error=False,fill_value=0.)
+	v = interp1d(sp2.wave,sp2.variance,bounds_error=False,fill_value=numpy.nan)
+	vtot = numpy.nansum([[sp1.variance],[v(sp1.wave)]],axis=0)
+
+# Mask certain wavelengths
+	for ranges in wave_ranges:
+		weights[numpy.where(((sp1.wave >= ranges[0]) & (sp1.wave <= ranges[1])))] = 1
+ 	
+# compute scale factor
+	alpha = numpy.nansum(weights*sp1.flux*f(sp1.wave)/vtot)/ \
+		numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)/vtot)
+	chi2 = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*alpha)**2/vtot)
+	print weights*sp1.flux, weights*f(sp1.wave), weights*vtot
+	print numpy.nansum(weights*sp1.flux*f(sp1.wave)/vtot), numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)/vtot), numpy.nansum(weights*sp1.flux*f(sp1.wave)), numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)), numpy.nansum(weights/vtot)
+	return chi2, alpha
 	
 	
 
@@ -754,7 +778,7 @@ def filterMag(sp,filter,*args,**kwargs):
 	ftrans = ftrans[~numpy.isnan(ftrans)]
 				
 # interpolate spectrum and vega spectrum onto filter wavelength function
-	d = interp1d(sp.wave,sp.flux)
+	d = interp1d(sp.wave,sp.flux,bounds_error=False,fill_value=0.)
 	result = numpy.nan
 	
 # compute relevant quantity
@@ -764,7 +788,7 @@ def filterMag(sp,filter,*args,**kwargs):
 			missing_values = ('NaN','nan'), filling_values = (numpy.nan))
 		vwave = vwave[~numpy.isnan(vtrans)]			# temporary fix
 		vtrans = vtrans[~numpy.isnan(vtrans)]
-		v = interp1d(vwave,vtrans)
+		v = interp1d(vwave,vtrans,bounds_error=False,fill_value=0.)
 		result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fwave)/trapz(ftrans*v(fwave),fwave))
 	if (energy):
 		result = trapz(ftrans*d(fwave),fwave)
@@ -774,7 +798,7 @@ def filterMag(sp,filter,*args,**kwargs):
 	if (ab):
 # NOTE: THIS IS CURRENTLY NOT WORKING
 		sp.flamToFnu()
-		dd = interp1d(sp.nu,sp.flux)
+		dd = interp1d(sp.nu,sp.flux,bounds_error=False,fill_value=0.)
 		a = trapz(ftrans*dd(fnu),numpy.log10(fnu))
 		b = trapz(ftrans,numpy.log10(fnu))
 		result = -2.5*numpy.log10(a/b)-48.6
@@ -1012,18 +1036,16 @@ def loadSpectrum(*args, **kwargs):
 		raise NameError('\nNeed to pass in filename for spectral data')
 
 # first try online
-	print kwargs['filename']
 	if not local:
-#		try:
-		open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
-		kwargs['filename'] = os.path.basename(kwargs['filename'])
-		print kwargs['filename']
-		sp = Spectrum(**kwargs)
-		os.remove(os.path.basename(kwargs['filename']))
-		return sp
-#		except urllib2.URLError, ex:
-		sys.stderr.write('\nCould not find data file '+kwargs['filename']+' at '+url+'\n\n')
-		local = True
+		try:
+			open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
+			kwargs['filename'] = os.path.basename(kwargs['filename'])
+			sp = Spectrum(**kwargs)
+			os.remove(os.path.basename(kwargs['filename']))
+			return sp
+		except urllib2.URLError, ex:
+			sys.stderr.write('\nCould not find data file '+kwargs['filename']+' at '+url+'\n\n')
+			local = True
 	
 # now try local drive
 	if (os.path.exists(kwargs['filename']) == False):
@@ -1049,9 +1071,9 @@ def measureIndex(sp,*args,**kwargs):
 	nsamples = kwargs.get('nsamples',100)
 			
 # create interpolation functions
-	w = numpy.where(sp.flux*sp.noise != numpy.nan)
-	f = interp1d(sp.wave[w],sp.flux[w])
-	s = interp1d(sp.wave[w],sp.noise[w])
+	w = numpy.where(numpy.isnan(sp.flux*sp.noise) == False)
+	f = interp1d(sp.wave[w],sp.flux[w],bounds_error=False,fill_value=0.)
+	s = interp1d(sp.wave[w],sp.noise[w],bounds_error=False,fill_value=numpy.nan)
 				
 # error checking on number of arguments provided
 	if (len(args) < 2):
@@ -1291,7 +1313,6 @@ def readSpectrum(**kwargs):
 		file = folder+os.path.basename(filename)
 	if (os.path.exists(file) == False):
 		raise NameError('\nCould not find ' + filename+'\n\n')
-	print file
 	
 # determine which type of file
 	ftype = file.split('.')[-1]
@@ -1304,8 +1325,6 @@ def readSpectrum(**kwargs):
 		else:
 			d = data[0].data
 		data.close()
-		wave = d[0,:]
-		flux = d[1,:]
 
 # ascii file	
 	else:
@@ -1331,7 +1350,7 @@ def readSpectrum(**kwargs):
 	noise[w] = numpy.nan
 
 # fix nans in flux
-	w = numpy.where(flux == numpy.nan)
+	w = numpy.where(numpy.isnan(flux) == True)
 	flux[w] = 0.
 
 # fix to catch badly formatted files where noise column is S/N	 			
@@ -1406,8 +1425,8 @@ def test():
 	sp = loadSpectrum('spex_prism_0415-0935_030917.txt')
 	sp.info()
 	sys.stderr.write('...loadSpectrum successful\n\n')
-	sp = getSpectrum(young=True,list=True)
-	sys.stderr.write('{} young spectra...getSpectrum successful\n\n'.format(len(sp)))
+	list = getSpectrum(young=True,list=True)
+	sys.stderr.write('{} young spectra...getSpectrum successful\n\n'.format(len(list)))
 	ind = measureIndexSet(sp,set='burgasser')
 	sys.stderr.write('Spectral indices:\n')
 	for k in ind.keys():
@@ -1418,8 +1437,8 @@ def test():
 	sp.fluxCalibrate('2MASS J',15.0)
 	mag = filterMag(sp,'MKO J')
 	sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag))
-	mdl = loadModel(teff=750,logg=4.5,set='btsettl08')
-	sys.stderr.write('\n...subsampled model generation successful\n')
+#	mdl = loadModel(teff=750,logg=4.5,set='btsettl08')
+#	sys.stderr.write('\n...subsampled model generation successful\n')
 	mdl.normalize()
 	sp.normalize()
 	sys.stderr.write('\n...normalization successful\n')
