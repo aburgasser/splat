@@ -127,9 +127,8 @@ class Spectrum(object):
 		self.nu = const.c.to('micron/s').value/self.wave
 #		w = numpy.where(numpy.isnan(self.flux))
 #		self.flux[w] = 0.
+		self.flux[numpy.isnan(self.flux)] = 0.
 # calculate variance
-#		self.variance = self.noise
-#		if (self.variance[0] != numpy.nan):
 		self.variance = [n**2 for n in self.noise]
 
 # preserve original values
@@ -557,26 +556,47 @@ def classifyByTemplate(sp, *args, **kwargs):
 def compareSpectra(sp1, sp2, *args, **kwargs):
 	'''Compare two spectra against each other'''
 	weights = kwargs.get('weights',numpy.zeros(len(sp1.wave)))
-	wave_ranges = kwargs.get('wave_ranges',[spex_wave_range])
+	mask = kwargs.get('mask',numpy.zeros(len(sp1.wave)))	# mask = 1 -> ignore
+	fit_ranges = kwargs.get('fit_ranges',[spex_wave_range])
+	mask_ranges = kwargs.get('mask_ranges',[])
+	mask_telluric = kwargs.get('mask_telluric',False)
+	mask_standard = kwargs.get('mask_standard',False)
 	
+	if (mask_standard == True):
+		mask_telluric == True
+		
 # create interpolation function for second spectrum
 	f = interp1d(sp2.wave,sp2.flux,bounds_error=False,fill_value=0.)
 	v = interp1d(sp2.wave,sp2.variance,bounds_error=False,fill_value=numpy.nan)
-	vtot = numpy.nansum([[sp1.variance],[v(sp1.wave)]],axis=0)
-
+	vtot = numpy.nanmax([sp1.variance,sp1.variance+v(sp1.wave)],axis=0)
+	
 # Mask certain wavelengths
-	for ranges in wave_ranges:
+# telluric absorption
+	if (mask_telluric):
+		mask_ranges.append([0.,0.65])		# meant to clear out short wavelengths
+		mask_ranges.append([1.35,1.45])
+		mask_ranges.append([1.8,2.0])
+		mask_ranges.append([2.45,99.])		# meant to clear out long wavelengths
+
+	if (mask_standard):
+		mask_ranges.append([0.,0.9])		# standard short cut
+		mask_ranges.append([2.35,99.])		# standard long cut
+
+	for ranges in mask_ranges:
+		mask[numpy.where(((sp1.wave >= ranges[0]) & (sp1.wave <= ranges[1])))] = 1
+
+# set the weights	
+	for ranges in fit_ranges:
 		weights[numpy.where(((sp1.wave >= ranges[0]) & (sp1.wave <= ranges[1])))] = 1
  	
+ 	weights = weights*(1.-mask)
+
 # compute scale factor
-	alpha = numpy.nansum(weights*sp1.flux*f(sp1.wave)/vtot)/ \
+	scale = numpy.nansum(weights*sp1.flux*f(sp1.wave)/vtot)/ \
 		numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)/vtot)
-	chi2 = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*alpha)**2/vtot)
-	print weights*sp1.flux, weights*f(sp1.wave), weights*vtot
-	print numpy.nansum(weights*sp1.flux*f(sp1.wave)/vtot), numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)/vtot), numpy.nansum(weights*sp1.flux*f(sp1.wave)), numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)), numpy.nansum(weights/vtot)
-	return chi2, alpha
-	
-	
+	chi2 = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*scale)**2/vtot)
+	return chi2, scale
+		
 
 def coordinateToDesignation(c):
 	'''Convert RA, Dec into designation string'''
@@ -863,11 +883,11 @@ def loadInterpolatedModel(*args,**kwargs):
 #	print param
 	
 # check if input parameters are within range
-#	for t in param.colnames:
-#		flg = kwargs.get(t,False)
-#		if flg != False:
-#			if (flg < param[t][0] or flg > param[t][1]):
-#				raise ValueError('\n\nValue {}={} outside model range'.format(t,str(flg)))
+	for t in param.colnames:
+		flg = kwargs.get(t,False)
+		if flg != False:
+			if (flg < param[t][0] or flg > param[t][1]):
+				raise ValueError('\n\nValue {}={} outside model range'.format(t,str(flg)))
 
 # try simply loading model (on grid)
 #	try:
@@ -885,19 +905,20 @@ def loadInterpolatedModel(*args,**kwargs):
 	x,y = numpy.meshgrid(trng,grng)
 
 	mkwargs = kwargs.copy()
-	try:
-		mkwargs['teff'] = trng[0]
-		mkwargs['logg'] = grng[0]
-		md11 = loadModel(**mkwargs)
-		mkwargs['teff'] = trng[1]
-		md21 = loadModel(**mkwargs)
-		mkwargs['teff'] = trng[0]
-		mkwargs['logg'] = grng[1]
-		md12 = loadModel(**mkwargs)
-		mkwargs['teff'] = trng[1]
-		md22 = loadModel(**mkwargs)
-	except:
-		raise NameError('\nProblem loading grid of models in loadInterpolatedModel\n\n')
+#	try:
+	print trng, grng
+	mkwargs['teff'] = trng[0]
+	mkwargs['logg'] = grng[0]
+	md11 = loadModel(**mkwargs)
+	mkwargs['teff'] = trng[1]
+	md21 = loadModel(**mkwargs)
+	mkwargs['teff'] = trng[0]
+	mkwargs['logg'] = grng[1]
+	md12 = loadModel(**mkwargs)
+	mkwargs['teff'] = trng[1]
+	md22 = loadModel(**mkwargs)
+#	except:
+#		raise NameError('\nProblem loading grid of models in loadInterpolatedModel\n\n')
 
 	mflx = numpy.zeros(len(md11.wave))
 	val = numpy.array([[None]*2]*2)
@@ -914,7 +935,7 @@ def loadModel(*args, **kwargs):
 	'''load up a model spectrum based on parameters'''
 # keyword parameters
 	set = kwargs.get('set','btsettl08')
-	teff = kwargs.get('teff',1000)
+	teff = kwargs.get('teff',1000.0)
 	logg = kwargs.get('logg',5.0)
 	z = kwargs.get('z',0.0)
 	kzz = kwargs.get('kzz',0)
@@ -941,7 +962,7 @@ def loadModel(*args, **kwargs):
 
 		if (set == 'btsettl08'):
 			url = url+'/'+set+'/'
-			kwargs['filename'] = set+'_'+str(teff)+'_'+str(logg)+'_-0.0_nc_nc_eq_0.5.txt'
+			kwargs['filename'] = set+'_{:.0f}_{:.1f}_-0.0_nc_nc_eq_0.5.txt'.format(teff,logg)
 #			kwargs['filename'] = 'lte'+'{:5.3f}'.format(teff/100000.)[2:]+'-'+str(logg)[0:3]+'-0.0.BT-Settl.7_r120.txt'		
 		else: 
 			raise NameError('\nCurrently only have BTSettl models\n\n')
@@ -967,11 +988,11 @@ def loadModel(*args, **kwargs):
 				open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
 				kwargs['filename'] = os.path.basename(kwargs['filename'])
 				sp = Spectrum(**kwargs)
-				os.remove(kwargs['filename'])
+				os.rmdir(kwargs['filename'])
 				return sp
 			except urllib2.URLError, ex:
 				sys.stderr.write('\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
-				os.remove(os.path.basename(kwargs['filename']))
+				os.rmdir(os.path.basename(kwargs['filename']))
 				local = True
 	
 	# now try local drive
@@ -1071,9 +1092,15 @@ def measureIndex(sp,*args,**kwargs):
 	nsamples = kwargs.get('nsamples',100)
 			
 # create interpolation functions
-	w = numpy.where(numpy.isnan(sp.flux*sp.noise) == False)
+	w = numpy.where(numpy.isnan(sp.flux) == False)
 	f = interp1d(sp.wave[w],sp.flux[w],bounds_error=False,fill_value=0.)
-	s = interp1d(sp.wave[w],sp.noise[w],bounds_error=False,fill_value=numpy.nan)
+	w = numpy.where(numpy.isnan(sp.noise) == False)
+	if (numpy.size(w) != 0):
+		s = interp1d(sp.wave[w],sp.noise[w],bounds_error=False,fill_value=numpy.nan)
+		noiseFlag = False
+	else:
+		s = interp1d(sp.wave,sp.noise,bounds_error=False,fill_value=numpy.nan)
+		noiseFlag = True
 				
 # error checking on number of arguments provided
 	if (len(args) < 2):
@@ -1096,19 +1123,25 @@ def measureIndex(sp,*args,**kwargs):
 # now do MonteCarlo measurement of value and uncertainty
 		for j in numpy.arange(0,nsamples):
 
+# doing this for noise = nan
+			if (numpy.isnan(yNum_e[0]) == False):
+				yVar = numpy.random.normal(yNum,yNum_e)
+			else:
+				yVar = yNum
+
 # choose function for measuring indices
 			if (sample == 'integrate'):
-				values[i,j] = trapz(numpy.random.normal(yNum,yNum_e),xNum)
+				values[i,j] = trapz(yVar,xNum)
 			elif (sample == 'average'):
-				values[i,j] = numpy.nanmean(numpy.random.normal(yNum,yNum_e))
+				values[i,j] = numpy.nanmean(yVar)
 			elif (sample == 'median'):
-				values[i,j] = numpy.median(numpy.random.normal(yNum,yNum_e))
+				values[i,j] = numpy.median(yVar)
 			elif (sample == 'maximum'):
-				values[i,j] = numpy.nanmax(numpy.random.normal(yNum,yNum_e))
+				values[i,j] = numpy.nanmax(yVar)
 			elif (sample == 'minimum'):
-				values[i,j] = numpy.nanmin(numpy.random.normal(yNum,yNum_e))
+				values[i,j] = numpy.nanmin(yVar)
 			else:
-				values[i,j] = numpy.nanmean(numpy.random.normal(yNum,yNum_e))
+				values[i,j] = numpy.nanmean(yVar)
 
 # compute index based on defined method
 # default is a simple ratio
@@ -1126,7 +1159,10 @@ def measureIndex(sp,*args,**kwargs):
 		vals = values[0,:]/values[1,:]
 			
 # output mean, standard deviation
-	return numpy.mean(vals), numpy.std(vals)
+	if (noiseFlag):
+		return numpy.mean(vals), numpy.nan
+	else:
+		return numpy.mean(vals), numpy.std(vals)
 
 
 # wrapper function for measuring specific sets of indices
@@ -1328,13 +1364,12 @@ def readSpectrum(**kwargs):
 
 # ascii file	
 	else:
-		if (uncertainty == True):
-			try:
-				d = numpy.genfromtxt(file, comments='#', unpack=False, \
-					missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
-			except ValueError:
-				d = numpy.genfromtxt(file, comments=';', unpack=False, \
-	 				missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
+		try:
+			d = numpy.genfromtxt(file, comments='#', unpack=False, \
+				missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
+		except ValueError:
+			d = numpy.genfromtxt(file, comments=';', unpack=False, \
+ 				missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
 
 # assign arrays to wave, flux, noise
 	wave = d[0,:]
@@ -1437,12 +1472,12 @@ def test():
 	sp.fluxCalibrate('2MASS J',15.0)
 	mag = filterMag(sp,'MKO J')
 	sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag))
-#	mdl = loadModel(teff=750,logg=4.5,set='btsettl08')
-#	sys.stderr.write('\n...subsampled model generation successful\n')
-#	mdl.normalize()
+	mdl = loadModel(teff=750,logg=4.5,set='btsettl08')
+	sys.stderr.write('\n...subsampled model generation successful\n')
+	mdl.normalize()
 	sp.normalize()
 	sys.stderr.write('\n...normalization successful\n')
-	plotSpectrum(sp,colors=['k'],title='If this appears everything is OK: close window')
+	plotSpectrum(sp,mdl,colors=['k','r'],title='If this appears everything is OK: close window')
 	sys.stderr.write('\n...plotting successful\n')
 	sys.stderr.write('\n>>>>>>>>>>>> SPLAT TEST SUCCESSFUL; HAVE FUN! <<<<<<<<<<<<\n\n')
 
