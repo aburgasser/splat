@@ -682,7 +682,7 @@ def fetchDatabase(*args, **kwargs):
     if not local:
         try:
             open(os.path.basename(dataFile), 'wb').write(urllib2.urlopen(url+dataFile).read())
-            data = ascii.read(dataFile, delimiter='    ',fill_values='-99.')
+            data = ascii.read(dataFile, delimiter='\t',fill_values='-99.')
             os.remove(os.path.basename(dataFile))
 #            return data
         except urllib2.URLError, ex:
@@ -897,7 +897,7 @@ def loadInterpolatedModel(*args,**kwargs):
     t = teff - teff%param['teff'][2]
     trng = [max(param['teff'][0],t),min(t+param['teff'][2],param['teff'][1])]
     g = logg - logg%param['logg'][2]
-    grng = [max(param['logg'][0],g),min(t+param['logg'][2],param['logg'][1])]
+    grng = [max(param['logg'][0],g),min(g+param['logg'][2],param['logg'][1])]
     x,y = numpy.meshgrid(trng,grng)
 
     mkwargs = kwargs.copy()
@@ -959,6 +959,7 @@ def loadModel(*args, **kwargs):
 
         if (set == 'btsettl08'):
             url = url+'/'+set+'/'
+#            print teff, logg
             kwargs['filename'] = set+'_{:.0f}_{:.1f}_-0.0_nc_nc_eq_0.5.txt'.format(teff,logg)
 #            kwargs['filename'] = 'lte'+'{:5.3f}'.format(teff/100000.)[2:]+'-'+str(logg)[0:3]+'-0.0.BT-Settl.7_r120.txt'        
         else: 
@@ -982,7 +983,7 @@ def loadModel(*args, **kwargs):
 # first try online
         if not local:
             try:
-                open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
+                open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
                 kwargs['filename'] = os.path.basename(kwargs['filename'])
                 sp = Spectrum(**kwargs)
                 os.remove(kwargs['filename'])
