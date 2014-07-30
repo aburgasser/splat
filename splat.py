@@ -983,15 +983,21 @@ def loadModel(*args, **kwargs):
 # first try online
         if not local:
             try:
-                open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
+                os.open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
                 kwargs['filename'] = os.path.basename(kwargs['filename'])
                 sp = Spectrum(**kwargs)
+#                os.close(kwargs['filename'])
                 os.remove(kwargs['filename'])
                 return sp
+#fh, filename = tempfile.mkstemp()    do i need this?
+#os.close(fh)
+#os.remove(filename)
             except urllib2.URLError, ex:
                 sys.stderr.write('\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
                 os.remove(os.path.basename(kwargs['filename']))
                 local = True
+
+
     
     # now try local drive
         if (os.path.exists(kwargs['filename']) == False):
