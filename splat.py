@@ -512,7 +512,7 @@ def classifyByIndex(sp, *args, **kwargs):
 		vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))*sptfact
 		coeffs[index]['spt'] = numpy.nanmean(vals)+sptoffset
 		coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
-		print index, indices[index], numpy.nanmean(vals), numpy.nanstd(vals), coeffs[index]['spt']
+#		print index, indices[index], numpy.nanmean(vals), numpy.nanstd(vals), coeffs[index]['spt']
 	
 #	print indices[index][0], numpy.polyval(coeffs[index]['coeff'],indices[index][0]), coeffs[index]
 	mask = numpy.ones(len(coeffs.keys()))
@@ -988,11 +988,11 @@ def loadModel(*args, **kwargs):
 				open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
 				kwargs['filename'] = os.path.basename(kwargs['filename'])
 				sp = Spectrum(**kwargs)
-				os.rmdir(kwargs['filename'])
+				os.remove(kwargs['filename'])
 				return sp
 			except urllib2.URLError, ex:
 				sys.stderr.write('\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
-				os.rmdir(os.path.basename(kwargs['filename']))
+				os.remove(os.path.basename(kwargs['filename']))
 				local = True
 	
 	# now try local drive
@@ -1232,6 +1232,9 @@ def measureIndexSet(sp,**kwargs):
 		inds = numpy.zeros(len(names))
 		errs = numpy.zeros(len(names))
 		inds[0],errs[0] = measureIndex(sp,[1.951,1.977],[2.062,2.088],method='ratio',sample='average',**kwargs)
+	else:
+		print '{} is not one of the sets used for measureIndexSet'.format(set)
+		return numpy.nan
 
 # output dictionary of indices
 	result = {names[i]: (inds[i],errs[i]) for i in numpy.arange(len(names))}
@@ -1245,7 +1248,7 @@ def measureIndexSet(sp,**kwargs):
 # To do:
 # 	masking telluric regions
 #	labeling features
-
+# 	add legend
 def plotSpectrum(*args, **kwargs):
 
 # error check - make sure you're plotting something
