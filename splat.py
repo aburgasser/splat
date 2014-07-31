@@ -2,11 +2,11 @@
 # based on routines developed by:
 #    Christian Aganze
 #    Daniella Bardalez Gagliuffi
-#     Adam Burgasser
+#    Adam Burgasser
 #    Caleb Choban
 #    Ivanna Escala
 #    Aishwarya Iyer
-#     Yuhui Jin
+#    Yuhui Jin
 #    Mike Lopez
 #    Alex Mendez
 #    Johnny Parra
@@ -32,6 +32,7 @@ import matplotlib.pyplot as plt
 import re
 import urllib2
 import string
+import warnings
 from scipy import stats, signal
 from scipy.integrate import trapz        # for numerical integration
 from scipy.interpolate import interp1d, griddata
@@ -41,7 +42,9 @@ from astropy.coordinates import ICRS, Galactic        # coordinate conversion
 from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 
-numpy.seterr(divide='warn')        # this is probably not an entirely safe approach
+# suppress warnings - probably not an entirely safe approach!
+numpy.seterr(all='ignore')
+warnings.simplefilter("ignore")
 #from splat._version import __version__
 
 ############ PARAMETERS ############
@@ -50,6 +53,7 @@ months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec
 parameter_names = ['teff','logg','z','fsed','kzz']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
 spex_wave_range = [0.65,2.45]    # default wavelength range
+max_snr = 1000.0                # maximum S/N ratio permitted
 ####################################
 
 # helper functions from Alex
@@ -110,7 +114,7 @@ class Spectrum(object):
             if len(kwargs.get('noise','')) > 0:
                 self.noise = kwargs['noise']
             else:
-                self.noise = [numpy.nan for i in self.wave]
+                self.noise = numpy.array([numpy.nan for i in self.wave])
         else:
 # filename given
             try:
@@ -120,12 +124,20 @@ class Spectrum(object):
         self.wave = numpy.array(self.wave)
         self.flux = numpy.array(self.flux)
         self.noise = numpy.array(self.noise)
+# enforce positivity
+        if (numpy.nanmin(self.flux) < 0):
+            self.flux[numpy.where(self.flux < 0)] = 0.
+# check on noise being too low
+        if (numpy.nanmax(self.flux/self.noise) > max_snr):
+            self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
+
+# some conversions
         self.nu = const.c.to('micron/s').value/self.wave
 #        w = numpy.where(numpy.isnan(self.flux))
 #        self.flux[w] = 0.
         self.flux[numpy.isnan(self.flux)] = 0.
 # calculate variance
-        self.variance = [n**2 for n in self.noise]
+        self.variance = numpy.array([n**2 for n in self.noise])
 
 # preserve original values
         self.wave_original = copy.deepcopy(self.wave)
@@ -168,7 +180,7 @@ class Spectrum(object):
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.add(self.flux,f(self.wave))
         sp.variance = sp.variance+n(self.wave)
-        sp.noise = [n**0.5 for n in sp.variance]
+        sp.noise = numpy.array([n**0.5 for n in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -181,7 +193,7 @@ class Spectrum(object):
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numby.subtract(self.flux,f(self.wave))
         sp.variance = sp.variance+n(self.wave)
-        sp.noise = [n**0.5 for n in sp.variance]
+        sp.noise = numpy.array([n**0.5 for n in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -196,7 +208,7 @@ class Spectrum(object):
         sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
             numpy.divide(self.variance,numpy.power(sp.flux,2))+\
             numpy.divide(n,numpy.power(f(self.wave),2))))
-        sp.noise = [n**0.5 for n in sp.variance]
+        sp.noise = numpy.array([n**0.5 for n in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -211,7 +223,7 @@ class Spectrum(object):
         sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
             numpy.divide(self.variance,numpy.power(sp.flux,2))+\
             numpy.divide(n,numpy.power(f(self.wave),2))))
-        sp.noise = [n**0.5 for n in sp.variance]
+        sp.noise = numpy.array([n**0.5 for n in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -270,7 +282,6 @@ class Spectrum(object):
         self.scale(1./self.fluxMax())
         self.fscale = 'Normalized'
         return
-
     def reset(self):
         '''Reset to original spectrum'''
         self.wave = copy.deepcopy(self.wave_original)
@@ -286,8 +297,8 @@ class Spectrum(object):
     def scale(self,factor):
          '''Scale spectrum and noise by a constant factor'''
          self.flux = self.flux*factor
-         self.noise = [n*factor for n in self.noise]
-         self.variance = [n**2 for n in self.noise]
+         self.noise = numpy.array([n*factor for n in self.noise])
+         self.variance = numpy.array([n**2 for n in self.noise])
          self.fscale = 'Scaled'
          return
         
@@ -334,7 +345,7 @@ class Spectrum(object):
              v = interp1d(wave_sample,var_smooth,bounds_error=False,fill_value=0.)
              self.flux = f(self.wave)
              self.variance = v(self.wave)
-             self.noise = [n**0.5 for n in self.variance]
+             self.noise = numpy.array([n**0.5 for n in self.variance])
              self.slitpixelwidth = self.slitpixelwidth*self.resolution/resolution
              self.resolution = resolution
              self.slitwidth = self.slitpixelwidth*spex_pixel_scale
@@ -352,7 +363,7 @@ class Spectrum(object):
             neff = numpy.sum(window)/numpy.nanmax(window)        # effective number of pixels
             self.flux = signal.convolve(self.flux, window/numpy.sum(window), mode='same')
             self.variance = signal.convolve(self.variance, window/numpy.sum(window), mode='same')/neff
-            self.noise = [n**0.5 for n in self.variance]
+            self.noise = numpy.array([n**0.5 for n in self.variance])
             self.resolution = self.resolution*self.slitpixelwidth/width
             self.slitpixelwidth = width
             self.slitwidth = self.slitpixelwidth*spex_pixel_scale
@@ -557,6 +568,11 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     mask_ranges = kwargs.get('mask_ranges',[])
     mask_telluric = kwargs.get('mask_telluric',False)
     mask_standard = kwargs.get('mask_standard',False)
+    chisqr = kwargs.get('chisqr',True)
+    stddev = kwargs.get('stddev',False)
+    absdev = kwargs.get('absdev',False)
+    if (absdev or stddev):
+        chisqr = False
     
     if (mask_standard == True):
         mask_telluric == True
@@ -564,7 +580,9 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 # create interpolation function for second spectrum
     f = interp1d(sp2.wave,sp2.flux,bounds_error=False,fill_value=0.)
     v = interp1d(sp2.wave,sp2.variance,bounds_error=False,fill_value=numpy.nan)
+# total variance - funny form to cover for nans
     vtot = numpy.nanmax([sp1.variance,sp1.variance+v(sp1.wave)],axis=0)
+ #   vtot = sp1.variance
     
 # Mask certain wavelengths
 # telluric absorption
@@ -585,13 +603,47 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     for ranges in fit_ranges:
         weights[numpy.where(((sp1.wave >= ranges[0]) & (sp1.wave <= ranges[1])))] = 1
      
+# mask flux < 0
+    mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
+
     weights = weights*(1.-mask)
 
-# compute scale factor
-    scale = numpy.nansum(weights*sp1.flux*f(sp1.wave)/vtot)/ \
-        numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)/vtot)
-    chi2 = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*scale)**2/vtot)
-    return chi2, scale
+    
+# comparison statistics
+
+# chi^2
+    if (chisqr):
+# compute scale factor    
+        scale = numpy.nansum(weights*sp1.flux*f(sp1.wave)/vtot)/ \
+            numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)/vtot)
+# correct variance
+        vtot = numpy.nanmax([sp1.variance,sp1.variance+v(sp1.wave)*scale**2],axis=0)
+        stat = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*scale)**2/vtot)
+
+# standard deviation
+    elif (stddev):
+# compute scale factor    
+        scale = numpy.nansum(weights*sp1.flux*f(sp1.wave))/ \
+            numpy.nansum(weights*f(sp1.wave)*f(sp1.wave))
+# correct variance
+        vtot = numpy.nanmax([sp1.variance,sp1.variance+v(sp1.wave)*scale**2],axis=0)
+        stat = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*scale)**2)
+
+# absolute deviation
+    elif (absdev):
+# compute scale factor    
+        scale = numpy.nansum(weights*sp1.flux)/ \
+            numpy.nansum(weights*f(sp1.wave))
+# correct variance
+        vtot = numpy.nanmax([sp1.variance,sp1.variance+v(sp1.wave)*scale**2],axis=0)
+        stat = numpy.nansum(weights*abs(sp1.flux-f(sp1.wave)*scale))
+
+# error
+    else:
+        print 'Error: statistic for compareSpectra not given'
+        return numpy.nan, numpy.nan
+
+    return stat, scale
         
 
 def coordinateToDesignation(c):
@@ -983,7 +1035,7 @@ def loadModel(*args, **kwargs):
 # first try online
         if not local:
             try:
-                os.open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
+                open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
                 kwargs['filename'] = os.path.basename(kwargs['filename'])
                 sp = Spectrum(**kwargs)
 #                os.close(kwargs['filename'])
@@ -1463,29 +1515,57 @@ def searchLibrary(*args, **kwargs):
 
     
 def test():
-    sys.stderr.write('\n\n>>>>>>>>>>>> TESTING SPLAT CODE <<<<<<<<<<<<\n\n')
-    sp = loadSpectrum('spex_prism_0415-0935_030917.txt')
+    sys.stderr.write('\n\n>>>>>>>>>>>> TESTING SPLAT CODE <<<<<<<<<<<<\n')
+# check you are online
+    sys.stderr.write('\n...online = {}; successful\n\n'.format(checkOnline()))
+
+# check you can load a spectrum
+    sp = loadSpectrum('spex_prism_1503+2525_030522.txt')
     sp.info()
-    sys.stderr.write('...loadSpectrum successful\n\n')
+    sys.stderr.write('...loadSpectrum successful\n')
+
+# check getSpectrum
     list = getSpectrum(young=True,list=True)
-    sys.stderr.write('{} young spectra...getSpectrum successful\n\n'.format(len(list)))
+    sys.stderr.write('\n{} young spectra in the SPL...getSpectrum successful\n'.format(len(list)))
+
+# check index measurement
     ind = measureIndexSet(sp,set='burgasser')
-    sys.stderr.write('Spectral indices:\n')
+    sys.stderr.write('\nSpectral indices for 2MASS J1503+2525:\n')
     for k in ind.keys():
-        print '{:s}: {:4.3f}+/-{:4.3f}'.format(k, ind[k][0], ind[k][1])
+        print '\t{:s}: {:4.3f}+/-{:4.3f}'.format(k, ind[k][0], ind[k][1])
     sys.stderr.write('...index measurement successful\n')
+
+# check classification
     spt, spt_e = classifyByIndex(sp,set='burgasser')
-    sys.stderr.write('\n...index classification of 2MASS J0415-0935 = {:s}+/-{:2.1f}; successful\n'.format(typeToNum(spt),spt_e))
+    sys.stderr.write('\n...index classification of 2MASS J1503+2525 = {:s}+/-{:2.1f}; successful\n'.format(typeToNum(spt),spt_e))
+
+# check SpT -> Teff
+    teff, teff_e = typeToTeff(spt,unc=spt_e)
+    sys.stderr.write('\n...Teff of 2MASS J1503+2525 = {:.1f}+/-{:.1f} K; successful\n'.format(teff,teff_e))
+
+# check flux calibration
     sp.fluxCalibrate('2MASS J',15.0)
     mag = filterMag(sp,'MKO J')
     sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag))
-    mdl = loadModel(teff=750,logg=4.5,set='btsettl08')
-    sys.stderr.write('\n...subsampled model generation successful\n')
+
+# check models
+    mdl = loadModel(teff=teff,logg=5.0,set='btsettl08')
+    sys.stderr.write('\n...interpolated model generation successful\n')
+
+# check normalization
     mdl.normalize()
     sp.normalize()
     sys.stderr.write('\n...normalization successful\n')
+
+# check compareSpectrum
+    chi, scale = compareSpectra(sp,mdl,mask_standard=True)
+    sys.stderr.write('\nFit to model: chi^2 = {}, scale = {}'.format(chi,scale))
+    sys.stderr.write('\n...compareSpectra successful\n'.format(chi,scale))
+
+# check plotSpectrum
+    mdl.scale(scale)
     plotSpectrum(sp,mdl,colors=['k','r'],title='If this appears everything is OK: close window')
-    sys.stderr.write('\n...plotting successful\n')
+    sys.stderr.write('\n...plotSpectrum successful\n')
     sys.stderr.write('\n>>>>>>>>>>>> SPLAT TEST SUCCESSFUL; HAVE FUN! <<<<<<<<<<<<\n\n')
 
 
@@ -1590,11 +1670,8 @@ def typeToTeff(input, **kwargs):
         fitunc = 87.
 # Looper is default
     else:
-        reference = 'Teff/SpT relation from Looper et al. (2008)'
-        sptoffset = 20.
-        coeff = [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92]
-        range = [20.,38.]
-        fitunc = 87.
+        sys.stderr.write('\nInvalid Teff/SpT relation given ({})\n'.format(ref))
+        return numpy.nan, numpy.nan
 
     if (range[0] <= spt <= range[1]):
         vals = numpy.polyval(coeff,numpy.random.normal(spt-sptoffset,unc,nsamples))
