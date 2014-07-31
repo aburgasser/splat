@@ -753,14 +753,14 @@ def fetchDatabase(*args, **kwargs):
 
 # TEMPORARY ADD-ONS UNTIL DATABASE IS COMPLETED
 # add in RA/Dec (TEMPORARY)
-    ra = []
-    dec = []
-    for x in data['designation']:
-        c = designationToCoordinate(x,ICRS=False)
-        ra.append(c[0])
-        dec.append(c[1])
-    data['ra'] = ra
-    data['dec'] = dec
+#    ra = []
+#    dec = []
+#    for x in data['designation']:
+#        c = designationToCoordinate(x,ICRS=False)
+#        ra.append(c[0])
+#        dec.append(c[1])
+#    data['ra'] = ra
+#    data['dec'] = dec
 
 # add in young, subdwarf, binary, sbinary categories (TEMPORARY)
     data['young'] = ['young' in x for x in data['library']]
