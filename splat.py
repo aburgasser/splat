@@ -38,7 +38,7 @@ from scipy.integrate import trapz        # for numerical integration
 from scipy.interpolate import interp1d, griddata
 from astropy.io import ascii, fits            # for reading in spreadsheet
 from astropy.table import Table, join            # for reading in table files
-from astropy.coordinates import ICRS, Galactic        # coordinate conversion
+from astropy.coordinates import SkyCoord      # coordinate conversion
 from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 
@@ -180,7 +180,7 @@ class Spectrum(object):
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.add(self.flux,f(self.wave))
         sp.variance = sp.variance+n(self.wave)
-        sp.noise = numpy.array([n**0.5 for n in sp.variance])
+        sp.noise = numpy.array([v**0.5 for v in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -191,9 +191,9 @@ class Spectrum(object):
         sp = copy.deepcopy(self)
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
-        sp.flux = numby.subtract(self.flux,f(self.wave))
+        sp.flux = numpy.subtract(self.flux,f(self.wave))
         sp.variance = sp.variance+n(self.wave)
-        sp.noise = numpy.array([n**0.5 for n in sp.variance])
+        sp.noise = numpy.array([v**0.5 for v in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -208,7 +208,7 @@ class Spectrum(object):
         sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
             numpy.divide(self.variance,numpy.power(sp.flux,2))+\
             numpy.divide(n,numpy.power(f(self.wave),2))))
-        sp.noise = numpy.array([n**0.5 for n in sp.variance])
+        sp.noise = numpy.array([v**0.5 for v in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -223,7 +223,7 @@ class Spectrum(object):
         sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
             numpy.divide(self.variance,numpy.power(sp.flux,2))+\
             numpy.divide(n,numpy.power(f(self.wave),2))))
-        sp.noise = numpy.array([n**0.5 for n in sp.variance])
+        sp.noise = numpy.array([v**0.5 for v in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -246,8 +246,8 @@ class Spectrum(object):
          '''Convert flux density from F_lam to F_nu, the later in Jy'''
          self.funit = u.Jy
          self.flabel = 'F_nu'
-         self.flux.to(funit,equivalencies=u.spectral_density(self.wave))
-         self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
+         self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
+         self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
          return
 
     def fluxCalibrate(self,filter,mag,**kwargs):
@@ -272,8 +272,8 @@ class Spectrum(object):
          '''Convert flux density from F_nu to F_lam, the later in erg/s/cm2/Hz'''
          self.funit = u.erg/(u.cm**2 * u.s * u.micron)
          self.flabel = 'F_lam'
-         self.flux.to(funit,equivalencies=u.spectral_density(self.wave))
-         self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
+         self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
+         self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
          self.variance = [n**2 for n in self.noise]
          return
 
@@ -408,7 +408,7 @@ def checkFile(filename,**kwargs):
     if (flag):
         try:
             open(os.path.basename(filename), 'wb').write(urllib2.urlopen(url+filename).read())
-        except urllib2.URLError, ex:
+        except urllib2.URLError:
             flag = False
     return flag
 
@@ -418,7 +418,7 @@ def checkOnline():
     try:
         urllib2.urlopen(SPLAT_URL)
         return True
-    except urllib2.URLError, ex:
+    except urllib2.URLError:
         return False
 
 
@@ -433,6 +433,9 @@ def classifyByIndex(sp, *args, **kwargs):
     nloop = kwargs.get('nloop', 5)
     set = kwargs.get('set','burgasser')
     allowed_sets = ['burgasser','reid','testi','allers']
+    if (set.lower() not in allowed_sets):
+        print '\nWarning: index classification method {} not present; returning nan\n\n'.format(set)
+        return numpy.nan, numpy.nan
 
 # measure indices if necessary
     if (len(args) != 0):
@@ -522,8 +525,8 @@ def classifyByIndex(sp, *args, **kwargs):
 #        print index, indices[index], numpy.nanmean(vals), numpy.nanstd(vals), coeffs[index]['spt']
     
 #    print indices[index][0], numpy.polyval(coeffs[index]['coeff'],indices[index][0]), coeffs[index]
-    mask = numpy.ones(len(coeffs.keys()))
-    result = numpy.zeros(2)
+#    mask = numpy.ones(len(coeffs.keys()))
+#    result = numpy.zeros(2)
     for i in numpy.arange(nloop):
         wts = [coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in coeffs.keys()]
         if (numpy.nansum(wts) == 0.):
@@ -649,21 +652,13 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 def coordinateToDesignation(c):
     '''Convert RA, Dec into designation string'''
 # input is ICRS
-    if isinstance(c,ICRS):
-        return string.replace('J{0}{1}'.format(c.ra.to_string(u.hour, sep='', precision=2, pad=True), \
-            c.dec.to_string(u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
-# input is [RA,Decl] pair in degrees
-    elif isinstance(c,list):
-        cc = ICRS(ra=c[0],dec=c[1],unit=(u.deg,u.deg))
-        return string.replace('J{0}{1}'.format(cc.ra.to_string(u.hour, sep='', precision=2, pad=True), \
-            cc.dec.to_string(u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
-# input is sexigessimal string
-    elif isinstance(c,str):
-        cc = ICRS(c)
-        return string.replace('J{0}{1}'.format(cc.ra.to_string(u.hour, sep='', precision=2, pad=True), \
-            cc.dec.to_string(u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
+    if isinstance(c,SkyCoord):
+        cc = c
     else:
-        raise ValueError('\nCould not parse input format\n\n')
+        cc = properCoordinates(c)
+# input is [RA,Dec] pair in degrees
+    return string.replace('J{0}{1}'.format(cc.ra.to_string(unit=u.hour, sep='', precision=2, pad=True), \
+        cc.dec.to_string(unit=u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
 
 
 def dateToCaldate(d):
@@ -697,7 +692,7 @@ def designationToCoordinate(value, **kwargs):
         dec+=float(spl[1][6:8])/360000.
     dec = dec*fact
     if icrsflag:
-        return ICRS(ra=ra, dec=dec, unit=(u.degree, u.degree))
+        return SkyCoord(ra=ra*u.degree, dec=dec*u.degree)
     else:
         return [ra,dec]
 
@@ -737,7 +732,7 @@ def fetchDatabase(*args, **kwargs):
             data = ascii.read(dataFile, delimiter='\t',fill_values='-99.')
             os.remove(os.path.basename(dataFile))
 #            return data
-        except urllib2.URLError, ex:
+        except urllib2.URLError:
             sys.stderr.write('\nReading local '+dataFile+'\n\n')
             local = True
     
@@ -751,7 +746,40 @@ def fetchDatabase(*args, **kwargs):
         else:
             data = ascii.read(file, delimiter='    ')
 
-# TEMPORARY ADD-ONS UNTIL DATABASE IS COMPLETED
+# clean up blanks and convert numerical values to numbers
+    data['ra'][numpy.where(data['ra'] == '')] = '0.'
+#    data['ran'] = [float(x) for x in data['ra']]
+    data['dec'][numpy.where(data['dec'] == '')] = '0.'
+#    data['decn'] = [float(x) for x in data['dec']]
+    data['jmag'][numpy.where(data['jmag'] == '')] = '99.'
+#    data['jmagn'] = [float(x) for x in data['jmag']]
+    data['hmag'][numpy.where(data['hmag'] == '')] = '99.'
+#    data['hmagn'] = [float(x) for x in data['hmag']]
+    data['kmag'][numpy.where(data['kmag'] == '')] = '99.'
+#    data['kmagn'] = [float(x) for x in data['kmag']]
+    data['jmag_error'][numpy.where(data['jmag_error'] == '')] = '99.'
+#    data['jmag_errorn'] = [float(x) for x in data['jmag_error']]
+    data['hmag_error'][numpy.where(data['hmag_error'] == '')] = '99.'
+#    data['hmag_errorn'] = [float(x) for x in data['hmag_error']]
+    data['kmag_error'][numpy.where(data['kmag_error'] == '')] = '99.'
+#    data['kmag_errorn'] = [float(x) for x in data['kmag_error']]
+    data['resolution'][numpy.where(data['resolution'] == '')] = '120'
+#    data['resolutionn'] = [float(x) for x in data['resolution']]
+    data['airmass'][numpy.where(data['airmass'] == '')] = '1.'
+#    data['airmassn'] = [float(x) for x in data['airmass']]
+    data['median_snr'][numpy.where(data['median_snr'] == '')] = '0'
+#    data['median_snrn'] = [float(x) for x in data['median_snr']]
+
+# convert coordinates to SkyCoord format
+#    data['skycoords'] = data['ra']
+    s = []
+    for i in numpy.arange(len(data['ra'])):
+        try:        # to deal with a blank string
+            s.append(SkyCoord(ra=float(data['ra'][i])*u.degree,dec=float(data['dec'][i])*u.degree,frame='icrs'))
+        except:
+            s.append(SkyCoord(ra=0.*u.degree,dec=0.*u.degree,frame='icrs'))
+    data['skycoords'] = s
+
 # add in RA/Dec (TEMPORARY)
 #    ra = []
 #    dec = []
@@ -762,13 +790,15 @@ def fetchDatabase(*args, **kwargs):
 #    data['ra'] = ra
 #    data['dec'] = dec
 
-# add in young, subdwarf, binary, sbinary categories (TEMPORARY)
     data['young'] = ['young' in x for x in data['library']]
     data['subdwarf'] = ['subdwarf' in x for x in data['library']]
     data['binary'] = ['binary' in x for x in data['library']]
-    data['spbin'] = ['spbin' in x for x in data['library']]
+    data['spbinary'] = ['sbinary' in x for x in data['library']]
     data['blue'] = ['blue' in x for x in data['library']]
     data['red'] = ['red' in x for x in data['library']]
+    data['giant'] = ['giant' in x for x in data['library']]
+    data['wd'] = ['wd' in x for x in data['library']]
+    data['standard'] = ['std' in x for x in data['library']]
 
 # add in shortnames (TEMPORARY)
     data['shortname'] = [designationToShortName(x) for x in data['designation']]
@@ -896,6 +926,7 @@ def getSpectrum(*args, **kwargs):
         return files
     
     if len(files) > 0:
+        print '\nRetrieving {} files'.format(len(files))
         for x in files:
             result.append(loadSpectrum(x))
     else:
@@ -923,6 +954,7 @@ def loadInterpolatedModel(*args,**kwargs):
     logg = float(kwargs.get('logg',5.0))
     kwargs['logg'] = logg
     url = kwargs.get('folder',SPLAT_URL+'/Models/')
+    kwargs['url'] = url
 #    local = kwargs.get('local',False)
     kwargs['model'] = True
 
@@ -1044,7 +1076,7 @@ def loadModel(*args, **kwargs):
 #fh, filename = tempfile.mkstemp()    do i need this?
 #os.close(fh)
 #os.remove(filename)
-            except urllib2.URLError, ex:
+            except urllib2.URLErro:
                 sys.stderr.write('\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
                 os.remove(os.path.basename(kwargs['filename']))
                 local = True
@@ -1082,7 +1114,7 @@ def loadModelParameters(*args, **kwargs):
         open(os.path.basename(pfile), 'wb').write(urllib2.urlopen(url+pfile).read())
         parameters = ascii.read(pfile)
         os.remove(os.path.basename(pfile))
-    except urllib2.URLError, ex:
+    except urllib2.URLError:
         raise urllib2.URLError('\n\nCannot access models from SPLAT website\n\n')
     
     return parameters
@@ -1096,7 +1128,6 @@ def loadSpectrum(*args, **kwargs):
 #    shname = kwargs.get('shname','')
 #    date = kwargs.get('date','')
     local = kwargs.get('local',False)
-    tempfilename = 'temp_model.txt'
     folder = kwargs.get('folder','')
     url = kwargs.get('folder',SPLAT_URL+'/Spectra/')
     kwargs['model'] = False
@@ -1120,7 +1151,7 @@ def loadSpectrum(*args, **kwargs):
             sp = Spectrum(**kwargs)
             os.remove(os.path.basename(kwargs['filename']))
             return sp
-        except urllib2.URLError, ex:
+        except urllib2.URLError:
             sys.stderr.write('\nCould not find data file '+kwargs['filename']+' at '+url+'\n\n')
             local = True
     
@@ -1392,6 +1423,19 @@ def plotSpectrum(*args, **kwargs):
     return
 
 
+def properCoordinates(c):
+    '''converts various coordinate forms to the proper SkyCoord format'''
+    if isinstance(c,SkyCoord):
+        return c
+    elif isinstance(c,list):
+        return SkyCoord(c[0]*u.deg,c[1]*u.deg,frame='icrs')
+# input is sexigessimal string
+    elif isinstance(c,str):
+        return SkyCoord(c,'icrs', unit=(u.hourangle, u.deg))
+    else:
+        raise ValueError('\nCould not parse input format\n\n')
+
+
 def readSpectrum(**kwargs):
 
 # TO BE DONE:
@@ -1401,13 +1445,13 @@ def readSpectrum(**kwargs):
 # keyword parameters
     folder = kwargs.get('folder','./')
     catchSN = kwargs.get('catchSN',True)
-    model = kwargs.get('model',False)
-    uncertainty = kwargs.get('uncertainty',not model)
+#    model = kwargs.get('model',False)
+#    uncertainty = kwargs.get('uncertainty',not model)
     file = kwargs.get('filename','')
     if (os.path.exists(file) == False):
-        file = folder+os.path.basename(filename)
+        file = folder+os.path.basename(file)
     if (os.path.exists(file) == False):
-        raise NameError('\nCould not find ' + filename+'\n\n')
+        raise NameError('\nCould not find ' + file+'\n\n')
     
 # determine which type of file
     ftype = file.split('.')[-1]
@@ -1459,8 +1503,8 @@ def readSpectrum(**kwargs):
     return wave, flux, noise
 
 
-
-def searchLibrary(*args, **kwargs):
+# THIS HAS BEEN SUPERCEDED BY NEW FXN; KEEPING AROUND JUST IN CASE
+def searchLibrary_OLD(*args, **kwargs):
     '''Search the SpeX database to extract the key reference for that Spectrum
         Note that this is currently only and AND search - need to figure out
         how to a full SQL style search'''
@@ -1513,7 +1557,173 @@ def searchLibrary(*args, **kwargs):
         
     return result[ref]
 
+
+
+def searchLibrary(*args, **kwargs):
+    '''Search the SpeX database to extract the key reference for that Spectrum
+        Note that this is currently only and AND search - need to figure out
+        how to a full SQL style search'''
+# program parameters
+    ref = kwargs.get('output','data_file')
+    radius = kwargs.get('radius',10.)      # search radius in arcseconds
+    classes = ['young','subdwarf','binary','spbinary','red','blue','giant','wd','standard']
+
+# get database
+    data = fetchDatabase(**kwargs)
+    if (ref not in data.colnames):
+        print '\nWarning: searchLibrary cannot return unknown column {}; returning filename instead\n\n'.format(ref)
+        ref = 'data_file'
+    data['select'] = numpy.zeros(len(data['ra']))
+    count = 0.
     
+# search by name
+    if kwargs.get('name',False) != False:
+        nm = kwargs['name']
+        if isinstance(nm,str):
+            nm = [nm]
+        for n in nm:
+            data['select'][numpy.where(data['name'] == n)] += 1
+        count+=1.
+# search by shortname
+    if kwargs.get('shortname',False) != False:
+        sname = kwargs['shortname']
+        if isinstance(sname,str):
+            sname = [sname]
+        for sn in sname:
+            if sn[0].lower() != 'j':
+                sn = 'J'+sn
+            data['select'][numpy.where(data['shortname'] == sn)] += 1
+        count+=1.
+# search by reference list
+    if kwargs.get('reference',False) != False:
+        refer = kwargs['reference']
+        if isinstance(ref,str):
+            refer = [refer]
+        for r in refer:
+            data['select'][numpy.where(data['data_reference'] == r)] += 1
+        count+=1.
+# search by designation
+    if kwargs.get('designation',False) != False:
+        desig = kwargs['designation']
+        if isinstance(desig,str):
+            desig = [desig]
+        for d in desig:
+            data['select'][numpy.where(data['designation'] == d)] += 1
+        count+=1.
+# search by observation date range
+    if kwargs.get('date',False) != False:
+        date = kwargs['date']
+        if isinstance(date,str) or isinstance(date,long) or isinstance(date,float) or isinstance(date,int):
+            date = [float(date),float(date)]
+        elif isinstance(date,list):
+            date = [float(date[0]),float(date[-1])]
+        else:
+            raise ValueError('\nCould not parse date input {}\n\n'.format(date))
+        data['daten'] = [float(x) for x in data['observation_date']]
+        data['select'][numpy.where(numpy.logical_and(data['daten'] >= date[0],data['daten'] <= date[1]))] += 1
+        count+=1.
+# search by coordinate - NOTE: THIS IS VERY SLOW RIGHT NOW
+    if kwargs.get('coordinate',False) != False:
+        coord = kwargs['coordinate']
+        if isinstance(coord,SkyCoord):
+            cc = coord
+        else:
+            cc = properCoordinates(coord)
+        data['separation'] = [cc.separation(data['skycoords'][i]).arcsecond for i in numpy.arange(len(data['skycoords']))]
+        data['select'][numpy.where(data['separation'] <= radius)] += 1
+        count+=1.
+# search by spectral type
+    if kwargs.get('spt',False) != False:
+        spt = kwargs['spt']
+        if not isinstance(spt,list):        # one value = only this type
+            spt = [spt,spt]
+        if isinstance(spt[0],str):          # convert to numerical spt
+            spt = [typeToNum(spt[0]),typeToNum(spt[1])]
+        data['sptn'] = [typeToNum(x) for x in data['spex_type']]
+        data['select'][numpy.where(numpy.logical_and(data['sptn'] >= spt[0],data['sptn'] <= spt[1]))] += 1
+        count+=1.
+    if kwargs.get('spex_spt',False) != False:
+        spt = kwargs['spex_spt']
+        if not isinstance(spt,list):        # one value = only this type
+            spt = [spt,spt]
+        if isinstance(spt[0],str):          # convert to numerical spt
+            spt = [typeToNum(spt[0]),typeToNum(spt[1])]
+        data['sptn'] = [typeToNum(x) for x in data['spex_type']]
+        data['select'][numpy.where(numpy.logical_and(data['sptn'] >= spt[0],data['sptn'] <= spt[1]))] += 1
+        count+=1.
+    if kwargs.get('nir_spt',False) != False:
+        spt = kwargs['nir_spt']
+        if not isinstance(spt,list):        # one value = only this type
+            spt = [spt,spt]
+        if isinstance(spt[0],str):          # convert to numerical spt
+            spt = [typeToNum(spt[0]),typeToNum(spt[1])]
+        data['sptn'] = [typeToNum(x) for x in data['nir_type']]
+        data['select'][numpy.where(numpy.logical_and(data['sptn'] >= spt[0],data['sptn'] <= spt[1]))] += 1
+        count+=1.
+    if kwargs.get('opt_spt',False) != False:
+        spt = kwargs['opt_spt']
+        if not isinstance(spt,list):        # one value = only this type
+            spt = [spt,spt]
+        if isinstance(spt[0],str):          # convert to numerical spt
+            spt = [typeToNum(spt[0]),typeToNum(spt[1])]
+        data['sptn'] = [typeToNum(x) for x in data['opt_type']]
+        data['select'][numpy.where(numpy.logical_and(data['sptn'] >= spt[0],data['sptn'] <= spt[1]))] += 1
+        count+=1.
+# search by magnitude range
+    if kwargs.get('jmag',False) != False:
+        mag = kwargs['jmag']
+        if not isinstance(mag,list):        # one value = faint limit
+            mag = [0,mag]
+        data['magn'] = [float(x) for x in data['jmag']]
+        data['select'][numpy.where(numpy.logical_and(data['magn'] >= mag[0],data['magn'] <= mag[1]))] += 1
+        count+=1.
+    if kwargs.get('hmag',False) != False:
+        mag = kwargs['hmag']
+        if not isinstance(mag,list):        # one value = faint limit
+            mag = [0,mag]
+        data['magn'] = [float(x) for x in data['hmag']]
+        data['select'][numpy.where(numpy.logical_and(data['magn'] >= mag[0],data['magn'] <= mag[1]))] += 1
+        count+=1.
+    if kwargs.get('kmag',False) != False:
+        mag = kwargs['kmag']
+        if not isinstance(mag,list):        # one value = faint limit
+            mag = [0,mag]
+        data['magn'] = [float(x) for x in data['kmag']]
+        data['select'][numpy.where(numpy.logical_and(data['magn'] >= mag[0],data['magn'] <= mag[1]))] += 1
+        count+=1.
+# search by S/N range
+    if kwargs.get('snr',False) != False:
+        snr = kwargs['snr']
+        if not isinstance(snr,list):        # one value = minimum S/N
+            snr = [float(snr),1.e9]
+        data['snrn'] = [float(x) for x in data['median_snr']]
+        data['select'][numpy.where(numpy.logical_and(data['snrn'] >= snr[0],data['snrn'] <= snr[1]))] += 1
+        count+=1.
+# search by class
+    for c in classes:
+        if kwargs.get(c,'n') != 'n':
+            test = kwargs.get(c)
+            if isinstance(test,bool):
+                data['select'][numpy.where(data[c] == test)]+=1
+                count+=1.
+
+# logic of search
+    logic = 'and'         # default combination
+    logic = kwargs.get('combine',logic).lower()
+    logic = kwargs.get('logic',logic).lower()
+    if (logic == 'and'):
+        data['select'] = numpy.floor(data['select']/count)
+    elif (logic == 'or'):
+        data['select'] = numpy.ceil(data['select']/count)
+    else:
+        raise NameError('\nDo not recognize logical operation {}; use logic = and/or\n\n'.format(logic))
+
+# return sorted by ra by default
+    if kwargs.get('sort',True) != False:
+        data.sort('ra')
+    return data[ref][numpy.where(data['select']==1)]
+
+
 def test():
     sys.stderr.write('\n\n>>>>>>>>>>>> TESTING SPLAT CODE <<<<<<<<<<<<\n')
 # check you are online
@@ -1600,15 +1810,19 @@ def typeToNum(input, **kwargs):
 
 # spectral type -> number
     else:
+        input = string.split(input,sep='+')[0]    # remove +/- sides
+        input = string.split(input,sep='-')[0]    # remove +/- sides
         sptype = re.findall('[{}]'.format(spletter),input)
         if (len(sptype) == 1):
             output = spletter.find(sptype[0])*10.
             spind = input.find(sptype[0])+1
-            if (input.find('.') < 0):
-                output = output+float(input[spind])
-            else:
-                output = output+float(input[spind:spind+3])
-                spind = spind+3
+            if (spind < len(input)):
+                if (input.find('.') < 0):
+                    if (isNumber(input[spind])):
+                        output = output+float(input[spind])
+                else:
+                    output = output+float(input[spind:spind+3])
+                    spind = spind+3
             ytype = re.findall('[abcd]',input.split('p')[-1])
             if (len(ytype) == 1):
                 ageclass = ytype[0]
@@ -1627,7 +1841,7 @@ def typeToNum(input, **kwargs):
             if (input[0] == 'b' or input[0] == 'r'):
                  colorclass = input[0]
         if (len(sptype) != 1):
-            print 'Only spectral classes {} are handled with this routine'.format(spletter)
+#            print 'Only spectral classes {} are handled with this routine'.format(spletter)
             output = numpy.nan
     return output
 
