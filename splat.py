@@ -1565,15 +1565,15 @@ def searchLibrary(*args, **kwargs):
         Note that this is currently only and AND search - need to figure out
         how to a full SQL style search'''
 # program parameters
-    ref = kwargs.get('output','data_file')
+    ref = kwargs.get('output','all')
     radius = kwargs.get('radius',10.)      # search radius in arcseconds
     classes = ['young','subdwarf','binary','spbinary','red','blue','giant','wd','standard']
 
 # get database
     data = fetchDatabase(**kwargs)
-    if (ref not in data.colnames):
+    if (ref not in data.colnames and ref != 'all'):
         print '\nWarning: searchLibrary cannot return unknown column {}; returning filename instead\n\n'.format(ref)
-        ref = 'data_file'
+        ref = 'all'
     data['select'] = numpy.zeros(len(data['ra']))
     count = 0.
     
@@ -1722,7 +1722,10 @@ def searchLibrary(*args, **kwargs):
 # return sorted by ra by default
     if kwargs.get('sort',True) != False:
         data.sort('ra')
-    return data[ref][numpy.where(data['select']==1)]
+    if (ref == 'all'):
+        return data[:][numpy.where(data['select']==1)]
+    else:
+        return data[ref][numpy.where(data['select']==1)]
 
 
 def test():
