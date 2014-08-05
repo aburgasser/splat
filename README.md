@@ -2,16 +2,19 @@
 
 ## Preamble
 
-SPLAT is a python package built upon numpy, scipy, astropy (v0.4) and matplotlib,
-designed to interface with the SpeX Prism Library, an online repository of over
+SPLAT is a python package built upon numpy, scipy, astropy and matplotlib, as well as 
+some other common packages.  SPLAT is
+designed to interface specifically with the SpeX Prism Library (SPL: http://www.browndwarfs.org/spexlibrary), 
+an online repository of over
 1500 low-resolution, near-infrared spectra of low-temperature stars and brown dwarfs.
-SPLAT tools allow you to search the library; read in spectra; perform basic spectral 
+SPLAT tools allow you to search the library; read in spectra from it; perform basic spectral 
 analyses such as classification, index measurement and spectrophotometry; perform
 advanced analyses such as spectral model fitting and spectral binary analysis; and 
 plot/tabulate your results.  
 
 SPLAT is an experimental, collaborative project of research students in Adam Burgasser's
-Cool Star Lab, aimed at teaching students how to build their own analysis tools.
+UCSD Cool Star Lab, aimed at teaching students how to do research by building 
+their own analysis tools.
 
 ## Installation and Dependencies
 
@@ -52,9 +55,9 @@ You can also read in your own spectrum using the loadSpectrum function
 sp = splat.loadSpectrum(filename='myspectrum.fits',local=True)
 ```
 
-Note that this file must currently conform to the standard that the first column is
+Note that this file must conform to the standard of the SPL data: the first column is
 wavelength in microns, second column flux in f_lambda units, third column (optional) is 
-flux uncertainty
+flux uncertainty.
 
 * To display the spectrum, use plotSpectrum
 
@@ -76,6 +79,8 @@ sp1 = splat.getSpectrum(shortname='0415-0935')[0]
 sp2 = splat.getSpectrum(shortname='1217-0311')[1]
 splat.plotSpectrum(sp1,sp2,colors=['k','r'])
 ```
+
+SPLAT can compare an arbitrary number of spectra.
 
 * To measure the indices of a spectrum, use measureIndex or measureIndexSet:
 
@@ -101,7 +106,7 @@ spt,unc = splat.classifyByStandard(sp)
 spt,unc = splat.classifyByTemplate(sp)
 ```
 
-* To compare a spectrum to another spectrum, or a model, use the following:
+* To compare a spectrum to another spectrum or a model, use compareSpectra:
 
 ```
 sp = splat.getSpectrum(shortname='0415-0935')[0]
@@ -111,7 +116,11 @@ mdl.scale(scale)
 splat.plotSpectrum(sp,mdl,colors=['k','r'])
 ```
 
-This can be placed in a for loop or MCMC chain to do best-fit parameter determination
+This can be placed in a for loop or MCMC chain to do best-fit parameter determination.
+
+All of these routines have many options worth exploring, and if there are capabilities
+you need, please suggest them or contribute code.
+
 
 
 
