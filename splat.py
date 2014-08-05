@@ -668,7 +668,7 @@ def dateToCaldate(d):
 
 def designationToCoordinate(value, **kwargs):
     '''Convert a designation into a RA, Dec tuple or ICRS'''
-    icrsflag = kwargs.get('ICRS',True)
+    icrsflag = kwargs.get('icrs',True)
 
     a = re.sub('[j.:hms]','',value.lower())
     fact = 1.
@@ -692,7 +692,7 @@ def designationToCoordinate(value, **kwargs):
         dec+=float(spl[1][6:8])/360000.
     dec = dec*fact
     if icrsflag:
-        return SkyCoord(ra=ra*u.degree, dec=dec*u.degree)
+        return SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
     else:
         return [ra,dec]
 
@@ -1177,6 +1177,7 @@ def measureIndex(sp,*args,**kwargs):
     method = kwargs.get('method','ratio')
     sample = kwargs.get('sample','integrate')
     nsamples = kwargs.get('nsamples',100)
+    noiseFlag = kwargs.get('nonoise',False)
             
 # create interpolation functions
     w = numpy.where(numpy.isnan(sp.flux) == False)
@@ -1853,7 +1854,7 @@ def typeToTeff(input, **kwargs):
     unc = kwargs.get('uncertainty',0.)
     unc = kwargs.get('unc',unc)
     unc = kwargs.get('spt_e',unc)
-    ref = kwargs.get('ref','looper')
+    ref = kwargs.get('ref','looper2008')
     ref = kwargs.get('set',ref)
     ref = kwargs.get('method',ref)
 
@@ -1866,7 +1867,7 @@ def typeToTeff(input, **kwargs):
 # choose among possible options
 # Stephens et al. (2009, ApJ, 702, 1545); using OPT/IR relation for M6-T8
 # plus alternate coefficients for L3-T8
-    if (ref.lower() == 'stephens'):
+    if (ref.lower() == 'stephens2009'):
         reference = 'Teff/SpT relation from Stephens et al. (2009)'
         sptoffset = 10.
         coeff = [-0.0025492,0.17667,-4.4727,54.67,-467.26,4400.]
@@ -1876,7 +1877,7 @@ def typeToTeff(input, **kwargs):
         range_alt = [23.,38.]
 
 # Looper et al. (2008, ApJ, 685, 1183)
-    elif (ref.lower() == 'looper'):
+    elif (ref.lower() == 'looper2008'):
         reference = 'Teff/SpT relation from Looper et al. (2008)'
         sptoffset = 20.
         coeff = [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92]
