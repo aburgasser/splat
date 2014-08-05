@@ -55,6 +55,13 @@ Note that this file must conform to the standard of the SPL data: the first colu
 wavelength in microns, second column flux in f_lambda units, third column (optional) is 
 flux uncertainty.
 
+* To flux calibrate the spectrum, use the object's built in fluxCalibrate() method:
+
+```
+sp = splat.getSpectrum(shortname='0415-0935')[0]
+sp.fluxCalibrate('2MASS J',14.0)
+```
+
 * To display the spectrum, use plotSpectrum
 
 ```
@@ -78,7 +85,7 @@ splat.plotSpectrum(sp1,sp2,colors=['k','r'])
 
 SPLAT can compare an arbitrary number of spectra.
 
-* To measure the indices of a spectrum, use measureIndex or measureIndexSet:
+* To measure spectral indices, use measureIndex or measureIndexSet:
 
 ```
 sp = splat.getSpectrum(shortname='0415-0935')[0]
@@ -112,10 +119,12 @@ mdl.scale(scale)
 splat.plotSpectrum(sp,mdl,colors=['k','r'])
 ```
 
-This can be placed in a for loop or MCMC chain to do best-fit parameter determination.
+This can be placed in a for loop or MCMC chain for best-fit parameter determination.
 
-All of these routines have many options worth exploring, and if there are capabilities
-you need, please suggest them or contribute code.
+
+All of these routines have many options worth exploring, and we are continually adding
+additional functionality. If there are capabilities
+you need, please suggest them, or even better contribute your own code!
 
 ## Authors
 
