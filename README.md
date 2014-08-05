@@ -12,10 +12,6 @@ analyses such as classification, index measurement and spectrophotometry; perfor
 advanced analyses such as spectral model fitting and spectral binary analysis; and 
 plot/tabulate your results.  
 
-SPLAT is an experimental, collaborative project of research students in Adam Burgasser's
-UCSD Cool Star Lab, aimed at teaching students how to do research by building 
-their own analysis tools.
-
 ## Installation and Dependencies
 
 SPLAT is best forked from this github site, which is updated on a semi-regular basis.
@@ -121,7 +117,13 @@ This can be placed in a for loop or MCMC chain to do best-fit parameter determin
 All of these routines have many options worth exploring, and if there are capabilities
 you need, please suggest them or contribute code.
 
+## Authors
 
+SPLAT is an experimental, collaborative project of research students in Adam Burgasser's
+UCSD Cool Star Lab, aimed at teaching students how to do research by building 
+their own analysis tools.  Contributors to SPLAT include Christian Aganze, Daniella Bardalez Gagliuffi,
+Adam Burgasser (PI), Caleb Choban, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez,
+Alex Mendez, Johnny Parra, Julian Pilate-Hutcherson, Maitrayee Sahi and Melisa Tallis.
 
 
 
@@ -133,3 +135,4 @@ you need, please suggest them or contribute code.
 
 
 
+.
