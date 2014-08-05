@@ -4,7 +4,7 @@
 
 SPLAT is a python package built upon numpy, scipy, astropy and matplotlib, as well as 
 some other common packages.  SPLAT is
-designed to interface specifically with the SpeX Prism Library (SPL: http://www.browndwarfs.org/spexlibrary), 
+designed to interface specifically with the SpeX Prism Library (SPL: http://www.browndwarfs.org/spexprism), 
 an online repository of over
 1500 low-resolution, near-infrared spectra of low-temperature stars and brown dwarfs.
 SPLAT tools allow you to search the library; read in spectra from it; perform basic spectral 
