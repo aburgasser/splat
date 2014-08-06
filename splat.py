@@ -2007,7 +2007,7 @@ def typeToTeff(input, **kwargs):
     '''return Teff for a given SpT'''
 # keywords     
     nsamples = kwargs.get('nsamples',100)
-    unc = kwargs.get('uncertainty',0.)
+    unc = kwargs.get('uncertainty',0.001)
     unc = kwargs.get('unc',unc)
     unc = kwargs.get('spt_e',unc)
     ref = kwargs.get('ref','looper2008')
@@ -2046,8 +2046,9 @@ def typeToTeff(input, **kwargs):
 
     if (range[0] <= spt <= range[1]):
         vals = numpy.polyval(coeff,numpy.random.normal(spt-sptoffset,unc,nsamples))
-        if (ref.lower() == 'stephens' and (range_alt[0] <= spt <= range_alt[1])):
-            vals = numpy.polyval(coeff_alt,numpy.random.normal(spt-sptoffset,unc,nsamples))
+        if (ref.lower() == 'stephens'):
+            if (range_alt[0] <= spt <= range_alt[1]):
+                vals = numpy.polyval(coeff_alt,numpy.random.normal(spt-sptoffset,unc,nsamples))
         teff = numpy.nanmean(vals)
         teff_e = (numpy.nanstd(vals)**2+fitunc**2)**0.5
         return teff, teff_e
