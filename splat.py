@@ -1029,11 +1029,10 @@ def getSpectrum(*args, **kwargs):
 
     result = []
     kwargs['output'] = 'all'
-    kwargs['access'] = checkAccess()
     list = kwargs.get('list',False)
     search = searchLibrary(*args, **kwargs)
 
-# only grab published data if no proprietary access
+# limit access to most users
     if checkAccess() == False:
         search = search[:][numpy.where(search['public'] == 'Y')]
     
@@ -1836,7 +1835,7 @@ def searchLibrary(*args, **kwargs):
                 count+=1.
 
 # limit access to public data for most users
-    if checkAccess() == True:
+    if checkAccess() == False:
         data['select'][numpy.where(data['public'] != 'Y')] = 0
 
 # logic of search
