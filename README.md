@@ -20,6 +20,8 @@ sending bug reports to aburgasser@ucsd.edu
 
 General instructions on setting up to run SPLAT are maintained at http://bit.ly/1AQuy9G
 
+You should copy the file .splat_access into your home directory - this is your access key
+
 ## Using SPLAT
 
 The best place to start is the code documentation, housed at http://bit.ly/1zPZgi2
@@ -106,7 +108,6 @@ print indices['H2O-J']		# returns value, error
 sp = splat.getSpectrum(shortname='0415-0935')[0]
 spt,unc = splat.classifyByIndex(sp,set='burgasser')
 spt,unc = splat.classifyByStandard(sp)
-spt,unc = splat.classifyByTemplate(sp)
 ```
 
 * To compare a spectrum to another spectrum or a model, use compareSpectra:
