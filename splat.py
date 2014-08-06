@@ -50,8 +50,6 @@ warnings.simplefilter("ignore")
 
 ############ CONSTANTS - THESE SHOULD STAY FIXED ############
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
-HOME_DIR = os.environ['HOME']
-access_file = '.splat_access'
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 parameter_names = ['teff','logg','z','fsed','kzz']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
@@ -418,17 +416,28 @@ def checkFile(filename,**kwargs):
     return flag
 
 
-def checkAccess():
+def checkAccess(**kwargs):
+    access_file = '.splat_access'
+    result = False
+
     try:
+        home = os.environ.get('HOME')
+        if home == None:
+            home = './'
         bcode = urllib2.urlopen(SPLAT_URL+access_file).read()
-        lcode = base64.b64encode(open(HOME_DIR+'/'+access_file,'r').read())
+        lcode = base64.b64encode(open(home+'/'+access_file,'r').read())
         if (lcode == bcode):
-            return True
-        else:
-            return False
+            result = True
     except:
-        return False
-        
+        result = False
+
+    if (kwargs.get('report','') != ''):
+        if result == True:
+            print 'You have full access to all SPLAT data'
+        else:
+            print 'You have access only to published data'
+    return result
+    
 
 def checkOnline():
     '''Check if you are online'''
@@ -722,7 +731,6 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 
     weights = weights*(1.-mask)
 
-    
 # comparison statistics
 
 # chi^2
