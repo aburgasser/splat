@@ -22,16 +22,17 @@
 #
 
 # imports
-import sys
-import os
-import copy
-import numpy
-import scipy
 import astropy
+import base64
+import copy
+import os
 import matplotlib.pyplot as plt
+import numpy
 import re
-import urllib2
+import scipy
 import string
+import sys
+import urllib2
 import warnings
 from scipy import stats, signal
 from scipy.integrate import trapz        # for numerical integration
@@ -47,15 +48,18 @@ numpy.seterr(all='ignore')
 warnings.simplefilter("ignore")
 #from splat._version import __version__
 
-############ PARAMETERS ############
+############ CONSTANTS - THESE SHOULD STAY FIXED ############
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
+HOME_DIR = os.environ['HOME']
+access_file = '.splat_access'
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 parameter_names = ['teff','logg','z','fsed','kzz']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
 spex_wave_range = [0.65,2.45]    # default wavelength range
 max_snr = 1000.0                # maximum S/N ratio permitted
-####################################
+#############################################################
 
+        
 # helper functions from Alex
 def lazyprop(fn):
      attr_name = '_lazy_' + fn.__name__
@@ -103,8 +107,8 @@ class Spectrum(object):
         self.flabel = kwargs.get('flabel','F_lambda')
         self.fscale = kwargs.get('fscale','')
         self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.micron))
-        self.resolution = kwargs.get('resolution',250)    # default placeholder
-        self.slitpixelwidth = kwargs.get('slitwidth',2)        # default placeholder
+        self.resolution = kwargs.get('resolution',150)    # default placeholder
+        self.slitpixelwidth = kwargs.get('slitwidth',3.33)        # default placeholder
         self.slitwidth = self.slitpixelwidth*spex_pixel_scale
         self.simplefilename = os.path.basename(self.filename)
 # wave and flux given
@@ -138,6 +142,7 @@ class Spectrum(object):
         self.flux[numpy.isnan(self.flux)] = 0.
 # calculate variance
         self.variance = numpy.array([n**2 for n in self.noise])
+        self.dof = numpy.round(len(self.wave)/self.slitpixelwidth)
 
 # preserve original values
         self.wave_original = copy.deepcopy(self.wave)
@@ -413,6 +418,18 @@ def checkFile(filename,**kwargs):
     return flag
 
 
+def checkAccess():
+    try:
+        bcode = urllib2.urlopen(SPLAT_URL+access_file).read()
+        lcode = base64.b64encode(open(HOME_DIR+'/'+access_file,'r').read())
+        if (lcode == bcode):
+            return True
+        else:
+            return False
+    except:
+        return False
+        
+
 def checkOnline():
     '''Check if you are online'''
     try:
@@ -426,7 +443,7 @@ def checkOnline():
 def classifyByIndex(sp, *args, **kwargs):
     '''Classify a spectrum based on its spectral indices'''
     
-    str_flag = kwargs.get('string', False)
+    str_flag = kwargs.get('string', True)
     rnd_flag = kwargs.get('round', False)
     rem_flag = kwargs.get('remeasure', True)
     nsamples = kwargs.get('nsamples', 100)
@@ -555,7 +572,94 @@ def classifyByIndex(sp, *args, **kwargs):
 
 def classifyByStandard(sp, *args, **kwargs):
     '''Classify a spectrum by comparing to spectral standards'''
-    return numpy.nan, numpy.nan
+
+    str_flag = kwargs.get('string', True)
+    method = kwargs.get('method','')
+    best_flag = kwargs.get('best',False)
+    plot_flag = kwargs.get('plot',False)
+    unc_sys = 0.5
+
+    stdsptnum = numpy.arange(30)+10.
+#    stdsptstr = ['M'+str(n) for n in numpy.arange(10)]
+#    stdsptstr.append(['L'+str(n) for n in numpy.arange(10)])
+#    stdsptstr.append(['T'+str(n) for n in numpy.arange(10)])
+    stdfiles = [ \
+        'spex_prism_Gl270_091203.fits',\
+        'spex_prism_Gl424_091229.fits',\
+        'spex_prism_Gl91_081012.fits',\
+        'spex_prism_Gl752A_070704.fits',\
+        'spex_prism_Gl213_071110dl.fits',\
+        'spex_prism_Gl51_070728.fits',\
+        'spex_prism_LHS1375_081012.fits',\
+        'spex_prism_vB8_070704.fits',\
+        'spex_prism_vB10_070704.fits',\
+        'spex_prism_LHS2924_070704.fits',\
+        'spex_prism_0345+2540_kc.txt',\
+        'spex_prism_2130-0845_080713.txt',\
+        'spex_prism_kelu-1_060411.txt',\
+        'spex_prism_1506+1321_060410.txt',\
+        'spex_prism_2158-1550_060901.fits',\
+        'spex_prism_sdss0835+19_chiu06.txt',\
+        'spex_prism_1010-0406_kc.txt',\
+        'spex_prism_0103+1935_060902.fits',\
+        'spex_prism_1632+1904_030905.txt',\
+        'spex_prism_denis0255-4700_040908.txt',\
+        'spex_prism_1207+0244_061221dl.txt',\
+        'spex_prism_0837-0000_061221.fits',\
+        'spex_prism_sdss1254-0122_030522.txt',\
+        'spex_prism_1209-1004_030523.fits',\
+        'spex_prism_2254+3123_030918.txt',\
+        'spex_prism_1503+2525_030522.txt',\
+        'spex_prism_sdss1624+0029_040312.txt',\
+        'spex_prism_0727+1710_040310.txt',\
+        'spex_prism_0415-0935_030917.txt',\
+        'spex_prism_0722-0540_110404.fits']
+
+    if (method == 'kirkpatrick'):
+        comprng = [0.9,1.4]         # as prescribed in Kirkpatrick et al. 2010, ApJS, 
+    else:
+        comprng = [0.7,2.45]        # by default, compare whole spectrum
+
+# compute fitting statistics
+    stat = []
+    for file in stdfiles:
+        spstd = loadSpectrum(file=file)
+        chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],chisqr=True,novar2=True)
+        stat.append(chisq)
+
+# list of sorted standard files and spectral types
+    sorted_stdfiles = [x for (y,x) in sorted(zip(stat,stdfiles))]
+    sorted_stdsptnum = [x for (y,x) in sorted(zip(stat,stdsptnum))]
+
+# select either best match or an ftest-weighted average
+    if best_flag:
+        sptn = sorted_stdsptnum[0]
+        sptn_e = unc_sys
+    else:
+        mean,var = weightedMeanVar(stdsptnum,stat,method='ftest',dof=sp.dof)
+        if (var**0.5 < 1.):
+            sptn = numpy.round(mean*2)*0.5
+        else:
+            sptn = numpy.round(mean)
+        sptn_e = (unc_sys**2+var)**0.5
+
+# string or not?
+    if (str_flag):
+        spt = typeToNum(sptn,uncertainty=sptn_e)
+    else:
+        spt = sptn
+
+# plot spectrum compared to best spectrum
+    if (plot_flag):
+        spc = sp.copy()     # copy to avoid change original value
+        spc.normalize()
+        spstd = loadSpectrum(file=sorted_stdfiles[0])
+        chisq,scale = compareSpectra(spc,spstd,fit_ranges=[comprng],chisqr=True)
+        spstd.scale(scale)
+        plotSpectrum(spc,spstd,colors=['k','r'],\
+            title=sp.name+' vs '+typeToNum(sorted_stdsptnum[0])+' Standard',**kwargs)
+
+    return spt, sptn_e
     
 
 def classifyByTemplate(sp, *args, **kwargs):
@@ -571,9 +675,12 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     mask_ranges = kwargs.get('mask_ranges',[])
     mask_telluric = kwargs.get('mask_telluric',False)
     mask_standard = kwargs.get('mask_standard',False)
+    var_flag = kwargs.get('novar2',False)
     chisqr = kwargs.get('chisqr',True)
     stddev = kwargs.get('stddev',False)
     absdev = kwargs.get('absdev',False)
+    minreturn = 1.e-9
+
     if (absdev or stddev):
         chisqr = False
     
@@ -582,7 +689,11 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         
 # create interpolation function for second spectrum
     f = interp1d(sp2.wave,sp2.flux,bounds_error=False,fill_value=0.)
-    v = interp1d(sp2.wave,sp2.variance,bounds_error=False,fill_value=numpy.nan)
+    if var_flag:
+        v = interp1d(sp2.wave,sp2.variance*numpy.nan,bounds_error=False,fill_value=numpy.nan)
+    else:        
+        v = interp1d(sp2.wave,sp2.variance,bounds_error=False,fill_value=numpy.nan)
+    
 # total variance - funny form to cover for nans
     vtot = numpy.nanmax([sp1.variance,sp1.variance+v(sp1.wave)],axis=0)
  #   vtot = sp1.variance
@@ -591,12 +702,12 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 # telluric absorption
     if (mask_telluric):
         mask_ranges.append([0.,0.65])        # meant to clear out short wavelengths
-        mask_ranges.append([1.35,1.45])
-        mask_ranges.append([1.8,2.0])
+        mask_ranges.append([1.35,1.42])
+        mask_ranges.append([1.8,1.92])
         mask_ranges.append([2.45,99.])        # meant to clear out long wavelengths
 
     if (mask_standard):
-        mask_ranges.append([0.,0.9])        # standard short cut
+        mask_ranges.append([0.,0.8])        # standard short cut
         mask_ranges.append([2.35,99.])        # standard long cut
 
     for ranges in mask_ranges:
@@ -646,7 +757,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         print 'Error: statistic for compareSpectra not given'
         return numpy.nan, numpy.nan
 
-    return stat, scale
+    return numpy.nanmax([stat,minreturn]), scale
         
 
 def coordinateToDesignation(c):
@@ -719,7 +830,7 @@ def fetchDatabase(*args, **kwargs):
     '''Get the SpeX Database from either online repository or local drive'''
     dataFile = kwargs.get('dataFile','db_spexprism.txt')
     folder = kwargs.get('folder','~/')
-    url = kwargs.get('url',SPLAT_URL)
+    url = kwargs.get('url',SPLAT_URL+'/Databases/')
     local = kwargs.get('local',False)
 
 # check if online
@@ -800,7 +911,7 @@ def fetchDatabase(*args, **kwargs):
     data['wd'] = ['wd' in x for x in data['library']]
     data['standard'] = ['std' in x for x in data['library']]
 
-# add in shortnames (TEMPORARY)
+# add in shortnames
     data['shortname'] = [designationToShortName(x) for x in data['designation']]
 
     return data
@@ -917,20 +1028,33 @@ def getSpectrum(*args, **kwargs):
     '''Get specific spectra from online library'''
 
     result = []
-    kwargs['output'] = 'data_file'
+    kwargs['output'] = 'all'
+    kwargs['access'] = checkAccess()
     list = kwargs.get('list',False)
-    files = searchLibrary(*args, **kwargs)
+    search = searchLibrary(*args, **kwargs)
 
+# only grab published data if no proprietary access
+    if checkAccess() == False:
+        search = search[:][numpy.where(search['public'] == 'Y')]
+    
+    files = search['data_file']
+        
 # return just the filenames
     if (list):
         return files
     
     if len(files) > 0:
-        print '\nRetrieving {} files'.format(len(files))
+        if (len(files) == 1):
+            print '\nRetrieving {} file\n'.format(len(files))
+        else:
+            print '\nRetrieving {} files\n'.format(len(files))
         for x in files:
             result.append(loadSpectrum(x))
     else:
-        sys.stderr.write('\nNo files match search criteria\n\n')
+        if checkAccess() == False:
+            sys.stderr.write('\nNo published files match search criteria\n\n')
+        else:
+            sys.stderr.write('\nNo files match search criteria\n\n')
     return result
         
 
@@ -1076,7 +1200,7 @@ def loadModel(*args, **kwargs):
 #fh, filename = tempfile.mkstemp()    do i need this?
 #os.close(fh)
 #os.remove(filename)
-            except urllib2.URLErro:
+            except urllib2.URLError:
                 sys.stderr.write('\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
                 os.remove(os.path.basename(kwargs['filename']))
                 local = True
@@ -1131,6 +1255,11 @@ def loadSpectrum(*args, **kwargs):
     folder = kwargs.get('folder','')
     url = kwargs.get('folder',SPLAT_URL+'/Spectra/')
     kwargs['model'] = False
+    file = kwargs.get('filename','')
+    file = kwargs.get('file',file)
+    if (len(args) > 0):
+        file = args[0]
+    kwargs['filename'] = file
 
 # check if online
     local = local or (not checkOnline())
@@ -1138,9 +1267,7 @@ def loadSpectrum(*args, **kwargs):
 # CODE NEEDED HERE TO SET UP FILE NAME; FOR NOW JUST ERROR
     
 # a filename has been passed
-    if (len(args) > 0):
-        kwargs['filename'] = args[0]
-    else:
+    if (kwargs['filename'] == ''):
         raise NameError('\nNeed to pass in filename for spectral data')
 
 # first try online
@@ -1708,6 +1835,10 @@ def searchLibrary(*args, **kwargs):
                 data['select'][numpy.where(data[c] == test)]+=1
                 count+=1.
 
+# limit access to public data for most users
+    if checkAccess() == True:
+        data['select'][numpy.where(data['public'] != 'Y')] = 0
+
 # logic of search
     logic = 'and'         # default combination
     logic = kwargs.get('combine',logic).lower()
@@ -1729,33 +1860,47 @@ def searchLibrary(*args, **kwargs):
 
 
 def test():
+    test_src = 'J1503+2525'
+
     sys.stderr.write('\n\n>>>>>>>>>>>> TESTING SPLAT CODE <<<<<<<<<<<<\n')
 # check you are online
-    sys.stderr.write('\n...online = {}; successful\n\n'.format(checkOnline()))
+    if checkOnline():
+        sys.stderr.write('\n...you are online and can see SPLAT website\n')
+    else:
+        sys.stderr.write('\n...you are NOT online or cannot see SPLAT website\n')
 
-# check you can load a spectrum
-    sp = loadSpectrum('spex_prism_1503+2525_030522.txt')
+# check your access
+    if checkAccess():
+        sys.stderr.write('\n...you currently HAVE access to unpublished spectra\n')
+    else:
+        sys.stderr.write('\n...you currently DO NOT HAVE access to unpublished spectra\n')
+        
+# check you can search for and load a spectrum
+    sp = getSpectrum(shortname=test_src)[0]
     sp.info()
-    sys.stderr.write('...loadSpectrum successful\n')
+    sys.stderr.write('\n...getSpectrum and loadSpectrum successful\n')
 
-# check getSpectrum
-    list = getSpectrum(young=True,list=True)
-    sys.stderr.write('\n{} young spectra in the SPL...getSpectrum successful\n'.format(len(list)))
+# check searchLibrary
+    list = searchLibrary(young=True,output='data_file')
+    sys.stderr.write('\n{} young spectra in the SPL  ...searchLibrary successful\n'.format(len(list)))
 
 # check index measurement
     ind = measureIndexSet(sp,set='burgasser')
-    sys.stderr.write('\nSpectral indices for 2MASS J1503+2525:\n')
+    sys.stderr.write('\nSpectral indices for '+test_src+':\n')
     for k in ind.keys():
         print '\t{:s}: {:4.3f}+/-{:4.3f}'.format(k, ind[k][0], ind[k][1])
     sys.stderr.write('...index measurement successful\n')
 
 # check classification
     spt, spt_e = classifyByIndex(sp,set='burgasser')
-    sys.stderr.write('\n...index classification of 2MASS J1503+2525 = {:s}+/-{:2.1f}; successful\n'.format(typeToNum(spt),spt_e))
+    sys.stderr.write('\n...index classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
+
+    spt, spt_e = classifyByStandard(sp,method='kirkpatrick')
+    sys.stderr.write('\n...standard classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
 
 # check SpT -> Teff
     teff, teff_e = typeToTeff(spt,unc=spt_e)
-    sys.stderr.write('\n...Teff of 2MASS J1503+2525 = {:.1f}+/-{:.1f} K; successful\n'.format(teff,teff_e))
+    sys.stderr.write('\n...Teff of '+test_src+' = {:.1f}+/-{:.1f} K; successful\n'.format(teff,teff_e))
 
 # check flux calibration
     sp.fluxCalibrate('2MASS J',15.0)
@@ -1781,6 +1926,7 @@ def test():
     plotSpectrum(sp,mdl,colors=['k','r'],title='If this appears everything is OK: close window')
     sys.stderr.write('\n...plotSpectrum successful\n')
     sys.stderr.write('\n>>>>>>>>>>>> SPLAT TEST SUCCESSFUL; HAVE FUN! <<<<<<<<<<<<\n\n')
+
 
 
 def typeToNum(input, **kwargs):
@@ -1901,3 +2047,33 @@ def typeToTeff(input, **kwargs):
     else:
         sys.stderr.write('\nSpectral Type is out of range for {:s} Teff/SpT relation\n'.format(reference))
         return numpy.nan, numpy.nan
+
+
+def weightedMeanVar(vals, winput, *args, **kwargs):
+    '''Compute weighted mean of an array of values through various methods'''
+    
+    method = kwargs.get('method','')
+    minwt = kwargs.get('weight_minimum',0.)
+    dof = kwargs.get('dof',len(vals)-1)
+    if (numpy.nansum(winput) <= 0.):
+        weights = numpy.ones(len(vals))
+    
+# uncertainty weighting: input is unceratinties   
+    if (method == 'uncertainty'):
+        weights = [w**(-2) for w in winput]
+# ftest weighting: input is chisq values, extra dof value is required   
+    elif (method == 'ftest'):
+# fix issue of chi^2 = 0
+        minchi = numpy.nanmin(winput)
+        weights = numpy.array([stats.f.pdf(w/minchi,dof,dof) for w in winput])
+# just use the input as the weights
+    else:
+        weights = [w for w in winput]
+    
+    weights = weights/numpy.nanmax(weights)
+    weights[numpy.where(weights < minwt)] = 0.
+    mn = numpy.nansum(vals*weights)/numpy.nansum(weights)
+    var = numpy.nansum(weights*(vals-mn)**2)/numpy.nansum(weights)
+    
+    return mn,var        
+
