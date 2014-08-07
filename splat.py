@@ -426,7 +426,7 @@ def checkAccess(**kwargs):
             home = './'
         bcode = urllib2.urlopen(SPLAT_URL+access_file).read()
         lcode = base64.b64encode(open(home+'/'+access_file,'r').read())
-        if (lcode == bcode):
+        if (bcode in lcode):        # changed to partial because of EOL variations
             result = True
     except:
         result = False
