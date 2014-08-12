@@ -743,14 +743,14 @@ def classifyGravity(sp, *args, **kwargs):
 					
     gravscore['score'] = scipy.stats.nanmean(medgrav)
     if gravscore['score'] <= 0.5:
-       gravscore['grav_class'] = 'FLD-G'
+       gravscore['gravity_class'] = 'FLD-G'
     elif gravscore['score'] > 0.5 and gravscore['score'] < 1.5:
-       gravscore['grav_class'] = 'INT-G'
+       gravscore['gravity_class'] = 'INT-G'
     elif gravscore['score'] >= 1.5:
-       gravscore['grav_class'] = 'VL-G'
+       gravscore['gravity_class'] = 'VL-G'
 
     if verbose:
-        print gravscore['grav_class']
+        print gravscore['gravity_class']
         
     return gravscore
 
