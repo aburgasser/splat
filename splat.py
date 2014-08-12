@@ -674,6 +674,86 @@ def classifyByStandard(sp, *args, **kwargs):
 def classifyByTemplate(sp, *args, **kwargs):
     '''Classify a spectrum by comparing to spectral templates'''
     return numpy.nan, numpy.nan
+
+
+def classifyGravity(sp, *args, **kwargs):
+    '''Determine the gravity classification of a brown dwarf
+    using the method of Allers & Liu 2013'''
+    
+    verbose = kwargs.get('verbose',False)
+    
+# Chart for determining gravity scores based on gravity sensitive 
+# indices as described in the Allers and Liu paper.
+# The key to the overall indices dictionary is each index name.
+# The key to each index dictionary are the spectral types, which 
+# contain the limits for each gravity score.
+# To access a value do the following: print grav['FeH-z']['M5'][0] 
+# which should return 'nan'
+    grav = {\
+        'FeH-z':{'M5.0':[numpy.nan,numpy.nan],'M6.0':[1.068,1.039],'M7.0':[1.103,1.056],'M8.0':[1.146,1.074],'M9.0': [1.167,1.086],'L0.0': [1.204,1.106],'L1.0':[1.252,1.121],'L2.0':[1.298,1.142],'L3.0': [1.357,1.163],'L4.0': [1.370,1.164],'L5.0': [1.258,1.138],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
+        'VO-z': {'M5.0':[numpy.nan,numpy.nan],'M6.0':[numpy.nan,numpy.nan],'M7.0': [numpy.nan,numpy.nan],'M8.0': [numpy.nan,numpy.nan],'M9.0': [numpy.nan,numpy.nan],'L0.0': [1.122,1.256],'L1.0': [1.112,1.251],'L2.0': [1.110,1.232],'L3.0': [1.097,1.187],'L4.0': [1.073,1.118],'L5.0': [numpy.nan,numpy.nan],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
+        'KI-J': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [1.042,1.028], 'M7.0': [1.059,1.036],'M8.0': [1.077,1.046],'M9.0': [1.085,1.053],'L0.0': [1.098,1.061],'L1.0': [1.114,1.067],'L2.0': [1.133,1.073],'L3.0': [1.135,1.075],'L4.0': [1.126,1.072],'L5.0': [1.094,1.061],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
+        'H-cont': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [.988,.994], 'M7.0': [.981,.990],'M8.0': [.963,.984],'M9.0': [.949,.979],'L0.0': [.935,.972],'L1.0': [.914,.968],'L2.0': [.906,.964],'L3.0': [.898,.960],'L4.0': [.885,.954],'L5.0': [.869,.949],'L6.0': [.874,.950],'L7.0': [numpy.nan,numpy.nan]}}
+
+# Calculate Allers indices and their uncertainties 
+    if kwargs.get('indices',False) == False:
+        ind = measureIndexSet(sp,set='allers')
+
+# Determine the object's NIR spectral type and its uncertainty 
+    sptn = kwargs.get('spt',False)
+    if sptn == False:
+        sptn, spt_e = classifyByIndex(sp,string=False,set='allers')
+    if isinstance(sptn,str):
+        sptn = typeToNum(sptn)
+    Spt = typeToNum(numpy.floor(sptn))
+
+#Check whether the NIR SpT is within gravity sensitive range values
+    if ((sptn < 16.0) or (sptn > 27.0)):
+        print 'Spectral type '+typeToNum(sptn)+' outside range for gravity classification'
+        return numpy.nan
+
+#Creates an empty array with dimensions 4x1 to fill in later with 5 gravscore values
+    gravscore = {}
+    medgrav = []
+
+# Use the spt to pick the column that contains the 
+# values we want to compare our indices with. 
+    for k in grav.keys():
+        val = 0.0
+        if k == 'VO-z' or k=='H-cont':
+            if numpy.isnan(grav[k][Spt][0]):
+                val = numpy.nan
+            if ind[k][0] >= grav[k][Spt][0]:
+                val = 1.0
+            if ind[k][0] >= grav[k][Spt][1]:
+                val = 2.0
+            if verbose:
+                print k,ind[k][0], ind[k][1], val 
+        if k == 'FeH-z' or k=='KI-J':
+            if numpy.isnan(grav[k][Spt][0]):
+                val = numpy.nan
+            if ind[k][0] <= grav[k][Spt][0]:
+                val = 1.0
+            if ind[k][0] <= grav[k][Spt][1]:
+                val = 2.0
+            if verbose:
+                print k,ind[k][0], ind[k][1], val 
+        gravscore[k] = val
+        medgrav.append(val)
+					
+    gravscore['score'] = scipy.stats.nanmean(medgrav)
+    if gravscore['score'] <= 0.5:
+       gravscore['grav_class'] = 'FLD-G'
+    elif gravscore['score'] > 0.5 and gravscore['score'] < 1.5:
+       gravscore['grav_class'] = 'INT-G'
+    elif gravscore['score'] >= 1.5:
+       gravscore['grav_class'] = 'VL-G'
+
+    if verbose:
+        print gravscore['grav_class']
+        
+    return gravscore
+
     
     
 def compareSpectra(sp1, sp2, *args, **kwargs):
@@ -918,9 +998,20 @@ def fetchDatabase(*args, **kwargs):
     data['giant'] = ['giant' in x for x in data['library']]
     data['wd'] = ['wd' in x for x in data['library']]
     data['standard'] = ['std' in x for x in data['library']]
+    data['companion'] = ['companion' in x for x in data['library']]
 
 # add in shortnames
     data['shortname'] = [designationToShortName(x) for x in data['designation']]
+
+# create literature spt 
+    data['lit_type'] = data['opt_type']
+    w = numpy.where(numpy.logical_and(data['lit_type'] == '',data['nir_type'] != ''))
+    data['lit_type'][w] = data['nir_type'][w]
+    sptn = [typeToNum(x) for x in data['lit_type']]
+    w = numpy.where(numpy.logical_and(sptn > 29.,data['nir_type'] != ''))
+    data['lit_type'][w] = data['nir_type'][w]
+#    w = numpy.where(numpy.logical_and(data['lit_type'] == '',typeToNum(data['spex_type']) > 17.))
+#    data['lit_type'][w] = data['spex_type'][w]
 
     return data
 
