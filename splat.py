@@ -48,14 +48,45 @@ numpy.seterr(all='ignore')
 warnings.simplefilter("ignore")
 #from splat._version import __version__
 
-############ CONSTANTS - THESE SHOULD STAY FIXED ############
+# CONSTANTS 
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 parameter_names = ['teff','logg','z','fsed','kzz']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
 spex_wave_range = [0.65,2.45]    # default wavelength range
 max_snr = 1000.0                # maximum S/N ratio permitted
-#############################################################
+
+spex_stdfiles = { \
+    'M0.0': 'spex_prism_Gl270_091203.fits',\
+    'M1.0': 'spex_prism_Gl424_091229.fits',\
+    'M2.0': 'spex_prism_Gl91_081012.fits',\
+    'M3.0': 'spex_prism_Gl752A_070704.fits',\
+    'M4.0': 'spex_prism_Gl213_071110dl.fits',\
+    'M5.0': 'spex_prism_Gl51_070728.fits',\
+    'M6.0': 'spex_prism_LHS1375_081012.fits',\
+    'M7.0': 'spex_prism_vB8_070704.fits',\
+    'M8.0': 'spex_prism_vB10_070704.fits',\
+    'M9.0': 'spex_prism_LHS2924_070704.fits',\
+    'L0.0': 'spex_prism_0345+2540_kc.txt',\
+    'L1.0': 'spex_prism_2130-0845_080713.txt',\
+    'L2.0': 'spex_prism_kelu-1_060411.txt',\
+    'L3.0': 'spex_prism_1506+1321_060410.txt',\
+    'L4.0': 'spex_prism_2158-1550_060901.fits',\
+    'L5.0': 'spex_prism_sdss0835+19_chiu06.txt',\
+    'L6.0': 'spex_prism_1010-0406_kc.txt',\
+    'L7.0': 'spex_prism_0103+1935_060902.fits',\
+    'L8.0': 'spex_prism_1632+1904_030905.txt',\
+    'L9.0': 'spex_prism_denis0255-4700_040908.txt',\
+    'T0.0': 'spex_prism_1207+0244_061221dl.txt',\
+    'T1.0': 'spex_prism_0837-0000_061221.fits',\
+    'T2.0': 'spex_prism_sdss1254-0122_030522.txt',\
+    'T3.0': 'spex_prism_1209-1004_030523.fits',\
+    'T4.0': 'spex_prism_2254+3123_030918.txt',\
+    'T5.0': 'spex_prism_1503+2525_030522.txt',\
+    'T6.0': 'spex_prism_sdss1624+0029_040312.txt',\
+    'T7.0': 'spex_prism_0727+1710_040310.txt',\
+    'T8.0': 'spex_prism_0415-0935_030917.txt',\
+    'T9.0': 'spex_prism_0722-0540_110404.fits'}
 
         
 # helper functions from Alex
@@ -585,44 +616,27 @@ def classifyByStandard(sp, *args, **kwargs):
     str_flag = kwargs.get('string', True)
     method = kwargs.get('method','')
     best_flag = kwargs.get('best',False)
-    plot_flag = kwargs.get('plot',False)
+    sptrange = kwargs.get('sptrange',[10,39])
+    if (isinstance(sptrange[0],str) != False):
+        sptrange = [typeToNum(sptrange[0]),typeToNum(sptrange[1])]
     unc_sys = 0.5
 
-    stdsptnum = numpy.arange(30)+10.
+# if you just want to compare to one standard
+    cspt = kwargs.get('compareto',False)
+    if (cspt != False):
+        if (isinstance(cspt,str) == False):
+            cspt = typeToNum(cspt)
+# round off
+        cspt = typeToNum(numpy.round(typeToNum(cspt)))
+        mkwargs = copy.deepcopy(kwargs)
+        mkwargs['compareto'] = False
+        mkwargs['sptrange'] =[cspt,cspt]
+        return classifyByStandard(sp,**mkwargs)
+            
+#    stdsptnum = numpy.arange(30)+10.
 #    stdsptstr = ['M'+str(n) for n in numpy.arange(10)]
 #    stdsptstr.append(['L'+str(n) for n in numpy.arange(10)])
 #    stdsptstr.append(['T'+str(n) for n in numpy.arange(10)])
-    stdfiles = [ \
-        'spex_prism_Gl270_091203.fits',\
-        'spex_prism_Gl424_091229.fits',\
-        'spex_prism_Gl91_081012.fits',\
-        'spex_prism_Gl752A_070704.fits',\
-        'spex_prism_Gl213_071110dl.fits',\
-        'spex_prism_Gl51_070728.fits',\
-        'spex_prism_LHS1375_081012.fits',\
-        'spex_prism_vB8_070704.fits',\
-        'spex_prism_vB10_070704.fits',\
-        'spex_prism_LHS2924_070704.fits',\
-        'spex_prism_0345+2540_kc.txt',\
-        'spex_prism_2130-0845_080713.txt',\
-        'spex_prism_kelu-1_060411.txt',\
-        'spex_prism_1506+1321_060410.txt',\
-        'spex_prism_2158-1550_060901.fits',\
-        'spex_prism_sdss0835+19_chiu06.txt',\
-        'spex_prism_1010-0406_kc.txt',\
-        'spex_prism_0103+1935_060902.fits',\
-        'spex_prism_1632+1904_030905.txt',\
-        'spex_prism_denis0255-4700_040908.txt',\
-        'spex_prism_1207+0244_061221dl.txt',\
-        'spex_prism_0837-0000_061221.fits',\
-        'spex_prism_sdss1254-0122_030522.txt',\
-        'spex_prism_1209-1004_030523.fits',\
-        'spex_prism_2254+3123_030918.txt',\
-        'spex_prism_1503+2525_030522.txt',\
-        'spex_prism_sdss1624+0029_040312.txt',\
-        'spex_prism_0727+1710_040310.txt',\
-        'spex_prism_0415-0935_030917.txt',\
-        'spex_prism_0722-0540_110404.fits']
 
     if (method == 'kirkpatrick'):
         comprng = [0.9,1.4]         # as prescribed in Kirkpatrick et al. 2010, ApJS, 
@@ -631,21 +645,25 @@ def classifyByStandard(sp, *args, **kwargs):
 
 # compute fitting statistics
     stat = []
-    for file in stdfiles:
-        spstd = loadSpectrum(file=file)
+    sspt = []
+    sfile = []
+    for t in numpy.arange(sptrange[0],sptrange[1]+1):
+        spstd = loadSpectrum(file=spex_stdfiles[typeToNum(t)])
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],chisqr=True,novar2=True)
         stat.append(chisq)
+        sspt.append(t)
+        sfile.append(spex_stdfiles[typeToNum(t)])
 
 # list of sorted standard files and spectral types
-    sorted_stdfiles = [x for (y,x) in sorted(zip(stat,stdfiles))]
-    sorted_stdsptnum = [x for (y,x) in sorted(zip(stat,stdsptnum))]
+    sorted_stdfiles = [x for (y,x) in sorted(zip(stat,sfile))]
+    sorted_stdsptnum = [x for (y,x) in sorted(zip(stat,sspt))]
 
 # select either best match or an ftest-weighted average
-    if best_flag:
+    if (best_flag or len(stat) == 1):
         sptn = sorted_stdsptnum[0]
         sptn_e = unc_sys
     else:
-        mean,var = weightedMeanVar(stdsptnum,stat,method='ftest',dof=sp.dof)
+        mean,var = weightedMeanVar(sspt,stat,method='ftest',dof=sp.dof)
         if (var**0.5 < 1.):
             sptn = numpy.round(mean*2)*0.5
         else:
@@ -659,7 +677,7 @@ def classifyByStandard(sp, *args, **kwargs):
         spt = sptn
 
 # plot spectrum compared to best spectrum
-    if (plot_flag):
+    if (kwargs.get('plot',False) != False):
         spc = sp.copy()     # copy to avoid change original value
         spc.normalize()
         spstd = loadSpectrum(file=sorted_stdfiles[0])
@@ -696,13 +714,17 @@ def classifyGravity(sp, *args, **kwargs):
         'H-cont': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [.988,.994], 'M7.0': [.981,.990],'M8.0': [.963,.984],'M9.0': [.949,.979],'L0.0': [.935,.972],'L1.0': [.914,.968],'L2.0': [.906,.964],'L3.0': [.898,.960],'L4.0': [.885,.954],'L5.0': [.869,.949],'L6.0': [.874,.950],'L7.0': [numpy.nan,numpy.nan]}}
 
 # Calculate Allers indices and their uncertainties 
-    if kwargs.get('indices',False) == False:
+    ind = kwargs.get('indices',False)
+    if ind == False:
         ind = measureIndexSet(sp,set='allers')
 
 # Determine the object's NIR spectral type and its uncertainty 
     sptn = kwargs.get('spt',False)
     if sptn == False:
         sptn, spt_e = classifyByIndex(sp,string=False,set='allers')
+        if numpy.isnan(sptn):
+            print 'Spectral type could not be determined from indices'
+            return numpy.nan
     if isinstance(sptn,str):
         sptn = typeToNum(sptn)
     Spt = typeToNum(numpy.floor(sptn))
@@ -740,8 +762,13 @@ def classifyGravity(sp, *args, **kwargs):
                 print k,ind[k][0], ind[k][1], val 
         gravscore[k] = val
         medgrav.append(val)
-					
-    gravscore['score'] = scipy.stats.nanmean(medgrav)
+
+# determine median score, or mean if even					
+    if (len(numpy.where(numpy.isnan(medgrav) == False))%2 == 0):
+        gravscore['score'] = scipy.stats.nanmean(medgrav)        
+    else:        
+        gravscore['score'] = scipy.stats.nanmedian(medgrav)        
+
     if gravscore['score'] <= 0.5:
        gravscore['gravity_class'] = 'FLD-G'
     elif gravscore['score'] > 0.5 and gravscore['score'] < 1.5:
@@ -749,10 +776,15 @@ def classifyGravity(sp, *args, **kwargs):
     elif gravscore['score'] >= 1.5:
        gravscore['gravity_class'] = 'VL-G'
 
-    if verbose:
-        print gravscore['gravity_class']
+# plot spectrum against standard
+    if (kwargs.get('plot',False) != False):
+        spt,unc = classifyByStandard(sp,compareto=Spt,method='kirkpatrick',**kwargs)
         
-    return gravscore
+# return gravity class or entire dictionary
+    if (kwargs.get('allscores',False) == False):
+        return gravscore['gravity_class']
+    else:
+        return gravscore
 
     
     
@@ -1958,7 +1990,7 @@ def searchLibrary(*args, **kwargs):
 
 
 def test():
-    test_src = 'J1503+2525'
+    test_src = 'J1507-1627'
 
     sys.stderr.write('\n\n>>>>>>>>>>>> TESTING SPLAT CODE <<<<<<<<<<<<\n')
 # check you are online
@@ -1995,6 +2027,9 @@ def test():
 
     spt, spt_e = classifyByStandard(sp,method='kirkpatrick')
     sys.stderr.write('\n...standard classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
+
+    grav = classifyGravity(sp)
+    sys.stderr.write('\n...gravity class of '+test_src+' = {:s}; successful\n'.format(grav))
 
 # check SpT -> Teff
     teff, teff_e = typeToTeff(spt,unc=spt_e)
