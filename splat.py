@@ -151,7 +151,11 @@ class Spectrum(object):
         else:
 # filename given
             try:
-                self.wave, self.flux, self.noise = readSpectrum(**kwargs)
+#                self.wave, self.flux, self.noise = readSpectrum(**kwargs)
+                rs = readSpectrum(**kwargs)
+                self.wave = rs['wave']
+                self.flux = rs['flux']
+                self.noise = rs['noise']
             except:
                 raise NameError('\nCould not load up spectral file {:s}'.format(kwargs.get('filename','')))
         self.wave = numpy.array(self.wave)
@@ -163,6 +167,9 @@ class Spectrum(object):
 # check on noise being too low
         if (numpy.nanmax(self.flux/self.noise) > max_snr):
             self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
+# load in header from splat database
+#        self.header = kwargs.get('header',searchLibrary(file=self.filename))
+        self.header = kwargs.get('header',Table())
 
 # some conversions
         self.nu = const.c.to('micron/s').value/self.wave
@@ -613,6 +620,7 @@ def classifyByIndex(sp, *args, **kwargs):
 def classifyByStandard(sp, *args, **kwargs):
     '''Classify a spectrum by comparing to spectral standards'''
 
+    verbose = kwargs.get('verbose',True)
     method = kwargs.get('method','')
     best_flag = kwargs.get('best',False)
     sptrange = kwargs.get('sptrange',[10,39])
@@ -652,6 +660,8 @@ def classifyByStandard(sp, *args, **kwargs):
         stat.append(chisq)
         sspt.append(t)
         sfile.append(spex_stdfiles[typeToNum(t)])
+        if (verbose):
+            print spex_stdfiles[typeToNum(t)], typeToNum(t), chisq, scale
 
 # list of sorted standard files and spectral types
     sorted_stdfiles = [x for (y,x) in sorted(zip(stat,sfile))]
@@ -689,7 +699,7 @@ def classifyByStandard(sp, *args, **kwargs):
     
 
 def classifyByTemplate(sp, *args, **kwargs):
-    '''Classify a spectrum by comparing to spectral templates'''
+    '''Classify a spectrum by comparing to other spectra in the library'''
     spt_return = kwargs.get('spt_return','spex')
     verbose = kwargs.get('verbose',True)
     set = kwargs.get('set','')
@@ -699,7 +709,8 @@ def classifyByTemplate(sp, *args, **kwargs):
     else:
         comprng = [0.7,2.45]        # by default, compare whole spectrum
 
-# some canned searches
+#  canned searches
+#  constrain spectral types
     spt = [10.,39.9]
     if ('m dwarf' in set):
         spt = [10,19.9]
@@ -709,33 +720,42 @@ def classifyByTemplate(sp, *args, **kwargs):
         spt = [30,39.9]
     if ('vlm' in set):
         spt = [numpy.max([17,spt[0]]),numpy.min([39.9,spt[-1]])]
+    spt = kwargs.get('spt',spt)
     
-    snr = [0,1000]
+#  constrain S/N
+    snr = 0.
     if ('high sn' in set):
-        snr = [100,1000]
+        snr = 100.
+    snr = kwargs.get('snr',snr)
     
+#  don't compare to same spectrum
+    try:
+        excludefile = [sp.filename]
+    except:
+        excludefile = ['']
+    excludefile = kwargs.get('excludefile',excludefile)
+        
     if ('optical' in set):
-        lib = searchLibrary(output='all',snr=snr,opt_type=spt,giant=False,logic='and')
+        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,opt_type=spt,giant=False,logic='and')
     elif ('standard' in set):
-        lib = searchLibrary(output='all',snr=snr,spt=spt,standard=True,logic='and')
+        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,standard=True,logic='and')
     elif ('companion' in set):
-        lib = searchLibrary(output='all',snr=snr,spt=spt,companion=True,giant=False,logic='and')
+        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,companion=True,giant=False,logic='and')
     elif ('young' in set):
-        lib = searchLibrary(output='all',snr=snr,spt=spt,young=True,logic='and')
+        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,young=True,logic='and')
     elif ('subdwarf' in set):
-        lib = searchLibrary(output='all',snr=snr,spt=spt,subdwarf=True,logic='and')
+        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,subdwarf=True,logic='and')
     elif ('single' in set):
-        lib = searchLibrary(output='all',snr=snr,spt=spt,spbinary=False,binary=False,giant=False,logic='and')
+        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,spbinary=False,binary=False,giant=False,logic='and')
     elif ('spectral binaries' in set):
-        lib = searchLibrary(output='all',snr=snr,spt=spt,spbinary=True,logic='and')
+        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,spbinary=True,logic='and')
     elif (set != ''):
-        lib = searchLibrary(output='all',snr=snr,spt=spt)
+        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt)
     else:
-        lib = searchLibrary(output='all',**kwargs)
+        lib = searchLibrary(output='all',excludefile=excludefile,**kwargs)
         
 # first search for the spectra desired - parameters are set by user
     files = lib['data_file']
-    print len(files)
 
 # which spectral type to return
     if ('spex' in spt_return):
@@ -745,11 +765,10 @@ def classifyByTemplate(sp, *args, **kwargs):
     elif ('nir' in spt_return):
         sptref = 'nir_type'
     else:
-        sptref = 'spex_type'
+        sptref = 'lit_type'
 
     lib = lib[:][numpy.where(lib[sptref] != '')]
     files = lib['data_file']
-    print len(files)
     sspt = [typeToNum(s) for s in lib[sptref]]
 
     if len(files) == 0:
@@ -768,7 +787,7 @@ def classifyByTemplate(sp, *args, **kwargs):
         chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],chisqr=True,novar2=True)
         stat.append(chisq)
         if (verbose):
-            print f, sspt[i], chisq, scale
+            print f, typeToNum(sspt[i]), chisq, scale
         
 # list of sorted standard files and spectral types
     sorted_files = [x for (y,x) in sorted(zip(stat,files))]
@@ -1256,19 +1275,11 @@ def filterMag(sp,filter,*args,**kwargs):
 
 
 
-def getSourceKey(*args, **kwargs):
-    '''Search the SpeX database to extract the key reference for that Source'''
-
-    pass
-    return
-
-
 def getSpectrum(*args, **kwargs):
     '''Get specific spectra from online library'''
 
     result = []
     kwargs['output'] = 'all'
-    list = kwargs.get('list',False)
     search = searchLibrary(*args, **kwargs)
 
 # limit access to most users
@@ -1278,7 +1289,7 @@ def getSpectrum(*args, **kwargs):
     files = search['data_file']
         
 # return just the filenames
-    if (list):
+    if (kwargs.get('list',False) != False):
         return files
     
     if len(files) > 0:
@@ -1286,8 +1297,8 @@ def getSpectrum(*args, **kwargs):
             print '\nRetrieving {} file\n'.format(len(files))
         else:
             print '\nRetrieving {} files\n'.format(len(files))
-        for x in files:
-            result.append(loadSpectrum(x))
+        for i,x in enumerate(files):
+            result.append(loadSpectrum(x,header=search[i:i+1]))
     else:
         if checkAccess() == False:
             sys.stderr.write('\nNo published files match search criteria\n\n')
@@ -1491,6 +1502,8 @@ def loadSpectrum(*args, **kwargs):
 #    date = kwargs.get('date','')
     local = kwargs.get('local',False)
     folder = kwargs.get('folder','')
+#    header = kwargs.get('header',False)
+#    kwargs['header'] = header
     url = kwargs.get('folder',SPLAT_URL+'/Spectra/')
     kwargs['model'] = False
     file = kwargs.get('filename','')
@@ -1513,6 +1526,8 @@ def loadSpectrum(*args, **kwargs):
         try:
             open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
             kwargs['filename'] = os.path.basename(kwargs['filename'])
+#            if kwargs['header'] == False:
+#                kwargs['header'] = searchLibrary(file=kwargs['filename'])
             sp = Spectrum(**kwargs)
             os.remove(os.path.basename(kwargs['filename']))
             return sp
@@ -1829,6 +1844,7 @@ def readSpectrum(**kwargs):
             d = data[0].data[0,:,:]
         else:
             d = data[0].data
+        header = data[0].header
         data.close()
 
 # ascii file    
@@ -1839,7 +1855,8 @@ def readSpectrum(**kwargs):
         except ValueError:
             d = numpy.genfromtxt(file, comments=';', unpack=False, \
                  missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
-
+        header = fits.Header()
+        
 # assign arrays to wave, flux, noise
     wave = d[0,:]
     flux = d[1,:]
@@ -1866,7 +1883,7 @@ def readSpectrum(**kwargs):
               w = numpy.where(numpy.isnan(noise))
               noise[w] = stats.nanmedian(noise)
 
-    return wave, flux, noise
+    return {'wave':wave,'flux':flux,'noise':noise,'header':header}
 
 
 
@@ -1887,6 +1904,23 @@ def searchLibrary(*args, **kwargs):
     data['select'] = numpy.zeros(len(data['ra']))
     count = 0.
     
+# search by filename
+    file = kwargs.get('file','')
+    file = kwargs.get('filename',file)
+    if (file != ''):
+        if isinstance(file,str):
+            file = [file]
+        for f in file:
+            data['select'][numpy.where(data['data_file'] == f)] += 1
+        count+=1.
+# exclude by filename
+    if kwargs.get('excludefile',False) != False:
+        file = kwargs['excludefile']
+        if isinstance(file,str):
+            file = [file]
+        for f in file:
+            data['select'][numpy.where(data['data_file'] != f)] += 1
+        count+=1.
 # search by name
     if kwargs.get('name',False) != False:
         nm = kwargs['name']
@@ -1904,6 +1938,16 @@ def searchLibrary(*args, **kwargs):
             if sn[0].lower() != 'j':
                 sn = 'J'+sn
             data['select'][numpy.where(data['shortname'] == sn)] += 1
+        count+=1.
+# exclude by shortname
+    if kwargs.get('excludesource',False) != False:
+        sname = kwargs['excludesource']
+        if isinstance(sname,str):
+            sname = [sname]
+        for sn in sname:
+            if sn[0].lower() != 'j':
+                sn = 'J'+sn
+            data['select'][numpy.where(data['shortname'] != sn)] += 1
         count+=1.
 # search by reference list
     if kwargs.get('reference',False) != False:
