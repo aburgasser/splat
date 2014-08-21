@@ -613,7 +613,6 @@ def classifyByIndex(sp, *args, **kwargs):
 def classifyByStandard(sp, *args, **kwargs):
     '''Classify a spectrum by comparing to spectral standards'''
 
-    str_flag = kwargs.get('string', True)
     method = kwargs.get('method','')
     best_flag = kwargs.get('best',False)
     sptrange = kwargs.get('sptrange',[10,39])
@@ -671,7 +670,7 @@ def classifyByStandard(sp, *args, **kwargs):
         sptn_e = (unc_sys**2+var)**0.5
 
 # string or not?
-    if (str_flag):
+    if (kwargs.get('string', True) == True):
         spt = typeToNum(sptn,uncertainty=sptn_e)
     else:
         spt = sptn
@@ -691,8 +690,116 @@ def classifyByStandard(sp, *args, **kwargs):
 
 def classifyByTemplate(sp, *args, **kwargs):
     '''Classify a spectrum by comparing to spectral templates'''
-    return numpy.nan, numpy.nan
+    spt_return = kwargs.get('spt_return','spex')
+    verbose = kwargs.get('verbose',True)
+    set = kwargs.get('set','')
+    unc_sys = 0.5
+    if (kwargs.get('method','') == 'kirkpatrick'):
+        comprng = [0.9,1.4]         # as prescribed in Kirkpatrick et al. 2010, ApJS, 
+    else:
+        comprng = [0.7,2.45]        # by default, compare whole spectrum
 
+# some canned searches
+    spt = [10.,39.9]
+    if ('mdwarf' in set):
+        spt = [10,19.9]
+    if ('ldwarf' in set):
+        spt = [20,29.9]
+    if ('tdwarf' in set):
+        spt = [30,39.9]
+    if ('vlm' in set):
+        spt = [numpy.max([17,spt[0]]),numpy.min([39.9,spt[-1]])]
+    
+    snr = [0,1000]
+    if ('high sn' in set):
+        snr = [100,1000]
+    
+    if ('optical' in set):
+        lib = searchLibrary(output='all',snr=snr,opt_type=spt,giant=False,logic='and')
+    elif ('standard' in set):
+        lib = searchLibrary(output='all',snr=snr,spt=spt,standard=True,logic='and')
+    elif ('companion' in set):
+        lib = searchLibrary(output='all',snr=snr,spt=spt,companion=True,giant=False,logic='and')
+    elif ('young' in set):
+        lib = searchLibrary(output='all',snr=snr,spt=spt,young=True,logic='and')
+    elif ('subdwarf' in set):
+        lib = searchLibrary(output='all',snr=snr,spt=spt,subdwarf=True,logic='and')
+    elif ('single' in set):
+        lib = searchLibrary(output='all',snr=snr,spt=spt,spbinary=False,binary=False,giant=False,logic='and')
+    elif ('spectral binaries' in set):
+        lib = searchLibrary(output='all',snr=snr,spt=spt,spbinary=True,logic='and')
+    elif (set != ''):
+        lib = searchLibrary(output='all',snr=snr,spt=spt)
+    else:
+        lib = searchLibrary(output='all',**kwargs)
+        
+# first search for the spectra desired - parameters are set by user
+    files = lib['data_file']
+    print len(files)
+
+# which spectral type to return
+    if ('spex' in spt_return):
+        sptref = 'spex_type'
+    elif ('opt' in spt_return):
+        sptref = 'opt_type'
+    elif ('nir' in spt_return):
+        sptref = 'nir_type'
+    else:
+        sptref = 'spex_type'
+
+    lib = lib[:][numpy.where(lib[sptref] != '')]
+    files = lib['data_file']
+    print len(files)
+    sspt = [typeToNum(s) for s in lib[sptref]]
+
+    if len(files) == 0:
+        print '\nNo templates available for comparison\n\n'
+        return numpy.nan, numpy.nan
+    if (verbose):
+        print '\nComparing to {} templates\n\n'.format(len(files))
+    if len(files) > 100:
+        if (verbose):
+            print 'This may take some time!\n\n'.format(len(files))
+
+# do comparison
+    stat = []
+    for i,f in enumerate(files):
+        s = loadSpectrum(file=f)
+        chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],chisqr=True,novar2=True)
+        stat.append(chisq)
+        print f, chisq, scale
+        
+# list of sorted standard files and spectral types
+    sorted_files = [x for (y,x) in sorted(zip(stat,files))]
+    sorted_spt = [x for (y,x) in sorted(zip(stat,sspt))]
+
+# select either best match or an ftest-weighted average
+    if (kwargs.get('best',False) or len(stat) == 1):
+        sptn = sorted_spt[0]
+        sptn_e = unc_sys
+    else:
+        mean,var = weightedMeanVar(sspt,stat,method='ftest',dof=sp.dof)
+        if (var**0.5 < 1.):
+            sptn = numpy.round(mean*2.)*0.5
+        else:
+            sptn = numpy.round(mean)
+        sptn_e = (unc_sys**2+var)**0.5
+
+# plot spectrum compared to best spectrum
+    if (kwargs.get('plot',False) != False):
+        s = loadSpectrum(file=sorted_files[0])
+        chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],chisqr=True)
+        s.scale(scale)
+        plotSpectrum(sp,s,colors=['k','r'],title=sp.name+' vs '+s.name,**kwargs)
+
+# string or not?
+    if (kwargs.get('string', True) == True):
+        spt = typeToNum(sptn,uncertainty=sptn_e)
+    else:
+        spt = sptn
+
+    return spt, sptn_e
+ 
 
 def classifyGravity(sp, *args, **kwargs):
     '''Determine the gravity classification of a brown dwarf
@@ -1761,61 +1868,6 @@ def readSpectrum(**kwargs):
     return wave, flux, noise
 
 
-# THIS HAS BEEN SUPERCEDED BY NEW FXN; KEEPING AROUND JUST IN CASE
-def searchLibrary_OLD(*args, **kwargs):
-    '''Search the SpeX database to extract the key reference for that Spectrum
-        Note that this is currently only and AND search - need to figure out
-        how to a full SQL style search'''
-
-# get database
-    data = fetchDatabase(**kwargs)
-    sql = Table()
-    ref = kwargs.get('output','data_file')
-
-# search parameters
-    if kwargs.get('name',False) != False:
-        nm = kwargs['name']
-        if isinstance(nm,str):
-            nm = [nm]
-        sql['name'] = nm
-    if kwargs.get('designation',False) != False:
-        desig = kwargs['designation']
-        if isinstance(desig,str):
-            desig = [desig]
-        sql['designation'] = desig
-    if kwargs.get('shortname',False) != False:
-        sname = kwargs['shortname']
-        if isinstance(sname,str):
-            sname = [sname]
-        for i,sn in enumerate(sname):
-            if sn[0].lower() != 'j':
-                sname[i] = 'J'+sname[i]
-        sql['shortname'] = sname
-    if kwargs.get('date',False) != False:
-        sql['observation_date'] = [kwargs['date']]
-    if kwargs.get('young',False) != False:
-        sql['young'] = [True]
-    if kwargs.get('subdwarf',False) != False:
-        sql['subdwarf'] = [True]
-    if kwargs.get('binary',False) != False:
-        sql['binary'] = [True]
-    if kwargs.get('spbin',False) != False:
-        sql['spbin'] = [True]
-    if kwargs.get('red',False) != False:
-        sql['red'] = [True]
-    if kwargs.get('blue',False) != False:
-        sql['blue'] = [True]
-
-# NEED TO ADD IN SEARCH IN AREA, MAGNITUDE RANGE, OBS DATE RANGE, REFERENCES
-
-    if len(sql) > 0:
-        result = join(data,sql)
-    else:
-        result = data
-        
-    return result[ref]
-
-
 
 def searchLibrary(*args, **kwargs):
     '''Search the SpeX database to extract the key reference for that Spectrum
@@ -1891,42 +1943,37 @@ def searchLibrary(*args, **kwargs):
         data['select'][numpy.where(data['separation'] <= radius)] += 1
         count+=1.
 # search by spectral type
-    if kwargs.get('spt',False) != False:
+    sref = ''
+    if (kwargs.get('spt',False) != False):
+        sref = 'spex_type'
         spt = kwargs['spt']
-        if not isinstance(spt,list):        # one value = only this type
-            spt = [spt,spt]
-        if isinstance(spt[0],str):          # convert to numerical spt
-            spt = [typeToNum(spt[0]),typeToNum(spt[1])]
-        data['sptn'] = [typeToNum(x) for x in data['spex_type']]
-        data['select'][numpy.where(numpy.logical_and(data['sptn'] >= spt[0],data['sptn'] <= spt[1]))] += 1
-        count+=1.
-    if kwargs.get('spex_spt',False) != False:
+    if (kwargs.get('spex_spt',False) != False):
+        sref = 'spex_type'
         spt = kwargs['spex_spt']
-        if not isinstance(spt,list):        # one value = only this type
-            spt = [spt,spt]
-        if isinstance(spt[0],str):          # convert to numerical spt
-            spt = [typeToNum(spt[0]),typeToNum(spt[1])]
-        data['sptn'] = [typeToNum(x) for x in data['spex_type']]
-        data['select'][numpy.where(numpy.logical_and(data['sptn'] >= spt[0],data['sptn'] <= spt[1]))] += 1
-        count+=1.
-    if kwargs.get('nir_spt',False) != False:
-        spt = kwargs['nir_spt']
-        if not isinstance(spt,list):        # one value = only this type
-            spt = [spt,spt]
-        if isinstance(spt[0],str):          # convert to numerical spt
-            spt = [typeToNum(spt[0]),typeToNum(spt[1])]
-        data['sptn'] = [typeToNum(x) for x in data['nir_type']]
-        data['select'][numpy.where(numpy.logical_and(data['sptn'] >= spt[0],data['sptn'] <= spt[1]))] += 1
-        count+=1.
-    if kwargs.get('opt_spt',False) != False:
+    if (kwargs.get('spex_type',False) != False):
+        sref = 'spex_type'
+        spt = kwargs['spex_type']
+    if (kwargs.get('opt_spt',False) != False):
+        sref = 'opt_type'
         spt = kwargs['opt_spt']
+    if (kwargs.get('opt_type',False) != False):
+        sref = 'opt_type'
+        spt = kwargs['opt_type']
+    if (kwargs.get('nir_spt',False) != False):
+        sref = 'nir_type'
+        spt = kwargs['nir_spt']
+    if (kwargs.get('nir_type',False) != False):
+        sref = 'nir_type'
+        spt = kwargs['nir_type']
+    if sref != '':
         if not isinstance(spt,list):        # one value = only this type
             spt = [spt,spt]
         if isinstance(spt[0],str):          # convert to numerical spt
             spt = [typeToNum(spt[0]),typeToNum(spt[1])]
-        data['sptn'] = [typeToNum(x) for x in data['opt_type']]
+        data['sptn'] = [typeToNum(x) for x in data[sref]]
         data['select'][numpy.where(numpy.logical_and(data['sptn'] >= spt[0],data['sptn'] <= spt[1]))] += 1
         count+=1.
+
 # search by magnitude range
     if kwargs.get('jmag',False) != False:
         mag = kwargs['jmag']
@@ -2060,6 +2107,95 @@ def test():
     sys.stderr.write('\n...plotSpectrum successful\n')
     sys.stderr.write('\n>>>>>>>>>>>> SPLAT TEST SUCCESSFUL; HAVE FUN! <<<<<<<<<<<<\n\n')
 
+
+def typeToMag(spt, filt, **kwargs):
+    """
+    Takes a spectral type, its uncertainty, and a filter, returns absolute magnitude
+    Filter options = ['MKO K', 'MKO H', 'MKO J', 'MKO Y', 'MKO LP', '2MASS J', '2MASS K', '2MASS H']
+    References = ['faherty', 'dupuy', 'burgasser']
+    """
+
+#Keywords
+    nsamples = kwargs.get('nsamples', 100)
+    ref = kwargs.get('ref', 'dupuy')
+    unc = kwargs.get('unc', 0.)
+
+#Convert spectral type string to number
+  
+    if (type(spt) == str):
+        spt = typeToNum(spt, uncertainty=unc)
+    else:
+        spt = copy.deepcopy(spt)
+
+#Faherty
+    if (ref.lower() == 'faherty'):
+        sptoffset = 10.
+        reference = 'Abs Mag/SpT relation from Faherty et al. (2012)'
+        coeffs = { \
+            'MKO J': {'fitunc' : 0.30, 'range' : [20., 38.],  \
+                'coeff': [.000203252, -.0129143, .275734, -1.99967, 14.8948]}, \
+            'MKO H': {'fitunc' : 0.27, 'range' : [20., 38.], \
+                'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, \
+            'MKO K': {'fitunc' : 0.28, 'range' : [20., 38.], \
+                'coeff' : [.0000816516, -.00469032, .0940816, -.485519, 9.76100]}}
+
+# Burgasser
+    elif (ref.lower() == 'burgasser'):
+        sptoffset = 20.
+        reference = 'Abs Mag/SpT relation from Burgasser (2007)'
+        coeffs = { \
+            'MKO K': {'fitunc' : 0.26, 'range' : [20., 38.], \
+                'coeff': [.0000001051, -.000006985, .0001807, -.002271, .01414, -.04024, .05129, .2322, 10.45]}}
+ 
+# Dupuy & Liu, default reference  
+    elif (ref.lower() == 'dupuy'):
+        reference = 'Abs Mag/SpT relation from Dupuy & Liu (2012)'
+        sptoffset = 10.
+        coeffs = { \
+            'MKO J': {'fitunc' : 0.39, 'range' : [16., 39.], \
+                'coeff' : [-.00000194920, .000227641, -.0103332, .232771, -2.74405, 16.3986, -28.3129]}, \
+            'MKO Y': {'fitunc': 0.40, 'range' : [16., 39.], \
+                'coeff': [-.00000252638, .000285027, -.0126151, .279438, -3.26895, 19.5444, -35.1560]}, \
+            'MKO H': {'fitunc': 0.38, 'range' : [16., 39.], \
+                'coeff': [-.00000224083, .000251601, -.0110960, .245209, -2.85705, 16.9138, -29.7306]}, \
+            'MKO K': {'fitunc': 0.40, 'range' : [16., 39.], \
+                'coeff': [-.00000104935, .000125731, -.00584342, .135177, -1.63930, 10.1248, -15.2200]}, \
+            'MKO LP': {'fitunc': 0.28, 'range': [16., 39.], \
+                'coeff': [0.00000, 0.00000, .0000546366, -.00293191, .0530581,  -.196584, 8.89928]}, \
+            '2MASS J': {'fitunc': 0.40, 'range': [16., 39.], \
+                'coeff': [-.000000784614, .000100820, -.00482973, .111715, -1.33053, 8.16362, -9.67994]}, \
+            '2MASS H': {'fitunc': 0.40, 'range': [16., 38.5], \
+                'coeff': [-.00000111499, .000129363, -.00580847, .129202, -1.50370, 9.00279, -11.7526]}, \
+            '2MASS K': {'fitunc': 0.43, 'range':[16., 38.5], \
+                'coeff': [0.00000, 0.00000, .000106693, -.00642118, .134163, -.867471, 11.0114]}}
+
+    else:
+        sys.stderr.write('\nInvalid Abs Mag/SpT relation given: %s\n' % ref)
+        return numpy.nan, numpy.nan
+
+    if (filt.upper() in coeffs.keys()) == 1:
+        for filter in coeffs.keys():
+            if filt.upper() == filter:
+                coeff = coeffs[filter]['coeff']
+                fitunc = coeffs[filter]['fitunc']
+                range = coeffs[filter]['range']
+    else:
+        sys.stderr.write('\n Invalid filter given for %s\n' % reference)
+        return numpy.nan, numpy.nan
+
+
+    if (range[0] <= spt <= range[1]):
+        if (unc > 0.):
+            vals = numpy.polyval(coeff, numpy.random.normal(spt - sptoffset, unc, nsamples))
+            abs_mag = numpy.nanmean(vals)
+            abs_mag_error = (numpy.nanstd(vals)**2+fitunc**2)**0.5
+            return abs_mag, abs_mag_error
+        else:
+            abs_mag = numpy.polyval(coeff, spt-sptoffset)
+            return abs_mag, fitunc
+    else:
+        sys.stderr.write('\nSpectral Type is out of range for %s Abs Mag/SpT relation\n' % reference)
+        return numpy.nan, numpy.nan
 
 
 def typeToNum(input, **kwargs):
