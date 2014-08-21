@@ -701,11 +701,11 @@ def classifyByTemplate(sp, *args, **kwargs):
 
 # some canned searches
     spt = [10.,39.9]
-    if ('mdwarf' in set):
+    if ('m dwarf' in set):
         spt = [10,19.9]
-    if ('ldwarf' in set):
+    if ('l dwarf' in set):
         spt = [20,29.9]
-    if ('tdwarf' in set):
+    if ('t dwarf' in set):
         spt = [30,39.9]
     if ('vlm' in set):
         spt = [numpy.max([17,spt[0]]),numpy.min([39.9,spt[-1]])]
@@ -767,7 +767,8 @@ def classifyByTemplate(sp, *args, **kwargs):
         s = loadSpectrum(file=f)
         chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],chisqr=True,novar2=True)
         stat.append(chisq)
-        print f, chisq, scale
+        if (verbose):
+            print f, sspt[i], chisq, scale
         
 # list of sorted standard files and spectral types
     sorted_files = [x for (y,x) in sorted(zip(stat,files))]
@@ -2183,7 +2184,7 @@ def typeToMag(spt, filt, **kwargs):
         sys.stderr.write('\n Invalid filter given for %s\n' % reference)
         return numpy.nan, numpy.nan
 
-
+# compute magnitude if its in the right spectral type range
     if (range[0] <= spt <= range[1]):
         if (unc > 0.):
             vals = numpy.polyval(coeff, numpy.random.normal(spt - sptoffset, unc, nsamples))
