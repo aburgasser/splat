@@ -140,6 +140,7 @@ class Spectrum(object):
         self.slitpixelwidth = kwargs.get('slitwidth',3.33)        # default placeholder
         self.slitwidth = self.slitpixelwidth*spex_pixel_scale
         self.simplefilename = os.path.basename(self.filename)
+        self.header = kwargs.get('header',Table())
 # wave and flux given
         if len(kwargs.get('wave','')) > 0 and len(kwargs.get('flux','')) > 0:
             self.wave = kwargs['wave']
@@ -156,6 +157,7 @@ class Spectrum(object):
                 self.wave = rs['wave']
                 self.flux = rs['flux']
                 self.noise = rs['noise']
+                self.header = rs['header']
             except:
                 raise NameError('\nCould not load up spectral file {:s}'.format(kwargs.get('filename','')))
         self.wave = numpy.array(self.wave)
@@ -169,7 +171,6 @@ class Spectrum(object):
             self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
 # load in header from splat database
 #        self.header = kwargs.get('header',searchLibrary(file=self.filename))
-        self.header = kwargs.get('header',Table())
 
 # some conversions
         self.nu = const.c.to('micron/s').value/self.wave
