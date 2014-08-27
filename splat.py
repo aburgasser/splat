@@ -2005,6 +2005,7 @@ def searchLibrary(*args, **kwargs):
     if (kwargs.get('opt_spt',False) != False):
         sref = 'opt_type'
         spt = kwargs['opt_spt']
+    if (kwargs.get('opt_type',False) != False):
         sref = 'opt_type'
         spt = kwargs['opt_type']
     if (kwargs.get('nir_spt',False) != False):
