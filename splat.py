@@ -43,6 +43,9 @@ from astropy.coordinates import SkyCoord      # coordinate conversion
 from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 
+# local application/library specific imports
+import bdevopar # still in development
+
 # suppress warnings - probably not an entirely safe approach!
 numpy.seterr(all='ignore')
 warnings.simplefilter("ignore")
