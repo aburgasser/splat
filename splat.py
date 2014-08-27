@@ -442,12 +442,35 @@ class Spectrum(object):
 
 # FUNCTIONS FOR SPLAT
 def caldateToDate(d):
-    '''Convert from numeric date to calendar date'''
+    '''
+    :Purpose: ``Convert from numeric date to calendar date, and vice-versa.``
+    :param d: ``A numeric date of the format '20050412', or a date in the 
+                calendar format '2005 Jun 12'``
+    :Example:
+       >>> import splat
+       >>> caldate = splat.dateToCaldate('20050612')
+       >>> print caldate
+       2005 Jun 12
+       >>> date = splat.caldateToDate('2005 June 12')
+       >>> print date
+       20050612
+    '''
     return d[:4]+str((months.index(d[5:8])+1)/100.)[2:4]+d[-2:]
 
 
 def checkFile(filename,**kwargs):
-    '''Check if a particular file is present in the online database'''
+    '''
+    :Purpose: ``Checks if a spectrum file exists in the SPLAT's library.``
+    :param filename: ``A string containing the spectrum's filename.``
+    :Example: 
+       >>> import splat
+       >>> spectrum1 = 'spex_prism_1315+2334_110404.fits'
+       >>> print splat.checkFile(spectrum1)
+       True
+       >>> spectrum2 = 'fake_name.fits'
+       >>> print splat.checkFile(spectrum2)
+       False
+    '''
     url = kwargs.get('url',SPLAT_URL)+'/Spectra/'
     flag = checkOnline()
     if (flag):
@@ -482,7 +505,16 @@ def checkAccess(**kwargs):
     
 
 def checkOnline():
-    '''Check if you are online'''
+    '''
+    :Purpose: ``Checks if SPLAT's URL is accessible from your machine--
+                that is, checks if you and the host are online.``
+    :Example:
+       >>> import splat
+       >>> splat.checkOnline()
+       True  # SPLAT's URL was detected.
+       >>> splat.checkOnline()
+       False # SPLAT's URL was not detected.
+    '''
     try:
         urllib2.urlopen(SPLAT_URL)
         return True
@@ -492,7 +524,37 @@ def checkOnline():
 
 
 def classifyByIndex(sp, *args, **kwargs):
-    '''Classify a spectrum based on its spectral indices'''
+    '''
+    :Purpose: ``Determine the spectral type and uncertainty for a spectrum 
+                based on indices. Makes use of published index-SpT relations
+                from Reid et al. (2001); Testi et al. (2001); Allers et al. 
+                (2007); and Burgasser (2007). Returns 2-element tuple 
+                containing spectral type (numeric or string) and 
+                uncertainty.``
+    :param sp: ``Spectrum class object, which should contain wave, flux and 
+                 noise array elements.``
+    :param \**kwargs (optional): - ``set = 'burgasser': named set of indices to measure and compute spectral type:``
+                          * ``'allers': H2O from Allers et al.``
+                          * ``'burgasser': H2O-J, CH4-J, H2O-H, CH4-H, 
+                            CH4-K from Burgasser (2007)``
+                          * ``'reid':H2O-A and H2O-B from Reid et al.(2001)``
+                          * ``'testi': sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, 
+                            sH2O_K from Testi et al. (2001)``
+                      - ``string = False: return spectral type as a string 
+                        (uses typeToNum)``
+                      - ``round = False: rounds off to nearest 0.5 subtypes``
+                      - ``remeasure = True: force remeasurement of indices``
+                      - ``nsamples = 100: number of Monte Carlo samples for 
+                        error computation``
+                      - ``nloop = 5: number of testing loops to see if 
+                        spectral type is within a certain range``
+
+    :Example:
+       >>> import splat
+       >>> spc = splat.loadSpectrum('spex_prism_gl570d_030522.txt')
+       >>> print splat.classifyByIndex(spc, string=True, set='burgasser', round=True)
+       ('T7.5', 0.25285169510990341)
+    '''
     
     str_flag = kwargs.get('string', True)
     rnd_flag = kwargs.get('round', False)
@@ -1994,7 +2056,7 @@ def searchLibrary(*args, **kwargs):
 # search by spectral type
     sref = ''
     if (kwargs.get('spt',False) != False):
-        sref = 'lit_type'
+        sref = 'spex_type'
         spt = kwargs['spt']
     if (kwargs.get('spex_spt',False) != False):
         sref = 'spex_type'
