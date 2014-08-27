@@ -2056,7 +2056,7 @@ def searchLibrary(*args, **kwargs):
 # search by spectral type
     sref = ''
     if (kwargs.get('spt',False) != False):
-        sref = 'spex_type'
+        sref = 'lit_type'
         spt = kwargs['spt']
     if (kwargs.get('spex_spt',False) != False):
         sref = 'spex_type'
