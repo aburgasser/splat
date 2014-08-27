@@ -43,9 +43,6 @@ from astropy.coordinates import SkyCoord      # coordinate conversion
 from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 
-# local application/library specific imports
-import bdevopar # still in development
-
 # suppress warnings - probably not an entirely safe approach!
 numpy.seterr(all='ignore')
 warnings.simplefilter("ignore")
@@ -2005,7 +2002,6 @@ def searchLibrary(*args, **kwargs):
     if (kwargs.get('opt_spt',False) != False):
         sref = 'opt_type'
         spt = kwargs['opt_spt']
-    if (kwargs.get('opt_type',False) != False):
         sref = 'opt_type'
         spt = kwargs['opt_type']
     if (kwargs.get('nir_spt',False) != False):
