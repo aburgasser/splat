@@ -45,7 +45,9 @@ from astropy import constants as const        # physical constants in SI units
 
 # local application/library specific imports
 import bdevopar # still in development
-
+constant = 1
+constant = 2
+constant = 3
 # suppress warnings - probably not an entirely safe approach!
 numpy.seterr(all='ignore')
 warnings.simplefilter("ignore")
