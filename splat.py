@@ -59,6 +59,7 @@ parameter_names = ['teff','logg','z','fsed','kzz']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
 spex_wave_range = [0.65,2.45]    # default wavelength range
 max_snr = 1000.0                # maximum S/N ratio permitted
+constant1 = 5.
 
 spex_stdfiles = { \
     'M0.0': 'spex_prism_Gl270_091203.fits',\
