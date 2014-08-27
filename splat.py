@@ -1,4 +1,3 @@
-constant = 2
 # WORKING COPY OF SPLAT CODE LIBRARY
 # based on routines developed by:
 #    Christian Aganze
