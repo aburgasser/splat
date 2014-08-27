@@ -45,11 +45,17 @@ from astropy import constants as const        # physical constants in SI units
 
 # local application/library specific imports
 import bdevopar # still in development
+<<<<<<< HEAD
 temp =2.
 adam = 4.
 junk = 7.
 
 
+=======
+constant = 1
+constant = 2
+constant = 3
+>>>>>>> origin/new
 # suppress warnings - probably not an entirely safe approach!
 numpy.seterr(all='ignore')
 warnings.simplefilter("ignore")
