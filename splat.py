@@ -56,7 +56,7 @@ SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 parameter_names = ['teff','logg','z','fsed','kzz']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
-spex_wave_range = [0.65,2.45]    # default wavelength range
+spex_wave_range = [0.65,2.45]*u.micron    # default wavelength range
 max_snr = 1000.0                # maximum S/N ratio permitted
 
 spex_stdfiles = { \
@@ -163,26 +163,36 @@ class Spectrum(object):
                 self.header = rs['header']
             except:
                 raise NameError('\nCould not load up spectral file {:s}'.format(kwargs.get('filename','')))
+# convert to numpy arrays
         self.wave = numpy.array(self.wave)
         self.flux = numpy.array(self.flux)
         self.noise = numpy.array(self.noise)
-# enforce positivity
+# enforce positivity and non-nan
         if (numpy.nanmin(self.flux) < 0):
             self.flux[numpy.where(self.flux < 0)] = 0.
+        self.flux[numpy.isnan(self.flux)] = 0.
 # check on noise being too low
         if (numpy.nanmax(self.flux/self.noise) > max_snr):
             self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
-# load in header from splat database
-#        self.header = kwargs.get('header',searchLibrary(file=self.filename))
-
+# convert to astropy quantities with units
+# assuming input is flam in erg/s/cm2/micron
+        if ~isinstance(self.wave,astropy.units.quantity.Quantity):
+            self.wave = numpy.array(self.wave)*self.wunit
+        if ~isinstance(self.flux,astropy.units.quantity.Quantity):
+            self.flux = numpy.array(self.flux)*self.funit
+        if ~isinstance(self.wave,astropy.units.quantity.Quantity):
+            self.noise = numpy.array(self.noise)*self.funit
 # some conversions
-        self.nu = const.c.to('micron/s').value/self.wave
-#        w = numpy.where(numpy.isnan(self.flux))
-#        self.flux[w] = 0.
-        self.flux[numpy.isnan(self.flux)] = 0.
+        self.flam = self.flux
+        self.nu = self.wave.to('Hz',equivalencies=u.spectral())
+        self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
+        self.fnunit = u.Jansky
 # calculate variance
-        self.variance = numpy.array([n**2 for n in self.noise])
+        self.variance = self.noise**2
         self.dof = numpy.round(len(self.wave)/self.slitpixelwidth)
+# signal to noise
+        w = numpy.where(self.flux.value > scipy.stats.nanmedian(self.flux))
+        self.snr = numpy.nanmean(self.flux[w]/self.noise[w])
 
 # preserve original values
         self.wave_original = copy.deepcopy(self.wave)
@@ -223,8 +233,8 @@ class Spectrum(object):
         sp = copy.deepcopy(self)
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
-        sp.flux = numpy.add(self.flux,f(self.wave))
-        sp.variance = sp.variance+n(self.wave)
+        sp.flux = numpy.add(self.flux,f(self.wave)*other.funit)
+        sp.variance = sp.variance+n(self.wave)*(other.funit**2)
         sp.noise = numpy.array([v**0.5 for v in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
@@ -236,8 +246,8 @@ class Spectrum(object):
         sp = copy.deepcopy(self)
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
-        sp.flux = numpy.subtract(self.flux,f(self.wave))
-        sp.variance = sp.variance+n(self.wave)
+        sp.flux = numpy.subtract(self.flux,f(self.wave)*other.funit)
+        sp.variance = sp.variance+n(self.wave)*(other.funit**2)
         sp.noise = numpy.array([v**0.5 for v in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
@@ -249,10 +259,10 @@ class Spectrum(object):
         sp = copy.deepcopy(self)
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
-        sp.flux = numpy.multiply(self.flux,f(self.wave))
+        sp.flux = numpy.multiply(self.flux,f(self.wave)*other.funit)
         sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
             numpy.divide(self.variance,numpy.power(sp.flux,2))+\
-            numpy.divide(n,numpy.power(f(self.wave),2))))
+            numpy.divide(n(self.wave)*(other.funit**2),numpy.power(f(self.wave),2))))
         sp.noise = numpy.array([v**0.5 for v in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
@@ -264,10 +274,10 @@ class Spectrum(object):
         sp = copy.deepcopy(self)
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
-        sp.flux = numpy.divide(self.flux,f(self.wave))
+        sp.flux = numpy.divide(self.flux,f(self.wave)*other.funit)
         sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
             numpy.divide(self.variance,numpy.power(sp.flux,2))+\
-            numpy.divide(n,numpy.power(f(self.wave),2))))
+            numpy.divide(n(self.wave)*(other.funit**2),numpy.power(f(self.wave),2))))
         sp.noise = numpy.array([v**0.5 for v in sp.variance])
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
@@ -311,7 +321,7 @@ class Spectrum(object):
 
     def fluxMax(self):
         return numpy.nanmax(self.flux[numpy.where(\
-            numpy.logical_and(self.wave > 0.8,self.wave < 2.3))])
+            numpy.logical_and(self.wave > 0.8*u.micron,self.wave < 2.3*u.micron))])
 
     def fnuToFlam(self):
          '''Convert flux density from F_nu to F_lam, the later in erg/s/cm2/Hz'''
@@ -327,6 +337,7 @@ class Spectrum(object):
         self.scale(1./self.fluxMax())
         self.fscale = 'Normalized'
         return
+
     def reset(self):
         '''Reset to original spectrum'''
         self.wave = copy.deepcopy(self.wave_original)
@@ -378,8 +389,8 @@ class Spectrum(object):
              wave_sample = [waveRng[0]*(1.+1./r)**i for i in numpy.arange(npix)]
              f = interp1d(self.wave,self.flux,bounds_error=False,fill_value=0.)
              v = interp1d(self.wave,self.variance,bounds_error=False,fill_value=numpy.nan)
-             flx_sample = f(wave_sample)
-             var_sample = v(wave_sample)
+             flx_sample = f(wave_sample)*self.funit
+             var_sample = v(wave_sample)*self.funit**2
 # now convolve a function to smooth resampled spectrum
              window = signal.get_window(method,numpy.round(overscale))
              neff = numpy.sum(window)/numpy.nanmax(window)        # effective number of pixels
@@ -388,8 +399,8 @@ class Spectrum(object):
 # resample back to original wavelength grid
              f = interp1d(wave_sample,flx_smooth,bounds_error=False,fill_value=0.)
              v = interp1d(wave_sample,var_smooth,bounds_error=False,fill_value=0.)
-             self.flux = f(self.wave)
-             self.variance = v(self.wave)
+             self.flux = f(self.wave)*self.funit
+             self.variance = v(self.wave)*self.funit**2
              self.noise = numpy.array([n**0.5 for n in self.variance])
              self.slitpixelwidth = self.slitpixelwidth*self.resolution/resolution
              self.resolution = resolution
@@ -424,9 +435,9 @@ class Spectrum(object):
         return
 
     def snr(self):
-         '''Compute a representative S/N value'''
-         pass
-         return
+        '''Compute a representative S/N value'''
+        pass
+        return
 
     def surface(self,radius):
          '''Convert to surface fluxes given a radius, assuming at absolute fluxes'''
@@ -685,8 +696,7 @@ def classifyByIndex(sp, *args, **kwargs):
 
 def classifyByStandard(sp, *args, **kwargs):
     '''Classify a spectrum by comparing to spectral standards'''
-
-    verbose = kwargs.get('verbose',True)
+    verbose = kwargs.get('verbose',False)
     method = kwargs.get('method','')
     best_flag = kwargs.get('best',False)
     sptrange = kwargs.get('sptrange',[10,39])
@@ -712,9 +722,9 @@ def classifyByStandard(sp, *args, **kwargs):
 #    stdsptstr.append(['T'+str(n) for n in numpy.arange(10)])
 
     if (method == 'kirkpatrick'):
-        comprng = [0.9,1.4]         # as prescribed in Kirkpatrick et al. 2010, ApJS, 
+        comprng = [0.9,1.4]*u.micron         # as prescribed in Kirkpatrick et al. 2010, ApJS, 
     else:
-        comprng = [0.7,2.45]        # by default, compare whole spectrum
+        comprng = [0.7,2.45]*u.micron       # by default, compare whole spectrum
 
 # compute fitting statistics
     stat = []
@@ -771,9 +781,9 @@ def classifyByTemplate(sp, *args, **kwargs):
     set = kwargs.get('set','')
     unc_sys = 0.5
     if (kwargs.get('method','') == 'kirkpatrick'):
-        comprng = [0.9,1.4]         # as prescribed in Kirkpatrick et al. 2010, ApJS, 
+        comprng = [0.9,1.4]*u.micron         # as prescribed in Kirkpatrick et al. 2010, ApJS, 
     else:
-        comprng = [0.7,2.45]        # by default, compare whole spectrum
+        comprng = [0.7,2.45]*u.micron       # by default, compare whole spectrum
 
 #  canned searches
 #  constrain spectral types
@@ -994,6 +1004,8 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     stddev = kwargs.get('stddev',False)
     absdev = kwargs.get('absdev',False)
     minreturn = 1.e-9
+    if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
+        fit_ranges*=u.micron
 
     if (absdev or stddev):
         chisqr = False
@@ -1009,20 +1021,20 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         v = interp1d(sp2.wave,sp2.variance,bounds_error=False,fill_value=numpy.nan)
     
 # total variance - funny form to cover for nans
-    vtot = numpy.nanmax([sp1.variance,sp1.variance+v(sp1.wave)],axis=0)
+    vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave)],axis=0)*(sp2.funit**2)
  #   vtot = sp1.variance
     
 # Mask certain wavelengths
 # telluric absorption
     if (mask_telluric):
-        mask_ranges.append([0.,0.65])        # meant to clear out short wavelengths
-        mask_ranges.append([1.35,1.42])
-        mask_ranges.append([1.8,1.92])
-        mask_ranges.append([2.45,99.])        # meant to clear out long wavelengths
+        mask_ranges.append([0.,0.65]*u.micron)        # meant to clear out short wavelengths
+        mask_ranges.append([1.35,1.42]*u.micron)
+        mask_ranges.append([1.8,1.92]*u.micron)
+        mask_ranges.append([2.45,99.]*u.micron)        # meant to clear out long wavelengths
 
     if (mask_standard):
-        mask_ranges.append([0.,0.8])        # standard short cut
-        mask_ranges.append([2.35,99.])        # standard long cut
+        mask_ranges.append([0.,0.8]*u.micron)        # standard short cut
+        mask_ranges.append([2.35,99.]*u.micron)        # standard long cut
 
     for ranges in mask_ranges:
         mask[numpy.where(((sp1.wave >= ranges[0]) & (sp1.wave <= ranges[1])))] = 1
@@ -1041,29 +1053,31 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 # chi^2
     if (chisqr):
 # compute scale factor    
-        scale = numpy.nansum(weights*sp1.flux*f(sp1.wave)/vtot)/ \
-            numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)/vtot)
+        scale = numpy.nansum(weights*sp1.flux*f(sp1.wave)*sp2.funit/vtot)/ \
+            numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)*sp2.funit**2/vtot)
 # correct variance
-        vtot = numpy.nanmax([sp1.variance,sp1.variance+v(sp1.wave)*scale**2],axis=0)
-        stat = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*scale)**2/vtot)
+        vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave)*scale**2],axis=0)*(sp2.funit**2)
+        stat = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*sp2.funit*scale)**2/vtot)
 
 # standard deviation
     elif (stddev):
 # compute scale factor    
-        scale = numpy.nansum(weights*sp1.flux*f(sp1.wave))/ \
-            numpy.nansum(weights*f(sp1.wave)*f(sp1.wave))
+        scale = numpy.nansum(weights*sp1.flux*f(sp1.wave)*sp2.funit)/ \
+            numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)*sp2.funit**2)
 # correct variance
-        vtot = numpy.nanmax([sp1.variance,sp1.variance+v(sp1.wave)*scale**2],axis=0)
-        stat = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*scale)**2)
+        vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave)*scale**2],axis=0)*(sp2.funit**2)
+        stat = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*sp2.funit*scale)**2)
+        minreturn*=sp1.funit**2
 
 # absolute deviation
     elif (absdev):
 # compute scale factor    
         scale = numpy.nansum(weights*sp1.flux)/ \
-            numpy.nansum(weights*f(sp1.wave))
+            numpy.nansum(weights*f(sp1.wave)*sp2.funit)
 # correct variance
-        vtot = numpy.nanmax([sp1.variance,sp1.variance+v(sp1.wave)*scale**2],axis=0)
-        stat = numpy.nansum(weights*abs(sp1.flux-f(sp1.wave)*scale))
+        vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave)*scale**2],axis=0)*(sp2.funit**2)
+        stat = numpy.nansum(weights*abs(sp1.flux-f(sp1.wave)*sp2.funit*scale))
+        minreturn*=sp1.funit
 
 # error
     else:
@@ -1268,12 +1282,12 @@ def filterMag(sp,filter,*args,**kwargs):
     filterFolder = kwargs.get('filterFolder',SPLAT_URL+'Filters/')
     vegaFile = kwargs.get('vegaFile','vega_kurucz.txt')
     info = kwargs.get('info',False)
-    units = kwargs.get('units',sp.funit)
     custom = kwargs.get('custom',False)
     vega = kwargs.get('vega',True)
     ab = kwargs.get('ab',False)
     photons = kwargs.get('photons',False)
     energy = kwargs.get('energy',False)
+    nsamples = kwargs.get('nsamples',100)
 
 # filter file assignments
     filters = { \
@@ -1296,7 +1310,7 @@ def filterMag(sp,filter,*args,**kwargs):
         print 'Filter names:'
         for x in filters.keys():
             print x+': '+filters[x]['description']    
-        return numpy.nan
+        return numpy.nan, numpy.nan
 
 # convert units to erg/cm2/s/um if needed - TO BE DONE
 
@@ -1306,39 +1320,43 @@ def filterMag(sp,filter,*args,**kwargs):
             missing_values = ('NaN','nan'), filling_values = (numpy.nan))
     else:
         fwave,ftrans = custom[0],custom[1]
-    fnu = const.c.to('micron/s').value/fwave
-    fwave = fwave[~numpy.isnan(ftrans)]            # temporary fix
+    fwave = fwave[~numpy.isnan(ftrans)]*u.micron   # temporary fix
     ftrans = ftrans[~numpy.isnan(ftrans)]
                 
-# interpolate spectrum and vega spectrum onto filter wavelength function
+# interpolate spectrum onto filter wavelength function
     d = interp1d(sp.wave,sp.flux,bounds_error=False,fill_value=0.)
-    result = numpy.nan
+    n = interp1d(sp.wave,sp.noise,bounds_error=False,fill_value=numpy.nan)
     
-# compute relevant quantity
+    result = []
     if (vega):
 # Read in Vega spectrum
-        vwave,vtrans = numpy.genfromtxt(filterFolder+vegaFile, comments='#', unpack=True, \
+        vwave,vflux = numpy.genfromtxt(filterFolder+vegaFile, comments='#', unpack=True, \
             missing_values = ('NaN','nan'), filling_values = (numpy.nan))
-        vwave = vwave[~numpy.isnan(vtrans)]            # temporary fix
-        vtrans = vtrans[~numpy.isnan(vtrans)]
-        v = interp1d(vwave,vtrans,bounds_error=False,fill_value=0.)
-        result = -2.5*numpy.log10(trapz(ftrans*d(fwave),fwave)/trapz(ftrans*v(fwave),fwave))
-    if (energy):
-        result = trapz(ftrans*d(fwave),fwave)
-    if (photons):
-        convert = const.h.to('erg s')*const.c.to('micron/s')
-        result = trapz(ftrans*d(fwave)*fwave,fwave) / convert.value
+        vwave = vwave[~numpy.isnan(vflux)]*u.micron
+        vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))
+        vflux.to(sp.funit,equivalencies=u.spectral_density(vwave))
+# interpolate Vega onto filter wavelength function
+        v = interp1d(vwave,vflux,bounds_error=False,fill_value=0.)
+        for i in numpy.arange(nsamples):
+            result.append(-2.5*numpy.log10(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave)/trapz(ftrans*v(fwave)*sp.funit,fwave)))
+    if (energy or photons):
+        for i in numpy.arange(nsamples):
+            result.append(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave))
+        if (photons):
+            convert = const.h.to('erg s')*const.c.to('micron/s')
+            result = result/convert.value
     if (ab):
-# NOTE: THIS IS CURRENTLY NOT WORKING
-        sp.flamToFnu()
-        dd = interp1d(sp.nu,sp.flux,bounds_error=False,fill_value=0.)
-        a = trapz(ftrans*dd(fnu),numpy.log10(fnu))
-        b = trapz(ftrans,numpy.log10(fnu))
-        result = -2.5*numpy.log10(a/b)-48.6
-        sp.fnuToFlam()
-    
-    return result
+        fnu = fwave.to('Hz',equivalencies=u.spectral())
+        fconst = 3631*u.jansky
+        fconst = fconst.to(sp.fnunit,equivalencies=u.spectral())
+        d = interp1d(sp.nu,sp.fnu,bounds_error=False,fill_value=0.)
+        n = interp1d(sp.nu,sp.noise,bounds_error=False,fill_value=0.)
+        b = trapz((ftrans/fnu)/fconst,fnu)
+        for i in numpy.arange(nsamples):
+            a = trapz(ftrans*numpy.random.normal(d(fnu),n(fnu))*sp.fnunit/fnu,fnu)
+            result.append(-2.5*numpy.log10(a/b))
 
+    return numpy.nanmean(result),numpy.nanstd(result)
 
 
 def getSpectrum(*args, **kwargs):
@@ -1651,8 +1669,8 @@ def measureIndex(sp,*args,**kwargs):
     for i,waveRng in enumerate(args):
         xNum = (numpy.arange(0,nsamples+1.0)/nsamples)* \
             (numpy.nanmax(waveRng)-numpy.nanmin(waveRng))+numpy.nanmin(waveRng)
-        yNum = f(xNum)
-        yNum_e = s(xNum)
+        yNum = f(xNum)*sp.funit
+        yNum_e = s(xNum)*sp.funit
 
 # now do MonteCarlo measurement of value and uncertainty
         for j in numpy.arange(0,nsamples):
@@ -1694,9 +1712,9 @@ def measureIndex(sp,*args,**kwargs):
             
 # output mean, standard deviation
     if (noiseFlag):
-        return numpy.mean(vals), numpy.nan
+        return numpy.nanmean(vals), numpy.nan
     else:
-        return numpy.mean(vals), numpy.std(vals)
+        return numpy.nanmean(vals), numpy.nanstd(vals)
 
 
 # wrapper function for measuring specific sets of indices
