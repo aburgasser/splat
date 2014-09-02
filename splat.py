@@ -235,7 +235,7 @@ class Spectrum(object):
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.add(self.flux,f(self.wave)*other.funit)
         sp.variance = sp.variance+n(self.wave)*(other.funit**2)
-        sp.noise = numpy.array([v**0.5 for v in sp.variance])
+        sp.noise = sp.variance**0.5
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -248,7 +248,7 @@ class Spectrum(object):
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.subtract(self.flux,f(self.wave)*other.funit)
         sp.variance = sp.variance+n(self.wave)*(other.funit**2)
-        sp.noise = numpy.array([v**0.5 for v in sp.variance])
+        sp.noise = sp.variance**0.5
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -263,7 +263,7 @@ class Spectrum(object):
         sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
             numpy.divide(self.variance,numpy.power(sp.flux,2))+\
             numpy.divide(n(self.wave)*(other.funit**2),numpy.power(f(self.wave),2))))
-        sp.noise = numpy.array([v**0.5 for v in sp.variance])
+        sp.noise = sp.variance**0.5
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -278,7 +278,7 @@ class Spectrum(object):
         sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
             numpy.divide(self.variance,numpy.power(sp.flux,2))+\
             numpy.divide(n(self.wave)*(other.funit**2),numpy.power(f(self.wave),2))))
-        sp.noise = numpy.array([v**0.5 for v in sp.variance])
+        sp.noise = sp.variance**0.5
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
@@ -322,7 +322,7 @@ class Spectrum(object):
 
     def fluxMax(self):
         return numpy.nanmax(self.flux[numpy.where(\
-            numpy.logical_and(self.wave > 0.8*u.micron,self.wave < 2.3*u.micron))])
+            numpy.logical_and(self.wave > 0.8*u.micron,self.wave < 2.3*u.micron))]).value
 
     def fnuToFlam(self):
          '''Convert flux density from F_nu to F_lam, the later in erg/s/cm2/Hz'''
@@ -330,7 +330,7 @@ class Spectrum(object):
          self.flabel = 'F_lam'
          self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
          self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
-         self.variance = [n**2 for n in self.noise]
+         self.variance = self.noise**2
          return
 
     def normalize(self):
@@ -354,8 +354,8 @@ class Spectrum(object):
     def scale(self,factor):
          '''Scale spectrum and noise by a constant factor'''
          self.flux = self.flux*factor
-         self.noise = numpy.array([n*factor for n in self.noise])
-         self.variance = numpy.array([n**2 for n in self.noise])
+         self.noise = self.noise*factor
+         self.variance = self.noise**2
          self.fscale = 'Scaled'
          return
         
@@ -446,7 +446,7 @@ class Spectrum(object):
          return
 
     def waveRange(self):
-        ii = numpy.where(self.flux > 0)
+        ii = numpy.where(self.flux.value > 0)
         return [numpy.nanmin(self.wave[ii]), numpy.nanmax(self.wave[ii])]
      
         
@@ -1822,7 +1822,7 @@ def plotSpectrum(*args, **kwargs):
     zeropoint = kwargs.get('zeropoint',[0. for x in range(len(sp))])
     xlabel = kwargs.get('xlabel','{} ({})'.format(sp[0].wlabel,sp[0].wunit))
     ylabel = kwargs.get('ylabel','{} {} ({})'.format(sp[0].fscale,sp[0].flabel,sp[0].funit))
-    xrange = kwargs.get('xrange',sp[0].waveRange())
+    xrange = kwargs.get('xrange',[x.value for x in sp[0].waveRange()])
     bound = xrange
     ymax = [s.fluxMax() for s in sp]
     yrange = kwargs.get('yrange',[0,numpy.nanmax(ymax)+numpy.nanmax(zeropoint)])
@@ -1858,16 +1858,16 @@ def plotSpectrum(*args, **kwargs):
 # loop through sources
     plt.subplots(1)
     for ii,a in enumerate(sp):
-        flx = [i+zeropoint[ii] for i in a.flux]
-        plt.plot(a.wave,flx,color=colors[ii],linestyle=linestyle[ii])
+        flx = [i+zeropoint[ii] for i in a.flux.value]
+        plt.plot(a.wave.value,flx,color=colors[ii],linestyle=linestyle[ii])
 # show noise
         if (showNoise[ii]):
-            ns = [i+zeropoint[ii] for i in a.noise]
-            plt.plot(a.wave,ns,color=colorsUnc[ii],linestyle=linestyle[ii],alpha=0.3)
+            ns = [i+zeropoint[ii] for i in a.noise.value]
+            plt.plot(a.wave.value,ns,color=colorsUnc[ii],linestyle=linestyle[ii],alpha=0.3)
 # zeropoint
         if (showZero[ii]):
             ze = numpy.ones(len(a.flux))*zeropoint[ii]
-            plt.plot(a.wave,ze,color=colors[ii],linestyle=':',alpha=0.3)
+            plt.plot(a.wave.value,ze,color=colors[ii],linestyle=':',alpha=0.3)
 
 # grid
     if (grid):
