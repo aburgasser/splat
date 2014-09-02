@@ -1405,7 +1405,7 @@ def isNumber(s):
 
 def loadInterpolatedModel(*args,**kwargs):
 # interpolates within a 2x2 grid of teff and logg ONLY
-    set = kwargs.get('set','btsettl08')
+    set = kwargs.get('set','BTSettl2008')
     kwargs['set'] = set
     teff = float(kwargs.get('teff',1000.0))
     kwargs['teff'] = teff
@@ -1473,7 +1473,7 @@ def loadInterpolatedModel(*args,**kwargs):
 def loadModel(*args, **kwargs):
     '''load up a model spectrum based on parameters'''
 # keyword parameters
-    set = kwargs.get('set','btsettl08')
+    set = kwargs.get('set','BTSettl2008')
     teff = float(kwargs.get('teff',1000.0))
     logg = float(kwargs.get('logg',5.0))
     z = kwargs.get('z',0.0)
@@ -1499,10 +1499,10 @@ def loadModel(*args, **kwargs):
 # get model parameters
         param = loadModelParameters(set)
 
-        if (set == 'btsettl08'):
+        if (set == 'BTSettl2008'):
             url = url+'/'+set+'/'
 #            print teff, logg
-            kwargs['filename'] = set+'_{:.0f}_{:.1f}_-0.0_nc_nc_eq_0.5.txt'.format(teff,logg)
+            kwargs['filename'] = 'btsettl08'+'_{:.0f}_{:.1f}_-0.0_nc_nc_eq_0.5.txt'.format(teff,logg)
 #            kwargs['filename'] = 'lte'+'{:5.3f}'.format(teff/100000.)[2:]+'-'+str(logg)[0:3]+'-0.0.BT-Settl.7_r120.txt'        
         else: 
             raise NameError('\nCurrently only have BTSettl models\n\n')
