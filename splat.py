@@ -1497,7 +1497,6 @@ def loadModel(*args, **kwargs):
     else:
 
 # get model parameters
-        print set
         param = loadModelParameters(set)
 
         if (set == 'BTSettl2008'):
@@ -1647,10 +1646,11 @@ def measureIndex(sp,*args,**kwargs):
             
 # create interpolation functions
     w = numpy.where(numpy.isnan(sp.flux) == False)
-    f = interp1d(sp.wave[w],sp.flux[w],bounds_error=False,fill_value=0.)
+    f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=0.)
     w = numpy.where(numpy.isnan(sp.noise) == False)
+# note that units are stripped out
     if (numpy.size(w) != 0):
-        s = interp1d(sp.wave[w],sp.noise[w],bounds_error=False,fill_value=numpy.nan)
+        s = interp1d(sp.wave.value[w],sp.noise.value[w],bounds_error=False,fill_value=numpy.nan)
         noiseFlag = False
     else:
         s = interp1d(sp.wave,sp.noise,bounds_error=False,fill_value=numpy.nan)
@@ -1671,8 +1671,8 @@ def measureIndex(sp,*args,**kwargs):
     for i,waveRng in enumerate(args):
         xNum = (numpy.arange(0,nsamples+1.0)/nsamples)* \
             (numpy.nanmax(waveRng)-numpy.nanmin(waveRng))+numpy.nanmin(waveRng)
-        yNum = f(xNum)*sp.funit
-        yNum_e = s(xNum)*sp.funit
+        yNum = f(xNum)
+        yNum_e = s(xNum)
 
 # now do MonteCarlo measurement of value and uncertainty
         for j in numpy.arange(0,nsamples):
@@ -1682,7 +1682,7 @@ def measureIndex(sp,*args,**kwargs):
                 yVar = numpy.random.normal(yNum,yNum_e)
             else:
                 yVar = yNum
-
+            
 # choose function for measuring indices
             if (sample == 'integrate'):
                 values[i,j] = trapz(yVar,xNum)
@@ -2214,7 +2214,8 @@ def test():
     sys.stderr.write('\n...Teff of '+test_src+' = {:.1f}+/-{:.1f} K; successful\n'.format(teff,teff_e))
 
 # check flux calibration
-    sp.fluxCalibrate('2MASS J',15.0)
+    sp.normalize()
+    sp.fluxCalibrate('2MASS J',15.0,apparent=True)
     mag,mag_e = filterMag(sp,'MKO J')
     sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f}+/-{:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag,mag_e))
 
@@ -2223,8 +2224,6 @@ def test():
     sys.stderr.write('\n...interpolated model generation successful\n')
 
 # check normalization
-    mdl.normalize()
-    sp.normalize()
     sys.stderr.write('\n...normalization successful\n')
 
 # check compareSpectrum
