@@ -191,8 +191,8 @@ class Spectrum(object):
         self.variance = self.noise**2
         self.dof = numpy.round(len(self.wave)/self.slitpixelwidth)
 # signal to noise
-        w = numpy.where(self.flux.value > scipy.stats.nanmedian(self.flux))
-        self.snr = numpy.nanmean(self.flux[w]/self.noise[w])
+        w = numpy.where(self.flux.value > numpy.median(self.flux.value))
+        self.snr = numpy.nanmean(self.flux.value[w]/self.noise.value[w])
 
 # preserve original values
         self.wave_original = copy.deepcopy(self.wave)
@@ -310,7 +310,8 @@ class Spectrum(object):
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',False)
         self.normalize()
-        apmag = filterMag(self,filter,**kwargs)
+        apmag,apmag_e = filterMag(self,filter,**kwargs)
+# NOTE: NEED TO INCORPORATE UNCERTAINTY INTO SPECTRAL UNCERTAINTY
         if (~numpy.isnan(apmag)):
             self.scale(10.**(0.4*(apmag-mag)))
             if (absolute):
@@ -1021,7 +1022,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         v = interp1d(sp2.wave,sp2.variance,bounds_error=False,fill_value=numpy.nan)
     
 # total variance - funny form to cover for nans
-    vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave)],axis=0)*(sp2.funit**2)
+    vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave.value)],axis=0)*(sp2.funit**2)
  #   vtot = sp1.variance
     
 # Mask certain wavelengths
@@ -1462,11 +1463,11 @@ def loadInterpolatedModel(*args,**kwargs):
     val = numpy.array([[None]*2]*2)
     for i,w in enumerate(md11.wave):
         val = numpy.array([ \
-            [numpy.log10(md11.flux[i]),numpy.log10(md21.flux[i])], \
-            [numpy.log10(md12.flux[i]),numpy.log10(md22.flux[i])]])
+            [numpy.log10(md11.flux.value[i]),numpy.log10(md21.flux.value[i])], \
+            [numpy.log10(md12.flux.value[i]),numpy.log10(md22.flux.value[i])]])
         mflx[i] = 10.**(griddata((x.flatten(),y.flatten()),val.flatten(),(teff,logg),'linear'))
     
-    return Spectrum(wave=md11.wave,flux=mflx,**kwargs)
+    return Spectrum(wave=md11.wave,flux=mflx*md11.funit,**kwargs)
 
 
 def loadModel(*args, **kwargs):
@@ -2213,8 +2214,8 @@ def test():
 
 # check flux calibration
     sp.fluxCalibrate('2MASS J',15.0)
-    mag = filterMag(sp,'MKO J')
-    sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag))
+    mag,mag_e = filterMag(sp,'MKO J')
+    sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f}+/-{:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag,mag_e))
 
 # check models
     mdl = loadModel(teff=teff,logg=5.0,set='btsettl08')
