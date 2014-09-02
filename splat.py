@@ -1497,12 +1497,13 @@ def loadModel(*args, **kwargs):
     else:
 
 # get model parameters
+        print set
         param = loadModelParameters(set)
 
         if (set == 'BTSettl2008'):
             url = url+'/'+set+'/'
 #            print teff, logg
-            kwargs['filename'] = 'btsettl08'+'_{:.0f}_{:.1f}_-0.0_nc_nc_eq_0.5.txt'.format(teff,logg)
+            kwargs['filename'] = set+'_{:.0f}_{:.1f}_-0.0_nc_nc_eq_0.5.txt'.format(teff,logg)
 #            kwargs['filename'] = 'lte'+'{:5.3f}'.format(teff/100000.)[2:]+'-'+str(logg)[0:3]+'-0.0.BT-Settl.7_r120.txt'        
         else: 
             raise NameError('\nCurrently only have BTSettl models\n\n')
@@ -2218,7 +2219,7 @@ def test():
     sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f}+/-{:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag,mag_e))
 
 # check models
-    mdl = loadModel(teff=teff,logg=5.0,set='btsettl08')
+    mdl = loadModel(teff=teff,logg=5.0,set='BTSettl2008')
     sys.stderr.write('\n...interpolated model generation successful\n')
 
 # check normalization
