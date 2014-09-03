@@ -592,6 +592,8 @@ def classifyByIndex(sp, *args, **kwargs):
     nsamples = kwargs.get('nsamples', 100)
     nloop = kwargs.get('nloop', 5)
     set = kwargs.get('set','burgasser')
+    set = kwargs.get('ref',set)
+    kwargs['set'] = set
     allowed_sets = ['burgasser','reid','testi','allers']
     if (set.lower() not in allowed_sets):
         print '\nWarning: index classification method {} not present; returning nan\n\n'.format(set)
@@ -1331,8 +1333,6 @@ def filterMag(sp,filter,*args,**kwargs):
             print x+': '+filters[x]['description']    
         return numpy.nan, numpy.nan
 
-# convert units to erg/cm2/s/um if needed - TO BE DONE
-
 # Read in filter
     if (custom == False):
         fwave,ftrans = numpy.genfromtxt(filterFolder+filters[filter]['file'], comments='#', unpack=True, \
@@ -1343,9 +1343,15 @@ def filterMag(sp,filter,*args,**kwargs):
     ftrans = ftrans[~numpy.isnan(ftrans)]
                 
 # interpolate spectrum onto filter wavelength function
-    d = interp1d(sp.wave,sp.flux,bounds_error=False,fill_value=0.)
-    n = interp1d(sp.wave,sp.noise,bounds_error=False,fill_value=numpy.nan)
-    
+    wgood = numpy.where(~numpy.isnan(sp.noise))
+    if len(wgood) > 1:
+        d = interp1d(sp.wave[wgood],sp.flux[wgood],bounds_error=False,fill_value=0.)
+        n = interp1d(sp.wave[wgood],sp.noise[wgood],bounds_error=False,fill_value=0.)
+# catch for models
+    else:
+        d = interp1d(sp.wave,sp.flux,bounds_error=False,fill_value=0.)
+        n = interp1d(sp.wave,sp.flux*1.e-9,bounds_error=False,fill_value=0.)
+        
     result = []
     if (vega):
 # Read in Vega spectrum
@@ -1375,7 +1381,11 @@ def filterMag(sp,filter,*args,**kwargs):
             a = trapz(ftrans*numpy.random.normal(d(fnu),n(fnu))*sp.fnunit/fnu,fnu)
             result.append(-2.5*numpy.log10(a/b))
 
-    return numpy.nanmean(result),numpy.nanstd(result)
+    val = numpy.nanmean(result)
+    err = numpy.nanstd(result)
+    if len(wgood) <= 1:
+        err = 0.
+    return val,err
 
 
 def getSpectrum(*args, **kwargs):
@@ -1986,9 +1996,18 @@ def readSpectrum(**kwargs):
 # keyword parameters
     folder = kwargs.get('folder','./')
     catchSN = kwargs.get('catchSN',True)
-#    model = kwargs.get('model',False)
-#    uncertainty = kwargs.get('uncertainty',not model)
     file = kwargs.get('filename','')
+    url = kwargs.get('url','')
+
+# download if a remote file
+    if url != '':
+        try:
+            open(os.path.basename(file), 'wb').write(urllib2.urlopen(url+file).read()) 
+            file = os.path.basename(kwargs['filename'])
+        except:
+            print '\n\nCould not locate {} at {}\n'.format(file,url)
+
+# try to read        
     if (os.path.exists(file) == False):
         file = folder+os.path.basename(file)
     if (os.path.exists(file) == False):
@@ -2042,6 +2061,10 @@ def readSpectrum(**kwargs):
               noise = flux/noise
               w = numpy.where(numpy.isnan(noise))
               noise[w] = stats.nanmedian(noise)
+
+# clean up
+    if url != '':
+        os.remove(file)
 
     return {'wave':wave,'flux':flux,'noise':noise,'header':header}
 
@@ -2560,8 +2583,7 @@ def loadInterpolatedModel_old(*args,**kwargs):
     kwargs['teff'] = teff
     logg = float(kwargs.get('logg',5.0))
     kwargs['logg'] = logg
-    url = kwargs.get('folder',SPLAT_URL+'/Models/')
-    kwargs['url'] = url
+    kwargs['url'] = kwargs.get('folder',SPLAT_URL+'/Models/')
 #    local = kwargs.get('local',False)
     kwargs['model'] = True
 
