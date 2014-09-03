@@ -1957,7 +1957,7 @@ def plotSpectrum(*args, **kwargs):
     
     else:
         plt.show()
-        if (kwargs['interactive'] != False):
+        if (kwargs.get('interactive',False) != False):
             plt.ion()        # make window interactive by default
         else:
             plt.ioff()
@@ -2539,7 +2539,7 @@ def weightedMeanVar(vals, winput, *args, **kwargs):
     elif (method == 'ftest'):
 # fix issue of chi^2 = 0
         minchi = numpy.nanmin(winput)
-        weights = numpy.array([stats.f.cdf(w/minchi,dof,dof) for w in winput])
+        weights = numpy.array([stats.f.pdf(w/minchi,dof,dof) for w in winput])
 # just use the input as the weights
     else:
         weights = [w for w in winput]
