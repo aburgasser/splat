@@ -1344,13 +1344,14 @@ def filterMag(sp,filter,*args,**kwargs):
                 
 # interpolate spectrum onto filter wavelength function
     wgood = numpy.where(~numpy.isnan(sp.noise))
-    if len(wgood) > 1:
+    if len(sp.wave[wgood]) > 0:
         d = interp1d(sp.wave[wgood],sp.flux[wgood],bounds_error=False,fill_value=0.)
-        n = interp1d(sp.wave[wgood],sp.noise[wgood],bounds_error=False,fill_value=0.)
+        n = interp1d(sp.wave[wgood],sp.noise[wgood],bounds_error=False,fill_value=numpy.nan)
 # catch for models
     else:
+        print 'no good points'
         d = interp1d(sp.wave,sp.flux,bounds_error=False,fill_value=0.)
-        n = interp1d(sp.wave,sp.flux*1.e-9,bounds_error=False,fill_value=0.)
+        n = interp1d(sp.wave,sp.flux*1.e-9,bounds_error=False,fill_value=numpy.nan)
         
     result = []
     if (vega):
@@ -1383,7 +1384,7 @@ def filterMag(sp,filter,*args,**kwargs):
 
     val = numpy.nanmean(result)
     err = numpy.nanstd(result)
-    if len(wgood) <= 1:
+    if len(sp.wave[wgood]) > 0:
         err = 0.
     return val,err
 
@@ -1610,7 +1611,7 @@ def loadModel(*args, **kwargs):
 # now try local drive
         if (os.path.exists(kwargs['filename']) == False):
             kwargs['filename'] = folder+os.path.basename(kwargs['filename'])
-            if (os.path.exists(file) == False):
+            if (os.path.exists(kwargs['filename']) == False):
                 raise NameError('\nCould not find model file {}'.format(kwargs['filename']))
             else:
                 return Spectrum(**kwargs)
