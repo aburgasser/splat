@@ -9,7 +9,7 @@
 #    Yuhui Jin
 #    Mike Lopez
 #    Alex Mendez
-#    Johnny Parra
+#    Jonathan Parra
 #    Julian Pilate-Hutcherson
 #    Maitrayee Sahi
 #    Melisa Tallis
@@ -43,8 +43,8 @@ from astropy.coordinates import SkyCoord      # coordinate conversion
 from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 
-# local application/library specific imports
-import bdevopar # still in development
+# local application/library specific import
+from bdevopar import *
 
 # suppress warnings - probably not an entirely safe approach!
 numpy.seterr(all='ignore')
