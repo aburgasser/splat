@@ -152,13 +152,13 @@ class ReadModel(object):
                 gravities[age].append(float(value[3+v]))
                 radiuses[age].append(float(value[4+v]))
 
-        return {'masses':masses, 'gravities':gravities, 'radiuses':radiuses,
-                'luminosities':luminosities, 'temperatures':temperatures, 
-		'ages':[float(i) for i in ages]}
+        return {'mass':masses, 'gravity':gravities, 'radius':radiuses,
+                'luminosity':luminosities, 'temperature':temperatures, 
+		'age':[float(i) for i in ages]}
 
 ############################### End of class ReadModel ########################
 ###############################################################################
-class Parameters(ReadModel):
+class Params(ReadModel):
     """
     :Description: Checks that the input parameters are valid (e.g user 
                   inputs must be capable of being interpolated). 
@@ -230,36 +230,36 @@ class Parameters(ReadModel):
             else: raise NameError('Only 1 mass allowed.\n')
          elif keywords[i][0].upper().startswith('L'): 
             if params['luminosity'] == 0: 
-               params['luminosity'] = float(kwargs[keys[i]])
+               params['luminosity'] = float(kwargs[keywords[i]])
             else: raise NameError('Only 1 luminosity allowed.\n')
          else: raise NameError("Keyword '"+keywords[i]+"' is nonexistent.\n")
 
       if params['temperature'] != 0: 
-         assert min(min(model['temperatures'][:])) <= \
-              params['temperature'] <= max(max(model['temperatures'][:])),\
+         assert min(min(model['temperature'][:])) <= \
+              params['temperature'] <= max(max(model['temperature'][:])),\
               "Temperature is out of model's range"
       if params['luminosity'] != 0: 
-         assert min(min(model['luminosities'][:])) <= \
-              params['luminosity'] <= max(max(model['luminosities'][:])), \
+         assert min(min(model['luminosity'][:])) <= \
+              params['luminosity'] <= max(max(model['luminosity'][:])), \
               "Luminosity is out of model's range"
       if params['gravity'] != 0: 
-         assert min(min(model['gravities'][:])) <= params['gravity'] <= \
-            max(max(model['gravities'][:])), "Gravity is out of model's range."
+         assert min(min(model['gravity'][:])) <= params['gravity'] <= \
+            max(max(model['gravity'][:])), "Gravity is out of model's range."
       if params['radius'] != 0: 
-         assert min(min(model['radiuses'][:])) <= params['radius'] <= \
-              max(max(model['radiuses'][:])), "Radius is out of model's range."
+         assert min(min(model['radius'][:])) <= params['radius'] <= \
+              max(max(model['radius'][:])), "Radius is out of model's range."
       if params['mass'] != 0: 
-         assert min(min(model['masses'][:])) <= params['mass'] <= \
-              max(max(model['masses'][:])), "Mass is out of model's range."
+         assert min(min(model['mass'][:])) <= params['mass'] <= \
+              max(max(model['mass'][:])), "Mass is out of model's range."
       if params['age'] != 0: 
-         assert min(model['ages'][:]) <= params['age'] <= \
-              max(model['ages'][:]), "Age is out of model's range."
+         assert min(model['age'][:]) <= params['age'] <= \
+              max(model['age'][:]), "Age is out of model's range."
 
       #########################################################################
       Ag, Ma, Te, Le, Ge, Re = [],[],[],[],[],[]
       input_type = 'mass_age'
       valid_ages = []
-      n_tables = range(len(model['ages']))
+      n_tables = range(len(model['age']))
 
       ############### WITH TWO KNOWN PARAMETERS, SPIT OUT AGE #################
       if (params['mass'] == False) and (params['age'] == False):
@@ -312,7 +312,7 @@ class Parameters(ReadModel):
           if input_type == 'two_params': 
               n_t = valid_ages
               valid_ages = []
-          else: n_t = model['n_tables']
+          else: n_t = n_tables
 
           for i in n_t:
              if min(model[P[0][0]][i]) <= P[0][1] <= max(model[P[0][0]][i]):
@@ -335,16 +335,16 @@ class Parameters(ReadModel):
           if input_type == 'mass_age': valid_ages = n_tables
 
           for i in valid_ages:
-              if min(model['masses'][i]) <= params['mass'] \
-                                                  <= max(model['masses'][i]):
-                  Ag.append(model['ages'][i])
-                  f =interp1d(model['masses'][i],model['temperatures'][i])
+              if min(model['mass'][i]) <= params['mass'] \
+                                                  <= max(model['mass'][i]):
+                  Ag.append(model['age'][i])
+                  f =interp1d(model['mass'][i],model['temperature'][i])
                   Te.append(f(params['mass']))
-                  f = interp1d(model['masses'][i],model['luminosities'][i])
+                  f = interp1d(model['mass'][i],model['luminosity'][i])
                   Le.append(f(params['mass']))
-                  f = interp1d(model['masses'][i],model['gravities'][i])
+                  f = interp1d(model['mass'][i],model['gravity'][i])
                   Ge.append(f(params['mass']))
-                  f = interp1d(model['masses'][i],model['radiuses'][i])
+                  f = interp1d(model['mass'][i],model['radius'][i])
                   Re.append(f(params['mass']))
       
       f = interp1d(Ag, Te) 
@@ -377,13 +377,13 @@ class Parameters(ReadModel):
 
       return {'temperature':params['temperature']*u.K, 
               'mass':params['mass']*u.solMass, 'age':params['age']*u.Gyr, 
-              'luminosity':exp(params['luminosity'])*u.solLum,
-	      'gravity':exp(params['gravity'])*u.centimeter/u.second**2, 
+              'luminosity':params['luminosity']*u.solLum,
+	      'gravity':params['gravity']*u.centimeter/u.second**2, 
 	      'radius':params['radius']*u.solRad}
 ########################## End of the class: bdevopar #########################
 ###############################################################################
 
-class ParamsList(Parameters, ReadModel):
+class Parameters(Params, ReadModel):
     """
     :Description: Allows the user to input a list of parameters.
     :Returns: 
@@ -395,8 +395,13 @@ class ParamsList(Parameters, ReadModel):
     """
     def __new__(cls,*model,**kwargs):
 	 keywords = kwargs.keys()
-         assert len(kwargs[keywords[0]]) == len(kwargs[keywords[1]]), """
-	     Number of elements in both input lists must be equal."""
+	 if type(kwargs[keywords[0]]) is float or \
+	                      type(kwargs[keywords[0]]) is int:  
+	     kwargs[keywords[0]] = [kwargs[keywords[0]]]
+	     kwargs[keywords[1]] = [kwargs[keywords[1]]]
+	 else:
+             assert len(kwargs[keywords[0]]) == len(kwargs[keywords[1]]), """
+	         Number of elements in both input lists must be equal."""
 	 assert len(keywords) == 2, "Only two keywords (lists) allowed."
 	 
 	 try: model = model[0]
@@ -404,8 +409,8 @@ class ParamsList(Parameters, ReadModel):
 
          if type(model) is not dict: model = ReadModel(model)
 
-         params = {'temperatures':[],'ages':[],'gravities':[],
-	           'radiuses':[],'masses':[],'luminosities':[]}
+         params = {'temperature':[],'age':[],'gravity':[],
+	           'radius':[],'mass':[],'luminosity':[]}
          T, A, G, R, M, L = False,False,False,False,False,False
 
          for i in range(2):
@@ -433,56 +438,56 @@ class ParamsList(Parameters, ReadModel):
 
 	 if A == True and M == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,m=mass[i],a=age[i])
+	        p[i] = Params(model,m=mass[i],a=age[i])
 	 elif A == True and L == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,l=luminosity[i],a=age[i])
+	        p[i] = Params(model,l=luminosity[i],a=age[i])
 	 elif A == True and T == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,t=temperature[i],a=age[i])
+	        p[i] = Params(model,t=temperature[i],a=age[i])
 	 elif A == True and G == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,g=gravity[i],a=age[i])
+	        p[i] = Params(model,g=gravity[i],a=age[i])
 	 elif A == True and R == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,r=radius[i],a=age[i])
+	        p[i] = Params(model,r=radius[i],a=age[i])
 	 elif M == True and R == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,r=radius[i],m=mass[i])
+	        p[i] = Params(model,r=radius[i],m=mass[i])
 	 elif M == True and L == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,l=luminosity[i],m=mass[i])
+	        p[i] = Params(model,l=luminosity[i],m=mass[i])
 	 elif M == True and T == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,t=temperature[i],m=mass[i])
+	        p[i] = Params(model,t=temperature[i],m=mass[i])
 	 elif M == True and G == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,m=mass[i],g=gravity[i])
+	        p[i] = Params(model,m=mass[i],g=gravity[i])
 	 elif R == True and T == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,r=radius[i],t=temperature[i])
+	        p[i] = Params(model,r=radius[i],t=temperature[i])
 	 elif R == True and G == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,r=radius[i],g=gravity[i])
+	        p[i] = Params(model,r=radius[i],g=gravity[i])
 	 elif R == True and L == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,r=radius[i],l=luminosity[i])
+	        p[i] = Params(model,r=radius[i],l=luminosity[i])
 	 elif G == True and T == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,g=gravity[i],t=temperature[i])
+	        p[i] = Params(model,g=gravity[i],t=temperature[i])
 	 elif G == True and L == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,g=gravity[i],l=luminosity[i])
+	        p[i] = Params(model,g=gravity[i],l=luminosity[i])
 	 elif L == True and T == True:
   	    for i in range(numberValues):
-	        p[i] = Parameters(model,r=luminosity[i],t=temperature[i])
+	        p[i] = Params(model,r=luminosity[i],t=temperature[i])
 
 	 for i in range(numberValues):
-	     params['temperatures'].append(p[i]['temperature'])
-	     params['ages'].append(p[i]['age'])
-             params['gravities'].append(p[i]['gravity'])
-	     params['radiuses'].append(p[i]['radius'])
-	     params['masses'].append(p[i]['mass'])
-	     params['luminosities'].append(p[i]['luminosity'])
+	     params['temperature'].append(p[i]['temperature'])
+	     params['age'].append(p[i]['age'])
+             params['gravity'].append(p[i]['gravity'])
+	     params['radius'].append(p[i]['radius'])
+	     params['mass'].append(p[i]['mass'])
+	     params['luminosity'].append(p[i]['luminosity'])
 
          return params
