@@ -15,11 +15,14 @@
 #    Melisa Tallis
 
 #
-# CURRENT STATUS (5/6/2014)
-# can now load up spectra and models from online sources
-# source spectra can be selected by name, designation, young/subdwarf/red/blue/binary/spbin
-# returned as array of spectra
-#
+# CURRENT STATUS (9/2/2014)
+# Several models are now available, although this is somewhat unstable
+# due to patchy parameter coverage
+# Units are integrated, although somewhat haphazardly
+# Need to create a copy routine for Spectrum
+# Need to spruce up plotSpectrum (more options)
+# Need to add more filters
+# Need to add better metadata for Spectrum object (headers)
 
 # imports
 import astropy
@@ -51,13 +54,15 @@ numpy.seterr(all='ignore')
 warnings.simplefilter("ignore")
 #from splat._version import __version__
 
-# CONSTANTS 
+#################### CONSTANTS ####################
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-parameter_names = ['teff','logg','z','fsed','kzz']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
 spex_wave_range = [0.65,2.45]*u.micron    # default wavelength range
 max_snr = 1000.0                # maximum S/N ratio permitted
+model_parameter_names = ['teff','logg','z','fsed','cld','kzz','slit']
+model_parameters = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
+defined_model_set = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
 
 spex_stdfiles = { \
     'M0.0': 'spex_prism_Gl270_091203.fits',\
@@ -90,6 +95,8 @@ spex_stdfiles = { \
     'T7.0': 'spex_prism_0727+1710_040310.txt',\
     'T8.0': 'spex_prism_0415-0935_030917.txt',\
     'T9.0': 'spex_prism_0722-0540_110404.fits'}
+
+#####################################################
 
         
 # helper functions from Alex
@@ -124,11 +131,11 @@ def Copy(fn):
 # define the Spectrum class which contains the relevant information
 class Spectrum(object):
     @Show
-    def __init__(self, filename, **kwargs):
+    def __init__(self, **kwargs):
         '''Load the file'''
         self.model = False
 # various options for setting the filename
-        self.filename = filename
+        self.filename = ''
         if kwargs.get('filename','') != '':
             self.filename = kwargs.get('filename','')
         if kwargs.get('file','') != '':
@@ -217,7 +224,10 @@ class Spectrum(object):
             self.teff = kwargs.get('teff',numpy.nan)
             self.logg = kwargs.get('logg',numpy.nan)
             self.z = kwargs.get('z',numpy.nan)
-            self.cloud = kwargs.get('cloud',numpy.nan)
+            self.fsed = kwargs.get('fsed',numpy.nan)
+            self.cld = kwargs.get('cld',numpy.nan)
+            self.kzz = kwargs.get('kzz',numpy.nan)
+            self.slit = kwargs.get('slit',numpy.nan)
             self.modelset = kwargs.get('set','')
             self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)
             self.fscale = 'Surface'
@@ -284,15 +294,23 @@ class Spectrum(object):
         sp.variance_original=sp.variance
         return sp
 
-    def copy(self):
-          '''Make a copy of the current spectrum'''
-          other = copy.deepcopy(self)
-          return other
+# NOTE: COPY CURRENTLY NOT FUNCTIONAL
+#    def copy(self):
+#          '''Make a copy of the current spectrum'''
+#          other = copy.deepcopy(self)
+#          return type('CopyOfB', B.__bases__, dict(B.__dict__))
 
     def info(self):
           '''Report some information about this spectrum'''
           if (self.model):
-              print '''{0} model with Teff = {1} and log g = {2}'''.format(self.modelset, self.teff, self.logg)
+              print '\n{} model with the following parmeters:'.format(self.modelset)
+              print 'Teff = {}'.format(self.teff)
+              print 'logg = {}'.format(self.logg)
+              print 'z = {}'.format(self.z)
+              print 'fsed = {}'.format(self.fsed)
+              print 'cld = {}'.format(self.cld)
+              print 'kzz = {}'.format(self.kzz)
+              print 'slit = {}\n'.format(self.slit)
           else:
               print '''Spectrum of {0} taken on {1}'''.format(self.name, self.date)
           return
@@ -1404,87 +1422,133 @@ def isNumber(s):
 
 
 def loadInterpolatedModel(*args,**kwargs):
-# interpolates within a 2x2 grid of teff and logg ONLY
-    set = kwargs.get('set','BTSettl2008')
-    kwargs['set'] = set
-    teff = float(kwargs.get('teff',1000.0))
-    kwargs['teff'] = teff
-    logg = float(kwargs.get('logg',5.0))
-    kwargs['logg'] = logg
-    url = kwargs.get('folder',SPLAT_URL+'/Models/')
-    kwargs['url'] = url
-#    local = kwargs.get('local',False)
+# attempt to generalize models to extra dimensions
+    kwargs['url'] = kwargs.get('url',SPLAT_URL+'/Models/')
+    kwargs['set'] = kwargs.get('set','BTSettl2008')
     kwargs['model'] = True
+    for ms in model_parameter_names:
+        kwargs[ms] = kwargs.get(ms,model_parameters[ms])
 
 # first get model parameters
-    param = loadModelParameters(set)
-#    print param
+    parameters = loadModelParameters(**kwargs)
     
-# check if input parameters are within range
-    for t in param.colnames:
-        flg = kwargs.get(t,False)
-        if flg != False:
-            if (flg < param[t][0] or flg > param[t][1]):
-                raise ValueError('\n\nValue {}={} outside model range'.format(t,str(flg)))
-
-# try simply loading model (on grid)
-#    try:
-#        return loadModel(**kwargs)
-#    except:
-#        sys.stderr.write('\nCalculating interpolated model\n')
+# check that given parameters are in range
+    for ms in model_parameter_names[0:3]:
+        if (float(kwargs[ms]) < parameters[ms][0] or float(kwargs[ms]) > parameters[ms][1]):
+            raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+    for ms in model_parameter_names[3:6]:
+        if (kwargs[ms] not in parameters[ms]):
+            raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
 
 # identify grid points around input parameters
-# NOTE: THIS IS JUST FOR TEFF AND LOGG GRIDDING FOR NOW
-
-    t = teff - teff%param['teff'][2]
-    trng = [max(param['teff'][0],t),min(t+param['teff'][2],param['teff'][1])]
-    g = logg - logg%param['logg'][2]
-    grng = [max(param['logg'][0],g),min(g+param['logg'][2],param['logg'][1])]
-    x,y = numpy.meshgrid(trng,grng)
+# 3x3 grid for teff, logg, z
+# note interpolation and model ranges are separate
+    mrng = []
+    rng = []
+    for ms in model_parameter_names[0:3]:
+        s = float(kwargs[ms]) - float(kwargs[ms])%float(parameters[ms][2])
+        r = [max(float(parameters[ms][0]),s),min(s+float(parameters[ms][2]),float(parameters[ms][1]))]
+        if abs(s-float(kwargs[ms])) < 0.1*float(parameters[ms][2]):
+            m = [float(kwargs[ms]),float(kwargs[ms])]
+            r[1]=r[0]+0.1*float(parameters[ms][2])
+        else:
+            m = r
+        rng.append(r)
+        mrng.append(m)
+    mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
 
     mkwargs = kwargs.copy()
-#    try:
-#    print trng, grng
-    mkwargs['teff'] = trng[0]
-    mkwargs['logg'] = grng[0]
-    md11 = loadModel(**mkwargs)
-    mkwargs['teff'] = trng[1]
-    md21 = loadModel(**mkwargs)
-    mkwargs['teff'] = trng[0]
-    mkwargs['logg'] = grng[1]
-    md12 = loadModel(**mkwargs)
-    mkwargs['teff'] = trng[1]
-    md22 = loadModel(**mkwargs)
-    
-#    except:
-#        raise NameError('\nProblem loading grid of models in loadInterpolatedModel\n\n')
 
-    mflx = numpy.zeros(len(md11.wave))
-    val = numpy.array([[None]*2]*2)
-    for i,w in enumerate(md11.wave):
+# read in models
+# note the complex path is to minimize model reads
+    mkwargs['teff'] = mrng[0][0]
+    mkwargs['logg'] = mrng[1][0]
+    mkwargs['z'] = mrng[2][0]
+    md111 = loadModel(**mkwargs)
+
+    mkwargs['z'] = mrng[2][1]
+    if (mrng[2][1] != mrng[2][0]):
+        md112 = loadModel(**mkwargs)
+    else:
+        md112 = md111
+
+    mkwargs['logg'] = mrng[1][1]
+    mkwargs['z'] = mrng[2][0]
+    if (mrng[1][1] != mrng[1][0]):
+        md121 = loadModel(**mkwargs)
+    else:
+        md121 = md111
+
+    mkwargs['z'] = mrng[2][1]
+    if (mrng[2][1] != mrng[2][0]):
+        md122 = loadModel(**mkwargs)
+    else:
+        md122 = md121
+
+    mkwargs['teff'] = mrng[0][1]
+    mkwargs['logg'] = mrng[1][0]
+    mkwargs['z'] = mrng[2][0]
+    if (mrng[0][1] != mrng[0][0]):
+        md211 = loadModel(**mkwargs)
+    else:
+        md211 = md111
+
+    mkwargs['z'] = mrng[2][1]
+    if (mrng[2][1] != mrng[2][0]):
+        md212 = loadModel(**mkwargs)
+    else:
+        md212 = md112
+
+    mkwargs['logg'] = mrng[1][1]
+    mkwargs['z'] = mrng[2][0]
+    if (mrng[1][1] != mrng[1][0]):
+        md221 = loadModel(**mkwargs)
+    else:
+        md221 = md211
+
+    mkwargs['z'] = mrng[2][1]
+    if (mrng[2][1] != mrng[2][0]):
+        md222 = loadModel(**mkwargs)
+    else:
+        md222 = md221
+
+    mflx = numpy.zeros(len(md111.wave))
+    val = numpy.zeros([2,2,2])
+    for i,w in enumerate(md111.wave):
         val = numpy.array([ \
-            [numpy.log10(md11.flux.value[i]),numpy.log10(md21.flux.value[i])], \
-            [numpy.log10(md12.flux.value[i]),numpy.log10(md22.flux.value[i])]])
-        mflx[i] = 10.**(griddata((x.flatten(),y.flatten()),val.flatten(),(teff,logg),'linear'))
+            [[numpy.log10(md111.flux.value[i]),numpy.log10(md112.flux.value[i])], \
+            [numpy.log10(md121.flux.value[i]),numpy.log10(md122.flux.value[i])]], \
+            [[numpy.log10(md211.flux.value[i]),numpy.log10(md212.flux.value[i])], \
+            [numpy.log10(md221.flux.value[i]),numpy.log10(md222.flux.value[i])]]])
+        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),val.flatten(),\
+            (float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])),'linear'))
     
-    return Spectrum(wave=md11.wave,flux=mflx*md11.funit,**kwargs)
+    return Spectrum(wave=md111.wave,flux=mflx*md111.funit,**kwargs)
 
 
 def loadModel(*args, **kwargs):
     '''load up a model spectrum based on parameters'''
 # keyword parameters
-    set = kwargs.get('set','BTSettl2008')
-    teff = float(kwargs.get('teff',1000.0))
-    logg = float(kwargs.get('logg',5.0))
-    z = kwargs.get('z',0.0)
-    kzz = kwargs.get('kzz',0)
-    fsed = kwargs.get('fsed',0)
-    folder = kwargs.get('folder','')
-    url = kwargs.get('folder',SPLAT_URL+'/Models/')
-    local = kwargs.get('local',False)
+    kwargs['set'] = kwargs.get('set','BTSettl2008')
     kwargs['model'] = True
+    local = kwargs.get('local',False)
+    folder = kwargs.get('folder','./')
     fileFlag = False
-    
+
+# preset defaults
+    for ms in model_parameter_names:
+        kwargs[ms] = kwargs.get(ms,model_parameters[ms])
+
+# some special defaults
+    if kwargs['set'] == 'morley12':
+        if kwargs['fsed'] == 'nc':
+            kwargs['fsed'] = 'f2'
+    if kwargs['set'] == 'morley14':
+        if kwargs['fsed'] == 'nc':
+            kwargs['fsed'] = 'f5'
+        if kwargs['cld'] == 'nc':
+            kwargs['cld'] = 'f50'
+
 # check if online
     local = local or (not checkOnline())
 
@@ -1497,55 +1561,47 @@ def loadModel(*args, **kwargs):
     else:
 
 # get model parameters
-        param = loadModelParameters(set)
+        parameters = loadModelParameters(**kwargs)
+        kwargs['url'] = kwargs.get('url',parameters['url'])
+        
+# check that given parameters are in range
+        for ms in model_parameter_names[0:3]:
+            if (float(kwargs[ms]) < parameters[ms][0] or float(kwargs[ms]) > parameters[ms][1]):
+                raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+        for ms in model_parameter_names[3:6]:
+            if (kwargs[ms] not in parameters[ms]):
+                raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
 
-        if (set == 'BTSettl2008'):
-            url = url+'/'+set+'/'
-#            print teff, logg
-            kwargs['filename'] = set+'_{:.0f}_{:.1f}_-0.0_nc_nc_eq_0.5.txt'.format(teff,logg)
-#            kwargs['filename'] = 'lte'+'{:5.3f}'.format(teff/100000.)[2:]+'-'+str(logg)[0:3]+'-0.0.BT-Settl.7_r120.txt'        
-        else: 
-            raise NameError('\nCurrently only have BTSettl models\n\n')
+# check to see if given parameters are "on grid"
+        chk = [float('{:.1f}'.format(float(kwargs[ms]))) in [float('{:.1f}'.format(x)) for x in numpy.arange(parameters[ms][0],parameters[ms][1]+parameters[ms][2],parameters[ms][2])] for ms in model_parameter_names[0:3]]
+        if numpy.all(chk):
+# generate a file name
+            kwargs['filename'] = kwargs['set']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
+                format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],float(kwargs['slit']))
+            fileFlag = True
 
-        if (teff < param['teff'][0] or teff > param['teff'][1]):
-            raise NameError('\nInput Teff out of range\n\n')
-
-        if (logg < param['logg'][0] or logg > param['logg'][1]):
-            raise NameError('\nInput logg out of range\n\n')
-
-    
-# if model is on grid read in that model
-    if (teff in numpy.arange(param['teff'][0],param['teff'][1]+param['teff'][2],param['teff'][2]) and \
-        logg in numpy.arange(param['logg'][0],param['logg'][1]+param['logg'][2],param['logg'][2])):
-        fileFlag = True
-
-# simple read in a file
+# first try to read in file
     if fileFlag:
-    
-# first try online
+
+# try online
         if not local:
             try:
-                open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
+                open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(kwargs['url']+kwargs['filename']).read()) 
                 kwargs['filename'] = os.path.basename(kwargs['filename'])
                 sp = Spectrum(**kwargs)
-#                os.close(kwargs['filename'])
+#               os.close(kwargs['filename'])
                 os.remove(kwargs['filename'])
                 return sp
-#fh, filename = tempfile.mkstemp()    do i need this?
-#os.close(fh)
-#os.remove(filename)
             except urllib2.URLError:
-                sys.stderr.write('\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
+                sys.stderr.write('\n\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
                 os.remove(os.path.basename(kwargs['filename']))
                 local = True
 
-
-    
-    # now try local drive
+# now try local drive
         if (os.path.exists(kwargs['filename']) == False):
             kwargs['filename'] = folder+os.path.basename(kwargs['filename'])
-            if (os.path.exists(kwargs['filename']) == False):
-                raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
+            if (os.path.exists(file) == False):
+                raise NameError('\nCould not find model file {}'.format(kwargs['filename']))
             else:
                 return Spectrum(**kwargs)
         else:
@@ -1554,29 +1610,45 @@ def loadModel(*args, **kwargs):
 # or do an interpolated Model
     else:
         return loadInterpolatedModel(**kwargs)
-        
 
 
-def loadModelParameters(*args, **kwargs):
-    '''Load up Model Parameters based on help file'''
+def loadModelParameters(**kwargs):
+    '''Load up model parameters and check model inputs'''
 # keyword parameters
-    set = args[0]
     pfile = kwargs.get('parameterFile','parameters.txt')
+    set = kwargs.get('set','BTSettl2008')
+    url = kwargs.get('url',SPLAT_URL+'/Models/'+set+'/')
+
+# legitimate model set?
+    if set not in defined_model_set:
+        raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(set,defined_model_set))
     
 # check if online
     if not checkOnline():
-        raise urllib2.URLError('\n\nCannot access online models\n\n')
+        raise urllib2.URLError('\n\nCannot access SPLAT online models; check your connection\n'.format(set))
 
-    url = kwargs.get('folder',SPLAT_URL+'/Models/'+set+'/')
+# read in parameter file
     try:
         open(os.path.basename(pfile), 'wb').write(urllib2.urlopen(url+pfile).read())
-        parameters = ascii.read(pfile)
+        p = ascii.read(pfile)
         os.remove(os.path.basename(pfile))
     except urllib2.URLError:
-        raise urllib2.URLError('\n\nCannot access models from SPLAT website\n\n')
-    
-    return parameters
+        raise urllib2.URLError('\n\nCannot access online models for model set {}\n'.format(set))
 
+# populate output parameter structure
+    parameters = {'set': set, 'url': url}
+    for ms in model_parameter_names[0:3]:
+        if ms in p.colnames:
+            parameters[ms] = [float(x) for x in p[ms]]
+        else:
+            raise ValueError('\n\nModel set {} does not have defined parameter range for {}'.format(set,ms))
+    for ms in model_parameter_names[3:6]:
+        if ms in p.colnames:
+            parameters[ms] = str(p[ms][0]).split(",")
+        else:
+            raise ValueError('\n\nModel set {} does not have defined parameter list for {}'.format(set,ms))
+
+    return parameters
 
 
 def loadSpectrum(*args, **kwargs):
@@ -1885,8 +1957,10 @@ def plotSpectrum(*args, **kwargs):
     
     else:
         plt.show()
-        plt.ion()        # make window interactive by default
-    
+        if (kwargs['interactive'] != False):
+            plt.ion()        # make window interactive by default
+        else:
+            plt.ioff()
     return
 
 
@@ -2220,7 +2294,7 @@ def test():
     sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f}+/-{:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag,mag_e))
 
 # check models
-    mdl = loadModel(teff=teff,logg=5.0,set='BTSettl2008')
+    mdl = loadModel(teff=teff,logg=5.3,set='BTSettl2008')
     sys.stderr.write('\n...interpolated model generation successful\n')
 
 # check normalization
@@ -2465,7 +2539,7 @@ def weightedMeanVar(vals, winput, *args, **kwargs):
     elif (method == 'ftest'):
 # fix issue of chi^2 = 0
         minchi = numpy.nanmin(winput)
-        weights = numpy.array([stats.f.pdf(w/minchi,dof,dof) for w in winput])
+        weights = numpy.array([stats.f.cdf(w/minchi,dof,dof) for w in winput])
 # just use the input as the weights
     else:
         weights = [w for w in winput]
@@ -2477,3 +2551,148 @@ def weightedMeanVar(vals, winput, *args, **kwargs):
     
     return mn,var        
 
+
+def loadInterpolatedModel_old(*args,**kwargs):
+# interpolates within a 2x2 grid of teff and logg ONLY
+    set = kwargs.get('set','BTSettl2008')
+    kwargs['set'] = set
+    teff = float(kwargs.get('teff',1000.0))
+    kwargs['teff'] = teff
+    logg = float(kwargs.get('logg',5.0))
+    kwargs['logg'] = logg
+    url = kwargs.get('folder',SPLAT_URL+'/Models/')
+    kwargs['url'] = url
+#    local = kwargs.get('local',False)
+    kwargs['model'] = True
+
+# first get model parameters
+    param = loadModelParameters(**kwargs)
+#    print param
+    
+# check if input parameters are within range
+    for t in param.colnames:
+        flg = kwargs.get(t,False)
+        if flg != False:
+            if (flg < param[t][0] or flg > param[t][1]):
+                raise ValueError('\n\nValue {}={} outside model range'.format(t,str(flg)))
+
+# identify grid points around input parameters
+# NOTE: THIS IS JUST FOR TEFF AND LOGG GRIDDING FOR NOW
+
+    t = teff - teff%param['teff'][2]
+    trng = [max(param['teff'][0],t),min(t+param['teff'][2],param['teff'][1])]
+    g = logg - logg%param['logg'][2]
+    grng = [max(param['logg'][0],g),min(g+param['logg'][2],param['logg'][1])]
+    x,y = numpy.meshgrid(trng,grng)
+
+    mkwargs = kwargs.copy()
+#    try:
+#    print trng, grng
+    mkwargs['teff'] = trng[0]
+    mkwargs['logg'] = grng[0]
+    md11 = loadModel_old(**mkwargs)
+    mkwargs['teff'] = trng[1]
+    md21 = loadModel_old(**mkwargs)
+    mkwargs['teff'] = trng[0]
+    mkwargs['logg'] = grng[1]
+    md12 = loadModel_old(**mkwargs)
+    mkwargs['teff'] = trng[1]
+    md22 = loadModel_old(**mkwargs)
+    
+#    except:
+#        raise NameError('\nProblem loading grid of models in loadInterpolatedModel\n\n')
+
+    mflx = numpy.zeros(len(md11.wave))
+    val = numpy.array([[None]*2]*2)
+    for i,w in enumerate(md11.wave):
+        val = numpy.array([ \
+            [numpy.log10(md11.flux.value[i]),numpy.log10(md21.flux.value[i])], \
+            [numpy.log10(md12.flux.value[i]),numpy.log10(md22.flux.value[i])]])
+        mflx[i] = 10.**(griddata((x.flatten(),y.flatten()),val.flatten(),(teff,logg),'linear'))
+    
+    return Spectrum(wave=md11.wave,flux=mflx*md11.funit,**kwargs)
+
+
+def loadModel_old(*args, **kwargs):
+    '''load up a model spectrum based on parameters'''
+# keyword parameters
+    set = kwargs.get('set','BTSettl2008')
+    kwargs['set'] = set
+    teff = float(kwargs.get('teff',1000.0))
+    logg = float(kwargs.get('logg',5.0))
+    z = kwargs.get('z',0.0)
+    kzz = kwargs.get('kzz',0)
+    fsed = kwargs.get('fsed',0)
+    folder = kwargs.get('folder','')
+    url = kwargs.get('folder',SPLAT_URL+'/Models/')
+    local = kwargs.get('local',False)
+    kwargs['model'] = True
+    fileFlag = False
+    
+# check if online
+    local = local or (not checkOnline())
+
+# a filename has been passed - simply read this file
+    if (len(args) > 0):
+        kwargs['filename'] = args[0]
+        fileFlag = True
+
+# determine model set
+    else:
+
+# get model parameters
+        param = loadModelParameters(**kwargs)
+
+        if (set == 'BTSettl2008'):
+            url = url+'/'+set+'/'
+#            print teff, logg
+            kwargs['filename'] = set+'_{:.0f}_{:.1f}_-0.0_nc_nc_eq_0.5.txt'.format(teff,logg)
+#            kwargs['filename'] = 'lte'+'{:5.3f}'.format(teff/100000.)[2:]+'-'+str(logg)[0:3]+'-0.0.BT-Settl.7_r120.txt'        
+        else: 
+            raise NameError('\nCurrently only have BTSettl models\n\n')
+
+        if (teff < param['teff'][0] or teff > param['teff'][1]):
+            raise NameError('\nInput Teff out of range\n\n')
+
+        if (logg < param['logg'][0] or logg > param['logg'][1]):
+            raise NameError('\nInput logg out of range\n\n')
+
+    
+# if model is on grid read in that model
+    if (teff in numpy.arange(param['teff'][0],param['teff'][1]+param['teff'][2],param['teff'][2]) and \
+        logg in numpy.arange(param['logg'][0],param['logg'][1]+param['logg'][2],param['logg'][2])):
+        fileFlag = True
+
+# simple read in a file
+    if fileFlag:
+    
+# first try online
+        if not local:
+            try:
+                open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
+                kwargs['filename'] = os.path.basename(kwargs['filename'])
+                sp = Spectrum(**kwargs)
+#                os.close(kwargs['filename'])
+                os.remove(kwargs['filename'])
+                return sp
+#fh, filename = tempfile.mkstemp()    do i need this?
+#os.close(fh)
+#os.remove(filename)
+            except urllib2.URLError:
+                sys.stderr.write('\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
+                os.remove(os.path.basename(kwargs['filename']))
+                local = True
+
+    # now try local drive
+        if (os.path.exists(kwargs['filename']) == False):
+            kwargs['filename'] = folder+os.path.basename(kwargs['filename'])
+            if (os.path.exists(kwargs['filename']) == False):
+                raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
+            else:
+                return Spectrum(**kwargs)
+        else:
+            return Spectrum(**kwargs)
+
+# or do an interpolated Model
+    else:
+        return loadInterpolatedModel_old(**kwargs)
