@@ -1384,7 +1384,7 @@ def filterMag(sp,filter,*args,**kwargs):
 
     val = numpy.nanmean(result)
     err = numpy.nanstd(result)
-    if len(sp.wave[wgood]) > 0:
+    if len(sp.wave[wgood]) == 0:
         err = 0.
     return val,err
 
@@ -1427,7 +1427,7 @@ def isNumber(s):
     '''check if something is a number'''
     try:
         float(s)
-        return True
+        return (True and ~numpy.isnan(numpy.nan))
     except ValueError:
         return False
 
@@ -1629,22 +1629,33 @@ def loadModelParameters(**kwargs):
     pfile = kwargs.get('parameterFile','parameters.txt')
     set = kwargs.get('set','BTSettl2008')
     url = kwargs.get('url',SPLAT_URL+'/Models/'+set+'/')
+    local = kwargs.get('local',False)
+    folder = kwargs.get('folder','./')
 
 # legitimate model set?
     if set not in defined_model_set:
         raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(set,defined_model_set))
     
 # check if online
-    if not checkOnline():
-        raise urllib2.URLError('\n\nCannot access SPLAT online models; check your connection\n'.format(set))
+    local = local or (not checkOnline())
 
-# read in parameter file
-    try:
-        open(os.path.basename(pfile), 'wb').write(urllib2.urlopen(url+pfile).read())
-        p = ascii.read(pfile)
-        os.remove(os.path.basename(pfile))
-    except urllib2.URLError:
-        raise urllib2.URLError('\n\nCannot access online models for model set {}\n'.format(set))
+# read in parameter file - local and not local
+    if not local:
+        try:
+            open(os.path.basename(pfile), 'wb').write(urllib2.urlopen(url+pfile).read())
+            p = ascii.read(pfile)
+            os.remove(os.path.basename(pfile))
+        except urllib2.URLError:
+            print '\n\nCannot access online models for model set {}\n'.format(set)
+            local = True
+    else:            
+        if (os.path.exists(pfile) == False):
+            pfile = folder+os.path.basename(pfile)
+            if (os.path.exists(pfile) == False):
+                raise NameError('\nCould not find parameter file {}'.format(pfile))
+            else:
+                p = ascii.read(pfile)
+
 
 # populate output parameter structure
     parameters = {'set': set, 'url': url}
