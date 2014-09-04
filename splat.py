@@ -2467,7 +2467,7 @@ def typeToNum(input, **kwargs):
             output = numpy.nan
 
 # spectral type -> number
-    elif (type(input) == 'str'):
+    elif isinstance(input,str):
         input = string.split(input,sep='+')[0]    # remove +/- sides
         input = string.split(input,sep='-')[0]    # remove +/- sides
         sptype = re.findall('[{}]'.format(spletter),input)
