@@ -1427,7 +1427,7 @@ def isNumber(s):
     '''check if something is a number'''
     try:
         float(s)
-        return (True and ~numpy.isnan(numpy.nan))
+        return (True and ~numpy.isnan(s))
     except ValueError:
         return False
 
@@ -2467,7 +2467,7 @@ def typeToNum(input, **kwargs):
             output = numpy.nan
 
 # spectral type -> number
-    else:
+    elif (type(input) == 'str'):
         input = string.split(input,sep='+')[0]    # remove +/- sides
         input = string.split(input,sep='-')[0]    # remove +/- sides
         sptype = re.findall('[{}]'.format(spletter),input)
@@ -2501,6 +2501,9 @@ def typeToNum(input, **kwargs):
         if (len(sptype) != 1):
 #            print 'Only spectral classes {} are handled with this routine'.format(spletter)
             output = numpy.nan
+# none of the above - return the input
+    else:
+        output = input
     return output
 
 
