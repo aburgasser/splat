@@ -16,7 +16,9 @@ from urllib2 import urlopen
 from scipy.interpolate import interp1d 
 from astropy import units as u
 from astropy.io import ascii
-from math import exp
+from math import isnan
+import matplotlib.pyplot as plt
+from numpy import isnan
 
 ###############################################################################
 ###############################################################################
@@ -104,8 +106,12 @@ class ReadModel(object):
             ages = ['0.001', '0.005', '0.010', '0.050', '0.100',
                     '0.120', '0.500', '1.000', '5.000', '10.000']
 
-            if model == 'baraffe': Emodels = Emodels_URL + 'Baraffe/cond_'
-            else: Emodels = Emodels_URL + 'Burrow/b97_'
+            if model == 'baraffe': 
+	        Emodels = Emodels_URL + 'Baraffe/cond_'
+	        EmodeL = 'Baraffe/cond_'
+            else: 
+	        Emodels = Emodels_URL + 'Burrow/b97_'
+	        EmodeL = 'Burrow/b97_'
             num_files = len(ages); v = 0
         ########################### SAUMON MODEL ##############################
         else:
@@ -131,6 +137,7 @@ class ReadModel(object):
                     '3.000','4.000','6.000','8.000','10.000']
 
             Emodels = Emodels_URL + 'Saumon/' + metallicity + '/' + Z
+            EmodeL = 'Saumon/' + metallicity + '/' + Z
 	    num_files = len(ages); v = 1
         #######################################################################
 
@@ -144,7 +151,8 @@ class ReadModel(object):
 
         for age in n_tables:
 	    try:data =ascii.read(urlopen(Emodels+ages[age]).read(),comment=';')
-	    except: assert False, "The servers are offline or yours is."
+	    except: 
+		data=ascii.read('/Users/Johnny/Documents/UCSD/Modules/BDevopar/Models/'+EmodeL+ages[age],comment='#')
             for line,value in enumerate(data):
                 masses[age].append(float(value[0+v]))
                 temperatures[age].append(float(value[1+v]))
@@ -234,26 +242,26 @@ class Params(ReadModel):
             else: raise NameError('Only 1 luminosity allowed.\n')
          else: raise NameError("Keyword '"+keywords[i]+"' is nonexistent.\n")
 
-      if params['temperature'] != 0: 
-         assert min(min(model['temperature'][:])) <= \
-              params['temperature'] <= max(max(model['temperature'][:])),\
-              "Temperature is out of model's range"
-      if params['luminosity'] != 0: 
-         assert min(min(model['luminosity'][:])) <= \
-              params['luminosity'] <= max(max(model['luminosity'][:])), \
-              "Luminosity is out of model's range"
-      if params['gravity'] != 0: 
-         assert min(min(model['gravity'][:])) <= params['gravity'] <= \
-            max(max(model['gravity'][:])), "Gravity is out of model's range."
-      if params['radius'] != 0: 
-         assert min(min(model['radius'][:])) <= params['radius'] <= \
-              max(max(model['radius'][:])), "Radius is out of model's range."
-      if params['mass'] != 0: 
-         assert min(min(model['mass'][:])) <= params['mass'] <= \
-              max(max(model['mass'][:])), "Mass is out of model's range."
-      if params['age'] != 0: 
-         assert min(model['age'][:]) <= params['age'] <= \
-              max(model['age'][:]), "Age is out of model's range."
+#      if params['temperature'] != 0: 
+#         assert min(min(model['temperature'][:])) <= \
+#              params['temperature'] <= max(max(model['temperature'][:])),\
+#              "Temperature is out of model's range"
+#      if params['luminosity'] != 0: 
+#         assert min(min(model['luminosity'][:])) <= \
+#              params['luminosity'] <= max(max(model['luminosity'][:])), \
+#              "Luminosity is out of model's range"
+#      if params['gravity'] != 0: 
+#         assert min(min(model['gravity'][:])) <= params['gravity'] <= \
+#            max(max(model['gravity'][:])), "Gravity is out of model's range."
+#      if params['radius'] != 0: 
+#         assert min(min(model['radius'][:])) <= params['radius'] <= \
+#              max(max(model['radius'][:])), "Radius is out of model's range."
+#      if params['mass'] != 0: 
+#         assert min(min(model['mass'][:])) <= params['mass'] <= \
+#              max(max(model['mass'][:])), "Mass is out of model's range."
+#      if params['age'] != 0: 
+#         assert min(model['age'][:]) <= params['age'] <= \
+#              max(model['age'][:]), "Age is out of model's range."
 
       #########################################################################
       Ag, Ma, Te, Le, Ge, Re = [],[],[],[],[],[]
@@ -284,18 +292,19 @@ class Params(ReadModel):
                   f = interp1d(model['mass'][i], model[P[1][0]][i])
                   Ge.append(f(Ma))
 
-          f = interp1d(Ge, Ag)
-          try:
-             params['age'] = f(P[1][1])
-          except ValueError:
-             assert False, P[1][0] + " is above the interpolation range."
+          
+          try: 
+              f = interp1d(Ge, Ag)
+              params['age'] = f(P[1][1])
+	  except: params['age'] = float('nan')
 
           del Ge[:], Ag[:]; Ma = []
  
       ################ WITH KNOWN AGE OR MASS AND ANOTHER PARAMETER ###########
       ################### SPIT OUT MASS OR AGE, RESPECTIVELY ##################
-      if ((params['age'] != False) and (params['mass'] == False)) \
-         or ((params['mass'] != False) and (params['age'] == False)):
+      if (((params['age'] != False) and (params['mass'] == False)) \
+         or ((params['mass'] != False) and (params['age'] == False))) and \
+	 not isnan(params['age']):
 
           if input_type != 'two_params': 
               input_type = 'one_param'; P = []
@@ -322,15 +331,20 @@ class Params(ReadModel):
                  Ma.append(f(P[0][1]))
           
           if params['mass'] == False:
-              f = interp1d(Ag, Ma)
-              params['mass'] = round(f(params['age']), 5)
+              try: 
+                  f = interp1d(Ag, Ma)
+	          params['mass'] = round(f(params['age']), 5)
+	      except: params['mass'] = float('nan')
           else:
-              f = interp1d(Ma, Ag)
-              params['age'] = round(f(params['mass']), 5)
+              try: 
+                  f = interp1d(Ma, Ag)
+                  params['age'] = round(f(params['mass']), 5)
+	      except: params['age'] = float('nan')
           del Ag[:]
 
       ###################### WITH KNOWN MASS AND AGE ##########################
-      if (params['mass'] != False) and (params['age'] != False):
+      if (params['mass'] != False) and (params['age'] != False) and \
+         (not isnan(params['age']) and not isnan(params['mass'])):
 
           if input_type == 'mass_age': valid_ages = n_tables
 
@@ -347,39 +361,41 @@ class Params(ReadModel):
                   f = interp1d(model['mass'][i],model['radius'][i])
                   Re.append(f(params['mass']))
       
-      f = interp1d(Ag, Te) 
-      params['temperature'] = round(f(params['age']), 8)
-      f = interp1d(Ag, Le)
-      params['luminosity'] = round(f(params['age']), 8)
-      f = interp1d(Ag, Ge) 
-      params['gravity'] = round(f(params['age']), 8)
-      f = interp1d(Ag, Re)
-      params['radius'] = round(f(params['age']), 8)
+          try: 
+              f = interp1d(Ag, Te) 
+	      params['temperature'] = round(f(params['age']), 8)
+	  except: params['temperature'] = float('nan')
+          try: 
+              f = interp1d(Ag, Le)
+	      params['luminosity'] = round(f(params['age']), 8)
+	  except: params['luminosity'] = float('nan')
+          try: 
+              f = interp1d(Ag, Ge) 
+	      params['gravity'] = round(f(params['age']), 8)
+	  except: params['gravity'] = float('nan')
+          try: 
+              f = interp1d(Ag, Re)
+	      params['radius'] = round(f(params['age']), 8)
+	  except: params['radius'] = float('nan')
       
-      if input_type == 'one_param': params[P[0][0]] = P[0][1]
-      elif input_type == 'two_params': 
-          params[P[0][0]] = P[0][1]
-          params[P[1][0]] = P[1][1]
+          if input_type == 'one_param': params[P[0][0]] = P[0][1]
+          elif input_type == 'two_params': 
+              params[P[0][0]] = P[0][1]
+              params[P[1][0]] = P[1][1]
 
-#      print "\n------------------------------------------"
-#      print "| BD's age (Gyr):           | " + str(params['age'])
-#      print "------------------------------------------"
-#      print "| BD's mass (Msun):         | " + str(params['mass'])
-#      print "------------------------------------------"
-#      print "| Effective temperature (K) | " + str(params['temperature'])
-#      print "------------------------------------------"
-#      print "| log L_bd/L_sun:           | " + str(params['luminosity'])
-#      print "------------------------------------------"
-#      print "| log surface gravity:      | " + str(params['gravity'])
-#      print "------------------------------------------"
-#      print "| BD's radius (Rsun):       | " + str(params['radius'])
-#      print "------------------------------------------\n"
-
-      return {'temperature':params['temperature']*u.K, 
-              'mass':params['mass']*u.solMass, 'age':params['age']*u.Gyr, 
-              'luminosity':params['luminosity']*u.solLum,
-	      'gravity':params['gravity']*u.centimeter/u.second**2, 
-	      'radius':params['radius']*u.solRad}
+          return {'temperature':params['temperature'], 
+                  'mass':params['mass'], 'age':params['age'], 
+                  'luminosity':params['luminosity'],
+	          'gravity':params['gravity'], 
+	          'radius':params['radius']}
+		  
+      else:
+          nan = float('nan')
+          return {'temperature':nan, 
+                  'mass':nan, 'age':nan, 
+                  'luminosity':nan,
+	          'gravity':nan, 
+	          'radius':nan}
 ########################## End of the class: bdevopar #########################
 ###############################################################################
 
@@ -490,4 +506,16 @@ class Parameters(Params, ReadModel):
 	     params['mass'].append(p[i]['mass'])
 	     params['luminosity'].append(p[i]['luminosity'])
 
+	 params['temperature'] = params['temperature']*u.K
+	 params['age'] = params['age']*u.Gyr
+         params['gravity'] = params['gravity']*u.cm/u.s
+	 params['radius'] = params['radius']*u.solRad
+         params['mass'] = params['mass']*u.solMass
+	 params['luminosity'] = params['luminosity']*u.solLum
+
          return params
+
+class PlotHist(Parameters, Params, ReadModel):
+    def __new__(cls,params,bins=60):
+        plt.hist(params[~isnan(params)],bins=bins)
+	return plt.show()
