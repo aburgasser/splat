@@ -19,7 +19,6 @@
 # Several models are now available, although this is somewhat unstable
 # due to patchy parameter coverage
 # Units are integrated, although somewhat haphazardly
-# Need to create a copy routine for Spectrum
 # Need to spruce up plotSpectrum (more options)
 # Need to add more filters
 # Need to add better metadata for Spectrum object (headers)
@@ -75,25 +74,25 @@ spex_stdfiles = { \
     'M7.0': 'spex_prism_vB8_070704.fits',\
     'M8.0': 'spex_prism_vB10_070704.fits',\
     'M9.0': 'spex_prism_LHS2924_070704.fits',\
-    'L0.0': 'spex_prism_0345+2540_kc.txt',\
-    'L1.0': 'spex_prism_2130-0845_080713.txt',\
-    'L2.0': 'spex_prism_kelu-1_060411.txt',\
-    'L3.0': 'spex_prism_1506+1321_060410.txt',\
+    'L0.0': 'spex_prism_0345+2540_kc.fits',\
+    'L1.0': 'spex_prism_2130-0845_080713.fits',\
+    'L2.0': 'spex_prism_kelu-1_060411.fits',\
+    'L3.0': 'spex_prism_1506+1321_060410.fits',\
     'L4.0': 'spex_prism_2158-1550_060901.fits',\
-    'L5.0': 'spex_prism_sdss0835+19_chiu06.txt',\
-    'L6.0': 'spex_prism_1010-0406_kc.txt',\
+    'L5.0': 'spex_prism_sdss0835+19_chiu06.fits',\
+    'L6.0': 'spex_prism_1010-0406_kc.fits',\
     'L7.0': 'spex_prism_0103+1935_060902.fits',\
-    'L8.0': 'spex_prism_1632+1904_030905.txt',\
-    'L9.0': 'spex_prism_denis0255-4700_040908.txt',\
-    'T0.0': 'spex_prism_1207+0244_061221dl.txt',\
+    'L8.0': 'spex_prism_1632+1904_030905.fits',\
+    'L9.0': 'spex_prism_denis0255-4700_040908.fits',\
+    'T0.0': 'spex_prism_1207+0244_061221dl.fits',\
     'T1.0': 'spex_prism_0837-0000_061221.fits',\
-    'T2.0': 'spex_prism_sdss1254-0122_030522.txt',\
+    'T2.0': 'spex_prism_sdss1254-0122_030522.fits',\
     'T3.0': 'spex_prism_1209-1004_030523.fits',\
-    'T4.0': 'spex_prism_2254+3123_030918.txt',\
-    'T5.0': 'spex_prism_1503+2525_030522.txt',\
-    'T6.0': 'spex_prism_sdss1624+0029_040312.txt',\
-    'T7.0': 'spex_prism_0727+1710_040310.txt',\
-    'T8.0': 'spex_prism_0415-0935_030917.txt',\
+    'T4.0': 'spex_prism_2254+3123_030918.fits',\
+    'T5.0': 'spex_prism_1503+2525_030522.fits',\
+    'T6.0': 'spex_prism_sdss1624+0029_040312.fits',\
+    'T7.0': 'spex_prism_0727+1710_040310.fits',\
+    'T8.0': 'spex_prism_0415-0935_030917.fits',\
     'T9.0': 'spex_prism_0722-0540_110404.fits'}
 
 #####################################################
@@ -295,9 +294,10 @@ class Spectrum(object):
         return sp
 
 # NOTE: COPY CURRENTLY NOT FUNCTIONAL
-#    def copy(self):
-#          '''Make a copy of the current spectrum'''
-#          other = copy.deepcopy(self)
+    def copy(self):
+        '''Make a copy of the current spectrum'''
+        other = copy.deepcopy(self)
+        return other
 #          return type('CopyOfB', B.__bases__, dict(B.__dict__))
 
     def info(self):
@@ -339,8 +339,8 @@ class Spectrum(object):
         return
 
     def fluxMax(self):
-        return numpy.nanmax(self.flux[numpy.where(\
-            numpy.logical_and(self.wave > 0.8*u.micron,self.wave < 2.3*u.micron))]).value
+        return numpy.nanmax(self.flux.value[numpy.where(\
+            numpy.logical_and(self.wave > 0.8*u.micron,self.wave < 2.3*u.micron))])*self.funit
 
     def fnuToFlam(self):
          '''Convert flux density from F_nu to F_lam, the later in erg/s/cm2/Hz'''
@@ -747,13 +747,19 @@ def classifyByStandard(sp, *args, **kwargs):
     else:
         comprng = [0.7,2.45]*u.micron       # by default, compare whole spectrum
 
+# which comparison statistic to use
+    if numpy.isnan(numpy.median(sp.noise)):
+        compstat = 'stddev_norm'
+    else:
+        compstat = 'chisqr'
+
 # compute fitting statistics
     stat = []
     sspt = []
     sfile = []
     for t in numpy.arange(sptrange[0],sptrange[1]+1):
         spstd = loadSpectrum(file=spex_stdfiles[typeToNum(t)])
-        chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],chisqr=True,novar2=True)
+        chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],stat=compstat,novar2=True)
         stat.append(chisq)
         sspt.append(t)
         sfile.append(spex_stdfiles[typeToNum(t)])
@@ -769,7 +775,14 @@ def classifyByStandard(sp, *args, **kwargs):
         sptn = sorted_stdsptnum[0]
         sptn_e = unc_sys
     else:
-        mean,var = weightedMeanVar(sspt,stat,method='ftest',dof=sp.dof)
+        try:
+            st = stat.value
+        except:
+            st = stat
+        if numpy.isnan(numpy.median(sp.noise)):
+            mean,var = weightedMeanVar(sspt,st)
+        else:
+            mean,var = weightedMeanVar(sspt,st,method='ftest',dof=sp.dof)        
         if (var**0.5 < 1.):
             sptn = numpy.round(mean*2)*0.5
         else:
@@ -784,12 +797,10 @@ def classifyByStandard(sp, *args, **kwargs):
 
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
-        spc = sp.copy()     # copy to avoid change original value
-        spc.normalize()
         spstd = loadSpectrum(file=sorted_stdfiles[0])
-        chisq,scale = compareSpectra(spc,spstd,fit_ranges=[comprng],chisqr=True)
+        chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],stat=compstat)
         spstd.scale(scale)
-        plotSpectrum(spc,spstd,colors=['k','r'],\
+        plotSpectrum(sp,spstd,colors=['k','r'],\
             title=sp.name+' vs '+typeToNum(sorted_stdsptnum[0])+' Standard',**kwargs)
 
     return spt, sptn_e
@@ -881,7 +892,7 @@ def classifyByTemplate(sp, *args, **kwargs):
     stat = []
     for i,f in enumerate(files):
         s = loadSpectrum(file=f)
-        chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],chisqr=True,novar2=True)
+        chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],stat='chisqr',novar2=True)
         stat.append(chisq)
         if (verbose):
             print f, typeToNum(sspt[i]), chisq, scale
@@ -905,7 +916,7 @@ def classifyByTemplate(sp, *args, **kwargs):
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
         s = loadSpectrum(file=sorted_files[0])
-        chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],chisqr=True)
+        chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],stat='chisqr')
         s.scale(scale)
         plotSpectrum(sp,s,colors=['k','r'],title=sp.name+' vs '+s.name,**kwargs)
 
@@ -1021,15 +1032,10 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     mask_telluric = kwargs.get('mask_telluric',False)
     mask_standard = kwargs.get('mask_standard',False)
     var_flag = kwargs.get('novar2',False)
-    chisqr = kwargs.get('chisqr',True)
-    stddev = kwargs.get('stddev',False)
-    absdev = kwargs.get('absdev',False)
+    stat = kwargs.get('stat','chisqr')
     minreturn = 1.e-9
     if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
         fit_ranges*=u.micron
-
-    if (absdev or stddev):
-        chisqr = False
     
     if (mask_standard == True):
         mask_telluric == True
@@ -1042,7 +1048,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         v = interp1d(sp2.wave,sp2.variance,bounds_error=False,fill_value=numpy.nan)
     
 # total variance - funny form to cover for nans
-    vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave.value)],axis=0)*(sp2.funit**2)
+    vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave.value)],axis=0)
  #   vtot = sp1.variance
     
 # Mask certain wavelengths
@@ -1072,40 +1078,49 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 # comparison statistics
 
 # chi^2
-    if (chisqr):
+    if (stat == 'chisqr'):
 # compute scale factor    
-        scale = numpy.nansum(weights*sp1.flux*f(sp1.wave)*sp2.funit/vtot)/ \
-            numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)*sp2.funit**2/vtot)
+        scale = numpy.nansum(weights*sp1.flux.value*f(sp1.wave)/vtot)/ \
+            numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)/vtot)
 # correct variance
-        vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave)*scale**2],axis=0)*(sp2.funit**2)
-        stat = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*sp2.funit*scale)**2/vtot)
+        vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave)*scale**2],axis=0)
+        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave)*scale)**2/vtot)
+        unit = sp1.funit/sp1.funit
+
+# normalized standard deviation
+    elif (stat == 'stddev_norm'):
+# compute scale factor    
+        scale = numpy.nansum(weights*sp1.flux.value)/ \
+            numpy.nansum(weights*f(sp1.wave))
+# correct variance
+        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave)*scale)**2)/ \
+            numpy.median(sp1.flux.value)**2
+        unit = sp1.funit/sp1.funit
 
 # standard deviation
-    elif (stddev):
+    elif (stat == 'stddev'):
 # compute scale factor    
-        scale = numpy.nansum(weights*sp1.flux*f(sp1.wave)*sp2.funit)/ \
-            numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)*sp2.funit**2)
+        scale = numpy.nansum(weights*sp1.flux.value*f(sp1.wave))/ \
+            numpy.nansum(weights*f(sp1.wave)*f(sp1.wave))
 # correct variance
-        vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave)*scale**2],axis=0)*(sp2.funit**2)
-        stat = numpy.nansum(weights*(sp1.flux-f(sp1.wave)*sp2.funit*scale)**2)
-        minreturn*=sp1.funit**2
+        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave)*scale)**2)
+        unit = sp1.funit**2
 
 # absolute deviation
-    elif (absdev):
+    elif (stat == 'absdev'):
 # compute scale factor    
-        scale = numpy.nansum(weights*sp1.flux)/ \
-            numpy.nansum(weights*f(sp1.wave)*sp2.funit)
+        scale = numpy.nansum(weights*sp1.flux.value)/ \
+            numpy.nansum(weights*f(sp1.wave))
 # correct variance
-        vtot = numpy.nanmax([sp1.variance.value,sp1.variance.value+v(sp1.wave)*scale**2],axis=0)*(sp2.funit**2)
-        stat = numpy.nansum(weights*abs(sp1.flux-f(sp1.wave)*sp2.funit*scale))
-        minreturn*=sp1.funit
+        stat = numpy.nansum(weights*abs(sp1.flux.value-f(sp1.wave)*scale))
+        unit = sp1.funit
 
 # error
     else:
-        print 'Error: statistic for compareSpectra not given'
+        print 'Error: statistic {} for compareSpectra not available'.format(stat)
         return numpy.nan, numpy.nan
 
-    return numpy.nanmax([stat,minreturn]), scale
+    return numpy.nanmax([stat,minreturn])*unit, scale
         
 
 def coordinateToDesignation(c):
@@ -1426,8 +1441,8 @@ def getSpectrum(*args, **kwargs):
 def isNumber(s):
     '''check if something is a number'''
     try:
-        float(s)
-        return (True and ~numpy.isnan(s))
+        t = float(s)
+        return (True and ~numpy.isnan(t))
     except ValueError:
         return False
 
@@ -1589,6 +1604,7 @@ def loadModel(*args, **kwargs):
 # generate a file name
             kwargs['filename'] = kwargs['set']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
                 format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],float(kwargs['slit']))
+#            print kwargs['filename']
             fileFlag = True
 
 # first try to read in file
@@ -1600,12 +1616,13 @@ def loadModel(*args, **kwargs):
                 open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(kwargs['url']+kwargs['filename']).read()) 
                 kwargs['filename'] = os.path.basename(kwargs['filename'])
                 sp = Spectrum(**kwargs)
+#                print sp.flux
+#                os.remove(os.path.basename(kwargs['filename']))
 #               os.close(kwargs['filename'])
-                os.remove(kwargs['filename'])
                 return sp
             except urllib2.URLError:
                 sys.stderr.write('\n\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
-                os.remove(os.path.basename(kwargs['filename']))
+#                os.remove(os.path.basename(kwargs['filename']))
                 local = True
 
 # now try local drive
@@ -1919,7 +1936,7 @@ def plotSpectrum(*args, **kwargs):
     ylabel = kwargs.get('ylabel','{} {} ({})'.format(sp[0].fscale,sp[0].flabel,sp[0].funit))
     xrange = kwargs.get('xrange',[x.value for x in sp[0].waveRange()])
     bound = xrange
-    ymax = [s.fluxMax() for s in sp]
+    ymax = [s.fluxMax().value for s in sp]
     yrange = kwargs.get('yrange',[0,numpy.nanmax(ymax)+numpy.nanmax(zeropoint)])
     bound.extend(yrange)
     grid = kwargs.get('grid',False)
@@ -2336,7 +2353,7 @@ def test():
     sys.stderr.write('\n...normalization successful\n')
 
 # check compareSpectrum
-    chi, scale = compareSpectra(sp,mdl,mask_standard=True)
+    chi, scale = compareSpectra(sp,mdl,mask_standard=True,stat='chisqr')
     sys.stderr.write('\nFit to model: chi^2 = {}, scale = {}'.format(chi,scale))
     sys.stderr.write('\n...compareSpectra successful\n'.format(chi,scale))
 
@@ -2561,15 +2578,19 @@ def typeToTeff(input, **kwargs):
         return numpy.nan, numpy.nan
 
 
-def weightedMeanVar(vals, winput, *args, **kwargs):
+def weightedMeanVar(vals, winp, *args, **kwargs):
     '''Compute weighted mean of an array of values through various methods'''
     
     method = kwargs.get('method','')
     minwt = kwargs.get('weight_minimum',0.)
     dof = kwargs.get('dof',len(vals)-1)
-    if (numpy.nansum(winput) <= 0.):
+    if (numpy.nansum(winp) <= 0.):
         weights = numpy.ones(len(vals))
-    
+    if isinstance(winp,astropy.units.quantity.Quantity):
+        winput = winp.value
+    else:
+        winput = copy.deepcopy(winp)
+
 # uncertainty weighting: input is unceratinties   
     if (method == 'uncertainty'):
         weights = [w**(-2) for w in winput]
