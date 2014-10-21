@@ -1379,10 +1379,12 @@ def filterMag(sp,filter,*args,**kwargs):
 # interpolate Vega onto filter wavelength function
         v = interp1d(vwave,vflux,bounds_error=False,fill_value=0.)
         for i in numpy.arange(nsamples):
-            result.append(-2.5*numpy.log10(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave)/trapz(ftrans*v(fwave)*sp.funit,fwave)))
+#            result.append(-2.5*numpy.log10(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave)/trapz(ftrans*v(fwave)*sp.funit,fwave)))
+            result.append(-2.5*numpy.log10(trapz(ftrans*(d(fwave)+numpy.random.normal(0,1.)*n(fwave))*sp.funit,fwave)/trapz(ftrans*v(fwave)*sp.funit,fwave)))
     if (energy or photons):
         for i in numpy.arange(nsamples):
-            result.append(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave))
+#            result.append(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave))
+            result.append(trapz(ftrans*(d(fwave)+numpy.random.normal(0,1.)*n(fwave))*sp.funit,fwave))
         if (photons):
             convert = const.h.to('erg s')*const.c.to('micron/s')
             result = result/convert.value
@@ -1394,7 +1396,7 @@ def filterMag(sp,filter,*args,**kwargs):
         n = interp1d(sp.nu,sp.noise,bounds_error=False,fill_value=0.)
         b = trapz((ftrans/fnu)/fconst,fnu)
         for i in numpy.arange(nsamples):
-            a = trapz(ftrans*numpy.random.normal(d(fnu),n(fnu))*sp.fnunit/fnu,fnu)
+            a = trapz(ftrans*(d(fnu)+numpy.random.normal(0,1)*n(fnu))*sp.fnunit/fnu,fnu)
             result.append(-2.5*numpy.log10(a/b))
 
     val = numpy.nanmean(result)
@@ -1790,7 +1792,7 @@ def measureIndex(sp,*args,**kwargs):
 
 # doing this for noise = nan
             if (numpy.isnan(yNum_e[0]) == False):
-                yVar = numpy.random.normal(yNum,yNum_e)
+                yVar = yNum+numpy.random.normal(0.,1.)*yNum_e
             else:
                 yVar = yNum
             
@@ -2106,7 +2108,7 @@ def searchLibrary(*args, **kwargs):
 # program parameters
     ref = kwargs.get('output','all')
     radius = kwargs.get('radius',10.)      # search radius in arcseconds
-    classes = ['young','subdwarf','binary','spbinary','red','blue','giant','wd','standard']
+    classes = ['young','subdwarf','binary','spbinary','red','blue','giant','wd','standard','companion']
 
 # get database
     data = fetchDatabase(**kwargs)
