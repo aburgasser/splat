@@ -1890,7 +1890,7 @@ def measureIndexSet(sp,**kwargs):
         names = ['H2O-1','H2O-2','FeH']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
-        inds[0],errs[0] = measureIndex(sp,[1.335,1.345],[1.295,1.304],method='ratio',sample='average',**kwargs)
+        inds[0],errs[0] = measureIndex(sp,[1.335,1.345],[1.295,1.305],method='ratio',sample='average',**kwargs)
         inds[1],errs[1] = measureIndex(sp,[2.035,2.045],[2.145,2.155],method='ratio',sample='average',**kwargs)
         inds[2],errs[2] = measureIndex(sp,[1.1935,1.2065],[1.2235,1.2365],method='ratio',sample='average',**kwargs)
     elif (set.lower() == 'mclean'):
