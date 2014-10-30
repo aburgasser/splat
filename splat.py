@@ -62,6 +62,7 @@ max_snr = 1000.0                # maximum S/N ratio permitted
 model_parameter_names = ['teff','logg','z','fsed','cld','kzz','slit']
 model_parameters = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
 defined_model_set = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
+tmpfilename = 'splattmpfile'
 
 spex_stdfiles = { \
     'M0.0': 'spex_prism_Gl270_091203.fits',\
@@ -160,9 +161,9 @@ class Spectrum(object):
                 self.noise = numpy.array([numpy.nan for i in self.wave])
         else:
 # filename given
+#            print kwargs['filename']
+            rs = readSpectrum(**kwargs)
             try:
-#                self.wave, self.flux, self.noise = readSpectrum(**kwargs)
-                rs = readSpectrum(**kwargs)
                 self.wave = rs['wave']
                 self.flux = rs['flux']
                 self.noise = rs['noise']
@@ -512,6 +513,14 @@ def checkFile(filename,**kwargs):
 
 
 def checkAccess(**kwargs):
+    '''
+    :Purpose: ``Checks if user has access to unpublished spectra in SPLAT library.``
+    :Example: 
+       >>> import splat
+       >>> print splat.checkAccess()
+       True
+    :Note: ``Must have the file .splat_access in your home directory with the correct passcode to use.``
+    '''
     access_file = '.splat_access'
     result = False
 
@@ -716,7 +725,32 @@ def classifyByIndex(sp, *args, **kwargs):
 
 
 def classifyByStandard(sp, *args, **kwargs):
-    '''Classify a spectrum by comparing to spectral standards'''
+    '''
+    :Purpose: ``Determine the spectral type and uncertainty for a 
+                spectrum by direct comparison to spectral standards. 
+                Standards span M0-T9 and include the standards listed in 
+                Kirkpatrick et al. (2010) with addition of UGPS 0722-0540 
+                as the T9 standard.  Returns the best match or an F-test 
+                weighted mean and uncertainty. There is an option to follow 
+                the procedure of Kirkpatrick et al. (2010), fitting only in 
+                the 0.9-1.4 micron region``
+    :Usage: ``spt,unc = splat.classifyByStandard(sp, \**kwargs)``
+    :param sp: ``Spectrum class object, which should contain wave, flux and 
+                 noise array elements.``
+    :param \**kwargs (optional): - ``'best' = False: return the best fit standard type only``
+                        - ``'compareto' = False: compare to a single standard (string or number)``
+                        - ``'plot' = False: generate a plot comparing best fit standard to source, can be save to a file using the file keyword``
+                        - ``'file' = '': output spectrum plot to a file``
+                        - ``'method' = '': set to 'kirkpatrick' to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band``
+                        - ``'sptrange' = ['M0','T9']: constraint spectral type range to fit, can be strings or numbers``
+                        - ``'string' = True: return spectral type as a string``
+                        - ``'verbose' = False: Give lots of feedback``
+    :Example:
+       >>> import splat
+       >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
+       >>> print splat.classifyByStandard(spc,string=True,method='kirkpatrick',plot=True)
+       ('L4.5', 0.7138959194725174)
+    '''
     verbose = kwargs.get('verbose',False)
     method = kwargs.get('method','')
     best_flag = kwargs.get('best',False)
@@ -807,8 +841,44 @@ def classifyByStandard(sp, *args, **kwargs):
     
 
 def classifyByTemplate(sp, *args, **kwargs):
-    '''Classify a spectrum by comparing to other spectra in the library'''
-    spt_return = kwargs.get('spt_return','spex')
+    '''
+    :Purpose: ``Determine the spectral type and uncertainty for a 
+                spectrum by direct comparison to a large set of spectra in
+                the library. One can select down the spectra by using the set
+                command. Returns the best match or an F-test weighted mean and 
+                uncertainty. There is an option to follow  the procedure of 
+                Kirkpatrick et al. (2010), fitting only in the 0.9-1.4 micron 
+                region. ``
+    :Usage: ``spt,unc = splat.classifyByTemplate(sp, \*args, \**kwargs)``
+    :param sp: ``Spectrum class object, which should contain wave, flux and 
+                 noise array elements.``
+    :param \**kwargs (optional): - ``'best' = False: return only the best fit template type``
+                    - ``'plot' = False: generate a plot comparing best fit standard to source, can be save to a file using the file keyword``
+                    - ``'file' = '': output spectrum plot to a file``
+                    - ``'method' = '': set to 'kirkpatrick' to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band``
+                    - ``'set' = '': string defining which spectral template set you want to compare to; several options which can be combined:``
+                        * ``'m dwarf': fit to M dwarfs only``
+                        * ``'l dwarf': fit to M dwarfs only``
+                        * ``'t dwarf': fit to M dwarfs only``
+                        * ``'vlm': fit to M7-T9 dwarfs``
+                        * ``'optical': only optical classifications``
+                        * ``'high sn': median S/N greater than 100``
+                        * ``'young': only young/low surface gravity dwarfs``
+                        * ``'companion': only companion dwarfs``
+                        * ``'subdwarf': only subdwarfs``
+                        * ``'single': only dwarfs not indicated a binaries``
+                        * ``'spectral binaries': only dwarfs indicated to be spectral binaries``
+                        * ``'standard': only spectral standards (use classifyByStandard instead)``
+                    - ``'string' = True: return spectral type as a string``
+                    - ``'sptype' = 'spex': specify which spectral classification type to return; can be 'spex', 'opt', 'nir', or 'lit'
+                    - ``'verbose' = False: Give lots of feedback``
+    :Example:
+       >>> import splat
+       >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
+       >>> print splat.classifyByTemplate(spc,string=True,set='l dwarf, high sn', sptype='spex', plot=True)
+       ('L4.5', 0.7138959194725174)
+    '''
+    sptype = kwargs.get('sptype','spex')
     verbose = kwargs.get('verbose',True)
     set = kwargs.get('set','')
     unc_sys = 0.5
@@ -866,11 +936,11 @@ def classifyByTemplate(sp, *args, **kwargs):
     files = lib['data_file']
 
 # which spectral type to return
-    if ('spex' in spt_return):
+    if ('spex' in sptype):
         sptref = 'spex_type'
-    elif ('opt' in spt_return):
+    elif ('opt' in sptype):
         sptref = 'opt_type'
-    elif ('nir' in spt_return):
+    elif ('nir' in sptype):
         sptref = 'nir_type'
     else:
         sptref = 'lit_type'
@@ -1193,7 +1263,7 @@ def fetchDatabase(*args, **kwargs):
     '''Get the SpeX Database from either online repository or local drive'''
     dataFile = kwargs.get('dataFile','db_spexprism.txt')
     folder = kwargs.get('folder','~/')
-    url = kwargs.get('url',SPLAT_URL+'/Databases/')
+    url = kwargs.get('url',SPLAT_URL)+'/Databases/'
     local = kwargs.get('local',False)
 
 # check if online
@@ -1202,9 +1272,9 @@ def fetchDatabase(*args, **kwargs):
 # first try online
     if not local:
         try:
-            open(os.path.basename(dataFile), 'wb').write(urllib2.urlopen(url+dataFile).read())
-            data = ascii.read(dataFile, delimiter='\t',fill_values='-99.')
-            os.remove(os.path.basename(dataFile))
+            open(os.path.basename(tmpfilename), 'wb').write(urllib2.urlopen(url+dataFile).read())
+            data = ascii.read(os.path.basename(tmpfilename), delimiter='\t',fill_values='-99.')
+            os.remove(os.path.basename(tmpfilename))
 #            return data
         except urllib2.URLError:
             sys.stderr.write('\nReading local '+dataFile+'\n\n')
@@ -1429,6 +1499,7 @@ def getSpectrum(*args, **kwargs):
         else:
             print '\nRetrieving {} files\n'.format(len(files))
         for i,x in enumerate(files):
+#            print i, x
             result.append(loadSpectrum(x,header=search[i:i+1]))
     else:
         if checkAccess() == False:
@@ -1454,6 +1525,7 @@ def loadInterpolatedModel(*args,**kwargs):
     kwargs['url'] = kwargs.get('url',SPLAT_URL+'/Models/')
     kwargs['set'] = kwargs.get('set','BTSettl2008')
     kwargs['model'] = True
+    kwargs['local'] = kwargs.get('local',False)
     for ms in model_parameter_names:
         kwargs[ms] = kwargs.get(ms,model_parameters[ms])
 
@@ -1615,17 +1687,19 @@ def loadModel(*args, **kwargs):
 # try online
         if not local:
             try:
-                open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(kwargs['url']+kwargs['filename']).read()) 
-                kwargs['filename'] = os.path.basename(kwargs['filename'])
+                ftype = kwargs['filename'].split('.')[-1]
+                tmp = tmpfilename+'.'+ftype
+                open(os.path.basename(tmp), 'wb').write(urllib2.urlopen(kwargs['url']+kwargs['filename']).read()) 
+                kwargs['filename'] = os.path.basename(tmp)
                 sp = Spectrum(**kwargs)
-#                print sp.flux
-#                os.remove(os.path.basename(kwargs['filename']))
+                os.remove(os.path.basename(tmp))
 #               os.close(kwargs['filename'])
                 return sp
             except urllib2.URLError:
                 sys.stderr.write('\n\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
 #                os.remove(os.path.basename(kwargs['filename']))
                 local = True
+                kwargs['local'] = True
 
 # now try local drive
         if (os.path.exists(kwargs['filename']) == False):
@@ -1661,9 +1735,9 @@ def loadModelParameters(**kwargs):
 # read in parameter file - local and not local
     if not local:
         try:
-            open(os.path.basename(pfile), 'wb').write(urllib2.urlopen(url+pfile).read())
-            p = ascii.read(pfile)
-            os.remove(os.path.basename(pfile))
+            open(os.path.basename(tmpfilename), 'wb').write(urllib2.urlopen(url+pfile).read())
+            p = ascii.read(os.path.basename(tmpfilename))
+            os.remove(os.path.basename(tmpfilename))
         except urllib2.URLError:
             print '\n\nCannot access online models for model set {}\n'.format(set)
             local = True
@@ -1722,12 +1796,14 @@ def loadSpectrum(*args, **kwargs):
 # first try online
     if not local:
         try:
-            open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read())
-            kwargs['filename'] = os.path.basename(kwargs['filename'])
+#            ftype = file.split('.')[-1]
+#            tmp = tmpfilename+'.'+ftype
+            open(os.path.basename(file), 'wb').write(urllib2.urlopen(url+file).read())
+            kwargs['filename'] = os.path.basename(file)
 #            if kwargs['header'] == False:
 #                kwargs['header'] = searchLibrary(file=kwargs['filename'])
             sp = Spectrum(**kwargs)
-            os.remove(os.path.basename(kwargs['filename']))
+            os.remove(os.path.basename(file))
             return sp
         except urllib2.URLError:
             sys.stderr.write('\nCould not find data file '+kwargs['filename']+' at '+url+'\n\n')
@@ -2023,20 +2099,23 @@ def readSpectrum(**kwargs):
 # TO BE DONE:
 # FIX IF THERE IS NO NOISE CHANNEL
 # PRODUCE AND RETURN HEADER => CHANGE OUTPUT TO DICTIONARY?
+# NOTE: THIS IS STRICTLY A LOCAL READ PROGRAM
     
 # keyword parameters
-    folder = kwargs.get('folder','./')
+    folder = kwargs.get('folder','')
     catchSN = kwargs.get('catchSN',True)
     file = kwargs.get('filename','')
-    url = kwargs.get('url','')
-
+#    url = kwargs.get('url',SPLAT_URL)+'/Spectra/'
+#    local = kwargs.get('local',False)
+    
 # download if a remote file
-    if url != '':
-        try:
-            open(os.path.basename(file), 'wb').write(urllib2.urlopen(url+file).read()) 
-            file = os.path.basename(kwargs['filename'])
-        except:
-            print '\n\nCould not locate {} at {}\n'.format(file,url)
+#    if url != '' and not local:
+#        try:
+#            open(os.path.basename(tmpfilename), 'wb').write(urllib2.urlopen(url+file).read()) 
+#            file = os.path.basename(tmpfilename)
+#            print 'Using {}'.format(tmpfilename)
+#        except:
+#            print '\n\nCould not locate {} at {}\n'.format(file,url)
 
 # try to read        
     if (os.path.exists(file) == False):
@@ -2094,8 +2173,8 @@ def readSpectrum(**kwargs):
               noise[w] = stats.nanmedian(noise)
 
 # clean up
-    if url != '':
-        os.remove(file)
+#    if url != '' and not local:
+#        os.remove(os.path.basename(tmpfilename))
 
     return {'wave':wave,'flux':flux,'noise':noise,'header':header}
 
@@ -2611,148 +2690,3 @@ def weightedMeanVar(vals, winp, *args, **kwargs):
     var = numpy.nansum(weights*(vals-mn)**2)/numpy.nansum(weights)
     
     return mn,var        
-
-
-def loadInterpolatedModel_old(*args,**kwargs):
-# interpolates within a 2x2 grid of teff and logg ONLY
-    set = kwargs.get('set','BTSettl2008')
-    kwargs['set'] = set
-    teff = float(kwargs.get('teff',1000.0))
-    kwargs['teff'] = teff
-    logg = float(kwargs.get('logg',5.0))
-    kwargs['logg'] = logg
-    kwargs['url'] = kwargs.get('folder',SPLAT_URL+'/Models/')
-#    local = kwargs.get('local',False)
-    kwargs['model'] = True
-
-# first get model parameters
-    param = loadModelParameters(**kwargs)
-#    print param
-    
-# check if input parameters are within range
-    for t in param.colnames:
-        flg = kwargs.get(t,False)
-        if flg != False:
-            if (flg < param[t][0] or flg > param[t][1]):
-                raise ValueError('\n\nValue {}={} outside model range'.format(t,str(flg)))
-
-# identify grid points around input parameters
-# NOTE: THIS IS JUST FOR TEFF AND LOGG GRIDDING FOR NOW
-
-    t = teff - teff%param['teff'][2]
-    trng = [max(param['teff'][0],t),min(t+param['teff'][2],param['teff'][1])]
-    g = logg - logg%param['logg'][2]
-    grng = [max(param['logg'][0],g),min(g+param['logg'][2],param['logg'][1])]
-    x,y = numpy.meshgrid(trng,grng)
-
-    mkwargs = kwargs.copy()
-#    try:
-#    print trng, grng
-    mkwargs['teff'] = trng[0]
-    mkwargs['logg'] = grng[0]
-    md11 = loadModel_old(**mkwargs)
-    mkwargs['teff'] = trng[1]
-    md21 = loadModel_old(**mkwargs)
-    mkwargs['teff'] = trng[0]
-    mkwargs['logg'] = grng[1]
-    md12 = loadModel_old(**mkwargs)
-    mkwargs['teff'] = trng[1]
-    md22 = loadModel_old(**mkwargs)
-    
-#    except:
-#        raise NameError('\nProblem loading grid of models in loadInterpolatedModel\n\n')
-
-    mflx = numpy.zeros(len(md11.wave))
-    val = numpy.array([[None]*2]*2)
-    for i,w in enumerate(md11.wave):
-        val = numpy.array([ \
-            [numpy.log10(md11.flux.value[i]),numpy.log10(md21.flux.value[i])], \
-            [numpy.log10(md12.flux.value[i]),numpy.log10(md22.flux.value[i])]])
-        mflx[i] = 10.**(griddata((x.flatten(),y.flatten()),val.flatten(),(teff,logg),'linear'))
-    
-    return Spectrum(wave=md11.wave,flux=mflx*md11.funit,**kwargs)
-
-
-def loadModel_old(*args, **kwargs):
-    '''load up a model spectrum based on parameters'''
-# keyword parameters
-    set = kwargs.get('set','BTSettl2008')
-    kwargs['set'] = set
-    teff = float(kwargs.get('teff',1000.0))
-    logg = float(kwargs.get('logg',5.0))
-    z = kwargs.get('z',0.0)
-    kzz = kwargs.get('kzz',0)
-    fsed = kwargs.get('fsed',0)
-    folder = kwargs.get('folder','')
-    url = kwargs.get('folder',SPLAT_URL+'/Models/')
-    local = kwargs.get('local',False)
-    kwargs['model'] = True
-    fileFlag = False
-    
-# check if online
-    local = local or (not checkOnline())
-
-# a filename has been passed - simply read this file
-    if (len(args) > 0):
-        kwargs['filename'] = args[0]
-        fileFlag = True
-
-# determine model set
-    else:
-
-# get model parameters
-        param = loadModelParameters(**kwargs)
-
-        if (set == 'BTSettl2008'):
-            url = url+'/'+set+'/'
-#            print teff, logg
-            kwargs['filename'] = set+'_{:.0f}_{:.1f}_-0.0_nc_nc_eq_0.5.txt'.format(teff,logg)
-#            kwargs['filename'] = 'lte'+'{:5.3f}'.format(teff/100000.)[2:]+'-'+str(logg)[0:3]+'-0.0.BT-Settl.7_r120.txt'        
-        else: 
-            raise NameError('\nCurrently only have BTSettl models\n\n')
-
-        if (teff < param['teff'][0] or teff > param['teff'][1]):
-            raise NameError('\nInput Teff out of range\n\n')
-
-        if (logg < param['logg'][0] or logg > param['logg'][1]):
-            raise NameError('\nInput logg out of range\n\n')
-
-    
-# if model is on grid read in that model
-    if (teff in numpy.arange(param['teff'][0],param['teff'][1]+param['teff'][2],param['teff'][2]) and \
-        logg in numpy.arange(param['logg'][0],param['logg'][1]+param['logg'][2],param['logg'][2])):
-        fileFlag = True
-
-# simple read in a file
-    if fileFlag:
-    
-# first try online
-        if not local:
-            try:
-                open(os.path.basename(kwargs['filename']), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
-                kwargs['filename'] = os.path.basename(kwargs['filename'])
-                sp = Spectrum(**kwargs)
-#                os.close(kwargs['filename'])
-                os.remove(kwargs['filename'])
-                return sp
-#fh, filename = tempfile.mkstemp()    do i need this?
-#os.close(fh)
-#os.remove(filename)
-            except urllib2.URLError:
-                sys.stderr.write('\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
-                os.remove(os.path.basename(kwargs['filename']))
-                local = True
-
-    # now try local drive
-        if (os.path.exists(kwargs['filename']) == False):
-            kwargs['filename'] = folder+os.path.basename(kwargs['filename'])
-            if (os.path.exists(kwargs['filename']) == False):
-                raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
-            else:
-                return Spectrum(**kwargs)
-        else:
-            return Spectrum(**kwargs)
-
-# or do an interpolated Model
-    else:
-        return loadInterpolatedModel_old(**kwargs)
