@@ -1733,6 +1733,7 @@ def loadModelParameters(**kwargs):
     local = local or (not checkOnline())
 
 # read in parameter file - local and not local
+    print url,set    
     if not local:
         try:
             open(os.path.basename(tmpfilename), 'wb').write(urllib2.urlopen(url+pfile).read())
