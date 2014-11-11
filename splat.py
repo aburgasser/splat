@@ -1548,15 +1548,20 @@ def loadInterpolatedModel(*args,**kwargs):
     for ms in model_parameter_names[0:3]:
         s = float(kwargs[ms]) - float(kwargs[ms])%float(parameters[ms][2])
         r = [max(float(parameters[ms][0]),s),min(s+float(parameters[ms][2]),float(parameters[ms][1]))]
-        if abs(s-float(kwargs[ms])) < 0.1*float(parameters[ms][2]):
-            m = [float(kwargs[ms]),float(kwargs[ms])]
-            r[1]=r[0]+0.1*float(parameters[ms][2])
-        else:
-            m = r
+        m = copy.deepcopy(r)
+#        print s, r, s-float(kwargs[ms])
+        if abs(s-float(kwargs[ms])) < (1.e-3)*float(parameters[ms][2]):
+            if float(kwargs[ms])%float(parameters[ms][2])-0.5*float(parameters[ms][2]) < 0.:
+                m[1]=m[0]
+                r[1] = r[0]+1.e-3*float(parameters[ms][2])
+            else:
+                m[0] = m[1]
+                r[0] = r[1]-(1.-1.e-3)*float(parameters[ms][2])
+#        print s, r, m, s-float(kwargs[ms])
         rng.append(r)
         mrng.append(m)
+#        print s, r, m
     mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
-
     mkwargs = kwargs.copy()
 
 # read in models
@@ -1713,6 +1718,8 @@ def loadModel(*args, **kwargs):
 
 # or do an interpolated Model
     else:
+#        for ms in model_parameter_names:
+#            print kwargs[ms]
         return loadInterpolatedModel(**kwargs)
 
 
