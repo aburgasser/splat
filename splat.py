@@ -612,24 +612,6 @@ def classifyByIndex(sp, *args, **kwargs):
     if (len(args) != 0):
         indices = args[0]
 
-# Burgasser (2007, ApJ, 659, 655) calibration
-    if (set.lower() == 'burgasser'):
-        if (rem_flag or len(args) == 0):
-            indices = measureIndexSet(sp, **kwargs)
-        sptoffset = 20.
-        sptfact = 1.
-        coeffs = { \
-            'H2O-J': {'fitunc': 0.8, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
-            'H2O-H': {'fitunc': 1.0, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-            'coeff': [9.087e-1, -3.221e1, 2.527e1, -1.978e1, 2.098e1]}, \
-            'CH4-J': {'fitunc': 0.7, 'range': [30,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-            'coeff': [1.491e2, -3.381e2, 2.424e2, -8.450e1, 2.708e1]}, \
-            'CH4-H': {'fitunc': 0.3, 'range': [31,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-            'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
-            'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-            'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
-
 # Reid et al. (2001, AJ, 121, 1710)
     elif (set.lower() == 'reid'):
         if (rem_flag or len(args) == 0):
@@ -662,6 +644,24 @@ def classifyByIndex(sp, *args, **kwargs):
             'sH2O_K': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
             'coeff': [2.36, 0.60]}}
 
+# Burgasser (2007, ApJ, 659, 655) calibration
+    if (set.lower() == 'burgasser'):
+        if (rem_flag or len(args) == 0):
+            indices = measureIndexSet(sp, **kwargs)
+        sptoffset = 20.
+        sptfact = 1.
+        coeffs = { \
+            'H2O-J': {'fitunc': 0.8, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+            'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
+            'H2O-H': {'fitunc': 1.0, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+            'coeff': [9.087e-1, -3.221e1, 2.527e1, -1.978e1, 2.098e1]}, \
+            'CH4-J': {'fitunc': 0.7, 'range': [30,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+            'coeff': [1.491e2, -3.381e2, 2.424e2, -8.450e1, 2.708e1]}, \
+            'CH4-H': {'fitunc': 0.3, 'range': [31,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+            'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
+            'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+            'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
+
 # Allers et al. (2013, ApJ, 657, 511)
     elif (set.lower() == 'allers'):
         if (rem_flag or len(args) == 0):
@@ -685,7 +685,7 @@ def classifyByIndex(sp, *args, **kwargs):
             'coeff': [37.5013, -97.8144, 55.4580, 10.8822]}}
 
     else:
-        sys.stderr.write('\nWarning: '+set.lower()+' SpT-index relation not in measureSpT code\n\n')
+        sys.stderr.write('\nWarning: '+set.lower()+' SpT-index relation not in classifyByIndex code\n\n')
         return numpy.nan, numpy.nan
 
 
@@ -1012,6 +1012,10 @@ def classifyGravity(sp, *args, **kwargs):
 # contain the limits for each gravity score.
 # To access a value do the following: print grav['FeH-z']['M5'][0] 
 # which should return 'nan'
+    
+# Note: alternate method is Canty et al. (2013, MNRAS, 435, 2650)
+# H2(K) index: median[2.16-2.18]/median[2.23-2.25]
+   
     grav = {\
         'FeH-z':{'M5.0':[numpy.nan,numpy.nan],'M6.0':[1.068,1.039],'M7.0':[1.103,1.056],'M8.0':[1.146,1.074],'M9.0': [1.167,1.086],'L0.0': [1.204,1.106],'L1.0':[1.252,1.121],'L2.0':[1.298,1.142],'L3.0': [1.357,1.163],'L4.0': [1.370,1.164],'L5.0': [1.258,1.138],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
         'VO-z': {'M5.0':[numpy.nan,numpy.nan],'M6.0':[numpy.nan,numpy.nan],'M7.0': [numpy.nan,numpy.nan],'M8.0': [numpy.nan,numpy.nan],'M9.0': [numpy.nan,numpy.nan],'L0.0': [1.122,1.256],'L1.0': [1.112,1.251],'L2.0': [1.110,1.232],'L3.0': [1.097,1.187],'L4.0': [1.073,1.118],'L5.0': [numpy.nan,numpy.nan],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
@@ -1273,7 +1277,7 @@ def fetchDatabase(*args, **kwargs):
     if not local:
         try:
             open(os.path.basename(tmpfilename), 'wb').write(urllib2.urlopen(url+dataFile).read())
-            data = ascii.read(os.path.basename(tmpfilename), delimiter='\t',fill_values='-99.')
+            data = ascii.read(os.path.basename(tmpfilename), delimiter='\t',fill_values='-99.',format='tab')
             os.remove(os.path.basename(tmpfilename))
 #            return data
         except urllib2.URLError:
@@ -1403,7 +1407,28 @@ def filterMag(sp,filter,*args,**kwargs):
         'MKO J': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere'}, \
         'MKO H': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere'}, \
         'MKO K': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere'}, \
-        'MKO Ks': {'file': 'k_atm_mko.txt', 'description': 'MKO Ks-band'} \
+        'MKO Kp': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band'}, \
+        'MKO Ks': {'file': 'mko_ks.txt', 'description': 'MKO Ks-band'}, \
+        'NICMOS F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M'}, \
+        'NICMOS F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N'}, \
+        'NICMOS F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N'}, \
+        'NICMOS F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N'}, \
+        'NICMOS F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M'}, \
+        'NICMOS F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W'}, \
+        'NICMOS F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N'}, \
+        'NICMOS F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W'}, \
+        'NICMOS F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M'}, \
+        'NICMOS F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W'}, \
+        'NICMOS F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N'}, \
+        'NICMOS F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M'}, \
+        'NICMOS F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N'}, \
+        'NICMOS F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M'}, \
+        'NICMOS F187N': {'file': 'nic1_f187n.txt', 'description': 'NICMOS F187N'}, \
+        'NICMOS F190N': {'file': 'nic1_f190n.txt', 'description': 'NICMOS F190N'}, \
+        'NIRC2 J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band'}, \
+        'NIRC2 H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band'}, \
+        'NIRC2 Kp': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band'}, \
+        'NIRC2 Ks': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band'} \
         }
 
 # check that requested filter is in list
@@ -2619,7 +2644,7 @@ def typeToTeff(input, **kwargs):
     unc = kwargs.get('uncertainty',0.001)
     unc = kwargs.get('unc',unc)
     unc = kwargs.get('spt_e',unc)
-    ref = kwargs.get('ref','looper2008')
+    ref = kwargs.get('ref','stephens2009')
     ref = kwargs.get('set',ref)
     ref = kwargs.get('method',ref)
 
@@ -2628,11 +2653,31 @@ def typeToTeff(input, **kwargs):
         spt = typeToNum(input,uncertainty=unc)
     else:
         spt = copy.deepcopy(input)
+    
+    if spt < 20. and 'marocco' not in ref.lower():
+        ref='stephens2009'
 
 # choose among possible options
+
+# Golimowski et al. (2004, AJ, 127, 3516)
+    if ('golimowski' in ref.lower()):
+        reference = 'Teff/SpT relation from Golimowski et al. (2004)'
+        sptoffset = 10.
+        coeff = [9.5373e-4,-9.8598e-2,4.0323,-8.3099e1,9.0951e2,-5.1287e3,1.4322e4]
+        range = [16.,38.]
+        fitunc = 124.
+
+# Looper et al. (2008, ApJ, 685, 1183)
+    elif ('looper' in ref.lower()):
+        reference = 'Teff/SpT relation from Looper et al. (2008)'
+        sptoffset = 20.
+        coeff = [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92]
+        range = [20.,38.]
+        fitunc = 87.
+
 # Stephens et al. (2009, ApJ, 702, 1545); using OPT/IR relation for M6-T8
 # plus alternate coefficients for L3-T8
-    if (ref.lower() == 'stephens2009'):
+    elif ('stephens' in ref.lower()):
         reference = 'Teff/SpT relation from Stephens et al. (2009)'
         sptoffset = 10.
         coeff = [-0.0025492,0.17667,-4.4727,54.67,-467.26,4400.]
@@ -2641,21 +2686,21 @@ def typeToTeff(input, **kwargs):
         coeff_alt = [-0.011997,1.2315,-50.472,1031.9,-10560.,44898.]
         range_alt = [23.,38.]
 
-# Looper et al. (2008, ApJ, 685, 1183)
-    elif (ref.lower() == 'looper2008'):
-        reference = 'Teff/SpT relation from Looper et al. (2008)'
-        sptoffset = 20.
-        coeff = [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92]
-        range = [20.,38.]
-        fitunc = 87.
-# Looper is default
+# Marocco et al. (2013, AJ, 146, 161)
+    elif ('marocco' in ref.lower()):
+        reference = 'Teff/SpT relation from Marocco et al. (2013)'
+        sptoffset = 10.
+        coeff = [7.4211e-5,-8.43736e-3,3.90319e-1,-9.46896,129.141,-975.953,3561.47,-1613.82]
+        range = [17.,38.]
+        fitunc = 140.
+
     else:
         sys.stderr.write('\nInvalid Teff/SpT relation given ({})\n'.format(ref))
         return numpy.nan, numpy.nan
 
     if (range[0] <= spt <= range[1]):
         vals = numpy.polyval(coeff,numpy.random.normal(spt-sptoffset,unc,nsamples))
-        if (ref.lower() == 'stephens'):
+        if ('stephens' in ref.lower()):
             if (range_alt[0] <= spt <= range_alt[1]):
                 vals = numpy.polyval(coeff_alt,numpy.random.normal(spt-sptoffset,unc,nsamples))
         teff = numpy.nanmean(vals)
