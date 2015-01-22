@@ -645,7 +645,7 @@ def classifyByIndex(sp, *args, **kwargs):
             'coeff': [2.36, 0.60]}}
 
 # Burgasser (2007, ApJ, 659, 655) calibration
-    if (set.lower() == 'burgasser'):
+    elif (set.lower() == 'burgasser'):
         if (rem_flag or len(args) == 0):
             indices = measureIndexSet(sp, **kwargs)
         sptoffset = 20.
