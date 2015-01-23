@@ -593,6 +593,8 @@ def classifyByIndex(sp, *args, **kwargs):
        >>> spc = splat.loadSpectrum('spex_prism_gl570d_030522.txt')
        >>> print splat.classifyByIndex(spc, string=True, set='burgasser', round=True)
        ('T7.5', 0.25285169510990341)
+    :Things to Update
+        * Need to allow output of individual spectral types from individual indices
     '''
     
     str_flag = kwargs.get('string', True)
@@ -1387,7 +1389,40 @@ def filenameToNameDate(filename):
 
 
 def filterMag(sp,filter,*args,**kwargs):
-    '''Compute the magnitudes of a spectrum given a filter name'''
+    '''
+    :Purpose: ``Determine the photometric magnitude of a source based on the
+                spectrum. Spectra are convolved with the filter specified by
+                the 'filter' input.  By default this filter is also 
+                convolved with a model of Vega to extract Vega magnitudes,
+                but the user can also specify AB magnitudes, photon flux or
+                energy flux.``
+    :Usage: ``mag,unc = splat.filterMag(sp, 'filter name',\*args, \**kwargs)``
+    :param sp: ``Spectrum class object, which should contain wave, flux and 
+                 noise array elements.``
+    :param 'filter mag': ``Name of filter, must be one of the following:``
+                    - ``'2MASS J', '2MASS H', '2MASS Ks'``
+                    - ``'MKO J', 'MKO H', 'MKO K', MKO Kp', 'MKO Ks'``
+                    - ``'NICMOS F090M', 'NICMOS F095N', 'NICMOS F097N', 'NICMOS F108N',`` 
+                    - ``'NICMOS F110M', 'NICMOS F110W', 'NICMOS F113N', 'NICMOS F140W',``
+                    - ``'NICMOS F145M', 'NICMOS F160W', 'NICMOS F164N', 'NICMOS F165M',``
+                    - ``'NICMOS F166N', 'NICMOS F170M', 'NICMOS F187N', 'NICMOS F190N'``
+                    - ``'NIRC2 J', 'NIRC2 H', 'NIRC2 Kp', 'NIRC2 Ks'``
+    :param \**kwargs (optional): - ``'info' = False: give the filter names available``
+                    - ``'custom' = False: specify to a 2 x N vector array specifying the wavelengths and transmissions for a custom filter``
+                    - ``'ab' = False: compute AB magnitudes``
+                    - ``'vega' = True: compute Vega magnitudes``
+                    - ``'energy' = False: compute energy flux``
+                    - ``'photon' = False: compute photon flux``
+                    - ``'filterFolder' = '': folder containing the filter transmission files``
+                    - ``'vegaFile' = '': name of file containing Vega flux file, must be within 'filterFolder'``
+                    - ``'nsamples' = 100: number of samples to use in MC error estimation``
+    :Example:
+       >>> import splat
+       >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
+       >>> spc.fluxCalibrate('2MASS J',14.5)
+       >>> print splat.filterMag(spc,'MKO J')
+       (14.345894376898123, 0.027596454828421831)
+    '''
 # keyword parameters
     filterFolder = kwargs.get('filterFolder',SPLAT_URL+'Filters/')
     vegaFile = kwargs.get('vegaFile','vega_kurucz.txt')

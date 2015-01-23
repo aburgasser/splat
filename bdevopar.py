@@ -29,9 +29,9 @@ class ReadModel(object):
                   <http://pono.ucsd.edu/~adam/splat/EvolutionaryModels/>`_.
                   Units are the following: masses are in M/Msun, 
                   luminosities in log L/Lsun, radius in R/Rsun, surface 
-                  gravities in log g (cm/s^2), temperatures in kelvins, 
+                  gravities in log g (cm/s^2), temperatures in Kelvin, 
                   and ages in Gyr. Each evolutionary model gives 
-                  snapshots of Brown Dwarfs with different masses and 
+                  snapshots of brown dwarfs with different masses and 
                   other physical properties as a function of time.
 
     :param model: 
@@ -53,7 +53,7 @@ class ReadModel(object):
 	           However, incorrect spelling will raise a NameError, so
 		   please make sure you spell correctly.
 
-        - **burrow:**
+        - **burrows:**
 
         - **saumon:**
           Isochrones from Saumon & Marley models (2008), described in 
@@ -97,12 +97,12 @@ class ReadModel(object):
         except IndexError: model = 'baraffe'
 	finally: print "You are using " + model + "'s model."
 
-        assert model in ['baraffe','burrow','saumon'], """
+        assert model in ['baraffe','burrows','saumon'], """
 	    Incorrect model or bad spelling. Please choose from the 
-	    following models: 'baraffe', 'burrow', or 'saumon'.\n"""
+	    following models: 'baraffe', 'burrows', or 'saumon'.\n"""
 
-        ##################### BARAFFE OR BURROW MODEL #########################
-        if model == 'baraffe' or model == 'burrow':
+        ##################### BARAFFE OR BURROWS MODEL #########################
+        if model == 'baraffe' or model == 'burrows':
             ages = ['0.001', '0.005', '0.010', '0.050', '0.100',
                     '0.120', '0.500', '1.000', '5.000', '10.000']
 
@@ -110,8 +110,8 @@ class ReadModel(object):
 	        Emodels = Emodels_URL + 'Baraffe/cond_'
 	        EmodeL = 'Baraffe/cond_'
             else: 
-	        Emodels = Emodels_URL + 'Burrow/b97_'
-	        EmodeL = 'Burrow/b97_'
+	        Emodels = Emodels_URL + 'Burrows/b97_'
+	        EmodeL = 'Burrows/b97_'
             num_files = len(ages); v = 0
         ########################### SAUMON MODEL ##############################
         else:
@@ -196,8 +196,8 @@ class Params(ReadModel):
        >>> saumon = Parameters(adf=0.01, MASSSS=0.4)
 
        >>> model = ReadModel('baraffe', z='f2_solar')
-       >>> burrow = Parameters(model, L=0.05, Gradfty=0.4)
-       >>> model = ReadModel('burrow', z='f2_solar')
+       >>> burrows = Parameters(model, L=0.05, Gradfty=0.4)
+       >>> model = ReadModel('burrows', z='f2_solar')
        >>> baraffe = Parameters(model, temp=2000, age=0.4)
 
     .. note:: Keyword spelling doesn't matter as long as the first 
