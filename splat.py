@@ -7,7 +7,7 @@
 #    Ivanna Escala
 #    Aishwarya Iyer
 #    Yuhui Jin
-#    Mike Lopez
+#    Michael Lopez
 #    Alex Mendez
 #    Jonathan Parra
 #    Julian Pilate-Hutcherson
@@ -1885,6 +1885,57 @@ def loadSpectrum(*args, **kwargs):
             return Spectrum(**kwargs)
     else:
         return Spectrum(**kwargs)
+
+
+#Takes the apparent magnitude and either takes or determines the absolute magnitude, then uses the magnitude/distance relation to estimate the distance to the object in parsecs
+#Note: the input spectra should be flux calibrated to their empirical apparent magnitudes
+
+def estimateDistance(sp, **kwargs):
+    mag = kwargs.get('mag', False)
+    mag_unc = kwargs.get('mag_unc', 0.)
+    absmag = kwargs.get('absmag', False)
+    absmag_unc = kwargs.get('absmag_unc', 0.)
+    spt = kwargs.get('spt', False)
+    spt_unc = kwargs.get('spt_e', 0.)
+    nsamples = kwargs.get('nsamples', 100)
+    filt = kwargs.get('filter', False)
+
+# if no apparent magnitude then calculate from spectrum
+    if (mag == False):
+        if (filt == False):
+            sys.stderr.write('\nPlease specify the filter used to determine the apparent magnitude\n')
+            return numpy.nan, numpy.nan
+        mag, mag_unc = filterMag(sp,filt)
+
+# if no spt then calculate from spectrum
+    if spt == False:
+        spt, spt_unc = classifyByIndex(sp)
+
+
+# if no absolute magnitude then estimate from spectral type
+    if absmag == False:
+        if filt == False:
+            sys.stderr.write('\nPlease specify the filter used to determine the absolute magnitude\n')
+            return numpy.nan, numpy.nan
+        absmag, absmag_unc = typeToMag(spt,filt,unc=spt_unc)
+
+# create Monte Carlo sets
+    if mag_unc > 0.:
+        mags = numpy.random.normal(mag, mag_unc, nsamples)
+    else:
+        mags = nsamples*[mag]
+
+    if absmag_unc > 0.:
+        absmags = numpy.random.normal(absmag, absmag_unc, nsamples)
+    else:
+        absmags = nsamples*[absmag]
+ 
+# calculate 
+    distances = 10.**(numpy.subtract(mags,absmags)/5. + 1.)
+    d = numpy.mean(distances)
+    unc = numpy.std(distances)
+    
+    return d, unc
 
 
 # code to measure a defined index from a spectrum using Monte Carlo noise estimate
