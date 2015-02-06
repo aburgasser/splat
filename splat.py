@@ -1407,6 +1407,8 @@ def filterMag(sp,filter,*args,**kwargs):
                     - ``'NICMOS F145M', 'NICMOS F160W', 'NICMOS F164N', 'NICMOS F165M',``
                     - ``'NICMOS F166N', 'NICMOS F170M', 'NICMOS F187N', 'NICMOS F190N'``
                     - ``'NIRC2 J', 'NIRC2 H', 'NIRC2 Kp', 'NIRC2 Ks'``
+                    - ``'WIRC J', 'WIRC H', 'WIRC K', 'WIRC CH4S', 'WIRC CH4L'``
+                    - ``'WIRC CO', 'WIRC PaBeta', 'WIRC BrGamma', 'WIRC Fe2'``
     :param \**kwargs (optional): - ``'info' = False: give the filter names available``
                     - ``'custom' = False: specify to a 2 x N vector array specifying the wavelengths and transmissions for a custom filter``
                     - ``'ab' = False: compute AB magnitudes``
@@ -1464,6 +1466,15 @@ def filterMag(sp,filter,*args,**kwargs):
         'NIRC2 H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band'}, \
         'NIRC2 Kp': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band'}, \
         'NIRC2 Ks': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band'} \
+        'WIRC J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont'} \
+        'WIRC H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont'} \
+        'WIRC K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont'} \
+        'WIRC CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO'} \
+        'WIRC CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S'} \
+        'WIRC CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L'} \
+        'WIRC Fe2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II'} \
+        'WIRC BrGamma': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma'} \
+        'WIRC PaBeta': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta'} \
         }
 
 # check that requested filter is in list
