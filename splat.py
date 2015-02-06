@@ -1465,15 +1465,15 @@ def filterMag(sp,filter,*args,**kwargs):
         'NIRC2 J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band'}, \
         'NIRC2 H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band'}, \
         'NIRC2 Kp': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band'}, \
-        'NIRC2 Ks': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band'} \
-        'WIRC J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont'} \
-        'WIRC H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont'} \
-        'WIRC K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont'} \
-        'WIRC CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO'} \
-        'WIRC CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S'} \
-        'WIRC CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L'} \
-        'WIRC Fe2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II'} \
-        'WIRC BrGamma': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma'} \
+        'NIRC2 Ks': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band'}, \
+        'WIRC J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont'}, \
+        'WIRC H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont'}, \
+        'WIRC K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont'}, \
+        'WIRC CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO'}, \
+        'WIRC CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S'}, \
+        'WIRC CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L'}, \
+        'WIRC Fe2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II'}, \
+        'WIRC BrGamma': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma'}, \
         'WIRC PaBeta': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta'} \
         }
 
