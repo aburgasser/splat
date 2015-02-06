@@ -30,6 +30,7 @@ import copy
 import os
 import matplotlib.pyplot as plt
 import numpy
+import random
 import re
 import scipy
 import string
@@ -1548,7 +1549,46 @@ def filterMag(sp,filter,*args,**kwargs):
 
 
 def getSpectrum(*args, **kwargs):
-    '''Get specific spectra from online library'''
+    '''
+    :Purpose: ``Gets a spectrum from the SPLAT library using various selection criteria.``
+    :Usage: ``[sp] = splat.getSpectrum({search commands},**kwargs)``
+    :param [sp]: ``array of Spectrum class objects, each of which should contain wave, flux and 
+                 noise array elements.``
+    :param '{search commands}': ``Various search commands to winnow down the selection:
+                    - **name**: search by source name (e.g., name='Gliese 570D')
+                    - **shortname**: search be short name (e.g. shortname = 'J1457-2124')
+                    - **designation**: search by full designation (e.g., designation = 'J11040127+1959217')
+                    - **coordinate**: search around a coordinate by a radius specified by radius keyword (e.g., coordinate=[180.,+30.], radius=10.)
+                    - **radius** = 10.: search radius in arcseconds for coordinate search
+                    - **spt** or **spex_spt**: search by SpeX spectral type; single value is exact, two-element array gives range (e.g., spt = 'M7' or spt = [24,39])
+                    - **opt_spt**: same as spt for literature optical spectral types
+                    - **nir_spt**: same as spt for literature NIR spectral types
+                    - **jmag, hmag, kmag**: select based on faint limit or range of J, H or Ks magnitudes (e.g., jmag = [12,15])
+                    - **snr**: search on minimum or range of S/N ratios (e.g., snr = 30. or snr = [50.,100.])
+                    - **young, subdwarf, binary, spbinary, red, blue, giant, wd, standard**: classes to search on (e.g., young=True)
+                    - **logic** or **combine** = 'and': search logic, can be 'and' or 'or'
+                    - **combine**: same as logic
+                    - **date**: search by date (e.g., date = '20040322') or range of dates (e.g., date=[20040301,20040330])
+                    - **reference**: search by list of references (bibcodes) (e.g., reference='2011ApJS..197...19K')
+    :param \**kwargs (optional): 
+                    - **sort** = True: sort results based on Right Ascension
+                    - **list** = False: if True, return just a list of the data files (can be done with searchLibrary as well)
+                    - **lucky** = False: if True, return one randomly selected spectrum from the selected sample
+    :Example:
+       >>> import splat
+       >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
+
+          Retrieving 1 file
+
+       >>> sparr = splat.getSpectrum(spt='M7')
+
+          Retrieving 120 files
+
+       >>> sparr = splat.getSpectrum(spt='T5',young=True)
+
+		  No files match search criteria
+		  
+    '''
 
     result = []
     kwargs['output'] = 'all'
@@ -1566,17 +1606,24 @@ def getSpectrum(*args, **kwargs):
     
     if len(files) > 0:
         if (len(files) == 1):
-            print '\nRetrieving {} file\n'.format(len(files))
+            print '\nRetrieving 1 file\n'
+            result.append(loadSpectrum(files[0],header=search[0]))
         else:
-            print '\nRetrieving {} files\n'.format(len(files))
-        for i,x in enumerate(files):
-#            print i, x
-            result.append(loadSpectrum(x,header=search[i:i+1]))
+        	if (kwargs.get('lucky',False) == True):
+	            print '\nRetrieving 1 lucky file\n'
+	            ind = random.choice(range(len(files)))
+	            result.append(loadSpectrum(files[ind],header=search[ind]))
+	        else:
+				print '\nRetrieving {} files\n'.format(len(files))
+				for i,x in enumerate(files):
+					result.append(loadSpectrum(x,header=search[i:i+1]))
+        	
     else:
         if checkAccess() == False:
             sys.stderr.write('\nNo published files match search criteria\n\n')
         else:
             sys.stderr.write('\nNo files match search criteria\n\n')
+
     return result
         
 
