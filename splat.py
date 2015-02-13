@@ -2174,6 +2174,9 @@ def plotSpectrum(*args, **kwargs):
     if (len(args) < 1):
         print 'plotSpectrum needs at least on Spectrum object to plot'
         return
+#    if isinstance(args[0],Spectrum):
+#        print 'plotSpectrum needs at least one Spectrum object to plot'
+#        return
 
 # this loop solves issues if a list of spectrum objects is provided accidentally
     sp = []
@@ -2183,7 +2186,19 @@ def plotSpectrum(*args, **kwargs):
         else:
             sp.append(a)
 
+# absorption features
+    feature_labels = { \
+        'h2o': {'label': 'H2O', 'type': 'band', 'wavelengths': [[1.325,1.450],[1.72,2.14]]}, \
+        'co': {'label': 'CO', 'type': 'band', 'wavelengths': [[2.28,2.42]]}, \
+        'tio': {'label': 'TiO', 'type': 'band', 'wavelengths': [[0.76,0.80],[0.825,0.831]]}, \
+        'feh': {'label': 'FeH', 'type': 'band', 'wavelengths': [[0.98,1.03],[1.19,1.31],[1.57,1.64]]}, \
+        'na': {'label': 'Na I', 'type': 'line', 'wavelengths': [[1.137,1,137],[2.206,2.209]]}, \
+        'k': {'label': 'K I', 'type': 'line', 'wavelengths': [[0.7699,0.7665],[1.169,1.177],[1.243,1.252]]}}
+
+
+
 # keyword parameters
+    nsamples = kwargs.get('nsamples',1000)
     title = kwargs.get('title','')
     zeropoint = kwargs.get('zeropoint',[0. for x in range(len(sp))])
     xlabel = kwargs.get('xlabel','{} ({})'.format(sp[0].wlabel,sp[0].wunit))
@@ -2191,7 +2206,7 @@ def plotSpectrum(*args, **kwargs):
     xrange = kwargs.get('xrange',[x.value for x in sp[0].waveRange()])
     bound = xrange
     ymax = [s.fluxMax().value for s in sp]
-    yrange = kwargs.get('yrange',[0,numpy.nanmax(ymax)+numpy.nanmax(zeropoint)])
+    yrange = kwargs.get('yrange',[0,1.2*(numpy.nanmax(ymax)+numpy.nanmax(zeropoint))])
     bound.extend(yrange)
     grid = kwargs.get('grid',False)
     colors = kwargs.get('colors',['k' for x in range(len(sp))])
@@ -2215,9 +2230,9 @@ def plotSpectrum(*args, **kwargs):
         showZero = [showZero]
     if (len(showZero) < len(sp)):
         showZero.extend([True for x in range(len(sp)-len(showZero))])
+    features = kwargs.get('features',[])
 #    mask = kwargs.get('mask',False)                # not yet implemented
 #    labels = kwargs.get('labels','')            # not yet implemented
-#    features = kwargs.get('features','')        # not yet implemented
 
 
 #    plt.clf()
@@ -2234,11 +2249,44 @@ def plotSpectrum(*args, **kwargs):
         if (showZero[ii]):
             ze = numpy.ones(len(a.flux))*zeropoint[ii]
             plt.plot(a.wave.value,ze,color=colors[ii],linestyle=':',alpha=0.3)
-
+# determine maximum flux for all spectra
+        f = interp1d(a.wave,flx,bounds_error=False,fill_value=0.)
+        if (ii == 0):
+            flxmax = flx
+            wvmax = a.wave
+        else:
+            flxmax = numpy.maximum(flxmax,f(wvmax))
+	         
 # grid
     if (grid):
         plt.grid()
-# labels
+
+# label features
+    f = interp1d(wvmax,flxmax,bounds_error=False,fill_value=0.)
+    yoff = 0.02*numpy.nanmax(yrange)
+    xset = [0.]
+    for ftr in features:
+        ftr = ftr.lower()
+        if ftr in feature_labels:
+            for ii,waveRng in enumerate(feature_labels[ftr]['wavelengths']):
+                x = (numpy.arange(0,nsamples+1.0)/nsamples)* \
+                    (numpy.nanmax(waveRng)-numpy.nanmin(waveRng)+0.1)+numpy.nanmin(waveRng)-0.05
+                y = numpy.nanmax(f(x))+0.5*yoff
+                if numpy.nanmin(numpy.abs(numpy.subtract(xset,[numpy.mean(waveRng)]*len(xset)))) < 0.2:
+                    y = y+4*yoff
+                xset.append(numpy.mean(waveRng))
+                if feature_labels[ftr]['type'] == 'band':
+                    plt.plot(waveRng,[y+yoff]*2,color='k',linestyle='-')
+                    plt.plot([waveRng[0]]*2,[y,y+yoff],color='k',linestyle='-')
+                    plt.text(waveRng[1],y+1.5*yoff,feature_labels[ftr]['label'],horizontalalignment='right')
+                else:
+                    for w in waveRng:
+                        plt.plot([w]*2,[y,y+yoff],color='k',linestyle='-')
+                    plt.text(numpy.mean(waveRng),y+1.5*yoff,feature_labels[ftr]['label'],horizontalalignment='center')
+
+
+
+# axis labels
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.axis(bound)
