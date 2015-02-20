@@ -27,9 +27,10 @@
 import astropy
 import base64
 import copy
-import os
+import glob
 import matplotlib.pyplot as plt
 import numpy
+import os
 import random
 import re
 import scipy
@@ -37,6 +38,7 @@ import string
 import sys
 import urllib2
 import warnings
+
 from scipy import stats, signal
 from scipy.integrate import trapz        # for numerical integration
 from scipy.interpolate import interp1d, griddata
@@ -54,16 +56,30 @@ numpy.seterr(all='ignore')
 warnings.simplefilter("ignore")
 #from splat._version import __version__
 
+#set the SPLAT PATH, either from set environment variable or from sys.path
+SPLAT_PATH = './'
+if os.environ.get('SPLAT_PATH') != None:
+    SPLAT_PATH = os.environ['SPLAT_PATH']
+else:
+    checkpath = ['splat' in r for r in sys.path]
+    if max(checkpath):
+        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
+
 #################### CONSTANTS ####################
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
+SPECTRAL_MODEL_FOLDER = '/SpectralModels/'
+EVOLUTIONARY_MODEL_FOLDER = '/EvolutionaryModels/'
+FILTER_FOLDER = '/Filters/'
+DATA_FOLDER = '/Spectra/'
+
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
 spex_wave_range = [0.65,2.45]*u.micron    # default wavelength range
 max_snr = 1000.0                # maximum S/N ratio permitted
-model_parameter_names = ['teff','logg','z','fsed','cld','kzz','slit']
-model_parameters = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
-defined_model_set = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
-tmpfilename = 'splattmpfile'
+MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']
+MODEL_PARAMETERS = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
+DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
+TMPFILENAME = 'splattmpfile'
 
 spex_stdfiles = { \
     'M0.0': 'spex_prism_Gl270_091203.fits',\
@@ -544,22 +560,57 @@ def checkAccess(**kwargs):
     return result
     
 
-def checkOnline():
+def checkLocal(file):
+    '''
+    :Purpose: ``Checks if a file is present locally or within the SPLAT
+                code directory'' 
+    :Example:
+       >>> import splat
+       >>> splat.checkLocal('splat.py')
+       True  # found the code
+       >>> splat.checkLocal('parameters.txt')
+       False  # can't find this file
+       >>> splat.checkLocal('SpectralModels/BTSettl08/parameters.txt')
+       True  # found it
+    '''
+    if not os.path.exists(file):
+        if not os.path.exists(SPLAT_PATH+file):
+            return False
+        else:
+            return True
+    else:
+        return True
+
+
+def checkOnline(*args):
     '''
     :Purpose: ``Checks if SPLAT's URL is accessible from your machine--
-                that is, checks if you and the host are online.``
+                that is, checks if you and the host are online. Alternately
+                checks if a given filename is present locally or online''
     :Example:
        >>> import splat
        >>> splat.checkOnline()
        True  # SPLAT's URL was detected.
        >>> splat.checkOnline()
        False # SPLAT's URL was not detected.
+       >>> splat.checkOnline('SpectralModels/BTSettl08/parameters.txt')
+       False # Could not find this online file.
     '''
-    try:
-        urllib2.urlopen(SPLAT_URL)
-        return True
-    except urllib2.URLError:
-        return False
+    if (len(args) != 0):
+        try:
+            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(SPLAT_URL+args[0]).read())
+            os.remove(os.path.basename(TMPFILENAME))
+            return True
+#            return data
+        except urllib2.URLError:
+            return False
+
+    else:
+        try:
+            urllib2.urlopen(SPLAT_URL)
+            return True
+        except urllib2.URLError:
+            return False
 
 
 
@@ -1279,9 +1330,9 @@ def fetchDatabase(*args, **kwargs):
 # first try online
     if not local:
         try:
-            open(os.path.basename(tmpfilename), 'wb').write(urllib2.urlopen(url+dataFile).read())
-            data = ascii.read(os.path.basename(tmpfilename), delimiter='\t',fill_values='-99.',format='tab')
-            os.remove(os.path.basename(tmpfilename))
+            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(url+dataFile).read())
+            data = ascii.read(os.path.basename(TMPFILENAME), delimiter='\t',fill_values='-99.',format='tab')
+            os.remove(os.path.basename(TMPFILENAME))
 #            return data
         except urllib2.URLError:
             sys.stderr.write('\nReading local '+dataFile+'\n\n')
@@ -1427,7 +1478,9 @@ def filterMag(sp,filter,*args,**kwargs):
        (14.345894376898123, 0.027596454828421831)
     '''
 # keyword parameters
-    filterFolder = kwargs.get('filterFolder',SPLAT_URL+'Filters/')
+    filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
+    if not os.path.exists(filterFolder):
+        filterFolder = SPLAT_URL+FILTERFOLDER
     vegaFile = kwargs.get('vegaFile','vega_kurucz.txt')
     info = kwargs.get('info',False)
     custom = kwargs.get('custom',False)
@@ -1638,23 +1691,122 @@ def isNumber(s):
         return False
 
 
+def loadInterpolatedModel_NEW(*args,**kwargs):
+
+
+# path to model
+#    kwargs['path'] = kwargs.get('path',SPLAT_PATH+SPECTRAL_MODEL_FOLDER)
+#    if not os.path.exists(kwargs['path']):
+#        kwargs['remote'] = True
+#        kwargs['path'] = SPLAT_URL+SPECTRAL_MODEL_FOLDER        
+#    kwargs['set'] = kwargs.get('set','BTSettl2008')
+#    kwargs['model'] = True
+#    for ms in MODEL_PARAMETER_NAMES:
+#        kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
+
+# first get model parameters
+    pfile = 'parameters_new.txt'
+#    parameters = loadModelParameters(**kwargs)
+
+# read in parameters of available models
+    folder = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'
+    if not checkLocal(folder):
+        raise NameError('\n\nCould not locate spectral model folder {} locally\n'.format(folder))
+    if not checkLocal(folder+pfile):
+        raise NameError('\n\nCould not locate parameter list {} locally\n'.format(folder+pfile))
+    parameters = ascii.read(folder+pfile)
+#    numpy.genfromtxt(folder+pfile, comments='#', unpack=False, \
+#        missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
+
+ 
+# check that given parameters are in range
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
+        if (float(kwargs[ms]) < min(parameters[ms]) or float(kwargs[ms]) > max(parameters[ms])):
+            raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+    for ms in MODEL_PARAMETER_NAMES[3:7]:
+        if (kwargs[ms] not in parameters[ms]):
+            raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+
+# now identify grid points around input parameters
+# first set up a mask for digital parameters
+    mask = numpy.ones(len(parameters[MODEL_PARAMETER_NAMES[0]]))
+    for ms in MODEL_PARAMETER_NAMES[3:7]:
+        m = [1 if a == kwargs[ms] else 0 for a in parameters[ms]]
+        mask = mask*m
+    
+# identify grid points around input parameters
+# 3x3 grid for teff, logg, z
+# note interpolation and model ranges are separate
+    dist = numpy.zeros(len(parameters[MODEL_PARAMETER_NAMES[0]]))
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
+# first get step size
+        ps = list(set(parameters[ms]))
+        ps.sort()
+        pps = numpy.abs(ps-ps[int(0.5*len(ps))])
+        pps.sort()
+        step = pps[1]
+        dist = dist + ((kwargs[ms]-parameters[ms])/step)**2
+
+# apply digital constraints
+    ddist = dist/mask    
+
+# find "closest" models
+    mvals = {}
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
+        mvals[ms] = [x for (y,x) in sorted(zip(ddist,parameters[ms]))]
+
+
+# this is a guess as to how many models we need to get unique parameter values
+    nmodels = 12
+    mx,my,mz = numpy.meshgrid(mvals[MODEL_PARAMETER_NAMES[0]][0:nmodels],mvals[MODEL_PARAMETER_NAMES[1]][0:nmodels],mvals[MODEL_PARAMETER_NAMES[2]][0:nmodels])
+    mkwargs = kwargs.copy()
+
+    for i,w in enumerate(numpy.zeros(nmodels)):
+        for ms in MODEL_PARAMETER_NAMES[0:3]:
+            mkwargs[ms] = mvals[ms][i]
+            print mvals[ms][i]
+        mdl = loadModel(**mkwargs)
+        if i == 0:
+            mdls = numpy.log10(mdl.flux.value)
+        else:
+            mdls = numpy.column_stack((mdls,numpy.log10(mdl.flux.value)))
+            
+#
+#
+#            
+## THIS NEXT PART IS BROKEN!
+#
+#
+#
+    mflx = numpy.zeros(len(mdl.wave))
+    for i,w in enumerate(mflx):
+        print i, (mdls[i],) 
+        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),(mdls[i],),\
+            (float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
+            float(kwargs[MODEL_PARAMETER_NAMES[2]])),'linear'))
+    
+    return Spectrum(wave=mdl.wave,flux=mflx*mdl.funit,**kwargs)
+
+
+
+
 def loadInterpolatedModel(*args,**kwargs):
 # attempt to generalize models to extra dimensions
     kwargs['url'] = kwargs.get('url',SPLAT_URL+'/Models/')
     kwargs['set'] = kwargs.get('set','BTSettl2008')
     kwargs['model'] = True
     kwargs['local'] = kwargs.get('local',False)
-    for ms in model_parameter_names:
-        kwargs[ms] = kwargs.get(ms,model_parameters[ms])
+    for ms in MODEL_PARAMETER_NAMES:
+        kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
 
 # first get model parameters
     parameters = loadModelParameters(**kwargs)
     
 # check that given parameters are in range
-    for ms in model_parameter_names[0:3]:
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
         if (float(kwargs[ms]) < parameters[ms][0] or float(kwargs[ms]) > parameters[ms][1]):
             raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
-    for ms in model_parameter_names[3:6]:
+    for ms in MODEL_PARAMETER_NAMES[3:6]:
         if (kwargs[ms] not in parameters[ms]):
             raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
 
@@ -1663,7 +1815,7 @@ def loadInterpolatedModel(*args,**kwargs):
 # note interpolation and model ranges are separate
     mrng = []
     rng = []
-    for ms in model_parameter_names[0:3]:
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
         s = float(kwargs[ms]) - float(kwargs[ms])%float(parameters[ms][2])
         r = [max(float(parameters[ms][0]),s),min(s+float(parameters[ms][2]),float(parameters[ms][1]))]
         m = copy.deepcopy(r)
@@ -1751,16 +1903,38 @@ def loadInterpolatedModel(*args,**kwargs):
 
 def loadModel(*args, **kwargs):
     '''load up a model spectrum based on parameters'''
-# keyword parameters
-    kwargs['set'] = kwargs.get('set','BTSettl2008')
+
+# path to model and set local/online
+# by default assume models come from local splat directory
+    local = kwargs.get('local',True)
+    online = kwargs.get('online',not local and checkOnline())
+    kwargs['folder'] = kwargs.get('folder',SPECTRAL_MODEL_FOLDER)
+    local = not online
+    kwargs['local'] = local
+    kwargs['online'] = online
     kwargs['model'] = True
-    local = kwargs.get('local',False)
-    folder = kwargs.get('folder','./')
-    fileFlag = False
+
+
+# a filename has been passed - assume this file is a local file
+# and check that the path is correct if its fully provided
+# otherwise assume path is inside model set folder
+    if (len(args) > 0):
+        kwargs['filename'] = args[0]
+        if not os.path.exists(kwargs['filename']):
+            kwargs['filename'] = kwargs['folder']+os.path.basename(kwargs['filename'])
+            if not os.path.exists(kwargs['filename']):
+                raise NameError('\nCould not find model file {} or {}'.format(kwargs['filename'],kwargs['folder']+os.path.basename(kwargs['filename'])))
+            else:
+                return Spectrum(**kwargs)
+        else:
+            return Spectrum(**kwargs)
+
+# set up the model set
+    kwargs['set'] = kwargs.get('set','BTSettl2008')
 
 # preset defaults
-    for ms in model_parameter_names:
-        kwargs[ms] = kwargs.get(ms,model_parameters[ms])
+    for ms in MODEL_PARAMETER_NAMES:
+        kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
 
 # some special defaults
     if kwargs['set'] == 'morley12':
@@ -1772,103 +1946,84 @@ def loadModel(*args, **kwargs):
         if kwargs['cld'] == 'nc':
             kwargs['cld'] = 'f50'
 
-# check if online
-    local = local or (not checkOnline())
 
-# a filename has been passed - simply read this file
-    if (len(args) > 0):
-        kwargs['filename'] = args[0]
-        fileFlag = True
+# check that folder/set is present either locally or online
+# if not present locally but present online, switch to this mode
+# if not present at either raise error
+    if not checkLocal(kwargs['folder']+kwargs['set']):
+        if not checkOnline(kwargs['folder']+kwargs['set']):
+            raise NameError('\nCould not find '+kwargs['folder']+kwargs['set']+' locally or on SPLAT website\n\n')
+        else:
+            kwargs['local'] = False
+            kwargs['online'] = True
 
-# determine model set
-    else:
+# generate model filename
+    kwargs['filename'] = kwargs['set']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
+        format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],float(kwargs['slit']))
 
 # get model parameters
-        parameters = loadModelParameters(**kwargs)
-        kwargs['url'] = kwargs.get('url',parameters['url'])
-        
+#        parameters = loadModelParameters(**kwargs)
+#        kwargs['path'] = kwargs.get('path',parameters['path'])
 # check that given parameters are in range
-        for ms in model_parameter_names[0:3]:
-            if (float(kwargs[ms]) < parameters[ms][0] or float(kwargs[ms]) > parameters[ms][1]):
-                raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
-        for ms in model_parameter_names[3:6]:
-            if (kwargs[ms] not in parameters[ms]):
-                raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+#        for ms in MODEL_PARAMETER_NAMES[0:3]:
+#            if (float(kwargs[ms]) < parameters[ms][0] or float(kwargs[ms]) > parameters[ms][1]):
+#                raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+#        for ms in MODEL_PARAMETER_NAMES[3:6]:
+#            if (kwargs[ms] not in parameters[ms]):
+#                raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
 
-# check to see if given parameters are "on grid"
-        chk = [float('{:.1f}'.format(float(kwargs[ms]))) in [float('{:.1f}'.format(x)) for x in numpy.arange(parameters[ms][0],parameters[ms][1]+parameters[ms][2],parameters[ms][2])] for ms in model_parameter_names[0:3]]
-        if numpy.all(chk):
-# generate a file name
-            kwargs['filename'] = kwargs['set']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
-                format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],float(kwargs['slit']))
-#            print kwargs['filename']
-            fileFlag = True
-
-# first try to read in file
-    if fileFlag:
-
-# try online
-        if not local:
-            try:
-                ftype = kwargs['filename'].split('.')[-1]
-                tmp = tmpfilename+'.'+ftype
-                open(os.path.basename(tmp), 'wb').write(urllib2.urlopen(kwargs['url']+kwargs['filename']).read()) 
-                kwargs['filename'] = os.path.basename(tmp)
-                sp = Spectrum(**kwargs)
-                os.remove(os.path.basename(tmp))
+# check if file is present; if so, read it in, otherwise go to interpolated
+# online:
+    if kwargs['online']:
+        if not checkOnline(kwargs['filename']):
+            kwargs['filename'] = kwargs['folder']+kwargs['set']+'/'+kwargs['filename']
+        if not checkOnline(kwargs['filename']):
+            return loadInterpolatedModel(**kwargs)
+        try:
+            ftype = kwargs['filename'].split('.')[-1]
+            tmp = TMPFILENAME+'.'+ftype
+            open(os.path.basename(tmp), 'wb').write(urllib2.urlopen(SPLAT_URL+kwargs['filename']).read()) 
+            kwargs['filename'] = os.path.basename(tmp)
+            sp = Spectrum(**kwargs)
+            os.remove(os.path.basename(tmp))
 #               os.close(kwargs['filename'])
-                return sp
-            except urllib2.URLError:
-                sys.stderr.write('\n\nCould not find model file '+kwargs['filename']+' on SPLAT website\n\n')
-#                os.remove(os.path.basename(kwargs['filename']))
-                local = True
-                kwargs['local'] = True
+            return sp
+        except urllib2.URLError:
+            raise NameError('\nProblem reading in '+kwargs['set']+'/'+kwargs['filename']+' from SPLAT website\n\n')
 
-# now try local drive
-        if (os.path.exists(kwargs['filename']) == False):
-            kwargs['filename'] = folder+os.path.basename(kwargs['filename'])
-            if (os.path.exists(kwargs['filename']) == False):
-                raise NameError('\nCould not find model file {}'.format(kwargs['filename']))
-            else:
-                return Spectrum(**kwargs)
-        else:
-            return Spectrum(**kwargs)
-
-# or do an interpolated Model
+# locally:
     else:
-#        for ms in model_parameter_names:
-#            print kwargs[ms]
-        return loadInterpolatedModel(**kwargs)
+        if not checkLocal(kwargs['filename']):
+            kwargs['filename'] = kwargs['folder']+kwargs['set']+'/'+kwargs['filename']
+        if not checkLocal(kwargs['filename']):
+            return loadInterpolatedModel(**kwargs)
+        kwargs['filename'] = SPLAT_PATH+kwargs['filename']
+        return Spectrum(**kwargs)
+
 
 
 def loadModelParameters(**kwargs):
     '''Load up model parameters and check model inputs'''
 # keyword parameters
     pfile = kwargs.get('parameterFile','parameters.txt')
-    set = kwargs.get('set','BTSettl2008')
-    url = kwargs.get('url',SPLAT_URL+'/Models/'+set+'/')
-    local = kwargs.get('local',False)
-    folder = kwargs.get('folder','./')
 
 # legitimate model set?
-    if set not in defined_model_set:
-        raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(set,defined_model_set))
+    if kwargs.get('set',False) not in DEFINED_MODEL_SET:
+        raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(set,DEFINED_MODEL_SET))
     
-# check if online
-    local = local or (not checkOnline())
 
 # read in parameter file - local and not local
-    if not local:
+    if kwargs.get('online',False):
         try:
-            open(os.path.basename(tmpfilename), 'wb').write(urllib2.urlopen(url+pfile).read())
-            p = ascii.read(os.path.basename(tmpfilename))
-            os.remove(os.path.basename(tmpfilename))
+            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(SPLAT_URL+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+pfile).read())
+            p = ascii.read(os.path.basename(TMPFILENAME))
+            os.remove(os.path.basename(TMPFILENAME))
         except urllib2.URLError:
             print '\n\nCannot access online models for model set {}\n'.format(set)
             local = True
     else:            
         if (os.path.exists(pfile) == False):
-            pfile = folder+os.path.basename(pfile)
+            pfile = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+os.path.basename(pfile)
             if (os.path.exists(pfile) == False):
                 raise NameError('\nCould not find parameter file {}'.format(pfile))
             else:
@@ -1876,13 +2031,13 @@ def loadModelParameters(**kwargs):
 
 
 # populate output parameter structure
-    parameters = {'set': set, 'url': url}
-    for ms in model_parameter_names[0:3]:
+    parameters = {'set': set, 'url': SPLAT_URL}
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
         if ms in p.colnames:
             parameters[ms] = [float(x) for x in p[ms]]
         else:
             raise ValueError('\n\nModel set {} does not have defined parameter range for {}'.format(set,ms))
-    for ms in model_parameter_names[3:6]:
+    for ms in MODEL_PARAMETER_NAMES[3:6]:
         if ms in p.colnames:
             parameters[ms] = str(p[ms][0]).split(",")
         else:
@@ -1922,7 +2077,7 @@ def loadSpectrum(*args, **kwargs):
     if not local:
         try:
 #            ftype = file.split('.')[-1]
-#            tmp = tmpfilename+'.'+ftype
+#            tmp = TMPFILENAME+'.'+ftype
             open(os.path.basename(file), 'wb').write(urllib2.urlopen(url+file).read())
             kwargs['filename'] = os.path.basename(file)
 #            if kwargs['header'] == False:
@@ -2369,9 +2524,9 @@ def readSpectrum(**kwargs):
 # download if a remote file
 #    if url != '' and not local:
 #        try:
-#            open(os.path.basename(tmpfilename), 'wb').write(urllib2.urlopen(url+file).read()) 
-#            file = os.path.basename(tmpfilename)
-#            print 'Using {}'.format(tmpfilename)
+#            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(url+file).read()) 
+#            file = os.path.basename(TMPFILENAME)
+#            print 'Using {}'.format(TMPFILENAME)
 #        except:
 #            print '\n\nCould not locate {} at {}\n'.format(file,url)
 
@@ -2432,7 +2587,7 @@ def readSpectrum(**kwargs):
 
 # clean up
 #    if url != '' and not local:
-#        os.remove(os.path.basename(tmpfilename))
+#        os.remove(os.path.basename(TMPFILENAME))
 
     return {'wave':wave,'flux':flux,'noise':noise,'header':header}
 
