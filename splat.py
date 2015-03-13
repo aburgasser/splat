@@ -10,18 +10,25 @@
 #    Michael Lopez
 #    Alex Mendez
 #    Jonathan Parra
-#    Julian Pilate-Hutcherson
 #    Maitrayee Sahi
 #    Melisa Tallis
 
 #
-# CURRENT STATUS (9/2/2014)
-# Several models are now available, although this is somewhat unstable
-# due to patchy parameter coverage
-# Units are integrated, although somewhat haphazardly
-# Need to spruce up plotSpectrum (more options)
-# Need to add more filters
-# Need to add better metadata for Spectrum object (headers)
+# CURRENT STATUS (3/12/2015)
+# URGENT
+# re-add class selection for searchlibrary
+# fix loadinterpolatedmodel(2) to allow for broader interpolation AND/OR
+#  patch holes in model sets with fake interpolated models or from model developers
+# fix bad labeling in plotspectrum
+# replace standard files with new filename formats
+#
+# LESS URGENT
+# reformat fits files so headers have valid information, and spectra are flux calibrated
+# update information for sources in source database
+# add help sections to all programs
+# plotspectrum => multiplot, multipage files
+# proper SQL search for database
+# have classifybyindex return individual index classifications (e.g., 'full' keyword)
 
 # imports
 import astropy
@@ -71,6 +78,10 @@ SPECTRAL_MODEL_FOLDER = '/SpectralModels/'
 EVOLUTIONARY_MODEL_FOLDER = '/EvolutionaryModels/'
 FILTER_FOLDER = '/Filters/'
 DATA_FOLDER = '/Spectra/'
+DB_FOLDER = '/Databases/'
+SOURCES_DB = 'source_data.txt'
+SPECTRA_DB = 'spectral_data.txt'
+ORIGINAL_DB = 'db_spexprism.txt'
 
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
@@ -82,36 +93,36 @@ DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12',
 TMPFILENAME = 'splattmpfile'
 
 spex_stdfiles = { \
-    'M0.0': 'spex_prism_Gl270_091203.fits',\
-    'M1.0': 'spex_prism_Gl424_091229.fits',\
-    'M2.0': 'spex_prism_Gl91_081012.fits',\
-    'M3.0': 'spex_prism_Gl752A_070704.fits',\
-    'M4.0': 'spex_prism_Gl213_071110dl.fits',\
-    'M5.0': 'spex_prism_Gl51_070728.fits',\
-    'M6.0': 'spex_prism_LHS1375_081012.fits',\
-    'M7.0': 'spex_prism_vB8_070704.fits',\
-    'M8.0': 'spex_prism_vB10_070704.fits',\
-    'M9.0': 'spex_prism_LHS2924_070704.fits',\
-    'L0.0': 'spex_prism_0345+2540_kc.fits',\
-    'L1.0': 'spex_prism_2130-0845_080713.fits',\
-    'L2.0': 'spex_prism_kelu-1_060411.fits',\
-    'L3.0': 'spex_prism_1506+1321_060410.fits',\
-    'L4.0': 'spex_prism_2158-1550_060901.fits',\
-    'L5.0': 'spex_prism_sdss0835+19_chiu06.fits',\
-    'L6.0': 'spex_prism_1010-0406_kc.fits',\
-    'L7.0': 'spex_prism_0103+1935_060902.fits',\
-    'L8.0': 'spex_prism_1632+1904_030905.fits',\
-    'L9.0': 'spex_prism_denis0255-4700_040908.fits',\
-    'T0.0': 'spex_prism_1207+0244_061221dl.fits',\
-    'T1.0': 'spex_prism_0837-0000_061221.fits',\
-    'T2.0': 'spex_prism_sdss1254-0122_030522.fits',\
-    'T3.0': 'spex_prism_1209-1004_030523.fits',\
-    'T4.0': 'spex_prism_2254+3123_030918.fits',\
-    'T5.0': 'spex_prism_1503+2525_030522.fits',\
-    'T6.0': 'spex_prism_sdss1624+0029_040312.fits',\
-    'T7.0': 'spex_prism_0727+1710_040310.fits',\
-    'T8.0': 'spex_prism_0415-0935_030917.fits',\
-    'T9.0': 'spex_prism_0722-0540_110404.fits'}
+    'M0.0': '11335_10505.fits',\
+    'M1.0': '11364_10806.fits',\
+    'M2.0': '11181_10187.fits',\
+    'M3.0': '10823_11422.fits',\
+    'M4.0': '12004_10444.fits',\
+    'M5.0': '10829_10104.fits',\
+    'M6.0': '11182_10188.fits',\
+    'M7.0': '10822_11283.fits',\
+    'M8.0': '10824_11423.fits',\
+    'M9.0': '10821_11058.fits',\
+    'L0.0': '10107_10315.fits',\
+    'L1.0': '11072_11527.fits',\
+    'L2.0': '10600_10957.fits',\
+    'L3.0': '10592_11111.fits',\
+    'L4.0': '10675_11572.fits',\
+    'L5.0': '10351_10583.fits',\
+    'L6.0': '10375_10696.fits',\
+    'L7.0': '10678_10105.fits',\
+    'L8.0': '10115_11254.fits',\
+    'L9.0': '10268_10237.fits',\
+    'T0.0': '10771_10871.fits',\
+    'T1.0': '10767_10591.fits',\
+    'T2.0': '10017_10945.fits',\
+    'T3.0': '10034_10874.fits',\
+    'T4.0': '10143_11632.fits',\
+    'T5.0': '10021_11106.fits',\
+    'T6.0': '10200_11236.fits',\
+    'T7.0': '10159_10513.fits',\
+    'T8.0': '10126_10349.fits',\
+    'T9.0': '11536_10509.fits'}
 
 #####################################################
 
@@ -153,10 +164,10 @@ class Spectrum(object):
         self.model = False
 # various options for setting the filename
         self.filename = ''
-        if kwargs.get('filename','') != '':
-            self.filename = kwargs.get('filename','')
         if kwargs.get('file','') != '':
             self.filename = kwargs.get('file','')
+        if kwargs.get('filename','') != '':
+            self.filename = kwargs.get('filename','')
         kwargs['filename'] = self.filename
         self.wlabel = kwargs.get('wlabel',r'Wavelength')
         self.wunit = kwargs.get('wunit',u.micron)
@@ -575,11 +586,11 @@ def checkLocal(file):
     '''
     if not os.path.exists(file):
         if not os.path.exists(SPLAT_PATH+file):
-            return False
+            return ''
         else:
-            return True
+            return SPLAT_PATH+file
     else:
-        return True
+        return file
 
 
 def checkOnline(*args):
@@ -600,17 +611,17 @@ def checkOnline(*args):
         try:
             open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(SPLAT_URL+args[0]).read())
             os.remove(os.path.basename(TMPFILENAME))
-            return True
+            return args[0]
 #            return data
         except urllib2.URLError:
-            return False
+            return ''
 
     else:
         try:
             urllib2.urlopen(SPLAT_URL)
-            return True
+            return SPLAT_URL
         except urllib2.URLError:
-            return False
+            return ''
 
 
 
@@ -747,11 +758,19 @@ def classifyByIndex(sp, *args, **kwargs):
         vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))*sptfact
         coeffs[index]['spt'] = numpy.nanmean(vals)+sptoffset
         coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
+
+# mask off indices that give a spectral type outside the allowed range
+        if (coeffs[index]['spt'] < coeffs[index]['range'][0] or coeffs[index]['spt'] > coeffs[index]['range'][1]):
+            coeffs[index]['mask'] = 0.
+            
 #        print index, indices[index], numpy.nanmean(vals), numpy.nanstd(vals), coeffs[index]['spt']
     
 #    print indices[index][0], numpy.polyval(coeffs[index]['coeff'],indices[index][0]), coeffs[index]
 #    mask = numpy.ones(len(coeffs.keys()))
 #    result = numpy.zeros(2)
+#    print [coeffs[index]['mask'] for index in coeffs.keys()]
+    
+# now iteratively mask off indices for which the mean (weighted) spectral type is outside the allowed range
     for i in numpy.arange(nloop):
         wts = [coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in coeffs.keys()]
         if (numpy.nansum(wts) == 0.):
@@ -762,8 +781,10 @@ def classifyByIndex(sp, *args, **kwargs):
         sptn = numpy.nansum(vals)/numpy.nansum(wts)
         sptn_e = 1./numpy.nansum(wts)**0.5
         for index in coeffs.keys():
-            coeffs[index]['mask'] = numpy.where( \
-                coeffs[index]['range'][0] <= sptn <= coeffs[index]['range'][1],1,0)
+            if (sptn < coeffs[index]['range'][0] or sptn > coeffs[index]['range'][1]):
+                coeffs[index]['mask'] = 0
+            else:
+                coeffs[index]['mask'] = 1
 
 # round off to nearest 0.5 subtypes if desired
     if (rnd_flag):
@@ -1319,68 +1340,92 @@ def designationToShortName(value):
 
 def fetchDatabase(*args, **kwargs):    
     '''Get the SpeX Database from either online repository or local drive'''
-    dataFile = kwargs.get('dataFile','db_spexprism.txt')
-    folder = kwargs.get('folder','~/')
-    url = kwargs.get('url',SPLAT_URL)+'/Databases/'
-    local = kwargs.get('local',False)
+    kwargs['filename'] = kwargs.get('filename',ORIGINAL_DB)
+    kwargs['filename'] = kwargs.get('file',kwargs['filename'])
+    kwargs['folder'] = kwargs.get('folder',DB_FOLDER)
+    url = kwargs.get('url',SPLAT_URL)+kwargs['folder']
+    local = kwargs.get('local',True)
+    online = kwargs.get('online',not local and checkOnline())
+    local = not online
+    kwargs['local'] = local
+    kwargs['online'] = online
+    kwargs['model'] = True
 
-# check if online
-    local = local or (not checkOnline())
-        
-# first try online
-    if not local:
+# check that folder/set is present either locally or online
+# if not present locally but present online, switch to this mode
+# if not present at either raise error
+    folder = checkLocal(kwargs['folder'])
+    if folder=='':
+        folder = checkOnline(kwargs['folder'])
+        if folder=='':
+            raise NameError('\nCould not find '+kwargs['folder']+' locally or on SPLAT website\n\n')
+        else:
+            kwargs['folder'] = folder
+            kwargs['local'] = False
+            kwargs['online'] = True
+    else:
+        kwargs['folder'] = folder
+
+# locally:
+    if kwargs['local']:
+        file = checkLocal(kwargs['filename'])
+        if file=='':
+            file = checkLocal(kwargs['folder']+'/'+kwargs['filename'])
+        if file=='':
+            raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
+        else:
+            data = ascii.read(file, delimiter='\t',fill_values='-99.',format='tab')
+
+# check if file is present; if so, read it in, otherwise go to interpolated
+# online:
+    if kwargs['online']:
+        file = checkOnline(kwargs['filename'])
+        if file=='':
+            file = checkOnline(kwargs['folder']+'/'+kwargs['filename'])
+        if file=='':
+            raise NameError('\nCould not find '+kwargs['filename']+' on the SPLAT website\n\n')
         try:
-            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(url+dataFile).read())
+            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(url+file).read()) 
+            kwargs['filename'] = os.path.basename(tmp)
             data = ascii.read(os.path.basename(TMPFILENAME), delimiter='\t',fill_values='-99.',format='tab')
             os.remove(os.path.basename(TMPFILENAME))
-#            return data
         except urllib2.URLError:
-            sys.stderr.write('\nReading local '+dataFile+'\n\n')
-            local = True
-    
-# now try local drive - NOT WORKING
-    file = dataFile
-    if local:
-        if (os.path.exists(file) == False):
-            file = folder+os.path.basename(file)
-        if (os.path.exists(file) == False):
-            raise NameError('\nCould not find '+dataFile+' or '+file+' locally\n\n')
-        else:
-            data = ascii.read(file, delimiter='    ')
+            raise NameError('\nHaving a problem reading in '+kwargs['filename']+' on the SPLAT website\n\n')
+
 
 # clean up blanks and convert numerical values to numbers
-    data['ra'][numpy.where(data['ra'] == '')] = '0.'
+    data['RA'][numpy.where(data['RA'] == '')] = '0.'
 #    data['ran'] = [float(x) for x in data['ra']]
-    data['dec'][numpy.where(data['dec'] == '')] = '0.'
+    data['DEC'][numpy.where(data['DEC'] == '')] = '0.'
 #    data['decn'] = [float(x) for x in data['dec']]
-    data['jmag'][numpy.where(data['jmag'] == '')] = '99.'
+    data['JMAG'][numpy.where(data['JMAG'] == '')] = '99.'
 #    data['jmagn'] = [float(x) for x in data['jmag']]
-    data['hmag'][numpy.where(data['hmag'] == '')] = '99.'
+    data['HMAG'][numpy.where(data['HMAG'] == '')] = '99.'
 #    data['hmagn'] = [float(x) for x in data['hmag']]
-    data['kmag'][numpy.where(data['kmag'] == '')] = '99.'
+    data['KMAG'][numpy.where(data['KMAG'] == '')] = '99.'
 #    data['kmagn'] = [float(x) for x in data['kmag']]
-    data['jmag_error'][numpy.where(data['jmag_error'] == '')] = '99.'
+    data['JMAG_ERROR'][numpy.where(data['JMAG_ERROR'] == '')] = '99.'
 #    data['jmag_errorn'] = [float(x) for x in data['jmag_error']]
-    data['hmag_error'][numpy.where(data['hmag_error'] == '')] = '99.'
+    data['HMAG_ERROR'][numpy.where(data['HMAG_ERROR'] == '')] = '99.'
 #    data['hmag_errorn'] = [float(x) for x in data['hmag_error']]
-    data['kmag_error'][numpy.where(data['kmag_error'] == '')] = '99.'
+    data['KMAG_ERROR'][numpy.where(data['KMAG_ERROR'] == '')] = '99.'
 #    data['kmag_errorn'] = [float(x) for x in data['kmag_error']]
-    data['resolution'][numpy.where(data['resolution'] == '')] = '120'
+    data['RESOLUTION'][numpy.where(data['RESOLUTION'] == '')] = '120'
 #    data['resolutionn'] = [float(x) for x in data['resolution']]
-    data['airmass'][numpy.where(data['airmass'] == '')] = '1.'
+    data['AIRMASS'][numpy.where(data['AIRMASS'] == '')] = '1.'
 #    data['airmassn'] = [float(x) for x in data['airmass']]
-    data['median_snr'][numpy.where(data['median_snr'] == '')] = '0'
+    data['MEDIAN_SNR'][numpy.where(data['MEDIAN_SNR'] == '')] = '0'
 #    data['median_snrn'] = [float(x) for x in data['median_snr']]
 
 # convert coordinates to SkyCoord format
 #    data['skycoords'] = data['ra']
     s = []
-    for i in numpy.arange(len(data['ra'])):
+    for i in numpy.arange(len(data['RA'])):
         try:        # to deal with a blank string
-            s.append(SkyCoord(ra=float(data['ra'][i])*u.degree,dec=float(data['dec'][i])*u.degree,frame='icrs'))
+            s.append(SkyCoord(ra=float(data['RA'][i])*u.degree,dec=float(data['DEC'][i])*u.degree,frame='icrs'))
         except:
             s.append(SkyCoord(ra=0.*u.degree,dec=0.*u.degree,frame='icrs'))
-    data['skycoords'] = s
+    data['SKYCOORDS'] = s
 
 # add in RA/Dec (TEMPORARY)
 #    ra = []
@@ -1392,27 +1437,27 @@ def fetchDatabase(*args, **kwargs):
 #    data['ra'] = ra
 #    data['dec'] = dec
 
-    data['young'] = ['young' in x for x in data['library']]
-    data['subdwarf'] = ['subdwarf' in x for x in data['library']]
-    data['binary'] = ['binary' in x for x in data['library']]
-    data['spbinary'] = ['sbinary' in x for x in data['library']]
-    data['blue'] = ['blue' in x for x in data['library']]
-    data['red'] = ['red' in x for x in data['library']]
-    data['giant'] = ['giant' in x for x in data['library']]
-    data['wd'] = ['wd' in x for x in data['library']]
-    data['standard'] = ['std' in x for x in data['library']]
-    data['companion'] = ['companion' in x for x in data['library']]
+    data['YOUNG'] = ['young' in x for x in data['LIBRARY']]
+    data['SUBDWARF'] = ['subdwarf' in x for x in data['LIBRARY']]
+    data['BINARY'] = ['binary' in x for x in data['LIBRARY']]
+    data['SPBINARY'] = ['sbinary' in x for x in data['LIBRARY']]
+    data['BLUE'] = ['blue' in x for x in data['LIBRARY']]
+    data['RED'] = ['red' in x for x in data['LIBRARY']]
+    data['GIANT'] = ['giant' in x for x in data['LIBRARY']]
+    data['WD'] = ['wd' in x for x in data['LIBRARY']]
+    data['STANDARD'] = ['std' in x for x in data['LIBRARY']]
+    data['COMPANION'] = ['companion' in x for x in data['LIBRARY']]
 
 # add in shortnames
-    data['shortname'] = [designationToShortName(x) for x in data['designation']]
+    data['SHORTNAME'] = [designationToShortName(x) for x in data['DESIGNATION']]
 
 # create literature spt 
-    data['lit_type'] = data['opt_type']
-    w = numpy.where(numpy.logical_and(data['lit_type'] == '',data['nir_type'] != ''))
-    data['lit_type'][w] = data['nir_type'][w]
-    sptn = [typeToNum(x) for x in data['lit_type']]
-    w = numpy.where(numpy.logical_and(sptn > 29.,data['nir_type'] != ''))
-    data['lit_type'][w] = data['nir_type'][w]
+    data['LIT_TYPE'] = data['OPT_TYPE']
+    w = numpy.where(numpy.logical_and(data['LIT_TYPE'] == '',data['NIR_TYPE'] != ''))
+    data['LIT_TYPE'][w] = data['NIR_TYPE'][w]
+    sptn = [typeToNum(x) for x in data['LIT_TYPE']]
+    w = numpy.where(numpy.logical_and(sptn > 29.,data['NIR_TYPE'] != ''))
+    data['LIT_TYPE'][w] = data['NIR_TYPE'][w]
 #    w = numpy.where(numpy.logical_and(data['lit_type'] == '',typeToNum(data['spex_type']) > 17.))
 #    data['lit_type'][w] = data['spex_type'][w]
 
@@ -1601,6 +1646,87 @@ def filterMag(sp,filter,*args,**kwargs):
     return val,err
 
 
+def getSpectrum_OLD(*args, **kwargs):
+    '''
+    :Purpose: ``Gets a spectrum from the SPLAT library using various selection criteria.``
+    :Usage: ``[sp] = splat.getSpectrum({search commands},**kwargs)``
+    :param [sp]: ``array of Spectrum class objects, each of which should contain wave, flux and 
+                 noise array elements.``
+    :param '{search commands}': ``Various search commands to winnow down the selection:
+                    - **name**: search by source name (e.g., name='Gliese 570D')
+                    - **shortname**: search be short name (e.g. shortname = 'J1457-2124')
+                    - **designation**: search by full designation (e.g., designation = 'J11040127+1959217')
+                    - **coordinate**: search around a coordinate by a radius specified by radius keyword (e.g., coordinate=[180.,+30.], radius=10.)
+                    - **radius** = 10.: search radius in arcseconds for coordinate search
+                    - **spt** or **spex_spt**: search by SpeX spectral type; single value is exact, two-element array gives range (e.g., spt = 'M7' or spt = [24,39])
+                    - **opt_spt**: same as spt for literature optical spectral types
+                    - **nir_spt**: same as spt for literature NIR spectral types
+                    - **jmag, hmag, kmag**: select based on faint limit or range of J, H or Ks magnitudes (e.g., jmag = [12,15])
+                    - **snr**: search on minimum or range of S/N ratios (e.g., snr = 30. or snr = [50.,100.])
+                    - **young, subdwarf, binary, spbinary, red, blue, giant, wd, standard**: classes to search on (e.g., young=True)
+                    - **logic** or **combine** = 'and': search logic, can be 'and' or 'or'
+                    - **combine**: same as logic
+                    - **date**: search by date (e.g., date = '20040322') or range of dates (e.g., date=[20040301,20040330])
+                    - **reference**: search by list of references (bibcodes) (e.g., reference='2011ApJS..197...19K')
+    :param \**kwargs (optional): 
+                    - **sort** = True: sort results based on Right Ascension
+                    - **list** = False: if True, return just a list of the data files (can be done with searchLibrary as well)
+                    - **lucky** = False: if True, return one randomly selected spectrum from the selected sample
+    :Example:
+       >>> import splat
+       >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
+
+          Retrieving 1 file
+
+       >>> sparr = splat.getSpectrum(spt='M7')
+
+          Retrieving 120 files
+
+       >>> sparr = splat.getSpectrum(spt='T5',young=True)
+
+		  No files match search criteria
+		  
+    '''
+
+    result = []
+    kwargs['output'] = 'all'
+    print 'Searching'
+    search = searchLibrary(*args, **kwargs)
+    print 'Searching complete'
+
+# limit access to most users
+    if checkAccess() == False:
+        search = search[:][numpy.where(search['public'] == 'Y')]
+    
+    files = search['DATA_FILE']
+        
+# return just the filenames
+    if (kwargs.get('list',False) != False):
+        return files
+    
+    if len(files) > 0:
+        if (len(files) == 1):
+            print '\nRetrieving 1 file\n'
+            result.append(loadSpectrum(files[0],header=search[0]))
+        else:
+        	if (kwargs.get('lucky',False) == True):
+	            print '\nRetrieving 1 lucky file\n'
+	            ind = random.choice(range(len(files)))
+	            result.append(loadSpectrum(files[ind],header=search[ind]))
+	        else:
+				print '\nRetrieving {} files\n'.format(len(files))
+				for i,x in enumerate(files):
+					result.append(loadSpectrum(x,header=search[i:i+1]))
+        	
+    else:
+        if checkAccess() == False:
+            sys.stderr.write('\nNo published files match search criteria\n\n')
+        else:
+            sys.stderr.write('\nNo files match search criteria\n\n')
+
+    return result
+        
+
 def getSpectrum(*args, **kwargs):
     '''
     :Purpose: ``Gets a spectrum from the SPLAT library using various selection criteria.``
@@ -1646,12 +1772,9 @@ def getSpectrum(*args, **kwargs):
     result = []
     kwargs['output'] = 'all'
     search = searchLibrary(*args, **kwargs)
-
-# limit access to most users
-    if checkAccess() == False:
-        search = search[:][numpy.where(search['public'] == 'Y')]
-    
-    files = search['data_file']
+    files = []
+    for i,x in enumerate(search['DATA_KEY']):
+        files.append(str(search['DATA_KEY'][i])+'_'+str(search['SOURCE_KEY'][i])+'.fits')
         
 # return just the filenames
     if (kwargs.get('list',False) != False):
@@ -1679,7 +1802,6 @@ def getSpectrum(*args, **kwargs):
 
     return result
         
-
 
 # simple number checker
 def isNumber(s):
@@ -1709,12 +1831,13 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
 #    parameters = loadModelParameters(**kwargs)
 
 # read in parameters of available models
-    folder = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'
-    if not checkLocal(folder):
-        raise NameError('\n\nCould not locate spectral model folder {} locally\n'.format(folder))
-    if not checkLocal(folder+pfile):
-        raise NameError('\n\nCould not locate parameter list {} locally\n'.format(folder+pfile))
-    parameters = ascii.read(folder+pfile)
+    folder = checkLocal(SPECTRAL_MODEL_FOLDER+kwargs['set']+'/')
+    if folder=='':
+        raise NameError('\n\nCould not locate spectral model folder {} locally\n'.format(SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'))
+    pfile = checkLocal(folder+pfile)
+    if pfile=='':
+        raise NameError('\n\nCould not locate parameter list in folder {} locally\n'.format(folder))
+    parameters = ascii.read(pfile)
 #    numpy.genfromtxt(folder+pfile, comments='#', unpack=False, \
 #        missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
 
@@ -1913,6 +2036,7 @@ def loadModel(*args, **kwargs):
     kwargs['local'] = local
     kwargs['online'] = online
     kwargs['model'] = True
+    url = kwargs.get('url',SPLAT_URL)
 
 
 # a filename has been passed - assume this file is a local file
@@ -1950,15 +2074,20 @@ def loadModel(*args, **kwargs):
 # check that folder/set is present either locally or online
 # if not present locally but present online, switch to this mode
 # if not present at either raise error
-    if not checkLocal(kwargs['folder']+kwargs['set']):
-        if not checkOnline(kwargs['folder']+kwargs['set']):
+    folder = checkLocal(kwargs['folder']+kwargs['set'])
+    if folder=='':
+        folder = checkOnline(kwargs['folder']+kwargs['set'])
+        if folder=='':
             raise NameError('\nCould not find '+kwargs['folder']+kwargs['set']+' locally or on SPLAT website\n\n')
         else:
+            kwargs['folder'] = folder
             kwargs['local'] = False
             kwargs['online'] = True
+    else:
+        kwargs['folder'] = folder
 
 # generate model filename
-    kwargs['filename'] = kwargs['set']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
+    kwargs['filename'] = kwargs['folder']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
         format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],float(kwargs['slit']))
 
 # get model parameters
@@ -1973,32 +2102,35 @@ def loadModel(*args, **kwargs):
 #                raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
 
 # check if file is present; if so, read it in, otherwise go to interpolated
-# online:
-    if kwargs['online']:
-        if not checkOnline(kwargs['filename']):
-            kwargs['filename'] = kwargs['folder']+kwargs['set']+'/'+kwargs['filename']
-        if not checkOnline(kwargs['filename']):
-            return loadInterpolatedModel(**kwargs)
-        try:
-            ftype = kwargs['filename'].split('.')[-1]
-            tmp = TMPFILENAME+'.'+ftype
-            open(os.path.basename(tmp), 'wb').write(urllib2.urlopen(SPLAT_URL+kwargs['filename']).read()) 
-            kwargs['filename'] = os.path.basename(tmp)
-            sp = Spectrum(**kwargs)
-            os.remove(os.path.basename(tmp))
-#               os.close(kwargs['filename'])
-            return sp
-        except urllib2.URLError:
-            raise NameError('\nProblem reading in '+kwargs['set']+'/'+kwargs['filename']+' from SPLAT website\n\n')
 
 # locally:
-    else:
-        if not checkLocal(kwargs['filename']):
-            kwargs['filename'] = kwargs['folder']+kwargs['set']+'/'+kwargs['filename']
-        if not checkLocal(kwargs['filename']):
+    if kwargs['local']:
+        file = checkLocal(kwargs['filename'])
+        if file=='':
             return loadInterpolatedModel(**kwargs)
-        kwargs['filename'] = SPLAT_PATH+kwargs['filename']
-        return Spectrum(**kwargs)
+        else:
+            try:
+                return Spectrum(**kwargs)
+            except:
+                raise NameError('\nProblem reading in '+kwargs['filename']+' locally\n\n')
+
+# online:
+    if kwargs['online']:
+        file = checkOnline(kwargs['filename'])
+        if file=='':
+            return loadInterpolatedModel(**kwargs)
+        else:
+            try:
+                ftype = kwargs['filename'].split('.')[-1]
+                tmp = TMPFILENAME+'.'+ftype
+                open(os.path.basename(tmp), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
+                kwargs['filename'] = os.path.basename(tmp)
+                sp = Spectrum(**kwargs)
+                os.remove(os.path.basename(tmp))
+                return sp
+            except urllib2.URLError:
+                raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
+
 
 
 
@@ -2029,7 +2161,6 @@ def loadModelParameters(**kwargs):
             else:
                 p = ascii.read(pfile)
 
-
 # populate output parameter structure
     parameters = {'set': set, 'url': SPLAT_URL}
     for ms in MODEL_PARAMETER_NAMES[0:3]:
@@ -2048,56 +2179,76 @@ def loadModelParameters(**kwargs):
 
 def loadSpectrum(*args, **kwargs):
     '''load up a SpeX spectrum based name, shortname and/or date'''
-# keyword parameters
-#    name = kwargs.get('name','')
-#    shname = kwargs.get('shname','')
-#    date = kwargs.get('date','')
-    local = kwargs.get('local',False)
-    folder = kwargs.get('folder','')
-#    header = kwargs.get('header',False)
-#    kwargs['header'] = header
-    url = kwargs.get('folder',SPLAT_URL+'/Spectra/')
-    kwargs['model'] = False
-    file = kwargs.get('filename','')
-    file = kwargs.get('file',file)
+
+    local = kwargs.get('local',True)
+    online = kwargs.get('online',not local and checkOnline())
+    kwargs['folder'] = kwargs.get('folder',DATA_FOLDER)
+    local = not online
+    kwargs['local'] = local
+    kwargs['online'] = online
+    kwargs['model'] = True
+    url = kwargs.get('url',SPLAT_URL)
+
+    file = kwargs.get('file','')
+    file = kwargs.get('filename',file)
     if (len(args) > 0):
         file = args[0]
     kwargs['filename'] = file
+    kwargs['model'] = False
 
-# check if online
-    local = local or (not checkOnline())
-    
-# CODE NEEDED HERE TO SET UP FILE NAME; FOR NOW JUST ERROR
-    
-# a filename has been passed
+# a filename must be passed
     if (kwargs['filename'] == ''):
-        raise NameError('\nNeed to pass in filename for spectral data')
+        raise NameError('\nNeed to pass in filename for spectral data\n\n')
 
-# first try online
-    if not local:
+
+# check that the file is locally present first
+    file = checkLocal(kwargs['filename'])
+    if file=='':
+        file = checkLocal(kwargs['folder']+os.path.basename(kwargs['filename']))
+        if file=='':
+            print 'Cannot find '+kwargs['filename']+' locally, trying online\n\n'
+            kwargs['local'] = False
+            kwargs['online'] = True                
+        else:
+            kwargs['filename'] = file
+    else:
+        kwargs['filename'] = file
+
+
+# read in local file
+    if kwargs['local']:
         try:
-#            ftype = file.split('.')[-1]
-#            tmp = TMPFILENAME+'.'+ftype
-            open(os.path.basename(file), 'wb').write(urllib2.urlopen(url+file).read())
-            kwargs['filename'] = os.path.basename(file)
-#            if kwargs['header'] == False:
-#                kwargs['header'] = searchLibrary(file=kwargs['filename'])
+            return Spectrum(**kwargs)
+        except:
+            print '\nProblem reading in '+kwargs['filename']+' locally, trying online\n\n'
+            kwargs['online'] = True
+
+# check that the file is online
+    file = checkOnline(kwargs['filename'])
+    if file=='':
+        file = checkOnline(kwargs['folder']+os.path.basename(kwargs['filename']))
+        if file=='':
+            raise NameError('\nCannot find file '+kwargs['filename']+' on SPLAT website\n\n')
+        else:
+            kwargs['filename'] = file
+    else:
+        kwargs['filename'] = file
+
+# read in online file
+    if kwargs['online']:
+        try:
+            ftype = kwargs['filename'].split('.')[-1]
+            tmp = TMPFILENAME+'.'+ftype
+            open(os.path.basename(tmp), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
+            kwargs['filename'] = os.path.basename(tmp)
             sp = Spectrum(**kwargs)
-            os.remove(os.path.basename(file))
+            os.remove(os.path.basename(tmp))
             return sp
         except urllib2.URLError:
-            sys.stderr.write('\nCould not find data file '+kwargs['filename']+' at '+url+'\n\n')
-            local = True
-    
-# now try local drive
-    if (os.path.exists(kwargs['filename']) == False):
-        kwargs['filename'] = folder+os.path.basename(kwargs['filename'])
-        if (os.path.exists(kwargs['filename']) == False):
-            raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
-        else:
-            return Spectrum(**kwargs)
+            raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
     else:
-        return Spectrum(**kwargs)
+        raise NameError('\nCould not find file '+kwargs['filename']+' on SPLAT website\n\n')
+
 
 
 #Takes the apparent magnitude and either takes or determines the absolute magnitude, then uses the magnitude/distance relation to estimate the distance to the object in parsecs
@@ -2517,7 +2668,8 @@ def readSpectrum(**kwargs):
 # keyword parameters
     folder = kwargs.get('folder','')
     catchSN = kwargs.get('catchSN',True)
-    file = kwargs.get('filename','')
+    file = kwargs.get('file','')
+    file = kwargs.get('filename',file)
 #    url = kwargs.get('url',SPLAT_URL)+'/Spectra/'
 #    local = kwargs.get('local',False)
     
@@ -2593,21 +2745,21 @@ def readSpectrum(**kwargs):
 
 
 
-def searchLibrary(*args, **kwargs):
+def searchLibrary_OLD(*args, **kwargs):
     '''Search the SpeX database to extract the key reference for that Spectrum
         Note that this is currently only and AND search - need to figure out
         how to a full SQL style search'''
 # program parameters
     ref = kwargs.get('output','all')
     radius = kwargs.get('radius',10.)      # search radius in arcseconds
-    classes = ['young','subdwarf','binary','spbinary','red','blue','giant','wd','standard','companion']
+    classes = ['YOUNG','SUBDWARF','BINARY','SPBINARY','RED','BLUE','GIANT','WD','STANDARD','COMPANION']
 
 # get database
     data = fetchDatabase(**kwargs)
     if (ref not in data.colnames and ref != 'all'):
         print '\nWarning: searchLibrary cannot return unknown column {}; returning filename instead\n\n'.format(ref)
         ref = 'all'
-    data['select'] = numpy.zeros(len(data['ra']))
+    data['SELECT'] = numpy.zeros(len(data['RA']))
     count = 0.
     
 # search by filename
@@ -2617,7 +2769,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(file,str):
             file = [file]
         for f in file:
-            data['select'][numpy.where(data['data_file'] == f)] += 1
+            data['SELECT'][numpy.where(data['DATA_FILE'] == f)] += 1
         count+=1.
 # exclude by filename
     if kwargs.get('excludefile',False) != False:
@@ -2625,7 +2777,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(file,str):
             file = [file]
         for f in file:
-            data['select'][numpy.where(data['data_file'] != f)] += 1
+            data['SELECT'][numpy.where(data['DATA_FILE'] != f)] += 1
         count+=1.
 # search by name
     if kwargs.get('name',False) != False:
@@ -2633,7 +2785,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(nm,str):
             nm = [nm]
         for n in nm:
-            data['select'][numpy.where(data['name'] == n)] += 1
+            data['SELECT'][numpy.where(data['NAME'] == n)] += 1
         count+=1.
 # search by shortname
     if kwargs.get('shortname',False) != False:
@@ -2643,7 +2795,7 @@ def searchLibrary(*args, **kwargs):
         for sn in sname:
             if sn[0].lower() != 'j':
                 sn = 'J'+sn
-            data['select'][numpy.where(data['shortname'] == sn)] += 1
+            data['SELECT'][numpy.where(data['SHORTNAME'] == sn)] += 1
         count+=1.
 # exclude by shortname
     if kwargs.get('excludesource',False) != False:
@@ -2653,7 +2805,7 @@ def searchLibrary(*args, **kwargs):
         for sn in sname:
             if sn[0].lower() != 'j':
                 sn = 'J'+sn
-            data['select'][numpy.where(data['shortname'] != sn)] += 1
+            data['SELECT'][numpy.where(data['SHORTNAME'] != sn)] += 1
         count+=1.
 # search by reference list
     if kwargs.get('reference',False) != False:
@@ -2661,7 +2813,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(ref,str):
             refer = [refer]
         for r in refer:
-            data['select'][numpy.where(data['data_reference'] == r)] += 1
+            data['SELECT'][numpy.where(data['DATA_REFERENCE'] == r)] += 1
         count+=1.
 # search by designation
     if kwargs.get('designation',False) != False:
@@ -2669,7 +2821,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(desig,str):
             desig = [desig]
         for d in desig:
-            data['select'][numpy.where(data['designation'] == d)] += 1
+            data['SELECT'][numpy.where(data['DESIGNATION'] == d)] += 1
         count+=1.
 # search by observation date range
     if kwargs.get('date',False) != False:
@@ -2680,49 +2832,49 @@ def searchLibrary(*args, **kwargs):
             date = [float(date[0]),float(date[-1])]
         else:
             raise ValueError('\nCould not parse date input {}\n\n'.format(date))
-        data['daten'] = [float(x) for x in data['observation_date']]
-        data['select'][numpy.where(numpy.logical_and(data['daten'] >= date[0],data['daten'] <= date[1]))] += 1
+        data['DATEN'] = [float(x) for x in data['OBSERVATION_DATE']]
+        data['SELECT'][numpy.where(numpy.logical_and(data['DATEN'] >= date[0],data['DATEN'] <= date[1]))] += 1
         count+=1.
 # search by coordinate - NOTE: THIS IS VERY SLOW RIGHT NOW
-    if kwargs.get('coordinate',False) != False:
-        coord = kwargs['coordinate']
+    if kwargs.get('COORDINATE',False) != False:
+        coord = kwargs['COORDINATE']
         if isinstance(coord,SkyCoord):
             cc = coord
         else:
             cc = properCoordinates(coord)
-        data['separation'] = [cc.separation(data['skycoords'][i]).arcsecond for i in numpy.arange(len(data['skycoords']))]
-        data['select'][numpy.where(data['separation'] <= radius)] += 1
+        data['SEPARATION'] = [cc.separation(data['SKYCOORDS'][i]).arcsecond for i in numpy.arange(len(data['SKYCOORDS']))]
+        data['SELECT'][numpy.where(data['SEPARATION'] <= radius)] += 1
         count+=1.
 # search by spectral type
     sref = ''
     if (kwargs.get('spt',False) != False):
-        sref = 'lit_type'
+        sref = 'LIT_TYPE'
         spt = kwargs['spt']
     if (kwargs.get('spex_spt',False) != False):
-        sref = 'spex_type'
+        sref = 'SPEX_TYPE'
         spt = kwargs['spex_spt']
     if (kwargs.get('spex_type',False) != False):
-        sref = 'spex_type'
+        sref = 'SPEX_TYPE'
         spt = kwargs['spex_type']
     if (kwargs.get('opt_spt',False) != False):
-        sref = 'opt_type'
+        sref = 'OPT_TYPE'
         spt = kwargs['opt_spt']
     if (kwargs.get('opt_type',False) != False):
-        sref = 'opt_type'
+        sref = 'OPT_TYPE'
         spt = kwargs['opt_type']
     if (kwargs.get('nir_spt',False) != False):
-        sref = 'nir_type'
+        sref = 'NIR_TYPE'
         spt = kwargs['nir_spt']
     if (kwargs.get('nir_type',False) != False):
-        sref = 'nir_type'
+        sref = 'NIR_TYPE'
         spt = kwargs['nir_type']
     if sref != '':
         if not isinstance(spt,list):        # one value = only this type
             spt = [spt,spt]
         if isinstance(spt[0],str):          # convert to numerical spt
             spt = [typeToNum(spt[0]),typeToNum(spt[1])]
-        data['sptn'] = [typeToNum(x) for x in data[sref]]
-        data['select'][numpy.where(numpy.logical_and(data['sptn'] >= spt[0],data['sptn'] <= spt[1]))] += 1
+        data['SPTN'] = [typeToNum(x) for x in data[sref]]
+        data['SELECT'][numpy.where(numpy.logical_and(data['SPTN'] >= spt[0],data['SPTN'] <= spt[1]))] += 1
         count+=1.
 
 # search by magnitude range
@@ -2730,61 +2882,279 @@ def searchLibrary(*args, **kwargs):
         mag = kwargs['jmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
-        data['magn'] = [float(x) for x in data['jmag']]
-        data['select'][numpy.where(numpy.logical_and(data['magn'] >= mag[0],data['magn'] <= mag[1]))] += 1
+        data['MAGN'] = [float(x) for x in data['JMAG']]
+        data['SELECT'][numpy.where(numpy.logical_and(data['MAGN'] >= mag[0],data['MAGN'] <= mag[1]))] += 1
         count+=1.
     if kwargs.get('hmag',False) != False:
         mag = kwargs['hmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
-        data['magn'] = [float(x) for x in data['hmag']]
-        data['select'][numpy.where(numpy.logical_and(data['magn'] >= mag[0],data['magn'] <= mag[1]))] += 1
+        data['MAGN'] = [float(x) for x in data['HMAG']]
+        data['SELECT'][numpy.where(numpy.logical_and(data['MAGN'] >= mag[0],data['MAGN'] <= mag[1]))] += 1
         count+=1.
     if kwargs.get('kmag',False) != False:
         mag = kwargs['kmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
-        data['magn'] = [float(x) for x in data['kmag']]
-        data['select'][numpy.where(numpy.logical_and(data['magn'] >= mag[0],data['magn'] <= mag[1]))] += 1
+        data['MAGN'] = [float(x) for x in data['KMAG']]
+        data['SELECT'][numpy.where(numpy.logical_and(data['MAGN'] >= mag[0],data['MAGN'] <= mag[1]))] += 1
         count+=1.
 # search by S/N range
     if kwargs.get('snr',False) != False:
         snr = kwargs['snr']
         if not isinstance(snr,list):        # one value = minimum S/N
             snr = [float(snr),1.e9]
-        data['snrn'] = [float(x) for x in data['median_snr']]
-        data['select'][numpy.where(numpy.logical_and(data['snrn'] >= snr[0],data['snrn'] <= snr[1]))] += 1
+        data['SNRN'] = [float(x) for x in data['MEDIAN_SNR']]
+        data['SELECT'][numpy.where(numpy.logical_and(data['SNRN'] >= snr[0],data['SNRN'] <= snr[1]))] += 1
         count+=1.
 # search by class
     for c in classes:
         if kwargs.get(c,'n') != 'n':
             test = kwargs.get(c)
             if isinstance(test,bool):
-                data['select'][numpy.where(data[c] == test)]+=1
+                data['SELECT'][numpy.where(data[c] == test)]+=1
                 count+=1.
 
 # limit access to public data for most users
     if checkAccess() == False:
-        data['select'][numpy.where(data['public'] != 'Y')] = 0
+        data['SELECT'][numpy.where(data['PUBLIC'] != 'Y')] = 0
 
 # logic of search
     logic = 'and'         # default combination
     logic = kwargs.get('combine',logic).lower()
     logic = kwargs.get('logic',logic).lower()
     if (logic == 'and'):
-        data['select'] = numpy.floor(data['select']/count)
+        data['SELECT'] = numpy.floor(data['SELECT']/count)
     elif (logic == 'or'):
-        data['select'] = numpy.ceil(data['select']/count)
+        data['SELECT'] = numpy.ceil(data['SELECT']/count)
     else:
         raise NameError('\nDo not recognize logical operation {}; use logic = and/or\n\n'.format(logic))
 
 # return sorted by ra by default
     if kwargs.get('sort',True) != False:
-        data.sort('ra')
+        data.sort('RA')
     if (ref == 'all'):
-        return data[:][numpy.where(data['select']==1)]
+        return data[:][numpy.where(data['SELECT']==1)]
     else:
-        return data[ref][numpy.where(data['select']==1)]
+        return data[ref][numpy.where(data['SELECT']==1)]
+
+
+
+
+
+def searchLibrary(*args, **kwargs):
+    '''Search the SpeX database to extract the key reference for that Spectrum
+        Note that this is currently only and AND search - need to figure out
+        how to a full SQL style search'''
+
+# program parameters
+    ref = kwargs.get('output','all')
+    radius = kwargs.get('radius',10.)      # search radius in arcseconds
+
+# logic of search
+    logic = 'and'         # default combination
+    logic = kwargs.get('combine',logic).lower()
+    logic = kwargs.get('logic',logic).lower()
+    if (logic != 'and' and logic != 'or'):
+        raise ValueError('\nLogical operator '+logic+' not supported\n\n')
+
+# read in source database
+    source_db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+
+# first search by source parameters
+    source_db['SELECT'] = numpy.zeros(len(source_db['RA']))
+    count = 0.
+
+# search by name
+    if kwargs.get('name',False) != False:
+        nm = kwargs['name']
+        if isinstance(nm,str):
+            nm = [nm]
+        for n in nm:
+            source_db['SELECT'][numpy.where(source_db['NAME'] == n)] += 1
+        count+=1.
+# search by shortname
+    if kwargs.get('shortname',False) != False:
+        sname = kwargs['shortname']
+        if isinstance(sname,str):
+            sname = [sname]
+        for sn in sname:
+            if sn[0].lower() != 'j':
+                sn = 'J'+sn
+            source_db['SELECT'][numpy.where(source_db['SHORTNAME'] == sn)] += 1
+        count+=1.
+# exclude by shortname
+    if kwargs.get('excludesource',False) != False:
+        sname = kwargs['excludesource']
+        if isinstance(sname,str):
+            sname = [sname]
+        for sn in sname:
+            if sn[0].lower() != 'j':
+                sn = 'J'+sn
+            source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)] += 1
+        count+=1.
+# search by reference list
+    if kwargs.get('reference',False) != False:
+        refer = kwargs['reference']
+        if isinstance(ref,str):
+            refer = [refer]
+        for r in refer:
+            source_db['SELECT'][numpy.where(source_db['DATA_REFERENCE'] == r)] += 1
+        count+=1.
+# search by designation
+    if kwargs.get('designation',False) != False:
+        desig = kwargs['designation']
+        if isinstance(desig,str):
+            desig = [desig]
+        for d in desig:
+            source_db['SELECT'][numpy.where(source_db['DESIGNATION'] == d)] += 1
+        count+=1.
+# search by coordinate - NOTE: THIS IS VERY SLOW RIGHT NOW
+    if kwargs.get('COORDINATE',False) != False:
+        coord = kwargs['COORDINATE']
+        if isinstance(coord,SkyCoord):
+            cc = coord
+        else:
+            cc = properCoordinates(coord)
+        source_db['SEPARATION'] = [cc.separation(source_db['SKYCOORDS'][i]).arcsecond for i in numpy.arange(len(source_db['SKYCOORDS']))]
+        source_db['SELECT'][numpy.where(source_db['SEPARATION'] <= radius)] += 1
+        count+=1.
+# search by spectral type
+    sref = ''
+    if (kwargs.get('spt',False) != False):
+        sref = 'LIT_SPT'
+        spt = kwargs['spt']
+    if (kwargs.get('spex_spt',False) != False):
+        sref = 'SPEX_TYPE'
+        spt = kwargs['spex_spt']
+    if (kwargs.get('spex_type',False) != False):
+        sref = 'SPEX_TYPE'
+        spt = kwargs['spex_type']
+    if (kwargs.get('opt_spt',False) != False):
+        sref = 'OPT_TYPE'
+        spt = kwargs['opt_spt']
+    if (kwargs.get('opt_type',False) != False):
+        sref = 'OPT_TYPE'
+        spt = kwargs['opt_type']
+    if (kwargs.get('nir_spt',False) != False):
+        sref = 'NIR_TYPE'
+        spt = kwargs['nir_spt']
+    if (kwargs.get('nir_type',False) != False):
+        sref = 'NIR_TYPE'
+        spt = kwargs['nir_type']
+    if sref != '':
+        if not isinstance(spt,list):        # one value = only this type
+            spt = [spt,spt]
+        if isinstance(spt[0],str):          # convert to numerical spt
+            spt = [typeToNum(spt[0]),typeToNum(spt[1])]
+        source_db['SPTN'] = [typeToNum(x) for x in source_db[sref]]
+        source_db['SELECT'][numpy.where(numpy.logical_and(source_db['SPTN'] >= spt[0],source_db['SPTN'] <= spt[1]))] += 1
+        count+=1.
+# search by magnitude range
+    if kwargs.get('jmag',False) != False:
+        mag = kwargs['jmag']
+        if not isinstance(mag,list):        # one value = faint limit
+            mag = [0,mag]
+        source_db['JMAGN'] = [float('0'+x) for x in source_db['JMAG']]
+        source_db['SELECT'][numpy.where(numpy.logical_and(source_db['JMAGN'] >= mag[0],source_db['JMAGN'] <= mag[1]))] += 1
+        count+=1.
+    if kwargs.get('hmag',False) != False:
+        mag = kwargs['hmag']
+        if not isinstance(mag,list):        # one value = faint limit
+            mag = [0,mag]
+        source_db['HMAGN'] = [float('0'+x) for x in source_db['HMAG']]
+        source_db['SELECT'][numpy.where(numpy.logical_and(source_db['HMAGN'] >= mag[0],source_db['HMAGN'] <= mag[1]))] += 1
+        count+=1.
+    if kwargs.get('kmag',False) != False:
+        mag = kwargs['kmag']
+        if not isinstance(mag,list):        # one value = faint limit
+            mag = [0,mag]
+        source_db['KMAGN'] = [float('0'+x) for x in source_db['KMAG']]
+        source_db['SELECT'][numpy.where(numpy.logical_and(source_db['KMAGN'] >= mag[0],source_db['KMAGN'] <= mag[1]))] += 1
+        count+=1.
+# search by class
+# THIS NEEDS TO BE ADDED BACK IN WITH NEW DATABASE FORMAT
+
+# select source keys
+    if (count > 0):
+        if (logic == 'and'):
+            source_db['SELECT'] = numpy.floor(source_db['SELECT']/count)
+        elif (logic == 'or'):
+            source_db['SELECT'] = numpy.ceil(source_db['SELECT']/count)
+
+        source_keys = source_db['SOURCE_KEY'][numpy.where(source_db['SELECT']==1)]
+# no selection made on sources - choose everything
+    else:
+        source_keys = source_db['SOURCE_KEY']
+
+
+# read in spectral database
+    spectral_db = ascii.read(SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
+    spectral_db['SELECT'] = numpy.zeros(len(spectral_db['DATA_KEY']))
+    count = 0.
+    
+    spectral_db['SOURCE_SELECT'] = [x in source_keys for x in spectral_db['SOURCE_KEY']]
+    
+# search by filename
+    file = kwargs.get('file','')
+    file = kwargs.get('filename',file)
+    if (file != ''):
+        if isinstance(file,str):
+            file = [file]
+        for f in file:
+            spectral_db['SELECT'][numpy.where(spectral_db['DATA_FILE'] == f)] += 1
+        count+=1.
+# exclude by filename
+    if kwargs.get('excludefile',False) != False:
+        file = kwargs['excludefile']
+        if isinstance(file,str):
+            file = [file]
+        for f in file:
+            spectral_db['SELECT'][numpy.where(spectral_db['DATA_FILE'] != f)] += 1
+        count+=1.
+# search by observation date range
+    if kwargs.get('date',False) != False:
+        date = kwargs['date']
+        if isinstance(date,str) or isinstance(date,long) or isinstance(date,float) or isinstance(date,int):
+            date = [float(date),float(date)]
+        elif isinstance(date,list):
+            date = [float(date[0]),float(date[-1])]
+        else:
+            raise ValueError('\nCould not parse date input {}\n\n'.format(date))
+        spectral_db['DATEN'] = [float('0'+x) for x in spectral_db['OBSERVATION_DATE']]
+        spectral_db['SELECT'][numpy.where(numpy.logical_and(spectral_db['DATEN'] >= date[0],spectral_db['DATEN'] <= date[1]))] += 1
+        count+=1.
+# search by S/N range
+    if kwargs.get('snr',False) != False:
+        snr = kwargs['snr']
+        if not isinstance(snr,list):        # one value = minimum S/N
+            snr = [float(snr),1.e9]
+        spectral_db['SNRN'] = [float('0'+x) for x in spectral_db['MEDIAN_SNR']]
+        spectral_db['SELECT'][numpy.where(numpy.logical_and(spectral_db['SNRN'] >= snr[0],spectral_db['SNRN'] <= snr[1]))] += 1
+        count+=1.
+
+# combine selection logically
+    if (count > 0):
+        if (logic == 'and'):
+            spectral_db['SELECT'] = numpy.floor(spectral_db['SELECT']/count)
+        else:
+            spectral_db['SELECT'] = numpy.ceil(spectral_db['SELECT']/count)
+
+    else:
+        spectral_db['SELECT'] = numpy.ones(len(spectral_db['DATA_KEY']))
+
+# limit access to public data for most users
+    if (not checkAccess() or kwargs.get('published',False) or kwargs.get('public',False)):
+        spectral_db['SELECT'][numpy.where(spectral_db['PUBLISHED'] != 'Y')] = 0.
+
+    
+# return spectral database information
+#       NEED TO FIGURE OUT HOW TO MERGE SOURCE AND DATABASE INFORMATION HERE
+    if (ref == 'all'):
+        return spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]
+    else:
+        return spectral_db[ref][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]
+
 
 
 def test():
