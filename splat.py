@@ -783,8 +783,8 @@ def classifyByIndex(sp, *args, **kwargs):
         for index in coeffs.keys():
             if (sptn < coeffs[index]['range'][0] or sptn > coeffs[index]['range'][1]):
                 coeffs[index]['mask'] = 0
-            else:
-                coeffs[index]['mask'] = 1
+#            else:
+#                coeffs[index]['mask'] = 1
 
 # round off to nearest 0.5 subtypes if desired
     if (rnd_flag):
@@ -830,6 +830,9 @@ def classifyByStandard(sp, *args, **kwargs):
     method = kwargs.get('method','')
     best_flag = kwargs.get('best',False)
     sptrange = kwargs.get('sptrange',[10,39])
+    sptrange = kwargs.get('range',sptrange)
+    if not isinstance(sptrange,list):
+        sptrange = [sptrange,sptrange]
     if (isinstance(sptrange[0],str) != False):
         sptrange = [typeToNum(sptrange[0]),typeToNum(sptrange[1])]
     unc_sys = 0.5
@@ -945,7 +948,7 @@ def classifyByTemplate(sp, *args, **kwargs):
                         * ``'spectral binaries': only dwarfs indicated to be spectral binaries``
                         * ``'standard': only spectral standards (use classifyByStandard instead)``
                     - ``'string' = True: return spectral type as a string``
-                    - ``'sptype' = 'spex': specify which spectral classification type to return; can be 'spex', 'opt', 'nir', or 'lit'
+                    - ``'spt_type' = 'literature': specify which spectral classification type to return; can be 'spex', 'opt', 'nir', or 'lit'
                     - ``'verbose' = False: Give lots of feedback``
     :Example:
        >>> import splat
@@ -953,8 +956,11 @@ def classifyByTemplate(sp, *args, **kwargs):
        >>> print splat.classifyByTemplate(spc,string=True,set='l dwarf, high sn', sptype='spex', plot=True)
        ('L4.5', 0.7138959194725174)
     '''
-    sptype = kwargs.get('sptype','spex')
+    spt_type = kwargs.get('spt_type','literature')
+    spt_range = kwargs.get('spt_range',[10.,39.9])
+    spt_range = kwargs.get('spt',spt_range)
     verbose = kwargs.get('verbose',True)
+    published = kwargs.get('published',True)
     set = kwargs.get('set','')
     unc_sys = 0.5
     if (kwargs.get('method','') == 'kirkpatrick'):
@@ -964,16 +970,23 @@ def classifyByTemplate(sp, *args, **kwargs):
 
 #  canned searches
 #  constrain spectral types
-    spt = [10.,39.9]
+    if ('lit' in spt_type.lower()):
+        spt_type = 'LIT_TYPE'
+    elif ('opt' in spt_type.lower() or 'optical' in set):
+        spt_type = 'OPT_TYPE'
+    elif ('nir' in spt_type.lower()):
+        spt_type = 'NIR_TYPE'
+    else:
+        spt_type = 'LIT_TYPE'
+
     if ('m dwarf' in set):
-        spt = [10,19.9]
+        spt_range = [10,19.9]
     if ('l dwarf' in set):
-        spt = [20,29.9]
+        spt_range = [20,29.9]
     if ('t dwarf' in set):
-        spt = [30,39.9]
+        spt_range = [30,39.9]
     if ('vlm' in set):
-        spt = [numpy.max([17,spt[0]]),numpy.min([39.9,spt[-1]])]
-    spt = kwargs.get('spt',spt)
+        spt_range = [numpy.max([17,spt_range[0]]),numpy.min([39.9,spt_range[-1]])]
     
 #  constrain S/N
     snr = 0.
@@ -982,47 +995,75 @@ def classifyByTemplate(sp, *args, **kwargs):
     snr = kwargs.get('snr',snr)
     
 #  don't compare to same spectrum
-    try:
-        excludefile = [sp.filename]
-    except:
-        excludefile = ['']
-    excludefile = kwargs.get('excludefile',excludefile)
-        
-    if ('optical' in set):
-        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,opt_type=spt,giant=False,logic='and')
-    elif ('standard' in set):
-        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,standard=True,logic='and')
-    elif ('companion' in set):
-        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,companion=True,giant=False,logic='and')
-    elif ('young' in set):
-        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,young=True,logic='and')
-    elif ('subdwarf' in set):
-        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,subdwarf=True,logic='and')
-    elif ('single' in set):
-        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,spbinary=False,binary=False,giant=False,logic='and')
-    elif ('spectral binaries' in set):
-        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,spbinary=True,logic='and')
-    elif (set != ''):
-        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt)
-    else:
-        lib = searchLibrary(output='all',excludefile=excludefile,**kwargs)
+    excludefile = kwargs.get('excludefile',False)
+    if not excludefile:
+        try:
+            excludefile = [sp.filename,kwargs['excludefile']]
+        except:
+            dum=0
+
+# other classes
+    giant = ''
+    if 'giant' in set:
+        giant = True
+    if 'not giant' in set:
+        giant = False
+    companion = ''
+    if 'companion' in set:
+        companion = True
+    if 'not companion' in set:
+        companion = False
+    young = ''
+    if 'young' in set:
+        young = True
+    if 'not young' in set:
+        young = False
+    binary = ''
+    if 'binary' in set:
+        binary = True
+    if 'not binary' in set:
+        binary = False
+    spbinary = ''
+    if 'spectral binary' in set:
+        spbinary = True
+    if 'not spectral binary' in set:
+        spbinary = False
+
+    lib = searchLibrary(excludefile=excludefile,snr=snr,spt_type=spt_type,spt_range=spt_range,published=published, \
+        giant=giant,companion=companion,young=young,binary=binary,spbinary=spbinary,output='all',logic='and')
+    
+#    print [x for x in compsp]
+#    elif ('companion' in set):
+#        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,companion=True,published=published,giant=False,logic='and')
+#    elif ('young' in set):
+#        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,young=True,published=published,logic='and')
+#    elif ('subdwarf' in set):
+#        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,subdwarf=True,published=published,logic='and')
+#    elif ('single' in set):
+#        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,spbinary=False,published=published,binary=False,giant=False,logic='and')
+#    elif ('spectral binaries' in set):
+#        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,spbinary=True,published=published,logic='and')
+#    elif (set != ''):
+#        lib = searchLibrary(output='all',excludefile=excludefile,published=published,snr=snr,spt=spt)
+#    else:
+#        lib = searchLibrary(output='all',excludefile=excludefile,published=published,**kwargs)
         
 # first search for the spectra desired - parameters are set by user
-    files = lib['data_file']
+    files = lib['DATA_FILE']
 
 # which spectral type to return
-    if ('spex' in sptype):
-        sptref = 'spex_type'
-    elif ('opt' in sptype):
-        sptref = 'opt_type'
-    elif ('nir' in sptype):
-        sptref = 'nir_type'
-    else:
-        sptref = 'lit_type'
+#    if ('spex' in sptype):
+#        sptref = 'SPEX_TYPE'
+#    elif ('opt' in sptype):
+#        sptref = 'OPT_TYPE'
+#    elif ('nir' in sptype):
+#        sptref = 'NIR_TYPE'
+#    else:
+#        sptref = 'LIT_TYPE'
 
-    lib = lib[:][numpy.where(lib[sptref] != '')]
-    files = lib['data_file']
-    sspt = [typeToNum(s) for s in lib[sptref]]
+#    lib = lib[:][numpy.where(lib[sptref] != '')]
+#    files = lib['DATA_FILE']
+    sspt = [typeToNum(s) for s in lib[spt_type]]
 
     if len(files) == 0:
         print '\nNo templates available for comparison\n\n'
@@ -2074,9 +2115,13 @@ def loadModel(*args, **kwargs):
 # check that folder/set is present either locally or online
 # if not present locally but present online, switch to this mode
 # if not present at either raise error
-    folder = checkLocal(kwargs['folder']+kwargs['set'])
+    folder = checkLocal(kwargs['folder'])
     if folder=='':
-        folder = checkOnline(kwargs['folder']+kwargs['set'])
+        folder = checkLocal(kwargs['folder']+kwargs['set'])
+    if folder=='':
+        folder = checkOnline(kwargs['folder'])
+        if folder=='':
+            folder = checkOnline(kwargs['folder']+kwargs['set'])
         if folder=='':
             raise NameError('\nCould not find '+kwargs['folder']+kwargs['set']+' locally or on SPLAT website\n\n')
         else:
@@ -2960,7 +3005,8 @@ def searchLibrary(*args, **kwargs):
 
 # read in source database
     source_db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
-
+    source_db['SHORTNAME'] = [designationToShortName(x) for x in source_db['DESIGNATION']]
+    
 # first search by source parameters
     source_db['SELECT'] = numpy.zeros(len(source_db['RA']))
     count = 0.
@@ -3010,7 +3056,7 @@ def searchLibrary(*args, **kwargs):
             source_db['SELECT'][numpy.where(source_db['DESIGNATION'] == d)] += 1
         count+=1.
 # search by coordinate - NOTE: THIS IS VERY SLOW RIGHT NOW
-    if kwargs.get('COORDINATE',False) != False:
+    if kwargs.get('coordinate',False) != False:
         coord = kwargs['COORDINATE']
         if isinstance(coord,SkyCoord):
             cc = coord
@@ -3019,37 +3065,21 @@ def searchLibrary(*args, **kwargs):
         source_db['SEPARATION'] = [cc.separation(source_db['SKYCOORDS'][i]).arcsecond for i in numpy.arange(len(source_db['SKYCOORDS']))]
         source_db['SELECT'][numpy.where(source_db['SEPARATION'] <= radius)] += 1
         count+=1.
+
 # search by spectral type
-    sref = ''
-    if (kwargs.get('spt',False) != False):
-        sref = 'LIT_SPT'
-        spt = kwargs['spt']
-    if (kwargs.get('spex_spt',False) != False):
-        sref = 'SPEX_TYPE'
-        spt = kwargs['spex_spt']
-    if (kwargs.get('spex_type',False) != False):
-        sref = 'SPEX_TYPE'
-        spt = kwargs['spex_type']
-    if (kwargs.get('opt_spt',False) != False):
-        sref = 'OPT_TYPE'
-        spt = kwargs['opt_spt']
-    if (kwargs.get('opt_type',False) != False):
-        sref = 'OPT_TYPE'
-        spt = kwargs['opt_type']
-    if (kwargs.get('nir_spt',False) != False):
-        sref = 'NIR_TYPE'
-        spt = kwargs['nir_spt']
-    if (kwargs.get('nir_type',False) != False):
-        sref = 'NIR_TYPE'
-        spt = kwargs['nir_type']
-    if sref != '':
-        if not isinstance(spt,list):        # one value = only this type
-            spt = [spt,spt]
-        if isinstance(spt[0],str):          # convert to numerical spt
-            spt = [typeToNum(spt[0]),typeToNum(spt[1])]
-        source_db['SPTN'] = [typeToNum(x) for x in source_db[sref]]
-        source_db['SELECT'][numpy.where(numpy.logical_and(source_db['SPTN'] >= spt[0],source_db['SPTN'] <= spt[1]))] += 1
+    if kwargs.get('spt_range',False) != False:
+        spt_range = kwargs.get('spt_range',False)
+        spt_type = kwargs.get('spt_type','LIT_TYPE')
+        if spt_type not in ['LIT_TYPE','SPEX_TYPE','OPT_TYPE','NIR_TYPE']:
+            spt_type = 'LIT_TYPE'
+        if not isinstance(spt_range,list):        # one value = only this type
+            spt_range = [spt_range,spt_range]
+        if isinstance(spt_range[0],str):          # convert to numerical spt
+            spt_range = [typeToNum(spt_range[0]),typeToNum(spt_range[1])]
+        source_db['SPTN'] = [typeToNum(x) for x in source_db[spt_type]]
+        source_db['SELECT'][numpy.where(numpy.logical_and(source_db['SPTN'] >= spt_range[0],source_db['SPTN'] <= spt_range[1]))] += 1
         count+=1.
+
 # search by magnitude range
     if kwargs.get('jmag',False) != False:
         mag = kwargs['jmag']
@@ -3107,6 +3137,7 @@ def searchLibrary(*args, **kwargs):
 # exclude by filename
     if kwargs.get('excludefile',False) != False:
         file = kwargs['excludefile']
+        print file
         if isinstance(file,str):
             file = [file]
         for f in file:
@@ -3147,13 +3178,22 @@ def searchLibrary(*args, **kwargs):
     if (not checkAccess() or kwargs.get('published',False) or kwargs.get('public',False)):
         spectral_db['SELECT'][numpy.where(spectral_db['PUBLISHED'] != 'Y')] = 0.
 
-    
+# merge databases
+    db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))],source_db,keys='SOURCE_KEY')
+
+#    print fdb.keys(), len(db),len(fdb)
+#    print fdb
+#    for k in source_db.keys():
+#        if k != 'SOURCE_KEY':
+#            db[k] = []        
+#            for s in db['SOURCE_KEY']:
+                
 # return spectral database information
 #       NEED TO FIGURE OUT HOW TO MERGE SOURCE AND DATABASE INFORMATION HERE
     if (ref == 'all'):
-        return spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]
+        return db
     else:
-        return spectral_db[ref][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]
+        return db[ref]
 
 
 
@@ -3179,7 +3219,7 @@ def test():
     sys.stderr.write('\n...getSpectrum and loadSpectrum successful\n')
 
 # check searchLibrary
-    list = searchLibrary(young=True,output='data_file')
+    list = searchLibrary(young=True,output='DATA_FILE')
     sys.stderr.write('\n{} young spectra in the SPL  ...searchLibrary successful\n'.format(len(list)))
 
 # check index measurement
