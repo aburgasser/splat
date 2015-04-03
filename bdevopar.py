@@ -19,6 +19,8 @@ from astropy.io import ascii
 from math import isnan
 import matplotlib.pyplot as plt
 from numpy import isnan
+import splat
+#from splat import SPLAT_PATH, EVOLUTIONARY_MODEL_FOLDER
 
 ###############################################################################
 ###############################################################################
@@ -152,7 +154,7 @@ class ReadModel(object):
         for age in n_tables:
 	    try:data =ascii.read(urlopen(Emodels+ages[age]).read(),comment=';')
 	    except: 
-		data=ascii.read('/Users/Johnny/Documents/UCSD/Modules/BDevopar/Models/'+EmodeL+ages[age],comment='#')
+		data=ascii.read(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+EmodeL+ages[age],comment='#')
             for line,value in enumerate(data):
                 masses[age].append(float(value[0+v]))
                 temperatures[age].append(float(value[1+v]))
