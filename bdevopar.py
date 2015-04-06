@@ -1,6 +1,6 @@
 """
 .. note::
-         sUsing a suite of evolutionary models, this code translates 
+         Using a suite of evolutionary models, this code translates 
          between the following brown dwarf parameters: mass, age, 
          temperature, radius, surface gravity, and luminosity. We allow 
          the user to choose a set of evolutionary model 
@@ -9,7 +9,9 @@
 """
 
 # Standard library imports.
-from sys import exit 
+#from sys import exit 
+import os
+import sys
 from urllib2 import urlopen
 
 # Related third party imports.
@@ -18,9 +20,20 @@ from astropy import units as u
 from astropy.io import ascii
 from math import isnan
 import matplotlib.pyplot as plt
-from numpy import isnan
-import splat
+#from numpy import isnan
+#import splat
 #from splat import SPLAT_PATH, EVOLUTIONARY_MODEL_FOLDER
+
+#set the SPLAT PATH, either from set environment variable or from sys.path
+SPLAT_PATH = './'
+if os.environ.get('SPLAT_PATH') != None:
+    SPLAT_PATH = os.environ['SPLAT_PATH']
+else:
+    checkpath = ['splat' in r for r in sys.path]
+    if max(checkpath):
+        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
+
+EVOLUTIONARY_MODEL_FOLDER = '/EvolutionaryModels/'
 
 ###############################################################################
 ###############################################################################
