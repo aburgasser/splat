@@ -2705,8 +2705,8 @@ def test():
     sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f}+/-{:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag,mag_e))
 
 # check models
- #   mdl = splmodel.loadModel(teff=1000,logg=5.0,set='BTSettl2008')
-    mdl = splmodel.loadModel(teff=teff,logg=5.3,set='BTSettl2008')
+ #   mdl = loadModel(teff=1000,logg=5.0,set='BTSettl2008')
+    mdl = loadModel(teff=teff,logg=5.3,set='BTSettl2008')
     sys.stderr.write('\n...interpolated model generation successful\n')
 
 # check normalization
