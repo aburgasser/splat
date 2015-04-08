@@ -67,6 +67,12 @@ warnings.simplefilter("ignore")
 SPLAT_PATH = './'
 if os.environ.get('SPLAT_PATH') != None:
     SPLAT_PATH = os.environ['SPLAT_PATH']
+# TO PUT HERE - GET SPLAT PATH FROM PYTHON PATH
+elif os.environ.get('PYTHONPATH') != None:
+    path = os.environ['PYTHONPATH']
+    for i in path.split(':'):
+        if 'splat' in i:
+            SPLAT_PATH = i
 else:
     checkpath = ['splat' in r for r in sys.path]
     if max(checkpath):
