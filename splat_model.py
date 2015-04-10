@@ -50,6 +50,9 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
     pfile = 'parameters_new.txt'
 #    parameters = loadModelParameters(**kwargs)
 
+# insert a switch to go between local and online here
+
+
 # read in parameters of available models
     folder = splat.checkLocal(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/')
     if folder=='':
@@ -176,6 +179,7 @@ def loadInterpolatedModel(*args,**kwargs):
 #        print s, r, m
     mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
     mkwargs = kwargs.copy()
+    mkwargs['force'] = True
 
 # read in models
 # note the complex path is to minimize model reads
@@ -256,6 +260,7 @@ def loadModel(*args, **kwargs):
     kwargs['local'] = local
     kwargs['online'] = online
     kwargs['model'] = True
+    kwargs['force'] = kwargs.get('force',False)
     url = kwargs.get('url',SPLAT_URL)
 
 
@@ -328,7 +333,10 @@ def loadModel(*args, **kwargs):
     if kwargs['local']:
         file = splat.checkLocal(kwargs['filename'])
         if file=='':
-            return loadInterpolatedModel(**kwargs)
+            if kwargs['force']:
+                raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
+            else:
+                return loadInterpolatedModel(**kwargs)
         else:
             try:
                 return splat.Spectrum(**kwargs)
@@ -339,7 +347,10 @@ def loadModel(*args, **kwargs):
     if kwargs['online']:
         file = splat.checkOnline(kwargs['filename'])
         if file=='':
-            return loadInterpolatedModel(**kwargs)
+            if kwargs['force']:
+                raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
+            else:
+                return loadInterpolatedModel(**kwargs)
         else:
             try:
                 ftype = kwargs['filename'].split('.')[-1]

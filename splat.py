@@ -669,7 +669,7 @@ def classifyByIndex(sp, *args, **kwargs):
     set = kwargs.get('set','burgasser')
     set = kwargs.get('ref',set)
     kwargs['set'] = set
-    allowed_sets = ['burgasser','reid','testi','allers']
+    allowed_sets = ['aganze','burgasser','reid','testi','allers']
     if (set.lower() not in allowed_sets):
         print '\nWarning: index classification method {} not present; returning nan\n\n'.format(set)
         return numpy.nan, numpy.nan
@@ -750,28 +750,59 @@ def classifyByIndex(sp, *args, **kwargs):
             'H2O-2': {'fitunc': 0.501, 'range': [14,22], 'spt': 0., 'sptunc': 99., 'mask': 1., \
             'coeff': [37.5013, -97.8144, 55.4580, 10.8822]}}
 
+# Aganze et al. 2015 (in preparation)
+    elif (set.lower() == 'aganze'):
+        if (rem_flag or len(args) == 0):
+            kwargs['set'] = 'geballe'
+            i1 = measureIndexSet(sp, **kwargs)
+            kwargs['set'] = 'slesnick'
+            i2 = measureIndexSet(sp, **kwargs)
+            kwargs['set'] = 'allers'
+            i3 = measureIndexSet(sp, **kwargs)
+            kwargs['set'] = 'burgasser'
+            i4 = measureIndexSet(sp, **kwargs)
+            kwargs['set'] = 'reid'
+            i5 = measureIndexSet(sp, **kwargs)
+            kwargs['set'] = 'tokunaga'
+            i6 = measureIndexSet(sp, **kwargs)    
+            indices = dict(i1.items() + i2.items() + i3.items()+ i4.items() + i5.items() + i6.items())
+            
+        sptoffset = 0.0
+        sptfact = 1.0
+        coeffs = { \
+            'H2O': {'fitunc': 0.863, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+            'coeff': [ -361.25130485, 1663.93768276, -2870.50724103,  2221.99873698, -638.03203556]}, \
+            'H2O-J': {'fitunc': 0.902, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+            'coeff': [ -146.21144969 ,  632.34633568,  -1008.79681307,   678.80156994 , -137.92921741]}, \
+            'H2O-K': {'fitunc':0.973, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+            'coeff': [-21366.79781425,  38630.25299752,  -25984.2424891  ,  7651.46728497,  -805.79462608]}, \
+            'K1': {'fitunc':0.878, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+            'coeff': [  10.29493194 ,  -62.71016723 ,  115.76162692,   -60.72606292 ,  15.1905955 ]}, \
+            'K2': {'fitunc':0.934, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+            'coeff': [ -44.78083424 , 225.58312733 ,-428.98225919 ,379.28205312 , -114.74469746]}, \
+            'H2O-1': {'fitunc':1.035, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+            'coeff': [ -2999.69506898 , 11118.42653046 , -15340.87706264  ,9307.5183138, -2068.63608393]}, \
+            'H2O-B': {'fitunc':1.096, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+            'coeff': [ -458.07448646 , 1547.35113353 , -1936.51451632 , 1041.95275566  , -178.50240834]}, \
+            'H2O-H': {'fitunc':1.041, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+            'coeff': [ -767.21126974 , 2786.26168556 , -3762.93498987,   2211.62680244,  -451.54693932]}, \
+            'CH4-2.2': {'fitunc': 0.932, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+            'coeff': [-331.74150369, 133.08406514  , -0.84614999  , 19.78717161  , 17.18479766]}}
+
     else:
         sys.stderr.write('\nWarning: '+set.lower()+' SpT-index relation not in classifyByIndex code\n\n')
         return numpy.nan, numpy.nan
-
 
     for index in coeffs.keys():
         vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))*sptfact
         coeffs[index]['spt'] = numpy.nanmean(vals)+sptoffset
         coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
-
-# mask off indices that give a spectral type outside the allowed range
+#        print index, coeffs[index]['spt'], coeffs[index]['range'], coeffs[index]['spt'] < coeffs[index]['range'][0], coeffs[index]['spt'] > coeffs[index]['range'][1]
         if (coeffs[index]['spt'] < coeffs[index]['range'][0] or coeffs[index]['spt'] > coeffs[index]['range'][1]):
             coeffs[index]['mask'] = 0.
-            
-#        print index, indices[index], numpy.nanmean(vals), numpy.nanstd(vals), coeffs[index]['spt']
+        else:
+            coeffs[index]['mask'] = 1.
     
-#    print indices[index][0], numpy.polyval(coeffs[index]['coeff'],indices[index][0]), coeffs[index]
-#    mask = numpy.ones(len(coeffs.keys()))
-#    result = numpy.zeros(2)
-#    print [coeffs[index]['mask'] for index in coeffs.keys()]
-    
-# now iteratively mask off indices for which the mean (weighted) spectral type is outside the allowed range
     for i in numpy.arange(nloop):
         wts = [coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in coeffs.keys()]
         if (numpy.nansum(wts) == 0.):
@@ -784,9 +815,8 @@ def classifyByIndex(sp, *args, **kwargs):
         for index in coeffs.keys():
             if (sptn < coeffs[index]['range'][0] or sptn > coeffs[index]['range'][1]):
                 coeffs[index]['mask'] = 0
-#            else:
-#                coeffs[index]['mask'] = 1
 
+    
 # round off to nearest 0.5 subtypes if desired
     if (rnd_flag):
         sptn = 0.5*numpy.around(sptn*2.)
@@ -798,6 +828,7 @@ def classifyByIndex(sp, *args, **kwargs):
         spt = sptn
 
     return spt, sptn_e
+
 
 
 def classifyByStandard(sp, *args, **kwargs):
