@@ -9,9 +9,11 @@
 #    Yuhui Jin
 #    Michael Lopez
 #    Alex Mendez
+#    Gretel Mercado
 #    Jonathan Parra
 #    Maitrayee Sahi
 #    Melisa Tallis
+#    Tomoki Tamiya
 
 #
 # CURRENT STATUS (3/12/2015)
@@ -386,6 +388,9 @@ class Spectrum(object):
         self.scale(1./self.fluxMax())
         self.fscale = 'Normalized'
         return
+
+    def plot(self):
+        plotSpectrum(self,showNoise=True,showZero=True)
 
     def reset(self):
         '''Reset to original spectrum'''
@@ -959,14 +964,24 @@ def classifyByTemplate(sp, *args, **kwargs):
                 uncertainty. There is an option to follow  the procedure of 
                 Kirkpatrick et al. (2010), fitting only in the 0.9-1.4 micron 
                 region. ``
-    :Usage: ``spt,unc = splat.classifyByTemplate(sp, \*args, \**kwargs)``
+    :Usage: ``result = splat.classifyByTemplate(sp, \*args, \**kwargs)
+    :Output: ``result is a dictionary containing the following keys:
+                    - ``'result = (Spectral Type, Spectral Type Uncertainty)``
+                    - ``'chisquare' = array of nbest chi-square values``
+                    - ``'name' = array of nbest source names``
+                    - ``'scale' = array of nbest optimal scale factors``
+                    - ``'spectra' = array of nbest Spectrum objects``
+                    - ``'spt' = array of nbest spectral types``
+    :Output:  result is a dictionary containing the following items:
+                
     :param sp: ``Spectrum class object, which should contain wave, flux and 
                  noise array elements.``
     :param \**kwargs (optional): - ``'best' = False: return only the best fit template type``
                     - ``'plot' = False: generate a plot comparing best fit standard to source, can be save to a file using the file keyword``
                     - ``'file' = '': output spectrum plot to a file``
                     - ``'method' = '': set to 'kirkpatrick' to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band``
-                    - ``'set' = '': string defining which spectral template set you want to compare to; several options which can be combined:``
+                    - ``'nbest' = 1: number of best fitting spectra to return
+                    - ``'select' = '': string defining which spectral template set you want to compare to; several options which can be combined:``
                         * ``'m dwarf': fit to M dwarfs only``
                         * ``'l dwarf': fit to M dwarfs only``
                         * ``'t dwarf': fit to M dwarfs only``
@@ -992,10 +1007,12 @@ def classifyByTemplate(sp, *args, **kwargs):
     spt_type = kwargs.get('spt_type','literature')
     spt_range = kwargs.get('spt_range',[10.,39.9])
     spt_range = kwargs.get('spt',spt_range)
-    verbose = kwargs.get('verbose',True)
-    published = kwargs.get('published',True)
-    set = kwargs.get('set','')
-    unc_sys = 0.5
+    nbest = kwargs.get('nbest',1)
+    verbose = kwargs.get('verbose',False)
+    published = kwargs.get('published','')
+    set = kwargs.get('select','')
+#   placeholder for a systematic unceratinty term
+    unc_sys = 0.
     if (kwargs.get('method','') == 'kirkpatrick'):
         comprng = [0.9,1.4]*u.micron         # as prescribed in Kirkpatrick et al. 2010, ApJS, 
     else:
@@ -1084,20 +1101,8 @@ def classifyByTemplate(sp, *args, **kwargs):
 # first search for the spectra desired - parameters are set by user
     files = lib['DATA_FILE']
     dkey = lib['DATA_KEY']
-    skey = lib['SOURCE_KEY']
-
-# which spectral type to return
-#    if ('spex' in sptype):
-#        sptref = 'SPEX_TYPE'
-#    elif ('opt' in sptype):
-#        sptref = 'OPT_TYPE'
-#    elif ('nir' in sptype):
-#        sptref = 'NIR_TYPE'
-#    else:
-#        sptref = 'LIT_TYPE'
 
 #    lib = lib[:][numpy.where(lib[sptref] != '')]
-#    files = lib['DATA_FILE']
     sspt = [typeToNum(s) for s in lib[spt_type]]
 
     if len(files) == 0:
@@ -1111,16 +1116,19 @@ def classifyByTemplate(sp, *args, **kwargs):
 
 # do comparison
     stat = []
-    for i,f in enumerate(files):
-        s = loadSpectrum(file=f)
+    scl = []
+    for i,d in enumerate(dkey):
+        s = loadSpectrum(data_key=d)
         chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],stat='chisqr',novar2=True)
         stat.append(chisq)
+        scl.append(scale)
         if (verbose):
-            print f, typeToNum(sspt[i]), chisq, scale
+            print keySpectrum(d)['NAME'][0], typeToNum(sspt[i]), chisq, scale
         
 # list of sorted standard files and spectral types
-    sorted_files = [x for (y,x) in sorted(zip(stat,files))]
+    sorted_dkey = [x for (y,x) in sorted(zip(stat,dkey))]
     sorted_spt = [x for (y,x) in sorted(zip(stat,sspt))]
+    sorted_scale = [x for (y,x) in sorted(zip(stat,scl))]
 
 # select either best match or an ftest-weighted average
     if (kwargs.get('best',False) or len(stat) == 1):
@@ -1137,9 +1145,9 @@ def classifyByTemplate(sp, *args, **kwargs):
 
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
-        s = loadSpectrum(file=sorted_files[0])
-        chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],stat='chisqr')
-        s.scale(scale)
+        s = loadSpectrum(data_key=sorted_dkey[0])
+#        chisq,scale = compareSpectra(s,sp,fit_ranges=[comprng],stat='chisqr',novar2=True)
+        s.scale(sorted_scale[0])
         plotSpectrum(sp,s,colors=['k','r'],title=sp.name+' vs '+s.name,**kwargs)
 
 # string or not?
@@ -1148,7 +1156,12 @@ def classifyByTemplate(sp, *args, **kwargs):
     else:
         spt = sptn
 
-    return spt, sptn_e
+# return dictionary of results
+    return {'result': (spt,sptn_e), \
+        'chisquare': sorted(stat)[0:nbest], 'spt': sorted_spt[0:nbest], 'scale': sorted_scale[0:nbest], \
+        'name': [keySpectrum(d)['NAME'][0] for d in sorted_dkey[0:nbest]], \
+        'spectra': [loadSpectrum(data_key=d) for d in sorted_dkey[0:nbest]]}
+
  
 
 def classifyGravity(sp, *args, **kwargs):
@@ -1891,21 +1904,41 @@ def isNumber(s):
 
 
 
-def keySource(key, **kwargs):
+def keySource(keys, **kwargs):
     '''keySource takes a source key and returns a table with the source information'''
 
 # vectorize
-    if isinstance(key,list) == False:
-        key = [key]
+    if isinstance(keys,list) == False:
+        keys = [keys]
 
-    source_db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCE_DB, delimiter='\t',fill_values='-99.',format='tab')
-    source_db['SELECT'] = [x in keys for x in spectral_db['SOURCE_KEY']]
+    sdb = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+    sdb['SELECT'] = [x in keys for x in sdb['SOURCE_KEY']]
 
-    if sum(source_db['SELECT']) == 0.:
-        print 'No sources found'
+    if sum(sdb['SELECT']) == 0.:
+        print 'No sources found with source key {}'.format(keys[0])
         return False
     else:
-        return source_db[:][numpy.where(numpy.logical_and(source_db['SELECT']==1))]
+        db = sdb[:][numpy.where(sdb['SELECT']==1)]
+        return db
+   
+    
+def keySpectrum(keys, **kwargs):
+    '''keySpectrum takes a spectrum key and returns a table with the spectrum and source information'''
+
+# vectorize
+    if isinstance(keys,list) == False:
+        keys = [keys]
+
+    sdb = ascii.read(SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
+    sdb['SELECT'] = [x in keys for x in sdb['DATA_KEY']]
+
+    if sum(sdb['SELECT']) == 0.:
+        print 'No spectra found with spectrum key {}'.format(keys[0])
+        return False
+    else:
+        s2db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+        db = join(sdb[:][numpy.where(sdb['SELECT']==1)],s2db,keys='SOURCE_KEY')
+        return db
    
     
     
@@ -1921,10 +1954,19 @@ def loadSpectrum(*args, **kwargs):
     kwargs['model'] = True
     url = kwargs.get('url',SPLAT_URL)
 
+# filename
     file = kwargs.get('file','')
     file = kwargs.get('filename',file)
     if (len(args) > 0):
         file = args[0]
+
+#  data key - preferred
+    dkey = kwargs.get('data_key',False)
+    if dkey != False:
+        tbl = keySpectrum(dkey)
+        if tbl != False:
+            file = tbl['DATA_FILE'][0]
+
     kwargs['filename'] = file
     kwargs['model'] = False
 
@@ -2666,7 +2708,6 @@ def searchLibrary(*args, **kwargs):
             date = [float(date[0]),float(date[-1])]
         else:
             raise ValueError('\nCould not parse date input {}\n\n'.format(date))
-#        print [float(x) for x in spectral_db['OBSERVATION_DATE']]
         spectral_db['DATEN'] = [float(x) for x in spectral_db['OBSERVATION_DATE']]
         spectral_db['SELECT'][numpy.where(numpy.logical_and(spectral_db['DATEN'] >= date[0],spectral_db['DATEN'] <= date[1]))] += 1
         count+=1.
