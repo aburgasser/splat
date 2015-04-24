@@ -985,9 +985,10 @@ def classifyByTemplate(sp, *args, **kwargs):
     :Example:
        >>> import splat
        >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
-       >>> print splat.classifyByTemplate(spc,string=True,set='l dwarf, high sn', sptype='spex', plot=True)
+       >>> print splat.classifyByTemplate(spc,string=True,set='l dwarf, high sn', spt_type='spex', plot=True)
        ('L4.5', 0.7138959194725174)
     '''
+
     spt_type = kwargs.get('spt_type','literature')
     spt_range = kwargs.get('spt_range',[10.,39.9])
     spt_range = kwargs.get('spt',spt_range)
@@ -1082,6 +1083,8 @@ def classifyByTemplate(sp, *args, **kwargs):
         
 # first search for the spectra desired - parameters are set by user
     files = lib['DATA_FILE']
+    dkey = lib['DATA_KEY']
+    skey = lib['SOURCE_KEY']
 
 # which spectral type to return
 #    if ('spex' in sptype):
@@ -1125,6 +1128,7 @@ def classifyByTemplate(sp, *args, **kwargs):
         sptn_e = unc_sys
     else:
         mean,var = weightedMeanVar(sspt,stat,method='ftest',dof=sp.dof)
+# allow 1/2 subtypes if uncertainty is less than 1.0
         if (var**0.5 < 1.):
             sptn = numpy.round(mean*2.)*0.5
         else:
@@ -1887,6 +1891,24 @@ def isNumber(s):
 
 
 
+def keySource(key, **kwargs):
+    '''keySource takes a source key and returns a table with the source information'''
+
+# vectorize
+    if isinstance(key,list) == False:
+        key = [key]
+
+    source_db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCE_DB, delimiter='\t',fill_values='-99.',format='tab')
+    source_db['SELECT'] = [x in keys for x in spectral_db['SOURCE_KEY']]
+
+    if sum(source_db['SELECT']) == 0.:
+        print 'No sources found'
+        return False
+    else:
+        return source_db[:][numpy.where(numpy.logical_and(source_db['SELECT']==1))]
+   
+    
+    
 def loadSpectrum(*args, **kwargs):
     '''load up a SpeX spectrum based name, shortname and/or date'''
 
@@ -2558,9 +2580,10 @@ def searchLibrary(*args, **kwargs):
         count+=1.
 
 # search by spectral type
-    if kwargs.get('spt_range',False) != False:
-        spt_range = kwargs.get('spt_range',False)
-        spt_type = kwargs.get('spt_type','LIT_TYPE')
+    spt_range = kwargs.get('spt_range',False)
+    spt_range = kwargs.get('spt',spt_range)
+    spt_type = kwargs.get('spt_type','LIT_TYPE')  
+    if spt_range != False:
         if spt_type not in ['LIT_TYPE','SPEX_TYPE','OPT_TYPE','NIR_TYPE']:
             spt_type = 'LIT_TYPE'
         if not isinstance(spt_range,list):        # one value = only this type
@@ -2643,7 +2666,8 @@ def searchLibrary(*args, **kwargs):
             date = [float(date[0]),float(date[-1])]
         else:
             raise ValueError('\nCould not parse date input {}\n\n'.format(date))
-        spectral_db['DATEN'] = [float('0'+x) for x in spectral_db['OBSERVATION_DATE']]
+#        print [float(x) for x in spectral_db['OBSERVATION_DATE']]
+        spectral_db['DATEN'] = [float(x) for x in spectral_db['OBSERVATION_DATE']]
         spectral_db['SELECT'][numpy.where(numpy.logical_and(spectral_db['DATEN'] >= date[0],spectral_db['DATEN'] <= date[1]))] += 1
         count+=1.
 # search by S/N range

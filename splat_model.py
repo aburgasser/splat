@@ -52,7 +52,7 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
 
 # insert a switch to go between local and online here
 
-
+    print 'Running new version'
 # read in parameters of available models
     folder = splat.checkLocal(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/')
     if folder=='':
@@ -110,13 +110,18 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
     for i,w in enumerate(numpy.zeros(nmodels)):
         for ms in MODEL_PARAMETER_NAMES[0:3]:
             mkwargs[ms] = mvals[ms][i]
-            print mvals[ms][i]
         mdl = loadModel(**mkwargs)
         if i == 0:
             mdls = numpy.log10(mdl.flux.value)
         else:
             mdls = numpy.column_stack((mdls,numpy.log10(mdl.flux.value)))
-            
+
+    print mdls[0,:]
+    print (float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
+            float(kwargs[MODEL_PARAMETER_NAMES[2]]))
+    print (mx.flatten(),my.flatten(),mz.flatten())
+    for i in range(nmodels):
+        print mvals['teff'][i],mvals['logg'][i],mvals['z'][i]
 #
 #
 #            
@@ -126,8 +131,12 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
 #
     mflx = numpy.zeros(len(mdl.wave))
     for i,w in enumerate(mflx):
-        print i, (mdls[i],) 
-        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),(mdls[i],),\
+#        print i, (mdls[i],) 
+#        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),val.flatten(),\
+#            (float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])),'linear'))
+
+        m = mdls[i,:]
+        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),m.flatten(),\
             (float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
             float(kwargs[MODEL_PARAMETER_NAMES[2]])),'linear'))
     
@@ -336,7 +345,7 @@ def loadModel(*args, **kwargs):
             if kwargs['force']:
                 raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
             else:
-                return loadInterpolatedModel(**kwargs)
+                return loadInterpolatedModel_NEW(**kwargs)
         else:
             try:
                 return splat.Spectrum(**kwargs)
@@ -350,7 +359,7 @@ def loadModel(*args, **kwargs):
             if kwargs['force']:
                 raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
             else:
-                return loadInterpolatedModel(**kwargs)
+                return loadInterpolatedModel_NEW(**kwargs)
         else:
             try:
                 ftype = kwargs['filename'].split('.')[-1]
