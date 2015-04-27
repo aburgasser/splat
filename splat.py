@@ -1078,7 +1078,7 @@ def classifyByTemplate(sp, *args, **kwargs):
         spbinary = True
     if 'not spectral binary' in set:
         spbinary = False
-
+    
     lib = searchLibrary(excludefile=excludefile,snr=snr,spt_type=spt_type,spt_range=spt_range,published=published, \
         giant=giant,companion=companion,young=young,binary=binary,spbinary=spbinary,output='all',logic='and')
     
@@ -1358,6 +1358,13 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     else:
         print 'Error: statistic {} for compareSpectra not available'.format(stat)
         return numpy.nan, numpy.nan
+
+# plot spectrum compared to best spectrum
+    if (kwargs.get('plot',False) != False):
+        spcomp = sp2.copy()
+        spcomp.scale(scale)
+        plotSpectrum(sp1,spcomp,colors=['k','r'],\
+            title=sp1.name+' vs '+sp2.name,**kwargs)
 
     return numpy.nanmax([stat,minreturn])*unit, scale
         
@@ -1980,7 +1987,7 @@ def loadSpectrum(*args, **kwargs):
     if file=='':
         file = checkLocal(kwargs['folder']+os.path.basename(kwargs['filename']))
         if file=='':
-            print 'Cannot find '+kwargs['filename']+' locally, trying online\n\n'
+#            print 'Cannot find '+kwargs['filename']+' locally, trying online\n\n'
             kwargs['local'] = False
             kwargs['online'] = True                
         else:
@@ -2550,6 +2557,7 @@ def searchLibrary(*args, **kwargs):
 # program parameters
     ref = kwargs.get('output','all')
     radius = kwargs.get('radius',10.)      # search radius in arcseconds
+    classes = ['YOUNG','SUBDWARF','BINARY','SPBINARY','RED','BLUE','GIANT','WD','STANDARD','COMPANION']
 
 # logic of search
     logic = 'and'         # default combination
@@ -2658,8 +2666,16 @@ def searchLibrary(*args, **kwargs):
         source_db['KMAGN'] = [float('0'+x) for x in source_db['KMAG']]
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['KMAGN'] >= mag[0],source_db['KMAGN'] <= mag[1]))] += 1
         count+=1.
+
 # search by class
 # THIS NEEDS TO BE ADDED BACK IN WITH NEW DATABASE FORMAT
+#    for c in classes:
+#        if kwargs.get(c,'n') != 'n':
+#            test = kwargs.get(c)
+#            if isinstance(test,bool):
+#                data['SELECT'][numpy.where(data[c] == test)]+=1
+#                count+=1.
+
 
 # select source keys
     if (count > 0):
