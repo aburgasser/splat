@@ -345,7 +345,7 @@ def loadModel(*args, **kwargs):
             if kwargs['force']:
                 raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
             else:
-                return loadInterpolatedModel_NEW(**kwargs)
+                return loadInterpolatedModel(**kwargs)
         else:
             try:
                 return splat.Spectrum(**kwargs)
@@ -359,7 +359,7 @@ def loadModel(*args, **kwargs):
             if kwargs['force']:
                 raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
             else:
-                return loadInterpolatedModel_NEW(**kwargs)
+                return loadInterpolatedModel(**kwargs)
         else:
             try:
                 ftype = kwargs['filename'].split('.')[-1]
