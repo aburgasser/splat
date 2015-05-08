@@ -161,17 +161,12 @@ def Copy(fn):
 
 # define the Spectrum class which contains the relevant information
 class Spectrum(object):
-    @Show
-    def __init__(self, **kwargs):
-        '''Load the file'''
+#    @Show
+
+    def __init__(self, *args, **kwargs):
+# some presets
+        sdb = False
         self.model = False
-# various options for setting the filename
-        self.filename = ''
-        if kwargs.get('file','') != '':
-            self.filename = kwargs.get('file','')
-        if kwargs.get('filename','') != '':
-            self.filename = kwargs.get('filename','')
-        kwargs['filename'] = self.filename
         self.wlabel = kwargs.get('wlabel',r'Wavelength')
         self.wunit = kwargs.get('wunit',u.micron)
         self.flabel = kwargs.get('flabel',r'F$_{\lambda}$')
@@ -180,9 +175,34 @@ class Spectrum(object):
         self.resolution = kwargs.get('resolution',150)    # default placeholder
         self.slitpixelwidth = kwargs.get('slitwidth',3.33)        # default placeholder
         self.slitwidth = self.slitpixelwidth*spex_pixel_scale
-        self.simplefilename = os.path.basename(self.filename)
         self.header = kwargs.get('header',Table())
-# wave and flux given
+        self.filename = ''
+
+# option 1: a filename is given    
+#        if isinstance(args[0],str):
+#            self.filename = args[0]
+        if kwargs.get('file','') != '':
+            self.filename = kwargs.get('file','')
+        if kwargs.get('filename','') != '':
+            self.filename = kwargs.get('filename','')
+
+# option 2: a spectrum ID is given
+        if kwargs.get('idkey',False) != False:
+            self.idkey = kwargs.get('idkey')
+            sdb = keySpectrum(self.idkey)
+            if sdb != False:
+                self.filename = sdb['DATA_FILE'][0]
+        else:
+            t = searchLibrary(file=self.filename)
+            if len(t) > 0:
+                sdb = t
+        kwargs['filename'] = self.filename
+
+# set up folder - by default this is local data directory
+        kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DATA_FOLDER)
+        self.simplefilename = os.path.basename(self.filename)
+        self.file = self.filename
+# option 3: wave and flux are given
         if len(kwargs.get('wave','')) > 0 and len(kwargs.get('flux','')) > 0:
             self.wave = kwargs['wave']
             self.flux = kwargs['flux']
@@ -191,9 +211,8 @@ class Spectrum(object):
             else:
                 self.noise = numpy.array([numpy.nan for i in self.wave])
         else:
-# filename given
-#            print kwargs['filename']
-            rs = readSpectrum(**kwargs)
+# read in data
+            rs = readSpectrum(self.filename,**kwargs)
             try:
                 self.wave = rs['wave']
                 self.flux = rs['flux']
@@ -237,18 +256,34 @@ class Spectrum(object):
         self.flux_original = copy.deepcopy(self.flux)
         self.noise_original = copy.deepcopy(self.noise)
         self.variance_original = copy.deepcopy(self.variance)
-        self.resolution = copy.deepcopy(self.resolution)
-        self.slitpixelwidth = copy.deepcopy(self.slitpixelwidth)
-        
+#        self.resolution = copy.deepcopy(self.resolution)
+#        self.slitpixelwidth = copy.deepcopy(self.slitpixelwidth)
+
+# populate information on source and spectrum from database
+        if sdb != False:
+            for k in sdb.keys():
+                setattr(self,k.lower(),sdb[k][0])
+            self.shortname = designationToShortName(self.designation)
+            self.date = self.observation_date
+# convert some data into numbers
+            kconv = ['ra','dec','julian_date','median_snr','resolution','airmass',\
+            'jmag','jmag_error','hmag','hmag_error','kmag','kmag_error']
+            for k in kconv:
+                try:
+                    setattr(self,k,float(getattr(self,k)))
+                except:
+                    setattr(self,k,numpy.nan)
+#                print getattr(self,k)
+                
 # information on source spectrum
         if not (kwargs.get('model',False)):
             x,y = filenameToNameDate(self.filename)
-            self.name = kwargs.get('name',x)
-            self.date = kwargs.get('date',y)
-            try:
-                self.caldate = dateToCaldate(self.date)
-            except:
-                self.caldate = ''
+#            self.name = kwargs.get('name',x)
+#            self.date = kwargs.get('date',y)
+#            try:
+#                self.caldate = dateToCaldate(self.date)
+#            except:
+#                self.caldate = ''
         else:
 # information on model
             self.model = True
@@ -615,12 +650,17 @@ def checkOnline(*args):
     '''
     if (len(args) != 0):
         try:
-            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(SPLAT_URL+args[0]).read())
+            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(args[0]).read())
             os.remove(os.path.basename(TMPFILENAME))
             return args[0]
 #            return data
         except urllib2.URLError:
-            return ''
+            try:
+                open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(SPLAT_URL+args[0]).read())
+                os.remove(os.path.basename(TMPFILENAME))
+                return SPLAT_URL+args[0]
+            except:
+                return ''
 
     else:
         try:
@@ -1118,7 +1158,8 @@ def classifyByTemplate(sp, *args, **kwargs):
     stat = []
     scl = []
     for i,d in enumerate(dkey):
-        s = loadSpectrum(data_key=d)
+        print d
+        s = Spectrum(idkey=d)
         chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],stat='chisqr',novar2=True)
         stat.append(chisq)
         scl.append(scale)
@@ -1947,14 +1988,36 @@ def keySpectrum(keys, **kwargs):
         db = join(sdb[:][numpy.where(sdb['SELECT']==1)],s2db,keys='SOURCE_KEY')
         return db
    
-    
-    
+
 def loadSpectrum(*args, **kwargs):
+    '''deprecated'''
+    if kwargs.get('file',False) != False:
+        return Spectrum(**kwargs)
+    if kwargs.get('filename',False) != False:
+        return Spectrum(**kwargs)
+    if kwargs.get('idkey',False) != False:
+        return Spectrum(**kwargs)
+
+# check primary argument
+    if len(args) > 0:
+        if isinstance(args[0],str):
+            kwargs['filename'] = args[0]    
+            return Spectrum(**kwargs)
+        if isinstance(args[0],int):
+            kwargs['idkey'] = args[0]    
+            return Spectrum(**kwargs)
+
+# couldn't find what you're looking for
+    raise NameError('\nNo filename or idkey specified in loadSpectrum\n\n')
+    return False
+
+    
+def loadSpectrum_old(*args, **kwargs):
     '''load up a SpeX spectrum based name, shortname and/or date'''
 
     local = kwargs.get('local',True)
     online = kwargs.get('online',not local and checkOnline())
-    kwargs['folder'] = kwargs.get('folder',DATA_FOLDER)
+    kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DATA_FOLDER)
     local = not online
     kwargs['local'] = local
     kwargs['online'] = online
@@ -1990,17 +2053,18 @@ def loadSpectrum(*args, **kwargs):
 #            print 'Cannot find '+kwargs['filename']+' locally, trying online\n\n'
             kwargs['local'] = False
             kwargs['online'] = True                
-        else:
-            kwargs['filename'] = file
     else:
-        kwargs['filename'] = file
+        kwargs['folder'] = ''
 
 
 # read in local file
     if kwargs['local']:
-        try:
-            return Spectrum(**kwargs)
-        except:
+#        try:
+        return Spectrum(**kwargs)
+#        except:
+        if False:
+            print 'this happened'
+            print kwargs
             print '\nProblem reading in '+kwargs['filename']+' locally, trying online\n\n'
             kwargs['online'] = True
 
@@ -2265,35 +2329,60 @@ def properCoordinates(c):
         raise ValueError('\nCould not parse input format\n\n')
 
 
-def readSpectrum(**kwargs):
+def readSpectrum(*args,**kwargs):
 
-# TO BE DONE:
-# FIX IF THERE IS NO NOISE CHANNEL
-# PRODUCE AND RETURN HEADER => CHANGE OUTPUT TO DICTIONARY?
-# NOTE: THIS IS STRICTLY A LOCAL READ PROGRAM
-    
 # keyword parameters
     folder = kwargs.get('folder','')
     catchSN = kwargs.get('catchSN',True)
+    local = kwargs.get('local',True)
+    online = kwargs.get('online',not local and checkOnline())
+    local = not online
+    url = kwargs.get('url',SPLAT_URL+DATA_FOLDER)
+    kwargs['model'] = False
+
+
+# filename
     file = kwargs.get('file','')
     file = kwargs.get('filename',file)
-#    url = kwargs.get('url',SPLAT_URL)+'/Spectra/'
-#    local = kwargs.get('local',False)
-    
-# download if a remote file
-#    if url != '' and not local:
-#        try:
-#            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(url+file).read()) 
-#            file = os.path.basename(TMPFILENAME)
-#            print 'Using {}'.format(TMPFILENAME)
-#        except:
-#            print '\n\nCould not locate {} at {}\n'.format(file,url)
+    if (len(args) > 0):
+        file = args[0]
+    kwargs['filename'] = file
+    kwargs['model'] = False
 
-# try to read        
-    if (os.path.exists(file) == False):
-        file = folder+os.path.basename(file)
-    if (os.path.exists(file) == False):
-        raise NameError('\nCould not find ' + file+'\n\n')
+# a filename must be passed
+    if (kwargs['filename'] == ''):
+        raise NameError('\nNeed to pass in filename to read in spectral data (readSpectrum)\n\n')
+
+# first pass: check if file is local
+    if online == False:
+        file = checkLocal(kwargs['filename'])
+        if file=='':
+            file = checkLocal(kwargs['folder']+os.path.basename(kwargs['filename']))
+            if file=='':
+#            print 'Cannot find '+kwargs['filename']+' locally, trying online\n\n'
+                local = False
+
+# second pass: download file if necessary
+    online = not local
+    if online == True:
+        file = checkOnline(url+kwargs['filename'])
+        if file=='':
+            raise NameError('\nCannot find file '+kwargs['filename']+' on SPLAT website\n\n')
+        else:
+# read in online file                
+            file = kwargs['filename']
+            try:
+#                file = TMPFILENAME+'.'+ftype
+                if os.path.exists(os.path.basename(file)):
+                    os.remove(os.path.basename(file))
+                open(os.path.basename(file), 'wb').write(urllib2.urlopen(url+file).read())
+#                print file
+#                kwargs['filename'] = os.path.basename(file)
+#               sp = Spectrum(**kwargs)
+#                os.remove(os.path.basename(tmp))
+#                return sp
+            except urllib2.URLError:
+                raise NameError('\nProblem reading in '+file+' from SPLAT website\n\n')
     
 # determine which type of file
     ftype = file.split('.')[-1]
@@ -2316,8 +2405,12 @@ def readSpectrum(**kwargs):
         except ValueError:
             d = numpy.genfromtxt(file, comments=';', unpack=False, \
                  missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
-        header = fits.Header()
-        
+        header = fits.Header()      # blank header
+
+# delete file if this was an online read
+    if online and not local and os.path.exists(os.path.basename(file)):
+        os.remove(os.path.basename(file))
+
 # assign arrays to wave, flux, noise
     wave = d[0,:]
     flux = d[1,:]
@@ -2810,7 +2903,7 @@ def test():
     sys.stderr.write('\n...standard classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
 
     grav = classifyGravity(sp)
-    sys.stderr.write('\n...gravity class of '+test_src+' = {:s}; successful\n'.format(grav))
+    sys.stderr.write('\n...gravity class of '+test_src+' = {}; successful\n'.format(grav))
 
 # check SpT -> Teff
     teff, teff_e = typeToTeff(spt,unc=spt_e)
