@@ -947,7 +947,7 @@ def classifyByStandard(sp, *args, **kwargs):
     sspt = []
     sfile = []
     for t in numpy.arange(sptrange[0],sptrange[1]+1):
-        spstd = loadSpectrum(file=spex_stdfiles[typeToNum(t)])
+        spstd = Spectrum(file=spex_stdfiles[typeToNum(t)])
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],stat=compstat,novar2=True)
         stat.append(chisq)
         sspt.append(t)
@@ -986,7 +986,7 @@ def classifyByStandard(sp, *args, **kwargs):
 
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
-        spstd = loadSpectrum(file=sorted_stdfiles[0])
+        spstd = Spectrum(file=sorted_stdfiles[0])
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],stat=compstat)
         spstd.scale(scale)
         plotSpectrum(sp,spstd,colors=['k','r'],\
@@ -1158,7 +1158,6 @@ def classifyByTemplate(sp, *args, **kwargs):
     stat = []
     scl = []
     for i,d in enumerate(dkey):
-        print d
         s = Spectrum(idkey=d)
         chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],stat='chisqr',novar2=True)
         stat.append(chisq)
@@ -1186,7 +1185,7 @@ def classifyByTemplate(sp, *args, **kwargs):
 
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
-        s = loadSpectrum(data_key=sorted_dkey[0])
+        s = Spectrum(idkey=sorted_dkey[0])
 #        chisq,scale = compareSpectra(s,sp,fit_ranges=[comprng],stat='chisqr',novar2=True)
         s.scale(sorted_scale[0])
         plotSpectrum(sp,s,colors=['k','r'],title=sp.name+' vs '+s.name,**kwargs)
@@ -1201,7 +1200,7 @@ def classifyByTemplate(sp, *args, **kwargs):
     return {'result': (spt,sptn_e), \
         'chisquare': sorted(stat)[0:nbest], 'spt': sorted_spt[0:nbest], 'scale': sorted_scale[0:nbest], \
         'name': [keySpectrum(d)['NAME'][0] for d in sorted_dkey[0:nbest]], \
-        'spectra': [loadSpectrum(data_key=d) for d in sorted_dkey[0:nbest]]}
+        'spectra': [Spectrum(idkey=d) for d in sorted_dkey[0:nbest]]}
 
  
 
@@ -1845,16 +1844,16 @@ def getSpectrum_OLD(*args, **kwargs):
     if len(files) > 0:
         if (len(files) == 1):
             print '\nRetrieving 1 file\n'
-            result.append(loadSpectrum(files[0],header=search[0]))
+            result.append(Spectrum(files[0],header=search[0]))
         else:
         	if (kwargs.get('lucky',False) == True):
 	            print '\nRetrieving 1 lucky file\n'
 	            ind = random.choice(range(len(files)))
-	            result.append(loadSpectrum(files[ind],header=search[ind]))
+	            result.append(Spectrum(files[ind],header=search[ind]))
 	        else:
 				print '\nRetrieving {} files\n'.format(len(files))
 				for i,x in enumerate(files):
-					result.append(loadSpectrum(x,header=search[i:i+1]))
+					result.append(Spectrum(x,header=search[i:i+1]))
         	
     else:
         if checkAccess() == False:
@@ -1921,16 +1920,16 @@ def getSpectrum(*args, **kwargs):
     if len(files) > 0:
         if (len(files) == 1):
             print '\nRetrieving 1 file\n'
-            result.append(loadSpectrum(files[0],header=search[0]))
+            result.append(Spectrum(files[0],header=search[0]))
         else:
         	if (kwargs.get('lucky',False) == True):
 	            print '\nRetrieving 1 lucky file\n'
 	            ind = random.choice(range(len(files)))
-	            result.append(loadSpectrum(files[ind],header=search[ind]))
+	            result.append(Spectrum(files[ind],header=search[ind]))
 	        else:
 				print '\nRetrieving {} files\n'.format(len(files))
 				for i,x in enumerate(files):
-					result.append(loadSpectrum(x,header=search[i:i+1]))
+					result.append(Spectrum(x,header=search[i:i+1]))
         	
     else:
         if checkAccess() == False:
@@ -2760,15 +2759,111 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['KMAGN'] >= mag[0],source_db['KMAGN'] <= mag[1]))] += 1
         count+=1.
 
-# search by class
-# THIS NEEDS TO BE ADDED BACK IN WITH NEW DATABASE FORMAT
-#    for c in classes:
-#        if kwargs.get(c,'n') != 'n':
-#            test = kwargs.get(c)
-#            if isinstance(test,bool):
-#                data['SELECT'][numpy.where(data[c] == test)]+=1
-#                count+=1.
 
+# young
+    if (kwargs.get('young','') != ''):
+        source_db['YOUNG'] = [i != '' for i in source_db['GRAVITY_CLASS_CRUZ']] or [i != '' for i in source_db['GRAVITY_CLASS_ALLERS']]
+        source_db['SELECT'][numpy.where(source_db['YOUNG'] == kwargs.get('young'))] += 1
+        count+=1.
+
+# ALLERS gravity class
+    if (kwargs.get('allers_class','') != ''):
+        source_db['GRAVITY_FLAG'] = [i.lower() == kwargs.get('allers_class').lower() for i in source_db['GRAVITY_CLASS_ALLERS']]
+        source_db['SELECT'][numpy.where(source_db['GRAVITY_FLAG'] == True)] += 1
+        count+=1.
+
+# CRUZ gravity class
+    if (kwargs.get('cruz_class','') != ''):
+        source_db['GRAVITY_FLAG'] = [i.lower() == kwargs.get('cruz_class').lower() for i in source_db['GRAVITY_CLASS_CRUZ']]
+        source_db['SELECT'][numpy.where(source_db['GRAVITY_FLAG'] == True)] += 1
+        count+=1.
+
+# specific cluster
+    if (kwargs.get('cluster','') != '' and isinstance(kwargs.get('cluster'),str)):
+        source_db['CLUSTER_FLAG'] = [i.lower() == kwargs.get('cluster').lower() for i in source_db['CLUSTER']]
+        source_db['SELECT'][numpy.where(source_db['CLUSTER_FLAG'] == True)] += 1
+        count+=1.
+
+# giant
+    if (kwargs.get('giant','') != ''):
+#        kwargs['vlm'] = False
+        source_db['GIANT'] = [i != '' for i in source_db['LUMINOSITY_CLASS']]
+        source_db['SELECT'][numpy.where(source_db['GIANT'] == kwargs.get('giant'))] += 1
+        count+=1.
+
+# luminosity class
+    if (kwargs.get('giant_class','') != ''):
+        source_db['GIANT_FLAG'] = [i.lower() == kwargs.get('giant_class').lower() for i in source_db['GIANT']]
+        source_db['SELECT'][numpy.where(source_db['GIANT_FLAG'] == True)] += 1
+        count+=1.
+
+# subdwarf
+    if (kwargs.get('subdwarf','') != ''):
+        source_db['SUBDWARF'] = [i != '' for i in source_db['METALLICITY_CLASS']]
+        source_db['SELECT'][numpy.where(source_db['SUBDWARF'] == kwargs.get('subdwarf'))] += 1
+        count+=1.
+
+# metallicity class
+    if (kwargs.get('subdwarf_class','') != ''):
+        source_db['SD_FLAG'] = [i.lower() == kwargs.get('subdwarf_class').lower() for i in source_db['METALLICITY_CLASS']]
+        source_db['SELECT'][numpy.where(source_db['SD_FLAG'] == True)] += 1
+        count+=1.
+
+# red
+    if (kwargs.get('red','') != ''):
+        source_db['RED'] = ['red' in i for i in source_db['LIBRARY']]
+        source_db['SELECT'][numpy.where(source_db['RED'] == kwargs.get('red'))] += 1
+        count+=1.
+
+# blue
+    if (kwargs.get('blue','') != ''):
+        source_db['BLUE'] = ['blue' in i for i in source_db['LIBRARY']]
+        source_db['SELECT'][numpy.where(source_db['BLUE'] == kwargs.get('blue'))] += 1
+        count+=1.
+
+# binaries
+    if (kwargs.get('binary','') != ''):
+        source_db['BINARY_FLAG'] = [i == 'Y' for i in source_db['BINARY']]
+        source_db['SELECT'][numpy.where(source_db['BINARY_FLAG'] == kwargs.get('binary'))] += 1
+        count+=1.
+
+# spectral binaries
+    if (kwargs.get('sbinary','') != ''):
+        source_db['SBINARY_FLAG'] = [i == 'Y' for i in source_db['SBINARY']]
+        source_db['SELECT'][numpy.where(source_db['SBINARY_FLAG'] == kwargs.get('sbinary'))] += 1
+        count+=1.
+
+# companions
+    if (kwargs.get('companion','') != ''):
+        source_db['COMPANION_FLAG'] = [i != '' for i in source_db['COMPANION_NAME']]
+        source_db['SELECT'][numpy.where(source_db['COMPANION_FLAG'] == kwargs.get('companion'))] += 1
+        count+=1.
+
+# white dwarfs
+    if (kwargs.get('wd','') != ''):
+        kwargs['vlm'] = False
+        source_db['WHITEDWARF'] = [i == 'WD' for i in source_db['NON_VLM']]
+        source_db['SELECT'][numpy.where(source_db['WHITEDWARF'] == kwargs.get('wd'))] += 1
+        count+=1.
+
+# galaxies
+    if (kwargs.get('galaxy','') != ''):
+        kwargs['vlm'] = False
+        source_db['GALAXY'] = [i == 'GAL' for i in source_db['NON_VLM']]
+        source_db['SELECT'][numpy.where(source_db['GALAXY'] == kwargs.get('galaxy'))] += 1
+        count+=1.
+
+# carbon stars
+    if (kwargs.get('carbon','') != ''):
+        kwargs['vlm'] = False
+        source_db['CARBON'] = [i == 'C' for i in source_db['NON_VLM']]
+        source_db['SELECT'][numpy.where(source_db['CARBON'] == kwargs.get('carbon'))] += 1
+        count+=1.
+
+# VLM dwarfs by default
+    source_db['VLM'] = [i == '' for i in source_db['NON_VLM']]
+    source_db['SELECT'][numpy.where(source_db['VLM'] == kwargs.get('vlm',True))] += 1
+    count+=1.
 
 # select source keys
     if (count > 0):
@@ -2845,16 +2940,7 @@ def searchLibrary(*args, **kwargs):
 
 # merge databases
     db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))],source_db,keys='SOURCE_KEY')
-
-#    print fdb.keys(), len(db),len(fdb)
-#    print fdb
-#    for k in source_db.keys():
-#        if k != 'SOURCE_KEY':
-#            db[k] = []        
-#            for s in db['SOURCE_KEY']:
                 
-# return spectral database information
-#       NEED TO FIGURE OUT HOW TO MERGE SOURCE AND DATABASE INFORMATION HERE
     if (ref == 'all'):
         return db
     else:
