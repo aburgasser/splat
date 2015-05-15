@@ -176,19 +176,24 @@ class Spectrum(object):
         self.slitpixelwidth = kwargs.get('slitwidth',3.33)        # default placeholder
         self.slitwidth = self.slitpixelwidth*spex_pixel_scale
         self.header = kwargs.get('header',Table())
-        self.filename = ''
+        self.filename = kwargs.get('file','')
+        self.idkey = kwargs.get('idkey',False)
 
-# option 1: a filename is given    
-#        if isinstance(args[0],str):
-#            self.filename = args[0]
-        if kwargs.get('file','') != '':
-            self.filename = kwargs.get('file','')
-        if kwargs.get('filename','') != '':
-            self.filename = kwargs.get('filename','')
-
+# option 1: a filename is given
+        if (len(args) > 0):
+            if isinstance(args[0],str):
+                self.filename = args[0]
+        if kwargs.get('file',self.filename) != '':
+            self.filename = kwargs.get('file',self.filename)
+        if kwargs.get('filename',self.filename) != '':
+            self.filename = kwargs.get('filename',self.filename)
+        
 # option 2: a spectrum ID is given
-        if kwargs.get('idkey',False) != False:
-            self.idkey = kwargs.get('idkey')
+        if (len(args) > 0):
+            if isinstance(args[0],int):
+                self.idkey = args[0]
+        if kwargs.get('idkey',self.idkey) != False:
+            self.idkey = kwargs.get('idkey',self.idkey)
             sdb = keySpectrum(self.idkey)
             if sdb != False:
                 self.filename = sdb['DATA_FILE'][0]
@@ -1846,14 +1851,14 @@ def getSpectrum_OLD(*args, **kwargs):
             print '\nRetrieving 1 file\n'
             result.append(Spectrum(files[0],header=search[0]))
         else:
-        	if (kwargs.get('lucky',False) == True):
-	            print '\nRetrieving 1 lucky file\n'
-	            ind = random.choice(range(len(files)))
-	            result.append(Spectrum(files[ind],header=search[ind]))
-	        else:
-				print '\nRetrieving {} files\n'.format(len(files))
-				for i,x in enumerate(files):
-					result.append(Spectrum(x,header=search[i:i+1]))
+            if (kwargs.get('lucky',False) == True):
+                print '\nRetrieving 1 lucky file\n'
+                ind = random.choice(range(len(files)))
+                result.append(Spectrum(files[ind],header=search[ind]))
+            else:
+                print '\nRetrieving {} files\n'.format(len(files))
+                for i,x in enumerate(files):
+                    result.append(Spectrum(x,header=search[i:i+1]))
         	
     else:
         if checkAccess() == False:
@@ -1922,14 +1927,14 @@ def getSpectrum(*args, **kwargs):
             print '\nRetrieving 1 file\n'
             result.append(Spectrum(files[0],header=search[0]))
         else:
-        	if (kwargs.get('lucky',False) == True):
-	            print '\nRetrieving 1 lucky file\n'
-	            ind = random.choice(range(len(files)))
-	            result.append(Spectrum(files[ind],header=search[ind]))
-	        else:
-				print '\nRetrieving {} files\n'.format(len(files))
-				for i,x in enumerate(files):
-					result.append(Spectrum(x,header=search[i:i+1]))
+            if (kwargs.get('lucky',False) == True):
+                print '\nRetrieving 1 lucky file\n'
+                ind = random.choice(range(len(files)))
+                result.append(Spectrum(files[ind],header=search[ind]))
+            else:
+                print '\nRetrieving {} files\n'.format(len(files))
+                for i,x in enumerate(files):
+                    result.append(Spectrum(x,header=search[i:i+1]))
         	
     else:
         if checkAccess() == False:
