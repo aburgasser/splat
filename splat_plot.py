@@ -36,16 +36,16 @@ def plotSpectrum(*args, **kwargs):
     feature_labels = { \
         'h2o': {'label': r'H$_2$O', 'type': 'band', 'wavelengths': [[0.92,0.95],[1.08,1.20],[1.325,1.450],[1.72,2.14]]}, \
         'ch4': {'label': r'CH$_4$', 'type': 'band', 'wavelengths': [[1.1,1.24],[1.28,1.44],[1.6,1.76],[2.05,2.35]]}, \
-        'co': {'label': r'CO$$', 'type': 'band', 'wavelengths': [[2.28,2.42]]}, \
-        'tio': {'label': r'TiO$$', 'type': 'band', 'wavelengths': [[0.76,0.80],[0.825,0.831]]}, \
-        'vo': {'label': r'VO$$', 'type': 'band', 'wavelengths': [[1.04,1.08]]}, \
-        'feh': {'label': r'FeH$$', 'type': 'band', 'wavelengths': [[0.86,0.90],[0.98,1.03],[1.19,1.31],[1.57,1.64]]}, \
+        'co': {'label': r'CO', 'type': 'band', 'wavelengths': [[2.28,2.42]]}, \
+        'tio': {'label': r'TiO', 'type': 'band', 'wavelengths': [[0.76,0.80],[0.825,0.831]]}, \
+        'vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.04,1.08]]}, \
+        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.86,0.90],[0.98,1.03],[1.19,1.31],[1.57,1.64]]}, \
         'h2': {'label': r'H$_2$', 'type': 'band', 'wavelengths': [[2.05,2.6]]}, \
-        'oh': {'label': r'tell$$', 'type': 'band', 'wavelengths': [[1.37,1.45],[1.82,2.0]]}, \
-        'sb': {'label': r'*$$', 'type': 'band', 'wavelengths': [[1.6,1.64]]}, \
-        'h': {'label': r'H I$$', 'type': 'line', 'wavelengths': [[1.004,1.005],[1.093,1.094],[1.281,1.282],[1.944,1.945],[2.166,2.166]]},\
-        'na': {'label': r'Na I$$', 'type': 'line', 'wavelengths': [[0.8186,0.8195],[1.136,1.137],[2.206,2.209]]}, \
-        'k': {'label': r'K I$$', 'type': 'line', 'wavelengths': [[0.7699,0.7665],[1.169,1.177],[1.244,1.252]]}}
+        'oh': {'label': r'tell', 'type': 'band', 'wavelengths': [[1.37,1.45],[1.82,2.0]]}, \
+        'sb': {'label': r'*', 'type': 'band', 'wavelengths': [[1.6,1.64]]}, \
+        'h': {'label': r'H I', 'type': 'line', 'wavelengths': [[1.004,1.005],[1.093,1.094],[1.281,1.282],[1.944,1.945],[2.166,2.166]]},\
+        'na': {'label': r'Na I', 'type': 'line', 'wavelengths': [[0.8186,0.8195],[1.136,1.137],[2.206,2.209]]}, \
+        'k': {'label': r'K I', 'type': 'line', 'wavelengths': [[0.7699,0.7665],[1.169,1.177],[1.244,1.252]]}}
 
 
 # keyword parameters
