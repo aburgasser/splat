@@ -202,6 +202,7 @@ class Spectrum(object):
             if len(t) > 0:
                 sdb = t
         kwargs['filename'] = self.filename
+        self.name = self.filename
 
 # set up folder - by default this is local data directory
         kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DATA_FOLDER)
@@ -2066,11 +2067,11 @@ def loadSpectrum_old(*args, **kwargs):
 #        try:
         return Spectrum(**kwargs)
 #        except:
-        if False:
-            print 'this happened'
-            print kwargs
-            print '\nProblem reading in '+kwargs['filename']+' locally, trying online\n\n'
-            kwargs['online'] = True
+#        if False:
+#            print 'this happened'
+#            print kwargs
+#            print '\nProblem reading in '+kwargs['filename']+' locally, trying online\n\n'
+#            kwargs['online'] = True
 
 # check that the file is online
     file = checkOnline(kwargs['filename'])
@@ -2100,10 +2101,11 @@ def loadSpectrum_old(*args, **kwargs):
 
 
 
-#Takes the apparent magnitude and either takes or determines the absolute magnitude, then uses the magnitude/distance relation to estimate the distance to the object in parsecs
-#Note: the input spectra should be flux calibrated to their empirical apparent magnitudes
-
 def estimateDistance(sp, **kwargs):
+    '''Takes the apparent magnitude and either takes or determines the absolute magnitude, 
+    then uses the magnitude/distance relation to estimate the distance to the object in parsecs
+    Note: the input spectra should be flux calibrated to their empirical apparent magnitudes'''
+
     mag = kwargs.get('mag', False)
     mag_unc = kwargs.get('mag_unc', 0.)
     absmag = kwargs.get('absmag', False)
@@ -2151,12 +2153,11 @@ def estimateDistance(sp, **kwargs):
     return d, unc
 
 
-# code to measure a defined index from a spectrum using Monte Carlo noise estimate
-# measure method can be mean, median, integrate
-# index method can be ratio = 1/2, valley = 1-2/3, OTHERS
-# output is index value and uncertainty
 def measureIndex(sp,*args,**kwargs):
-    '''Measure an index on a spectrum based on defined methodology'''
+    '''Measure an index on a spectrum based on defined methodology
+    measure method can be mean, median, integrate
+    index method can be ratio = 1/2, valley = 1-2/3, OTHERS
+    output is index value and uncertainty'''
 
 # keyword parameters
     method = kwargs.get('method','ratio')
@@ -3016,7 +3017,7 @@ def test():
 
 # check compareSpectrum
     chi, scale = compareSpectra(sp,mdl,mask_standard=True,stat='chisqr')
-    sys.stderr.write('\nFit to model: chi^2 = {}, scale = {}'.format(chi,scale))
+    sys.stderr.write('\nScaling model: chi^2 = {}, scale = {}'.format(chi,scale))
     sys.stderr.write('\n...compareSpectra successful\n'.format(chi,scale))
 
 # check plotSpectrum
