@@ -1075,59 +1075,56 @@ def classifyByTemplate(sp, *args, **kwargs):
     else:
         spt_type = 'LIT_TYPE'
 
-    if ('m dwarf' in set):
+    if ('m dwarf' in set.lower()):
         spt_range = [10,19.9]
-    if ('l dwarf' in set):
+    if ('l dwarf' in set.lower()):
         spt_range = [20,29.9]
-    if ('t dwarf' in set):
+    if ('t dwarf' in set.lower()):
         spt_range = [30,39.9]
-    if ('vlm' in set):
+    if ('vlm' in set.lower()):
         spt_range = [numpy.max([17,spt_range[0]]),numpy.min([39.9,spt_range[-1]])]
     
 #  constrain S/N
     snr = 0.
-    if ('high sn' in set):
+    if ('high sn' in set.lower()):
         snr = 100.
     snr = kwargs.get('snr',snr)
     
 #  don't compare to same spectrum
-    excludefile = kwargs.get('excludefile',False)
-    if not excludefile:
-        try:
-            excludefile = [sp.filename,kwargs['excludefile']]
-        except:
-            dum=0
+    excludefile = [sp.filename]
+    if kwargs.get('excludefile',False) != False:
+        excludefile = [sp.filename,kwargs['excludefile']]
 
 # other classes
     giant = ''
-    if 'giant' in set:
+    if 'giant' in set.lower():
         giant = True
-    if 'not giant' in set:
+    if 'not giant' in set.lower():
         giant = False
     companion = ''
-    if 'companion' in set:
+    if 'companion' in set.lower():
         companion = True
-    if 'not companion' in set:
+    if 'not companion' in set.lower():
         companion = False
     young = ''
-    if 'young' in set:
+    if 'young' in set.lower():
         young = True
-    if 'not young' in set:
+    if 'not young' in set.lower():
         young = False
     binary = ''
-    if 'binary' in set:
+    if 'binary' in set.lower():
         binary = True
-    if 'not binary' in set:
+    if 'not binary' in set.lower():
         binary = False
     spbinary = ''
-    if 'spectral binary' in set:
+    if 'spectral binary' in set.lower():
         spbinary = True
-    if 'not spectral binary' in set:
+    if 'not spectral binary' in set.lower():
         spbinary = False
     
     lib = searchLibrary(excludefile=excludefile,snr=snr,spt_type=spt_type,spt_range=spt_range,published=published, \
         giant=giant,companion=companion,young=young,binary=binary,spbinary=spbinary,output='all',logic='and')
-    
+        
 #    print [x for x in compsp]
 #    elif ('companion' in set):
 #        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,companion=True,published=published,giant=False,logic='and')
