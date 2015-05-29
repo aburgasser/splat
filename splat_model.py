@@ -7,16 +7,14 @@ import copy
 import os
 import sys
 import urllib2
-#import scipy
-
-# Related third party imports.
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from scipy import stats
 from scipy.interpolate import griddata
 import numpy
-#import matplotlib.pyplot as plt
 from astropy.io import ascii            # for reading in spreadsheet
 import splat
 
-SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 SPECTRAL_MODEL_FOLDER = '/SpectralModels/'
 MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']
 MODEL_PARAMETERS = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
@@ -24,18 +22,18 @@ DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12',
 TMPFILENAME = 'splattmpfile'
 
 #set the SPLAT PATH, either from set environment variable or from sys.path
-SPLAT_PATH = './'
-if os.environ.get('SPLAT_PATH') != None:
-    SPLAT_PATH = os.environ['SPLAT_PATH']
-else:
-    checkpath = ['splat' in r for r in sys.path]
-    if max(checkpath):
-        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
+#SPLAT_PATH = './'
+#if os.environ.get('SPLAT_PATH') != None:
+#    SPLAT_PATH = os.environ['SPLAT_PATH']
+#else:
+#    checkpath = ['splat' in r for r in sys.path]
+#    if max(checkpath):
+#        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
+
+
 
 
 def loadInterpolatedModel_NEW(*args,**kwargs):
-
-
 # path to model
 #    kwargs['path'] = kwargs.get('path',SPLAT_PATH+SPECTRAL_MODEL_FOLDER)
 #    if not os.path.exists(kwargs['path']):
@@ -54,7 +52,7 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
 
     print 'Running new version'
 # read in parameters of available models
-    folder = splat.checkLocal(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/')
+    folder = splat.checkLocal(splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/')
     if folder=='':
         raise NameError('\n\nCould not locate spectral model folder {} locally\n'.format(SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'))
     pfile = splat.checkLocal(folder+pfile)
@@ -147,7 +145,7 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
 
 def loadInterpolatedModel(*args,**kwargs):
 # attempt to generalize models to extra dimensions
-    kwargs['url'] = kwargs.get('url',SPLAT_URL+'/Models/')
+    kwargs['url'] = kwargs.get('url',splat.SPLAT_URL+'/Models/')
     kwargs['set'] = kwargs.get('set','BTSettl2008')
     kwargs['model'] = True
     kwargs['local'] = kwargs.get('local',False)
@@ -270,7 +268,7 @@ def loadModel(*args, **kwargs):
     kwargs['online'] = online
     kwargs['model'] = True
     kwargs['force'] = kwargs.get('force',False)
-    url = kwargs.get('url',SPLAT_URL)
+    url = kwargs.get('url',splat.SPLAT_URL)
 
 
 # a filename has been passed - assume this file is a local file
@@ -289,7 +287,7 @@ def loadModel(*args, **kwargs):
 
 # set up the model set
     kwargs['set'] = kwargs.get('set','BTSettl2008')
-    kwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'
+    kwargs['folder'] = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'
     
 # preset defaults
     for ms in MODEL_PARAMETER_NAMES:
@@ -345,7 +343,8 @@ def loadModel(*args, **kwargs):
             if kwargs['force']:
                 raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
             else:
-                return loadInterpolatedModel(**kwargs)
+                kwargs['local']=False
+                kwargs['online']=True
         else:
             try:
                 return splat.Spectrum(**kwargs)
@@ -388,7 +387,7 @@ def loadModelParameters(**kwargs):
 # read in parameter file - local and not local
     if kwargs.get('online',False):
         try:
-            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(SPLAT_URL+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+pfile).read())
+            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(splat.SPLAT_URL+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+pfile).read())
             p = ascii.read(os.path.basename(TMPFILENAME))
             os.remove(os.path.basename(TMPFILENAME))
         except urllib2.URLError:
@@ -396,14 +395,14 @@ def loadModelParameters(**kwargs):
 #            local = True
     else:            
         if (os.path.exists(pfile) == False):
-            pfile = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+os.path.basename(pfile)
+            pfile = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+os.path.basename(pfile)
             if (os.path.exists(pfile) == False):
                 raise NameError('\nCould not find parameter file {}'.format(pfile))
             else:
                 p = ascii.read(pfile)
 
 # populate output parameter structure
-    parameters = {'set': set, 'url': SPLAT_URL}
+    parameters = {'set': set, 'url': splat.SPLAT_URL}
     for ms in MODEL_PARAMETER_NAMES[0:3]:
         if ms in p.colnames:
             parameters[ms] = [float(x) for x in p[ms]]
