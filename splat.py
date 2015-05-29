@@ -169,9 +169,11 @@ class Spectrum(object):
         self.model = False
         self.wlabel = kwargs.get('wlabel',r'Wavelength')
         self.wunit = kwargs.get('wunit',u.micron)
+        self.wunit_label = kwargs.get('wunit_label',r'$\mu$m')
         self.flabel = kwargs.get('flabel',r'F$_{\lambda}$')
         self.fscale = kwargs.get('fscale','')
         self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.micron))
+        self.funit_label = kwargs.get('funit_label',r'erg~cm$^{-2}$~s$^{-1}$~$\mu$m$^{-1}$')
         self.resolution = kwargs.get('resolution',150)    # default placeholder
         self.slitpixelwidth = kwargs.get('slitwidth',3.33)        # default placeholder
         self.slitwidth = self.slitpixelwidth*spex_pixel_scale
@@ -1154,8 +1156,7 @@ def classifyByTemplate(sp, *args, **kwargs):
     if (verbose):
         print '\nComparing to {} templates\n\n'.format(len(files))
     if len(files) > 100:
-        if (verbose):
-            print 'This may take some time!\n\n'.format(len(files))
+        print 'This may take some time!\n\n'.format(len(files))
 
 # do comparison
     stat = []
@@ -2900,7 +2901,7 @@ def searchLibrary(*args, **kwargs):
 # exclude by filename
     if kwargs.get('excludefile',False) != False:
         file = kwargs['excludefile']
-        print file
+#        print file
         if isinstance(file,str):
             file = [file]
         for f in file:
