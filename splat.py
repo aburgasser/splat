@@ -166,7 +166,7 @@ class Spectrum(object):
     def __init__(self, *args, **kwargs):
 # some presets
         sdb = False
-        self.model = False
+        self.model = kwargs.get('model',False)
         self.wlabel = kwargs.get('wlabel',r'Wavelength')
         self.wunit = kwargs.get('wunit',u.micron)
         self.wunit_label = kwargs.get('wunit_label',r'$\mu$m')
@@ -179,6 +179,7 @@ class Spectrum(object):
         self.slitwidth = self.slitpixelwidth*spex_pixel_scale
         self.header = kwargs.get('header',Table())
         self.filename = kwargs.get('file','')
+        self.filename = kwargs.get('filename',self.filename)
         self.idkey = kwargs.get('idkey',False)
 
 # option 1: a filename is given
@@ -194,12 +195,13 @@ class Spectrum(object):
         if (len(args) > 0):
             if isinstance(args[0],int):
                 self.idkey = args[0]
-        if kwargs.get('idkey',self.idkey) != False:
-            self.idkey = kwargs.get('idkey',self.idkey)
+        
+        if self.idkey != False:
+#            self.idkey = kwargs.get('idkey',self.idkey)
             sdb = keySpectrum(self.idkey)
             if sdb != False:
                 self.filename = sdb['DATA_FILE'][0]
-        else:
+        elif self.model == False:
             t = searchLibrary(file=self.filename)
             if len(t) > 0:
                 sdb = t
@@ -210,6 +212,7 @@ class Spectrum(object):
         kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DATA_FOLDER)
         self.simplefilename = os.path.basename(self.filename)
         self.file = self.filename
+
 # option 3: wave and flux are given
         if len(kwargs.get('wave','')) > 0 and len(kwargs.get('flux','')) > 0:
             self.wave = kwargs['wave']
@@ -219,6 +222,7 @@ class Spectrum(object):
             else:
                 self.noise = numpy.array([numpy.nan for i in self.wave])
         else:
+
 # read in data
             rs = readSpectrum(self.filename,**kwargs)
             try:
@@ -294,7 +298,6 @@ class Spectrum(object):
 #                self.caldate = ''
         else:
 # information on model
-            self.model = True
             self.teff = kwargs.get('teff',numpy.nan)
             self.logg = kwargs.get('logg',numpy.nan)
             self.z = kwargs.get('z',numpy.nan)
@@ -657,18 +660,20 @@ def checkOnline(*args):
        False # Could not find this online file.
     '''
     if (len(args) != 0):
-        try:
-            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(args[0]).read())
-            os.remove(os.path.basename(TMPFILENAME))
-            return args[0]
-#            return data
-        except urllib2.URLError:
+        if 'http://' in args[0]:
             try:
-                open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(SPLAT_URL+args[0]).read())
+                open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(args[0]).read())
                 os.remove(os.path.basename(TMPFILENAME))
-                return SPLAT_URL+args[0]
-            except:
-                return ''
+                return args[0]
+            except urllib2.URLError:
+                try:
+                    open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(SPLAT_URL+args[0]).read())
+                    os.remove(os.path.basename(TMPFILENAME))
+                    return SPLAT_URL+args[0]
+                except:
+                    return ''
+        else:
+            return ''
 
     else:
         try:
@@ -2880,7 +2885,7 @@ def searchLibrary(*args, **kwargs):
 # no selection made on sources - choose everything
     else:
         source_keys = source_db['SOURCE_KEY']
-
+    
 
 # read in spectral database
     spectral_db = ascii.read(SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
@@ -2942,13 +2947,19 @@ def searchLibrary(*args, **kwargs):
     if (not checkAccess() or kwargs.get('published',False) or kwargs.get('public',False)):
         spectral_db['SELECT'][numpy.where(spectral_db['PUBLISHED'] != 'Y')] = 0.
 
-# merge databases
-    db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))],source_db,keys='SOURCE_KEY')
-                
-    if (ref == 'all'):
-        return db
+# no matches
+    if numpy.sum(spectral_db['SELECT']) == 0. or numpy.sum(source_db['SELECT']) == 0.:
+        print 'No spectra in the SPL database match the selection criteria'
+        return Table()
     else:
-        return db[ref]
+
+# merge databases
+        db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))],source_db,keys='SOURCE_KEY')
+                
+        if (ref == 'all'):
+            return db
+        else:
+            return db[ref]
 
 
 
@@ -3006,8 +3017,13 @@ def test():
     sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f}+/-{:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag,mag_e))
 
 # check models
- #   mdl = loadModel(teff=1000,logg=5.0,set='BTSettl2008')
-    mdl = loadModel(teff=teff,logg=5.3,set='BTSettl2008')
+#   mdl = loadModel(teff=1000,logg=5.0,set='BTSettl2008')
+    logg = 5.2
+    if grav == 'VL-G':
+        logg = 4.2
+    elif grav == 'INT-G':
+        logg = 4.6
+    mdl = loadModel(teff=teff,logg=logg,set='BTSettl2008')
     sys.stderr.write('\n...interpolated model generation successful\n')
 
 # check normalization
