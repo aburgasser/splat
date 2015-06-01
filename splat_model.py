@@ -145,23 +145,25 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
 
 def loadInterpolatedModel(*args,**kwargs):
 # attempt to generalize models to extra dimensions
-    kwargs['url'] = kwargs.get('url',splat.SPLAT_URL+'/Models/')
-    kwargs['set'] = kwargs.get('set','BTSettl2008')
-    kwargs['model'] = True
-    kwargs['local'] = kwargs.get('local',False)
+    mkwargs = kwargs.copy()
+    mkwargs['force'] = True
+    mkwargs['url'] = kwargs.get('url',splat.SPLAT_URL+'/Models/')
+    mkwargs['set'] = kwargs.get('set','BTSettl2008')
+    mkwargs['model'] = True
+    mkwargs['local'] = kwargs.get('local',False)
     for ms in MODEL_PARAMETER_NAMES:
-        kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
+        mkwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
 
 # first get model parameters
     parameters = loadModelParameters(**kwargs)
     
 # check that given parameters are in range
     for ms in MODEL_PARAMETER_NAMES[0:3]:
-        if (float(kwargs[ms]) < parameters[ms][0] or float(kwargs[ms]) > parameters[ms][1]):
-            raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+        if (float(mkwargs[ms]) < parameters[ms][0] or float(mkwargs[ms]) > parameters[ms][1]):
+            raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,mkwargs[ms],mkwargs['set']))
     for ms in MODEL_PARAMETER_NAMES[3:6]:
-        if (kwargs[ms] not in parameters[ms]):
-            raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+        if (mkwargs[ms] not in parameters[ms]):
+            raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,mkwargs[ms],mkwargs['set']))
 
 # identify grid points around input parameters
 # 3x3 grid for teff, logg, z
@@ -169,11 +171,11 @@ def loadInterpolatedModel(*args,**kwargs):
     mrng = []
     rng = []
     for ms in MODEL_PARAMETER_NAMES[0:3]:
-        s = float(kwargs[ms]) - float(kwargs[ms])%float(parameters[ms][2])
+        s = float(mkwargs[ms]) - float(mkwargs[ms])%float(parameters[ms][2])
         r = [max(float(parameters[ms][0]),s),min(s+float(parameters[ms][2]),float(parameters[ms][1]))]
         m = copy.deepcopy(r)
 #        print s, r, s-float(kwargs[ms])
-        if abs(s-float(kwargs[ms])) < (1.e-3)*float(parameters[ms][2]):
+        if abs(s-float(mkwargs[ms])) < (1.e-3)*float(parameters[ms][2]):
             if float(kwargs[ms])%float(parameters[ms][2])-0.5*float(parameters[ms][2]) < 0.:
                 m[1]=m[0]
                 r[1] = r[0]+1.e-3*float(parameters[ms][2])
@@ -185,8 +187,7 @@ def loadInterpolatedModel(*args,**kwargs):
         mrng.append(m)
 #        print s, r, m
     mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
-    mkwargs = kwargs.copy()
-    mkwargs['force'] = True
+    mkwargs0 = mkwargs.copy()
 
 # read in models
 # note the complex path is to minimize model reads
@@ -250,7 +251,7 @@ def loadInterpolatedModel(*args,**kwargs):
             [[numpy.log10(md211.flux.value[i]),numpy.log10(md212.flux.value[i])], \
             [numpy.log10(md221.flux.value[i]),numpy.log10(md222.flux.value[i])]]])
         mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),val.flatten(),\
-            (float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])),'linear'))
+            (float(mkwargs0['teff']),float(mkwargs0['logg']),float(mkwargs0['z'])),'linear'))
     
     return splat.Spectrum(wave=md111.wave,flux=mflx*md111.funit,**kwargs)
 
@@ -261,11 +262,11 @@ def loadModel(*args, **kwargs):
 # path to model and set local/online
 # by default assume models come from local splat directory
     local = kwargs.get('local',True)
-    online = kwargs.get('online',not local and splat.checkOnline())
-    kwargs['folder'] = kwargs.get('folder','')
+    online = kwargs.get('online',not local and splat.checkOnline() != '')
     local = not online
     kwargs['local'] = local
     kwargs['online'] = online
+    kwargs['folder'] = kwargs.get('folder','')
     kwargs['model'] = True
     kwargs['force'] = kwargs.get('force',False)
     url = kwargs.get('url',splat.SPLAT_URL)
@@ -304,6 +305,7 @@ def loadModel(*args, **kwargs):
             kwargs['cld'] = 'f50'
 
 
+
 # check that folder/set is present either locally or online
 # if not present locally but present online, switch to this mode
 # if not present at either raise error
@@ -334,8 +336,8 @@ def loadModel(*args, **kwargs):
 #            if (kwargs[ms] not in parameters[ms]):
 #                raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
 
-# check if file is present; if so, read it in, otherwise go to interpolated
 
+# check if file is present; if so, read it in, otherwise go to interpolated
 # locally:
     if kwargs['local']:
         file = splat.checkLocal(kwargs['filename'])
@@ -343,8 +345,9 @@ def loadModel(*args, **kwargs):
             if kwargs['force']:
                 raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
             else:
-                kwargs['local']=False
-                kwargs['online']=True
+                return loadInterpolatedModel(**kwargs)
+#                kwargs['local']=False
+#                kwargs['online']=True
         else:
             try:
                 return splat.Spectrum(**kwargs)
