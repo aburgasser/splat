@@ -36,6 +36,7 @@
 import astropy
 import base64
 import copy
+import matplotlib.pyplot as plt
 import numpy
 import os
 import random
@@ -46,14 +47,14 @@ import sys
 import urllib2
 import warnings
 
-from scipy import stats, signal
-from scipy.integrate import trapz        # for numerical integration
-from scipy.interpolate import interp1d
 from astropy.io import ascii, fits            # for reading in spreadsheet
 from astropy.table import Table, join            # for reading in table files
 from astropy.coordinates import SkyCoord      # coordinate conversion
 from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
+from scipy import stats, signal
+from scipy.integrate import trapz        # for numerical integration
+from scipy.interpolate import interp1d
 
 # local application/library specific import
 #import bdevopar as splevol
@@ -435,8 +436,8 @@ class Spectrum(object):
         self.fscale = 'Normalized'
         return
 
-    def plot(self):
-        plotSpectrum(self,showNoise=True,showZero=True)
+    def plot(self,**kwargs):
+        plotSpectrum(self,showNoise=True,showZero=True,**kwargs)
 
     def reset(self):
         '''Reset to original spectrum'''
@@ -2156,6 +2157,108 @@ def estimateDistance(sp, **kwargs):
     return d, unc
 
 
+def measureEW(sp, *args, **kwargs):
+    '''Routine to measure equivalent widths (EWs) of specified lines'''
+
+# presets
+    nsamples = kwargs.get('nsamples',100)
+    noiseFlag = kwargs.get('nonoise',False)
+
+# predefined lines
+    specline = kwargs.get('line','').replace(' ','').lower()
+    if 'nai' in specline:
+        if '2.2' in specline:
+            wave_line = [2.2020, 2.2120]
+            wave_cont = [2.1965, 2.2125, 2.2175]
+    elif 'cai' in specline:
+        if '2.2' in specline:
+            wave_line = [2.2580, 2.2690]
+            wave_cont = [2.2510, 2.2580, 2.2705, 2.2760]
+    else:
+        if len(args) < 2:
+            print 'measureEW needs at least two wavelength arrays to measure line and continuum regions'
+            return numpy.nan, numpy.nan
+        else:
+            wave_line = args[0]
+            wave_cont = args[1]
+
+    
+# create interpolation routines
+    w = numpy.where(numpy.isnan(sp.flux) == False)
+    f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=0.)
+    w = numpy.where(numpy.isnan(sp.noise) == False)
+
+# note that units are stripped out
+    if (numpy.size(w) != 0):
+        n = interp1d(sp.wave.value[w],sp.noise.value[w],bounds_error=False,fill_value=numpy.nan)
+        noiseFlag = False or noiseFlag
+    else:
+        n = interp1d(sp.wave.value[:],sp.noise.value[:],bounds_error=False,fill_value=numpy.nan)
+        noiseFlag = True or noiseFlag
+    
+    wLine = (numpy.arange(0,nsamples+1.0)/nsamples)* \
+            (numpy.nanmax(wave_line)-numpy.nanmin(wave_line))+numpy.nanmin(wave_line)
+    fLine = f(wLine)
+    nLine = n(wLine)
+    fCont = f(wave_cont)
+    nCont = n(wave_cont)
+    
+    if noiseFlag == True:
+#linear fit to continuum
+        pCont = numpy.poly1d(numpy.polyfit(wave_cont,fCont,1))
+        fContFit = pCont(wLine)
+        ew = trapz((numpy.ones(len(fLine))-(fLine/fContFit)), wLine)*1e4 
+        return ew*u.angstrom, numpy.nan
+#monte carlo
+    else:
+        ew=[]
+        for i in range(nsamples):
+#generate simulated fluxes
+#            fContVar = fCont+numpy.random.normal(0.,1.)*nCont
+#            fLineVar = fLine+numpy.random.normal(0.,1.)*nLine
+            fContVar = numpy.random.normal(fCont,nCont)
+            fLineVar = numpy.random.normal(fLine,nLine)
+        
+#linear fit to continuum
+            pCont = numpy.poly1d(numpy.polyfit(wave_cont,fContVar,1))
+            fContFit = pCont(wLine)
+            ew.append(trapz((numpy.ones(len(fLineVar))-(fLineVar/fContFit)), wLine)*1e4)
+
+# some error checking
+#            plt.plot(wLine,fContFit,color='r')
+#            plt.plot(wLine,fLine,color='k')
+#            plt.show()
+
+# following line is more correct but having problem with output
+#       return numpy.nanmean(ew)*u.angstrom, numpy.nanstd(ew)*u.angstrom
+        return numpy.nanmean(ew), numpy.nanstd(ew)
+
+
+def measureEWSet(sp,*args,**kwargs):
+    set = kwargs.get('set','rojas')
+
+# determine combine method
+    if ('rojas' in set.lower()):
+        reference = 'EW measures from Rojas-Ayala et al. (2012)'
+        names = ['Na I 2.206/2.209','Ca I 2.26']
+        ews = numpy.zeros(len(names))
+        errs = numpy.zeros(len(names))
+        ews[0],errs[0] = measureEW(sp,[2.2020, 2.2120],[2.1965, 2.2125, 2.2175],**kwargs)
+        ews[1],errs[1] = measureEW(sp,[2.2580, 2.2690],[2.2510, 2.2580, 2.2705, 2.2760],**kwargs)
+    else:
+        print '{} is not one of the sets used for measureIndexSet'.format(set)
+        return numpy.nan
+
+# output dictionary of indices
+    result = {names[i]: (ews[i],errs[i]) for i in numpy.arange(len(names))}
+    result['reference'] = reference
+    result['names'] = names
+#    result['reference'] = reference
+#    return inds,errs,names
+
+    return result
+
+
 def measureIndex(sp,*args,**kwargs):
     '''Measure an index on a spectrum based on defined methodology
     measure method can be mean, median, integrate
@@ -2177,7 +2280,7 @@ def measureIndex(sp,*args,**kwargs):
         s = interp1d(sp.wave.value[w],sp.noise.value[w],bounds_error=False,fill_value=numpy.nan)
         noiseFlag = False
     else:
-        s = interp1d(sp.wave,sp.noise,bounds_error=False,fill_value=numpy.nan)
+        s = interp1d(sp.wave.value[:],sp.noise.value[:],bounds_error=False,fill_value=numpy.nan)
         noiseFlag = True
                 
 # error checking on number of arguments provided
@@ -2201,9 +2304,13 @@ def measureIndex(sp,*args,**kwargs):
 # now do MonteCarlo measurement of value and uncertainty
         for j in numpy.arange(0,nsamples):
 
-# doing this for noise = nan
+# sample variance
             if (numpy.isnan(yNum_e[0]) == False):
                 yVar = yNum+numpy.random.normal(0.,1.)*yNum_e
+# NOTE: I'M NOT COMFORTABLE WITH ABOVE LINE - SEEMS TO BE TOO COARSE OF UNCERTAINTY
+# BUT FOLLOWING LINES GIVE UNCERTAINTIES THAT ARE WAY TOO SMALL
+#                yVar = numpy.random.normal(yNum,yNum_e)
+#                yVar = yNum+numpy.random.normal(0.,1.,len(yNum))*yNum_e
             else:
                 yVar = yNum
             
@@ -2251,7 +2358,7 @@ def measureIndexSet(sp,**kwargs):
     set = kwargs.get('set','burgasser')
 
 # determine combine method
-    if (set.lower() == 'burgasser'):
+    if ('burgasser' in set.lower()):
         reference = 'Indices from Burgasser et al. (2006)'
         names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J']
         inds = numpy.zeros(len(names))
@@ -2263,21 +2370,21 @@ def measureIndexSet(sp,**kwargs):
         inds[4],errs[4] = measureIndex(sp,[1.975,1.995],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
         inds[5],errs[5] = measureIndex(sp,[2.215,2.255],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
         inds[6],errs[6] = measureIndex(sp,[2.06,2.10],[1.25,1.29],method='ratio',sample='integrate',**kwargs)
-    elif (set.lower() == 'tokunaga'):
+    elif ('tokunaga' in set.lower()):
         reference = 'Indices from Tokunaga & Kobayashi (1999)'
         names = ['K1','K2']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
         inds[0],errs[0] = measureIndex(sp,[2.1,2.18],[1.96,2.04],method='change',sample='average',**kwargs)
         inds[1],errs[1] = measureIndex(sp,[2.2,2.28],[2.1,2.18],method='change',sample='average',**kwargs)
-    elif (set.lower() == 'reid'):
+    elif ('reid' in set.lower()):
         reference = 'Indices from Reid et al. (2001)'
         names = ['H2O-A','H2O-B']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
         inds[0],errs[0] = measureIndex(sp,[1.33,1.35],[1.28,1.30],method='ratio',sample='average',**kwargs)
         inds[1],errs[1] = measureIndex(sp,[1.47,1.49],[1.59,1.61],method='ratio',sample='average',**kwargs)
-    elif (set.lower() == 'geballe'):
+    elif ('geballe' in set.lower()):
         reference = 'Indices from Geballe et al. (2002)'
         names = ['H2O-1.2','H2O-1.5','CH4-2.2']
         inds = numpy.zeros(len(names))
@@ -2285,7 +2392,7 @@ def measureIndexSet(sp,**kwargs):
         inds[0],errs[0] = measureIndex(sp,[1.26,1.29],[1.13,1.16],method='ratio',sample='integrate',**kwargs)
         inds[1],errs[1] = measureIndex(sp,[1.57,1.59],[1.46,1.48],method='ratio',sample='integrate',**kwargs)
         inds[2],errs[2] = measureIndex(sp,[2.08,2.12],[2.215,2.255],method='ratio',sample='integrate',**kwargs)
-    elif (set.lower() == 'allers'):
+    elif ('allers' in set.lower()):
         reference = 'Indices from Allers et al. (2007), Allers & Liu (2013)'
         names = ['H2O','FeH-z','VO-z','FeH-J','KI-J','H-cont']
         inds = numpy.zeros(len(names))
@@ -2296,7 +2403,18 @@ def measureIndexSet(sp,**kwargs):
         inds[3],errs[3] = measureIndex(sp,[1.19880,1.20120],[1.19080,1.19320],[1.20680,1.20920],method='allers',sample='average',**kwargs)
         inds[4],errs[4] = measureIndex(sp,[1.23570,1.25230],[1.21170,1.22830],[1.26170,1.27830],method='allers',sample='average',**kwargs)
         inds[5],errs[5] = measureIndex(sp,[1.54960,1.57040],[1.45960,1.48040],[1.65960,1.68040],method='allers',sample='average',**kwargs)
-    elif (set.lower() == 'slesnick'):
+    elif ('testi' in set.lower()):
+        reference = 'Indices from Testi et al. (2001)'
+        names = ['sHJ','sKJ','sH2O-J','sH2O-H1','sH2O-H2','sH2O-K']
+        inds = numpy.zeros(len(names))
+        errs = numpy.zeros(len(names))
+        inds[0],errs[0] = measureIndex(sp,[1.265,1.305],[1.6,1.7],method='change',sample='average',**kwargs)
+        inds[1],errs[1] = measureIndex(sp,[1.265,1.305],[2.12,2.16],method='change',sample='average',**kwargs)
+        inds[2],errs[2] = measureIndex(sp,[1.265,1.305],[1.09,1.13],method='change',sample='average',**kwargs)
+        inds[3],errs[3] = measureIndex(sp,[1.60,1.70],[1.45,1.48],method='change',sample='average',**kwargs)
+        inds[4],errs[4] = measureIndex(sp,[1.60,1.70],[1.77,1.81],method='change',sample='average',**kwargs)
+        inds[5],errs[5] = measureIndex(sp,[2.12,2.16],[1.96,1.99],method='change',sample='average',**kwargs)
+    elif ('slesnick' in set.lower()):
         reference = 'Indices from Slesnick et al. (2004)'
         names = ['H2O-1','H2O-2','FeH']
         inds = numpy.zeros(len(names))
@@ -2304,12 +2422,21 @@ def measureIndexSet(sp,**kwargs):
         inds[0],errs[0] = measureIndex(sp,[1.335,1.345],[1.295,1.305],method='ratio',sample='average',**kwargs)
         inds[1],errs[1] = measureIndex(sp,[2.035,2.045],[2.145,2.155],method='ratio',sample='average',**kwargs)
         inds[2],errs[2] = measureIndex(sp,[1.1935,1.2065],[1.2235,1.2365],method='ratio',sample='average',**kwargs)
-    elif (set.lower() == 'mclean'):
+    elif ('mclean' in set.lower()):
         reference = 'Indices from McLean et al. (2003)'
         names = ['H2OD']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
         inds[0],errs[0] = measureIndex(sp,[1.951,1.977],[2.062,2.088],method='ratio',sample='average',**kwargs)
+    elif ('rojas' in set.lower()):
+        reference = 'Indices from Rojas-Ayala et al.(2012)'
+        names = ['H2O-K2']
+        inds = numpy.zeros(len(names))
+        errs = numpy.zeros(len(names))
+        num, er1= measureIndex(sp,[2.070,2.090],[2.235,2.255],method='ratio',sample='average',**kwargs)
+        den, er2= measureIndex(sp,[2.235,2.255],[2.360,2.380],method='ratio',sample='average',**kwargs)
+        inds[0]= num/den
+        errs[0]= inds[0]*numpy.sqrt((er1/num)**2+(er2/den)**2)    
     else:
         print '{} is not one of the sets used for measureIndexSet'.format(set)
         return numpy.nan
@@ -2322,6 +2449,28 @@ def measureIndexSet(sp,**kwargs):
     return result
 
 
+def metallicity(sp,**kwargs):
+    '''Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in Rojas-Ayala et al. (2012)'''
+
+    nsamples = kwargs.get('nsamples',100)
+
+    coeff_feh = [-1.039,0.092,0.119]
+    coeff_feh_e = [0.17,0.023,0.033]
+    feh_unc = 0.100
+    coeff_mh = [-0.731,0.066,0.083]
+    coeff_mh_e = [0.12,0.016,0.023]
+    mh_unc = 0.100
+
+    h2ok2,h2ok2_e = measureIndexSet(sp, set='rojas')['H2O-K2']
+    ew = measureEWSet(sp,set='rojas')        
+    nai, nai_e = ew['Na I 2.206/2.209']
+    cai, cai_e = ew['Ca I 2.26']
+
+    mh = numpy.ones(nsamples)*coeff_mh[0]+\
+        (numpy.random.normal(nai,nai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[1]+\
+        (numpy.random.normal(cai,cai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[2]
+
+    return numpy.nanmean(mh), numpy.sqrt(numpy.nanstd(mh)**2+mh_unc**2)
 
 
 def properCoordinates(c):
@@ -2949,7 +3098,7 @@ def searchLibrary(*args, **kwargs):
 
 # no matches
     if numpy.sum(spectral_db['SELECT']) == 0. or numpy.sum(source_db['SELECT']) == 0.:
-        print 'No spectra in the SPL database match the selection criteria'
+#        print 'No spectra in the SPL database match the selection criteria'
         return Table()
     else:
 
