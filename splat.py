@@ -23,6 +23,7 @@
 #  patch holes in model sets with fake interpolated models or from model developers
 # fix bad labeling in plotspectrum
 # replace standard files with new filename formats
+# fails when reading in unpublished (online) data
 #
 # LESS URGENT
 # reformat fits files so headers have valid information, and spectra are flux calibrated
@@ -83,7 +84,6 @@ else:
 
 #################### CONSTANTS ####################
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
-FILTER_FOLDER = '/Filters/'
 DATA_FOLDER = '/Spectra/'
 DB_FOLDER = '/Databases/'
 SOURCES_DB = 'source_data.txt'
@@ -127,6 +127,48 @@ spex_stdfiles = { \
     'T7.0': '10159_10513.fits',\
     'T8.0': '10126_10349.fits',\
     'T9.0': '11536_10509.fits'}
+
+# filters
+FILTER_FOLDER = '/Filters/'
+filters = { \
+    '2MASS J': {'file': 'j_2mass.txt', 'description': '2MASS J-band'}, \
+    '2MASS H': {'file': 'h_2mass.txt', 'description': '2MASS H-band'}, \
+    '2MASS Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band'}, \
+    'MKO J': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere'}, \
+    'MKO H': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere'}, \
+    'MKO K': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere'}, \
+    'MKO Kp': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band'}, \
+    'MKO Ks': {'file': 'mko_ks.txt', 'description': 'MKO Ks-band'}, \
+    'NICMOS F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M'}, \
+    'NICMOS F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N'}, \
+    'NICMOS F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N'}, \
+    'NICMOS F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N'}, \
+    'NICMOS F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M'}, \
+    'NICMOS F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W'}, \
+    'NICMOS F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N'}, \
+    'NICMOS F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W'}, \
+    'NICMOS F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M'}, \
+    'NICMOS F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W'}, \
+    'NICMOS F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N'}, \
+    'NICMOS F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M'}, \
+    'NICMOS F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N'}, \
+    'NICMOS F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M'}, \
+    'NICMOS F187N': {'file': 'nic1_f187n.txt', 'description': 'NICMOS F187N'}, \
+    'NICMOS F190N': {'file': 'nic1_f190n.txt', 'description': 'NICMOS F190N'}, \
+    'NIRC2 J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band'}, \
+    'NIRC2 H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band'}, \
+    'NIRC2 Kp': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band'}, \
+    'NIRC2 Ks': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band'}, \
+    'WIRC J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont'}, \
+    'WIRC H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont'}, \
+    'WIRC K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont'}, \
+    'WIRC CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO'}, \
+    'WIRC CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S'}, \
+    'WIRC CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L'}, \
+    'WIRC Fe2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II'}, \
+    'WIRC BrGamma': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma'}, \
+    'WIRC PaBeta': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta'} \
+    }
 
 #####################################################
 
@@ -1682,46 +1724,6 @@ def filterMag(sp,filter,*args,**kwargs):
     energy = kwargs.get('energy',False)
     nsamples = kwargs.get('nsamples',100)
 
-# filter file assignments
-    filters = { \
-        '2MASS J': {'file': 'j_2mass.txt', 'description': '2MASS J-band'}, \
-        '2MASS H': {'file': 'h_2mass.txt', 'description': '2MASS H-band'}, \
-        '2MASS Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band'}, \
-        'MKO J': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere'}, \
-        'MKO H': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere'}, \
-        'MKO K': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere'}, \
-        'MKO Kp': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band'}, \
-        'MKO Ks': {'file': 'mko_ks.txt', 'description': 'MKO Ks-band'}, \
-        'NICMOS F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M'}, \
-        'NICMOS F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N'}, \
-        'NICMOS F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N'}, \
-        'NICMOS F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N'}, \
-        'NICMOS F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M'}, \
-        'NICMOS F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W'}, \
-        'NICMOS F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N'}, \
-        'NICMOS F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W'}, \
-        'NICMOS F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M'}, \
-        'NICMOS F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W'}, \
-        'NICMOS F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N'}, \
-        'NICMOS F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M'}, \
-        'NICMOS F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N'}, \
-        'NICMOS F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M'}, \
-        'NICMOS F187N': {'file': 'nic1_f187n.txt', 'description': 'NICMOS F187N'}, \
-        'NICMOS F190N': {'file': 'nic1_f190n.txt', 'description': 'NICMOS F190N'}, \
-        'NIRC2 J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band'}, \
-        'NIRC2 H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band'}, \
-        'NIRC2 Kp': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band'}, \
-        'NIRC2 Ks': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band'}, \
-        'WIRC J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont'}, \
-        'WIRC H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont'}, \
-        'WIRC K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont'}, \
-        'WIRC CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO'}, \
-        'WIRC CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S'}, \
-        'WIRC CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L'}, \
-        'WIRC Fe2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II'}, \
-        'WIRC BrGamma': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma'}, \
-        'WIRC PaBeta': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta'} \
-        }
 
 # check that requested filter is in list
     if (filter not in filters.keys()):
@@ -2546,6 +2548,7 @@ def readSpectrum(*args,**kwargs):
 
 # fits file    
     if (ftype == 'fit' or ftype == 'fits'):
+        print file
         data = fits.open(file)
         if 'NAXIS3' in data[0].header.keys():
             d = data[0].data[0,:,:]
