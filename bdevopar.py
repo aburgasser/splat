@@ -8,6 +8,13 @@
          the rest of the interpolated parameters. 
 """
 
+'''
+.. Bug list::
+        Getting different interpolated values than similar code in IDL
+        need to verify outputs with original models
+'''
+
+
 # Standard library imports.
 #from sys import exit 
 import os
@@ -376,41 +383,34 @@ class Params(ReadModel):
                   f = interp1d(model['mass'][i],model['radius'][i])
                   Re.append(f(params['mass']))
       
-          try: 
+          try:
               f = interp1d(Ag, Te) 
-	      params['temperature'] = round(f(params['age']), 8)
-	  except: params['temperature'] = float('nan')
+              params['temperature'] = round(f(params['age']), 8)
+          except: params['temperature'] = float('nan')
           try: 
               f = interp1d(Ag, Le)
-	      params['luminosity'] = round(f(params['age']), 8)
-	  except: params['luminosity'] = float('nan')
+              params['luminosity'] = round(f(params['age']), 8)
+          except: params['luminosity'] = float('nan')
           try: 
               f = interp1d(Ag, Ge) 
-	      params['gravity'] = round(f(params['age']), 8)
-	  except: params['gravity'] = float('nan')
+              params['gravity'] = round(f(params['age']), 8)
+          except: params['gravity'] = float('nan')
           try: 
               f = interp1d(Ag, Re)
-	      params['radius'] = round(f(params['age']), 8)
-	  except: params['radius'] = float('nan')
+              params['radius'] = round(f(params['age']), 8)
+          except: params['radius'] = float('nan')
       
           if input_type == 'one_param': params[P[0][0]] = P[0][1]
           elif input_type == 'two_params': 
               params[P[0][0]] = P[0][1]
               params[P[1][0]] = P[1][1]
 
-          return {'temperature':params['temperature'], 
-                  'mass':params['mass'], 'age':params['age'], 
-                  'luminosity':params['luminosity'],
-	          'gravity':params['gravity'], 
-	          'radius':params['radius']}
+          return {'temperature':params['temperature'],'mass':params['mass'],'age':params['age'],'luminosity':params['luminosity'],'gravity':params['gravity'],'radius':params['radius']}
 		  
       else:
           nan = float('nan')
-          return {'temperature':nan, 
-                  'mass':nan, 'age':nan, 
-                  'luminosity':nan,
-	          'gravity':nan, 
-	          'radius':nan}
+          return {'temperature':nan,'mass':nan, 'age':nan,'luminosity':nan,'gravity':nan,'radius':nan}
+          
 ########################## End of the class: bdevopar #########################
 ###############################################################################
 
