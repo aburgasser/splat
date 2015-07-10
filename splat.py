@@ -131,43 +131,43 @@ spex_stdfiles = { \
 # filters
 FILTER_FOLDER = '/Filters/'
 filters = { \
-    '2MASS J': {'file': 'j_2mass.txt', 'description': '2MASS J-band'}, \
-    '2MASS H': {'file': 'h_2mass.txt', 'description': '2MASS H-band'}, \
-    '2MASS Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band'}, \
-    'MKO J': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere'}, \
-    'MKO H': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere'}, \
-    'MKO K': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere'}, \
-    'MKO Kp': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band'}, \
-    'MKO Ks': {'file': 'mko_ks.txt', 'description': 'MKO Ks-band'}, \
-    'NICMOS F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M'}, \
-    'NICMOS F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N'}, \
-    'NICMOS F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N'}, \
-    'NICMOS F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N'}, \
-    'NICMOS F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M'}, \
-    'NICMOS F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W'}, \
-    'NICMOS F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N'}, \
-    'NICMOS F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W'}, \
-    'NICMOS F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M'}, \
-    'NICMOS F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W'}, \
-    'NICMOS F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N'}, \
-    'NICMOS F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M'}, \
-    'NICMOS F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N'}, \
-    'NICMOS F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M'}, \
-    'NICMOS F187N': {'file': 'nic1_f187n.txt', 'description': 'NICMOS F187N'}, \
-    'NICMOS F190N': {'file': 'nic1_f190n.txt', 'description': 'NICMOS F190N'}, \
-    'NIRC2 J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band'}, \
-    'NIRC2 H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band'}, \
-    'NIRC2 Kp': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band'}, \
-    'NIRC2 Ks': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band'}, \
-    'WIRC J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont'}, \
-    'WIRC H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont'}, \
-    'WIRC K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont'}, \
-    'WIRC CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO'}, \
-    'WIRC CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S'}, \
-    'WIRC CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L'}, \
-    'WIRC Fe2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II'}, \
-    'WIRC BrGamma': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma'}, \
-    'WIRC PaBeta': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta'} \
+    '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band'}, \
+    '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band'}, \
+    '2MASS_Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band'}, \
+    'MKO_J': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere'}, \
+    'MKO_H': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere'}, \
+    'MKO_K': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere'}, \
+    'MKO_Kp': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band'}, \
+    'MKO_Ks': {'file': 'mko_ks.txt', 'description': 'MKO Ks-band'}, \
+    'NICMOS_F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M'}, \
+    'NICMOS_F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N'}, \
+    'NICMOS_F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N'}, \
+    'NICMOS_F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N'}, \
+    'NICMOS_F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M'}, \
+    'NICMOS_F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W'}, \
+    'NICMOS_F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N'}, \
+    'NICMOS_F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W'}, \
+    'NICMOS_F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M'}, \
+    'NICMOS_F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W'}, \
+    'NICMOS_F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N'}, \
+    'NICMOS_F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M'}, \
+    'NICMOS_F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N'}, \
+    'NICMOS_F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M'}, \
+    'NICMOS_F187N': {'file': 'nic1_f187n.txt', 'description': 'NICMOS F187N'}, \
+    'NICMOS_F190N': {'file': 'nic1_f190n.txt', 'description': 'NICMOS F190N'}, \
+    'NIRC2_J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band'}, \
+    'NIRC2_H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band'}, \
+    'NIRC2_Kp': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band'}, \
+    'NIRC2_Ks': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band'}, \
+    'WIRC_J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont'}, \
+    'WIRC_H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont'}, \
+    'WIRC_K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont'}, \
+    'WIRC_CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO'}, \
+    'WIRC_CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S'}, \
+    'WIRC_CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L'}, \
+    'WIRC_Fe2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II'}, \
+    'WIRC_BrGamma': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma'}, \
+    'WIRC_PaBeta': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta'} \
     }
 
 #####################################################
@@ -1726,7 +1726,8 @@ def filterMag(sp,filter,*args,**kwargs):
 
 
 # check that requested filter is in list
-    if (filter not in filters.keys()):
+    f = filter.replace(' ','_')
+    if (f not in filters.keys()):
         print 'Filter '+filter+' not included in filterMag'
         info = True
         
@@ -1739,7 +1740,7 @@ def filterMag(sp,filter,*args,**kwargs):
 
 # Read in filter
     if (custom == False):
-        fwave,ftrans = numpy.genfromtxt(filterFolder+filters[filter]['file'], comments='#', unpack=True, \
+        fwave,ftrans = numpy.genfromtxt(filterFolder+filters[f]['file'], comments='#', unpack=True, \
             missing_values = ('NaN','nan'), filling_values = (numpy.nan))
     else:
         fwave,ftrans = custom[0],custom[1]
@@ -1770,6 +1771,7 @@ def filterMag(sp,filter,*args,**kwargs):
         for i in numpy.arange(nsamples):
 #            result.append(-2.5*numpy.log10(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave)/trapz(ftrans*v(fwave)*sp.funit,fwave)))
             result.append(-2.5*numpy.log10(trapz(ftrans*(d(fwave)+numpy.random.normal(0,1.)*n(fwave))*sp.funit,fwave)/trapz(ftrans*v(fwave)*sp.funit,fwave)))
+        
     if (energy or photons):
         for i in numpy.arange(nsamples):
 #            result.append(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave))
@@ -2362,6 +2364,7 @@ def measureIndexSet(sp,**kwargs):
 # determine combine method
     if ('burgasser' in set.lower()):
         reference = 'Indices from Burgasser et al. (2006)'
+        refcode = 'BUR06'
         names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
@@ -2374,6 +2377,7 @@ def measureIndexSet(sp,**kwargs):
         inds[6],errs[6] = measureIndex(sp,[2.06,2.10],[1.25,1.29],method='ratio',sample='integrate',**kwargs)
     elif ('tokunaga' in set.lower()):
         reference = 'Indices from Tokunaga & Kobayashi (1999)'
+        refcode = 'TOK99'
         names = ['K1','K2']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
@@ -2381,6 +2385,7 @@ def measureIndexSet(sp,**kwargs):
         inds[1],errs[1] = measureIndex(sp,[2.2,2.28],[2.1,2.18],method='change',sample='average',**kwargs)
     elif ('reid' in set.lower()):
         reference = 'Indices from Reid et al. (2001)'
+        refcode = 'REI01'
         names = ['H2O-A','H2O-B']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
@@ -2388,6 +2393,7 @@ def measureIndexSet(sp,**kwargs):
         inds[1],errs[1] = measureIndex(sp,[1.47,1.49],[1.59,1.61],method='ratio',sample='average',**kwargs)
     elif ('geballe' in set.lower()):
         reference = 'Indices from Geballe et al. (2002)'
+        refcode = 'GEB02'
         names = ['H2O-1.2','H2O-1.5','CH4-2.2']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
@@ -2396,6 +2402,7 @@ def measureIndexSet(sp,**kwargs):
         inds[2],errs[2] = measureIndex(sp,[2.08,2.12],[2.215,2.255],method='ratio',sample='integrate',**kwargs)
     elif ('allers' in set.lower()):
         reference = 'Indices from Allers et al. (2007), Allers & Liu (2013)'
+        refcode = 'ALL13'
         names = ['H2O','FeH-z','VO-z','FeH-J','KI-J','H-cont']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
@@ -2407,6 +2414,7 @@ def measureIndexSet(sp,**kwargs):
         inds[5],errs[5] = measureIndex(sp,[1.54960,1.57040],[1.45960,1.48040],[1.65960,1.68040],method='allers',sample='average',**kwargs)
     elif ('testi' in set.lower()):
         reference = 'Indices from Testi et al. (2001)'
+        refcode = 'TES01'
         names = ['sHJ','sKJ','sH2O-J','sH2O-H1','sH2O-H2','sH2O-K']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
@@ -2418,6 +2426,7 @@ def measureIndexSet(sp,**kwargs):
         inds[5],errs[5] = measureIndex(sp,[2.12,2.16],[1.96,1.99],method='change',sample='average',**kwargs)
     elif ('slesnick' in set.lower()):
         reference = 'Indices from Slesnick et al. (2004)'
+        refcode = 'SEL04'
         names = ['H2O-1','H2O-2','FeH']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
@@ -2426,12 +2435,14 @@ def measureIndexSet(sp,**kwargs):
         inds[2],errs[2] = measureIndex(sp,[1.1935,1.2065],[1.2235,1.2365],method='ratio',sample='average',**kwargs)
     elif ('mclean' in set.lower()):
         reference = 'Indices from McLean et al. (2003)'
+        refcode = 'MCL03'
         names = ['H2OD']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
         inds[0],errs[0] = measureIndex(sp,[1.951,1.977],[2.062,2.088],method='ratio',sample='average',**kwargs)
     elif ('rojas' in set.lower()):
         reference = 'Indices from Rojas-Ayala et al.(2012)'
+        refcode = 'ROJ12'
         names = ['H2O-K2']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
