@@ -12,6 +12,7 @@
 #    Gretel Mercado
 #    Jonathan Parra
 #    Maitrayee Sahi
+#    Adrian Suarez
 #    Melisa Tallis
 #    Tomoki Tamiya
 
@@ -169,6 +170,9 @@ filters = { \
     'WIRC_BrGamma': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma'}, \
     'WIRC_PaBeta': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta'} \
     }
+
+# Index sets
+index_sets = ['burgasser','tokunaga','reid','geballe','allers','testi','slesnick','mclean','rojas']
 
 #####################################################
 
@@ -2559,7 +2563,6 @@ def readSpectrum(*args,**kwargs):
 
 # fits file    
     if (ftype == 'fit' or ftype == 'fits'):
-        print file
         data = fits.open(file)
         if 'NAXIS3' in data[0].header.keys():
             d = data[0].data[0,:,:]
@@ -3014,26 +3017,26 @@ def searchLibrary(*args, **kwargs):
 # white dwarfs
     if (kwargs.get('wd','') != ''):
         kwargs['vlm'] = False
-        source_db['WHITEDWARF'] = [i == 'WD' for i in source_db['NON_VLM']]
+        source_db['WHITEDWARF'] = [i == 'WD' for i in source_db['OBJECT_TYPE']]
         source_db['SELECT'][numpy.where(source_db['WHITEDWARF'] == kwargs.get('wd'))] += 1
         count+=1.
 
 # galaxies
     if (kwargs.get('galaxy','') != ''):
         kwargs['vlm'] = False
-        source_db['GALAXY'] = [i == 'GAL' for i in source_db['NON_VLM']]
+        source_db['GALAXY'] = [i == 'GAL' for i in source_db['OBJECT_TYPE']]
         source_db['SELECT'][numpy.where(source_db['GALAXY'] == kwargs.get('galaxy'))] += 1
         count+=1.
 
 # carbon stars
     if (kwargs.get('carbon','') != ''):
         kwargs['vlm'] = False
-        source_db['CARBON'] = [i == 'C' for i in source_db['NON_VLM']]
+        source_db['CARBON'] = [i == 'C' for i in source_db['OBJECT_TYPE']]
         source_db['SELECT'][numpy.where(source_db['CARBON'] == kwargs.get('carbon'))] += 1
         count+=1.
 
 # VLM dwarfs by default
-    source_db['VLM'] = [i == '' for i in source_db['NON_VLM']]
+    source_db['VLM'] = [i == '' for i in source_db['OBJECT_TYPE']]
     source_db['SELECT'][numpy.where(source_db['VLM'] == kwargs.get('vlm',True))] += 1
     count+=1.
 
