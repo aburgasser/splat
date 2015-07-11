@@ -360,7 +360,7 @@ class Spectrum(object):
                 
     def __repr__(self):
         '''A simple representation of an object is to just give it a name'''
-        return 'Spectra Object for {}'.format(self.name)
+        return 'Spectrum Object for {}'.format(self.name)
 
     def __add__(self,other):
         '''Adding two spectra '''
@@ -1591,17 +1591,17 @@ def fetchDatabase(*args, **kwargs):
 #    data['ran'] = [float(x) for x in data['ra']]
     data['DEC'][numpy.where(data['DEC'] == '')] = '0.'
 #    data['decn'] = [float(x) for x in data['dec']]
-    data['JMAG'][numpy.where(data['JMAG'] == '')] = '99.'
+    data['2MASS_J'][numpy.where(data['2MASS_J'] == '')] = '99.'
 #    data['jmagn'] = [float(x) for x in data['jmag']]
-    data['HMAG'][numpy.where(data['HMAG'] == '')] = '99.'
+    data['2MASS_H'][numpy.where(data['2MASS_H'] == '')] = '99.'
 #    data['hmagn'] = [float(x) for x in data['hmag']]
-    data['KMAG'][numpy.where(data['KMAG'] == '')] = '99.'
+    data['2MASS_KS'][numpy.where(data['2MASS_KS'] == '')] = '99.'
 #    data['kmagn'] = [float(x) for x in data['kmag']]
-    data['JMAG_ERROR'][numpy.where(data['JMAG_ERROR'] == '')] = '99.'
+    data['2MASS_J_UNC'][numpy.where(data['2MASS_J_UNC'] == '')] = '99.'
 #    data['jmag_errorn'] = [float(x) for x in data['jmag_error']]
-    data['HMAG_ERROR'][numpy.where(data['HMAG_ERROR'] == '')] = '99.'
+    data['2MASS_H_UNC'][numpy.where(data['2MASS_H_UNC'] == '')] = '99.'
 #    data['hmag_errorn'] = [float(x) for x in data['hmag_error']]
-    data['KMAG_ERROR'][numpy.where(data['KMAG_ERROR'] == '')] = '99.'
+    data['2MASS_KS'][numpy.where(data['2MASS_KS_UNC'] == '')] = '99.'
 #    data['kmag_errorn'] = [float(x) for x in data['kmag_error']]
     data['RESOLUTION'][numpy.where(data['RESOLUTION'] == '')] = '120'
 #    data['resolutionn'] = [float(x) for x in data['resolution']]
@@ -1758,7 +1758,7 @@ def filterMag(sp,filter,*args,**kwargs):
         n = interp1d(sp.wave[wgood],sp.noise[wgood],bounds_error=False,fill_value=numpy.nan)
 # catch for models
     else:
-        print 'no good points'
+        print filter+': no good points'
         d = interp1d(sp.wave,sp.flux,bounds_error=False,fill_value=0.)
         n = interp1d(sp.wave,sp.flux*1.e-9,bounds_error=False,fill_value=numpy.nan)
         
@@ -1800,87 +1800,6 @@ def filterMag(sp,filter,*args,**kwargs):
         err = 0.
     return val,err
 
-
-def getSpectrum_OLD(*args, **kwargs):
-    '''
-    :Purpose: ``Gets a spectrum from the SPLAT library using various selection criteria.``
-    :Usage: ``[sp] = splat.getSpectrum({search commands},**kwargs)``
-    :param [sp]: ``array of Spectrum class objects, each of which should contain wave, flux and 
-                 noise array elements.``
-    :param '{search commands}': ``Various search commands to winnow down the selection:
-                    - **name**: search by source name (e.g., name='Gliese 570D')
-                    - **shortname**: search be short name (e.g. shortname = 'J1457-2124')
-                    - **designation**: search by full designation (e.g., designation = 'J11040127+1959217')
-                    - **coordinate**: search around a coordinate by a radius specified by radius keyword (e.g., coordinate=[180.,+30.], radius=10.)
-                    - **radius** = 10.: search radius in arcseconds for coordinate search
-                    - **spt** or **spex_spt**: search by SpeX spectral type; single value is exact, two-element array gives range (e.g., spt = 'M7' or spt = [24,39])
-                    - **opt_spt**: same as spt for literature optical spectral types
-                    - **nir_spt**: same as spt for literature NIR spectral types
-                    - **jmag, hmag, kmag**: select based on faint limit or range of J, H or Ks magnitudes (e.g., jmag = [12,15])
-                    - **snr**: search on minimum or range of S/N ratios (e.g., snr = 30. or snr = [50.,100.])
-                    - **young, subdwarf, binary, spbinary, red, blue, giant, wd, standard**: classes to search on (e.g., young=True)
-                    - **logic** or **combine** = 'and': search logic, can be 'and' or 'or'
-                    - **combine**: same as logic
-                    - **date**: search by date (e.g., date = '20040322') or range of dates (e.g., date=[20040301,20040330])
-                    - **reference**: search by list of references (bibcodes) (e.g., reference='2011ApJS..197...19K')
-    :param \**kwargs (optional): 
-                    - **sort** = True: sort results based on Right Ascension
-                    - **list** = False: if True, return just a list of the data files (can be done with searchLibrary as well)
-                    - **lucky** = False: if True, return one randomly selected spectrum from the selected sample
-    :Example:
-       >>> import splat
-       >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
-
-          Retrieving 1 file
-
-       >>> sparr = splat.getSpectrum(spt='M7')
-
-          Retrieving 120 files
-
-       >>> sparr = splat.getSpectrum(spt='T5',young=True)
-
-		  No files match search criteria
-		  
-    '''
-
-    result = []
-    kwargs['output'] = 'all'
-    print 'Searching'
-    search = searchLibrary(*args, **kwargs)
-    print 'Searching complete'
-
-# limit access to most users
-    if checkAccess() == False:
-        search = search[:][numpy.where(search['public'] == 'Y')]
-    
-    files = search['DATA_FILE']
-        
-# return just the filenames
-    if (kwargs.get('list',False) != False):
-        return files
-    
-    if len(files) > 0:
-        if (len(files) == 1):
-            print '\nRetrieving 1 file\n'
-            result.append(Spectrum(files[0],header=search[0]))
-        else:
-            if (kwargs.get('lucky',False) == True):
-                print '\nRetrieving 1 lucky file\n'
-                ind = random.choice(range(len(files)))
-                result.append(Spectrum(files[ind],header=search[ind]))
-            else:
-                print '\nRetrieving {} files\n'.format(len(files))
-                for i,x in enumerate(files):
-                    result.append(Spectrum(x,header=search[i:i+1]))
-        	
-    else:
-        if checkAccess() == False:
-            sys.stderr.write('\nNo published files match search criteria\n\n')
-        else:
-            sys.stderr.write('\nNo files match search criteria\n\n')
-
-    return result
-        
 
 def getSpectrum(*args, **kwargs):
     '''
@@ -1927,15 +1846,16 @@ def getSpectrum(*args, **kwargs):
     result = []
     kwargs['output'] = 'all'
     search = searchLibrary(*args, **kwargs)
-    files = []
-    for i,x in enumerate(search['DATA_KEY']):
-        files.append(str(search['DATA_KEY'][i])+'_'+str(search['SOURCE_KEY'][i])+'.fits')
-        
+
+    if len(search) > 0:    
+        files = []
+        for i,x in enumerate(search['DATA_KEY']):
+            files.append(str(search['DATA_KEY'][i])+'_'+str(search['SOURCE_KEY'][i])+'.fits')
+            
 # return just the filenames
-    if (kwargs.get('list',False) != False):
-        return files
+        if (kwargs.get('list',False) != False):
+            return files
     
-    if len(files) > 0:
         if (len(files) == 1):
             print '\nRetrieving 1 file\n'
             result.append(Spectrum(files[0],header=search[0]))
@@ -2027,90 +1947,6 @@ def loadSpectrum(*args, **kwargs):
 # couldn't find what you're looking for
     raise NameError('\nNo filename or idkey specified in loadSpectrum\n\n')
     return False
-
-    
-def loadSpectrum_old(*args, **kwargs):
-    '''load up a SpeX spectrum based name, shortname and/or date'''
-
-    local = kwargs.get('local',True)
-    online = kwargs.get('online',not local and checkOnline())
-    kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DATA_FOLDER)
-    local = not online
-    kwargs['local'] = local
-    kwargs['online'] = online
-    kwargs['model'] = True
-    url = kwargs.get('url',SPLAT_URL)
-
-# filename
-    file = kwargs.get('file','')
-    file = kwargs.get('filename',file)
-    if (len(args) > 0):
-        file = args[0]
-
-#  data key - preferred
-    dkey = kwargs.get('data_key',False)
-    if dkey != False:
-        tbl = keySpectrum(dkey)
-        if tbl != False:
-            file = tbl['DATA_FILE'][0]
-
-    kwargs['filename'] = file
-    kwargs['model'] = False
-
-# a filename must be passed
-    if (kwargs['filename'] == ''):
-        raise NameError('\nNeed to pass in filename for spectral data\n\n')
-
-
-# check that the file is locally present first
-    file = checkLocal(kwargs['filename'])
-    if file=='':
-        file = checkLocal(kwargs['folder']+os.path.basename(kwargs['filename']))
-        if file=='':
-#            print 'Cannot find '+kwargs['filename']+' locally, trying online\n\n'
-            kwargs['local'] = False
-            kwargs['online'] = True                
-    else:
-        kwargs['folder'] = ''
-
-
-# read in local file
-    if kwargs['local']:
-#        try:
-        return Spectrum(**kwargs)
-#        except:
-#        if False:
-#            print 'this happened'
-#            print kwargs
-#            print '\nProblem reading in '+kwargs['filename']+' locally, trying online\n\n'
-#            kwargs['online'] = True
-
-# check that the file is online
-    file = checkOnline(kwargs['filename'])
-    if file=='':
-        file = checkOnline(kwargs['folder']+os.path.basename(kwargs['filename']))
-        if file=='':
-            raise NameError('\nCannot find file '+kwargs['filename']+' on SPLAT website\n\n')
-        else:
-            kwargs['filename'] = file
-    else:
-        kwargs['filename'] = file
-
-# read in online file
-    if kwargs['online']:
-        try:
-            ftype = kwargs['filename'].split('.')[-1]
-            tmp = TMPFILENAME+'.'+ftype
-            open(os.path.basename(tmp), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
-            kwargs['filename'] = os.path.basename(tmp)
-            sp = Spectrum(**kwargs)
-            os.remove(os.path.basename(tmp))
-            return sp
-        except urllib2.URLError:
-            raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
-    else:
-        raise NameError('\nCould not find file '+kwargs['filename']+' on SPLAT website\n\n')
-
 
 
 def estimateDistance(sp, **kwargs):
@@ -2619,203 +2455,6 @@ def readSpectrum(*args,**kwargs):
 
 
 
-def searchLibrary_OLD(*args, **kwargs):
-    '''Search the SpeX database to extract the key reference for that Spectrum
-        Note that this is currently only and AND search - need to figure out
-        how to a full SQL style search'''
-# program parameters
-    ref = kwargs.get('output','all')
-    radius = kwargs.get('radius',10.)      # search radius in arcseconds
-    classes = ['YOUNG','SUBDWARF','BINARY','SPBINARY','RED','BLUE','GIANT','WD','STANDARD','COMPANION']
-
-# get database
-    data = fetchDatabase(**kwargs)
-    if (ref not in data.colnames and ref != 'all'):
-        print '\nWarning: searchLibrary cannot return unknown column {}; returning filename instead\n\n'.format(ref)
-        ref = 'all'
-    data['SELECT'] = numpy.zeros(len(data['RA']))
-    count = 0.
-    
-# search by filename
-    file = kwargs.get('file','')
-    file = kwargs.get('filename',file)
-    if (file != ''):
-        if isinstance(file,str):
-            file = [file]
-        for f in file:
-            data['SELECT'][numpy.where(data['DATA_FILE'] == f)] += 1
-        count+=1.
-# exclude by filename
-    if kwargs.get('excludefile',False) != False:
-        file = kwargs['excludefile']
-        if isinstance(file,str):
-            file = [file]
-        for f in file:
-            data['SELECT'][numpy.where(data['DATA_FILE'] != f)] += 1
-        count+=1.
-# search by name
-    if kwargs.get('name',False) != False:
-        nm = kwargs['name']
-        if isinstance(nm,str):
-            nm = [nm]
-        for n in nm:
-            data['SELECT'][numpy.where(data['NAME'] == n)] += 1
-        count+=1.
-# search by shortname
-    if kwargs.get('shortname',False) != False:
-        sname = kwargs['shortname']
-        if isinstance(sname,str):
-            sname = [sname]
-        for sn in sname:
-            if sn[0].lower() != 'j':
-                sn = 'J'+sn
-            data['SELECT'][numpy.where(data['SHORTNAME'] == sn)] += 1
-        count+=1.
-# exclude by shortname
-    if kwargs.get('excludesource',False) != False:
-        sname = kwargs['excludesource']
-        if isinstance(sname,str):
-            sname = [sname]
-        for sn in sname:
-            if sn[0].lower() != 'j':
-                sn = 'J'+sn
-            data['SELECT'][numpy.where(data['SHORTNAME'] != sn)] += 1
-        count+=1.
-# search by reference list
-    if kwargs.get('reference',False) != False:
-        refer = kwargs['reference']
-        if isinstance(ref,str):
-            refer = [refer]
-        for r in refer:
-            data['SELECT'][numpy.where(data['DATA_REFERENCE'] == r)] += 1
-        count+=1.
-# search by designation
-    if kwargs.get('designation',False) != False:
-        desig = kwargs['designation']
-        if isinstance(desig,str):
-            desig = [desig]
-        for d in desig:
-            data['SELECT'][numpy.where(data['DESIGNATION'] == d)] += 1
-        count+=1.
-# search by observation date range
-    if kwargs.get('date',False) != False:
-        date = kwargs['date']
-        if isinstance(date,str) or isinstance(date,long) or isinstance(date,float) or isinstance(date,int):
-            date = [float(date),float(date)]
-        elif isinstance(date,list):
-            date = [float(date[0]),float(date[-1])]
-        else:
-            raise ValueError('\nCould not parse date input {}\n\n'.format(date))
-        data['DATEN'] = [float(x) for x in data['OBSERVATION_DATE']]
-        data['SELECT'][numpy.where(numpy.logical_and(data['DATEN'] >= date[0],data['DATEN'] <= date[1]))] += 1
-        count+=1.
-# search by coordinate - NOTE: THIS IS VERY SLOW RIGHT NOW
-    if kwargs.get('COORDINATE',False) != False:
-        coord = kwargs['COORDINATE']
-        if isinstance(coord,SkyCoord):
-            cc = coord
-        else:
-            cc = properCoordinates(coord)
-        data['SEPARATION'] = [cc.separation(data['SKYCOORDS'][i]).arcsecond for i in numpy.arange(len(data['SKYCOORDS']))]
-        data['SELECT'][numpy.where(data['SEPARATION'] <= radius)] += 1
-        count+=1.
-# search by spectral type
-    sref = ''
-    if (kwargs.get('spt',False) != False):
-        sref = 'LIT_TYPE'
-        spt = kwargs['spt']
-    if (kwargs.get('spex_spt',False) != False):
-        sref = 'SPEX_TYPE'
-        spt = kwargs['spex_spt']
-    if (kwargs.get('spex_type',False) != False):
-        sref = 'SPEX_TYPE'
-        spt = kwargs['spex_type']
-    if (kwargs.get('opt_spt',False) != False):
-        sref = 'OPT_TYPE'
-        spt = kwargs['opt_spt']
-    if (kwargs.get('opt_type',False) != False):
-        sref = 'OPT_TYPE'
-        spt = kwargs['opt_type']
-    if (kwargs.get('nir_spt',False) != False):
-        sref = 'NIR_TYPE'
-        spt = kwargs['nir_spt']
-    if (kwargs.get('nir_type',False) != False):
-        sref = 'NIR_TYPE'
-        spt = kwargs['nir_type']
-    if sref != '':
-        if not isinstance(spt,list):        # one value = only this type
-            spt = [spt,spt]
-        if isinstance(spt[0],str):          # convert to numerical spt
-            spt = [typeToNum(spt[0]),typeToNum(spt[1])]
-        data['SPTN'] = [typeToNum(x) for x in data[sref]]
-        data['SELECT'][numpy.where(numpy.logical_and(data['SPTN'] >= spt[0],data['SPTN'] <= spt[1]))] += 1
-        count+=1.
-
-# search by magnitude range
-    if kwargs.get('jmag',False) != False:
-        mag = kwargs['jmag']
-        if not isinstance(mag,list):        # one value = faint limit
-            mag = [0,mag]
-        data['MAGN'] = [float(x) for x in data['JMAG']]
-        data['SELECT'][numpy.where(numpy.logical_and(data['MAGN'] >= mag[0],data['MAGN'] <= mag[1]))] += 1
-        count+=1.
-    if kwargs.get('hmag',False) != False:
-        mag = kwargs['hmag']
-        if not isinstance(mag,list):        # one value = faint limit
-            mag = [0,mag]
-        data['MAGN'] = [float(x) for x in data['HMAG']]
-        data['SELECT'][numpy.where(numpy.logical_and(data['MAGN'] >= mag[0],data['MAGN'] <= mag[1]))] += 1
-        count+=1.
-    if kwargs.get('kmag',False) != False:
-        mag = kwargs['kmag']
-        if not isinstance(mag,list):        # one value = faint limit
-            mag = [0,mag]
-        data['MAGN'] = [float(x) for x in data['KMAG']]
-        data['SELECT'][numpy.where(numpy.logical_and(data['MAGN'] >= mag[0],data['MAGN'] <= mag[1]))] += 1
-        count+=1.
-# search by S/N range
-    if kwargs.get('snr',False) != False:
-        snr = kwargs['snr']
-        if not isinstance(snr,list):        # one value = minimum S/N
-            snr = [float(snr),1.e9]
-        data['SNRN'] = [float(x) for x in data['MEDIAN_SNR']]
-        data['SELECT'][numpy.where(numpy.logical_and(data['SNRN'] >= snr[0],data['SNRN'] <= snr[1]))] += 1
-        count+=1.
-# search by class
-    for c in classes:
-        if kwargs.get(c,'n') != 'n':
-            test = kwargs.get(c)
-            if isinstance(test,bool):
-                data['SELECT'][numpy.where(data[c] == test)]+=1
-                count+=1.
-
-# limit access to public data for most users
-    if checkAccess() == False:
-        data['SELECT'][numpy.where(data['PUBLIC'] != 'Y')] = 0
-
-# logic of search
-    logic = 'and'         # default combination
-    logic = kwargs.get('combine',logic).lower()
-    logic = kwargs.get('logic',logic).lower()
-    if (logic == 'and'):
-        data['SELECT'] = numpy.floor(data['SELECT']/count)
-    elif (logic == 'or'):
-        data['SELECT'] = numpy.ceil(data['SELECT']/count)
-    else:
-        raise NameError('\nDo not recognize logical operation {}; use logic = and/or\n\n'.format(logic))
-
-# return sorted by ra by default
-    if kwargs.get('sort',True) != False:
-        data.sort('RA')
-    if (ref == 'all'):
-        return data[:][numpy.where(data['SELECT']==1)]
-    else:
-        return data[ref][numpy.where(data['SELECT']==1)]
-
-
-
-
-
 def searchLibrary(*args, **kwargs):
     '''Search the SpeX database to extract the key reference for that Spectrum
         Note that this is currently only and AND search - need to figure out
@@ -2833,7 +2472,7 @@ def searchLibrary(*args, **kwargs):
     if (logic != 'and' and logic != 'or'):
         raise ValueError('\nLogical operator '+logic+' not supported\n\n')
 
-# read in source database
+# read in source database and add in shortnames and skycoords
     source_db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
     source_db['SHORTNAME'] = [designationToShortName(x) for x in source_db['DESIGNATION']]
     
@@ -2875,7 +2514,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(ref,str):
             refer = [refer]
         for r in refer:
-            source_db['SELECT'][numpy.where(source_db['DATA_REFERENCE'] == r)] += 1
+            source_db['SELECT'][numpy.where(source_db['DISCOVERY_REFERENCE'] == r)] += 1
         count+=1.
 # search by designation
     if kwargs.get('designation',False) != False:
@@ -2887,11 +2526,19 @@ def searchLibrary(*args, **kwargs):
         count+=1.
 # search by coordinate - NOTE: THIS IS VERY SLOW RIGHT NOW
     if kwargs.get('coordinate',False) != False:
-        coord = kwargs['COORDINATE']
+        coord = kwargs['coordinate']
         if isinstance(coord,SkyCoord):
             cc = coord
         else:
             cc = properCoordinates(coord)
+# calculate skycoords
+        s = []
+        for i in numpy.arange(len(source_db['RA'])):
+            try:        # to deal with a blank string
+                s.append(SkyCoord(ra=float(source_db['RA'][i])*u.degree,dec=float(source_db['DEC'][i])*u.degree,frame='icrs'))
+            except:
+                s.append(SkyCoord(ra=numpy.nan*u.degree,dec=numpy.nan*u.degree,frame='icrs'))
+        source_db['SKYCOORDS'] = s
         source_db['SEPARATION'] = [cc.separation(source_db['SKYCOORDS'][i]).arcsecond for i in numpy.arange(len(source_db['SKYCOORDS']))]
         source_db['SELECT'][numpy.where(source_db['SEPARATION'] <= radius)] += 1
         count+=1.
@@ -2911,26 +2558,28 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['SPTN'] >= spt_range[0],source_db['SPTN'] <= spt_range[1]))] += 1
         count+=1.
 
+
+
 # search by magnitude range
     if kwargs.get('jmag',False) != False:
         mag = kwargs['jmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
-        source_db['JMAGN'] = [float('0'+x) for x in source_db['JMAG']]
+        source_db['JMAGN'] = [float('0'+x) for x in source_db['2MASS_J']]
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['JMAGN'] >= mag[0],source_db['JMAGN'] <= mag[1]))] += 1
         count+=1.
     if kwargs.get('hmag',False) != False:
         mag = kwargs['hmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
-        source_db['HMAGN'] = [float('0'+x) for x in source_db['HMAG']]
+        source_db['HMAGN'] = [float('0'+x) for x in source_db['2MASS_H']]
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['HMAGN'] >= mag[0],source_db['HMAGN'] <= mag[1]))] += 1
         count+=1.
     if kwargs.get('kmag',False) != False:
         mag = kwargs['kmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
-        source_db['KMAGN'] = [float('0'+x) for x in source_db['KMAG']]
+        source_db['KMAGN'] = [float('0'+x) for x in source_db['2MASS_KS']]
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['KMAGN'] >= mag[0],source_db['KMAGN'] <= mag[1]))] += 1
         count+=1.
 
@@ -2941,17 +2590,14 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(source_db['YOUNG'] == kwargs.get('young'))] += 1
         count+=1.
 
-# ALLERS gravity class
-    if (kwargs.get('allers_class','') != ''):
-        source_db['GRAVITY_FLAG'] = [i.lower() == kwargs.get('allers_class').lower() for i in source_db['GRAVITY_CLASS_ALLERS']]
-        source_db['SELECT'][numpy.where(source_db['GRAVITY_FLAG'] == True)] += 1
+# specific gravity class
+    flag = kwargs.get('gravity_class','')
+    flag = kwargs.get('gravity',flag)
+    if (flag != ''):
+        source_db['SELECT'][numpy.where(source_db['GRAVITY_CLASS_CRUZ'] == flag)] += 1
+        source_db['SELECT'][numpy.where(source_db['GRAVITY_CLASS_ALLERS'] == flag)] += 1
         count+=1.
 
-# CRUZ gravity class
-    if (kwargs.get('cruz_class','') != ''):
-        source_db['GRAVITY_FLAG'] = [i.lower() == kwargs.get('cruz_class').lower() for i in source_db['GRAVITY_CLASS_CRUZ']]
-        source_db['SELECT'][numpy.where(source_db['GRAVITY_FLAG'] == True)] += 1
-        count+=1.
 
 # specific cluster
     if (kwargs.get('cluster','') != '' and isinstance(kwargs.get('cluster'),str)):
@@ -3008,6 +2654,7 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(source_db['SBINARY_FLAG'] == kwargs.get('sbinary'))] += 1
         count+=1.
 
+
 # companions
     if (kwargs.get('companion','') != ''):
         source_db['COMPANION_FLAG'] = [i != '' for i in source_db['COMPANION_NAME']]
@@ -3036,9 +2683,9 @@ def searchLibrary(*args, **kwargs):
         count+=1.
 
 # VLM dwarfs by default
-    source_db['VLM'] = [i == '' for i in source_db['OBJECT_TYPE']]
-    source_db['SELECT'][numpy.where(source_db['VLM'] == kwargs.get('vlm',True))] += 1
-    count+=1.
+    if (kwargs.get('vlm',True)):
+        source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == 'VLM')] += 1
+        count+=1.
 
 # select source keys
     if (count > 0):
