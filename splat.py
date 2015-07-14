@@ -1208,6 +1208,7 @@ def classifyByTemplate(sp, *args, **kwargs):
     if (verbose):
         print '\nComparing to {} templates\n\n'.format(len(files))
     if len(files) > 100:
+        print '\nComparing to {} templates\n\n'.format(len(files))
         print 'This may take some time!\n\n'.format(len(files))
 
 # do comparison
@@ -1457,7 +1458,8 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
-        spcomp = sp2.copy()
+#        spcomp = sp2.copy()        # copy is currently not working in astropy?
+        spcomp = sp2
         spcomp.scale(scale)
         plotSpectrum(sp1,spcomp,colors=['k','r'],\
             title=sp1.name+' vs '+sp2.name,**kwargs)
