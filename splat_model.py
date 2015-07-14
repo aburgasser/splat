@@ -313,7 +313,11 @@ def loadModel(*args, **kwargs):
     if folder=='':
         folder = splat.checkOnline(kwargs['folder'])
         if folder=='':
-            raise NameError('\nCould not find '+kwargs['folder']+' locally or on SPLAT website\n\n')
+            print '\nCould not find '+kwargs['folder']+' locally or on SPLAT website'
+            print '\nAvailable model set options are:'
+            for s in DEFINED_MODEL_SET:
+                print '\t{}'.format(s)
+            raise NameError()
         else:
             kwargs['folder'] = folder
             kwargs['local'] = False

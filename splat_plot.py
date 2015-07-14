@@ -90,7 +90,7 @@ def plotSpectrum(*args, **kwargs):
         splist = []
         for a in args:
             if a.__class__.__name__ == 'Spectrum':      # a spectrum object
-                splist.append([a])
+                splist.append(a)
             elif isinstance(a,list):
                 splist.append(a)
             else:
