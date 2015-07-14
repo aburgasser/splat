@@ -1413,6 +1413,10 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 
 # comparison statistics
 
+# switch to standard deviation if no uncertainty
+    if numpy.isnan(numpy.nanmax(vtot)):
+        stat = 'stddev'
+
 # chi^2
     if (stat == 'chisqr'):
 # compute scale factor    
@@ -2869,7 +2873,6 @@ def typeToMag(spt, filt, **kwargs):
     unc = kwargs.get('unc', 0.)
 
 #Convert spectral type string to number
-  
     if (type(spt) == str):
         spt = typeToNum(spt, uncertainty=unc)
     else:
