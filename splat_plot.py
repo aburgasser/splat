@@ -243,7 +243,7 @@ def plotSpectrum(*args, **kwargs):
                 wvmax = numpy.arange(bound[0],bound[1],0.001)
                 flxmax = f(wvmax)
             else:
-                flxmax = numpy.max(flxmax,f(wvmax))
+                flxmax = numpy.maximum(flxmax,f(wvmax))
 
 # label features
 # THIS NEEDS TO BE FIXED WITH GRETEL'S STUFF

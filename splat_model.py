@@ -422,3 +422,160 @@ def loadModelParameters(**kwargs):
             raise ValueError('\n\nModel set {} does not have defined parameter list for {}'.format(set,ms))
 
     return parameters
+
+
+
+
+#### the following codes are in progress
+def modelFitMCMC(spec, **kwargs):
+    return
+   
+   
+def modelFitMCMC(spec, **kwargs):
+
+    nsample = kwargs.get('nsamples', 1000)
+    cutout = kwargs.get('initial_cut', 0.1)  # what fraction of the initial steps are to be discarded
+    m_set = kwargs.get('set', 'BTSettl2008')
+    step_size = kwargs.get('step_size', [100,0.5])  # the std of the jump size
+    plot = kwargs.get('plot', False)
+    contour = kwargs.get('contour', False)
+    landscape = kwargs.get('landscape', False)
+    mask_ranges = kwargs.get('mask_ranges',[])
+    mask_telluric = kwargs.get('mask_telluric',False)
+    mask_standard = kwargs.get('mask_standard',True)
+    xstep = kwargs.get('xstep', 20)
+    ystep = kwargs.get('ystep', 20)
+    mask = kwargs.get('mask',numpy.zeros(len(spec.wave)))
+    calcRadius = kwargs.get('radius', spec.fscale == 'Absolute')
+    filename = kwargs.get('filename', spec.filename[:-3] + m_set + '.dat')
+
+    teff_step = kwargs.get('teff_step',50)
+    logg_step = kwargs.get('logg_step',0.25)
+    z_step = kwargs.get('z_step',0.0)
+    param_step = kwargs.get('param_step',[teff_step,logg_step,z_step])
+    
+    if (mask_standard == True):
+        mask_telluric == True
+   
+    if mask_telluric:
+        mask_ranges.append([0.,0.65])        # meant to clear out short wavelengths
+        mask_ranges.append([1.35,1.42])
+        mask_ranges.append([1.8,1.92])
+        mask_ranges.append([2.45,99.]) 
+        
+    if (mask_standard):
+        mask_ranges.append([0.,0.8])        # standard short cut
+        mask_ranges.append([2.35,99.])      # standard long cut
+        
+# Mask certain wavelengths and find effective degrees of freedom
+    for ranges in mask_ranges:
+        mask[numpy.where(((spec.wave.value >= ranges[0]) & (spec.wave.value <= ranges[1])))] = 1
+    
+    slit_weight = 3.
+    eff_dof = numpy.round((numpy.nansum(mask) / slit_weight) - 3.)
+    
+    
+    # NEED TO MAKE A GUESS
+    rang = splat.loadModelParameters(set = m_set) # Range parameters can fall in
+    teff_range = rang['teff'][0:2]
+    #temp_range[1] = 2200
+    grav_range = rang['logg'][0:2]
+    z_range = rang['z'][0:2]
+
+# initial guesses
+    teff0 = kwargs.get('initial_temperature',1500.)
+    teff0 = kwargs.get('initial_teff',teff0)    
+    logg0 = kwargs.get('initial_gravity',5.0)
+    logg0 = kwargs.get('initial_logg',logg0)
+    z0 = kwargs.get('initial_metallicity',False)
+    z0 = kwargs.get('initial_z',z0)
+    if z0 != False:
+        z_step = numpy.max([z_step,0.1])
+    else:
+        z0 = 0.0
+    param0 = kwargs.get('initial_tgz',[teff0,logg0,z0])
+    param0 = kwargs.get('param0',param0)
+
+#    tg0 = kwargs.get("initial_guess", [numpy.random.uniform(temp_range[0], \
+#          temp_range[1]), numpy.random.uniform(grav_range[0], grav_range[1]),\
+#          numpy.random.uniform(z_range[0], z_range[1])])
+
+# Checks if initial guess is within model range
+    if not (teff_range[0] <= param0[0] <= teff_range[1] and \
+        grav_range[0] <= param0[1] <= grav_range[1] and \
+        z_range[0] <= param0[2] <= z_range[1]):
+        sys.stderr.write("Initial guess is out of model range and so it will" + \
+                            "default to a random guess.")
+        param0 = [numpy.random.random_integers(temp_range[0], high = temp_range[1]), \
+            numpy.random.random_integers(grav_range[0], high = grav_range[1]), \
+            numpy.random.random_integers(z_range[0], high = z_range[1])]
+
+# initial model 
+    print "initial guess", param0
+    try:
+        model = splat.loadModel(teff = param0[0], logg = param0[1], z = param0[2], set = m_set)
+    except:
+        raise ValueError('\nInitial model parameters {} outside parameter set for {}'.format(tgz0,m_set))
+
+    chisqr0,alpha0 = splat.compareSpectra(spec, model, maskranges=maskranges)
+    params = [param0]
+    chisqrs = [chisqr0]    
+    radii = [TEN_PARSEC*numpy.sqrt(alpha0)]       # need to fill this number in
+
+# main recursion loop - only compute when there is a nonzero stepsize
+    for i in range(nsample):
+        for j in range(len(param0)):
+            # Needed in order to catch some models that do not exist but are 
+            # still in the allowed ranges
+            if param_step[j] > 0.:
+                try:            
+                    param1 = copy.deepcopy(param0)
+                    param1[j] = numpy.random.normal(param1[j],param1_step[j])
+                    model = splat.loadModel(teff = param1[0], logg = param1[1],z = param1[2], set = m_set)
+                    chisqr1,alpha1 = splat.compareSpectra(spec,model,maskranges=maskranges)  
+                    # Probability that it will jump to this new point
+                    h = 1. - stats.f.cdf(chisqr1/chisqr0, eff_dof, eff_dof)
+                    # Determines if step will be taken
+                    if numpy.random.uniform(0,1) < h:
+                        param0[j] = param1[j]
+                        chisqr0 = chisqr1
+                        alpha0 = alpha1
+                
+                    # Adds new temp, log g, and chisqr to lists even if they did not change
+                    params.append(param0)
+                    chisqrs.append(chisqr0)
+                    radii.append(TEN_PARSEC*numpy.sqrt(alpha0))
+                    
+                except:
+                    continue
+
+# report results
+    cut = int(cutout*len(temps)) # Cuts out intial cutout percent of steps 
+    print "Effective Temp", numpy.mean(temps[cut:]),numpy.std(temps[cut:])
+    print "Log G", numpy.mean(gravs[cut:]),numpy.std(gravs[cut:])
+    print "Metallicity", numpy.mean(z[cut:]),numpy.std(z[cut:])
+    if calcRadius:
+        print "Radius", numpy.mean(radii[cut:]),numpy.std(radii[cut:])
+
+    if calcRadius:
+        data = {'temps': temps[cut:], 'gravs': gravs[cut:], 'zs': z[cut:], 
+                'radii': radii[cut:], 'chis': chisqrs[cut:], 
+                'temp': numpy.mean(temps[cut:]), 'grav': numpy.mean(gravs[cut:]), 
+                'z': numpy.mean(z[cut:]), 'radius': numpy.mean(radii[cut:])}
+    else:
+        data = {'temps': temps[cut:], 'gravs': gravs[cut:], 'zs': z[cut:], 
+                'chis': chisqrs[cut:], 'temp': numpy.mean(temps[cut:]), 
+                'grav': numpy.mean(gravs[cut:]), 'z': numpy.mean(z[cut:])}
+    
+    with open(filename, 'wb') as f:
+      pickle.dump(data, f)
+      
+    if calcRadius:
+        return [numpy.mean(temps[cut:]),numpy.std(temps[cut:])], \
+               [numpy.mean(gravs[cut:]),numpy.std(gravs[cut:])], \
+               [numpy.mean(z[cut:]),numpy.std(z[cut:])], \
+               [numpy.mean(radii[cut:]),numpy.std(radii[cut:])]
+    else:
+        return [numpy.mean(temps[cut:]),numpy.std(temps[cut:])], \
+               [numpy.mean(gravs[cut:]),numpy.std(gravs[cut:])], \
+               [numpy.mean(z[cut:]),numpy.std(z[cut:])]
