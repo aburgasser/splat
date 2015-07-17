@@ -465,7 +465,7 @@ class Spectrum(object):
 
     def fluxMax(self):
         return numpy.nanmax(self.flux.value[numpy.where(\
-            numpy.logical_and(self.wave > 0.8*u.micron,self.wave < 2.3*u.micron))])*self.funit
+            numpy.logical_and(self.wave > 0.9*u.micron,self.wave < 2.3*u.micron))])*self.funit
 
     def fnuToFlam(self):
          '''Convert flux density from F_nu to F_lam, the later in erg/s/cm2/Hz'''

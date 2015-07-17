@@ -30,12 +30,13 @@ def plotSpectrum(*args, **kwargs):
     grid = kwargs.get('grid',False)                 # plot internal grid lines
     filename = kwargs.get('filename','')            # output filename
     filename = kwargs.get('file',filename)
+    filename = kwargs.get('output',filename)
     title = kwargs.get('title','')
     filebase = filename.split('.')[0]               # filebase for multiple files
     filetype = kwargs.get('format',filename.split('.')[-1])
     filetype.lower()
     if filetype == '':
-        filetype = 'eps'
+        filetype = 'pdf'
     comparison = kwargs.get('comparison',False)
     if comparison.__class__.__name__ != 'Spectrum':
         comparison = False
@@ -239,14 +240,14 @@ def plotSpectrum(*args, **kwargs):
 # determine maximum flux for all spectra
             f = interp1d(a.wave,flx,bounds_error=False,fill_value=0.)
             if (ii == 0):
-                flxmax = flx
-                wvmax = a.wave
+                wvmax = numpy.arange(bound[0],bound[1],0.001)
+                flxmax = f(wvmax)
             else:
-                flxmax = numpy.maximum(flxmax,f(wvmax))
+                flxmax = numpy.max(flxmax,f(wvmax))
 
 # label features
 # THIS NEEDS TO BE FIXED WITH GRETEL'S STUFF
-        yoff = 0.02*numpy.nanmax(yrng)
+        yoff = 0.02*(bound[3]-bound[2])
         fontsize = 10-numpy.min([(multilayout[0]*multilayout[1]-1),6])
         for ftr in features:
             ftr = ftr.lower()
@@ -273,6 +274,7 @@ def plotSpectrum(*args, **kwargs):
                         flxmax = [numpy.max([x,y]) for x, y in zip(flxmax, foff)]
 
 # overplot telluric absorption
+
         bound[3] = numpy.max(flxmax)+2.*yoff
         if (kwargs.get('telluric',False) == True):
             twv = [[1.1,1.2],[1.3,1.5],[1.75,2.0]]
