@@ -1104,6 +1104,7 @@ def classifyByTemplate(sp, *args, **kwargs):
        ('L4.5', 0.7138959194725174)
     '''
 
+#
     spt_type = kwargs.get('spt_type','literature')
     spt_range = kwargs.get('spt_range',[10.,39.9])
     spt_range = kwargs.get('spt',spt_range)
@@ -1111,7 +1112,7 @@ def classifyByTemplate(sp, *args, **kwargs):
     verbose = kwargs.get('verbose',False)
     published = kwargs.get('published','')
     set = kwargs.get('select','')
-#   placeholder for a systematic unceratinty term
+#   placeholder for a systematic uncertainty term
     unc_sys = 0.
     if (kwargs.get('method','') == 'kirkpatrick'):
         comprng = [0.9,1.4]*u.micron         # as prescribed in Kirkpatrick et al. 2010, ApJS, 
@@ -1145,10 +1146,38 @@ def classifyByTemplate(sp, *args, **kwargs):
     snr = kwargs.get('snr',snr)
     
 #  don't compare to same spectrum
-    excludefile = [sp.filename]
+    try:
+        excludefile = [sp.filename]
+    except:
+        excludefile = []
     if kwargs.get('excludefile',False) != False:
-        excludefile = [sp.filename,kwargs['excludefile']]
-
+        e = kwargs.get('excludefile')
+        if isinstance(e,list):
+            excludefile.extend(e)
+        else:
+            excludefile.append(e)
+    try:
+        excludekey = [sp.data_key]
+    except:
+        excludekey = []
+    if kwargs.get('excludekey',False) != False:
+        e = kwargs.get('excludekey')
+        if isinstance(e,list):
+            excludekey.extend(e)
+        else:
+            excludekey.append(e)
+    try:
+        excludeshortname = [sp.shortname]
+    except:
+        excludeshortname = []
+    if kwargs.get('excludeshortname',False) != False:
+        e = kwargs.get('excludeshortname')
+        if isinstance(e,list):
+            excludeshortname.extend(e)
+        else:
+            excludeshortname.append(e)
+#    print excludefile, excludekey, excludeshortname
+    
 # other classes
     giant = ''
     if 'giant' in set.lower():
@@ -1176,7 +1205,8 @@ def classifyByTemplate(sp, *args, **kwargs):
     if 'not spectral binary' in set.lower():
         spbinary = False
     
-    lib = searchLibrary(excludefile=excludefile,snr=snr,spt_type=spt_type,spt_range=spt_range,published=published, \
+    lib = searchLibrary(excludefile=excludefile,excludekey=excludekey,excludeshortname=excludeshortname, \
+        snr=snr,spt_type=spt_type,spt_range=spt_range,published=published, \
         giant=giant,companion=companion,young=young,binary=binary,spbinary=spbinary,output='all',logic='and')
         
 #    print [x for x in compsp]
@@ -1194,17 +1224,18 @@ def classifyByTemplate(sp, *args, **kwargs):
 #        lib = searchLibrary(output='all',excludefile=excludefile,published=published,snr=snr,spt=spt)
 #    else:
 #        lib = searchLibrary(output='all',excludefile=excludefile,published=published,**kwargs)
-        
-# first search for the spectra desired - parameters are set by user
-    files = lib['DATA_FILE']
-    dkey = lib['DATA_KEY']
 
 #    lib = lib[:][numpy.where(lib[sptref] != '')]
-    sspt = [typeToNum(s) for s in lib[spt_type]]
-
-    if len(files) == 0:
+        
+# first search for the spectra desired - parameters are set by user
+    if len(lib) == 0:
         print '\nNo templates available for comparison\n\n'
         return numpy.nan, numpy.nan
+
+    files = lib['DATA_FILE']
+    dkey = lib['DATA_KEY']
+    sspt = [typeToNum(s) for s in lib[spt_type]]
+
     if (verbose):
         print '\nComparing to {} templates\n\n'.format(len(files))
     if len(files) > 100:
@@ -2505,14 +2536,18 @@ def searchLibrary(*args, **kwargs):
             source_db['SELECT'][numpy.where(source_db['SHORTNAME'] == sn)] += 1
         count+=1.
 # exclude by shortname
-    if kwargs.get('excludesource',False) != False:
-        sname = kwargs['excludesource']
+    sname = kwargs.get('excludesource',False)
+    sname = kwargs.get('excludeshortname',sname)
+    if sname != False and len(sname) > 0:
         if isinstance(sname,str):
             sname = [sname]
         for sn in sname:
             if sn[0].lower() != 'j':
                 sn = 'J'+sn
+#            t = numpy.sum(source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)])
             source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)] += 1
+#            if numpy.sum(source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)]) > t:
+#                print 'rejected '+sn
         count+=1.
 # search by reference list
     if kwargs.get('reference',False) != False:
@@ -2722,15 +2757,27 @@ def searchLibrary(*args, **kwargs):
         for f in file:
             spectral_db['SELECT'][numpy.where(spectral_db['DATA_FILE'] == f)] += 1
         count+=1.
+# exclude by data key
+    if kwargs.get('excludekey',False) != False:
+        exkey = kwargs['excludekey']
+#        print file
+        if len(exkey) > 0:
+            if isinstance(exkey,str):
+                exkey = [exkey]
+            for f in exkey:
+                spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)] += 1
+                print spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)]
+            count+=1.
 # exclude by filename
     if kwargs.get('excludefile',False) != False:
         file = kwargs['excludefile']
 #        print file
-        if isinstance(file,str):
-            file = [file]
-        for f in file:
-            spectral_db['SELECT'][numpy.where(spectral_db['DATA_FILE'] != f)] += 1
-        count+=1.
+        if len(file) > 0:
+            if isinstance(file,str):
+                file = [file]
+            for f in file:
+                spectral_db['SELECT'][numpy.where(spectral_db['DATA_FILE'] != f)] += 1
+            count+=1.
 # search by observation date range
     if kwargs.get('date',False) != False:
         date = kwargs['date']
