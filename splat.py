@@ -14,16 +14,11 @@
 #    Maitrayee Sahi
 #    Adrian Suarez
 #    Melisa Tallis
-#    Tomoki Tamiya hello
+#    Tomoki Tamiya 
 
 #
 # CURRENT STATUS (3/12/2015)
 # URGENT
-# re-add class selection for searchlibrary
-# fix loadinterpolatedmodel(2) to allow for broader interpolation AND/OR
-#  patch holes in model sets with fake interpolated models or from model developers
-# fix bad labeling in plotspectrum
-# replace standard files with new filename formats
 # fails when reading in unpublished (online) data
 #
 # LESS URGENT
@@ -248,17 +243,19 @@ class Spectrum(object):
             sdb = keySpectrum(self.idkey)
             if sdb != False:
                 self.filename = sdb['DATA_FILE'][0]
-        elif self.model == False:
+        elif self.model == False and self.filename != '':
             t = searchLibrary(file=self.filename)
             if len(t) > 0:
                 sdb = t
-        kwargs['filename'] = self.filename
-        self.name = self.filename
+        else:
+            sdb = False
 
 # set up folder - by default this is local data directory
         kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DATA_FOLDER)
         self.simplefilename = os.path.basename(self.filename)
         self.file = self.filename
+        self.name = self.filename
+        kwargs['filename'] = self.filename
 
 # option 3: wave and flux are given
         if len(kwargs.get('wave','')) > 0 and len(kwargs.get('flux','')) > 0:
@@ -268,53 +265,62 @@ class Spectrum(object):
                 self.noise = kwargs['noise']
             else:
                 self.noise = numpy.array([numpy.nan for i in self.wave])
-        else:
 
-# read in data
-            rs = readSpectrum(self.filename,**kwargs)
+# read in data from file
+        elif self.filename != '':
             try:
+                rs = readSpectrum(self.filename,**kwargs)
                 self.wave = rs['wave']
                 self.flux = rs['flux']
                 self.noise = rs['noise']
                 self.header = rs['header']
             except:
                 raise NameError('\nCould not load up spectral file {:s}'.format(kwargs.get('filename','')))
+
+# empty spectrum vessel (used for copying)
+        else:
+            self.wave = []
+            self.flux = []
+            self.noise = []
+
+# process spectral data
+        if len(self.wave) > 0:
 # convert to numpy arrays
-        self.wave = numpy.array(self.wave)
-        self.flux = numpy.array(self.flux)
-        self.noise = numpy.array(self.noise)
+            self.wave = numpy.array(self.wave)
+            self.flux = numpy.array(self.flux)
+            self.noise = numpy.array(self.noise)
 # enforce positivity and non-nan
-        if (numpy.nanmin(self.flux) < 0):
-            self.flux[numpy.where(self.flux < 0)] = 0.
-        self.flux[numpy.isnan(self.flux)] = 0.
+            if (numpy.nanmin(self.flux) < 0):
+                self.flux[numpy.where(self.flux < 0)] = 0.
+            self.flux[numpy.isnan(self.flux)] = 0.
 # check on noise being too low
-        if (numpy.nanmax(self.flux/self.noise) > max_snr):
-            self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
+            if (numpy.nanmax(self.flux/self.noise) > max_snr):
+                self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
 # convert to astropy quantities with units
 # assuming input is flam in erg/s/cm2/micron
-        if ~isinstance(self.wave,astropy.units.quantity.Quantity):
-            self.wave = numpy.array(self.wave)*self.wunit
-        if ~isinstance(self.flux,astropy.units.quantity.Quantity):
-            self.flux = numpy.array(self.flux)*self.funit
-        if ~isinstance(self.wave,astropy.units.quantity.Quantity):
-            self.noise = numpy.array(self.noise)*self.funit
+            if ~isinstance(self.wave,astropy.units.quantity.Quantity):
+                self.wave = numpy.array(self.wave)*self.wunit
+            if ~isinstance(self.flux,astropy.units.quantity.Quantity):
+                self.flux = numpy.array(self.flux)*self.funit
+            if ~isinstance(self.wave,astropy.units.quantity.Quantity):
+                self.noise = numpy.array(self.noise)*self.funit
 # some conversions
-        self.flam = self.flux
-        self.nu = self.wave.to('Hz',equivalencies=u.spectral())
-        self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
-        self.fnunit = u.Jansky
+            self.flam = self.flux
+            self.nu = self.wave.to('Hz',equivalencies=u.spectral())
+            self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
+            self.fnunit = u.Jansky
 # calculate variance
-        self.variance = self.noise**2
-        self.dof = numpy.round(len(self.wave)/self.slitpixelwidth)
+            self.variance = self.noise**2
+            self.dof = numpy.round(len(self.wave)/self.slitpixelwidth)
 # signal to noise
-        w = numpy.where(self.flux.value > numpy.median(self.flux.value))
-        self.snr = numpy.nanmean(self.flux.value[w]/self.noise.value[w])
+            w = numpy.where(self.flux.value > numpy.median(self.flux.value))
+            self.snr = numpy.nanmean(self.flux.value[w]/self.noise.value[w])
 
 # preserve original values
-        self.wave_original = copy.deepcopy(self.wave)
-        self.flux_original = copy.deepcopy(self.flux)
-        self.noise_original = copy.deepcopy(self.noise)
-        self.variance_original = copy.deepcopy(self.variance)
+            self.wave_original = copy.deepcopy(self.wave)
+            self.flux_original = copy.deepcopy(self.flux)
+            self.noise_original = copy.deepcopy(self.noise)
+            self.variance_original = copy.deepcopy(self.variance)
 #        self.resolution = copy.deepcopy(self.resolution)
 #        self.slitpixelwidth = copy.deepcopy(self.slitpixelwidth)
 
@@ -334,17 +340,8 @@ class Spectrum(object):
                     setattr(self,k,numpy.nan)
 #                print getattr(self,k)
                 
-# information on source spectrum
-        if not (kwargs.get('model',False)):
-            x,y = filenameToNameDate(self.filename)
-#            self.name = kwargs.get('name',x)
-#            self.date = kwargs.get('date',y)
-#            try:
-#                self.caldate = dateToCaldate(self.date)
-#            except:
-#                self.caldate = ''
-        else:
 # information on model
+        if self.model == True:
             self.teff = kwargs.get('teff',numpy.nan)
             self.logg = kwargs.get('logg',numpy.nan)
             self.z = kwargs.get('z',numpy.nan)
@@ -353,18 +350,29 @@ class Spectrum(object):
             self.kzz = kwargs.get('kzz',numpy.nan)
             self.slit = kwargs.get('slit',numpy.nan)
             self.modelset = kwargs.get('set','')
-            self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)
+            self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.logg)
             self.fscale = 'Surface'
         self.history = ['Loaded']
 
                 
+    def __copy__(self):
+            s = type(self)()
+            s.__dict__.update(self.__dict__)
+            return s    
+
+# backup version
+    def copy(self):
+            s = type(self)()
+            s.__dict__.update(self.__dict__)
+            return s    
+
     def __repr__(self):
         '''A simple representation of an object is to just give it a name'''
-        return 'Spectrum Object for {}'.format(self.name)
+        return 'Spectrum of {}'.format(self.name)
 
     def __add__(self,other):
         '''Adding two spectra '''
-        sp = copy.deepcopy(self)
+        sp = self.copy()
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.add(self.flux,f(self.wave)*other.funit)
@@ -373,11 +381,12 @@ class Spectrum(object):
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
+        sp.name = self.name+' + '+other.name
         return sp
 
     def __sub__(self,other):
         '''Subtracting two spectra '''
-        sp = copy.deepcopy(self)
+        sp = self.copy()
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.subtract(self.flux,f(self.wave)*other.funit)
@@ -386,44 +395,44 @@ class Spectrum(object):
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
+        sp.name = self.name+' - '+other.name
         return sp
 
     def __mul__(self,other):
         '''Multiplying two spectra'''
-        sp = copy.deepcopy(self)
+        sp = self.copy()
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.multiply(self.flux,f(self.wave)*other.funit)
-        sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
-            numpy.divide(self.variance,numpy.power(sp.flux,2))+\
-            numpy.divide(n(self.wave)*(other.funit**2),numpy.power(f(self.wave),2))))
+        sp.variance = numpy.multiply(sp.flux**2,(\
+            numpy.divide(self.variance.value,sp.flux.value**2)+numpy.divide(n(self.wave),f(self.wave)**2)))
         sp.noise = sp.variance**0.5
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
+        sp.name = self.name+' x '+other.name
+        sp.funit = sp.flux.unit
         return sp
 
     def __div__(self,other):
         '''Dividing two spectra'''
-        sp = copy.deepcopy(self)
+        sp = self.copy()
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.divide(self.flux,f(self.wave)*other.funit)
-        sp.variance = numpy.multiply(numpy.power(sp.flux,2),(\
-            numpy.divide(self.variance,numpy.power(sp.flux,2))+\
-            numpy.divide(n(self.wave)*(other.funit**2),numpy.power(f(self.wave),2))))
+        sp.variance = numpy.multiply(sp.flux**2,(\
+            numpy.divide(self.variance.value,sp.flux.value**2)+numpy.divide(n(self.wave),f(self.wave)**2)))
         sp.noise = sp.variance**0.5
+# clean up infinities
+        sp.flux = numpy.where(numpy.absolute(sp.flux) == numpy.inf, numpy.nan, sp.flux)*u.erg/u.erg      
+        sp.noise = numpy.where(numpy.absolute(sp.noise) == numpy.inf, numpy.nan, sp.noise)*u.erg/u.erg     
+        sp.variance = numpy.where(numpy.absolute(sp.variance) == numpy.inf, numpy.nan, sp.variance)*u.erg/u.erg       
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
+        sp.name = self.name+' / '+other.name
+        sp.funit = sp.flux.unit
         return sp
-
-# NOTE: COPY CURRENTLY NOT FUNCTIONAL
-    def copy(self):
-        '''Make a copy of the current spectrum'''
-        other = copy.deepcopy(self)
-        return other
-#          return type('CopyOfB', B.__bases__, dict(B.__dict__))
 
     def info(self):
           '''Report some information about this spectrum'''
@@ -478,7 +487,7 @@ class Spectrum(object):
 
     def normalize(self):
         '''Normalize spectrum'''
-        self.scale(1./self.fluxMax())
+        self.scale(1./self.fluxMax().value)
         self.fscale = 'Normalized'
         return
 
@@ -1493,8 +1502,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
-#        spcomp = sp2.copy()        # copy is currently not working in astropy?
-        spcomp = sp2
+        spcomp = sp2.copy()
         spcomp.scale(scale)
         plotSpectrum(sp1,spcomp,colors=['k','r'],\
             title=sp1.name+' vs '+sp2.name,**kwargs)
