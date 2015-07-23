@@ -20,6 +20,7 @@ MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']
 MODEL_PARAMETERS = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
 DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
 TMPFILENAME = 'splattmpfile'
+TEN_PARSEC = 443344480.     # ten parcecs in solar radii
 
 #set the SPLAT PATH, either from set environment variable or from sys.path
 #SPLAT_PATH = './'
@@ -427,16 +428,12 @@ def loadModelParameters(**kwargs):
 
 
 #### the following codes are in progress
-def modelFitMCMC(spec, **kwargs):
-    return
-   
    
 def modelFitMCMC(spec, **kwargs):
 
-    nsample = kwargs.get('nsamples', 1000)
+    nsample = kwargs.get('nsamples', 10)
     cutout = kwargs.get('initial_cut', 0.1)  # what fraction of the initial steps are to be discarded
     m_set = kwargs.get('set', 'BTSettl2008')
-    step_size = kwargs.get('step_size', [100,0.5])  # the std of the jump size
     plot = kwargs.get('plot', False)
     contour = kwargs.get('contour', False)
     landscape = kwargs.get('landscape', False)
@@ -448,11 +445,8 @@ def modelFitMCMC(spec, **kwargs):
     mask = kwargs.get('mask',numpy.zeros(len(spec.wave)))
     calcRadius = kwargs.get('radius', spec.fscale == 'Absolute')
     filename = kwargs.get('filename', spec.filename[:-3] + m_set + '.dat')
+    savestep = kwargs.get('filename', nsample/10)
 
-    teff_step = kwargs.get('teff_step',50)
-    logg_step = kwargs.get('logg_step',0.25)
-    z_step = kwargs.get('z_step',0.0)
-    param_step = kwargs.get('param_step',[teff_step,logg_step,z_step])
     
     if (mask_standard == True):
         mask_telluric == True
@@ -466,41 +460,50 @@ def modelFitMCMC(spec, **kwargs):
     if (mask_standard):
         mask_ranges.append([0.,0.8])        # standard short cut
         mask_ranges.append([2.35,99.])      # standard long cut
-        
-# Mask certain wavelengths and find effective degrees of freedom
+
+# set the mask    
     for ranges in mask_ranges:
         mask[numpy.where(((spec.wave.value >= ranges[0]) & (spec.wave.value <= ranges[1])))] = 1
-    
-    slit_weight = 3.
-    eff_dof = numpy.round((numpy.nansum(mask) / slit_weight) - 3.)
-    
-    
-    # NEED TO MAKE A GUESS
-    rang = splat.loadModelParameters(set = m_set) # Range parameters can fall in
-    teff_range = rang['teff'][0:2]
-    #temp_range[1] = 2200
-    grav_range = rang['logg'][0:2]
-    z_range = rang['z'][0:2]
+        
 
 # initial guesses
-    teff0 = kwargs.get('initial_temperature',1500.)
-    teff0 = kwargs.get('initial_teff',teff0)    
-    logg0 = kwargs.get('initial_gravity',5.0)
-    logg0 = kwargs.get('initial_logg',logg0)
+    param0 = []
+    param0.append(kwargs.get('initial_temperature',1500.))
+    param0[0] = kwargs.get('initial_teff',param0[0])    
+    param0.append(kwargs.get('initial_gravity',5.0))
+    param0[1] = kwargs.get('initial_logg',param0[1])
     z0 = kwargs.get('initial_metallicity',False)
     z0 = kwargs.get('initial_z',z0)
+
+    param_step = []
+    param_step.append(kwargs.get('teff_step',50))
+    param_step.append(kwargs.get('logg_step',0.25))
+    param_step.append(kwargs.get('z_step',0.0))
     if z0 != False:
-        z_step = numpy.max([z_step,0.1])
+        param_step[2] = numpy.max([param_step[2],0.1])
+        param0.append(z0)
     else:
-        z0 = 0.0
-    param0 = kwargs.get('initial_tgz',[teff0,logg0,z0])
+        param0.append(0.0)
+    param_step = kwargs.get('param_step',param_step)
+
+    param0 = kwargs.get('initial_tgz',param0)
     param0 = kwargs.get('param0',param0)
+
+# degrees of freedom        
+    slit_weight = 3.
+    eff_dof = numpy.round((numpy.nansum(mask) / slit_weight) - 3.)
 
 #    tg0 = kwargs.get("initial_guess", [numpy.random.uniform(temp_range[0], \
 #          temp_range[1]), numpy.random.uniform(grav_range[0], grav_range[1]),\
 #          numpy.random.uniform(z_range[0], z_range[1])])
 
 # Checks if initial guess is within model range
+    rang = splat.loadModelParameters(set = m_set) # Range parameters can fall in
+    teff_range = rang['teff'][0:2]
+    #temp_range[1] = 2200
+    grav_range = rang['logg'][0:2]
+    z_range = rang['z'][0:2]
+
     if not (teff_range[0] <= param0[0] <= teff_range[1] and \
         grav_range[0] <= param0[1] <= grav_range[1] and \
         z_range[0] <= param0[2] <= z_range[1]):
@@ -511,13 +514,13 @@ def modelFitMCMC(spec, **kwargs):
             numpy.random.random_integers(z_range[0], high = z_range[1])]
 
 # initial model 
-    print "initial guess", param0
+    print "initial guess", param0, param_step
     try:
         model = splat.loadModel(teff = param0[0], logg = param0[1], z = param0[2], set = m_set)
     except:
-        raise ValueError('\nInitial model parameters {} outside parameter set for {}'.format(tgz0,m_set))
+        raise ValueError('\nInitial model parameters {} outside parameter range for model set {}'.format(param0,m_set))
 
-    chisqr0,alpha0 = splat.compareSpectra(spec, model, maskranges=maskranges)
+    chisqr0,alpha0 = splat.compareSpectra(spec, model, maskranges=mask_ranges)
     params = [param0]
     chisqrs = [chisqr0]    
     radii = [TEN_PARSEC*numpy.sqrt(alpha0)]       # need to fill this number in
@@ -530,12 +533,14 @@ def modelFitMCMC(spec, **kwargs):
             if param_step[j] > 0.:
                 try:            
                     param1 = copy.deepcopy(param0)
-                    param1[j] = numpy.random.normal(param1[j],param1_step[j])
+                    param1[j] = numpy.random.normal(param1[j],param_step[j])
                     model = splat.loadModel(teff = param1[0], logg = param1[1],z = param1[2], set = m_set)
-                    chisqr1,alpha1 = splat.compareSpectra(spec,model,maskranges=maskranges)  
+                    chisqr1,alpha1 = splat.compareSpectra(spec,model,maskranges=mask_ranges)  
                     # Probability that it will jump to this new point
+                    print chisqr1, chisqr0, eff_dof
                     h = 1. - stats.f.cdf(chisqr1/chisqr0, eff_dof, eff_dof)
                     # Determines if step will be taken
+                    print h
                     if numpy.random.uniform(0,1) < h:
                         param0[j] = param1[j]
                         chisqr0 = chisqr1
@@ -545,12 +550,18 @@ def modelFitMCMC(spec, **kwargs):
                     params.append(param0)
                     chisqrs.append(chisqr0)
                     radii.append(TEN_PARSEC*numpy.sqrt(alpha0))
+                    print param0, chisqr0
                     
                 except:
+                    print 'error'
                     continue
-
+        if i%savestep == 0 and i != 0:
+            print 'save data here'
+            print params
+            
+            
 # report results
-    cut = int(cutout*len(temps)) # Cuts out intial cutout percent of steps 
+    cut = int(cutout*len(teffs)) # Cuts out intial cutout percent of steps 
     print "Effective Temp", numpy.mean(temps[cut:]),numpy.std(temps[cut:])
     print "Log G", numpy.mean(gravs[cut:]),numpy.std(gravs[cut:])
     print "Metallicity", numpy.mean(z[cut:]),numpy.std(z[cut:])
