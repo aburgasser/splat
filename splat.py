@@ -472,9 +472,17 @@ class Spectrum(object):
                 self.fscale = 'Apparent'
         return
 
-    def fluxMax(self):
-        return numpy.nanmax(self.flux.value[numpy.where(\
-            numpy.logical_and(self.wave > 0.9*u.micron,self.wave < 2.3*u.micron))])*self.funit
+# determine maximum flux, by default in non telluric regions
+    def fluxMax(self,**kwargs):
+        if kwargs.get('maskTelluric',True):
+            return numpy.nanmax(self.flux.value[numpy.where(\
+                numpy.logical_or(\
+                    numpy.logical_and(self.wave > 0.9*u.micron,self.wave < 1.35*u.micron),
+                    numpy.logical_and(self.wave > 1.42*u.micron,self.wave < 1.8*u.micron),
+                    numpy.logical_and(self.wave > 1.92*u.micron,self.wave < 2.3*u.micron)))])*self.funit
+        else:    
+            return numpy.nanmax(self.flux.value[numpy.where(\
+                numpy.logical_and(self.wave > 0.9*u.micron,self.wave < 2.3*u.micron))])*self.funit
 
     def fnuToFlam(self):
          '''Convert flux density from F_nu to F_lam, the later in erg/s/cm2/Hz'''
@@ -485,9 +493,9 @@ class Spectrum(object):
          self.variance = self.noise**2
          return
 
-    def normalize(self):
+    def normalize(self,**kwargs):
         '''Normalize spectrum'''
-        self.scale(1./self.fluxMax().value)
+        self.scale(1./self.fluxMax(**kwargs).value)
         self.fscale = 'Normalized'
         return
 
