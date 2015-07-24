@@ -203,7 +203,17 @@ def Copy(fn):
 
 # define the Spectrum class which contains the relevant information
 class Spectrum(object):
-#    @Show
+    '''
+    Description:
+      Primary class for containing spectral and source data for SpeX Prism Library.
+
+    **Usage**
+       >>> import splat
+       >>> sp = splat.Spectrum(filename='myspectrum.fits')      # read in a file
+       >>> sp = splat.Spectrum('myspectrum.fits')               # same
+       >>> sp = splat.Spectrum(10002)                           # read in spectrum with idkey = 10002
+       >>> sp = splat.Spectrum(wave=wavearray,flux=fluxarray)   # create objects with wavelength & flux arrays
+    '''
 
     def __init__(self, *args, **kwargs):
 # some presets
@@ -618,9 +628,9 @@ class Spectrum(object):
 # FUNCTIONS FOR SPLAT
 def caldateToDate(d):
     '''
-    :Purpose: ``Convert from numeric date to calendar date, and vice-versa.``
-    :param d: ``A numeric date of the format '20050412', or a date in the 
-                calendar format '2005 Jun 12'``
+    :Purpose: Convert from numeric date to calendar date, and vice-versa.
+    :param d: A numeric date of the format '20050412', or a date in the 
+                calendar format '2005 Jun 12'
     :Example:
        >>> import splat
        >>> caldate = splat.dateToCaldate('20050612')
@@ -635,8 +645,8 @@ def caldateToDate(d):
 
 def checkFile(filename,**kwargs):
     '''
-    :Purpose: ``Checks if a spectrum file exists in the SPLAT's library.``
-    :param filename: ``A string containing the spectrum's filename.``
+    :Purpose: Checks if a spectrum file exists in the SPLAT's library.
+    :param filename: A string containing the spectrum's filename.
     :Example: 
        >>> import splat
        >>> spectrum1 = 'spex_prism_1315+2334_110404.fits'
@@ -658,12 +668,12 @@ def checkFile(filename,**kwargs):
 
 def checkAccess(**kwargs):
     '''
-    :Purpose: ``Checks if user has access to unpublished spectra in SPLAT library.``
+    :Purpose: Checks if user has access to unpublished spectra in SPLAT library.
     :Example: 
        >>> import splat
        >>> print splat.checkAccess()
        True
-    :Note: ``Must have the file .splat_access in your home directory with the correct passcode to use.``
+    :Note: Must have the file .splat_access in your home directory with the correct passcode to use.
     '''
     access_file = '.splat_access'
     result = False
@@ -689,8 +699,8 @@ def checkAccess(**kwargs):
 
 def checkLocal(file):
     '''
-    :Purpose: ``Checks if a file is present locally or within the SPLAT
-                code directory'' 
+    :Purpose: Checks if a file is present locally or within the SPLAT
+                code directory
     :Example:
        >>> import splat
        >>> splat.checkLocal('splat.py')
@@ -711,9 +721,9 @@ def checkLocal(file):
 
 def checkOnline(*args):
     '''
-    :Purpose: ``Checks if SPLAT's URL is accessible from your machine--
+    :Purpose: Checks if SPLAT's URL is accessible from your machine--
                 that is, checks if you and the host are online. Alternately
-                checks if a given filename is present locally or online''
+                checks if a given filename is present locally or online
     :Example:
        >>> import splat
        >>> splat.checkOnline()
@@ -750,36 +760,32 @@ def checkOnline(*args):
 
 def classifyByIndex(sp, *args, **kwargs):
     '''
-    :Purpose: ``Determine the spectral type and uncertainty for a spectrum 
+    :Purpose: Determine the spectral type and uncertainty for a spectrum 
                 based on indices. Makes use of published index-SpT relations
                 from Reid et al. (2001); Testi et al. (2001); Allers et al. 
                 (2007); and Burgasser (2007). Returns 2-element tuple 
                 containing spectral type (numeric or string) and 
-                uncertainty.``
-    :param sp: ``Spectrum class object, which should contain wave, flux and 
-                 noise array elements.``
-    :param \**kwargs (optional): - ``set = 'burgasser': named set of indices to measure and compute spectral type:``
-                          * ``'allers': H2O from Allers et al.``
-                          * ``'burgasser': H2O-J, CH4-J, H2O-H, CH4-H, 
-                            CH4-K from Burgasser (2007)``
-                          * ``'reid':H2O-A and H2O-B from Reid et al.(2001)``
-                          * ``'testi': sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, 
-                            sH2O_K from Testi et al. (2001)``
-                      - ``string = False: return spectral type as a string 
-                        (uses typeToNum)``
-                      - ``round = False: rounds off to nearest 0.5 subtypes``
-                      - ``remeasure = True: force remeasurement of indices``
-                      - ``nsamples = 100: number of Monte Carlo samples for 
-                        error computation``
-                      - ``nloop = 5: number of testing loops to see if 
-                        spectral type is within a certain range``
+                uncertainty.
+    :param sp: Spectrum class object, which should contain wave, flux and 
+                 noise array elements.
+    :param set: (optional, default='burgasser') named set of indices to measure and compute spectral type 
+        - 'allers': H2O from Allers et al.
+        - 'burgasser': H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from Burgasser (2007)
+        - 'reid':H2O-A and H2O-B from Reid et al.(2001)
+        - 'testi': sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from Testi et al. (2001) 
+    :param string: (optional, default=False) return spectral type as a string (uses typeToNum)
+    :param round: (optional, default=False)  rounds off to nearest 0.5 subtypes
+    :param remeasure: (optional, default=True) force remeasurement of indices
+    :param nsamples: (optional, default=100) number of Monte Carlo samples for error computation
+    :param nloop: (optional, default=5) number of testing loops to see if spectral type is within a certain range
 
-    :Example:
+    :Example: 
        >>> import splat
-       >>> spc = splat.loadSpectrum('spex_prism_gl570d_030522.txt')
+       >>> spc = splat.getSpectrum(shortname='0559-1404')[0]
        >>> print splat.classifyByIndex(spc, string=True, set='burgasser', round=True)
-       ('T7.5', 0.25285169510990341)
-    :Things to Update
+         ('T4.5', 0.2562934083414341)
+
+    :Note:
         * Need to allow output of individual spectral types from individual indices
     '''
     
@@ -1074,26 +1080,25 @@ def classifyByStandard(sp, *args, **kwargs):
 
 def classifyByTemplate(sp, *args, **kwargs):
     '''
-    :Purpose: ``Determine the spectral type and uncertainty for a 
+    :Purpose: Determine the spectral type and uncertainty for a 
                 spectrum by direct comparison to a large set of spectra in
                 the library. One can select down the spectra by using the set
                 command. Returns the best match or an F-test weighted mean and 
                 uncertainty. There is an option to follow  the procedure of 
                 Kirkpatrick et al. (2010), fitting only in the 0.9-1.4 micron 
-                region. ``
-    :Usage: ``result = splat.classifyByTemplate(sp, \*args, \**kwargs)
-    :Output: ``result is a dictionary containing the following keys:
-                    - ``'result = (Spectral Type, Spectral Type Uncertainty)``
-                    - ``'chisquare' = array of nbest chi-square values``
-                    - ``'name' = array of nbest source names``
-                    - ``'scale' = array of nbest optimal scale factors``
-                    - ``'spectra' = array of nbest Spectrum objects``
-                    - ``'spt' = array of nbest spectral types``
-    :Output:  result is a dictionary containing the following items:
+                region. 
+    :Usage: result = splat.classifyByTemplate(sp, \*args, \**kwargs)
+    :Output: result is a dictionary containing the following keys:
+                    - 'result = (Spectral Type, Spectral Type Uncertainty)
+                    - 'chisquare' = array of nbest chi-square values
+                    - 'name' = array of nbest source names
+                    - 'scale' = array of nbest optimal scale factors
+                    - 'spectra' = array of nbest Spectrum objects
+                    - 'spt' = array of nbest spectral types
                 
-    :param sp: ``Spectrum class object, which should contain wave, flux and 
-                 noise array elements.``
-    :param \**kwargs (optional): - ``'best' = False: return only the best fit template type``
+    :param sp: Spectrum class object, which should contain wave, flux and 
+                 noise array elements.
+    :param 'best': (optional, default = False) return only the best fit template type``
                     - ``'plot' = False: generate a plot comparing best fit standard to source, can be save to a file using the file keyword``
                     - ``'file' = '': output spectrum plot to a file``
                     - ``'method' = '': set to 'kirkpatrick' to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band``
