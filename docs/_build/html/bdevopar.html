@@ -1,0 +1,298 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Brown Dwarf Evolutionary Models &mdash; SpeX Prism Library Analysis Toolkit 0.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/logo.ico"/>
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.3 documentation" href="index.html" />
+    <link rel="prev" title="SPLAT Spectral Modeling" href="splat_model.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="splat_model.html" title="SPLAT Spectral Modeling"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="splat_model.html"
+                        title="previous chapter">SPLAT Spectral Modeling</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bdevopar.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="brown-dwarf-evolutionary-models">
+<h1>Brown Dwarf Evolutionary Models<a class="headerlink" href="#brown-dwarf-evolutionary-models" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-bdevopar"></span><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Using a suite of evolutionary models, this code translates 
+between the following brown dwarf parameters: mass, age, 
+temperature, radius, surface gravity, and luminosity. We allow 
+the user to choose a set of evolutionary model 
+(Baraffe, Burrows, or Saumon) and two parameters, then output
+the rest of the interpolated parameters.</p>
+</div>
+<dl class="class">
+<dt id="bdevopar.Parameters">
+<em class="property">class </em><code class="descclassname">bdevopar.</code><code class="descname">Parameters</code><a class="headerlink" href="#bdevopar.Parameters" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Description:</th><td class="field-body"><p class="first">Allows the user to input a list of parameters.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;baraffe&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.04</span><span class="p">,</span><span class="mf">0.06</span><span class="p">,</span><span class="mf">0.07</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.003</span><span class="p">,</span><span class="mf">0.004</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span> <span class="o">=</span> <span class="n">ParamsList</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">masses</span><span class="o">=</span><span class="n">m</span><span class="p">,</span><span class="n">ages</span><span class="o">=</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">params</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="bdevopar.Params">
+<em class="property">class </em><code class="descclassname">bdevopar.</code><code class="descname">Params</code><a class="headerlink" href="#bdevopar.Params" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Description:</th><td class="field-body"><p class="first">Checks that the input parameters are valid (e.g user 
+inputs must be capable of being interpolated). 
+Interpolation between evolutionary models is done here 
+as well, and we used the method interp1d from astropy.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>*args</strong> &#8211; <p>If you&#8217;re using Saumon&#8217;s models, then u must specified the
+metallicity since there&#8217;s 5 total: hybrid_solar, f2_solar, 
+nc+0.3, nc-0.3, and nc_solar.</p>
+</li>
+<li><strong>*kwargs</strong> &#8211; <p>You must input any of the two following parameters: age, 
+mass, temperature, luminosity, gravity, or radius.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>Returns the interpolated parameters.</p>
+<ul>
+<li><p class="first"><strong>Examples:</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;saumon&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s">&#39;hybrid_solar&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mass</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;saumon&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s">&#39;nc+0.3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">mss</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;saumon&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s">&#39;nc-0.3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">mas</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">RiUS</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;saumon&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s">&#39;nc_solar&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">AgE</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;saumon&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s">&#39;f2_solar&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">adf</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">MASSSS</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;baraffe&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s">&#39;f2_solar&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">burrows</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">L</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">Gradfty</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;burrows&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s">&#39;f2_solar&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">baraffe</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Keyword spelling doesn&#8217;t matter as long as the first 
+letter is right. Also, ordering of the keywords is not 
+important. However, metallicites must be spelled exactly 
+as mentioned aboved&#8211;there are no execptions.</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="bdevopar.ReadModel">
+<em class="property">class </em><code class="descclassname">bdevopar.</code><code class="descname">ReadModel</code><a class="headerlink" href="#bdevopar.ReadModel" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Description:</th><td class="field-body">This class reads in evolutionary models that are defined 
+in the methods below, and their data is acquired <a class="reference external" href="http://pono.ucsd.edu/~adam/splat/EvolutionaryModels/">here</a>.
+Units are the following: masses are in M/Msun, 
+luminosities in log L/Lsun, radius in R/Rsun, surface 
+gravities in log g (cm/s^2), temperatures in Kelvin, 
+and ages in Gyr. Each evolutionary model gives 
+snapshots of brown dwarfs with different masses and 
+other physical properties as a function of time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> &#8211; <ul>
+<li><strong>baraffe:</strong> 
+Isochrones from Baraffe et. la models (2003), described in the 
+following paper: &#8220;Evolutionary models for cool brown dwarfs and 
+extrasolar giant planets. The case of HD 20945&#8221;: <a class="reference external" href="http://arxiv.org/abs/astro-ph/0302293">Here</a>. Original model&#8217;s <a class="reference external" href="https://perso.ens-lyon.fr/isabelle.baraffe/COND03_models">URL</a>.
+Ages (in Gyr) used for interpolation were the following:<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bdevopar</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;baraffe&#39;</span><span class="p">)[</span><span class="s">&#39;age&#39;</span><span class="p">]</span>
+<span class="go">[0.001, 0.005, 0.01, 0.05, 0.1, 0.12, 0.5, 1.0, 5.0, 10.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;BaRaFfE&#39;</span><span class="p">)[</span><span class="s">&#39;age&#39;</span><span class="p">]</span>
+<span class="go">[0.001, 0.005, 0.01, 0.05, 0.1, 0.12, 0.5, 1.0, 5.0, 10.0]</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Capilatizing some letters or none won&#8217;t cause any problems.
+However, incorrect spelling will raise a NameError, so
+please make sure you spell correctly.</p>
+</div>
+</div></blockquote>
+<ul>
+<li><strong>burrows:</strong></li>
+<li><strong>saumon:</strong>
+Isochrones from Saumon &amp; Marley models (2008), described in 
+<a class="reference external" href="http://adsabs.harvard.edu/abs/2008ApJ...689.1327S">paper</a>. 
+Original models&#8217; URL and the README used to differentiate
+between metallicites are found <a class="reference external" href="https://laws.lanl.gov/x7/dsaumon/BD_evolution/">here.</a>
+Brown dwarfs ages used here are as follows:<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bdevopar</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;saumon&#39;</span><span class="p">)[</span><span class="s">&#39;age&#39;</span><span class="p">]</span>
+<span class="go">[0.003, 0.004, 0.006, 0.008, 0.01, 0.015, 0.02, 0.03, 0.04, </span>
+<span class="go">0.06, 0.08, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, </span>
+<span class="go">2.0, 3.0, 4.0, 6.0, 8.0, 10.0]</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">metallicity:</th><td class="field-body"><ul class="first simple">
+<li><strong>nc_solar:</strong> The atmosphere model is cloudless with [M/H]=0</li>
+<li><strong>nc+0.3:</strong> The atmosphere model is cloudless with [M/H]=+0.3</li>
+<li><strong>nc-0.3:</strong> The atmosphere model is cloudless with [M/H]=-0.3</li>
+<li><strong>f2_solar:</strong> Atmosphere model is cloudless Fsed=2) with [M/H]=0</li>
+<li><strong>hybrid_solar</strong> Atmosphere cloudless(Fsed=2 to nc) with [M/H]=0</li>
+</ul>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bdevopar</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;saumon&#39;</span><span class="p">,</span><span class="n">metallicity</span><span class="o">=</span><span class="s">&#39;nc_solar&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;saumon&#39;</span><span class="p">,</span><span class="n">metallicity</span><span class="o">=</span><span class="s">&#39;f2_solar&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s">&#39;saumon&#39;</span><span class="p">,</span><span class="n">metallicity</span><span class="o">=</span><span class="s">&#39;hybri_solar&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return:</th><td class="field-body">A dictionary where each key maps to a 3 dimensional matrix. The 
+dimensions are as follows: (Age x Mass x OtherParam). This
+method is used in the subclass Parameters, which is 
+further discussed in the section belowed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="splat_model.html" title="SPLAT Spectral Modeling"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Adam Burgasser.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

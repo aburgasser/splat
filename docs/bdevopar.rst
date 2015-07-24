@@ -1,20 +1,17 @@
 .. SpeX Prism Library Analysis Toolkit documentation master file, created by
    sphinx-quickstart on Sat Jul 11 20:07:28 2015.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-Welcome to SpeX Prism Library Analysis Toolkit's documentation!
+Brown Dwarf Evolutionary Models
 ===============================================================
 
-Contents:
-
-.. toctree::
+.. toctree
    :maxdepth: 3
 
-   splat.rst
-   splat_alt.rst
-   splat_plot.rst
-   splat_model.rst
-   bdevopar.rst
 
+.. automodule:: bdevopar
+ :members:
 
 
 * :ref:`genindex`

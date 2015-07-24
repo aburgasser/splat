@@ -16,6 +16,9 @@ import splat
 
 def plotSpectrum(*args, **kwargs):
     '''
+    The SPLAT plotting routines provide various ways of visualizing individual
+    and sets of spectral data. 
+    
     :Purpose: ``Primary plotting program for Spectrum objects.``
 
     :Input
@@ -88,37 +91,70 @@ def plotSpectrum(*args, **kwargs):
     yrange = [-0.02,1.2]*fluxMax:
         plot range for wavelength axis
         
-        
-    :Example 1: A simple view of a random spectrum
+    
+    :Examples:
+    **Example 1: A simple view of a random spectrum**
+      This example shows various ways of displaying a random spectrum in the library
+    
        >>> import splat
-       >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0]
-       >>> spc.plot()                       # this automatically generates a "quicklook" plot
-       >>> splat.plotSpectrum(spc)          # does the same thing
+       >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0]	# select random spectrum
+       >>> spc.plot()                   				# this automatically generates a "quicklook" plot
+       >>> splat.plotSpectrum(spc)      				# does the same thing
        >>> splat.plotSpectrum(spc,uncertainty=True,tdwarf=True)     # show the spectrum uncertainty and T dwarf absorption features
-
-    :Example 2: Viewing a set of spectra for a given object
-        In this case we'll look at all of the spectra of TWA 30B in the library, sorted by year and compared to the first epoch data
-        This is an example of using multiplot and multipage
-
+    
+      The last plot should look like the following:
+    .. image:: _images/plot_example1.png
+      :width: 400
+      :align: center
+    
+    **Example 2: Compare two spectra**
+      Optimally scale and compare two spectra. 
+    
+       >>> import splat
+       >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0]	# select random spectrum
+       >>> spc2 = splat.getSpectrum(spt = 'T4', lucky=True)[0]	# read in another random spectrum
+       >>> comp = splat.compareSpectra(spc,spc2)	# compare spectra to get optimal scaling
+       >>> spc2.scale(comp[1])			# apply optimal scaling
+       >>> splat.plotSpectrum(spc,spc2,colors=['black','red'],labels=[spc.name,spc2.name])     # show the spectrum uncertainty and T dwarf absorption features
+    
+    .. image:: _images/plot_example2.png
+      :width: 400
+      :align: center
+     
+    
+    **Example 3: Compare several spectra for a given object**
+      In this case we'll look at all of the spectra of TWA 30B in the library, sorted by year and compare each to the first epoch data. This is an example of using both multiplot and multipage.
+    
        >>> splist = splat.getSpectrum(name = 'TWA 30B')         # get all spectra of TWA 30B
        >>> junk = [sp.normalize() for sp in splist]             # normalize the spectra
        >>> dates = [sp.date for sp in splist]                   # observation dates
-       >>> spsort = [s for (s,d) in sorted(zip(dates,splis))]   # sort spectra by dates
+       >>> spsort = [s for (d,s) in sorted(zip(dates,splist))]   # sort spectra by dates
        >>> dates.sort()                                         # don't forget to sort dates!
        >>> splat.plotSpectrum(spsort,multiplot=True,layout=[2,2],multipage=True,\   # here's our plot statement
            comparison=spsort[0],uncertainty=True,mdwarf=True,telluric=True,legends=dates,\
            legendLocation='lower left',output='TWA30B.pdf')
-       
-    :Example 3: Display the spectra sequence of L dwarfs
-        This example uses the list of standard files contained in SPLAT, and illustrates the stack feature
-
+    
+      Here is the first page of the resulting 5 page pdf file
+    .. image:: _images/plot_example3.png
+      :width: 500
+      :align: center
+           
+    **Example 4: Display the spectra sequence of L dwarfs**
+            This example uses the list of standard files contained in SPLAT, and illustrates the stack feature
+    
        >>> spt = [splat.typeToNum(i+20) for i in range(10)]     # generate list of L spectral types
        >>> files = [splat.spex_stdfiles[s] for s in spt]        # get the standard files
        >>> splist = [splat.Spectrum(f) for f in files]          # read in list of Spectrum objects
        >>> junk = [sp.normalize() for sp in splist]             # normalize the spectra
-       >>> labels = [sp.shortname for sp in splist]              # set labels to be names
+       >>> labels = [sp.shortname for sp in splist]             # set labels to be names
        >>> splat.plotSpectrum(splist,figsize=[10,20],labels=labels,stack=0.5,\  # here's our plot statement
            colorScheme='copper',legendLocation='outside',telluric=True,output='lstandards.pdf')
+    
+    .. image:: _images/plot_example4.png
+      :width: 400
+      :align: center
+
+        
        
     '''
 
@@ -237,6 +273,8 @@ def plotSpectrum(*args, **kwargs):
     plt.close('all')
 
 # set up here for multiple file output
+    if filetype != 'pdf':
+        multipage = False
     if multipage == True:
         nplot = multilayout[0]*multilayout[1]
         if filetype == 'pdf':
@@ -247,8 +285,6 @@ def plotSpectrum(*args, **kwargs):
         fig = range(numpages)
     else:
         files = [filebase+'{}.'.format(i+1)+filetype for i in range(len(splist))]
-
-    print multipage, splist
 
     pg_n = 0        # page counter
     plt_n = 0       # plot per page counter
@@ -341,7 +377,7 @@ def plotSpectrum(*args, **kwargs):
             flx = [i+zeropoint[ii] for i in a.flux.value]
 #stack
             if stack > 0:
-                flx = [f + (len(sp)-ii)*stack for f in flx]
+                flx = [f + (len(sp)-ii-1)*stack for f in flx]
                 if kwargs.get('yrange') == None:
                     bound[3] = bound[3] + stack
             
@@ -455,7 +491,10 @@ def plotSpectrum(*args, **kwargs):
 #            fig[pg_n].text(0.06, 0.5, ylabel, ha = 'center', va = 'center', rotation = 'vertical')
             fig[pg_n].tight_layout
             fig[pg_n].suptitle(title, fontsize = 14, fontweight = 'bold')
-            pdf_pages.savefig(fig[pg_n])
+            if filetype=='pdf':
+                pdf_pages.savefig(fig[pg_n])
+            else:
+                plt.savefig(fig[pg_n], format=filetype)     # this may not work
         if filetype == 'pdf':
             pdf_pages.close()
 

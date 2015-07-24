@@ -406,11 +406,10 @@ def loadModelParameters(**kwargs):
             pfile = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+os.path.basename(pfile)
             if (os.path.exists(pfile) == False):
                 raise NameError('\nCould not find parameter file {}'.format(pfile))
-            else:
-                p = ascii.read(pfile)
+        p = ascii.read(pfile)
 
 # populate output parameter structure
-    parameters = {'set': set, 'url': splat.SPLAT_URL}
+    parameters = {'set': kwargs.get('set'), 'url': splat.SPLAT_URL}
     for ms in MODEL_PARAMETER_NAMES[0:3]:
         if ms in p.colnames:
             parameters[ms] = [float(x) for x in p[ms]]

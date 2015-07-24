@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to SpeX Prism Library Analysis Toolkit’s documentation! &mdash; SpeX Prism Library Analysis Toolkit 0.3 documentation</title>
+    <title>SPLAT Spectral Modeling &mdash; SpeX Prism Library Analysis Toolkit 0.3 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -24,8 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/logo.ico"/>
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.3 documentation" href="#" />
-    <link rel="next" title="Main SPLAT module" href="splat.html" /> 
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.3 documentation" href="index.html" />
+    <link rel="next" title="Brown Dwarf Evolutionary Models" href="bdevopar.html" />
+    <link rel="prev" title="SPLAT Plotting Routines" href="splat_plot.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -38,23 +39,29 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="splat.html" title="Main SPLAT module"
+          <a href="bdevopar.html" title="Brown Dwarf Evolutionary Models"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="splat_plot.html" title="SPLAT Plotting Routines"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-            <p class="logo"><a href="#">
+            <p class="logo"><a href="index.html">
               <img class="logo" src="_static/logo.jpg" alt="Logo"/>
             </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="splat_plot.html"
+                        title="previous chapter">SPLAT Plotting Routines</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="splat.html"
-                        title="next chapter">Main SPLAT module</a></p>
+  <p class="topless"><a href="bdevopar.html"
+                        title="next chapter">Brown Dwarf Evolutionary Models</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/index.txt"
+      <li><a href="_sources/splat_model.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -79,36 +86,24 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-spex-prism-library-analysis-toolkit-s-documentation">
-<h1>Welcome to SpeX Prism Library Analysis Toolkit&#8217;s documentation!<a class="headerlink" href="#welcome-to-spex-prism-library-analysis-toolkit-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="splat.html#examples">Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="splat.html#classes">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="splat.html#routines">Routines</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="splat.html#data-access">Data Access</a></li>
-<li class="toctree-l3"><a class="reference internal" href="splat.html#spectral-classification">Spectral Classification</a></li>
-<li class="toctree-l3"><a class="reference internal" href="splat.html#other-spectral-analyses">Other Spectral Analyses</a></li>
-<li class="toctree-l3"><a class="reference internal" href="splat.html#source-analysis">Source Analysis</a></li>
-<li class="toctree-l3"><a class="reference internal" href="splat.html#conversion-routines">Conversion Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="splat.html#i-o-routines">I/O Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="splat.html#other-routines">Other Routines</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="splat_alt.html">Main SPLAT module (alternative format)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="splat_plot.html#examples">Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="splat_plot.html#routines">Routines</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
-</ul>
+  <div class="section" id="splat-spectral-modeling">
+<h1>SPLAT Spectral Modeling<a class="headerlink" href="#splat-spectral-modeling" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-splat_model"></span><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">These are the spectral modeling functions for SPLAT</p>
 </div>
+<dl class="function">
+<dt id="splat_model.loadModel">
+<code class="descclassname">splat_model.</code><code class="descname">loadModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>load up a model spectrum based on parameters</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.loadModelParameters">
+<code class="descclassname">splat_model.</code><code class="descname">loadModelParameters</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModelParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load up model parameters and check model inputs</p>
+</dd></dl>
+
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
@@ -132,9 +127,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="splat.html" title="Main SPLAT module"
+          <a href="bdevopar.html" title="Brown Dwarf Evolutionary Models"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="splat_plot.html" title="SPLAT Plotting Routines"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
