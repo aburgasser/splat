@@ -25,6 +25,8 @@ Currently broken or doesn't exist and should:
  * no ``spectralBinary`` function
  * no tabular output of data
  * need a reddening function
+ * young objects are not properly selected by ``searchLibrary`` - these need to be better labeled in source database
+ * need a bibliography tool (feed in bibcode, get out citation information)
 
 Medium priority 
 ---------------------------

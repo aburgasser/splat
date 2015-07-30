@@ -342,7 +342,7 @@ class Spectrum(object):
             self.date = self.observation_date
 # convert some data into numbers
             kconv = ['ra','dec','julian_date','median_snr','resolution','airmass',\
-            'jmag','jmag_error','hmag','hmag_error','kmag','kmag_error']
+            'jmag','jmag_error','hmag','hmag_error','kmag','kmag_error','source_key']
             for k in kconv:
                 try:
                     setattr(self,k,float(getattr(self,k)))
@@ -2539,6 +2539,14 @@ def searchLibrary(*args, **kwargs):
     source_db['SELECT'] = numpy.zeros(len(source_db['RA']))
     count = 0.
 
+# search by source key
+    if kwargs.get('sourcekey',False) != False:
+        sk = kwargs['sourcekey']
+        if isinstance(sk,int):
+            sk = [sk]
+        for s in sk:
+            source_db['SELECT'][numpy.where(source_db['SOURCE_KEY'] == s)] += 1
+        count+=1.
 # search by name
     if kwargs.get('name',False) != False:
         nm = kwargs['name']
