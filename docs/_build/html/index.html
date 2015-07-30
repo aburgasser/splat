@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to SpeX Prism Library Analysis Toolkit’s documentation! &mdash; SpeX Prism Library Analysis Toolkit 0.3 documentation</title>
+    <title>SPLAT: The SpeX Prism Library Analysis Toolkit &mdash; SpeX Prism Library Analysis Toolkit 0.3 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -48,6 +48,17 @@
             <p class="logo"><a href="#">
               <img class="logo" src="_static/logo.jpg" alt="Logo"/>
             </a></p>
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SPLAT: The SpeX Prism Library Analysis Toolkit</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#installation-and-dependencies">Installation and Dependencies</a></li>
+<li><a class="reference internal" href="#using-splat">Using SPLAT</a></li>
+<li><a class="reference internal" href="#authors">Authors</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Next topic</h4>
   <p class="topless"><a href="splat.html"
                         title="next chapter">Main SPLAT module</a></p>
@@ -79,9 +90,143 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-spex-prism-library-analysis-toolkit-s-documentation">
-<h1>Welcome to SpeX Prism Library Analysis Toolkit&#8217;s documentation!<a class="headerlink" href="#welcome-to-spex-prism-library-analysis-toolkit-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
+  <div class="section" id="splat-the-spex-prism-library-analysis-toolkit">
+<h1>SPLAT: The SpeX Prism Library Analysis Toolkit<a class="headerlink" href="#splat-the-spex-prism-library-analysis-toolkit" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>SPLAT is a python-based spectral access and analysis package designed to interface
+with the SpeX Prism Library (SPL: <a class="reference external" href="http://www.browndwarfs.org/spexprism">http://www.browndwarfs.org/spexprism</a>),
+an online repository of over
+1500 low-resolution, near-infrared spectra of low-temperature stars and brown dwarfs.
+It is built on common python packages such as numpy, scipy, astropy and matplotlib.</p>
+<dl class="docutils">
+<dt>SPLAT tools will allow you to:</dt>
+<dd><ul class="first last simple">
+<li>search the SPL for data and source information;</li>
+<li>access the publically-available (published) spectra contained in it;</li>
+<li>compare your near-infrared spectrum to these data</li>
+<li>make use of published empirical trends in absolute magnitudes and effective temperatures;</li>
+<li>perform basic spectral analyses such as spectral classification, gravity classification, index measurement, spectrophotometry, reddening, robust comparison statistics, basic math operations;</li>
+<li>perform advanced analyses such as MCMC spectral model fitting, spectral binary analysis, and optimized index definition;</li>
+<li>transform observable to physical parameters using evolutionary models; and</li>
+<li>plot/tabulate/publish your results.</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Note that many of these features are currently under development.</strong></p>
+</div>
+<div class="section" id="installation-and-dependencies">
+<h2>Installation and Dependencies<a class="headerlink" href="#installation-and-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>SPLAT is best forked from the github site <a class="reference external" href="http://github.org/aburgasser/splat">http://github.org/aburgasser/splat</a>,
+which is updated on a regular basis.
+SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by
+sending bug reports to <a class="reference external" href="mailto:aburgasser&#37;&#52;&#48;ucsd&#46;edu">aburgasser<span>&#64;</span>ucsd<span>&#46;</span>edu</a></p>
+<p>General instructions on setting up to run SPLAT are maintained at <a class="reference external" href="http://bit.ly/1AQuy9G">http://bit.ly/1AQuy9G</a></p>
+<p>You should copy the file <code class="docutils literal"><span class="pre">.splat_access</span></code> into your home directory - this is your access key
+if you have priveleged access to unpublished data.</p>
+</div>
+<div class="section" id="using-splat">
+<h2>Using SPLAT<a class="headerlink" href="#using-splat" title="Permalink to this headline">¶</a></h2>
+<p>SPLAT is best used in the ipython or ipython notebook; all of the necessary data is
+included in the github install, so you won&#8217;t need to be online to run anything</p>
+<p>Here are some examples:</p>
+<ul class="simple">
+<li>The best way to read in a spectrum is to use getSpectrum:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;0415-0935&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">young</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;M7&#39;</span><span class="p">,</span><span class="s">&#39;L5&#39;</span><span class="p">],</span><span class="n">jmag</span><span class="o">=</span><span class="p">[</span><span class="mf">14.</span><span class="p">,</span><span class="mf">99.</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>In each case, splist is a list of Spectrum objects, which is the container of various
+aspects of the spectrum and it source properties. For example, selecting the first spectrum,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">sp.wave</span></code> gives the wavelengths of this spectrum, <code class="docutils literal"><span class="pre">sp.flux</span></code> the flux values, and <code class="docutils literal"><span class="pre">sp.noise</span></code> the
+flux uncertainty.</p>
+<p>You can also read in your own spectrum by passing a filename</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s">&#39;PATH_TO/myspectrum.fits&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that this file must conform to the standard of the SPL data: the first column is
+wavelength in microns, second column flux in f_lambda units, third column (optional) is
+flux uncertainty.</p>
+<ul class="simple">
+<li>To flux calibrate the spectrum, use the object&#8217;s built in <code class="docutils literal"><span class="pre">fluxCalibrate()</span></code> method:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>To display the spectrum, use plotSpectrum</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which will pop up a window displaying flux vs. wavelength.
+You can save this display by adding a filename:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="nb">file</span><span class="o">=</span><span class="s">&#39;spectrum.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also compare multiple spectra:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1217-0311&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span><span class="n">sp2</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;black&#39;</span><span class="p">,</span><span class="s">&#39;red&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>You can add several extras to this to label features, plot uncertainties,
+indicate telluric absorption regions, make multi-panel and multi-page plots
+of lists of spectra, etc. Be sure to look through the plotting
+subpackage for more details.</p>
+<p>SPLAT can analyze and compare an arbitrary number of spectra.</p>
+<ul class="simple">
+<li>To measure spectral indices, use measureIndex or measureIndexSet:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">value</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">measureIndex</span><span class="p">(</span><span class="n">sp</span><span class="p">,[</span><span class="mf">1.14</span><span class="p">,</span><span class="mf">1.165</span><span class="p">],[</span><span class="mf">1.21</span><span class="p">,</span><span class="mf">1.235</span><span class="p">],</span><span class="n">method</span><span class="o">=</span><span class="s">&#39;integrate&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">indices</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">measureIndexSet</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="nb">set</span><span class="o">=</span><span class="s">&#39;testi&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The last line returns a dictionary, whose value,error pair can be accessed by the name
+of the index:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">indices</span><span class="p">[</span><span class="s">&#39;sH2O-J&#39;</span><span class="p">]</span>             <span class="c"># returns value, error</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>To classify a spectrum, use the classifyByXXX methods:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span><span class="n">unc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="nb">set</span><span class="o">=</span><span class="s">&#39;burgasser&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span><span class="n">unc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;T5&#39;</span><span class="p">,</span><span class="s">&#39;T9&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;T8&#39;</span><span class="p">,</span><span class="s">&#39;T9&#39;</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The last line returns a dictionary containing the best 5 template matches to the Spectrum sp.</p>
+<ul class="simple">
+<li>To compare a spectrum to another spectrum or a model, use compareSpectra:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mdl</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">loadModel</span><span class="p">(</span><span class="n">teff</span><span class="o">=</span><span class="mi">700</span><span class="p">,</span><span class="n">logg</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>                    <span class="c"># loads a BTSettl08 model by default</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chi</span><span class="p">,</span><span class="n">scale</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">mdl</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mdl</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">mdl</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;black&#39;</span><span class="p">,</span><span class="s">&#39;red&#39;</span><span class="p">],</span><span class="n">legend</span><span class="o">=</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">mdl</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>All of these routines have many options worth exploring, and which are (increasingly) documented
+in the following pages. If there are capabilities
+you need, please suggest them, or even better contribute your own code!</p>
+</div>
+<div class="section" id="authors">
+<h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
+<p>SPLAT is an experimental, collaborative project of research students in Adam Burgasser&#8217;s
+UCSD Cool Star Lab, aimed at teaching students how to do research by building
+their own analysis tools.  Contributors to SPLAT include Christian Aganze, Daniella Bardalez Gagliuffi,
+Adam Burgasser (PI), Caleb Choban, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez,
+Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis and Tomoki Tamiya.</p>
+<p><em>Contents</em></p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a><ul>
@@ -107,13 +252,21 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bugs.html#high-priority">High priority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bugs.html#medium-priority">Medium priority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bugs.html#low-priority">Low priority</a></li>
+</ul>
+</li>
 </ul>
 </div>
+<p><em>Search</em></p>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
 <li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
 </ul>
+</div>
 </div>
 
 

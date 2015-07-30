@@ -1715,25 +1715,26 @@ def fetchDatabase(*args, **kwargs):
     return data
 
 
-def filenameToNameDate(filename):
-    '''Extract from a SPLAT filename the source name and observation date'''
-    ind = filename.rfind('.')
-    base = filename[:ind]
-    spl = base.split('_')
-    if (len(spl) < 2):
-        return '', ''
-    else:
-        name = spl[-2]
-        d = spl[-1]
-        try:
-            float(d)
-            date = '20'+d
-        except ValueError:
+# DEPRECATED
+#def filenameToNameDate(filename):
+#    '''Extract from a SPLAT filename the source name and observation date'''
+#    ind = filename.rfind('.')
+#    base = filename[:ind]
+#    spl = base.split('_')
+#    if (len(spl) < 2):
+#        return '', ''
+#    else:
+#        name = spl[-2]
+#        d = spl[-1]
+#        try:
+#            float(d)
+#            date = '20'+d
+#        except ValueError:
 #            print filename+' does not contain a date'
-            date = ''
-        
-        return name, date
-
+#            date = ''
+#        
+#        return name, date
+#
 
 
 def filterMag(sp,filter,*args,**kwargs):
@@ -2787,7 +2788,7 @@ def searchLibrary(*args, **kwargs):
                 exkey = [exkey]
             for f in exkey:
                 spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)] += 1
-                print spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)]
+#                print spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)]
             count+=1.
 # exclude by filename
     if kwargs.get('excludefile',False) != False:
@@ -2851,6 +2852,10 @@ def searchLibrary(*args, **kwargs):
 
 
 def test():
+    '''
+    Testing the SPLAT Code.
+    '''
+    
     test_src = 'Random'
 
     sys.stderr.write('\n\n>>>>>>>>>>>> TESTING SPLAT CODE <<<<<<<<<<<<\n')
