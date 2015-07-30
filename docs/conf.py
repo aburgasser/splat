@@ -3,6 +3,10 @@
 # SpeX Prism Library Analysis Toolkit documentation build configuration file, created by
 # sphinx-quickstart on Sat Jul 11 20:07:28 2015.
 #
+##################
+#  you should compile this using the following command in the _build folder:
+#     sphinx-apidoc -f -o docs/source projectdir
+##################
 # This file is execfile()d with the current directory set to its
 # containing dir.
 #
@@ -30,7 +34,7 @@ sys.path.insert(0, os.path.abspath('../'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc','sphinx.ext.intersphinx'
+    'sphinx.ext.autodoc','sphinx.ext.intersphinx', 'sphinx.ext.napoleon'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
