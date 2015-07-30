@@ -37,6 +37,7 @@ Annoying but functional:
  * need a way to store/read in indices
  * evolutionary models may not be returning accurate values - this needs to be validated
  * if an error occurs or you stop a spectrum download midway, that (blank) file persists and causes problems - deleting in advance does not seem to work
+ * not entirely sure EW program is returning correct values
 
 
 Low priority 
