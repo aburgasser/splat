@@ -80,8 +80,8 @@ else:
 
 #################### CONSTANTS ####################
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
-DATA_FOLDER = '/Spectra/'
-DB_FOLDER = '/Databases/'
+DATA_FOLDER = '/reference/Spectra/'
+DB_FOLDER = '/db/'
 SOURCES_DB = 'source_data.txt'
 SPECTRA_DB = 'spectral_data.txt'
 ORIGINAL_DB = 'db_spexprism.txt'
@@ -125,7 +125,7 @@ spex_stdfiles = { \
     'T9.0': '11536_10509.fits'}
 
 # filters
-FILTER_FOLDER = '/Filters/'
+FILTER_FOLDER = '/reference/Filters/'
 filters = { \
     '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band'}, \
     '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band'}, \
@@ -168,6 +168,9 @@ filters = { \
 
 # Index sets
 index_sets = ['burgasser','tokunaga','reid','geballe','allers','testi','slesnick','mclean','rojas']
+
+# change the command prompt
+sys.ps1 = 'splat> '
 
 #####################################################
 
@@ -3256,3 +3259,9 @@ def weightedMeanVar(vals, winp, *args, **kwargs):
     var = numpy.nansum(weights*(vals-mn)**2)/numpy.nansum(weights)
     
     return mn,var        
+
+
+
+# run test program if calling from command line
+if __name__ == "__main__":
+    test()

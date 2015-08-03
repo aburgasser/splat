@@ -40,7 +40,12 @@ else:
     if max(checkpath):
         SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
 
-EVOLUTIONARY_MODEL_FOLDER = '/EvolutionaryModels/'
+EVOLUTIONARY_MODEL_FOLDER = '/reference/EvolutionaryModels/'
+
+# change the command prompt
+sys.ps1 = 'splat evolve> '
+
+
 
 ###############################################################################
 ###############################################################################
