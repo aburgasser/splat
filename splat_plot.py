@@ -13,6 +13,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import numpy
 from scipy.interpolate import interp1d 
 import splat
+import sys
 
 # change the command prompt
 sys.ps1 = 'splat plot> '
