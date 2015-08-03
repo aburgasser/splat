@@ -167,7 +167,7 @@ filters = { \
     }
 
 # Index sets
-index_sets = ['burgasser','tokunaga','reid','geballe','allers','testi','slesnick','mclean','rojas']
+index_sets = ['burgasser','bardalez','tokunaga','reid','geballe','allers','testi','slesnick','mclean','rojas']
 
 # change the command prompt
 sys.ps1 = 'splat> '
@@ -2193,7 +2193,7 @@ def measureIndex(sp,*args,**kwargs):
     if (len(args) < 2):
         print 'measureIndex needs at least two samples to function'
         return numpy.nan, numpy.nan
-    elif (len(args) < 3 and (method == 'line' or method == 'allers')):
+    elif (len(args) < 3 and (method == 'line' or method == 'allers' or method == 'inverse_line')):
         print method+' requires at least 3 sample regions'
         return numpy.nan, numpy.nan
 
@@ -2239,7 +2239,9 @@ def measureIndex(sp,*args,**kwargs):
     if (method == 'ratio'):
         vals = values[0,:]/values[1,:]
     elif (method == 'line'):
-        vals = (values[0,:]+values[1,:])/values[2,:]
+        vals = 0.5*(values[0,:]+values[1,:])/values[2,:]
+    elif (method == 'inverse_line'):
+        vals = 2.*values[0,:]/(values[1,:]+values[2,:])
     elif (method == 'change'):
         vals = 2.*(values[0,:]-values[1,:])/(values[0,:]+values[1,:])
     elif (method == 'allers'):
@@ -2277,6 +2279,21 @@ def measureIndexSet(sp,**kwargs):
         inds[4],errs[4] = measureIndex(sp,[1.975,1.995],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
         inds[5],errs[5] = measureIndex(sp,[2.215,2.255],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
         inds[6],errs[6] = measureIndex(sp,[2.06,2.10],[1.25,1.29],method='ratio',sample='integrate',**kwargs)
+    elif ('bardalez' in set.lower()):
+        reference = 'Indices from Bardalez Gagliuffi et al. (2014)'
+        refcode = 'BUR06'
+        names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J','H-dip','K-slope','J-slope','H-bump','H2O-Y']
+        inds = numpy.zeros(len(names))
+        errs = numpy.zeros(len(names))
+        inds[0],errs[0] = measureIndex(sp,[1.14,1.165],[1.26,1.285],method='ratio',sample='integrate',**kwargs)
+        inds[1],errs[1] = measureIndex(sp,[1.315,1.335],[1.26,1.285],method='ratio',sample='integrate',**kwargs)
+        inds[2],errs[2] = measureIndex(sp,[1.48,1.52],[1.56,1.60],method='ratio',sample='integrate',**kwargs)
+        inds[3],errs[3] = measureIndex(sp,[1.635,1.675],[1.56,1.60],method='ratio',sample='integrate',**kwargs)
+        inds[4],errs[4] = measureIndex(sp,[1.975,1.995],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
+        inds[5],errs[5] = measureIndex(sp,[2.215,2.255],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
+        inds[6],errs[6] = measureIndex(sp,[2.06,2.10],[1.25,1.29],method='ratio',sample='integrate',**kwargs)
+### ADRIAN FILL IN OTHER INDICES HERE - NOTE THAT H-DIP METHOD=INVERSE_LINE, J-CURVE METHOD = LINE
+
     elif ('tokunaga' in set.lower()):
         reference = 'Indices from Tokunaga & Kobayashi (1999)'
         refcode = 'TOK99'
