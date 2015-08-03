@@ -14,10 +14,6 @@ import numpy
 from scipy.interpolate import interp1d 
 import splat
 
-# change the command prompt
-sys.ps1 = 'splat plot> '
-
-
 def plotSpectrum(*args, **kwargs):
     '''
     :Purpose: ``Primary plotting program for Spectrum objects.``

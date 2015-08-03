@@ -15,12 +15,15 @@ import numpy
 from astropy.io import ascii            # for reading in spreadsheet
 import splat
 
-SPECTRAL_MODEL_FOLDER = '/SpectralModels/'
+SPECTRAL_MODEL_FOLDER = '/reference/SpectralModels/'
 MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']
 MODEL_PARAMETERS = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
 DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
 TMPFILENAME = 'splattmpfile'
 TEN_PARSEC = 443344480.     # ten parcecs in solar radii
+
+# change the command prompt
+sys.ps1 = 'splat model> '
 
 #set the SPLAT PATH, either from set environment variable or from sys.path
 #SPLAT_PATH = './'
