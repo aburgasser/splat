@@ -1423,7 +1423,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     mask_ranges = kwargs.get('mask_ranges',[])
     mask_telluric = kwargs.get('mask_telluric',False)
     mask_standard = kwargs.get('mask_standard',False)
-    var_flag = kwargs.get('novar2',False)
+    var_flag = kwargs.get('novar2',True)
     stat = kwargs.get('stat','chisqr')
     minreturn = 1.e-9
     if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
