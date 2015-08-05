@@ -260,6 +260,7 @@ def plotSpectrum(*args, **kwargs):
     plt.close('all')
 
 # set up here for multiple file output
+    nplot = 1
     if multipage == True or multiplot == True:
         nplot = multilayout[0]*multilayout[1]
         numpages = int(len(splist) / nplot) + 1
@@ -482,7 +483,6 @@ def plotSpectrum(*args, **kwargs):
 # grid
         if (grid):
             ax.grid()            
-        ax.axis(bound)
 
 # axis labels 
         fontsize = (13-numpy.min([(multilayout[0]*multilayout[1]-1),8])) * fontscale        # Added in fontscale
@@ -498,6 +498,9 @@ def plotSpectrum(*args, **kwargs):
             ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size':fontsize})
         else:
             ax.legend(loc=legendLocation, prop={'size':fontsize})
+            bound[3] = bound[3]+0.1*(bound[3]-bound[2])     # extend axis for in-plot legends
+
+        ax.axis(bound)
     
 # save to file or display
         if multipage == False:
