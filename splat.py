@@ -88,6 +88,7 @@ ORIGINAL_DB = 'db_spexprism.txt'
 
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
+uspex_pixel_scale = 0.10            # spatial scale in arcseconds per pixel
 spex_wave_range = [0.65,2.45]*u.micron    # default wavelength range
 max_snr = 1000.0                # maximum S/N ratio permitted
 TMPFILENAME = 'splattmpfile'
@@ -1421,6 +1422,8 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     mask = kwargs.get('mask',numpy.zeros(len(sp1.wave)))    # mask = 1 -> ignore
     fit_ranges = kwargs.get('fit_ranges',[spex_wave_range])
     mask_ranges = kwargs.get('mask_ranges',[])
+    if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
+        mask_ranges*=u.micron
     mask_telluric = kwargs.get('mask_telluric',False)
     mask_standard = kwargs.get('mask_standard',False)
     var_flag = kwargs.get('novar2',True)
@@ -1520,8 +1523,9 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     if (kwargs.get('plot',False) != False):
         spcomp = sp2.copy()
         spcomp.scale(scale)
-        plotSpectrum(sp1,spcomp,colors=['k','r'],\
-            title=sp1.name+' vs '+sp2.name,**kwargs)
+        kwargs['colors'] = kwargs.get('colors',['k','r'])
+        kwargs['title'] = kwargs.get('title',sp1.name+' vs '+sp2.name)
+        plotSpectrum(sp1,spcomp,**kwargs)
 
     return numpy.nanmax([stat,minreturn])*unit, scale
         
