@@ -2269,8 +2269,38 @@ def measureIndexSet(sp,**kwargs):
 # keyword parameters
     set = kwargs.get('set','burgasser')
 
-# determine combine method
-    if ('burgasser' in set.lower()):
+    if ('allers' in set.lower()):
+        reference = 'Indices from Allers et al. (2007), Allers & Liu (2013)'
+        refcode = 'ALL13'
+        names = ['H2O','FeH-z','VO-z','FeH-J','KI-J','H-cont']
+        inds = numpy.zeros(len(names))
+        errs = numpy.zeros(len(names))
+        inds[0],errs[0] = measureIndex(sp,[1.55,1.56],[1.492,1.502],method='ratio',sample='average',**kwargs)
+        inds[1],errs[1] = measureIndex(sp,[0.99135,1.00465],[0.97335,0.98665],[1.01535,1.02865],method='allers',sample='average',**kwargs)
+        inds[2],errs[2] = measureIndex(sp,[1.05095,1.06505],[1.02795,1.04205],[1.07995,1.09405],method='allers',sample='average',**kwargs)
+        inds[3],errs[3] = measureIndex(sp,[1.19880,1.20120],[1.19080,1.19320],[1.20680,1.20920],method='allers',sample='average',**kwargs)
+        inds[4],errs[4] = measureIndex(sp,[1.23570,1.25230],[1.21170,1.22830],[1.26170,1.27830],method='allers',sample='average',**kwargs)
+        inds[5],errs[5] = measureIndex(sp,[1.54960,1.57040],[1.45960,1.48040],[1.65960,1.68040],method='allers',sample='average',**kwargs)
+    elif ('bardalez' in set.lower()):
+        reference = 'Indices from Bardalez Gagliuffi et al. (2014)'
+        refcode = 'BAR14'
+        names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J','H-dip','K-slope','J-slope','J-curve','H-bump','H2O-Y']
+        inds = numpy.zeros(len(names))
+        errs = numpy.zeros(len(names))
+        inds[0],errs[0] = measureIndex(sp,[1.14,1.165],[1.26,1.285],method='ratio',sample='integrate',**kwargs)
+        inds[1],errs[1] = measureIndex(sp,[1.315,1.335],[1.26,1.285],method='ratio',sample='integrate',**kwargs)
+        inds[2],errs[2] = measureIndex(sp,[1.48,1.52],[1.56,1.60],method='ratio',sample='integrate',**kwargs)
+        inds[3],errs[3] = measureIndex(sp,[1.635,1.675],[1.56,1.60],method='ratio',sample='integrate',**kwargs)
+        inds[4],errs[4] = measureIndex(sp,[1.975,1.995],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
+        inds[5],errs[5] = measureIndex(sp,[2.215,2.255],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
+        inds[6],errs[6] = measureIndex(sp,[2.06,2.10],[1.25,1.29],method='ratio',sample='integrate',**kwargs)
+        inds[7],errs[7] = measureIndex(sp,[1.61,1.64],[1.56,1.59],[1.66,1.69] ,method='inverse_line',sample='integrate',**kwargs)
+        inds[8],errs[8] = measureIndex(sp,[2.06,2.10],[2.10,2.14],method='ratio',sample='integrate',**kwargs)
+        inds[9],errs[9] = measureIndex(sp,[1.27,1.30],[1.30,1.33],method='ratio',sample='integrate',**kwargs)
+        inds[10],errs[10] = measureIndex(sp,[1.04,1.07],[1.26,1.29],[1.14,1.17],method='line',sample='integrate',**kwargs)
+        inds[11],errs[11] = measureIndex(sp,[1.54,1.57],[1.66,1.69],method='ratio',sample='integrate',**kwargs)
+        inds[12],errs[12] = measureIndex(sp,[1.04,1.07],[1.14,1.17],method='ratio',sample='integrate',**kwargs)
+    elif ('burgasser' in set.lower()):
         reference = 'Indices from Burgasser et al. (2006)'
         refcode = 'BUR06'
         names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J']
@@ -2283,37 +2313,6 @@ def measureIndexSet(sp,**kwargs):
         inds[4],errs[4] = measureIndex(sp,[1.975,1.995],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
         inds[5],errs[5] = measureIndex(sp,[2.215,2.255],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
         inds[6],errs[6] = measureIndex(sp,[2.06,2.10],[1.25,1.29],method='ratio',sample='integrate',**kwargs)
-    elif ('bardalez' in set.lower()):
-        reference = 'Indices from Bardalez Gagliuffi et al. (2014)'
-        refcode = 'BUR06'
-        names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J','H-dip','K-slope','J-slope','H-bump','H2O-Y']
-        inds = numpy.zeros(len(names))
-        errs = numpy.zeros(len(names))
-        inds[0],errs[0] = measureIndex(sp,[1.14,1.165],[1.26,1.285],method='ratio',sample='integrate',**kwargs)
-        inds[1],errs[1] = measureIndex(sp,[1.315,1.335],[1.26,1.285],method='ratio',sample='integrate',**kwargs)
-        inds[2],errs[2] = measureIndex(sp,[1.48,1.52],[1.56,1.60],method='ratio',sample='integrate',**kwargs)
-        inds[3],errs[3] = measureIndex(sp,[1.635,1.675],[1.56,1.60],method='ratio',sample='integrate',**kwargs)
-        inds[4],errs[4] = measureIndex(sp,[1.975,1.995],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
-        inds[5],errs[5] = measureIndex(sp,[2.215,2.255],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
-        inds[6],errs[6] = measureIndex(sp,[2.06,2.10],[1.25,1.29],method='ratio',sample='integrate',**kwargs)
-### ADRIAN FILL IN OTHER INDICES HERE - NOTE THAT H-DIP METHOD=INVERSE_LINE, J-CURVE METHOD = LINE
-
-    elif ('tokunaga' in set.lower()):
-        reference = 'Indices from Tokunaga & Kobayashi (1999)'
-        refcode = 'TOK99'
-        names = ['K1','K2']
-        inds = numpy.zeros(len(names))
-        errs = numpy.zeros(len(names))
-        inds[0],errs[0] = measureIndex(sp,[2.1,2.18],[1.96,2.04],method='change',sample='average',**kwargs)
-        inds[1],errs[1] = measureIndex(sp,[2.2,2.28],[2.1,2.18],method='change',sample='average',**kwargs)
-    elif ('reid' in set.lower()):
-        reference = 'Indices from Reid et al. (2001)'
-        refcode = 'REI01'
-        names = ['H2O-A','H2O-B']
-        inds = numpy.zeros(len(names))
-        errs = numpy.zeros(len(names))
-        inds[0],errs[0] = measureIndex(sp,[1.33,1.35],[1.28,1.30],method='ratio',sample='average',**kwargs)
-        inds[1],errs[1] = measureIndex(sp,[1.47,1.49],[1.59,1.61],method='ratio',sample='average',**kwargs)
     elif ('geballe' in set.lower()):
         reference = 'Indices from Geballe et al. (2002)'
         refcode = 'GEB02'
@@ -2323,18 +2322,40 @@ def measureIndexSet(sp,**kwargs):
         inds[0],errs[0] = measureIndex(sp,[1.26,1.29],[1.13,1.16],method='ratio',sample='integrate',**kwargs)
         inds[1],errs[1] = measureIndex(sp,[1.57,1.59],[1.46,1.48],method='ratio',sample='integrate',**kwargs)
         inds[2],errs[2] = measureIndex(sp,[2.08,2.12],[2.215,2.255],method='ratio',sample='integrate',**kwargs)
-    elif ('allers' in set.lower()):
-        reference = 'Indices from Allers et al. (2007), Allers & Liu (2013)'
-        refcode = 'ALL13'
-        names = ['H2O','FeH-z','VO-z','FeH-J','KI-J','H-cont']
+    elif ('mclean' in set.lower()):
+        reference = 'Indices from McLean et al. (2003)'
+        refcode = 'MCL03'
+        names = ['H2OD']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
-        inds[0],errs[0] = measureIndex(sp,[1.55,1.56],[1.492,1.502],method='ratio',sample='average',**kwargs)
-        inds[1],errs[1] = measureIndex(sp,[0.99135,1.00465],[0.97335,0.98665],[1.01535,1.02865],method='allers',sample='average',**kwargs)
-        inds[2],errs[2] = measureIndex(sp,[1.05095,1.06505],[1.02795,1.04205],[1.07995,1.09405],method='allers',sample='average',**kwargs)
-        inds[3],errs[3] = measureIndex(sp,[1.19880,1.20120],[1.19080,1.19320],[1.20680,1.20920],method='allers',sample='average',**kwargs)
-        inds[4],errs[4] = measureIndex(sp,[1.23570,1.25230],[1.21170,1.22830],[1.26170,1.27830],method='allers',sample='average',**kwargs)
-        inds[5],errs[5] = measureIndex(sp,[1.54960,1.57040],[1.45960,1.48040],[1.65960,1.68040],method='allers',sample='average',**kwargs)
+        inds[0],errs[0] = measureIndex(sp,[1.951,1.977],[2.062,2.088],method='ratio',sample='average',**kwargs)
+    elif ('reid' in set.lower()):
+        reference = 'Indices from Reid et al. (2001)'
+        refcode = 'REI01'
+        names = ['H2O-A','H2O-B']
+        inds = numpy.zeros(len(names))
+        errs = numpy.zeros(len(names))
+        inds[0],errs[0] = measureIndex(sp,[1.33,1.35],[1.28,1.30],method='ratio',sample='average',**kwargs)
+        inds[1],errs[1] = measureIndex(sp,[1.47,1.49],[1.59,1.61],method='ratio',sample='average',**kwargs)
+    elif ('rojas' in set.lower()):
+        reference = 'Indices from Rojas-Ayala et al.(2012)'
+        refcode = 'ROJ12'
+        names = ['H2O-K2']
+        inds = numpy.zeros(len(names))
+        errs = numpy.zeros(len(names))
+        num, er1= measureIndex(sp,[2.070,2.090],[2.235,2.255],method='ratio',sample='average',**kwargs)
+        den, er2= measureIndex(sp,[2.235,2.255],[2.360,2.380],method='ratio',sample='average',**kwargs)
+        inds[0]= num/den
+        errs[0]= inds[0]*numpy.sqrt((er1/num)**2+(er2/den)**2)    
+    elif ('slesnick' in set.lower()):
+        reference = 'Indices from Slesnick et al. (2004)'
+        refcode = 'SEL04'
+        names = ['H2O-1','H2O-2','FeH']
+        inds = numpy.zeros(len(names))
+        errs = numpy.zeros(len(names))
+        inds[0],errs[0] = measureIndex(sp,[1.335,1.345],[1.295,1.305],method='ratio',sample='average',**kwargs)
+        inds[1],errs[1] = measureIndex(sp,[2.035,2.045],[2.145,2.155],method='ratio',sample='average',**kwargs)
+        inds[2],errs[2] = measureIndex(sp,[1.1935,1.2065],[1.2235,1.2365],method='ratio',sample='average',**kwargs)
     elif ('testi' in set.lower()):
         reference = 'Indices from Testi et al. (2001)'
         refcode = 'TES01'
@@ -2347,32 +2368,14 @@ def measureIndexSet(sp,**kwargs):
         inds[3],errs[3] = measureIndex(sp,[1.60,1.70],[1.45,1.48],method='change',sample='average',**kwargs)
         inds[4],errs[4] = measureIndex(sp,[1.60,1.70],[1.77,1.81],method='change',sample='average',**kwargs)
         inds[5],errs[5] = measureIndex(sp,[2.12,2.16],[1.96,1.99],method='change',sample='average',**kwargs)
-    elif ('slesnick' in set.lower()):
-        reference = 'Indices from Slesnick et al. (2004)'
-        refcode = 'SEL04'
-        names = ['H2O-1','H2O-2','FeH']
+    elif ('tokunaga' in set.lower()):
+        reference = 'Indices from Tokunaga & Kobayashi (1999)'
+        refcode = 'TOK99'
+        names = ['K1','K2']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
-        inds[0],errs[0] = measureIndex(sp,[1.335,1.345],[1.295,1.305],method='ratio',sample='average',**kwargs)
-        inds[1],errs[1] = measureIndex(sp,[2.035,2.045],[2.145,2.155],method='ratio',sample='average',**kwargs)
-        inds[2],errs[2] = measureIndex(sp,[1.1935,1.2065],[1.2235,1.2365],method='ratio',sample='average',**kwargs)
-    elif ('mclean' in set.lower()):
-        reference = 'Indices from McLean et al. (2003)'
-        refcode = 'MCL03'
-        names = ['H2OD']
-        inds = numpy.zeros(len(names))
-        errs = numpy.zeros(len(names))
-        inds[0],errs[0] = measureIndex(sp,[1.951,1.977],[2.062,2.088],method='ratio',sample='average',**kwargs)
-    elif ('rojas' in set.lower()):
-        reference = 'Indices from Rojas-Ayala et al.(2012)'
-        refcode = 'ROJ12'
-        names = ['H2O-K2']
-        inds = numpy.zeros(len(names))
-        errs = numpy.zeros(len(names))
-        num, er1= measureIndex(sp,[2.070,2.090],[2.235,2.255],method='ratio',sample='average',**kwargs)
-        den, er2= measureIndex(sp,[2.235,2.255],[2.360,2.380],method='ratio',sample='average',**kwargs)
-        inds[0]= num/den
-        errs[0]= inds[0]*numpy.sqrt((er1/num)**2+(er2/den)**2)    
+        inds[0],errs[0] = measureIndex(sp,[2.1,2.18],[1.96,2.04],method='change',sample='average',**kwargs)
+        inds[1],errs[1] = measureIndex(sp,[2.2,2.28],[2.1,2.18],method='change',sample='average',**kwargs)
     else:
         print '{} is not one of the sets used for measureIndexSet'.format(set)
         return numpy.nan

@@ -797,7 +797,7 @@ if __name__ == '__main__':
     basefolder = '/Users/adam/projects/splat/exercises/ex9/'
     sp = splat.getSpectrum(shortname='1047+2124')[0]        # T6.5 radio emitter
     spt,spt_e = splat.classifyByStandard(sp,spt=['T2','T8'])
-    teff = typeToTeff(spt)
+    teff,teff_e = splat.typeToTeff(spt)
     sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
-    table = modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=50,savestep=0,filebase=basefolder+'fit1047',verbose=True)
+    table = modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=10000,savestep=0,filebase=basefolder+'fit1047',verbose=True)
 
