@@ -125,6 +125,23 @@ spex_stdfiles = { \
     'T8.0': '10126_10349.fits',\
     'T9.0': '11536_10509.fits'}
 
+spex_sd_stdfiles = { \
+    'sdM5.5': '11670_11134.fits',\
+    'sdM6.0': '10265_10045.fits',\
+    'sdM7.0': '10197_11074.fits',\
+    'sdM8.0': '10123_10145.fits',\
+    'sdM9.5': '10188_10700.fits',\
+    'sdL0.0': '11972_10248.fits',\
+    'sdL3.5': '10364_10946.fits',\
+    'sdL4.0': '10203_11241.fits'}
+
+spex_esd_stdfiles = { \
+    'esdM5.0': '10229_10163.fits',\
+#    'esdM6.5': '_10579.fits',\
+    'esdM7.0': '10521_10458.fits',\
+    'esdM8.5': '10278_10400.fits'}
+
+
 # filters
 FILTER_FOLDER = '/reference/Filters/'
 filters = { \
@@ -1001,6 +1018,17 @@ def classifyByStandard(sp, *args, **kwargs):
         sptrange = [typeToNum(sptrange[0]),typeToNum(sptrange[1])]
     unc_sys = 0.5
 
+# classification list    
+    stdfiles = spex_stdfiles
+    subclass = ''
+    if kwargs.get('sd',False):
+        stdfiles = spex_sd_stdfiles
+        subclass = 'sd'
+    if kwargs.get('esd',False):
+        stdfiles = spex_esd_stdfiles
+        subclass = 'esd'
+    spt_allowed = numpy.array([typeToNum(s) for s in stdfiles.keys()])
+    
 # if you just want to compare to one standard
     cspt = kwargs.get('compareto',False)
     if (cspt != False):
@@ -1033,14 +1061,17 @@ def classifyByStandard(sp, *args, **kwargs):
     stat = []
     sspt = []
     sfile = []
-    for t in numpy.arange(sptrange[0],sptrange[1]+1):
-        spstd = Spectrum(file=spex_stdfiles[typeToNum(t)])
+    spt_sample = spt_allowed[numpy.where(spt_allowed >= sptrange[0])]
+    spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
+    
+    for t in spt_sample:
+        spstd = Spectrum(file=stdfiles[typeToNum(t,subclass=subclass)])
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],stat=compstat,novar2=True)
         stat.append(chisq)
         sspt.append(t)
-        sfile.append(spex_stdfiles[typeToNum(t)])
+        sfile.append(stdfiles[typeToNum(t,subclass=subclass)])
         if (verbose):
-            print spex_stdfiles[typeToNum(t)], typeToNum(t), chisq, scale
+            print stdfiles[typeToNum(t,subclass=subclass)], typeToNum(t,subclass=subclass), chisq, scale
 
 # list of sorted standard files and spectral types
     sorted_stdfiles = [x for (y,x) in sorted(zip(stat,sfile))]
@@ -1067,7 +1098,7 @@ def classifyByStandard(sp, *args, **kwargs):
 
 # string or not?
     if (kwargs.get('string', True) == True):
-        spt = typeToNum(sptn,uncertainty=sptn_e)
+        spt = typeToNum(sptn,uncertainty=sptn_e,subclass=subclass)
     else:
         spt = sptn
 
@@ -1077,7 +1108,7 @@ def classifyByStandard(sp, *args, **kwargs):
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],stat=compstat)
         spstd.scale(scale)
         plotSpectrum(sp,spstd,colors=['k','r'],\
-            title=sp.name+' vs '+typeToNum(sorted_stdsptnum[0])+' Standard',**kwargs)
+            title=sp.name+' vs '+typeToNum(sorted_stdsptnum[0],subclass=subclass)+' Standard',**kwargs)
 
     return spt, sptn_e
     
