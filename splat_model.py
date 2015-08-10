@@ -799,5 +799,5 @@ if __name__ == '__main__':
     spt,spt_e = splat.classifyByStandard(sp,spt=['T2','T8'])
     teff,teff_e = splat.typeToTeff(spt)
     sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
-    table = modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=10000,savestep=0,filebase=basefolder+'fit1047',verbose=True)
+    table = modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
 
