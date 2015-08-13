@@ -787,26 +787,36 @@ def classifyByIndex(sp, *args, **kwargs):
                 (2007); and Burgasser (2007). Returns 2-element tuple 
                 containing spectral type (numeric or string) and 
                 uncertainty.
+
     :param sp: Spectrum class object, which should contain wave, flux and 
-                 noise array elements.
-    :param set: (optional, default='burgasser') named set of indices to measure and compute spectral type 
-        - 'allers': H2O from Allers et al.
-        - 'burgasser': H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from Burgasser (2007)
-        - 'reid':H2O-A and H2O-B from Reid et al.(2001)
-        - 'testi': sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from Testi et al. (2001) 
-    :param string: (optional, default=False) return spectral type as a string (uses typeToNum)
-    :param round: (optional, default=False)  rounds off to nearest 0.5 subtypes
-    :param remeasure: (optional, default=True) force remeasurement of indices
-    :param nsamples: (optional, default=100) number of Monte Carlo samples for error computation
-    :param nloop: (optional, default=5) number of testing loops to see if spectral type is within a certain range
+               noise array elements.
+
+    :param set: named set of indices to measure and compute spectral type
+
+        - *'allers'*: H2O from Allers et al.
+        - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from Burgasser (2007)
+        - *'reid'*:H2O-A and H2O-B from Reid et al.(2001)
+        - *'testi'*: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from Testi et al. (2001)
+
+    :type set: optional, default = 'burgasser'
+    :param string: return spectral type as a string (uses typeToNum)
+    :type string: optional, default = False
+    :param round: rounds off to nearest 0.5 subtypes
+    :type round: optional, default = False
+    :param remeasure: force remeasurement of indices
+    :type remeasure: optional, default = True
+    :param nsamples: number of Monte Carlo samples for error computation
+    :type nsamples: optional, default = 100
+    :param nloop: number of testing loops to see if spectral type is within a certain range
+    :type nloop: optional, default = 5
 
     :Example: 
-       >>> import splat
-       >>> spc = splat.getSpectrum(shortname='0559-1404')[0]
-       >>> print splat.classifyByIndex(spc, string=True, set='burgasser', round=True)
-         ('T4.5', 0.2562934083414341)
+    >>> import splat
+    >>> spc = splat.getSpectrum(shortname='0559-1404')[0]
+    >>> print splat.classifyByIndex(spc, string=True, set='burgasser', round=True)
+        ('T4.5', 0.2562934083414341)
 
-    :Note:
+    .. note::
         * Need to allow output of individual spectral types from individual indices
     '''
     
@@ -982,31 +992,42 @@ def classifyByIndex(sp, *args, **kwargs):
 
 def classifyByStandard(sp, *args, **kwargs):
     '''
-    :Purpose: ``Determine the spectral type and uncertainty for a 
+    :Purpose: Determine the spectral type and uncertainty for a 
                 spectrum by direct comparison to spectral standards. 
                 Standards span M0-T9 and include the standards listed in 
                 Kirkpatrick et al. (2010) with addition of UGPS 0722-0540 
                 as the T9 standard.  Returns the best match or an F-test 
                 weighted mean and uncertainty. There is an option to follow 
                 the procedure of Kirkpatrick et al. (2010), fitting only in 
-                the 0.9-1.4 micron region``
-    :Usage: ``spt,unc = splat.classifyByStandard(sp, \**kwargs)``
-    :param sp: ``Spectrum class object, which should contain wave, flux and 
-                 noise array elements.``
-    :param \**kwargs (optional): - ``'best' = False: return the best fit standard type only``
-                        - ``'compareto' = False: compare to a single standard (string or number)``
-                        - ``'plot' = False: generate a plot comparing best fit standard to source, can be save to a file using the file keyword``
-                        - ``'file' = '': output spectrum plot to a file``
-                        - ``'method' = '': set to 'kirkpatrick' to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band``
-                        - ``'sptrange' = ['M0','T9']: constraint spectral type range to fit, can be strings or numbers``
-                        - ``'string' = True: return spectral type as a string``
-                        - ``'verbose' = False: Give lots of feedback``
+                the 0.9-1.4 micron region
+
+    .. :Usage: spt,unc = splat.classifyByStandard(sp, \**kwargs) (Do we need this?)
+    
+    :param sp: spectrum class object, which should contain wave, flux and noise array elements.
+    :param best: return the best fit standard type only
+    :type best: optional, default = False
+    :param compareto: compare to a single standard (string or number)
+    :type compareto: optional, default = False
+    :param plot: generate a plot comparing best fit standard to source, can be saved to a file using the ``file`` keyword
+    :type plot: optional, default = False
+    :param file: output spectrum plot to a file
+    :type file: optional, default = ''
+    :param method: set to 'kirkpatrick' to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band
+    :type method: optional, default = ''
+    :param sptrange: constraint spectral type range to fit, can be strings or numbers
+    :type sptrange: optional, default = ['M0','T9']
+    :param string: return spectral type as a string
+    :type string: optional, default = True
+    :param verbose: give lots of feedback
+    :type verbose: optional, default = False
+
     :Example:
-       >>> import splat
-       >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
-       >>> print splat.classifyByStandard(spc,string=True,method='kirkpatrick',plot=True)
-       ('L4.5', 0.7138959194725174)
+    >>> import splat
+    >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
+    >>> print splat.classifyByStandard(spc,string=True,method='kirkpatrick',plot=True)
+        ('L4.5', 0.7138959194725174)
     '''
+    
     verbose = kwargs.get('verbose',False)
     method = kwargs.get('method','')
     best_flag = kwargs.get('best',False)
@@ -1122,43 +1143,59 @@ def classifyByTemplate(sp, *args, **kwargs):
                 uncertainty. There is an option to follow  the procedure of 
                 Kirkpatrick et al. (2010), fitting only in the 0.9-1.4 micron 
                 region. 
-    :Usage: result = splat.classifyByTemplate(sp, \*args, \**kwargs)
-    :Output: result is a dictionary containing the following keys:
-                    - 'result = (Spectral Type, Spectral Type Uncertainty)
-                    - 'chisquare' = array of nbest chi-square values
-                    - 'name' = array of nbest source names
-                    - 'scale' = array of nbest optimal scale factors
-                    - 'spectra' = array of nbest Spectrum objects
-                    - 'spt' = array of nbest spectral types
-                
+
+    .. :Usage: result = splat.classifyByTemplate(sp, \*args, \**kwargs)
+
+    :Output: Returns a dictionary containing the following keys:
+
+                    - **result**: a tuple containing the spectral type and its uncertainty)
+                    - **chisquare**: array of nbest chi-square values
+                    - **name**: array of nbest source names
+                    - **scale**: array of nbest optimal scale factors
+                    - **spectra**: array of nbest Spectrum objects
+                    - **spt**: array of nbest spectral types
+
     :param sp: Spectrum class object, which should contain wave, flux and 
-                 noise array elements.
-    :param 'best': (optional, default = False) return only the best fit template type``
-                    - ``'plot' = False: generate a plot comparing best fit standard to source, can be save to a file using the file keyword``
-                    - ``'file' = '': output spectrum plot to a file``
-                    - ``'method' = '': set to 'kirkpatrick' to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band``
-                    - ``'nbest' = 1: number of best fitting spectra to return
-                    - ``'select' = '': string defining which spectral template set you want to compare to; several options which can be combined:``
-                        * ``'m dwarf': fit to M dwarfs only``
-                        * ``'l dwarf': fit to M dwarfs only``
-                        * ``'t dwarf': fit to M dwarfs only``
-                        * ``'vlm': fit to M7-T9 dwarfs``
-                        * ``'optical': only optical classifications``
-                        * ``'high sn': median S/N greater than 100``
-                        * ``'young': only young/low surface gravity dwarfs``
-                        * ``'companion': only companion dwarfs``
-                        * ``'subdwarf': only subdwarfs``
-                        * ``'single': only dwarfs not indicated a binaries``
-                        * ``'spectral binaries': only dwarfs indicated to be spectral binaries``
-                        * ``'standard': only spectral standards (use classifyByStandard instead)``
-                    - ``'string' = True: return spectral type as a string``
-                    - ``'spt_type' = 'literature': specify which spectral classification type to return; can be 'spex', 'opt', 'nir', or 'lit'
-                    - ``'verbose' = False: Give lots of feedback``
+               noise array elements.
+    :param best: return only the best fit template type
+    :type best: optional, default = False
+    :param plot: generate a plot comparing best fit standard to source, can be save to a file using the file keyword
+    :type plot: optional, default = False
+    :param file: output spectrum plot to a file
+    :type file: optional, default = ''
+    :param method: set to *'kirkpatrick'* to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band
+    :type method: optional, default = ''
+    :param nbest: number of best fitting spectra to return
+    :type nbest: optional, default = 1
+    :param set: string defining which spectral template set you want to compare to; several options which can be combined:
+
+            - *m dwarf*: fit to M dwarfs only
+            - *l dwarf*: fit to M dwarfs only
+            - *t dwarf*: fit to M dwarfs only
+            - *vlm*: fit to M7-T9 dwarfs
+            - *optical*: only optical classifications
+            - *high sn*: median S/N greater than 100
+            - *young*: only young/low surface gravity dwarfs
+            - *companion*: only companion dwarfs
+            - *subdwarf*: only subdwarfs
+            - *single*: only dwarfs not indicated a binaries
+            - *spectral binaries*: only dwarfs indicated to be spectral binaries
+            - *standard*: only spectral standards (use classifyByStandard instead)
+    
+    :type set: optional, default = ''
+
+    :param string: return spectral type as a string
+    :type string: optional, default = True
+    :param spt_type: specify which spectral classification type to return; can be 'spex', 'opt', 'nir', or 'lit'
+    :type spt_type: optional, default = 'literature'
+    :param verbose: give lots of feedback
+    :type verbose: optional, default = False
+
     :Example:
-       >>> import splat
-       >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
-       >>> print splat.classifyByTemplate(spc,string=True,set='l dwarf, high sn', spt_type='spex', plot=True)
-       ('L4.5', 0.7138959194725174)
+    >>> import splat
+    >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
+    >>> print splat.classifyByTemplate(spc,string=True,set='l dwarf, high sn', spt_type='spex', plot=True)
+        ('L4.5', 0.7138959194725174)
     '''
 
 #
@@ -1350,8 +1387,30 @@ def classifyByTemplate(sp, *args, **kwargs):
  
 
 def classifyGravity(sp, *args, **kwargs):
-    '''Determine the gravity classification of a brown dwarf
-    using the method of Allers & Liu 2013'''
+    '''
+    :Purpose: Determine the gravity classification of a brown dwarf using the method of Allers & Liu 2013
+
+    :param sp: Spectrum class object, which should contain wave, flux and 
+               noise array elements. Must be between M6.0 and L7.0.
+    :param indices: specify indices set using ``measureIndexSet``.
+    :type indices: optional, default = False
+    :param spt: spectral type of ``sp``. Must be between M6.0 and L7.0
+    :type spt: optional, default = False
+    :param plot: plot against spectral standard
+    :type plot: optional, default = False
+    :param allscores: returns the full result, including the gravity scores from different indices
+    :type allscores: optional, default = False
+    :param verbose: give lots of feedback
+    :type verbose: optional, default = False
+
+    :Example:
+    >>> import splat
+    >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
+    >>> print splat.classifyGravity(sp)
+        FLD-G
+    >>> print splat.classifyGravity(sp, allscores = True)
+        {'VO-z': 0.0, 'FeH-z': 1.0, 'gravity_class': 'FLD-G', 'H-cont': 0.0, 'KI-J': 1.0, 'score': 0.5}
+    '''
     
     verbose = kwargs.get('verbose',False)
     
@@ -1448,7 +1507,50 @@ def classifyGravity(sp, *args, **kwargs):
     
     
 def compareSpectra(sp1, sp2, *args, **kwargs):
-    '''Compare two spectra against each other'''
+    '''
+    :Purpose: Compare two spectra against each other. Returns the stat value as well as
+                the scale factor. Minimum possible value is 1.e-9.
+
+    :param sp1: Spectrum class object
+    :param sp2: Spectrum class object to compare with ``sp1``
+    :param weights: set weights for flux values of ``sp1``
+    :type weights: optional, default = [0, ..., 0] for len(sp1.wave)
+    :param mask: mask any flux value of ``sp1``; has to be an array with length equal as ``sp1`` with only 0 (unmask) or 1 (mask).
+    :type mask: optional, default = [0, ..., 0] for len(sp1.wave)
+    :param fit_ranges: wavelength range, measured in microns
+    :type fit_ranges: optional, default = [0.65,2.45]
+    :param mask_ranges: mask any flux value of ``sp1`` by specifying the wavelength range. Must be in microns
+    :type mask_ranges: optional, default = []
+    :param mask_telluric: masks certain wavelengths to avoid effects from telluric absorption
+    :type mask_telluric: optional, default = False
+    :param mask_standard: same as ``mask_telluric``
+    :type mask_standard: optional, default = False
+    :param novar2: compute without using variance of ``sp2``
+    :type novar2: optional, default = False
+    :param stat: string defining which statistical method to use; available options are:
+    
+            - *'chisqr'*: compare by computing chi squared value
+            - *'stddev'*: compare by computing standard deviation
+            - *'stddev_norm'*: compare by computing normalized standard deviation
+            - *'absdev'*: compare by computing absolute deviation
+
+    :type stat: optional, default = 'chisqr'
+    :param plot: plot ``sp1`` with scaled ``sp2``
+    :type plot: optional, default = False
+
+    :Example:
+    >>> import splat
+    >>> import numpy
+    >>> sp1 = splat.getSpectrum(shortname = '2346-3153')[0]
+    >>> sp2 = splat.getSpectrum(shortname = '1421+1827')[0]
+    >>> print splat.compareSpectra(sp1, sp2)
+        (<Quantity 17633.117108524682>, 1.1354366238893992e-15)
+    >>> m = numpy.zeros(len(sp1.wave))
+    >>> m[200:300] = 1
+    >>> m_range = [[1.3, 1.5]]
+    >>> splat.compareSpectra(sp1, sp2, mask = m, mask_ranges = m_range, novar2 = True)
+        (<Quantity 18980.062433571456>, 1.1694685419610533e-15)
+    '''
     weights = kwargs.get('weights',numpy.zeros(len(sp1.wave)))
     mask = kwargs.get('mask',numpy.zeros(len(sp1.wave)))    # mask = 1 -> ignore
     fit_ranges = kwargs.get('fit_ranges',[spex_wave_range])
@@ -1562,7 +1664,22 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         
 
 def coordinateToDesignation(c):
-    '''Convert RA, Dec into designation string'''
+    '''
+    :Purpose: Converts right ascension and declination into a designation string
+    :param c: RA and Dec to be converted; can be a SkyCoord object with units of degrees,
+              a list with RA and Dec in degrees, or a string with RA measured in hour
+              angles and Dec in degrees
+    :Example:
+    >>> import splat
+    >>> from astropy.coordinates import SkyCoord
+    >>> c = SkyCoord(238.86, 9.90, unit="deg")
+    >>> print splat.coordinateToDesignation(c)
+        J15552640+0954000
+    >>> print splat.coordinateToDesignation([238.86, 9.90])
+        J15552640+0954000
+    >>> print splat.coordinateToDesignation('15:55:26.4 +09:54:00.0')
+        J15552640+0954000
+    '''
 # input is ICRS
     if isinstance(c,SkyCoord):
         cc = c
@@ -1574,12 +1691,28 @@ def coordinateToDesignation(c):
 
 
 def dateToCaldate(d):
-    '''Convert from numeric date to calendar date'''
+    '''
+    :Purpose: Converts numeric date to calendar date
+    :param d: string in the form 'YYYYMMDD'
+    :Example:
+    >>> import splat
+    >>> print splat.dateToCaldate('19940523')
+        1994 May 23
+    '''
     return d[:4]+' '+months[int(d[5:6])-1]+' '+d[-2:]
 
 
 def designationToCoordinate(value, **kwargs):
-    '''Convert a designation into a RA, Dec tuple or ICRS'''
+    '''
+    :Purpose: Convert a designation into a RA, Dec tuple or ICRS
+    :param value: string with RA measured in hour angles and Dec in degrees
+    :param icrs: returns coordinate in ICRS frame if ``True``
+    :type icrs: optional, defualt = True
+    :Example:
+    >>> import splat
+    >>> print splat.designationToCoordinate('1555.2640+0954.000')
+        <SkyCoord (ICRS): ra=238.86 deg, dec=9.9 deg>
+    '''
     icrsflag = kwargs.get('icrs',True)
 
     a = re.sub('[j.:hms]','',value.lower())
@@ -1610,7 +1743,14 @@ def designationToCoordinate(value, **kwargs):
 
 
 def designationToShortName(value):
-    '''Produce a shortened version of designation'''
+    '''
+    :Purpose: Produce a shortened version of designation
+    :param value: string with RA measured in hour angles and Dec in degrees
+    :Example:
+    >>> import splat
+    >>> print print splat.designationToShortName('1555.2640+0954.000')
+        J1555+0954
+    '''
     if isinstance(value,str):
         a = re.sub('[j.:hms]','',value.lower())
         mrk = '+'
@@ -1628,7 +1768,9 @@ def designationToShortName(value):
         
 
 def fetchDatabase(*args, **kwargs):    
-    '''Get the SpeX Database from either online repository or local drive'''
+    '''
+    :Purpose: Get the SpeX Database from either online repository or local drive
+    '''
     kwargs['filename'] = kwargs.get('filename',ORIGINAL_DB)
     kwargs['filename'] = kwargs.get('file',kwargs['filename'])
     kwargs['folder'] = kwargs.get('folder',DB_FOLDER)
@@ -1777,40 +1919,54 @@ def fetchDatabase(*args, **kwargs):
 
 def filterMag(sp,filter,*args,**kwargs):
     '''
-    :Purpose: ``Determine the photometric magnitude of a source based on the
+    :Purpose: Determine the photometric magnitude of a source based on the
                 spectrum. Spectra are convolved with the filter specified by
-                the 'filter' input.  By default this filter is also 
+                the ``filter`` input.  By default this filter is also 
                 convolved with a model of Vega to extract Vega magnitudes,
                 but the user can also specify AB magnitudes, photon flux or
-                energy flux.``
-    :Usage: ``mag,unc = splat.filterMag(sp, 'filter name',\*args, \**kwargs)``
-    :param sp: ``Spectrum class object, which should contain wave, flux and 
-                 noise array elements.``
-    :param 'filter mag': ``Name of filter, must be one of the following:``
-                    - ``'2MASS J', '2MASS H', '2MASS Ks'``
-                    - ``'MKO J', 'MKO H', 'MKO K', MKO Kp', 'MKO Ks'``
-                    - ``'NICMOS F090M', 'NICMOS F095N', 'NICMOS F097N', 'NICMOS F108N',`` 
-                    - ``'NICMOS F110M', 'NICMOS F110W', 'NICMOS F113N', 'NICMOS F140W',``
-                    - ``'NICMOS F145M', 'NICMOS F160W', 'NICMOS F164N', 'NICMOS F165M',``
-                    - ``'NICMOS F166N', 'NICMOS F170M', 'NICMOS F187N', 'NICMOS F190N'``
-                    - ``'NIRC2 J', 'NIRC2 H', 'NIRC2 Kp', 'NIRC2 Ks'``
-                    - ``'WIRC J', 'WIRC H', 'WIRC K', 'WIRC CH4S', 'WIRC CH4L'``
-                    - ``'WIRC CO', 'WIRC PaBeta', 'WIRC BrGamma', 'WIRC Fe2'``
-    :param \**kwargs (optional): - ``'info' = False: give the filter names available``
-                    - ``'custom' = False: specify to a 2 x N vector array specifying the wavelengths and transmissions for a custom filter``
-                    - ``'ab' = False: compute AB magnitudes``
-                    - ``'vega' = True: compute Vega magnitudes``
-                    - ``'energy' = False: compute energy flux``
-                    - ``'photon' = False: compute photon flux``
-                    - ``'filterFolder' = '': folder containing the filter transmission files``
-                    - ``'vegaFile' = '': name of file containing Vega flux file, must be within 'filterFolder'``
-                    - ``'nsamples' = 100: number of samples to use in MC error estimation``
+                energy flux.
+
+    .. :Usage: mag, unc = splat.filterMag(sp, 'filter name',\*args, \**kwargs) (Unneeded)
+
+    :param sp: Spectrum class object, which should contain wave, flux and 
+                 noise array elements.
+    :param filter: Name of filter, must be one of the following:
+
+                    - '2MASS J', '2MASS H', '2MASS Ks'
+                    - 'MKO J', 'MKO H', 'MKO K', MKO Kp', 'MKO Ks'
+                    - 'NICMOS F090M', 'NICMOS F095N', 'NICMOS F097N', 'NICMOS F108N'
+                    - 'NICMOS F110M', 'NICMOS F110W', 'NICMOS F113N', 'NICMOS F140W'
+                    - 'NICMOS F145M', 'NICMOS F160W', 'NICMOS F164N', 'NICMOS F165M'
+                    - 'NICMOS F166N', 'NICMOS F170M', 'NICMOS F187N', 'NICMOS F190N'
+                    - 'NIRC2 J', 'NIRC2 H', 'NIRC2 Kp', 'NIRC2 Ks'
+                    - 'WIRC J', 'WIRC H', 'WIRC K', 'WIRC CH4S', 'WIRC CH4L'
+                    - 'WIRC CO', 'WIRC PaBeta', 'WIRC BrGamma', 'WIRC Fe2'
+
+    :param info: give the filter names available
+    :type info: optional, default = False
+    :param custom: specify to a 2 x N vector array specifying the wavelengths and transmissions for a custom filter
+    :type custom: optional, default = False
+    :param ab: compute AB magnitudes
+    :type ab: optional, default = False
+    :param vega: compute Vega magnitudes
+    :type vega: optional, default = True
+    :param energy: compute energy flux
+    :type energy: optional, default = False
+    :param photon: compute photon flux
+    :type photon: optional, default = False
+    :param filterFolder: folder containing the filter transmission files
+    :type filterFolder: optional, default = ''
+    :param vegaFile: name of file containing Vega flux file, must be within ``filterFolder``
+    :type vegaFile: optional, default = ''
+    :param nsamples: number of samples to use in Monte Carlo error estimation
+    :type nsamples: optional, default = 100
+    
     :Example:
-       >>> import splat
-       >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
-       >>> spc.fluxCalibrate('2MASS J',14.5)
-       >>> print splat.filterMag(spc,'MKO J')
-       (14.345894376898123, 0.027596454828421831)
+    >>> import splat
+    >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
+    >>> spc.fluxCalibrate('2MASS J',14.5)
+    >>> print splat.filterMag(spc,'MKO J')
+        (14.345894376898123, 0.027596454828421831)
     '''
 # keyword parameters
     filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
@@ -1900,44 +2056,45 @@ def filterMag(sp,filter,*args,**kwargs):
 
 def getSpectrum(*args, **kwargs):
     '''
-    :Purpose: ``Gets a spectrum from the SPLAT library using various selection criteria.``
-    :Usage: ``[sp] = splat.getSpectrum({search commands},**kwargs)``
-    :param [sp]: ``array of Spectrum class objects, each of which should contain wave, flux and 
-                 noise array elements.``
-    :param '{search commands}': ``Various search commands to winnow down the selection:
-                    - **name**: search by source name (e.g., name='Gliese 570D')
-                    - **shortname**: search be short name (e.g. shortname = 'J1457-2124')
-                    - **designation**: search by full designation (e.g., designation = 'J11040127+1959217')
-                    - **coordinate**: search around a coordinate by a radius specified by radius keyword (e.g., coordinate=[180.,+30.], radius=10.)
-                    - **radius** = 10.: search radius in arcseconds for coordinate search
-                    - **spt** or **spex_spt**: search by SpeX spectral type; single value is exact, two-element array gives range (e.g., spt = 'M7' or spt = [24,39])
-                    - **opt_spt**: same as spt for literature optical spectral types
-                    - **nir_spt**: same as spt for literature NIR spectral types
-                    - **jmag, hmag, kmag**: select based on faint limit or range of J, H or Ks magnitudes (e.g., jmag = [12,15])
-                    - **snr**: search on minimum or range of S/N ratios (e.g., snr = 30. or snr = [50.,100.])
-                    - **young, subdwarf, binary, spbinary, red, blue, giant, wd, standard**: classes to search on (e.g., young=True)
-                    - **logic** or **combine** = 'and': search logic, can be 'and' or 'or'
-                    - **combine**: same as logic
-                    - **date**: search by date (e.g., date = '20040322') or range of dates (e.g., date=[20040301,20040330])
-                    - **reference**: search by list of references (bibcodes) (e.g., reference='2011ApJS..197...19K')
-    :param \**kwargs (optional): 
-                    - **sort** = True: sort results based on Right Ascension
-                    - **list** = False: if True, return just a list of the data files (can be done with searchLibrary as well)
-                    - **lucky** = False: if True, return one randomly selected spectrum from the selected sample
+    :Purpose: Gets a spectrum from the SPLAT library using various selection criteria.
+    .. :Usage: [sp] = splat.getSpectrum({search commands},**kwargs)
+
+    :param sp: array of Spectrum class objects, each of which should contain wave, flux and 
+                 noise array elements.
+    :param optional name: search by source name (e.g., ``name = 'Gliese 570D'``)
+    :param optional shortname: search be short name (e.g. ``shortname = 'J1457-2124'``)
+    :param optional designation: search by full designation (e.g., ``designation = 'J11040127+1959217'``)
+    :param optional coordinate: search around a coordinate by a radius specified by radius keyword (e.g., ``coordinate = [180.,+30.], radius = 10.``)
+    :param radius: search radius in arcseconds for coordinate search
+    :type radius: optional, default = 10
+    :param optional spt: search by SpeX spectral type; single value is exact, two-element array gives range (e.g., ``spt = 'M7'`` or ``spt = [24,39]``)
+    :param optional spex_spt: same as ``spt``
+    :param optional opt_spt: same as ``spt`` for literature optical spectral types
+    :param optional nir_spt: same as ``spt`` for literature NIR spectral types
+    :param optional jmag, hmag, kmag: select based on faint limit or range of J, H or Ks magnitudes (e.g., ``jmag = [12,15]``)
+    :param optional snr: search on minimum or range of S/N ratios (e.g., ``snr = 30.`` or ``snr = [50.,100.]``)
+    :param optional subdwarf, young, binary, spbinary, red, blue, giant, wd, standard: classes to search on (e.g., ``young = True``)
+    :param logic: search logic, can be ``and`` or ``or``
+    :type logic: optional, default = 'and'
+    :param combine: same as logic
+    :type combine: optional, default = 'and'
+    :param optional date: search by date (e.g., ``date = '20040322'``) or range of dates (e.g., ``date=[20040301,20040330]``)
+    :param optional reference: search by list of references (bibcodes) (e.g., ``reference = '2011ApJS..197...19K'``)
+    :param sort: sort results based on Right Ascension
+    :type sort: optional, default = True
+    :param list: if True, return just a list of the data files (can be done with searchLibrary as well)
+    :type list: optional, default = False
+    :param lucky: if True, return one randomly selected spectrum from the selected sample
+    :type lucky: optional, default = False
+
     :Example:
-       >>> import splat
-       >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
-
-          Retrieving 1 file
-
-       >>> sparr = splat.getSpectrum(spt='M7')
-
-          Retrieving 120 files
-
-       >>> sparr = splat.getSpectrum(spt='T5',young=True)
-
-		  No files match search criteria
-		  
+    >>> import splat
+    >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
+        Retrieving 1 file
+    >>> sparr = splat.getSpectrum(spt='M7')
+        Retrieving 120 files
+    >>> sparr = splat.getSpectrum(spt='T5',young=True)
+        No files match search criteria
     '''
 
     result = []
@@ -1977,7 +2134,16 @@ def getSpectrum(*args, **kwargs):
 
 # simple number checker
 def isNumber(s):
-    '''check if something is a number'''
+    '''
+    :Purpose: Checks if something is a number.
+    :param s: object to be checked
+    :Example:
+    >>> import splat
+    >>> print splat.isNumber(3)
+        True
+    >>> print splat.isNumber('hello')
+        False
+    '''
     try:
         t = float(s)
         return (True and ~numpy.isnan(t))
@@ -1987,7 +2153,24 @@ def isNumber(s):
 
 
 def keySource(keys, **kwargs):
-    '''keySource takes a source key and returns a table with the source information'''
+    '''
+    :Purpose: Takes a source key and returns a table with the source information
+    :param keys: source key or a list of source keys
+    :Example:
+    >>> import splat
+    >>> print splat.keySource(10001)
+        SOURCE_KEY           NAME              DESIGNATION    ... NOTE SELECT
+        ---------- ------------------------ ----------------- ... ---- ------
+             10001 SDSS J000013.54+255418.6 J00001354+2554180 ...        True
+    >>> print splat.keySource([10105, 10623])
+        SOURCE_KEY          NAME             DESIGNATION    ... NOTE SELECT
+        ---------- ---------------------- ----------------- ... ---- ------
+             10105 2MASSI J0103320+193536 J01033203+1935361 ...        True
+             10623 SDSS J09002368+2539343 J09002368+2539343 ...        True
+    >>> print splat.keySource(1000001)
+        No sources found with source key 1000001
+        False
+    '''
 
 # vectorize
     if isinstance(keys,list) == False:
@@ -2005,7 +2188,24 @@ def keySource(keys, **kwargs):
    
     
 def keySpectrum(keys, **kwargs):
-    '''keySpectrum takes a spectrum key and returns a table with the spectrum and source information'''
+    '''
+    :Purpose: Takes a spectrum key and returns a table with the spectrum and source information
+    :param keys: spectrum key or a list of source keys
+    :Example:
+    >>> import splat
+    >>> print splat.keySpectrum(10001)
+        DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2
+        -------- ---------- ---------------- ... --------- -------------- ------
+           10001      10443 10001_10443.fits ...  
+    >>> print splat.keySpectrum([10123, 11298])
+        DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2
+        -------- ---------- ---------------- ... --------- -------------- ------
+           11298      10118 11298_10118.fits ...                                
+           10123      10145 10123_10145.fits ...                                
+    >>> print splat.keySpectrum(1000001)
+        No spectra found with spectrum key 1000001
+        False
+    '''
 
 # vectorize
     if isinstance(keys,list) == False:
@@ -2024,7 +2224,9 @@ def keySpectrum(keys, **kwargs):
    
 
 def loadSpectrum(*args, **kwargs):
-    '''deprecated'''
+    '''
+    .. note:: deprecated
+    '''
     if kwargs.get('file',False) != False:
         return Spectrum(**kwargs)
     if kwargs.get('filename',False) != False:
@@ -2047,9 +2249,49 @@ def loadSpectrum(*args, **kwargs):
 
 
 def estimateDistance(sp, **kwargs):
-    '''Takes the apparent magnitude and either takes or determines the absolute magnitude, 
-    then uses the magnitude/distance relation to estimate the distance to the object in parsecs
-    Note: the input spectra should be flux calibrated to their empirical apparent magnitudes'''
+    '''
+    :Purpose: Takes the apparent magnitude and either takes or determines the absolute
+                magnitude, then uses the magnitude/distance relation to estimate the 
+                distance to the object in parsecs. Returns estimated distance and 
+                uncertainty in parsecs
+    
+    :param sp: Spectrum class object, which should be flux calibrated to its empirical apparent magnitude
+    :param mag: apparent magnitude of ``sp``
+    :type mag: optional, default = False
+    :param mag_unc: uncertainty of the apparent magnitude
+    :type mag_unc: optional, default = 0
+    :param absmag: absolute magnitude of ``sp``
+    :type absmag: optional, default = False
+    :param absmag_unc: uncertainty of the absolute magnitude
+    :type absmag_unc: optional, default = 0
+    :param spt: spectral type of ``sp``
+    :type spt: optional, default = False
+    :param spt_e: uncertainty of the spectral type
+    :type spt_e: optional, default = 0
+    :param nsamples: number of samples to use in Monte Carlo error estimation
+    :type nsamples: optional, default = 100
+    :param filter: Name of filter, must be one of the following:
+
+                    - '2MASS J', '2MASS H', '2MASS Ks'
+                    - 'MKO J', 'MKO H', 'MKO K', MKO Kp', 'MKO Ks'
+                    - 'NICMOS F090M', 'NICMOS F095N', 'NICMOS F097N', 'NICMOS F108N'
+                    - 'NICMOS F110M', 'NICMOS F110W', 'NICMOS F113N', 'NICMOS F140W'
+                    - 'NICMOS F145M', 'NICMOS F160W', 'NICMOS F164N', 'NICMOS F165M'
+                    - 'NICMOS F166N', 'NICMOS F170M', 'NICMOS F187N', 'NICMOS F190N'
+                    - 'NIRC2 J', 'NIRC2 H', 'NIRC2 Kp', 'NIRC2 Ks'
+                    - 'WIRC J', 'WIRC H', 'WIRC K', 'WIRC CH4S', 'WIRC CH4L'
+                    - 'WIRC CO', 'WIRC PaBeta', 'WIRC BrGamma', 'WIRC Fe2'
+
+    :type filter: optional, default = False
+    :Example:
+    >>> import splat
+    >>> sp = splat.getSpectrum(shortname='1555+0954')[0]
+    >>> print splat.estimateDistance(sp)
+        Please specify the filter used to determine the apparent magnitude
+        (nan, nan)
+    >>> print splat.estimateDistance(sp, mag = 12.521, mag_unc = 0.022, absmag = 7.24, absmag_unc = 0.50, spt = 'M3')
+        (116.36999172188771, 33.124820555524224)
+    '''
 
     mag = kwargs.get('mag', False)
     mag_unc = kwargs.get('mag_unc', 0.)
@@ -2099,7 +2341,18 @@ def estimateDistance(sp, **kwargs):
 
 
 def measureEW(sp, *args, **kwargs):
-    '''Routine to measure equivalent widths (EWs) of specified lines'''
+    '''
+    :Purpose: Measures equivalent widths (EWs) of specified lines
+    :param sp: Spectrum class object, which should contain wave, flux and noise array elements
+    :param args: wavelength arrays. Needs at least two arrays to measure line and continuum regions.
+    :type nsamples: optional, default = 100
+    :param nonoise: 
+    :type nonoise: optional, default = False
+    :param line: 
+    :type nonoise: optional, default = ''
+    
+    .. not too sure about how this one works; will come back later.
+    '''
 
 # presets
     nsamples = kwargs.get('nsamples',100)
@@ -2176,6 +2429,21 @@ def measureEW(sp, *args, **kwargs):
 
 
 def measureEWSet(sp,*args,**kwargs):
+    '''
+    :Purpose: Measures equivalent widths (EWs) of lines from specified sets. Returns dictionary of indices.
+    :param sp: Spectrum class object, which should contain wave, flux and noise array elements
+    :param set: string defining which EW measurement set you want to use; options include:
+
+            - *rojas*: EW measures from Rojas-Ayala et al. (2012); uses Na I 2.206/2.209 Ca I 2.26 micron lines.
+    
+    :type set: optional, default = 'rojas'
+
+    :Example:
+    >>> import splat
+    >>> sp = splat.getSpectrum(shortname='1555+0954')[0]
+    >>> print splat.measureEWSet(sp, set = 'rojas')
+        {'Na I 2.206/2.209': (1.7484002652013144, 0.23332441577025356), 'Ca I 2.26': (1.3742491939667159, 0.24867705962337672), 'names': ['Na I 2.206/2.209', 'Ca I 2.26'], 'reference': 'EW measures from Rojas-Ayala et al. (2012)'}
+    '''
     set = kwargs.get('set','rojas')
 
 # determine combine method
@@ -2201,10 +2469,13 @@ def measureEWSet(sp,*args,**kwargs):
 
 
 def measureIndex(sp,*args,**kwargs):
-    '''Measure an index on a spectrum based on defined methodology
-    measure method can be mean, median, integrate
-    index method can be ratio = 1/2, valley = 1-2/3, OTHERS
-    output is index value and uncertainty'''
+    '''
+    :Purpose: Measure an index on a spectrum based on defined methodology
+                measure method can be mean, median, integrate
+                index method can be ratio = 1/2, valley = 1-2/3, OTHERS
+                output is index value and uncertainty
+    .. will also come back to this one
+    '''
 
 # keyword parameters
     method = kwargs.get('method','ratio')
@@ -2296,7 +2567,29 @@ def measureIndex(sp,*args,**kwargs):
 # wrapper function for measuring specific sets of indices
 
 def measureIndexSet(sp,**kwargs):
+    '''
+    :Purpose: Measures indices of ``sp`` from specified sets. Returns dictionary of indices.
+    :param sp: Spectrum class object, which should contain wave, flux and noise array elements
+    :param set: string defining which indices set you want to use; options include:
 
+            - *burgasser*: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J from Burgasser et al. (2006)
+            - *tokunaga*: K1, K2 from Tokunaga & Kobayashi (1999)
+            - *reid*: H2O-A, H2O-B from Reid et al. (2001)
+            - *geballe*: H2O-1.2, H2O-1.5, CH4-2.2 from Geballe et al. (2002)
+            - *allers*: H2O, FeH-z, VO-z, FeH-J, KI-J, H-cont from Allers et al. (2007), Allers & Liu (2013)
+            - *testi*: sHJ, sKJ, sH2O-J, sH2O-H1, sH2O-H2, sH2O-K from Testi et al. (2001)
+            - *slesnick*: H2O-1, H2O-2, FeH from Slesnick et al. (2004)
+            - *mclean*: H2OD from McLean et al. (2003)
+            - *rojas*: H2O-K2 from Rojas-Ayala et al.(2012)
+    
+    :type set: optional, default = 'burgasser'
+
+    :Example:
+    >>> import splat
+    >>> sp = splat.getSpectrum(shortname='1555+0954')[0]
+    >>> print splat.measureIndexSet(sp, set = 'reid')
+        {'H2O-B': (1.0531856077273236, 0.0045092074790538221), 'H2O-A': (0.89673318593633422, 0.0031278302105038594)}
+    '''
 # keyword parameters
     set = kwargs.get('set','burgasser')
 
@@ -2420,8 +2713,18 @@ def measureIndexSet(sp,**kwargs):
 
 
 def metallicity(sp,**kwargs):
-    '''Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in Rojas-Ayala et al. (2012)'''
+    '''
+    :Purpose: Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in Rojas-Ayala et al. (2012)
+    :param sp: Spectrum class object, which should contain wave, flux and noise array elements
+    :param nsamples: number of Monte Carlo samples for error computation
+    :type nsamples: optional, default = 100
 
+    :Example:
+    >>> import splat
+    >>> sp = splat.getSpectrum(shortname='0559-1404')[0]
+    >>> print splat.metallicity(sp)
+        (-0.50726104530066363, 0.24844773591243882)
+    '''
     nsamples = kwargs.get('nsamples',100)
 
     coeff_feh = [-1.039,0.092,0.119]
@@ -2444,7 +2747,16 @@ def metallicity(sp,**kwargs):
 
 
 def properCoordinates(c):
-    '''converts various coordinate forms to the proper SkyCoord format'''
+    '''
+    :Purpose: Converts various coordinate forms to the proper SkyCoord format. Convertible forms include lists and strings.
+    :param c: coordinate to be converted. Can be a list or a string.
+    :Example:
+    >>> import splat
+    >>> print splat.properCoordinates([104.79, 25.06])
+        <SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg>
+    >>> print splat.properCoordinates('06:59:09.60 +25:03:36.0')
+        <SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg>
+    '''
     if isinstance(c,SkyCoord):
         return c
     elif isinstance(c,list):
@@ -2457,7 +2769,9 @@ def properCoordinates(c):
 
 
 def readSpectrum(*args,**kwargs):
-
+    '''
+    .. will come back to this one
+    '''
 # keyword parameters
     folder = kwargs.get('folder','')
     catchSN = kwargs.get('catchSN',True)
@@ -2624,9 +2938,33 @@ def redden(sp, **kwargs):
 
 
 def searchLibrary(*args, **kwargs):
-    '''Search the SpeX database to extract the key reference for that Spectrum
-        Note that this is currently only and AND search - need to figure out
-        how to a full SQL style search'''
+    '''
+    :Purpose: Search the SpeX database to extract the key reference for that Spectrum
+    :param output: returns desired output of selected results
+    :type output: optional, default = 'all'
+    :param logic: search logic, can be ``and`` or ``or``
+    :type logic: optional, default = 'and'
+    :param combine: same as logic
+    :type combine: optional, default = 'and'
+    :Example:
+    >>> import splat
+    >>> print splat.searchLibrary(shortname = '2213-2136')
+        DATA_KEY SOURCE_KEY    DATA_FILE     ... SHORTNAME  SELECT_2
+        -------- ---------- ---------------- ... ---------- --------
+           11590      11586 11590_11586.fits ... J2213-2136      1.0
+           11127      11586 11127_11586.fits ... J2213-2136      1.0
+           10697      11586 10697_11586.fits ... J2213-2136      1.0
+           10489      11586 10489_11586.fits ... J2213-2136      1.0
+    >>> print splat.searchLibrary(shortname = '2213-2136', output = 'OBSERVATION_DATE')
+        OBSERVATION_DATE
+        ----------------
+                20110908
+                20080829
+                20060902
+                20051017
+
+    .. note:: Note that this is currently only and AND search - need to figure out how to a full SQL style search
+    '''
 
 # program parameters
     ref = kwargs.get('output','all')
@@ -2970,7 +3308,20 @@ def searchLibrary(*args, **kwargs):
 
 def test():
     '''
-    Testing the SPLAT Code.
+    :Purpose: Tests the SPLAT Code
+    :Checks the following:
+    
+        - If you are online and can see the SPLAT website
+        - If you have access to unpublished spectra
+        - If you can search for and load a spectrum
+        - If ``searchLibrary`` functions properly
+        - If index measurement routines functions properly
+        - If classification routines function properly
+        - If ``typeToTeff`` functions properly
+        - If flux calibration and normalization function properly
+        - If ``loadModel`` functions properly
+        - If ``compareSpectra`` functions properly
+        - If ``plotSpectrum`` functions properly
     '''
     
     test_src = 'Random'
@@ -3052,9 +3403,33 @@ def test():
 
 def typeToMag(spt, filt, **kwargs):
     """
-    Takes a spectral type, its uncertainty, and a filter, returns absolute magnitude
-    Filter options = ['MKO K', 'MKO H', 'MKO J', 'MKO Y', 'MKO LP', '2MASS J', '2MASS K', '2MASS H']
-    References = ['faherty', 'dupuy', 'burgasser']
+    :Purpose: Takes a spectral type and a filter, and returns absolute magnitude
+    :param spt: string or integer of the spectral type
+    :param filter: filter of the absolute magnitude. Options are MKO K, MKO H, MKO J, MKO Y, MKO LP, 2MASS J, 2MASS K, or 2MASS H
+    :param nsamples: number of Monte Carlo samples for error computation
+    :type nsamples: optional, default = 100
+    :param unc: uncertainty of ``spt``
+    :type unc: optional, default = 0.
+    :param ref: Abs Mag/SpT relation used to compute the absolute magnitude. Options are:
+    
+        - *faherty*: Abs Mag/SpT relation from Faherty et al. (2012). Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K.
+        - *burgasser*: Abs Mag/SpT relation from Burgasser (2007). Allowed spectral type range is L0 to T8, and allowed filters are MKO K.
+        - *dupuy*: Abs Mag/SpT relation from Dupuy & Liu (2012). Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS K.
+
+
+    :type ref: optional, default = 'dupuy'
+    :Example:
+        >>> import splat
+        >>> print splat.typeToMag('L3', '2MASS J')
+            (12.730064813273996, 0.4)
+        >>> print splat.typeToMag(21, 'MKO K', ref = 'burgasser')
+            (10.705292820099999, 0.26)
+        >>> print splat.typeToMag(24, '2MASS J', ref = 'faherty')
+            Invalid filter given for Abs Mag/SpT relation from Faherty et al. (2012)
+            (nan, nan)
+        >>> print splat.typeToMag('M0', '2MASS H', ref = 'dupuy')
+            Spectral Type is out of range for Abs Mag/SpT relation from Dupuy & Liu (2012) Abs Mag/SpT relation
+            (nan, nan)
     """
 
 #Keywords
@@ -3140,7 +3515,43 @@ def typeToMag(spt, filt, **kwargs):
 
 
 def typeToNum(input, **kwargs):
-    '''convert between string and numeric spectral types'''
+    '''
+    :Purpose: Converts between string and numeric spectral types, and vise versa. 
+    :param input: Spectral type to convert. Can convert a number or a string from 0 (K0) and 49.0 (Y9).
+    :param error: magnitude of uncertainty. ':' for uncertainty > 1 and '::; for uncertainty > 2.
+    :type error: optional, default = ''
+    :param uncertainty: uncertainty of spectral type
+    :type uncertainty: optional, default = 0
+    :param subclass: subclass of object. Options include:
+    
+        - *sd*: object is a subdwarf
+        - *esd*: object is an extreme subdwarf
+        - *usd*: object is an ultra subdwarf
+
+    :type subclass: optional, default = ''
+    :param lumclass: luminosity class of object represented by roman numerals
+    :type lumclass: optional, default = ''
+    :param ageclass: age class of object
+    :type ageclass: optional, default = ''
+    :param colorclass: color class of object
+    :type colorclass: optional, default = ''
+    :param peculiar: if object is peculiar or not
+    :type peculiar: optional, default = False
+    
+    .. not too sure how colorclass and ageclass work
+    
+    :Example:
+        >>> import splat
+        >>> print splat.typeToNum(30)
+            T0.0
+        >>> print splat.typeToNum('T0.0')
+            30.0
+        >>> print splat.typeToNum(27, peculiar = True, uncertainty = 1.2, lumclass = 'II')
+            L7.0IIp:
+        >>> print splat.typeToNum(50)
+            Spectral type number must be between 0 (K0) and 49.0 (Y9)
+            nan
+    '''
 # keywords     
     error = kwargs.get('error','')
     unc = kwargs.get('uncertainty',0.)
@@ -3210,7 +3621,37 @@ def typeToNum(input, **kwargs):
 
 
 def typeToTeff(input, **kwargs):
-    '''return Teff for a given SpT'''
+    '''
+    :Purpose: Returns an effective temperature (Teff) and its uncertainty for a given spectral type
+    :param input: Spectral type; can be a number or a string from 0 (K0) and 49.0 (Y9).
+    :param uncertainty: uncertainty of spectral type
+    :type uncertainty: optional, default = 0.001
+    :param unc: same as ``uncertainty``
+    :type unc: optional, default = 0.001
+    :param spt_e: same as ``uncertainty``
+    :type spt_e: optional, default = 0.001
+    :param ref: Teff/SpT relation used to compute the effective temperature. Options are:
+    
+        - *golimowski*: Teff/SpT relation from Golimowski et al. (2004). Allowed spectral type range is M6 to T8.
+        - *looper*: Teff/SpT relation from Looper et al. (2008). Allowed spectral type range is L0 to T8.
+        - *stephens*: Teff/SpT relation from Stephens et al. (2009). Allowed spectral type range is M6 to T8.
+        - *marocco*: Teff/SpT relation from Marocco et al. (2013). Allowed spectral type range is M7 to T8.
+
+    :type ref: optional, default = 'stephens2009'
+    :param set: same as ``ref``
+    :type set: optional, default = 'stephens2009'
+    :param method: same as ``ref``
+    :type method: optional, default = 'stephens2009'
+    :param nsamples: number of samples to use in Monte Carlo error estimation
+    :type nsamples: optional, default = 100
+    
+    :Example:
+        >>> import splat
+        >>> print splat.typeToTeff(20)
+            (2233.4796740905499, 100.00007874571999)
+        >>> print splat.typeToTeff(20, unc = 0.3, ref = 'golimowski')
+            (2305.7500497902788, 127.62548366132124)
+    '''
 # keywords     
     nsamples = kwargs.get('nsamples',100)
     unc = kwargs.get('uncertainty',0.001)
@@ -3284,7 +3725,30 @@ def typeToTeff(input, **kwargs):
 
 
 def weightedMeanVar(vals, winp, *args, **kwargs):
-    '''Compute weighted mean of an array of values through various methods'''
+    '''
+    :Purpose: Computes weighted mean of an array of values through various methods. Returns weighted mean and weighted uncertainty.
+    :param vals: array of values
+    :param winp: array of weights associated with ``vals``
+    :param method: input type of weights. Default is where ``winp`` is the actual weights of ``vals``. Options include:
+    
+        - *uncertainty*: uncertainty weighting, where ``winp`` is the uncertainties of ``vals``
+        - *ftest*: ftest weighting, where ``winp`` is the chi squared values of ``vals``
+
+    :type method: optional, default = ''
+    :param weight_minimum: minimum possible weight value
+    :type weight_minimum: optional, default = 0.
+    :param dof: effective degrees of freedom
+    :type dof: optional, default = len(vals) - 1
+    
+    .. note:: When using ``ftest`` method, extra ``dof`` value is required
+    
+    :Example:
+        >>> import splat
+        >>> print splat.weightedMeanVar([3.52, 5.88, 9.03], [0.65, 0.23, 0.19])
+            (5.0057009345794379, 4.3809422657000594)
+        >>> print splat.weightedMeanVar([3.52, 5.88, 9.03], [1.24, 2.09, 2.29], method = 'uncertainty')
+            (5.0069199363443841, 4.3914329968409946)
+    '''
     
     method = kwargs.get('method','')
     minwt = kwargs.get('weight_minimum',0.)
