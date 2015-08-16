@@ -77,6 +77,8 @@ def plotSpectrum(*args, **kwargs):
         a comparison Spectrum to compare in each plot, useful for common reference standard
     noise, showNoise or uncertainty = False:
         plot the uncertainty for each spectrum
+    residual = False:
+        plots the residual between two spectra
 
     color or colors:
         color of plot lines; by default all black
@@ -87,6 +89,8 @@ def plotSpectrum(*args, **kwargs):
         see http://matplotlib.org/api/pyplot_summary.html?highlight=colormaps#matplotlib.pyplot.colormaps
     linestyle:
         line style of plot lines; by default all solid
+    fontscale = 10:
+        sets a scale factor for the fontsize
 
     xrange = [0.85,2.42]:
         plot range for wavelength axis
