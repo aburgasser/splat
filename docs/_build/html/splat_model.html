@@ -93,6 +93,13 @@
 <p class="last">These are the spectral modeling functions for SPLAT</p>
 </div>
 <dl class="function">
+<dt id="splat_model.distributionStats">
+<code class="descclassname">splat_model.</code><code class="descname">distributionStats</code><span class="sig-paren">(</span><em>x, q=[0.16, 0.5, 0.84], weights=None, sigma=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.distributionStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find key values along distributions based on quantile steps
+This code is derived almost entirely from triangle.py</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="splat_model.loadModel">
 <code class="descclassname">splat_model.</code><code class="descname">loadModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>load up a model spectrum based on parameters</p>
@@ -102,6 +109,27 @@
 <dt id="splat_model.loadModelParameters">
 <code class="descclassname">splat_model.</code><code class="descname">loadModelParameters</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModelParameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load up model parameters and check model inputs</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.modelFitGrid">
+<code class="descclassname">splat_model.</code><code class="descname">modelFitGrid</code><span class="sig-paren">(</span><em>spec</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model fitting code to grid of models</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.modelFitMCMC">
+<code class="descclassname">splat_model.</code><code class="descname">modelFitMCMC</code><span class="sig-paren">(</span><em>spec</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitMCMC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Monte Carlo Markov Chain model fitting routine for SPLAT</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.reportModelFitResults">
+<code class="descclassname">splat_model.</code><code class="descname">reportModelFitResults</code><span class="sig-paren">(</span><em>spec</em>, <em>t</em>, <em>*arg</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.reportModelFitResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reports the result of model fitting parameters
+Input is an astropy Table with columns containing parameters fit, and one column for chi-square values (&#8216;chisqr&#8217;)
+Produces triangle plot, best fit model, statistics of parameters
+and saves raw data if iterative = True</p>
 </dd></dl>
 
 <ul class="simple">

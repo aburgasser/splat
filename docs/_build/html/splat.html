@@ -245,65 +245,61 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">Gets</span> <span class="pre">a</span> <span class="pre">spectrum</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">SPLAT</span> <span class="pre">library</span> <span class="pre">using</span> <span class="pre">various</span> <span class="pre">selection</span> <span class="pre">criteria.</span></code></p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Usage:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">[sp]</span> <span class="pre">=</span> <span class="pre">splat.getSpectrum({search</span> <span class="pre">commands},**kwargs)</span></code></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>[sp]</strong> &#8211; <code class="docutils literal"><span class="pre">array</span> <span class="pre">of</span> <span class="pre">Spectrum</span> <span class="pre">class</span> <span class="pre">objects,</span> <span class="pre">each</span> <span class="pre">of</span> <span class="pre">which</span> <span class="pre">should</span> <span class="pre">contain</span> <span class="pre">wave,</span> <span class="pre">flux</span> <span class="pre">and</span>
-<span class="pre">noise</span> <span class="pre">array</span> <span class="pre">elements.</span></code></li>
-<li><strong>commands}'</strong> (<em>&#8216;{search</em>) &#8211; <a href="#id1"><span class="problematic" id="id2">``</span></a>Various search commands to winnow down the selection:
-- <strong>name</strong>: search by source name (e.g., name=&#8217;Gliese 570D&#8217;)
-- <strong>shortname</strong>: search be short name (e.g. shortname = &#8216;J1457-2124&#8217;)
-- <strong>designation</strong>: search by full designation (e.g., designation = &#8216;J11040127+1959217&#8217;)
-- <strong>coordinate</strong>: search around a coordinate by a radius specified by radius keyword (e.g., coordinate=[180.,+30.], radius=10.)
-- <strong>radius</strong> = 10.: search radius in arcseconds for coordinate search
-- <strong>spt</strong> or <strong>spex_spt</strong>: search by SpeX spectral type; single value is exact, two-element array gives range (e.g., spt = &#8216;M7&#8217; or spt = [24,39])
-- <strong>opt_spt</strong>: same as spt for literature optical spectral types
-- <strong>nir_spt</strong>: same as spt for literature NIR spectral types
-- <strong>jmag, hmag, kmag</strong>: select based on faint limit or range of J, H or Ks magnitudes (e.g., jmag = [12,15])
-- <strong>snr</strong>: search on minimum or range of S/N ratios (e.g., snr = 30. or snr = [50.,100.])
-- <strong>young, subdwarf, binary, spbinary, red, blue, giant, wd, standard</strong>: classes to search on (e.g., young=True)
-- <strong>logic</strong> or <strong>combine</strong> = &#8216;and&#8217;: search logic, can be &#8216;and&#8217; or &#8216;or&#8217;
-- <strong>combine</strong>: same as logic
-- <strong>date</strong>: search by date (e.g., date = &#8216;20040322&#8217;) or range of dates (e.g., date=[20040301,20040330])
-- <strong>reference</strong>: search by list of references (bibcodes) (e.g., reference=&#8216;2011ApJS..197...19K&#8217;)</li>
-<li><strong>(optional)</strong> (<em>**kwargs</em>) &#8211; <ul>
-<li><strong>sort</strong> = True: sort results based on Right Ascension</li>
-<li><strong>list</strong> = False: if True, return just a list of the data files (can be done with searchLibrary as well)</li>
-<li><strong>lucky</strong> = False: if True, return one randomly selected spectrum from the selected sample</li>
-</ul>
-</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets a spectrum from the SPLAT library using various selection criteria.</td>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Example</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; array of Spectrum class objects, each of which should contain wave, flux and
+noise array elements.</li>
+<li><strong>name</strong> (<em>optional</em>) &#8211; search by source name (e.g., <code class="docutils literal"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">'Gliese</span> <span class="pre">570D'</span></code>)</li>
+<li><strong>shortname</strong> (<em>optional</em>) &#8211; search be short name (e.g. <code class="docutils literal"><span class="pre">shortname</span> <span class="pre">=</span> <span class="pre">'J1457-2124'</span></code>)</li>
+<li><strong>designation</strong> (<em>optional</em>) &#8211; search by full designation (e.g., <code class="docutils literal"><span class="pre">designation</span> <span class="pre">=</span> <span class="pre">'J11040127+1959217'</span></code>)</li>
+<li><strong>coordinate</strong> (<em>optional</em>) &#8211; search around a coordinate by a radius specified by radius keyword (e.g., <code class="docutils literal"><span class="pre">coordinate</span> <span class="pre">=</span> <span class="pre">[180.,+30.],</span> <span class="pre">radius</span> <span class="pre">=</span> <span class="pre">10.</span></code>)</li>
+<li><strong>radius</strong> (<em>optional, default = 10</em>) &#8211; search radius in arcseconds for coordinate search</li>
+<li><strong>spt</strong> (<em>optional</em>) &#8211; search by SpeX spectral type; single value is exact, two-element array gives range (e.g., <code class="docutils literal"><span class="pre">spt</span> <span class="pre">=</span> <span class="pre">'M7'</span></code> or <code class="docutils literal"><span class="pre">spt</span> <span class="pre">=</span> <span class="pre">[24,39]</span></code>)</li>
+<li><strong>spex_spt</strong> (<em>optional</em>) &#8211; same as <code class="docutils literal"><span class="pre">spt</span></code></li>
+<li><strong>opt_spt</strong> (<em>optional</em>) &#8211; same as <code class="docutils literal"><span class="pre">spt</span></code> for literature optical spectral types</li>
+<li><strong>nir_spt</strong> (<em>optional</em>) &#8211; same as <code class="docutils literal"><span class="pre">spt</span></code> for literature NIR spectral types</li>
+<li><strong>jmag, hmag, kmag</strong> (<em>optional</em>) &#8211; select based on faint limit or range of J, H or Ks magnitudes (e.g., <code class="docutils literal"><span class="pre">jmag</span> <span class="pre">=</span> <span class="pre">[12,15]</span></code>)</li>
+<li><strong>snr</strong> (<em>optional</em>) &#8211; search on minimum or range of S/N ratios (e.g., <code class="docutils literal"><span class="pre">snr</span> <span class="pre">=</span> <span class="pre">30.</span></code> or <code class="docutils literal"><span class="pre">snr</span> <span class="pre">=</span> <span class="pre">[50.,100.]</span></code>)</li>
+<li><strong>subdwarf, young, binary, spbinary, red, blue, giant, wd, standard</strong> (<em>optional</em>) &#8211; classes to search on (e.g., <code class="docutils literal"><span class="pre">young</span> <span class="pre">=</span> <span class="pre">True</span></code>)</li>
+<li><strong>logic</strong> (<em>optional, default = &#8216;and&#8217;</em>) &#8211; search logic, can be <code class="docutils literal"><span class="pre">and</span></code> or <code class="docutils literal"><span class="pre">or</span></code></li>
+<li><strong>combine</strong> (<em>optional, default = &#8216;and&#8217;</em>) &#8211; same as logic</li>
+<li><strong>date</strong> (<em>optional</em>) &#8211; search by date (e.g., <code class="docutils literal"><span class="pre">date</span> <span class="pre">=</span> <span class="pre">'20040322'</span></code>) or range of dates (e.g., <code class="docutils literal"><span class="pre">date=[20040301,20040330]</span></code>)</li>
+<li><strong>reference</strong> (<em>optional</em>) &#8211; search by list of references (bibcodes) (e.g., <code class="docutils literal"><span class="pre">reference</span> <span class="pre">=</span> <span class="pre">'2011ApJS..197...19K'</span></code>)</li>
+<li><strong>sort</strong> (<em>optional, default = True</em>) &#8211; sort results based on Right Ascension</li>
+<li><strong>list</strong> (<em>optional, default = False</em>) &#8211; if True, return just a list of the data files (can be done with searchLibrary as well)</li>
+<li><strong>lucky</strong> (<em>optional, default = False</em>) &#8211; if True, return one randomly selected spectrum from the selected sample</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">    Retrieving 1 file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sparr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span><span class="o">=</span><span class="s">&#39;M7&#39;</span><span class="p">)</span>
+<span class="go">    Retrieving 120 files</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sparr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span><span class="o">=</span><span class="s">&#39;T5&#39;</span><span class="p">,</span><span class="n">young</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    No files match search criteria</span>
 </pre></div>
 </div>
-<blockquote>
-<div>Retrieving 1 file</div></blockquote>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sparr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span><span class="o">=</span><span class="s">&#39;M7&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<blockquote>
-<div>Retrieving 120 files</div></blockquote>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sparr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span><span class="o">=</span><span class="s">&#39;T5&#39;</span><span class="p">,</span><span class="n">young</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-</pre></div>
-</div>
-<blockquote>
-<div>No files match search criteria</div></blockquote>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.loadSpectrum">
 <code class="descclassname">splat.</code><code class="descname">loadSpectrum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.loadSpectrum" title="Permalink to this definition">¶</a></dt>
-<dd><p>deprecated</p>
+<dd><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">deprecated</p>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -314,27 +310,122 @@
 <dl class="function">
 <dt id="splat.searchLibrary">
 <code class="descclassname">splat.</code><code class="descname">searchLibrary</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.searchLibrary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Search the SpeX database to extract the key reference for that Spectrum
-Note that this is currently only and AND search - need to figure out
-how to a full SQL style search</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Search the SpeX database to extract the key reference for that Spectrum</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>output</strong> (<em>optional, default = &#8216;all&#8217;</em>) &#8211; returns desired output of selected results</li>
+<li><strong>logic</strong> (<em>optional, default = &#8216;and&#8217;</em>) &#8211; search logic, can be <code class="docutils literal"><span class="pre">and</span></code> or <code class="docutils literal"><span class="pre">or</span></code></li>
+<li><strong>combine</strong> (<em>optional, default = &#8216;and&#8217;</em>) &#8211; same as logic</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">searchLibrary</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s">&#39;2213-2136&#39;</span><span class="p">)</span>
+<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... SHORTNAME  SELECT_2</span>
+<span class="go">    -------- ---------- ---------------- ... ---------- --------</span>
+<span class="go">       11590      11586 11590_11586.fits ... J2213-2136      1.0</span>
+<span class="go">       11127      11586 11127_11586.fits ... J2213-2136      1.0</span>
+<span class="go">       10697      11586 10697_11586.fits ... J2213-2136      1.0</span>
+<span class="go">       10489      11586 10489_11586.fits ... J2213-2136      1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">searchLibrary</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s">&#39;2213-2136&#39;</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="s">&#39;OBSERVATION_DATE&#39;</span><span class="p">)</span>
+<span class="go">    OBSERVATION_DATE</span>
+<span class="go">    ----------------</span>
+<span class="go">            20110908</span>
+<span class="go">            20080829</span>
+<span class="go">            20060902</span>
+<span class="go">            20051017</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Note that this is currently only and AND search - need to figure out how to a full SQL style search</p>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.fetchDatabase">
 <code class="descclassname">splat.</code><code class="descname">fetchDatabase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.fetchDatabase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the SpeX Database from either online repository or local drive</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Get the SpeX Database from either online repository or local drive</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.keySource">
 <code class="descclassname">splat.</code><code class="descname">keySource</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.keySource" title="Permalink to this definition">¶</a></dt>
-<dd><p>keySource takes a source key and returns a table with the source information</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a source key and returns a table with the source information</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; source key or a list of source keys</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
+<span class="go">    SOURCE_KEY           NAME              DESIGNATION    ... NOTE SELECT</span>
+<span class="go">    ---------- ------------------------ ----------------- ... ---- ------</span>
+<span class="go">         10001 SDSS J000013.54+255418.6 J00001354+2554180 ...        True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">([</span><span class="mi">10105</span><span class="p">,</span> <span class="mi">10623</span><span class="p">])</span>
+<span class="go">    SOURCE_KEY          NAME             DESIGNATION    ... NOTE SELECT</span>
+<span class="go">    ---------- ---------------------- ----------------- ... ---- ------</span>
+<span class="go">         10105 2MASSI J0103320+193536 J01033203+1935361 ...        True</span>
+<span class="go">         10623 SDSS J09002368+2539343 J09002368+2539343 ...        True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
+<span class="go">    No sources found with source key 1000001</span>
+<span class="go">    False</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.keySpectrum">
 <code class="descclassname">splat.</code><code class="descname">keySpectrum</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.keySpectrum" title="Permalink to this definition">¶</a></dt>
-<dd><p>keySpectrum takes a spectrum key and returns a table with the spectrum and source information</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a spectrum key and returns a table with the spectrum and source information</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; spectrum key or a list of source keys</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
+<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
+<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
+<span class="go">       10001      10443 10001_10443.fits ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">([</span><span class="mi">10123</span><span class="p">,</span> <span class="mi">11298</span><span class="p">])</span>
+<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
+<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
+<span class="go">       11298      10118 11298_10118.fits ...</span>
+<span class="go">       10123      10145 10123_10145.fits ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
+<span class="go">    No spectra found with spectrum key 1000001</span>
+<span class="go">    False</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -355,29 +446,33 @@ containing spectral type (numeric or string) and
 uncertainty.</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
 noise array elements.</li>
-<li><strong>set</strong> &#8211; (optional, default=&#8217;burgasser&#8217;) named set of indices to measure and compute spectral type
-- &#8216;allers&#8217;: H2O from Allers et al.
-- &#8216;burgasser&#8217;: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from Burgasser (2007)
-- &#8216;reid&#8217;:H2O-A and H2O-B from Reid et al.(2001)
-- &#8216;testi&#8217;: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from Testi et al. (2001)</li>
-<li><strong>string</strong> &#8211; (optional, default=False) return spectral type as a string (uses typeToNum)</li>
-<li><strong>round</strong> &#8211; (optional, default=False)  rounds off to nearest 0.5 subtypes</li>
-<li><strong>remeasure</strong> &#8211; (optional, default=True) force remeasurement of indices</li>
-<li><strong>nsamples</strong> &#8211; (optional, default=100) number of Monte Carlo samples for error computation</li>
-<li><strong>nloop</strong> &#8211; (optional, default=5) number of testing loops to see if spectral type is within a certain range</li>
+<li><strong>set</strong> (<em>optional, default = &#8216;burgasser&#8217;</em>) &#8211; <p>named set of indices to measure and compute spectral type</p>
+<ul>
+<li><em>&#8216;allers&#8217;</em>: H2O from Allers et al.</li>
+<li><em>&#8216;burgasser&#8217;</em>: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from Burgasser (2007)</li>
+<li><em>&#8216;reid&#8217;</em>:H2O-A and H2O-B from Reid et al.(2001)</li>
+<li><em>&#8216;testi&#8217;</em>: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from Testi et al. (2001)</li>
+</ul>
+</li>
+<li><strong>string</strong> (<em>optional, default = False</em>) &#8211; return spectral type as a string (uses typeToNum)</li>
+<li><strong>round</strong> (<em>optional, default = False</em>) &#8211; rounds off to nearest 0.5 subtypes</li>
+<li><strong>remeasure</strong> (<em>optional, default = True</em>) &#8211; force remeasurement of indices</li>
+<li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of Monte Carlo samples for error computation</li>
+<li><strong>nloop</strong> (<em>optional, default = 5</em>) &#8211; number of testing loops to see if spectral type is within a certain range</li>
 </ul>
 </td>
 </tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
 </tbody>
 </table>
-<p class="rubric">Example</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;0559-1404&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="s">&#39;burgasser&#39;</span><span class="p">,</span> <span class="nb">round</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="go">  (&#39;T4.5&#39;, 0.2562934083414341)</span>
+<span class="go">    (&#39;T4.5&#39;, 0.2562934083414341)</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -395,43 +490,42 @@ noise array elements.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">Determine</span> <span class="pre">the</span> <span class="pre">spectral</span> <span class="pre">type</span> <span class="pre">and</span> <span class="pre">uncertainty</span> <span class="pre">for</span> <span class="pre">a</span>
-<span class="pre">spectrum</span> <span class="pre">by</span> <span class="pre">direct</span> <span class="pre">comparison</span> <span class="pre">to</span> <span class="pre">spectral</span> <span class="pre">standards.</span>
-<span class="pre">Standards</span> <span class="pre">span</span> <span class="pre">M0-T9</span> <span class="pre">and</span> <span class="pre">include</span> <span class="pre">the</span> <span class="pre">standards</span> <span class="pre">listed</span> <span class="pre">in</span>
-<span class="pre">Kirkpatrick</span> <span class="pre">et</span> <span class="pre">al.</span> <span class="pre">(2010)</span> <span class="pre">with</span> <span class="pre">addition</span> <span class="pre">of</span> <span class="pre">UGPS</span> <span class="pre">0722-0540</span>
-<span class="pre">as</span> <span class="pre">the</span> <span class="pre">T9</span> <span class="pre">standard.</span>&nbsp; <span class="pre">Returns</span> <span class="pre">the</span> <span class="pre">best</span> <span class="pre">match</span> <span class="pre">or</span> <span class="pre">an</span> <span class="pre">F-test</span>
-<span class="pre">weighted</span> <span class="pre">mean</span> <span class="pre">and</span> <span class="pre">uncertainty.</span> <span class="pre">There</span> <span class="pre">is</span> <span class="pre">an</span> <span class="pre">option</span> <span class="pre">to</span> <span class="pre">follow</span>
-<span class="pre">the</span> <span class="pre">procedure</span> <span class="pre">of</span> <span class="pre">Kirkpatrick</span> <span class="pre">et</span> <span class="pre">al.</span> <span class="pre">(2010),</span> <span class="pre">fitting</span> <span class="pre">only</span> <span class="pre">in</span>
-<span class="pre">the</span> <span class="pre">0.9-1.4</span> <span class="pre">micron</span> <span class="pre">region</span></code></p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Usage:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">spt,unc</span> <span class="pre">=</span> <span class="pre">splat.classifyByStandard(sp,</span> <span class="pre">\**kwargs)</span></code></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sp</strong> &#8211; <code class="docutils literal"><span class="pre">Spectrum</span> <span class="pre">class</span> <span class="pre">object,</span> <span class="pre">which</span> <span class="pre">should</span> <span class="pre">contain</span> <span class="pre">wave,</span> <span class="pre">flux</span> <span class="pre">and</span>
-<span class="pre">noise</span> <span class="pre">array</span> <span class="pre">elements.</span></code></li>
-<li><strong>(optional)</strong> (<em>**kwargs</em>) &#8211; <ul>
-<li><code class="docutils literal"><span class="pre">'best'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">return</span> <span class="pre">the</span> <span class="pre">best</span> <span class="pre">fit</span> <span class="pre">standard</span> <span class="pre">type</span> <span class="pre">only</span></code></li>
-<li><code class="docutils literal"><span class="pre">'compareto'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">compare</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">single</span> <span class="pre">standard</span> <span class="pre">(string</span> <span class="pre">or</span> <span class="pre">number)</span></code></li>
-<li><code class="docutils literal"><span class="pre">'plot'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">generate</span> <span class="pre">a</span> <span class="pre">plot</span> <span class="pre">comparing</span> <span class="pre">best</span> <span class="pre">fit</span> <span class="pre">standard</span> <span class="pre">to</span> <span class="pre">source,</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">save</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">file</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">file</span> <span class="pre">keyword</span></code></li>
-<li><code class="docutils literal"><span class="pre">'file'</span> <span class="pre">=</span> <span class="pre">'':</span> <span class="pre">output</span> <span class="pre">spectrum</span> <span class="pre">plot</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">file</span></code></li>
-<li><code class="docutils literal"><span class="pre">'method'</span> <span class="pre">=</span> <span class="pre">'':</span> <span class="pre">set</span> <span class="pre">to</span> <span class="pre">'kirkpatrick'</span> <span class="pre">to</span> <span class="pre">follow</span> <span class="pre">the</span> <span class="pre">Kirkpatrick</span> <span class="pre">et</span> <span class="pre">al.</span> <span class="pre">(2010)</span> <span class="pre">method,</span> <span class="pre">fitting</span> <span class="pre">only</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">0.9-1.4</span> <span class="pre">micron</span> <span class="pre">band</span></code></li>
-<li><code class="docutils literal"><span class="pre">'sptrange'</span> <span class="pre">=</span> <span class="pre">['M0','T9']:</span> <span class="pre">constraint</span> <span class="pre">spectral</span> <span class="pre">type</span> <span class="pre">range</span> <span class="pre">to</span> <span class="pre">fit,</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">strings</span> <span class="pre">or</span> <span class="pre">numbers</span></code></li>
-<li><code class="docutils literal"><span class="pre">'string'</span> <span class="pre">=</span> <span class="pre">True:</span> <span class="pre">return</span> <span class="pre">spectral</span> <span class="pre">type</span> <span class="pre">as</span> <span class="pre">a</span> <span class="pre">string</span></code></li>
-<li><code class="docutils literal"><span class="pre">'verbose'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">Give</span> <span class="pre">lots</span> <span class="pre">of</span> <span class="pre">feedback</span></code></li>
-</ul>
-</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Determine the spectral type and uncertainty for a
+spectrum by direct comparison to spectral standards.
+Standards span M0-T9 and include the standards listed in
+Kirkpatrick et al. (2010) with addition of UGPS 0722-0540
+as the T9 standard.  Returns the best match or an F-test
+weighted mean and uncertainty. There is an option to follow
+the procedure of Kirkpatrick et al. (2010), fitting only in
+the 0.9-1.4 micron region</td>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Example</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; spectrum class object, which should contain wave, flux and noise array elements.</li>
+<li><strong>best</strong> (<em>optional, default = False</em>) &#8211; return the best fit standard type only</li>
+<li><strong>compareto</strong> (<em>optional, default = False</em>) &#8211; compare to a single standard (string or number)</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; generate a plot comparing best fit standard to source, can be saved to a file using the <code class="docutils literal"><span class="pre">file</span></code> keyword</li>
+<li><strong>file</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; output spectrum plot to a file</li>
+<li><strong>method</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; set to &#8216;kirkpatrick&#8217; to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band</li>
+<li><strong>sptrange</strong> (<em>optional, default = [&#8216;M0&#8217;,&#8217;T9&#8217;]</em>) &#8211; constraint spectral type range to fit, can be strings or numbers</li>
+<li><strong>string</strong> (<em>optional, default = True</em>) &#8211; return spectral type as a string</li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">string</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s">&#39;kirkpatrick&#39;</span><span class="p">,</span><span class="n">plot</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="go">(&#39;L4.5&#39;, 0.7138959194725174)</span>
+<span class="go">    (&#39;L4.5&#39;, 0.7138959194725174)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -443,68 +537,69 @@ noise array elements.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Determine the spectral type and uncertainty for a
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Determine the spectral type and uncertainty for a
 spectrum by direct comparison to a large set of spectra in
 the library. One can select down the spectra by using the set
 command. Returns the best match or an F-test weighted mean and
 uncertainty. There is an option to follow  the procedure of
 Kirkpatrick et al. (2010), fitting only in the 0.9-1.4 micron
-region.</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Usage:</th><td class="field-body"><p class="first">result = splat.classifyByTemplate(sp, *args, **kwargs)</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><p class="first">result is a dictionary containing the following keys:
-- &#8216;result = (Spectral Type, Spectral Type Uncertainty)
-- &#8216;chisquare&#8217; = array of nbest chi-square values
-- &#8216;name&#8217; = array of nbest source names
-- &#8216;scale&#8217; = array of nbest optimal scale factors
-- &#8216;spectra&#8217; = array of nbest Spectrum objects
-- &#8216;spt&#8217; = array of nbest spectral types</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
-noise array elements.</li>
-<li><strong>'best'</strong> &#8211; <p>(optional, default = False) return only the best fit template type``
-- <code class="docutils literal"><span class="pre">'plot'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">generate</span> <span class="pre">a</span> <span class="pre">plot</span> <span class="pre">comparing</span> <span class="pre">best</span> <span class="pre">fit</span> <span class="pre">standard</span> <span class="pre">to</span> <span class="pre">source,</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">save</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">file</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">file</span> <span class="pre">keyword</span></code>
-- <code class="docutils literal"><span class="pre">'file'</span> <span class="pre">=</span> <span class="pre">'':</span> <span class="pre">output</span> <span class="pre">spectrum</span> <span class="pre">plot</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">file</span></code>
-- <code class="docutils literal"><span class="pre">'method'</span> <span class="pre">=</span> <span class="pre">'':</span> <span class="pre">set</span> <span class="pre">to</span> <span class="pre">'kirkpatrick'</span> <span class="pre">to</span> <span class="pre">follow</span> <span class="pre">the</span> <span class="pre">Kirkpatrick</span> <span class="pre">et</span> <span class="pre">al.</span> <span class="pre">(2010)</span> <span class="pre">method,</span> <span class="pre">fitting</span> <span class="pre">only</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">0.9-1.4</span> <span class="pre">micron</span> <span class="pre">band</span></code>
-- <code class="docutils literal"><span class="pre">'nbest'</span> <span class="pre">=</span> <span class="pre">1:</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">best</span> <span class="pre">fitting</span> <span class="pre">spectra</span> <span class="pre">to</span> <span class="pre">return</span>
-<span class="pre">-</span> <span class="pre">``'select'</span> <span class="pre">=</span> <span class="pre">'':</span> <span class="pre">string</span> <span class="pre">defining</span> <span class="pre">which</span> <span class="pre">spectral</span> <span class="pre">template</span> <span class="pre">set</span> <span class="pre">you</span> <span class="pre">want</span> <span class="pre">to</span> <span class="pre">compare</span> <span class="pre">to;</span> <span class="pre">several</span> <span class="pre">options</span> <span class="pre">which</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">combined:</span></code></p>
-<blockquote>
-<div><ul>
-<li><code class="docutils literal"><span class="pre">'m</span> <span class="pre">dwarf':</span> <span class="pre">fit</span> <span class="pre">to</span> <span class="pre">M</span> <span class="pre">dwarfs</span> <span class="pre">only</span></code></li>
-<li><code class="docutils literal"><span class="pre">'l</span> <span class="pre">dwarf':</span> <span class="pre">fit</span> <span class="pre">to</span> <span class="pre">M</span> <span class="pre">dwarfs</span> <span class="pre">only</span></code></li>
-<li><code class="docutils literal"><span class="pre">'t</span> <span class="pre">dwarf':</span> <span class="pre">fit</span> <span class="pre">to</span> <span class="pre">M</span> <span class="pre">dwarfs</span> <span class="pre">only</span></code></li>
-<li><code class="docutils literal"><span class="pre">'vlm':</span> <span class="pre">fit</span> <span class="pre">to</span> <span class="pre">M7-T9</span> <span class="pre">dwarfs</span></code></li>
-<li><code class="docutils literal"><span class="pre">'optical':</span> <span class="pre">only</span> <span class="pre">optical</span> <span class="pre">classifications</span></code></li>
-<li><code class="docutils literal"><span class="pre">'high</span> <span class="pre">sn':</span> <span class="pre">median</span> <span class="pre">S/N</span> <span class="pre">greater</span> <span class="pre">than</span> <span class="pre">100</span></code></li>
-<li><code class="docutils literal"><span class="pre">'young':</span> <span class="pre">only</span> <span class="pre">young/low</span> <span class="pre">surface</span> <span class="pre">gravity</span> <span class="pre">dwarfs</span></code></li>
-<li><code class="docutils literal"><span class="pre">'companion':</span> <span class="pre">only</span> <span class="pre">companion</span> <span class="pre">dwarfs</span></code></li>
-<li><code class="docutils literal"><span class="pre">'subdwarf':</span> <span class="pre">only</span> <span class="pre">subdwarfs</span></code></li>
-<li><code class="docutils literal"><span class="pre">'single':</span> <span class="pre">only</span> <span class="pre">dwarfs</span> <span class="pre">not</span> <span class="pre">indicated</span> <span class="pre">a</span> <span class="pre">binaries</span></code></li>
-<li><code class="docutils literal"><span class="pre">'spectral</span> <span class="pre">binaries':</span> <span class="pre">only</span> <span class="pre">dwarfs</span> <span class="pre">indicated</span> <span class="pre">to</span> <span class="pre">be</span> <span class="pre">spectral</span> <span class="pre">binaries</span></code></li>
-<li><code class="docutils literal"><span class="pre">'standard':</span> <span class="pre">only</span> <span class="pre">spectral</span> <span class="pre">standards</span> <span class="pre">(use</span> <span class="pre">classifyByStandard</span> <span class="pre">instead)</span></code></li>
-</ul>
-</div></blockquote>
-<ul>
-<li><code class="docutils literal"><span class="pre">'string'</span> <span class="pre">=</span> <span class="pre">True:</span> <span class="pre">return</span> <span class="pre">spectral</span> <span class="pre">type</span> <span class="pre">as</span> <span class="pre">a</span> <span class="pre">string</span></code></li>
-<li><a href="#id3"><span class="problematic" id="id4">``</span></a>&#8216;spt_type&#8217; = &#8216;literature&#8217;: specify which spectral classification type to return; can be &#8216;spex&#8217;, &#8216;opt&#8217;, &#8216;nir&#8217;, or &#8216;lit&#8217;</li>
-<li><code class="docutils literal"><span class="pre">'verbose'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">Give</span> <span class="pre">lots</span> <span class="pre">of</span> <span class="pre">feedback</span></code></li>
-</ul>
-</li>
-</ul>
-</td>
+region.</td>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Example</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><p class="first">Returns a dictionary containing the following keys:</p>
+<ul class="simple">
+<li><strong>result</strong>: a tuple containing the spectral type and its uncertainty)</li>
+<li><strong>chisquare</strong>: array of nbest chi-square values</li>
+<li><strong>name</strong>: array of nbest source names</li>
+<li><strong>scale</strong>: array of nbest optimal scale factors</li>
+<li><strong>spectra</strong>: array of nbest Spectrum objects</li>
+<li><strong>spt</strong>: array of nbest spectral types</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
+noise array elements.</li>
+<li><strong>best</strong> (<em>optional, default = False</em>) &#8211; return only the best fit template type</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; generate a plot comparing best fit standard to source, can be save to a file using the file keyword</li>
+<li><strong>file</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; output spectrum plot to a file</li>
+<li><strong>method</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; set to <em>&#8216;kirkpatrick&#8217;</em> to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band</li>
+<li><strong>nbest</strong> (<em>optional, default = 1</em>) &#8211; number of best fitting spectra to return</li>
+<li><strong>set</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; <p>string defining which spectral template set you want to compare to; several options which can be combined:</p>
+<ul>
+<li><em>m dwarf</em>: fit to M dwarfs only</li>
+<li><em>l dwarf</em>: fit to M dwarfs only</li>
+<li><em>t dwarf</em>: fit to M dwarfs only</li>
+<li><em>vlm</em>: fit to M7-T9 dwarfs</li>
+<li><em>optical</em>: only optical classifications</li>
+<li><em>high sn</em>: median S/N greater than 100</li>
+<li><em>young</em>: only young/low surface gravity dwarfs</li>
+<li><em>companion</em>: only companion dwarfs</li>
+<li><em>subdwarf</em>: only subdwarfs</li>
+<li><em>single</em>: only dwarfs not indicated a binaries</li>
+<li><em>spectral binaries</em>: only dwarfs indicated to be spectral binaries</li>
+<li><em>standard</em>: only spectral standards (use classifyByStandard instead)</li>
+</ul>
+</li>
+<li><strong>string</strong> (<em>optional, default = True</em>) &#8211; return spectral type as a string</li>
+<li><strong>spt_type</strong> (<em>optional, default = &#8216;literature&#8217;</em>) &#8211; specify which spectral classification type to return; can be &#8216;spex&#8217;, &#8216;opt&#8217;, &#8216;nir&#8217;, or &#8216;lit&#8217;</li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">string</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="nb">set</span><span class="o">=</span><span class="s">&#39;l dwarf, high sn&#39;</span><span class="p">,</span> <span class="n">spt_type</span><span class="o">=</span><span class="s">&#39;spex&#39;</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="go">(&#39;L4.5&#39;, 0.7138959194725174)</span>
+<span class="go">    (&#39;L4.5&#39;, 0.7138959194725174)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -512,14 +607,64 @@ noise array elements.</li>
 <dl class="function">
 <dt id="splat.classifyGravity">
 <code class="descclassname">splat.</code><code class="descname">classifyGravity</code><span class="sig-paren">(</span><em>sp</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.classifyGravity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determine the gravity classification of a brown dwarf
-using the method of Allers &amp; Liu 2013</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Determine the gravity classification of a brown dwarf using the method of Allers &amp; Liu 2013</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
+noise array elements. Must be between M6.0 and L7.0.</li>
+<li><strong>indices</strong> (<em>optional, default = False</em>) &#8211; specify indices set using <code class="docutils literal"><span class="pre">measureIndexSet</span></code>.</li>
+<li><strong>spt</strong> (<em>optional, default = False</em>) &#8211; spectral type of <code class="docutils literal"><span class="pre">sp</span></code>. Must be between M6.0 and L7.0</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; plot against spectral standard</li>
+<li><strong>allscores</strong> (<em>optional, default = False</em>) &#8211; returns the full result, including the gravity scores from different indices</li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<span class="go">    FLD-G</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">allscores</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+<span class="go">    {&#39;VO-z&#39;: 0.0, &#39;FeH-z&#39;: 1.0, &#39;gravity_class&#39;: &#39;FLD-G&#39;, &#39;H-cont&#39;: 0.0, &#39;KI-J&#39;: 1.0, &#39;score&#39;: 0.5}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.metallicity">
 <code class="descclassname">splat.</code><code class="descname">metallicity</code><span class="sig-paren">(</span><em>sp</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.metallicity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in Rojas-Ayala et al. (2012)</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in Rojas-Ayala et al. (2012)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and noise array elements</li>
+<li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of Monte Carlo samples for error computation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;0559-1404&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">metallicity</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<span class="go">    (-0.50726104530066363, 0.24844773591243882)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -528,7 +673,53 @@ using the method of Allers &amp; Liu 2013</p>
 <dl class="function">
 <dt id="splat.compareSpectra">
 <code class="descclassname">splat.</code><code class="descname">compareSpectra</code><span class="sig-paren">(</span><em>sp1</em>, <em>sp2</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.compareSpectra" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compare two spectra against each other</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Compare two spectra against each other. Returns the stat value as well as
+the scale factor. Minimum possible value is 1.e-9.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp1</strong> &#8211; Spectrum class object</li>
+<li><strong>sp2</strong> &#8211; Spectrum class object to compare with <code class="docutils literal"><span class="pre">sp1</span></code></li>
+<li><strong>weights</strong> (<em>optional, default = [0, ..., 0] for len(sp1.wave)</em>) &#8211; set weights for flux values of <code class="docutils literal"><span class="pre">sp1</span></code></li>
+<li><strong>mask</strong> (<em>optional, default = [0, ..., 0] for len(sp1.wave)</em>) &#8211; mask any flux value of <code class="docutils literal"><span class="pre">sp1</span></code>; has to be an array with length equal as <code class="docutils literal"><span class="pre">sp1</span></code> with only 0 (unmask) or 1 (mask).</li>
+<li><strong>fit_ranges</strong> (<em>optional, default = [0.65,2.45]</em>) &#8211; wavelength range, measured in microns</li>
+<li><strong>mask_ranges</strong> (<em>optional, default = []</em>) &#8211; mask any flux value of <code class="docutils literal"><span class="pre">sp1</span></code> by specifying the wavelength range. Must be in microns</li>
+<li><strong>mask_telluric</strong> (<em>optional, default = False</em>) &#8211; masks certain wavelengths to avoid effects from telluric absorption</li>
+<li><strong>mask_standard</strong> (<em>optional, default = False</em>) &#8211; same as <code class="docutils literal"><span class="pre">mask_telluric</span></code></li>
+<li><strong>novar2</strong> (<em>optional, default = False</em>) &#8211; compute without using variance of <code class="docutils literal"><span class="pre">sp2</span></code></li>
+<li><strong>stat</strong> (<em>optional, default = &#8216;chisqr&#8217;</em>) &#8211; <p>string defining which statistical method to use; available options are:</p>
+<ul>
+<li><em>&#8216;chisqr&#8217;</em>: compare by computing chi squared value</li>
+<li><em>&#8216;stddev&#8217;</em>: compare by computing standard deviation</li>
+<li><em>&#8216;stddev_norm&#8217;</em>: compare by computing normalized standard deviation</li>
+<li><em>&#8216;absdev&#8217;</em>: compare by computing absolute deviation</li>
+</ul>
+</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; plot <code class="docutils literal"><span class="pre">sp1</span></code> with scaled <code class="docutils literal"><span class="pre">sp2</span></code></li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s">&#39;2346-3153&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s">&#39;1421+1827&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">)</span>
+<span class="go">    (&lt;Quantity 17633.117108524682&gt;, 1.1354366238893992e-15)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sp1</span><span class="o">.</span><span class="n">wave</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">[</span><span class="mi">200</span><span class="p">:</span><span class="mi">300</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m_range</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.3</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">m</span><span class="p">,</span> <span class="n">mask_ranges</span> <span class="o">=</span> <span class="n">m_range</span><span class="p">,</span> <span class="n">novar2</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+<span class="go">    (&lt;Quantity 18980.062433571456&gt;, 1.1694685419610533e-15)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -538,40 +729,193 @@ using the method of Allers &amp; Liu 2013</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">Determine</span> <span class="pre">the</span> <span class="pre">photometric</span> <span class="pre">magnitude</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">source</span> <span class="pre">based</span> <span class="pre">on</span> <span class="pre">the</span>
-<span class="pre">spectrum.</span> <span class="pre">Spectra</span> <span class="pre">are</span> <span class="pre">convolved</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">filter</span> <span class="pre">specified</span> <span class="pre">by</span>
-<span class="pre">the</span> <span class="pre">'filter'</span> <span class="pre">input.</span>&nbsp; <span class="pre">By</span> <span class="pre">default</span> <span class="pre">this</span> <span class="pre">filter</span> <span class="pre">is</span> <span class="pre">also</span>
-<span class="pre">convolved</span> <span class="pre">with</span> <span class="pre">a</span> <span class="pre">model</span> <span class="pre">of</span> <span class="pre">Vega</span> <span class="pre">to</span> <span class="pre">extract</span> <span class="pre">Vega</span> <span class="pre">magnitudes,</span>
-<span class="pre">but</span> <span class="pre">the</span> <span class="pre">user</span> <span class="pre">can</span> <span class="pre">also</span> <span class="pre">specify</span> <span class="pre">AB</span> <span class="pre">magnitudes,</span> <span class="pre">photon</span> <span class="pre">flux</span> <span class="pre">or</span>
-<span class="pre">energy</span> <span class="pre">flux.</span></code></p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Determine the photometric magnitude of a source based on the
+spectrum. Spectra are convolved with the filter specified by
+the <code class="docutils literal"><span class="pre">filter</span></code> input.  By default this filter is also
+convolved with a model of Vega to extract Vega magnitudes,
+but the user can also specify AB magnitudes, photon flux or
+energy flux.</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
+noise array elements.</li>
+<li><strong>filter</strong> &#8211; <p>Name of filter, must be one of the following:</p>
+<ul>
+<li>&#8216;2MASS J&#8217;, &#8216;2MASS H&#8217;, &#8216;2MASS Ks&#8217;</li>
+<li>&#8216;MKO J&#8217;, &#8216;MKO H&#8217;, &#8216;MKO K&#8217;, MKO Kp&#8217;, &#8216;MKO Ks&#8217;</li>
+<li>&#8216;NICMOS F090M&#8217;, &#8216;NICMOS F095N&#8217;, &#8216;NICMOS F097N&#8217;, &#8216;NICMOS F108N&#8217;</li>
+<li>&#8216;NICMOS F110M&#8217;, &#8216;NICMOS F110W&#8217;, &#8216;NICMOS F113N&#8217;, &#8216;NICMOS F140W&#8217;</li>
+<li>&#8216;NICMOS F145M&#8217;, &#8216;NICMOS F160W&#8217;, &#8216;NICMOS F164N&#8217;, &#8216;NICMOS F165M&#8217;</li>
+<li>&#8216;NICMOS F166N&#8217;, &#8216;NICMOS F170M&#8217;, &#8216;NICMOS F187N&#8217;, &#8216;NICMOS F190N&#8217;</li>
+<li>&#8216;NIRC2 J&#8217;, &#8216;NIRC2 H&#8217;, &#8216;NIRC2 Kp&#8217;, &#8216;NIRC2 Ks&#8217;</li>
+<li>&#8216;WIRC J&#8217;, &#8216;WIRC H&#8217;, &#8216;WIRC K&#8217;, &#8216;WIRC CH4S&#8217;, &#8216;WIRC CH4L&#8217;</li>
+<li>&#8216;WIRC CO&#8217;, &#8216;WIRC PaBeta&#8217;, &#8216;WIRC BrGamma&#8217;, &#8216;WIRC Fe2&#8217;</li>
+</ul>
+</li>
+<li><strong>info</strong> (<em>optional, default = False</em>) &#8211; give the filter names available</li>
+<li><strong>custom</strong> (<em>optional, default = False</em>) &#8211; specify to a 2 x N vector array specifying the wavelengths and transmissions for a custom filter</li>
+<li><strong>ab</strong> (<em>optional, default = False</em>) &#8211; compute AB magnitudes</li>
+<li><strong>vega</strong> (<em>optional, default = True</em>) &#8211; compute Vega magnitudes</li>
+<li><strong>energy</strong> (<em>optional, default = False</em>) &#8211; compute energy flux</li>
+<li><strong>photon</strong> (<em>optional, default = False</em>) &#8211; compute photon flux</li>
+<li><strong>filterFolder</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; folder containing the filter transmission files</li>
+<li><strong>vegaFile</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; name of file containing Vega flux file, must be within <code class="docutils literal"><span class="pre">filterFolder</span></code></li>
+<li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of samples to use in Monte Carlo error estimation</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Usage:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">mag,unc</span> <span class="pre">=</span> <span class="pre">splat.filterMag(sp,</span> <span class="pre">'filter</span> <span class="pre">name',\*args,</span> <span class="pre">\**kwargs)</span></code></p>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="s">&#39;MKO J&#39;</span><span class="p">)</span>
+<span class="go">    (14.345894376898123, 0.027596454828421831)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat.measureIndex">
+<code class="descclassname">splat.</code><code class="descname">measureIndex</code><span class="sig-paren">(</span><em>sp</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.measureIndex" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Measure an index on a spectrum based on defined methodology
+measure method can be mean, median, integrate
+index method can be ratio = 1/2, valley = 1-2/3, OTHERS
+output is index value and uncertainty</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat.measureIndexSet">
+<code class="descclassname">splat.</code><code class="descname">measureIndexSet</code><span class="sig-paren">(</span><em>sp</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.measureIndexSet" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Measures indices of <code class="docutils literal"><span class="pre">sp</span></code> from specified sets. Returns dictionary of indices.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sp</strong> &#8211; <code class="docutils literal"><span class="pre">Spectrum</span> <span class="pre">class</span> <span class="pre">object,</span> <span class="pre">which</span> <span class="pre">should</span> <span class="pre">contain</span> <span class="pre">wave,</span> <span class="pre">flux</span> <span class="pre">and</span>
-<span class="pre">noise</span> <span class="pre">array</span> <span class="pre">elements.</span></code></li>
-<li><strong>mag'</strong> (<em>&#8216;filter</em>) &#8211; <code class="docutils literal"><span class="pre">Name</span> <span class="pre">of</span> <span class="pre">filter,</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">one</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">following:</span></code>
-- <code class="docutils literal"><span class="pre">'2MASS</span> <span class="pre">J',</span> <span class="pre">'2MASS</span> <span class="pre">H',</span> <span class="pre">'2MASS</span> <span class="pre">Ks'</span></code>
-- <code class="docutils literal"><span class="pre">'MKO</span> <span class="pre">J',</span> <span class="pre">'MKO</span> <span class="pre">H',</span> <span class="pre">'MKO</span> <span class="pre">K',</span> <span class="pre">MKO</span> <span class="pre">Kp',</span> <span class="pre">'MKO</span> <span class="pre">Ks'</span></code>
-- <code class="docutils literal"><span class="pre">'NICMOS</span> <span class="pre">F090M',</span> <span class="pre">'NICMOS</span> <span class="pre">F095N',</span> <span class="pre">'NICMOS</span> <span class="pre">F097N',</span> <span class="pre">'NICMOS</span> <span class="pre">F108N',</span></code>
-- <code class="docutils literal"><span class="pre">'NICMOS</span> <span class="pre">F110M',</span> <span class="pre">'NICMOS</span> <span class="pre">F110W',</span> <span class="pre">'NICMOS</span> <span class="pre">F113N',</span> <span class="pre">'NICMOS</span> <span class="pre">F140W',</span></code>
-- <code class="docutils literal"><span class="pre">'NICMOS</span> <span class="pre">F145M',</span> <span class="pre">'NICMOS</span> <span class="pre">F160W',</span> <span class="pre">'NICMOS</span> <span class="pre">F164N',</span> <span class="pre">'NICMOS</span> <span class="pre">F165M',</span></code>
-- <code class="docutils literal"><span class="pre">'NICMOS</span> <span class="pre">F166N',</span> <span class="pre">'NICMOS</span> <span class="pre">F170M',</span> <span class="pre">'NICMOS</span> <span class="pre">F187N',</span> <span class="pre">'NICMOS</span> <span class="pre">F190N'</span></code>
-- <code class="docutils literal"><span class="pre">'NIRC2</span> <span class="pre">J',</span> <span class="pre">'NIRC2</span> <span class="pre">H',</span> <span class="pre">'NIRC2</span> <span class="pre">Kp',</span> <span class="pre">'NIRC2</span> <span class="pre">Ks'</span></code>
-- <code class="docutils literal"><span class="pre">'WIRC</span> <span class="pre">J',</span> <span class="pre">'WIRC</span> <span class="pre">H',</span> <span class="pre">'WIRC</span> <span class="pre">K',</span> <span class="pre">'WIRC</span> <span class="pre">CH4S',</span> <span class="pre">'WIRC</span> <span class="pre">CH4L'</span></code>
-- <code class="docutils literal"><span class="pre">'WIRC</span> <span class="pre">CO',</span> <span class="pre">'WIRC</span> <span class="pre">PaBeta',</span> <span class="pre">'WIRC</span> <span class="pre">BrGamma',</span> <span class="pre">'WIRC</span> <span class="pre">Fe2'</span></code></li>
-<li><strong>(optional)</strong> (<em>**kwargs</em>) &#8211; <ul>
-<li><code class="docutils literal"><span class="pre">'info'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">give</span> <span class="pre">the</span> <span class="pre">filter</span> <span class="pre">names</span> <span class="pre">available</span></code></li>
-<li><code class="docutils literal"><span class="pre">'custom'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">specify</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">2</span> <span class="pre">x</span> <span class="pre">N</span> <span class="pre">vector</span> <span class="pre">array</span> <span class="pre">specifying</span> <span class="pre">the</span> <span class="pre">wavelengths</span> <span class="pre">and</span> <span class="pre">transmissions</span> <span class="pre">for</span> <span class="pre">a</span> <span class="pre">custom</span> <span class="pre">filter</span></code></li>
-<li><code class="docutils literal"><span class="pre">'ab'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">compute</span> <span class="pre">AB</span> <span class="pre">magnitudes</span></code></li>
-<li><code class="docutils literal"><span class="pre">'vega'</span> <span class="pre">=</span> <span class="pre">True:</span> <span class="pre">compute</span> <span class="pre">Vega</span> <span class="pre">magnitudes</span></code></li>
-<li><code class="docutils literal"><span class="pre">'energy'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">compute</span> <span class="pre">energy</span> <span class="pre">flux</span></code></li>
-<li><code class="docutils literal"><span class="pre">'photon'</span> <span class="pre">=</span> <span class="pre">False:</span> <span class="pre">compute</span> <span class="pre">photon</span> <span class="pre">flux</span></code></li>
-<li><code class="docutils literal"><span class="pre">'filterFolder'</span> <span class="pre">=</span> <span class="pre">'':</span> <span class="pre">folder</span> <span class="pre">containing</span> <span class="pre">the</span> <span class="pre">filter</span> <span class="pre">transmission</span> <span class="pre">files</span></code></li>
-<li><code class="docutils literal"><span class="pre">'vegaFile'</span> <span class="pre">=</span> <span class="pre">'':</span> <span class="pre">name</span> <span class="pre">of</span> <span class="pre">file</span> <span class="pre">containing</span> <span class="pre">Vega</span> <span class="pre">flux</span> <span class="pre">file,</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">within</span> <span class="pre">'filterFolder'</span></code></li>
-<li><code class="docutils literal"><span class="pre">'nsamples'</span> <span class="pre">=</span> <span class="pre">100:</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">samples</span> <span class="pre">to</span> <span class="pre">use</span> <span class="pre">in</span> <span class="pre">MC</span> <span class="pre">error</span> <span class="pre">estimation</span></code></li>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and noise array elements</li>
+<li><strong>set</strong> (<em>optional, default = &#8216;burgasser&#8217;</em>) &#8211; <p>string defining which indices set you want to use; options include:</p>
+<ul>
+<li><em>burgasser</em>: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J from Burgasser et al. (2006)</li>
+<li><em>tokunaga</em>: K1, K2 from Tokunaga &amp; Kobayashi (1999)</li>
+<li><em>reid</em>: H2O-A, H2O-B from Reid et al. (2001)</li>
+<li><em>geballe</em>: H2O-1.2, H2O-1.5, CH4-2.2 from Geballe et al. (2002)</li>
+<li><em>allers</em>: H2O, FeH-z, VO-z, FeH-J, KI-J, H-cont from Allers et al. (2007), Allers &amp; Liu (2013)</li>
+<li><em>testi</em>: sHJ, sKJ, sH2O-J, sH2O-H1, sH2O-H2, sH2O-K from Testi et al. (2001)</li>
+<li><em>slesnick</em>: H2O-1, H2O-2, FeH from Slesnick et al. (2004)</li>
+<li><em>mclean</em>: H2OD from McLean et al. (2003)</li>
+<li><em>rojas</em>: H2O-K2 from Rojas-Ayala et al.(2012)</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1555+0954&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">measureIndexSet</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">set</span> <span class="o">=</span> <span class="s">&#39;reid&#39;</span><span class="p">)</span>
+<span class="go">    {&#39;H2O-B&#39;: (1.0531856077273236, 0.0045092074790538221), &#39;H2O-A&#39;: (0.89673318593633422, 0.0031278302105038594)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat.measureEW">
+<code class="descclassname">splat.</code><code class="descname">measureEW</code><span class="sig-paren">(</span><em>sp</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.measureEW" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Measures equivalent widths (EWs) of specified lines</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and noise array elements</li>
+<li><strong>args</strong> &#8211; wavelength arrays. Needs at least two arrays to measure line and continuum regions.</li>
+<li><strong>nonoise</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; </li>
+<li><strong>line</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat.measureEWSet">
+<code class="descclassname">splat.</code><code class="descname">measureEWSet</code><span class="sig-paren">(</span><em>sp</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.measureEWSet" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Measures equivalent widths (EWs) of lines from specified sets. Returns dictionary of indices.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and noise array elements</li>
+<li><strong>set</strong> (<em>optional, default = &#8216;rojas&#8217;</em>) &#8211; <p>string defining which EW measurement set you want to use; options include:</p>
+<ul>
+<li><em>rojas</em>: EW measures from Rojas-Ayala et al. (2012); uses Na I 2.206/2.209 Ca I 2.26 micron lines.</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1555+0954&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">measureEWSet</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">set</span> <span class="o">=</span> <span class="s">&#39;rojas&#39;</span><span class="p">)</span>
+<span class="go">    {&#39;Na I 2.206/2.209&#39;: (1.7484002652013144, 0.23332441577025356), &#39;Ca I 2.26&#39;: (1.3742491939667159, 0.24867705962337672), &#39;names&#39;: [&#39;Na I 2.206/2.209&#39;, &#39;Ca I 2.26&#39;], &#39;reference&#39;: &#39;EW measures from Rojas-Ayala et al. (2012)&#39;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="source-analysis">
+<h3>Source Analysis<a class="headerlink" href="#source-analysis" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat.typeToMag">
+<code class="descclassname">splat.</code><code class="descname">typeToMag</code><span class="sig-paren">(</span><em>spt</em>, <em>filt</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.typeToMag" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Takes a spectral type and a filter, and returns absolute magnitude</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>spt</strong> &#8211; string or integer of the spectral type</li>
+<li><strong>filter</strong> &#8211; filter of the absolute magnitude. Options are MKO K, MKO H, MKO J, MKO Y, MKO LP, 2MASS J, 2MASS K, or 2MASS H</li>
+<li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of Monte Carlo samples for error computation</li>
+<li><strong>unc</strong> (<em>optional, default = 0.</em>) &#8211; uncertainty of <code class="docutils literal"><span class="pre">spt</span></code></li>
+<li><strong>ref</strong> (<em>optional, default = &#8216;dupuy&#8217;</em>) &#8211; <p>Abs Mag/SpT relation used to compute the absolute magnitude. Options are:</p>
+<ul>
+<li><em>faherty</em>: Abs Mag/SpT relation from Faherty et al. (2012). Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K.</li>
+<li><em>burgasser</em>: Abs Mag/SpT relation from Burgasser (2007). Allowed spectral type range is L0 to T8, and allowed filters are MKO K.</li>
+<li><em>dupuy</em>: Abs Mag/SpT relation from Dupuy &amp; Liu (2012). Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS K.</li>
 </ul>
 </li>
 </ul>
@@ -581,62 +925,112 @@ using the method of Allers &amp; Liu 2013</p>
 </table>
 <p class="rubric">Example</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="s">&#39;MKO J&#39;</span><span class="p">)</span>
-<span class="go">(14.345894376898123, 0.027596454828421831)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s">&#39;L3&#39;</span><span class="p">,</span> <span class="s">&#39;2MASS J&#39;</span><span class="p">)</span>
+<span class="go">    (12.730064813273996, 0.4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="mi">21</span><span class="p">,</span> <span class="s">&#39;MKO K&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s">&#39;burgasser&#39;</span><span class="p">)</span>
+<span class="go">    (10.705292820099999, 0.26)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="s">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s">&#39;faherty&#39;</span><span class="p">)</span>
+<span class="go">    Invalid filter given for Abs Mag/SpT relation from Faherty et al. (2012)</span>
+<span class="go">    (nan, nan)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s">&#39;M0&#39;</span><span class="p">,</span> <span class="s">&#39;2MASS H&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s">&#39;dupuy&#39;</span><span class="p">)</span>
+<span class="go">    Spectral Type is out of range for Abs Mag/SpT relation from Dupuy &amp; Liu (2012) Abs Mag/SpT relation</span>
+<span class="go">    (nan, nan)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.measureIndex">
-<code class="descclassname">splat.</code><code class="descname">measureIndex</code><span class="sig-paren">(</span><em>sp</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.measureIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Measure an index on a spectrum based on defined methodology
-measure method can be mean, median, integrate
-index method can be ratio = 1/2, valley = 1-2/3, OTHERS
-output is index value and uncertainty</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat.measureIndexSet">
-<code class="descclassname">splat.</code><code class="descname">measureIndexSet</code><span class="sig-paren">(</span><em>sp</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.measureIndexSet" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="splat.measureEW">
-<code class="descclassname">splat.</code><code class="descname">measureEW</code><span class="sig-paren">(</span><em>sp</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.measureEW" title="Permalink to this definition">¶</a></dt>
-<dd><p>Routine to measure equivalent widths (EWs) of specified lines</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat.measureEWSet">
-<code class="descclassname">splat.</code><code class="descname">measureEWSet</code><span class="sig-paren">(</span><em>sp</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.measureEWSet" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-<div class="section" id="source-analysis">
-<h3>Source Analysis<a class="headerlink" href="#source-analysis" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="splat.typeToMag">
-<code class="descclassname">splat.</code><code class="descname">typeToMag</code><span class="sig-paren">(</span><em>spt</em>, <em>filt</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.typeToMag" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes a spectral type, its uncertainty, and a filter, returns absolute magnitude
-Filter options = [&#8216;MKO K&#8217;, &#8216;MKO H&#8217;, &#8216;MKO J&#8217;, &#8216;MKO Y&#8217;, &#8216;MKO LP&#8217;, &#8216;2MASS J&#8217;, &#8216;2MASS K&#8217;, &#8216;2MASS H&#8217;]
-References = [&#8216;faherty&#8217;, &#8216;dupuy&#8217;, &#8216;burgasser&#8217;]</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="splat.typeToTeff">
 <code class="descclassname">splat.</code><code class="descname">typeToTeff</code><span class="sig-paren">(</span><em>input</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.typeToTeff" title="Permalink to this definition">¶</a></dt>
-<dd><p>return Teff for a given SpT</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Returns an effective temperature (Teff) and its uncertainty for a given spectral type</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>input</strong> &#8211; Spectral type; can be a number or a string from 0 (K0) and 49.0 (Y9).</li>
+<li><strong>uncertainty</strong> (<em>optional, default = 0.001</em>) &#8211; uncertainty of spectral type</li>
+<li><strong>unc</strong> (<em>optional, default = 0.001</em>) &#8211; same as <code class="docutils literal"><span class="pre">uncertainty</span></code></li>
+<li><strong>spt_e</strong> (<em>optional, default = 0.001</em>) &#8211; same as <code class="docutils literal"><span class="pre">uncertainty</span></code></li>
+<li><strong>ref</strong> (<em>optional, default = &#8216;stephens2009&#8217;</em>) &#8211; <p>Teff/SpT relation used to compute the effective temperature. Options are:</p>
+<ul>
+<li><em>golimowski</em>: Teff/SpT relation from Golimowski et al. (2004). Allowed spectral type range is M6 to T8.</li>
+<li><em>looper</em>: Teff/SpT relation from Looper et al. (2008). Allowed spectral type range is L0 to T8.</li>
+<li><em>stephens</em>: Teff/SpT relation from Stephens et al. (2009). Allowed spectral type range is M6 to T8.</li>
+<li><em>marocco</em>: Teff/SpT relation from Marocco et al. (2013). Allowed spectral type range is M7 to T8.</li>
+</ul>
+</li>
+<li><strong>set</strong> (<em>optional, default = &#8216;stephens2009&#8217;</em>) &#8211; same as <code class="docutils literal"><span class="pre">ref</span></code></li>
+<li><strong>method</strong> (<em>optional, default = &#8216;stephens2009&#8217;</em>) &#8211; same as <code class="docutils literal"><span class="pre">ref</span></code></li>
+<li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of samples to use in Monte Carlo error estimation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="go">    (2233.4796740905499, 100.00007874571999)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">unc</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s">&#39;golimowski&#39;</span><span class="p">)</span>
+<span class="go">    (2305.7500497902788, 127.62548366132124)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.estimateDistance">
 <code class="descclassname">splat.</code><code class="descname">estimateDistance</code><span class="sig-paren">(</span><em>sp</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.estimateDistance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes the apparent magnitude and either takes or determines the absolute magnitude,
-then uses the magnitude/distance relation to estimate the distance to the object in parsecs
-Note: the input spectra should be flux calibrated to their empirical apparent magnitudes</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Takes the apparent magnitude and either takes or determines the absolute
+magnitude, then uses the magnitude/distance relation to estimate the
+distance to the object in parsecs. Returns estimated distance and
+uncertainty in parsecs</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; Spectrum class object, which should be flux calibrated to its empirical apparent magnitude</li>
+<li><strong>mag</strong> (<em>optional, default = False</em>) &#8211; apparent magnitude of <code class="docutils literal"><span class="pre">sp</span></code></li>
+<li><strong>mag_unc</strong> (<em>optional, default = 0</em>) &#8211; uncertainty of the apparent magnitude</li>
+<li><strong>absmag</strong> (<em>optional, default = False</em>) &#8211; absolute magnitude of <code class="docutils literal"><span class="pre">sp</span></code></li>
+<li><strong>absmag_unc</strong> (<em>optional, default = 0</em>) &#8211; uncertainty of the absolute magnitude</li>
+<li><strong>spt</strong> (<em>optional, default = False</em>) &#8211; spectral type of <code class="docutils literal"><span class="pre">sp</span></code></li>
+<li><strong>spt_e</strong> (<em>optional, default = 0</em>) &#8211; uncertainty of the spectral type</li>
+<li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of samples to use in Monte Carlo error estimation</li>
+<li><strong>filter</strong> (<em>optional, default = False</em>) &#8211; <p>Name of filter, must be one of the following:</p>
+<ul>
+<li>&#8216;2MASS J&#8217;, &#8216;2MASS H&#8217;, &#8216;2MASS Ks&#8217;</li>
+<li>&#8216;MKO J&#8217;, &#8216;MKO H&#8217;, &#8216;MKO K&#8217;, MKO Kp&#8217;, &#8216;MKO Ks&#8217;</li>
+<li>&#8216;NICMOS F090M&#8217;, &#8216;NICMOS F095N&#8217;, &#8216;NICMOS F097N&#8217;, &#8216;NICMOS F108N&#8217;</li>
+<li>&#8216;NICMOS F110M&#8217;, &#8216;NICMOS F110W&#8217;, &#8216;NICMOS F113N&#8217;, &#8216;NICMOS F140W&#8217;</li>
+<li>&#8216;NICMOS F145M&#8217;, &#8216;NICMOS F160W&#8217;, &#8216;NICMOS F164N&#8217;, &#8216;NICMOS F165M&#8217;</li>
+<li>&#8216;NICMOS F166N&#8217;, &#8216;NICMOS F170M&#8217;, &#8216;NICMOS F187N&#8217;, &#8216;NICMOS F190N&#8217;</li>
+<li>&#8216;NIRC2 J&#8217;, &#8216;NIRC2 H&#8217;, &#8216;NIRC2 Kp&#8217;, &#8216;NIRC2 Ks&#8217;</li>
+<li>&#8216;WIRC J&#8217;, &#8216;WIRC H&#8217;, &#8216;WIRC K&#8217;, &#8216;WIRC CH4S&#8217;, &#8216;WIRC CH4L&#8217;</li>
+<li>&#8216;WIRC CO&#8217;, &#8216;WIRC PaBeta&#8217;, &#8216;WIRC BrGamma&#8217;, &#8216;WIRC Fe2&#8217;</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1555+0954&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<span class="go">    Please specify the filter used to determine the apparent magnitude</span>
+<span class="go">    (nan, nan)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">mag</span> <span class="o">=</span> <span class="mf">12.521</span><span class="p">,</span> <span class="n">mag_unc</span> <span class="o">=</span> <span class="mf">0.022</span><span class="p">,</span> <span class="n">absmag</span> <span class="o">=</span> <span class="mf">7.24</span><span class="p">,</span> <span class="n">absmag_unc</span> <span class="o">=</span> <span class="mf">0.50</span><span class="p">,</span> <span class="n">spt</span> <span class="o">=</span> <span class="s">&#39;M3&#39;</span><span class="p">)</span>
+<span class="go">    (116.36999172188771, 33.124820555524224)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -671,43 +1065,195 @@ calendar format &#8216;2005 Jun 12&#8217;</td>
 <dl class="function">
 <dt id="splat.dateToCaldate">
 <code class="descclassname">splat.</code><code class="descname">dateToCaldate</code><span class="sig-paren">(</span><em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.dateToCaldate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert from numeric date to calendar date</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Converts numeric date to calendar date</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> &#8211; string in the form &#8216;YYYYMMDD&#8217;</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">dateToCaldate</span><span class="p">(</span><span class="s">&#39;19940523&#39;</span><span class="p">)</span>
+<span class="go">    1994 May 23</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.coordinateToDesignation">
 <code class="descclassname">splat.</code><code class="descname">coordinateToDesignation</code><span class="sig-paren">(</span><em>c</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.coordinateToDesignation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert RA, Dec into designation string</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Converts right ascension and declination into a designation string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>c</strong> &#8211; RA and Dec to be converted; can be a SkyCoord object with units of degrees,
+a list with RA and Dec in degrees, or a string with RA measured in hour
+angles and Dec in degrees</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy.coordinates</span> <span class="kn">import</span> <span class="n">SkyCoord</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="mf">238.86</span><span class="p">,</span> <span class="mf">9.90</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&quot;deg&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">coordinateToDesignation</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="go">    J15552640+0954000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">coordinateToDesignation</span><span class="p">([</span><span class="mf">238.86</span><span class="p">,</span> <span class="mf">9.90</span><span class="p">])</span>
+<span class="go">    J15552640+0954000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">coordinateToDesignation</span><span class="p">(</span><span class="s">&#39;15:55:26.4 +09:54:00.0&#39;</span><span class="p">)</span>
+<span class="go">    J15552640+0954000</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.designationToCoordinate">
 <code class="descclassname">splat.</code><code class="descname">designationToCoordinate</code><span class="sig-paren">(</span><em>value</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.designationToCoordinate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a designation into a RA, Dec tuple or ICRS</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Convert a designation into a RA, Dec tuple or ICRS</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>value</strong> &#8211; string with RA measured in hour angles and Dec in degrees</li>
+<li><strong>icrs</strong> (<em>optional, defualt = True</em>) &#8211; returns coordinate in ICRS frame if <code class="docutils literal"><span class="pre">True</span></code></li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">designationToCoordinate</span><span class="p">(</span><span class="s">&#39;1555.2640+0954.000&#39;</span><span class="p">)</span>
+<span class="go">    &lt;SkyCoord (ICRS): ra=238.86 deg, dec=9.9 deg&gt;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.designationToShortName">
 <code class="descclassname">splat.</code><code class="descname">designationToShortName</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.designationToShortName" title="Permalink to this definition">¶</a></dt>
-<dd><p>Produce a shortened version of designation</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Produce a shortened version of designation</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> &#8211; string with RA measured in hour angles and Dec in degrees</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">designationToShortName</span><span class="p">(</span><span class="s">&#39;1555.2640+0954.000&#39;</span><span class="p">)</span>
+<span class="go">    J1555+0954</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.typeToNum">
 <code class="descclassname">splat.</code><code class="descname">typeToNum</code><span class="sig-paren">(</span><em>input</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.typeToNum" title="Permalink to this definition">¶</a></dt>
-<dd><p>convert between string and numeric spectral types</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Converts between string and numeric spectral types, and vise versa.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>input</strong> &#8211; Spectral type to convert. Can convert a number or a string from 0 (K0) and 49.0 (Y9).</li>
+<li><strong>error</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; magnitude of uncertainty. &#8216;:&#8217; for uncertainty &gt; 1 and &#8216;::; for uncertainty &gt; 2.</li>
+<li><strong>uncertainty</strong> (<em>optional, default = 0</em>) &#8211; uncertainty of spectral type</li>
+<li><strong>subclass</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; <p>subclass of object. Options include:</p>
+<ul>
+<li><em>sd</em>: object is a subdwarf</li>
+<li><em>esd</em>: object is an extreme subdwarf</li>
+<li><em>usd</em>: object is an ultra subdwarf</li>
+</ul>
+</li>
+<li><strong>lumclass</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; luminosity class of object represented by roman numerals</li>
+<li><strong>ageclass</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; age class of object</li>
+<li><strong>colorclass</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; color class of object</li>
+<li><strong>peculiar</strong> (<em>optional, default = False</em>) &#8211; if object is peculiar or not</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="go">    T0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="s">&#39;T0.0&#39;</span><span class="p">)</span>
+<span class="go">    30.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="n">peculiar</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">uncertainty</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">,</span> <span class="n">lumclass</span> <span class="o">=</span> <span class="s">&#39;II&#39;</span><span class="p">)</span>
+<span class="go">    L7.0IIp:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">    Spectral type number must be between 0 (K0) and 49.0 (Y9)</span>
+<span class="go">    nan</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.properCoordinates">
 <code class="descclassname">splat.</code><code class="descname">properCoordinates</code><span class="sig-paren">(</span><em>c</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.properCoordinates" title="Permalink to this definition">¶</a></dt>
-<dd><p>converts various coordinate forms to the proper SkyCoord format</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Converts various coordinate forms to the proper SkyCoord format. Convertible forms include lists and strings.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>c</strong> &#8211; coordinate to be converted. Can be a list or a string.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">properCoordinates</span><span class="p">([</span><span class="mf">104.79</span><span class="p">,</span> <span class="mf">25.06</span><span class="p">])</span>
+<span class="go">    &lt;SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">properCoordinates</span><span class="p">(</span><span class="s">&#39;06:59:09.60 +25:03:36.0&#39;</span><span class="p">)</span>
+<span class="go">    &lt;SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg&gt;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat.isNumber">
 <code class="descclassname">splat.</code><code class="descname">isNumber</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.isNumber" title="Permalink to this definition">¶</a></dt>
-<dd><p>check if something is a number</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Checks if something is a number.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> &#8211; object to be checked</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">isNumber</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">    True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">isNumber</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>
+<span class="go">    False</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -796,7 +1342,31 @@ checks if a given filename is present locally or online</td>
 <dl class="function">
 <dt id="splat.test">
 <code class="descclassname">splat.</code><code class="descname">test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.test" title="Permalink to this definition">¶</a></dt>
-<dd><p>Testing the SPLAT Code.</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Tests the SPLAT Code</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Checks the following:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ul class="first last simple">
+<li>If you are online and can see the SPLAT website</li>
+<li>If you have access to unpublished spectra</li>
+<li>If you can search for and load a spectrum</li>
+<li>If <code class="docutils literal"><span class="pre">searchLibrary</span></code> functions properly</li>
+<li>If index measurement routines functions properly</li>
+<li>If classification routines function properly</li>
+<li>If <code class="docutils literal"><span class="pre">typeToTeff</span></code> functions properly</li>
+<li>If flux calibration and normalization function properly</li>
+<li>If <code class="docutils literal"><span class="pre">loadModel</span></code> functions properly</li>
+<li>If <code class="docutils literal"><span class="pre">compareSpectra</span></code> functions properly</li>
+<li>If <code class="docutils literal"><span class="pre">plotSpectrum</span></code> functions properly</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <ul class="simple">
