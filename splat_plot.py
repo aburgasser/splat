@@ -10,10 +10,16 @@ import matplotlib.colors as colmap
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+#from matplotlib.colors import LinearSegmentedColormap
+#from matplotlib.patches import Ellipse
+#from matplotlib.ticker import MaxNLocator
 import numpy
 from scipy.interpolate import interp1d 
+from scipy import ndimage
 import splat
 import sys
+#from __future__ import print_function, absolute_import, unicode_literals
+
 
 # change the command prompt
 sys.ps1 = 'splat plot> '
@@ -143,7 +149,12 @@ def plotSpectrum(*args, **kwargs):
     filename = kwargs.get('file',filename)
     filename = kwargs.get('output',filename)
     title = kwargs.get('title','')
-    filebase = filename.split('.')[0]               # filebase for multiple files
+    fb = filename.split('.')[:-1]               # filebase for multiple files
+    filebase = fb[0]
+    if len(fb) > 1:
+        for x in fb[1:]:
+            filebase+='.'+x
+    print filebase
     filetype = kwargs.get('format',filename.split('.')[-1])
     filetype.lower()
     if filetype == '':
@@ -276,7 +287,10 @@ def plotSpectrum(*args, **kwargs):
         pdf_pages = PdfPages(filename)
         
     if multipage == False:
-        files = [filebase+'{}.'.format(i+1)+filetype for i in range(len(splist))]
+        if len(splist) > 1:
+            files = [filebase+'{}.'.format(i+1)+filetype for i in range(len(splist))]
+        else:
+            files = [filebase+'.'+filetype]
 
     #print multipage, splist
 
@@ -534,3 +548,6 @@ def plotSpectrum(*args, **kwargs):
 
     return
 
+
+  
+    

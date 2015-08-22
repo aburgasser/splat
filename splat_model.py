@@ -11,7 +11,7 @@ import os
 import sys
 import urllib2
 #import matplotlib.pyplot as plt
-#from matplotlib import cm
+from matplotlib import cm
 from scipy import stats
 from scipy.interpolate import griddata
 import numpy
@@ -440,6 +440,7 @@ def modelFitGrid(spec, **kwargs):
     '''
     Model fitting code to grid of models
     '''
+    print 'This function is not yet implemented'
     pass
 
 
@@ -471,6 +472,7 @@ def modelFitMCMC(spec, **kwargs):
     filebase = kwargs.get('filename',filebase)
     kwargs['filebase'] = filebase
     savestep = kwargs.get('savestep', nsample/10)
+    dataformat = kwargs.get('dataformat','ascii.csv')
 # evolutionary models    
     emodel = kwargs.get('evolutionary_model', 'baraffe')
     emodel = kwargs.get('emodel', emodel)
@@ -525,7 +527,7 @@ def modelFitMCMC(spec, **kwargs):
         numpy.random.uniform(logg_range[0],logg_range[1]),\
         numpy.random.uniform(z_range[0],z_range[1])])
     if len(param0_init) < 3:
-        param0_init.append[0.0]
+        param0_init.append(0.0)
         
     t0 = kwargs.get('initial_temperature',param0_init[0])
     t0 = kwargs.get('initial_teff',t0)
@@ -546,6 +548,7 @@ def modelFitMCMC(spec, **kwargs):
     param_step = kwargs.get('step_sizes',[tstep,gstep,zstep])
     if len(param_step) < 3:
         param_step.append[0.0]
+        kwargs['nometallicity'] = True
 
     if kwargs.get('nometallicity',False):
         param_step[2] = 0.
@@ -562,8 +565,24 @@ def modelFitMCMC(spec, **kwargs):
         if param0[2] == 0.:
             param_step[2] = 0.
 
-# TEMP ERROR CHECKING
-#    print "initial guess", param0
+
+# read in prior calculation and start from there
+    if kwargs.get('addon',False) != False:
+        addflag = False
+# a table is passed
+        if isinstance(kwargs.get('addon'),Table):
+            t = kwargs.get('addon')
+            addflg = True
+# a dictionary is passed
+        elif isinstance(kwargs.get('addon'),dict):
+            t = Table(kwargs.get('addon'))
+            addflg = True
+# a filename is passed
+        elif isinstance(kwargs.get('addon'),str):
+            try:
+                p = ascii.read(kwargs.get('addon'))
+            except:
+                print '\nCould not read in parameter file {}'.format(kwargs.get('addon'))
 
 
 # initial fit cycle
@@ -615,25 +634,21 @@ def modelFitMCMC(spec, **kwargs):
                 if showRadius:
                     t['radius'] = radii
                 t['chisqr'] = chisqrs
-                print t
+                t.write(filebase+'rawdata.dat',format=dataformat)
                 reportModelFitResults(spec,t,iterative=True,model_set=m_set,**kwargs)
 
 # Final results
     t = Table(zip(*params[::-1]),names=['teff','logg','z'])
-    if param_step[2] == 0.:
+    if param_step[2] == 0. or kwargs.get('nometallicity',False):
         del t['z']
     if showRadius:
         t['radius'] = radii
     t['chisqr'] = chisqrs
 # cut first x% of parameters
     s = Table(t[burn*len(t):])
-    
-# get the evolutionary model parameters
-    values=bdevopar.Parameters(emodel, teff=s['teff'], grav=s['logg'])
-    s['age'] = values['age']
-    s['lbol'] = values['luminosity']
-    s['mass'] = values['mass']
-    s['radius_evol'] = values['radius']
+
+# save data
+    s.write(filebase+'rawdata.dat',format=dataformat)
     
     reportModelFitResults(spec,s,iterative=False,model_set=m_set,**kwargs)
     if verbose:
@@ -649,15 +664,15 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
     and saves raw data if iterative = True
     '''    
 
+    evolFlag = kwargs.get('evol',True)
+    emodel = kwargs.get('emodel','Baraffe')
     statsFlag = kwargs.get('stats',True)
     triangleFlag = kwargs.get('triangle',True)
     bestfitFlag = kwargs.get('bestfit',True)
-    saverawFlag = kwargs.get('saveraw',True)
     summaryFlag = kwargs.get('summary',True)
     weights = kwargs.get('weight',None)
     filebase = kwargs.get('filebase','modelfit_results')
     statcolumn = kwargs.get('stat','chisqr')
-    dataformat = kwargs.get('dataformat','ascii.csv')
     mset = kwargs.get('model_set','')
     mset = kwargs.get('mset',mset)
     mask_ranges = kwargs.get('mask_ranges',[])
@@ -686,14 +701,14 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
 
     unit_assoc = {\
         'teff': 'K',\
-        'logg': r'cm/s$^2$',\
+#        'logg': r'cm/s$^2$',\
         'age': 'Gyr'}
 
     if kwargs.get('iterative',False):
         statsFlag = True
-        triangleFlag = True
-        bestfitFlag = True
-        saverawFlag = True
+        evolFlag = True
+        triangleFlag = False
+        bestfitFlag = False
         summaryFlag = False
 
 # check that table has the correct properties
@@ -706,15 +721,46 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
 
     parameters = t.colnames
     parameters.remove(statcolumn)
+ 
+# get the evolutionary model parameters
+# turned off for now
+    evolFlag = False
+    if evolFlag:
+        if 'teff' not in t.colnames or 'logg' not in t.colnames:
+            print '\nCannot compare to best fit without teff and logg parameters'
+
+        else:
+            values=bdevopar.Parameters(emodel, teff=t['teff'], grav=t['logg'])
+            t['age'] = values['age']
+            t['lbol'] = values['luminosity']
+            t['mass'] = values['mass']
+            t['radius_evol'] = values['radius']
+            parameters = t.colnames
+            parameters.remove(statcolumn)
     
+   
 # calculate statistics
     if statsFlag:
-        print '\n'
         if weights == True:
             weights = numpy.exp(0.5*(numpy.nanmin(t[statcolumn])-t[statcolumn]))
-            
+
+        print '\nNumber of steps = {}'.format(len(t))    
+        
+        print '\nBest Fit parameters:'
+        print 'Lowest chi2 value = {} for {} degrees of freedom'.format(numpy.nanmin(t[statcolumn]),spec.dof)
         for p in parameters:
-            mn, sm, sp = distributionStats(t[p],sigma=sigma,weights=weights)      # +/- 1 sigma
+            sort = [x for (y,x) in sorted(zip(t[statcolumn],t[p]))]
+            name = p
+            if p in descrip_assoc.keys():
+                name = descrip_assoc[p]
+            unit = ''
+            if p in unit_assoc.keys():
+                unit = '('+unit_assoc[p]+')'
+            print '{} = {:.3f} {}'.format(name,sort[0],unit)
+
+        print '\nMedian parameters:'
+        for p in parameters:
+            sm, mn, sp = distributionStats(t[p],sigma=sigma,weights=weights)      # +/- 1 sigma
             name = p
             if p in descrip_assoc.keys():
                 name = descrip_assoc[p]
@@ -724,28 +770,30 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
             print '{} = {:.3f} + {:.3f} - {:.3f} {}'.format(name,mn,sp-mn,mn-sm,unit)
         print '\n'
 
-# save raw data
-    if saverawFlag:
-        t.write(filebase+'_rawdata.dat',format=dataformat)
         
 # best fit model
     if bestfitFlag and mset in DEFINED_MODEL_SET:
 # check to make sure at least teff & logg are present
         if 'teff' not in t.colnames or 'logg' not in t.colnames:
-            print '\nCannot to best fit without teff and logg parameters; skipping this step'
+            print '\nCannot compare to best fit without teff and logg parameters'
 
-        t.sort(statcolumn)
-        margs = {'set': mset, 'teff': t['teff'][0], 'logg': t['logg'][0]}
-        legend = [spec.name,'{} T = {:.0f}, logg =  {:.2f}'.format(mset,margs['teff'],margs['logg']),r'$\chi^2$ = {:.0f}'.format(t[statcolumn][0])]
-        if 'z' in t.colnames:
-            margs['z'] = t['z'][0]
-            legend[1]+=', z = {:.2f}'.format(margs['z'])
-        model = splat.loadModel(**margs)
-        
-        chisqr,alpha = splat.compareSpectra(spec, model ,mask_ranges=mask_ranges)
-        model.scale(alpha)
-        splat.plotSpectrum(spec,model,spec-model,uncertainty=True,colors=['k','r','b'], \
-            legend=legend,filename=filebase+'_bestfit.eps')  
+        else:
+            t.sort(statcolumn)
+            margs = {'set': mset, 'teff': t['teff'][0], 'logg': t['logg'][0]}
+            legend = [spec.name,'{} T = {:.0f}, logg =  {:.2f}'.format(mset,margs['teff'],margs['logg']),r'$\chi^2$ = {:.0f}, DOF = {:.0f}'.format(t[statcolumn][0],spec.dof)]
+            if 'z' in t.colnames:
+                margs['z'] = t['z'][0]
+                legend[1]+=', z = {:.2f}'.format(margs['z'])
+            model = splat.loadModel(**margs)
+            chisqr,alpha = splat.compareSpectra(spec, model ,mask_ranges=mask_ranges)
+            model.scale(alpha)
+
+            w = numpy.where(numpy.logical_and(spec.wave.value > 0.9,spec.wave.value < 2.35))
+            diff = spec-model
+            print filebase
+            splat.plotSpectrum(spec,model,diff,uncertainty=True,colors=['k','r','b'], \
+                legend=legend,filename=filebase+'bestfit.eps',\
+                yrange=[1.1*numpy.nanmin(diff.flux.value[w]),1.1*numpy.nanmax([spec.flux.value[w],model.flux.value[w]])])  
  
 # triangle plot of parameters
     if triangleFlag:
@@ -761,8 +809,8 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
                 if p in unit_assoc.keys():
                     labels[-1] = labels[-1]+' ('+unit_assoc[p]+')'
 #        print labels        
-        fig = triangle.corner(zip(*y[::-1]), labels=list(reversed(labels)))
-        fig.savefig(filebase+'_parameters.eps')
+        fig = triangle.corner(zip(*y[::-1]), labels=list(reversed(labels)), show_titles=True, quantiles=[0.16,0.5,0.84],cmap=cm.Oranges)
+        fig.savefig(filebase+'parameters.eps')
            
 # plain language summary
     if summaryFlag:
@@ -778,6 +826,9 @@ def distributionStats(x, q=[0.16,0.5,0.84], weights=None, sigma=None, **kwargs):
 # clean data of nans
     xd = x[~numpy.isnan(x)]
 
+    if q is None and sigma is None:
+        sigma = 1.
+        
     if sigma is not None:
         q = [stats.norm.cdf(-sigma),0.5,stats.norm.cdf(sigma)]
         
