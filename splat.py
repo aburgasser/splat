@@ -147,7 +147,7 @@ FILTER_FOLDER = '/reference/Filters/'
 filters = { \
     '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band'}, \
     '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band'}, \
-    '2MASS_Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band'}, \
+    '2MASS_KS': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band'}, \
     'MKO_J': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere'}, \
     'MKO_H': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere'}, \
     'MKO_K': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere'}, \
@@ -1128,8 +1128,11 @@ def classifyByStandard(sp, *args, **kwargs):
         spstd = Spectrum(file=sorted_stdfiles[0])
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],stat=compstat)
         spstd.scale(scale)
-        plotSpectrum(sp,spstd,colors=['k','r'],\
-            title=sp.name+' vs '+typeToNum(sorted_stdsptnum[0],subclass=subclass)+' Standard',**kwargs)
+        if kwargs.get('colors',False) == False:
+            kwargs['colors'] = ['k','r']
+        if kwargs.get('labels',False) == False:
+            kwargs['labels'] = [sp.name,typeToNum(sorted_stdsptnum[0],subclass=subclass)+' Standard']
+        plotSpectrum(sp,spstd,**kwargs)
 
     return spt, sptn_e
     
@@ -1341,7 +1344,7 @@ def classifyByTemplate(sp, *args, **kwargs):
     scl = []
     for i,d in enumerate(dkey):
         s = Spectrum(idkey=d)
-        chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],stat='chisqr',novar2=True)
+        chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],stat='chisqr',novar2=True,*kwargs)
         stat.append(chisq)
         scl.append(scale)
         if (verbose):
@@ -2281,6 +2284,7 @@ def estimateDistance(sp, **kwargs):
                     - 'NIRC2 J', 'NIRC2 H', 'NIRC2 Kp', 'NIRC2 Ks'
                     - 'WIRC J', 'WIRC H', 'WIRC K', 'WIRC CH4S', 'WIRC CH4L'
                     - 'WIRC CO', 'WIRC PaBeta', 'WIRC BrGamma', 'WIRC Fe2'
+                    - 'WISE W1', 'WISE W2'
 
     :type filter: optional, default = False
     :Example:
@@ -2320,6 +2324,7 @@ def estimateDistance(sp, **kwargs):
             sys.stderr.write('\nPlease specify the filter used to determine the absolute magnitude\n')
             return numpy.nan, numpy.nan
         absmag, absmag_unc = typeToMag(spt,filt,unc=spt_unc)
+        print absmag, absmag_unc
 
 # create Monte Carlo sets
     if mag_unc > 0.:
@@ -2683,7 +2688,7 @@ def measureIndexSet(sp,**kwargs):
     elif ('testi' in set.lower()):
         reference = 'Indices from Testi et al. (2001)'
         refcode = 'TES01'
-        names = ['sHJ','sKJ','sH2O-J','sH2O-H1','sH2O-H2','sH2O-K']
+        names = ['sHJ','sKJ','sH2O_J','sH2O_H1','sH2O_H2','sH2O_K']
         inds = numpy.zeros(len(names))
         errs = numpy.zeros(len(names))
         inds[0],errs[0] = measureIndex(sp,[1.265,1.305],[1.6,1.7],method='change',sample='average',**kwargs)
@@ -3132,6 +3137,8 @@ def searchLibrary(*args, **kwargs):
 
 # luminosity class
     if (kwargs.get('giant_class','') != ''):
+        if 'GIANT' not in source_db.keys():
+            source_db['GIANT'] = [i != '' for i in source_db['LUMINOSITY_CLASS']]
         source_db['GIANT_FLAG'] = [i.lower() == kwargs.get('giant_class').lower() for i in source_db['GIANT']]
         source_db['SELECT'][numpy.where(source_db['GIANT_FLAG'] == True)] += 1
         count+=1.
@@ -3405,16 +3412,17 @@ def typeToMag(spt, filt, **kwargs):
     """
     :Purpose: Takes a spectral type and a filter, and returns absolute magnitude
     :param spt: string or integer of the spectral type
-    :param filter: filter of the absolute magnitude. Options are MKO K, MKO H, MKO J, MKO Y, MKO LP, 2MASS J, 2MASS K, or 2MASS H
+    :param filter: filter of the absolute magnitude. Options are MKO K, MKO H, MKO J, MKO Y, MKO LP, 2MASS J, 2MASS Ks, or 2MASS H
     :param nsamples: number of Monte Carlo samples for error computation
     :type nsamples: optional, default = 100
     :param unc: uncertainty of ``spt``
     :type unc: optional, default = 0.
     :param ref: Abs Mag/SpT relation used to compute the absolute magnitude. Options are:
     
-        - *faherty*: Abs Mag/SpT relation from Faherty et al. (2012). Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K.
         - *burgasser*: Abs Mag/SpT relation from Burgasser (2007). Allowed spectral type range is L0 to T8, and allowed filters are MKO K.
-        - *dupuy*: Abs Mag/SpT relation from Dupuy & Liu (2012). Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS K.
+        - *faherty*: Abs Mag/SpT relation from Faherty et al. (2012). Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K.
+        - *dupuy*: Abs Mag/SpT relation from Dupuy & Liu (2012). Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS Ks.
+        - *filippazzo*: Abs Mag/SpT relation from Filippazzo et al. (2015). Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J and WISE W2.
 
 
     :type ref: optional, default = 'dupuy'
@@ -3480,10 +3488,23 @@ def typeToMag(spt, filt, **kwargs):
                 'coeff': [0.00000, 0.00000, .0000546366, -.00293191, .0530581,  -.196584, 8.89928]}, \
             '2MASS J': {'fitunc': 0.40, 'range': [16., 39.], \
                 'coeff': [-.000000784614, .000100820, -.00482973, .111715, -1.33053, 8.16362, -9.67994]}, \
-            '2MASS H': {'fitunc': 0.40, 'range': [16., 38.5], \
+            '2MASS H': {'fitunc': 0.40, 'range': [16., 39.], \
                 'coeff': [-.00000111499, .000129363, -.00580847, .129202, -1.50370, 9.00279, -11.7526]}, \
-            '2MASS K': {'fitunc': 0.43, 'range':[16., 38.5], \
-                'coeff': [0.00000, 0.00000, .000106693, -.00642118, .134163, -.867471, 11.0114]}}
+            '2MASS KS': {'fitunc': 0.43, 'range':[16., 39.], \
+                'coeff': [1.06693e-4, -6.42118e-3, 1.34163e-1, -8.67471e-1, 1.10114e1]}, \
+            'WISE W1': {'fitunc': 0.39, 'range':[16., 39.], \
+                'coeff': [1.58040e-5, -3.33944e-4, -4.38105e-3, 3.55395e-1, 7.14765]}, \
+            'WISE W2': {'fitunc': 0.35, 'range':[16., 39.], \
+                'coeff': [1.78555e-5, -8.81973e-4, 1.14325e-2, 1.92354e-1, 7.46564]}}
+
+    elif (ref.lower() == 'filippazzo'):
+        reference = 'Abs Mag/SpT relation from Filippazzo et al. (2015)'
+        sptoffset = 10.
+        coeffs = { \
+            '2MASS J': {'fitunc': 0.40, 'range': [16., 39.], \
+                'coeff': [3.478e-5, -2.684e-3, 7.771e-2, -1.058e0, 7.157e0, -8.350e0]}, \
+            'WISE W2': {'fitunc': 0.40, 'range': [16., 39.], \
+                'coeff': [8.190e-6, -6.938e-4, 2.283e-2, -3.655e-1, 3.032e0, -5.043e-1]}}
 
     else:
         sys.stderr.write('\nInvalid Abs Mag/SpT relation given: %s\n' % ref)
@@ -3494,13 +3515,13 @@ def typeToMag(spt, filt, **kwargs):
             if filt.upper() == filter:
                 coeff = coeffs[filter]['coeff']
                 fitunc = coeffs[filter]['fitunc']
-                range = coeffs[filter]['range']
+                rng = coeffs[filter]['range']
     else:
-        sys.stderr.write('\n Invalid filter given for %s\n' % reference)
+        sys.stderr.write('\n Invalid filter {} given for {}\n'.format(filt,reference))
         return numpy.nan, numpy.nan
 
 # compute magnitude if its in the right spectral type range
-    if (range[0] <= spt <= range[1]):
+    if (rng[0] <= spt <= rng[1]):
         if (unc > 0.):
             vals = numpy.polyval(coeff, numpy.random.normal(spt - sptoffset, unc, nsamples))
             abs_mag = numpy.nanmean(vals)
@@ -3636,6 +3657,7 @@ def typeToTeff(input, **kwargs):
         - *looper*: Teff/SpT relation from Looper et al. (2008). Allowed spectral type range is L0 to T8.
         - *stephens*: Teff/SpT relation from Stephens et al. (2009). Allowed spectral type range is M6 to T8.
         - *marocco*: Teff/SpT relation from Marocco et al. (2013). Allowed spectral type range is M7 to T8.
+        - *filippazzo*: Teff/SpT relation from Filippazzo et al. (2015). Allowed spectral type range is M6 to T9.
 
     :type ref: optional, default = 'stephens2009'
     :param set: same as ``ref``
@@ -3667,8 +3689,8 @@ def typeToTeff(input, **kwargs):
     else:
         spt = copy.deepcopy(input)
     
-    if spt < 20. and 'marocco' not in ref.lower():
-        ref='stephens2009'
+#    if spt < 20. and 'marocco' not in ref.lower():
+#        ref='stephens2009'
 
 # choose among possible options
 
@@ -3706,6 +3728,13 @@ def typeToTeff(input, **kwargs):
         coeff = [7.4211e-5,-8.43736e-3,3.90319e-1,-9.46896,129.141,-975.953,3561.47,-1613.82]
         range = [17.,38.]
         fitunc = 140.
+
+    elif ('filippazzo' in ref.lower()):
+        reference = 'Teff/SpT relation from Filippazzo et al. (2015)'
+        sptoffset = 10.
+        coeff = [1.546e-4, -1.606e-2, 6.318e-1, -1.191e1, 1.155e2, -7.005e2, 4.747e3]
+        range = [16., 39.]
+        fitunc = 113.
 
     else:
         sys.stderr.write('\nInvalid Teff/SpT relation given ({})\n'.format(ref))
@@ -3776,9 +3805,10 @@ def weightedMeanVar(vals, winp, *args, **kwargs):
     weights[numpy.where(weights < minwt)] = 0.
     mn = numpy.nansum(vals*weights)/numpy.nansum(weights)
     var = numpy.nansum(weights*(vals-mn)**2)/numpy.nansum(weights)
-    
-    return mn,var        
+    if (method == 'uncertainty'):
+        var+=numpy.nansum([w**2 for w in winput])/(len(winput)**2)
 
+    return mn,numpy.sqrt(var)
 
 
 # run test program if calling from command line
