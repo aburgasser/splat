@@ -285,7 +285,7 @@ class Spectrum(object):
         kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DATA_FOLDER)
         self.simplefilename = os.path.basename(self.filename)
         self.file = self.filename
-        self.name = self.filename
+        self.name = kwargs.get('name',self.filename)
         kwargs['filename'] = self.filename
 
 # option 3: wave and flux are given
@@ -793,7 +793,7 @@ def classifyByIndex(sp, *args, **kwargs):
 
     :param set: named set of indices to measure and compute spectral type
 
-        - *'allers'*: H2O from Allers et al.
+        - *'allers'*: H2O from Allers et al. (2013)
         - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from Burgasser (2007)
         - *'reid'*:H2O-A and H2O-B from Reid et al.(2001)
         - *'testi'*: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from Testi et al. (2001)
@@ -1659,9 +1659,9 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     if (kwargs.get('plot',False) != False):
         spcomp = sp2.copy()
         spcomp.scale(scale)
-        kwargs['colors'] = kwargs.get('colors',['k','r'])
+        kwargs['colors'] = kwargs.get('colors',['k','r','b'])
         kwargs['title'] = kwargs.get('title',sp1.name+' vs '+sp2.name)
-        plotSpectrum(sp1,spcomp,**kwargs)
+        plotSpectrum(sp1,spcomp,sp1-spcomp,**kwargs)
 
     return numpy.nanmax([stat,minreturn])*unit, scale
         
@@ -2741,9 +2741,16 @@ def metallicity(sp,**kwargs):
 
     h2ok2,h2ok2_e = measureIndexSet(sp, set='rojas')['H2O-K2']
     ew = measureEWSet(sp,set='rojas')        
-    nai, nai_e = ew['Na I 2.206/2.209']
-    cai, cai_e = ew['Ca I 2.26']
+    nai = kwargs.get('nai',False)
+    nai_e = kwargs.get('nai_e',0.)
+    if nai is False:
+        nai, nai_e = ew['Na I 2.206/2.209']
+    cai = kwargs.get('cai',False)
+    cai_e = kwargs.get('cai_e',0.)
+    if cai is False:
+        cai, cai_e = ew['Ca I 2.26']
 
+    
     mh = numpy.ones(nsamples)*coeff_mh[0]+\
         (numpy.random.normal(nai,nai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[1]+\
         (numpy.random.normal(cai,cai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[2]
@@ -3298,13 +3305,17 @@ def searchLibrary(*args, **kwargs):
         spectral_db['SELECT'][numpy.where(spectral_db['PUBLISHED'] != 'Y')] = 0.
 
 # no matches
-    if numpy.sum(spectral_db['SELECT']) == 0. or numpy.sum(source_db['SELECT']) == 0.:
-#        print 'No spectra in the SPL database match the selection criteria'
+    if len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))]) == 0:
+        print 'No spectra in the SPL database match the selection criteria'
         return Table()
     else:
 
 # merge databases
-        db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))],source_db,keys='SOURCE_KEY')
+#        print numpy.sum(spectral_db['SELECT']), numpy.sum(spectral_db['SOURCE_SELECT'])
+#        print spectral_db[:][numpy.where(spectral_db['SELECT']==1)]
+#        print spectral_db['SELECT'][numpy.where(spectral_db['SOURCE_SELECT']==1)]
+#        print len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))])
+        db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))],source_db,keys='SOURCE_KEY')
                 
         if (ref == 'all'):
             return db

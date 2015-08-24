@@ -150,11 +150,12 @@ def plotSpectrum(*args, **kwargs):
     filename = kwargs.get('output',filename)
     title = kwargs.get('title','')
     fb = filename.split('.')[:-1]               # filebase for multiple files
-    filebase = fb[0]
-    if len(fb) > 1:
+    if filename != '' and len(fb) > 1:
+        filebase = fb[0]
         for x in fb[1:]:
             filebase+='.'+x
-    print filebase
+    else:
+        filebase = filename
     filetype = kwargs.get('format',filename.split('.')[-1])
     filetype.lower()
     if filetype == '':
@@ -190,8 +191,9 @@ def plotSpectrum(*args, **kwargs):
         'co': {'label': r'CO', 'type': 'band', 'wavelengths': [[2.28,2.39]]}, \
         'tio': {'label': r'TiO', 'type': 'band', 'wavelengths': [[0.76,0.80],[0.825,0.831]]}, \
         'vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.04,1.08]]}, \
-        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.86,0.90],[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
-        'h2': {'label': r'H$_2$', 'type': 'band', 'wavelengths': [[2.05,2.6]]}, \
+#        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.86,0.90],[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
+        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
+        'h2': {'label': r'H$_2$', 'type': 'band', 'wavelengths': [[2.05,2.4]]}, \
         'sb': {'label': r'*', 'type': 'band', 'wavelengths': [[1.6,1.64]]}, \
         'h': {'label': r'H I', 'type': 'line', 'wavelengths': [[1.004,1.005],[1.093,1.094],[1.281,1.282],[1.944,1.945],[2.166,2.166]]},\
         'hi': {'label': r'H I', 'type': 'line', 'wavelengths': [[1.004,1.005],[1.093,1.094],[1.281,1.282],[1.944,1.945],[2.166,2.166]]},\
@@ -392,7 +394,17 @@ def plotSpectrum(*args, **kwargs):
 
             ax.plot(a.wave.value,flx,color=colors[ii],linestyle=linestyle[ii], zorder = 10, label = legend[lg_n])  
 
+# add comparison
+            if comparison != False:
+                colorComparison = kwargs.get('colorComparison',colors[0])
+                linestyleComparison = kwargs.get('linestyleComparison',linestyle[0])
+                cflx = [i+zeropoint[ii] for i in comparison.flux.value]
 
+                if stack > 0:
+                    cflx = [f + (len(sp)-ii-1)*stack for f in cflx]
+
+                ax.plot(comparison.wave.value,cflx,color=colorComparison,linestyle=linestyleComparison,alpha=0.5, zorder = 10)
+    
 
 
 
@@ -453,11 +465,6 @@ def plotSpectrum(*args, **kwargs):
             lg_n = lg_n + 1 # Increment lg_n
 
 
-# add comparison
-        if comparison != False:
-            colorComparison = kwargs.get('colorComparison',colors[0])
-            linestyleComparison = kwargs.get('linestyleComparison',linestyle[0])
-            ax.plot(comparison.wave.value,comparison.flux.value,color=colorComparison,linestyle=linestyleComparison,alpha=0.5, zorder = 10)
 
 # label features
 # THIS NEEDS TO BE FIXED WITH GRETEL'S STUFF
@@ -481,21 +488,13 @@ def plotSpectrum(*args, **kwargs):
                             for w in waveRng:
                                 ax.plot([w]*2,[y,y+yoff],color='k',linestyle='-')
                             ax.text(numpy.mean(waveRng),y+1.5*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=fontsize)
-                            waveRng = [waveRng[0]-0.05,waveRng[1]+0.05]   # for overlap
+                            waveRng = [waveRng[0]-0.02,waveRng[1]+0.02]   # for overlap
 
 # update offset
                         foff = [y+3*yoff if (w >= waveRng[0] and w <= waveRng[1]) else 0 for w in wvmax]
                         flxmax = [numpy.max([x,y]) for x, y in zip(flxmax, foff)]
-
-# overplot telluric absorption
-
-        bound[3] = numpy.max(flxmax)+2.*yoff
-        if (kwargs.get('telluric',False) == True):
-            twv = [[1.1,1.2],[1.3,1.5],[1.75,2.0]]
-            for waveRng in twv:
-                rect = patches.Rectangle((waveRng[0],bound[2]),waveRng[1]-waveRng[0],bound[3]-bound[2],facecolor='grey', alpha=0.1)
-                ax.add_patch(rect)
-                ax.text(numpy.mean(waveRng),bound[2]+3*yoff,r'$\oplus$',horizontalalignment='center',fontsize=fontsize)
+        bound[3] = numpy.max(flxmax)+1.*yoff
+        ax.axis(bound)
 
 
 # grid
@@ -510,15 +509,24 @@ def plotSpectrum(*args, **kwargs):
         ax.tick_params(axis='y', labelsize=fontsize)
 
 # place legend
-        if legendLocation == 'outside':
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0 + box.height * 0.15, box.width * 0.7, box.height * 0.7])
-            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size':fontsize})
-        else:
-            ax.legend(loc=legendLocation, prop={'size':fontsize})
-            bound[3] = bound[3]+0.1*(bound[3]-bound[2])     # extend axis for in-plot legends
+        if len(legend) > 0:
+            if legendLocation == 'outside':
+                box = ax.get_position()
+                ax.set_position([box.x0, box.y0 + box.height * 0.15, box.width * 0.7, box.height * 0.7])
+                ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size':fontsize})
+            else:
+                ax.legend(loc=legendLocation, prop={'size':fontsize})
+                bound[3] = bound[3]+0.1*(bound[3]-bound[2])     # extend axis for in-plot legends
+            ax.axis(bound)
 
-        ax.axis(bound)
+# overplot telluric absorption
+        if (kwargs.get('telluric',False) == True):
+            twv = [[1.1,1.2],[1.3,1.5],[1.75,2.0]]
+            for waveRng in twv:
+                rect = patches.Rectangle((waveRng[0],bound[2]),waveRng[1]-waveRng[0],bound[3]-bound[2],facecolor='0.95',alpha=0.2,color='0.95')
+                ax.add_patch(rect)
+                ax.text(numpy.mean(waveRng),bound[2]+3*yoff,r'$\oplus$',horizontalalignment='center',fontsize=fontsize)
+
     
 # save to file or display
         if multipage == False:
