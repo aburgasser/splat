@@ -24,6 +24,7 @@ SPECTRAL_MODEL_FOLDER = '/reference/SpectralModels/'
 MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']
 MODEL_PARAMETERS = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
 DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
+DEFINED_MODEL_NAME = ['BT-Settled (2008)','Burrows (2006)','Morley (2012)','Morley (2014)','Saumon (2012)','Drift (2008)']
 TMPFILENAME = 'splattmpfile'
 TEN_PARSEC = 443344480.     # ten parcecs in solar radii
 
@@ -337,7 +338,8 @@ def loadModel(*args, **kwargs):
 # generate model filename
     kwargs['filename'] = kwargs['folder']+kwargs['set']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
         format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],float(kwargs['slit']))
-
+    kwargs['name'] = set
+    
 # get model parameters
 #        parameters = loadModelParameters(**kwargs)
 #        kwargs['path'] = kwargs.get('path',parameters['path'])
@@ -791,9 +793,9 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
             w = numpy.where(numpy.logical_and(spec.wave.value > 0.9,spec.wave.value < 2.35))
             diff = spec-model
             print filebase
-            splat.plotSpectrum(spec,model,diff,uncertainty=True,colors=['k','r','b'], \
+            splat.plotSpectrum(spec,model,diff,uncertainty=True,telluric=True,colors=['k','r','b'], \
                 legend=legend,filename=filebase+'bestfit.eps',\
-                yrange=[1.1*numpy.nanmin(diff.flux.value[w]),1.1*numpy.nanmax([spec.flux.value[w],model.flux.value[w]])])  
+                yrange=[1.1*numpy.nanmin(diff.flux.value[w]),1.2*numpy.nanmax([spec.flux.value[w],model.flux.value[w]])])  
  
 # triangle plot of parameters
     if triangleFlag:
