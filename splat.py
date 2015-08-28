@@ -225,10 +225,40 @@ def Copy(fn):
 # define the Spectrum class which contains the relevant information
 class Spectrum(object):
     '''
-    Description:
-      Primary class for containing spectral and source data for SpeX Prism Library.
-
-    **Usage**
+    :Description: Primary class for containing spectral and source data for SpeX Prism Library.
+      
+    :param model:
+    :type model: optional, default = False
+    :param wlabel: label of wavelength
+    :type wlabel: optional, default = 'Wavelength'
+    :param wunit: unit in which wavelength is measured
+    :type wunit: optional, default = ``u.micron``
+    :param wunit_label: label of the unit of wavelength
+    :type wunit_label: optional, default = :math:`\\mu m`
+    :param flabel: label of flux density
+    :type flabel: optional, default = :math:`F_\\lambda`
+    :param fscale: string describing how flux density is scaled
+    :type fscale: optional, default = ''
+    :param funit: unit in which flux density is measured
+    :type funit: optional, default = ``u.erg/(u.cm**2 * u.s * u.micron)``
+    :param funit_label: label of the unit of flux density
+    :type funit_label: optional, default = :math:`erg\;cm^{-2} s^{-1} \\mu m^{-1}`
+    :param resolution:
+    :type resolution: optional, default = 150
+    :param slitpixelwidth: Width of the slit measured in subpixel values.
+    :type slitpixelwidth: optional, default = 3.33
+    :param slitwidth: Actual width of the slit, measured in arc seconds. Default value is the ``slitpixelwidth`` multiplied by the spectrograph pixel scale of 0.15 arcseconds.
+    :type slitwidth: optional, default = ``slitpixelwidth`` * 0.15
+    :param header: header info of the spectrum
+    :type header: optional, default = Table()
+    :param filename: a string containing the spectrum's filename.
+    :type filename: optional, default = ''
+    :param file: same as filename
+    :type file: optional, default = ''
+    :param idkey: spectrum key of the desired spectrum
+    :type idkey: optional, default = False
+    
+    :Example:
        >>> import splat
        >>> sp = splat.Spectrum(filename='myspectrum.fits')      # read in a file
        >>> sp = splat.Spectrum('myspectrum.fits')               # same
@@ -398,11 +428,16 @@ class Spectrum(object):
             return s    
 
     def __repr__(self):
-        '''A simple representation of an object is to just give it a name'''
+        '''
+        :Purpose: A simple representation of an object is to just give it a name
+        '''
         return 'Spectrum of {}'.format(self.name)
 
     def __add__(self,other):
-        '''Adding two spectra '''
+        '''
+        :Purpose: Adds two spectra
+        :param other: the other spectrum to add to the object
+        '''
         sp = self.copy()
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
@@ -416,7 +451,10 @@ class Spectrum(object):
         return sp
 
     def __sub__(self,other):
-        '''Subtracting two spectra '''
+        '''
+        :Purpose: Subtracts two spectra
+        :param other: the other spectrum to subtract from the object
+        '''
         sp = self.copy()
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
@@ -430,7 +468,10 @@ class Spectrum(object):
         return sp
 
     def __mul__(self,other):
-        '''Multiplying two spectra'''
+        '''
+        :Purpose: Multiplies two spectra
+        :param other: the other spectrum to multiply by the object
+        '''
         sp = self.copy()
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
@@ -446,7 +487,10 @@ class Spectrum(object):
         return sp
 
     def __div__(self,other):
-        '''Dividing two spectra'''
+        '''
+        :Purpose: Divides two spectra
+        :param other: the other spectrum to divide by the object
+        '''
         sp = self.copy()
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
@@ -466,7 +510,9 @@ class Spectrum(object):
         return sp
 
     def info(self):
-          '''Report some information about this spectrum'''
+          '''
+          :Purpose: Reports some information about this spectrum.
+          '''
           if (self.model):
               print '\n{} model with the following parmeters:'.format(self.modelset)
               print 'Teff = {}'.format(self.teff)
@@ -481,7 +527,9 @@ class Spectrum(object):
           return
 
     def flamToFnu(self):
-         '''Convert flux density from F_lam to F_nu, the later in Jy'''
+         '''
+         :Purpose: Converts flux density from :math:`F_\\lambda` to :math:`F_\\nu`, the later in Jy
+         '''
          self.funit = u.Jy
          self.flabel = 'F_nu'
          self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
@@ -489,7 +537,9 @@ class Spectrum(object):
          return
 
     def fluxCalibrate(self,filter,mag,**kwargs):
-        '''Calibrate spectrum to input magnitude'''
+        '''
+        :Purpose: Calibrates spectrum to input magnitude
+        '''
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',False)
         self.normalize()
@@ -505,6 +555,11 @@ class Spectrum(object):
 
 # determine maximum flux, by default in non telluric regions
     def fluxMax(self,**kwargs):
+        '''
+        :Purpose: Determines maximum flux of spectrum
+        :param maskTelluric: masks telluric regions
+        :type maskTelluric: optional, default = True
+        '''
         if kwargs.get('maskTelluric',True):
             return numpy.nanmax(self.flux.value[numpy.where(\
                 numpy.logical_or(\
@@ -516,7 +571,9 @@ class Spectrum(object):
                 numpy.logical_and(self.wave > 0.9*u.micron,self.wave < 2.3*u.micron))])*self.funit
 
     def fnuToFlam(self):
-         '''Convert flux density from F_nu to F_lam, the later in erg/s/cm2/Hz'''
+         '''
+         :Purpose: Converts flux density from :math:`F_\\nu` to :math:`F_\\lambda`, the later in erg/s/cm2/Hz
+         '''
          self.funit = u.erg/(u.cm**2 * u.s * u.micron)
          self.flabel = 'F_lam'
          self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
@@ -525,16 +582,25 @@ class Spectrum(object):
          return
 
     def normalize(self,**kwargs):
-        '''Normalize spectrum'''
+        '''
+        :Purpose: Normalizes spectrum to its maximum flux.
+        :param maskTelluric: masks telluric regions
+        :type maskTelluric: optional, default = True
+        '''
         self.scale(1./self.fluxMax(**kwargs).value)
         self.fscale = 'Normalized'
         return
 
     def plot(self,**kwargs):
+        '''
+        :Purpose: Plots spectrum. See SPLAT Plotting Routines page for more details.
+        '''
         plotSpectrum(self,showNoise=True,showZero=True,**kwargs)
 
     def reset(self):
-        '''Reset to original spectrum'''
+        '''
+        :Purpose: Resets to original spectrum
+        '''
         self.wave = copy.deepcopy(self.wave_original)
         self.flux = copy.deepcopy(self.flux_original)
         self.noise = copy.deepcopy(self.noise_original)
@@ -546,7 +612,17 @@ class Spectrum(object):
         return
 
     def scale(self,factor):
-         '''Scale spectrum and noise by a constant factor'''
+         '''
+        :Purpose: Smooths spectrum to a constant slit width (smooths by pixels)
+        :param method: the type of window to create. See http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html for more details.
+        :type method: optional, default = 'hanning'
+        :param slitpixelwidth: Width of the slit measured in subpixel values.
+        :type slitpixelwidth: optional, default = 3.33
+        :param slitwidth: Actual width of the slit, measured in arc seconds. Default value is the ``slitpixelwidth`` multiplied by the spectrograph pixel scale of 0.15 arcseconds.
+        :param resolution:
+        :type resolution: optional, default = 150
+        :type slitwidth: optional, default = slitpixelwidth * 0.15
+        '''
          self.flux = self.flux*factor
          self.noise = self.noise*factor
          self.variance = self.noise**2
@@ -570,7 +646,14 @@ class Spectrum(object):
         return
 
     def smoothToResolution(self,resolution,**kwargs):
-        '''Smooth spectrum to a constant resolution'''
+        '''
+        :Purpose: Smooths spectrum to a constant resolution
+        :param resolution: resolution for smoothing the spectrum
+        :param overscale: used for computing number of samples in the window
+        :type overscale: optional, default = 10.
+        :param method: the type of window to create. See http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html for more details.
+        :type method: optional, default = 'hanning'
+        '''
         overscale = kwargs.get('overscale',10.)
         method = kwargs.get('method','hanning')
         kwargs['method'] = method
@@ -604,7 +687,12 @@ class Spectrum(object):
         return
 
     def smoothToSlitPixelWidth(self,width,**kwargs):
-        '''Smooth spectrum to a constant slit width (smooth by pixels)'''
+        '''
+        :Purpose: Smooths spectrum to a constant slit width
+        :param width: width for smoothing the spectrum
+        :param method: the type of window to create. See http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html for more details.
+        :type method: optional, default = 'hanning'
+        '''
         method = kwargs.get('method','hanning')
         kwargs['method'] = method
 # do nothing if requested resolution is higher than current resolution
@@ -622,20 +710,31 @@ class Spectrum(object):
         return
 
     def smoothToSlitWidth(self,width,**kwargs):
+        '''
+        :Purpose: Smooths spectrum to a constant slit width (smooths by pixels)
+        :param width: width for smoothing the spectrum
+        :param method: the type of window to create. See http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html for more details.
+        :type method: optional, default = 'hanning'
+        '''
         method = kwargs.get('method','hanning')
         kwargs['method'] = method
-        '''Smooth spectrum to a constant slit width (smooth by pixels)'''
         pwidth = width/spex_pixel_scale
         self.smoothToSlitPixelWidth(pwidth,**kwargs)
         return
 
     def snr(self):
-        '''Compute a representative S/N value'''
+        '''
+        :Purpose: Compute a representative S/N value
+        .. note:: Unfinished
+        '''
         pass
         return
 
     def surface(self,radius):
-         '''Convert to surface fluxes given a radius, assuming at absolute fluxes'''
+         '''
+         :Purpose: Convert to surface fluxes given a radius, assuming at absolute fluxes
+         .. note:: Unfinished
+         '''
          pass
          return
 
@@ -783,8 +882,10 @@ def classifyByIndex(sp, *args, **kwargs):
     '''
     :Purpose: Determine the spectral type and uncertainty for a spectrum 
                 based on indices. Makes use of published index-SpT relations
-                from Reid et al. (2001); Testi et al. (2001); Allers et al. 
-                (2007); and Burgasser (2007). Returns 2-element tuple 
+                from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_; 
+                `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_; 
+                `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_; 
+                and `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_. Returns 2-element tuple 
                 containing spectral type (numeric or string) and 
                 uncertainty.
 
@@ -793,10 +894,10 @@ def classifyByIndex(sp, *args, **kwargs):
 
     :param set: named set of indices to measure and compute spectral type
 
-        - *'allers'*: H2O from Allers et al. (2013)
-        - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from Burgasser (2007)
-        - *'reid'*:H2O-A and H2O-B from Reid et al.(2001)
-        - *'testi'*: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from Testi et al. (2001)
+        - *'allers'*: H2O from `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_
+        - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_
+        - *'reid'*:H2O-A and H2O-B from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_
+        - *'testi'*: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_
 
     :type set: optional, default = 'burgasser'
     :param string: return spectral type as a string (uses typeToNum)
@@ -995,15 +1096,17 @@ def classifyByStandard(sp, *args, **kwargs):
     :Purpose: Determine the spectral type and uncertainty for a 
                 spectrum by direct comparison to spectral standards. 
                 Standards span M0-T9 and include the standards listed in 
-                Kirkpatrick et al. (2010) with addition of UGPS 0722-0540 
-                as the T9 standard.  Returns the best match or an F-test 
-                weighted mean and uncertainty. There is an option to follow 
-                the procedure of Kirkpatrick et al. (2010), fitting only in 
-                the 0.9-1.4 micron region
+                `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_ 
+                with addition of UGPS 0722-0540  as the T9 standard.  Returns the best 
+                match or an F-test weighted mean and uncertainty. There is an option 
+                to follow the procedure of `Kirkpatrick et al. (2010) 
+                <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_, fitting only in 
+                the 0.9-1.4 micron region.
 
     .. :Usage: spt,unc = splat.classifyByStandard(sp, \**kwargs) (Do we need this?)
     
-    :param sp: spectrum class object, which should contain wave, flux and noise array elements.
+    :param sp: spectrum class object, which should contain wave, flux and 
+               noise array elements.
     :param best: return the best fit standard type only
     :type best: optional, default = False
     :param compareto: compare to a single standard (string or number)
@@ -1012,7 +1115,7 @@ def classifyByStandard(sp, *args, **kwargs):
     :type plot: optional, default = False
     :param file: output spectrum plot to a file
     :type file: optional, default = ''
-    :param method: set to 'kirkpatrick' to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band
+    :param method: set to ``'kirkpatrick'`` to follow the `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_  method, fitting only to the 0.9-1.4 micron band
     :type method: optional, default = ''
     :param sptrange: constraint spectral type range to fit, can be strings or numbers
     :type sptrange: optional, default = ['M0','T9']
@@ -1144,8 +1247,8 @@ def classifyByTemplate(sp, *args, **kwargs):
                 the library. One can select down the spectra by using the set
                 command. Returns the best match or an F-test weighted mean and 
                 uncertainty. There is an option to follow  the procedure of 
-                Kirkpatrick et al. (2010), fitting only in the 0.9-1.4 micron 
-                region. 
+                `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_, 
+                fitting only in the 0.9-1.4 micron region. 
 
     .. :Usage: result = splat.classifyByTemplate(sp, \*args, \**kwargs)
 
@@ -1166,7 +1269,7 @@ def classifyByTemplate(sp, *args, **kwargs):
     :type plot: optional, default = False
     :param file: output spectrum plot to a file
     :type file: optional, default = ''
-    :param method: set to *'kirkpatrick'* to follow the Kirkpatrick et al. (2010) method, fitting only to the 0.9-1.4 micron band
+    :param method: set to ``'kirkpatrick'`` to follow the `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_ method, fitting only to the 0.9-1.4 micron band
     :type method: optional, default = ''
     :param nbest: number of best fitting spectra to return
     :type nbest: optional, default = 1
@@ -1391,7 +1494,7 @@ def classifyByTemplate(sp, *args, **kwargs):
 
 def classifyGravity(sp, *args, **kwargs):
     '''
-    :Purpose: Determine the gravity classification of a brown dwarf using the method of Allers & Liu 2013
+    :Purpose: Determine the gravity classification of a brown dwarf using the method of `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_
 
     :param sp: Spectrum class object, which should contain wave, flux and 
                noise array elements. Must be between M6.0 and L7.0.
@@ -1517,7 +1620,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     :param sp1: Spectrum class object
     :param sp2: Spectrum class object to compare with ``sp1``
     :param weights: set weights for flux values of ``sp1``
-    :type weights: optional, default = [0, ..., 0] for len(sp1.wave)
+    :type weights: optional, default = [1, ..., 1] for len(sp1.wave)
     :param mask: mask any flux value of ``sp1``; has to be an array with length equal as ``sp1`` with only 0 (unmask) or 1 (mask).
     :type mask: optional, default = [0, ..., 0] for len(sp1.wave)
     :param fit_ranges: wavelength range, measured in microns
@@ -2439,7 +2542,8 @@ def measureEWSet(sp,*args,**kwargs):
     :param sp: Spectrum class object, which should contain wave, flux and noise array elements
     :param set: string defining which EW measurement set you want to use; options include:
 
-            - *rojas*: EW measures from Rojas-Ayala et al. (2012); uses Na I 2.206/2.209 Ca I 2.26 micron lines.
+            - *rojas*: EW measures from `Rojas-Ayala et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...748...93R>`_; 
+              uses Na I 2.206/2.209 Ca I 2.26 micron lines.
     
     :type set: optional, default = 'rojas'
 
@@ -2577,15 +2681,15 @@ def measureIndexSet(sp,**kwargs):
     :param sp: Spectrum class object, which should contain wave, flux and noise array elements
     :param set: string defining which indices set you want to use; options include:
 
-            - *burgasser*: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J from Burgasser et al. (2006)
-            - *tokunaga*: K1, K2 from Tokunaga & Kobayashi (1999)
-            - *reid*: H2O-A, H2O-B from Reid et al. (2001)
-            - *geballe*: H2O-1.2, H2O-1.5, CH4-2.2 from Geballe et al. (2002)
-            - *allers*: H2O, FeH-z, VO-z, FeH-J, KI-J, H-cont from Allers et al. (2007), Allers & Liu (2013)
-            - *testi*: sHJ, sKJ, sH2O-J, sH2O-H1, sH2O-H2, sH2O-K from Testi et al. (2001)
-            - *slesnick*: H2O-1, H2O-2, FeH from Slesnick et al. (2004)
-            - *mclean*: H2OD from McLean et al. (2003)
-            - *rojas*: H2O-K2 from Rojas-Ayala et al.(2012)
+            - *burgasser*: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J from `Burgasser et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...637.1067B>`_
+            - *tokunaga*: K1, K2 from `Tokunaga & Kobayashi (1999) <http://adsabs.harvard.edu/abs/1999AJ....117.1010T>`_
+            - *reid*: H2O-A, H2O-B from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_
+            - *geballe*: H2O-1.2, H2O-1.5, CH4-2.2 from `Geballe et al. (2002) <http://adsabs.harvard.edu/abs/2002ApJ...564..466G>`_
+            - *allers*: H2O, FeH-z, VO-z, FeH-J, KI-J, H-cont from `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_, `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_
+            - *testi*: sHJ, sKJ, sH2O-J, sH2O-H1, sH2O-H2, sH2O-K from `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_
+            - *slesnick*: H2O-1, H2O-2, FeH from `Slesnick et al. (2004) <http://adsabs.harvard.edu/abs/2004ApJ...610.1045S>`_
+            - *mclean*: H2OD from `McLean et al. (2003) <http://adsabs.harvard.edu/abs/2003ApJ...596..561M>`_
+            - *rojas*: H2O-K2 from `Rojas-Ayala et al.(2012) <http://adsabs.harvard.edu/abs/2012ApJ...748...93R>`_
     
     :type set: optional, default = 'burgasser'
 
@@ -2719,7 +2823,7 @@ def measureIndexSet(sp,**kwargs):
 
 def metallicity(sp,**kwargs):
     '''
-    :Purpose: Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in Rojas-Ayala et al. (2012)
+    :Purpose: Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in `Rojas-Ayala et al.(2012) <http://adsabs.harvard.edu/abs/2012ApJ...748...93R>`_
     :param sp: Spectrum class object, which should contain wave, flux and noise array elements
     :param nsamples: number of Monte Carlo samples for error computation
     :type nsamples: optional, default = 100
@@ -3423,16 +3527,19 @@ def typeToMag(spt, filt, **kwargs):
     """
     :Purpose: Takes a spectral type and a filter, and returns absolute magnitude
     :param spt: string or integer of the spectral type
-    :param filter: filter of the absolute magnitude. Options are MKO K, MKO H, MKO J, MKO Y, MKO LP, 2MASS J, 2MASS Ks, or 2MASS H
+    :param filter: filter of the absolute magnitude. Options are MKO K, MKO H, MKO J, MKO Y, MKO LP, 2MASS J, 2MASS K, or 2MASS H
     :param nsamples: number of Monte Carlo samples for error computation
     :type nsamples: optional, default = 100
     :param unc: uncertainty of ``spt``
     :type unc: optional, default = 0.
     :param ref: Abs Mag/SpT relation used to compute the absolute magnitude. Options are:
-    
-        - *burgasser*: Abs Mag/SpT relation from Burgasser (2007). Allowed spectral type range is L0 to T8, and allowed filters are MKO K.
-        - *faherty*: Abs Mag/SpT relation from Faherty et al. (2012). Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K.
-        - *dupuy*: Abs Mag/SpT relation from Dupuy & Liu (2012). Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS Ks.
+
+        - *burgasser*: Abs Mag/SpT relation from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_.
+          Allowed spectral type range is L0 to T8, and allowed filters are MKO K.
+        - *faherty*: Abs Mag/SpT relation from `Faherty et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...752...56F>`_. 
+          Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K.
+        - *dupuy*: Abs Mag/SpT relation from `Dupuy & Liu (2012) <http://adsabs.harvard.edu/abs/2012ApJS..201...19D>`_.
+          Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS K.
         - *filippazzo*: Abs Mag/SpT relation from Filippazzo et al. (2015). Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J and WISE W2.
 
 
@@ -3550,7 +3657,7 @@ def typeToNum(input, **kwargs):
     '''
     :Purpose: Converts between string and numeric spectral types, and vise versa. 
     :param input: Spectral type to convert. Can convert a number or a string from 0 (K0) and 49.0 (Y9).
-    :param error: magnitude of uncertainty. ':' for uncertainty > 1 and '::; for uncertainty > 2.
+    :param error: magnitude of uncertainty. ':' for uncertainty > 1 and '::' for uncertainty > 2.
     :type error: optional, default = ''
     :param uncertainty: uncertainty of spectral type
     :type uncertainty: optional, default = 0
@@ -3664,10 +3771,14 @@ def typeToTeff(input, **kwargs):
     :type spt_e: optional, default = 0.001
     :param ref: Teff/SpT relation used to compute the effective temperature. Options are:
     
-        - *golimowski*: Teff/SpT relation from Golimowski et al. (2004). Allowed spectral type range is M6 to T8.
-        - *looper*: Teff/SpT relation from Looper et al. (2008). Allowed spectral type range is L0 to T8.
-        - *stephens*: Teff/SpT relation from Stephens et al. (2009). Allowed spectral type range is M6 to T8.
-        - *marocco*: Teff/SpT relation from Marocco et al. (2013). Allowed spectral type range is M7 to T8.
+        - *golimowski*: Teff/SpT relation from `Golimowski et al. (2004) <http://adsabs.harvard.edu/abs/2004AJ....127.3516G>`_.
+          Allowed spectral type range is M6 to T8.
+        - *looper*: Teff/SpT relation from `Looper et al. (2008) <http://adsabs.harvard.edu/abs/2008ApJ...685.1183L>`_.
+          Allowed spectral type range is L0 to T8.
+        - *stephens*: Teff/SpT relation from `Stephens et al. (2009) <http://adsabs.harvard.edu/abs/2009ApJ...702..154S>`_.
+          Allowed spectral type range is M6 to T8 and uses alternate coefficients for L3 to T8.
+        - *marocco*: Teff/SpT relation from `Marocco et al. (2013) <http://adsabs.harvard.edu/abs/2013AJ....146..161M>`_.
+          Allowed spectral type range is M7 to T8.
         - *filippazzo*: Teff/SpT relation from Filippazzo et al. (2015). Allowed spectral type range is M6 to T9.
 
     :type ref: optional, default = 'stephens2009'

@@ -154,6 +154,41 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
 
 
 def loadInterpolatedModel(*args,**kwargs):
+    '''
+    .. not sure what force does
+    :Purpose: Loads interpolated model spectrum based on parameters
+    :param set: set of models to use; options include:
+
+        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
+          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
+        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
+          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
+        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
+          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
+        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
+          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
+        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
+          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
+        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
+          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
+          
+    :type set: optional, default = 'BTSettl2008'
+    :param local: read in parameter file locally if True
+    :type local: optional, default = True
+    :param url: string of the url to the SPLAT website
+    :type url: optional, default = 'http://pono.ucsd.edu/~adam/splat/'
+
+    :Model Parameters: Below are parameters that define the model:
+
+        - *teff*: effective temperature of the model
+        - *logg*: surface gravity of the model
+        - *z*: metallicity of the model
+        - *fsed*: sedimentation efficiency of the model
+        - *cld*: cloud shape function of the model
+        - *kzz*: vertical eddy diffusion coefficient of the model
+        - *slit*: slit weight of the model
+    '''
+
 # attempt to generalize models to extra dimensions
     mkwargs = kwargs.copy()
     mkwargs['force'] = True
@@ -267,7 +302,46 @@ def loadInterpolatedModel(*args,**kwargs):
 
 
 def loadModel(*args, **kwargs):
-    '''load up a model spectrum based on parameters'''
+    '''
+    .. not sure what force does
+    :Purpose: Load up a model spectrum based on parameters
+    :param set: set of models to use; options include:
+
+        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
+          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
+        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
+          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
+        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
+          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
+        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
+          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
+        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
+          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
+        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
+          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
+    
+    :type set: optional, default = 'BTSettl2008'
+    :param local: read in parameter file locally if True
+    :type local: optional, default = True
+    :param online: read in parameter file online if True
+    :type online: optional, default = False
+    :param folder: string of the folder name containing the model set
+    :type folder: optional, default = ''
+    :param filename: string of the filename of the desired model
+    :type filename: optional
+    :param url: string of the url to the SPLAT website
+    :type url: optional, default = 'http://pono.ucsd.edu/~adam/splat/'
+
+    :Model Parameters: Below are parameters that define the model:
+
+        - *teff*: effective temperature of the model
+        - *logg*: surface gravity of the model
+        - *z*: metallicity of the model
+        - *fsed*: sedimentation efficiency of the model
+        - *cld*: cloud shape function of the model
+        - *kzz*: vertical eddy diffusion coefficient of the model
+        - *slit*: slit weight of the model
+    '''
 
 # path to model and set local/online
 # by default assume models come from local splat directory
@@ -393,7 +467,32 @@ def loadModel(*args, **kwargs):
 
 
 def loadModelParameters(**kwargs):
-    '''Load up model parameters and check model inputs'''
+    '''
+    .. is cld cloud shape function? kzz the vertical eddy diffusion coefficient?
+    :Purpose: Load up model parameters and check model inputs. Parameters include 
+                effective temperature, surface gravity (expressed as logg), metallicity, 
+                and sedimentation efficiency (for cloudy models only).
+    :param parameterFile: name of file containing parameters for spectral models
+    :type parameterFile: optional, default = 'parameters.txt'
+    :param set: set of models to use; options include:
+
+        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
+          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
+        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
+          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
+        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
+          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
+        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
+          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
+        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
+          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
+        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
+          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
+
+    :type set: optional, default = 'BTSettl2008'
+    :param online: read in parameter file online if True
+    :type online: optional, default = False
+    '''
 # keyword parameters
     pfile = kwargs.get('parameterFile','parameters.txt')
 
@@ -448,7 +547,132 @@ def modelFitGrid(spec, **kwargs):
 
 def modelFitMCMC(spec, **kwargs):
     '''
-    Monte Carlo Markov Chain model fitting routine for SPLAT
+    .. still need to add description of emodel
+    :Purpose: Uses Markov chain Monte Carlo method to compare an object with models from a 
+                given set. Returns the best estimate of the effective temperature, surface 
+                gravity, and metallicity. Can also determine the radius of the object by 
+                using these estimates. 
+    :param spec: Spectrum class object, which should contain wave, flux and 
+                  noise array elements.
+    :param nsamples: number of Monte Carlo samples
+    :type nsamples: optional, default = 1000
+    :param initial_cut: the fraction of the initial steps to be discarded. (e.g., if 
+                ``initial_cut = 0.2``, the first 20% of the samples are discarded.)
+    :type initial_cut: optional, default = 0.1
+    :param burn: the same as ``initial_cut``
+    :type burn: optional, default = 0.1
+    :param set: set of models to use; options include:
+
+        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
+          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
+        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
+          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
+        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
+          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
+        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
+          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
+        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
+          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
+        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
+          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
+    
+    :type set: optional, default = 'BTSettl2008'
+    :param model: the same as ``set``
+    :type model: optional, default = 'BTSettl2008'
+    :param models: the same as ``set``
+    :type models: optional, default = 'BTSettl2008'
+    :param verbose: give lots of feedback
+    :type verbose: optional, default = False
+    :param mask_ranges: mask any flux value of ``spec`` by specifying the wavelength range.
+                        Must be in microns.
+    :type mask_ranges: optional, default = []
+    :param mask_telluric: masks certain wavelengths to avoid effects from telluric absorption
+    :type mask_telluric: optional, default = False
+    :param mask_standard: masks wavelengths below 0.8 and above 2.35 microns
+    :type mask_standard: optional, default = True
+    :param mask: mask any flux value of ``spec``; has to be an array with length equal as ``spec`` with only 0 (unmask) or 1 (mask).
+    :type mask: optional, default = [0, ..., 0] for len(sp1.wave)
+    :param radius: calculates and returns radius of object if True
+    :type radius: optional
+    
+    :param filename: filename or filename base for output
+    :type filename: optional
+    :param filebase: the same as ``filename``
+    :type filebase: optional
+    :param savestep: indicate when to save data output (e.g. ``savestep = 10`` will save the output every 10 samples)
+    :type savestep: optional, default = ``nsamples/10``
+    :param dataformat: output data format type
+    :type dataformat: optional, default = 'ascii.csv'
+    :param initial_guess: array including initial guess of the effective temperature, surface gravity and metallicity of ``spec``.
+                            Can also set individual guesses of spectral parameters by using **initial_temperature** or **initial_teff**,
+                            **initial_gravity** or **initial_logg**, and **initial_metallicity** or **initial_z**.
+    :type initial_guess: optional, default = array of random numbers within allowed ranges
+    :param ranges: array of arrays indicating ranges of the effective temperature, surface gravity and metallicity of the model set.
+                            Can also set individual ranges of spectral parameters by using **temperature_range** or **teff_range**,
+                            **gravity_range** or **logg_range**, and **metallicity_range** or **z_range**.
+    :type ranges: optional, default = depends on model set
+    :param step_sizes: an array specifying step sizes of spectral parameters. Can also set individual step sizes by using
+                        **temperature_step** or **teff_step**, **gravity_step** or **logg_step**, and **metallicity_step** or **z_step**.
+    :type step_sizes: optional, default = [50, 0.25, 0.1]
+    :param nonmetallicity: if True, sets metallicity = 0
+    :type nonmetallicity: optional, default = False
+    :param addon: reads in prior calculation and starts from there. Allowed object types are tables, dictionaries and strings.
+    :type addon: optional, default = False
+    
+    :Example:
+    >>> import splat
+    >>> sp = splat.getSpectrum(shortname='1047+2124')[0]        # T6.5 radio emitter
+    >>> spt, spt_e = splat.classifyByStandard(sp,spt=['T2','T8'])
+    >>> teff,teff_e = splat.typeToTeff(spt)
+    >>> sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
+    >>> table = splat.modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100, savestep=0, verbose=True)
+        Trouble with model BTSettl2008 T=1031.61, logg=5.27, z=-0.02
+        At cycle 0: fit = T=1031.61, logg=5.27, z=0.00 with chi2 = 35948.5
+        Trouble with model BTSettl2008 T=1031.61, logg=5.27, z=-0.13
+        At cycle 1: fit = T=1031.61, logg=5.27, z=0.00 with chi2 = 35948.5 
+                                        .
+                                        .
+                                        .
+                            # Skipped a few lines
+                                        .
+                                        .
+                                        .
+        Trouble with model BTSettl2008 T=973.89, logg=4.95, z=-0.17
+        At cycle 99: fit = T=973.89, logg=4.95, z=0.00 with chi2 = 30569.6 
+        <BLANKLINE>
+        Number of steps = 170
+        <BLANKLINE>
+        Best Fit parameters:
+        Lowest chi2 value = 29402.3750247 for 169.0 degrees of freedom
+        Effective Temperature = 1031.608 (K)
+        log Surface Gravity = 5.267 
+        Metallicity = 0.000 
+        Radius (relative to Sun) from surface fluxes = 0.103 
+        <BLANKLINE>
+        Median parameters:
+        Effective Temperature = 1029.322 + 66.535 - 90.360 (K)
+        log Surface Gravity = 5.108 + 0.338 - 0.473 
+        Metallicity = 0.000 + 0.000 - 0.000 
+        Radius (relative to Sun) from surface fluxes = 0.094 + 0.012 - 0.007 
+        <BLANKLINE>
+        <BLANKLINE>
+        fit_J1047+2124_BTSettl2008
+        Quantiles:
+        [(0.16, 0.087231370556002871), (0.5, 0.09414839610875167), (0.84, 0.10562967101117798)]
+        Quantiles:
+        [(0.16, 4.6366512070621884), (0.5, 5.1077094570511488), (0.84, 5.4459108887603094)]
+        Quantiles:
+        [(0.16, 938.96254520460286), (0.5, 1029.3222563137401), (0.84, 1095.8574021575118)]
+        <BLANKLINE>
+        Total time elapsed = 0:01:46.340169
+    >>> print table
+             teff          logg      z       radius         chisqr   
+        ------------- ------------- --- --------------- -------------
+        1031.60790828 5.26704520744 0.0  0.103152256465 29402.3750247
+        1031.60790828 5.26704520744 0.0  0.103152256465 29402.3750247
+                  ...           ... ...             ...           ...   # Skipped a few lines
+        938.962545205 5.43505121711 0.0  0.125429265207 43836.3720496
+        938.962545205 5.43505121711 0.0  0.129294090544 47650.4267022
     '''
 
 # code style note:
@@ -515,11 +739,12 @@ def modelFitMCMC(spec, **kwargs):
 
 # set ranges for models - input or set by model itself
     rang = splat.loadModelParameters(set = m_set) # Range parameters can fall in
-    teff_range = kwargs.get('teff_range',rang['teff'][0:2])
+    ranges = kwargs.get('ranges', [rang['teff'][0:2], rang['logg'][0:2], rang['z'][0:2]])
+    teff_range = kwargs.get('teff_range',ranges[0])
     teff_range = kwargs.get('temperature_range',teff_range)
-    logg_range = kwargs.get('logg_range',rang['logg'][0:2])
+    logg_range = kwargs.get('logg_range',ranges[1])
     logg_range = kwargs.get('gravity_range',logg_range)
-    z_range = kwargs.get('z_range',rang['z'][0:2])
+    z_range = kwargs.get('z_range',ranges[2])
     z_range = kwargs.get('metallicity_range',z_range)
 
 # set initial parameters
