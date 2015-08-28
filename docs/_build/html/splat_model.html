@@ -100,15 +100,142 @@ This code is derived almost entirely from triangle.py</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="splat_model.loadInterpolatedModel">
+<code class="descclassname">splat_model.</code><code class="descname">loadInterpolatedModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadInterpolatedModel" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Loads interpolated model spectrum based on parameters</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>set</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; <p>set of models to use; options include:</p>
+<ul>
+<li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
+<li><em>&#8216;burrows06&#8217;</em>: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5,
+and sedimentation efficiency of either 0 or 100 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...640.1063B">Burrows et al. (2006)</a></li>
+<li><em>&#8216;morley12&#8217;</em>: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0
+and sedimentation efficiency of 2 to 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...756..172M">Morley et al. (2012)</a></li>
+<li><em>&#8216;morley14&#8217;</em>: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0
+and sedimentation efficiency of 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...787...78M">Morley et al. (2014)</a></li>
+<li><em>&#8216;saumon12&#8217;</em>: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...750...74S">Saumon et al. (2012)</a></li>
+<li><em>&#8216;drift&#8217;</em>: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
+</ul>
+</li>
+<li><strong>local</strong> (<em>optional, default = True</em>) &#8211; read in parameter file locally if True</li>
+<li><strong>url</strong> (optional, default = &#8216;<a class="reference external" href="http://pono.ucsd.edu/~adam/splat/">http://pono.ucsd.edu/~adam/splat/</a>&#8216;) &#8211; string of the url to the SPLAT website</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Model Parameters:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">Below are parameters that define the model:</p>
+<ul class="last simple">
+<li><em>teff</em>: effective temperature of the model</li>
+<li><em>logg</em>: surface gravity of the model</li>
+<li><em>z</em>: metallicity of the model</li>
+<li><em>fsed</em>: sedimentation efficiency of the model</li>
+<li><em>cld</em>: cloud shape function of the model</li>
+<li><em>kzz</em>: vertical eddy diffusion coefficient of the model</li>
+<li><em>slit</em>: slit weight of the model</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="splat_model.loadModel">
 <code class="descclassname">splat_model.</code><code class="descname">loadModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>load up a model spectrum based on parameters</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Load up a model spectrum based on parameters</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>set</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; <p>set of models to use; options include:</p>
+<ul>
+<li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
+<li><em>&#8216;burrows06&#8217;</em>: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5,
+and sedimentation efficiency of either 0 or 100 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...640.1063B">Burrows et al. (2006)</a></li>
+<li><em>&#8216;morley12&#8217;</em>: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0
+and sedimentation efficiency of 2 to 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...756..172M">Morley et al. (2012)</a></li>
+<li><em>&#8216;morley14&#8217;</em>: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0
+and sedimentation efficiency of 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...787...78M">Morley et al. (2014)</a></li>
+<li><em>&#8216;saumon12&#8217;</em>: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...750...74S">Saumon et al. (2012)</a></li>
+<li><em>&#8216;drift&#8217;</em>: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
+</ul>
+</li>
+<li><strong>local</strong> (<em>optional, default = True</em>) &#8211; read in parameter file locally if True</li>
+<li><strong>online</strong> (<em>optional, default = False</em>) &#8211; read in parameter file online if True</li>
+<li><strong>folder</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; string of the folder name containing the model set</li>
+<li><strong>filename</strong> (<em>optional</em>) &#8211; string of the filename of the desired model</li>
+<li><strong>url</strong> (optional, default = &#8216;<a class="reference external" href="http://pono.ucsd.edu/~adam/splat/">http://pono.ucsd.edu/~adam/splat/</a>&#8216;) &#8211; string of the url to the SPLAT website</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Model Parameters:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">Below are parameters that define the model:</p>
+<ul class="last simple">
+<li><em>teff</em>: effective temperature of the model</li>
+<li><em>logg</em>: surface gravity of the model</li>
+<li><em>z</em>: metallicity of the model</li>
+<li><em>fsed</em>: sedimentation efficiency of the model</li>
+<li><em>cld</em>: cloud shape function of the model</li>
+<li><em>kzz</em>: vertical eddy diffusion coefficient of the model</li>
+<li><em>slit</em>: slit weight of the model</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat_model.loadModelParameters">
 <code class="descclassname">splat_model.</code><code class="descname">loadModelParameters</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModelParameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load up model parameters and check model inputs</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Load up model parameters and check model inputs. Parameters include
+effective temperature, surface gravity (expressed as logg), metallicity,
+and sedimentation efficiency (for cloudy models only).</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>parameterFile</strong> (<em>optional, default = &#8216;parameters.txt&#8217;</em>) &#8211; name of file containing parameters for spectral models</li>
+<li><strong>set</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; <p>set of models to use; options include:</p>
+<ul>
+<li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
+<li><em>&#8216;burrows06&#8217;</em>: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5,
+and sedimentation efficiency of either 0 or 100 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...640.1063B">Burrows et al. (2006)</a></li>
+<li><em>&#8216;morley12&#8217;</em>: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0
+and sedimentation efficiency of 2 to 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...756..172M">Morley et al. (2012)</a></li>
+<li><em>&#8216;morley14&#8217;</em>: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0
+and sedimentation efficiency of 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...787...78M">Morley et al. (2014)</a></li>
+<li><em>&#8216;saumon12&#8217;</em>: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...750...74S">Saumon et al. (2012)</a></li>
+<li><em>&#8216;drift&#8217;</em>: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
+</ul>
+</li>
+<li><strong>online</strong> (<em>optional, default = False</em>) &#8211; read in parameter file online if True</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -120,7 +247,124 @@ This code is derived almost entirely from triangle.py</p>
 <dl class="function">
 <dt id="splat_model.modelFitMCMC">
 <code class="descclassname">splat_model.</code><code class="descname">modelFitMCMC</code><span class="sig-paren">(</span><em>spec</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitMCMC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Monte Carlo Markov Chain model fitting routine for SPLAT</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Uses Markov chain Monte Carlo method to compare an object with models from a
+given set. Returns the best estimate of the effective temperature, surface
+gravity, and metallicity. Can also determine the radius of the object by
+using these estimates.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>spec</strong> &#8211; Spectrum class object, which should contain wave, flux and
+noise array elements.</li>
+<li><strong>nsamples</strong> (<em>optional, default = 1000</em>) &#8211; number of Monte Carlo samples</li>
+<li><strong>initial_cut</strong> (<em>optional, default = 0.1</em>) &#8211; the fraction of the initial steps to be discarded. (e.g., if
+<code class="docutils literal"><span class="pre">initial_cut</span> <span class="pre">=</span> <span class="pre">0.2</span></code>, the first 20% of the samples are discarded.)</li>
+<li><strong>burn</strong> (<em>optional, default = 0.1</em>) &#8211; the same as <code class="docutils literal"><span class="pre">initial_cut</span></code></li>
+<li><strong>set</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; <p>set of models to use; options include:</p>
+<ul>
+<li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
+<li><em>&#8216;burrows06&#8217;</em>: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5,
+and sedimentation efficiency of either 0 or 100 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...640.1063B">Burrows et al. (2006)</a></li>
+<li><em>&#8216;morley12&#8217;</em>: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0
+and sedimentation efficiency of 2 to 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...756..172M">Morley et al. (2012)</a></li>
+<li><em>&#8216;morley14&#8217;</em>: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0
+and sedimentation efficiency of 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...787...78M">Morley et al. (2014)</a></li>
+<li><em>&#8216;saumon12&#8217;</em>: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...750...74S">Saumon et al. (2012)</a></li>
+<li><em>&#8216;drift&#8217;</em>: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
+</ul>
+</li>
+<li><strong>model</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; the same as <code class="docutils literal"><span class="pre">set</span></code></li>
+<li><strong>models</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; the same as <code class="docutils literal"><span class="pre">set</span></code></li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
+<li><strong>mask_ranges</strong> (<em>optional, default = []</em>) &#8211; mask any flux value of <code class="docutils literal"><span class="pre">spec</span></code> by specifying the wavelength range.
+Must be in microns.</li>
+<li><strong>mask_telluric</strong> (<em>optional, default = False</em>) &#8211; masks certain wavelengths to avoid effects from telluric absorption</li>
+<li><strong>mask_standard</strong> (<em>optional, default = True</em>) &#8211; masks wavelengths below 0.8 and above 2.35 microns</li>
+<li><strong>mask</strong> (<em>optional, default = [0, ..., 0] for len(sp1.wave)</em>) &#8211; mask any flux value of <code class="docutils literal"><span class="pre">spec</span></code>; has to be an array with length equal as <code class="docutils literal"><span class="pre">spec</span></code> with only 0 (unmask) or 1 (mask).</li>
+<li><strong>radius</strong> (<em>optional</em>) &#8211; calculates and returns radius of object if True</li>
+<li><strong>filename</strong> (<em>optional</em>) &#8211; filename or filename base for output</li>
+<li><strong>filebase</strong> (<em>optional</em>) &#8211; the same as <code class="docutils literal"><span class="pre">filename</span></code></li>
+<li><strong>savestep</strong> (optional, default = <code class="docutils literal"><span class="pre">nsamples/10</span></code>) &#8211; indicate when to save data output (e.g. <code class="docutils literal"><span class="pre">savestep</span> <span class="pre">=</span> <span class="pre">10</span></code> will save the output every 10 samples)</li>
+<li><strong>dataformat</strong> (<em>optional, default = &#8216;ascii.csv&#8217;</em>) &#8211; output data format type</li>
+<li><strong>initial_guess</strong> (<em>optional, default = array of random numbers within allowed ranges</em>) &#8211; array including initial guess of the effective temperature, surface gravity and metallicity of <code class="docutils literal"><span class="pre">spec</span></code>.
+Can also set individual guesses of spectral parameters by using <strong>initial_temperature</strong> or <strong>initial_teff</strong>,
+<strong>initial_gravity</strong> or <strong>initial_logg</strong>, and <strong>initial_metallicity</strong> or <strong>initial_z</strong>.</li>
+<li><strong>ranges</strong> (<em>optional, default = depends on model set</em>) &#8211; array of arrays indicating ranges of the effective temperature, surface gravity and metallicity of the model set.
+Can also set individual ranges of spectral parameters by using <strong>temperature_range</strong> or <strong>teff_range</strong>,
+<strong>gravity_range</strong> or <strong>logg_range</strong>, and <strong>metallicity_range</strong> or <strong>z_range</strong>.</li>
+<li><strong>step_sizes</strong> (<em>optional, default = [50, 0.25, 0.1]</em>) &#8211; an array specifying step sizes of spectral parameters. Can also set individual step sizes by using
+<strong>temperature_step</strong> or <strong>teff_step</strong>, <strong>gravity_step</strong> or <strong>logg_step</strong>, and <strong>metallicity_step</strong> or <strong>z_step</strong>.</li>
+<li><strong>nonmetallicity</strong> (<em>optional, default = False</em>) &#8211; if True, sets metallicity = 0</li>
+<li><strong>addon</strong> (<em>optional, default = False</em>) &#8211; reads in prior calculation and starts from there. Allowed object types are tables, dictionaries and strings.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1047+2124&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>        <span class="c"># T6.5 radio emitter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span> <span class="n">spt_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;T2&#39;</span><span class="p">,</span><span class="s">&#39;T8&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">teff</span><span class="p">,</span><span class="n">teff_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="n">spt</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="n">spt</span><span class="p">,</span><span class="s">&#39;MKO J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">mask_standard</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="n">teff</span><span class="p">,</span> <span class="mf">5.3</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">zstep</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">savestep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    Trouble with model BTSettl2008 T=1031.61, logg=5.27, z=-0.02</span>
+<span class="go">    At cycle 0: fit = T=1031.61, logg=5.27, z=0.00 with chi2 = 35948.5</span>
+<span class="go">    Trouble with model BTSettl2008 T=1031.61, logg=5.27, z=-0.13</span>
+<span class="go">    At cycle 1: fit = T=1031.61, logg=5.27, z=0.00 with chi2 = 35948.5</span>
+<span class="go">                                    .</span>
+<span class="go">                                    .</span>
+<span class="go">                                    .</span>
+<span class="go">                        # Skipped a few lines</span>
+<span class="go">                                    .</span>
+<span class="go">                                    .</span>
+<span class="go">                                    .</span>
+<span class="go">    Trouble with model BTSettl2008 T=973.89, logg=4.95, z=-0.17</span>
+<span class="go">    At cycle 99: fit = T=973.89, logg=4.95, z=0.00 with chi2 = 30569.6</span>
+
+<span class="go">    Number of steps = 170</span>
+
+<span class="go">    Best Fit parameters:</span>
+<span class="go">    Lowest chi2 value = 29402.3750247 for 169.0 degrees of freedom</span>
+<span class="go">    Effective Temperature = 1031.608 (K)</span>
+<span class="go">    log Surface Gravity = 5.267</span>
+<span class="go">    Metallicity = 0.000</span>
+<span class="go">    Radius (relative to Sun) from surface fluxes = 0.103</span>
+
+<span class="go">    Median parameters:</span>
+<span class="go">    Effective Temperature = 1029.322 + 66.535 - 90.360 (K)</span>
+<span class="go">    log Surface Gravity = 5.108 + 0.338 - 0.473</span>
+<span class="go">    Metallicity = 0.000 + 0.000 - 0.000</span>
+<span class="go">    Radius (relative to Sun) from surface fluxes = 0.094 + 0.012 - 0.007</span>
+
+
+<span class="go">    fit_J1047+2124_BTSettl2008</span>
+<span class="go">    Quantiles:</span>
+<span class="go">    [(0.16, 0.087231370556002871), (0.5, 0.09414839610875167), (0.84, 0.10562967101117798)]</span>
+<span class="go">    Quantiles:</span>
+<span class="go">    [(0.16, 4.6366512070621884), (0.5, 5.1077094570511488), (0.84, 5.4459108887603094)]</span>
+<span class="go">    Quantiles:</span>
+<span class="go">    [(0.16, 938.96254520460286), (0.5, 1029.3222563137401), (0.84, 1095.8574021575118)]</span>
+
+<span class="go">    Total time elapsed = 0:01:46.340169</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">table</span>
+<span class="go">         teff          logg      z       radius         chisqr</span>
+<span class="go">    ------------- ------------- --- --------------- -------------</span>
+<span class="go">    1031.60790828 5.26704520744 0.0  0.103152256465 29402.3750247</span>
+<span class="go">    1031.60790828 5.26704520744 0.0  0.103152256465 29402.3750247</span>
+<span class="go">              ...           ... ...             ...           ...   # Skipped a few lines</span>
+<span class="go">    938.962545205 5.43505121711 0.0  0.125429265207 43836.3720496</span>
+<span class="go">    938.962545205 5.43505121711 0.0  0.129294090544 47650.4267022</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
