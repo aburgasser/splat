@@ -26,7 +26,7 @@ from matplotlib.ticker import MaxNLocator
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Ellipse
 import matplotlib.cm as cm
-
+import sys
 
 def corner(xs, weights=None, labels=None, show_titles=False, title_fmt=".2f",
            title_args={}, extents=None, truths=None, truth_color="#4682b4",
@@ -159,6 +159,13 @@ def corner(xs, weights=None, labels=None, show_titles=False, title_fmt=".2f",
                 q = [0.5 - 0.5*extents[i], 0.5 + 0.5*extents[i]]
                 extents[i] = quantile(xs[i], q, weights=weights)
 
+# MODIFICATION BY AJB TO ALLOW FOR MULTIPLE FORMATS FOR TITLES
+    if not isinstance(title_fmt,list):
+        title_fmt = [title_fmt]
+    if len(title_fmt) < len(xs):
+        for i in range(len(xs)-len(title_fmt)):
+            title_fmt.extend(title_fmt[-1])
+
     for i, x in enumerate(xs):
         if np.shape(xs)[0] == 1:
             ax = axes
@@ -189,8 +196,9 @@ def corner(xs, weights=None, labels=None, show_titles=False, title_fmt=".2f",
                 q_m, q_p = q_50-q_16, q_84-q_50
 
                 # Format the quantile display.
-                fmt = "{{0:{0}}}".format(title_fmt).format
+                fmt = "{{0:{0}}}".format(title_fmt[i]).format
                 title = r"${{{0}}}_{{-{1}}}^{{+{2}}}$"
+#                sys.stderr.write('\n{} {} {}'.format("{{0:{0}}}".format(title_fmt[i]),labels[i],title_fmt[i]))
                 title = title.format(fmt(q_50), fmt(q_m), fmt(q_p))
 
                 # Add in the column name if it's given.

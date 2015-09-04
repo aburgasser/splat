@@ -13,6 +13,7 @@ import urllib2
 #import matplotlib.pyplot as plt
 from matplotlib import cm
 from scipy import stats
+from scipy.integrate import trapz        # for numerical integration
 from scipy.interpolate import griddata
 import numpy
 from astropy.io import ascii            # for reading in spreadsheet
@@ -26,7 +27,7 @@ MODEL_PARAMETERS = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','
 DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
 DEFINED_MODEL_NAME = ['BT-Settled (2008)','Burrows (2006)','Morley (2012)','Morley (2014)','Saumon (2012)','Drift (2008)']
 TMPFILENAME = 'splattmpfile'
-TEN_PARSEC = 443344480.     # ten parcecs in solar radii
+TEN_PARSEC = 443344480.     # ten parsecs in solar radii
 
 # change the command prompt
 sys.ps1 = 'splat model> '
@@ -372,8 +373,10 @@ def loadModel(*args, **kwargs):
 
 # set up the model set
     kwargs['set'] = kwargs.get('set','BTSettl2008')
+    if kwargs.get('sed',False):
+        kwargs['set'] = 'BTSettl2008'
     kwargs['folder'] = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'
-    
+        
 # preset defaults
     for ms in MODEL_PARAMETER_NAMES:
         kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
@@ -413,7 +416,11 @@ def loadModel(*args, **kwargs):
     kwargs['filename'] = kwargs['folder']+kwargs['set']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
         format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],float(kwargs['slit']))
     kwargs['name'] = set
-    
+    if kwargs.get('sed',False):
+        kwargs['filename'] = kwargs['folder']+kwargs['set']+'_{:.0f}_{:.1f}_{:.1f}_nc_nc_eq_sed.txt'.\
+            format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001)
+        kwargs['name'] = set+' SED'
+
 # get model parameters
 #        parameters = loadModelParameters(**kwargs)
 #        kwargs['path'] = kwargs.get('path',parameters['path'])
@@ -881,7 +888,71 @@ def modelFitMCMC(spec, **kwargs):
     if verbose:
         print '\nTotal time elapsed = {}'.format(datetime.now()-timestart)
     return s
-        
+
+
+def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
+    '''
+    Calculate luminosity from photometry and stitching models
+    
+    '''
+
+    spec_filters = ['SDSS Z','2MASS J','2MASS H','2MASS KS','MKO J','MKO H','MKO K']
+    sed_filters = ['SDSS R','SDSS I','WISE W1','WISE W2','WISE W3','WISE W4','IRAC CH1','IRAC CH2','IRAC CH3','IRAC CH4']
+    
+    if ~isinstance(absmags,dict):
+        raise ValueError('\nAbsolute magnitudes should be a dictionary whose keys are one of the following filters:\n{}'.format(spec_filters+sed_filters))
+
+# read in a model if one is not provided based on classification and temperature
+    if mdl == False or 'SED' not in mdl.name:
+        spt,spt_unc = splat.classifyByIndex(sp)
+        teff,unc = splat.typeToTeff(spt)
+        mdl = splat.loadModel(teff=teff,logg=5.0,sed=True)
+
+# prep arrays
+    flux = []
+    flux_unc = []
+    flux_wave = []
+    
+# steps:
+# scale spectrum to absolute magnitude if necessary and integrate flux, varying noise and including variance in abs mag factor
+    spcopy = sp
+    if spcopy.fscale != 'Absolute':
+        scale = []
+        scale_unc = []
+        for k in absmags.keys():
+            if k.upper() in spec_filters:
+                m = splat.filterMag(spcopy,k)
+                scale.extend(10.**(0.4*(m-absmags[k][0])))
+# note: need to add in spectral flux uncertainty as well
+                scale_unc.extend(numpy.log(10.)*0.4*absmags[k][1]*scale[-1])
+        if len(scale) == 0:
+            raise ValueError('\nNo absolute magnitudes provided to scale spectrum; you specified:\n{}'.format(absmags.keys()))
+        scl,scl_e = splat.weightedMeanVar(scale,scale_unc,uncertainty=True)
+        spcopy.scale(numpy.mean(scl))
+        spcopy.fscale = 'Absolute'
+
+# integrate data
+# NEED TO INSERT UNCERTAINTY HERE
+    flux.extend(trapz(spcopy.flux,spcopy.wave))
+    flux_unc.extend(0.)
+    flux_wave.extend([numpy.nanmin(spcopy.wave),numpy.nanmax(spcopy.wave)])
+
+# scale segments of models scaled to WISE or IRAC bands if available, include variance in abs mag factor
+# PROBLEM: WHAT IF SPECTRAL PIECES OVERLAP?
+    for k in absmags.keys():
+        if k.upper() in sed_filters:
+            filterdat = splat.filterProperties(k.upper())
+            mdl.fluxCalibrate(k,absmags[k][0])
+            w = numpy.where(mdl.wave.value >= filterdat['lambda_min'] and mdl.wave.value <= filterdat['lambda_max'])
+            flux.extend(trapz(mdl.flux[w],mdl.wave[w]))
+            flux_unc.extend(2.5*numpy.log(10.)*absmags[k][1]*flux[-1])
+            flux_wave.extend([filterdat['lambda_min'],filterdat['lambda_max']])
+
+# match model between these scaled pieces and out to ends and integrate, include variance in abs mag factor(s)
+# report log luminosity in solar units and uncertainty
+# optional report the various pieces and percentages of whole ()
+#
+# absmags is a dictionary whose keys are filter names and whose elements are 2-element lists of value and uncertainty        
     
 def reportModelFitResults(spec,t,*arg,**kwargs):
     '''
@@ -915,6 +986,16 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
         'lbol': r'log L$_{bol}$/L$_{\odot}$',\
         'radius': r'R/R$_{\odot}$',\
         'radius_evol': r'R/R$_{\odot}$'}
+
+    format_assoc = {\
+        'teff': '.0f',\
+        'logg': '.2f',\
+        'z': '.2f',\
+        'mass': '.3f',\
+        'age': '.1f',\
+        'lbol': '.2f',\
+        'radius': '.3f',\
+        'radius_evol': '.3f'}
 
     descrip_assoc = {\
         'teff': 'Effective Temperature',\
@@ -1020,12 +1101,13 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
             print filebase
             splat.plotSpectrum(spec,model,diff,uncertainty=True,telluric=True,colors=['k','r','b'], \
                 legend=legend,filename=filebase+'bestfit.eps',\
-                yrange=[1.1*numpy.nanmin(diff.flux.value[w]),1.2*numpy.nanmax([spec.flux.value[w],model.flux.value[w]])])  
+                yrange=[1.1*numpy.nanmin(diff.flux.value[w]),1.25*numpy.nanmax([spec.flux.value[w],model.flux.value[w]])])  
  
 # triangle plot of parameters
     if triangleFlag:
         y=[]
         labels = []
+        fmt = []
         for p in parameters:
             if min(numpy.isfinite(t[p])) == True and numpy.nanstd(t[p]) != 0.:       # patch to address arrays with NaNs in them
                 y.append(t[p])
@@ -1035,8 +1117,13 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
                     labels.append(p)
                 if p in unit_assoc.keys():
                     labels[-1] = labels[-1]+' ('+unit_assoc[p]+')'
+                if p in format_assoc.keys():
+                    fmt.append(format_assoc[p])
+                else:
+                    fmt.append('.2f')
 #        print labels        
-        fig = triangle.corner(zip(*y[::-1]), labels=list(reversed(labels)), show_titles=True, quantiles=[0.16,0.5,0.84],cmap=cm.Oranges)
+        print labels, fmt
+        fig = triangle.corner(zip(*y[::-1]), labels=list(reversed(labels)), show_titles=True, quantiles=[0.16,0.5,0.84],cmap=cm.Oranges,title_fmt=list(reversed(fmt)),plot_contours=True)
         fig.savefig(filebase+'parameters.eps')
            
 # plain language summary
