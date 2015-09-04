@@ -93,7 +93,7 @@ spex_wave_range = [0.65,2.45]*u.micron    # default wavelength range
 max_snr = 1000.0                # maximum S/N ratio permitted
 TMPFILENAME = 'splattmpfile'
 
-spex_stdfiles = { \
+SPEX_STDFILES = { \
     'M0.0': '11335_10505.fits',\
     'M1.0': '11364_10806.fits',\
     'M2.0': '11181_10187.fits',\
@@ -125,7 +125,7 @@ spex_stdfiles = { \
     'T8.0': '10126_10349.fits',\
     'T9.0': '11536_10509.fits'}
 
-spex_sd_stdfiles = { \
+SPEX_SD_STDFILES = { \
     'sdM5.5': '11670_11134.fits',\
     'sdM6.0': '10265_10045.fits',\
     'sdM7.0': '10197_11074.fits',\
@@ -135,7 +135,7 @@ spex_sd_stdfiles = { \
     'sdL3.5': '10364_10946.fits',\
     'sdL4.0': '10203_11241.fits'}
 
-spex_esd_stdfiles = { \
+SPEX_ESD_STDFILES = { \
     'esdM5.0': '10229_10163.fits',\
 #    'esdM6.5': '_10579.fits',\
     'esdM7.0': '10521_10458.fits',\
@@ -144,44 +144,59 @@ spex_esd_stdfiles = { \
 
 # filters
 FILTER_FOLDER = '/reference/Filters/'
-filters = { \
-    '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band'}, \
-    '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band'}, \
-    '2MASS_KS': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band'}, \
-    'MKO_J': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere'}, \
-    'MKO_H': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere'}, \
-    'MKO_K': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere'}, \
-    'MKO_Kp': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band'}, \
-    'MKO_Ks': {'file': 'mko_ks.txt', 'description': 'MKO Ks-band'}, \
-    'NICMOS_F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M'}, \
-    'NICMOS_F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N'}, \
-    'NICMOS_F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N'}, \
-    'NICMOS_F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N'}, \
-    'NICMOS_F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M'}, \
-    'NICMOS_F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W'}, \
-    'NICMOS_F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N'}, \
-    'NICMOS_F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W'}, \
-    'NICMOS_F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M'}, \
-    'NICMOS_F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W'}, \
-    'NICMOS_F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N'}, \
-    'NICMOS_F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M'}, \
-    'NICMOS_F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N'}, \
-    'NICMOS_F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M'}, \
-    'NICMOS_F187N': {'file': 'nic1_f187n.txt', 'description': 'NICMOS F187N'}, \
-    'NICMOS_F190N': {'file': 'nic1_f190n.txt', 'description': 'NICMOS F190N'}, \
-    'NIRC2_J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band'}, \
-    'NIRC2_H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band'}, \
-    'NIRC2_Kp': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band'}, \
-    'NIRC2_Ks': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band'}, \
-    'WIRC_J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont'}, \
-    'WIRC_H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont'}, \
-    'WIRC_K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont'}, \
-    'WIRC_CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO'}, \
-    'WIRC_CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S'}, \
-    'WIRC_CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L'}, \
-    'WIRC_Fe2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II'}, \
-    'WIRC_BrGamma': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma'}, \
-    'WIRC_PaBeta': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta'} \
+FILTERS = { \
+    'BESSEL_I': {'file': 'bessel_i.txt', 'description': 'Bessel I-band', 'zeropoint': 2405.3}, \
+    '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band', 'zeropoint': 1594.0}, \
+    '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band', 'zeropoint': 1024.0}, \
+    '2MASS_KS': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7}, \
+    'MKO_J': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 0.}, \
+    'MKO_H': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 0.}, \
+    'MKO_K': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere', 'zeropoint': 0.}, \
+    'MKO_KP': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band', 'zeropoint': 0.}, \
+    'MKO_KS': {'file': 'mko_ks.txt', 'description': 'MKO Ks-band', 'zeropoint': 0.}, \
+    'NICMOS_F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M', 'zeropoint': 2255.0}, \
+    'NICMOS_F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N', 'zeropoint': 2044.6}, \
+    'NICMOS_F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N', 'zeropoint': 2275.4}, \
+    'NICMOS_F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N', 'zeropoint': 1937.3}, \
+    'NICMOS_F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M', 'zeropoint': 1871.8}, \
+    'NICMOS_F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W', 'zeropoint': 1768.5}, \
+    'NICMOS_F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N', 'zeropoint': 1821.0}, \
+    'NICMOS_F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W', 'zeropoint': 1277.1}, \
+    'NICMOS_F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M', 'zeropoint': 1242.0}, \
+    'NICMOS_F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W', 'zeropoint': 1071.7}, \
+    'NICMOS_F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N', 'zeropoint': 1003.0}, \
+    'NICMOS_F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M', 'zeropoint': 1023.6}, \
+    'NICMOS_F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N', 'zeropoint': 1047.7}, \
+    'NICMOS_F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M', 'zeropoint': 979.1}, \
+    'NICMOS_F187N': {'file': 'nic1_f187n.txt', 'description': 'NICMOS F187N', 'zeropoint': 803.7}, \
+    'NICMOS_F190N': {'file': 'nic1_f190n.txt', 'description': 'NICMOS F190N', 'zeropoint': 836.5}, \
+    'NIRC2_J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band', 'zeropoint': 1562.7}, \
+    'NIRC2_H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band', 'zeropoint': 1075.5}, \
+    'NIRC2_HCONT': {'file': 'nirc2-hcont.txt', 'description': 'NIRC2 H-continuum band', 'zeropoint': 1044.5}, \
+    'NIRC2_K': {'file': 'nirc2-k.txt', 'description': 'NIRC2 K-band', 'zeropoint': 648.9}, \
+    'NIRC2_KP': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band', 'zeropoint': 689.3}, \
+    'NIRC2_KS': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band', 'zeropoint': 676.2}, \
+    'NIRC2_KCONT': {'file': 'nirc2-kcont.txt', 'description': 'NIRC2 K continuum-band', 'zeropoint': 605.9}, \
+    'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'WIRC Fe II', 'zeropoint': 1019.7}, \
+    'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'WIRC Fe II', 'zeropoint': 248.0}, \
+    'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'WIRC Fe II', 'zeropoint': 165.8}, \
+    'WIRC_J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont', 'zeropoint': 0.}, \
+    'WIRC_H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont', 'zeropoint': 0.}, \
+    'WIRC_K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont', 'zeropoint': 0.}, \
+    'WIRC_CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO', 'zeropoint': 0.}, \
+    'WIRC_CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S', 'zeropoint': 0.}, \
+    'WIRC_CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L', 'zeropoint': 0.}, \
+    'WIRC_FE2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II', 'zeropoint': 0.}, \
+    'WIRC_BRGAMMA': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma', 'zeropoint': 0.}, \
+    'WIRC_PABETA': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta', 'zeropoint': 0.}, \
+    'IRAC CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9}, \
+    'IRAC CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7}, \
+    'IRAC CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0}, \
+    'IRAC CH4': {'file': 'irac4.txt', 'description': 'IRAC Channel 4 (8.0 micron)', 'zeropoint': 64.13}, \
+    'WISE_W1': {'file': 'wise_w1.txt', 'description': 'WISE W1 (3.5 micron)', 'zeropoint': 309.54}, \
+    'WISE_W2': {'file': 'wise_w2.txt', 'description': 'WISE W2 (4.6 micron)', 'zeropoint': 171.79}, \
+    'WISE_W3': {'file': 'wise_w3.txt', 'description': 'WISE W3 (13 micron)', 'zeropoint': 31.67}, \
+    'WISE_W4': {'file': 'wise_w4.txt', 'description': 'WISE W4 (22 micron)', 'zeropoint': 8.363} \
     }
 
 # Index sets
@@ -536,14 +551,19 @@ class Spectrum(object):
          self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
          return
 
+<<<<<<< Updated upstream
     def fluxCalibrate(self,filter,mag,**kwargs):
         '''
         :Purpose: Calibrates spectrum to input magnitude
         '''
+=======
+    def fluxCalibrate(self,f,mag,**kwargs):
+        '''Calibrate spectrum to input magnitude'''
+>>>>>>> Stashed changes
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',False)
         self.normalize()
-        apmag,apmag_e = filterMag(self,filter,**kwargs)
+        apmag,apmag_e = filterMag(self,f,**kwargs)
 # NOTE: NEED TO INCORPORATE UNCERTAINTY INTO SPECTRAL UNCERTAINTY
         if (~numpy.isnan(apmag)):
             self.scale(10.**(0.4*(apmag-mag)))
@@ -582,12 +602,25 @@ class Spectrum(object):
          return
 
     def normalize(self,**kwargs):
+<<<<<<< Updated upstream
         '''
         :Purpose: Normalizes spectrum to its maximum flux.
         :param maskTelluric: masks telluric regions
         :type maskTelluric: optional, default = True
         '''
         self.scale(1./self.fluxMax(**kwargs).value)
+=======
+        '''Normalize spectrum'''
+        if kwargs.get('waveRange',False) != False:
+            rng = kwargs.get('waveRange')
+            if not isinstance(rng,list):
+                rng = [rng]
+            if len(rng) < 2:
+                rng = [rng[0]-0.02,rng[0]+0.02]
+            self.scale(1./numpy.nanmax(self.flux.value[numpy.where(numpy.logical_and(self.wave > rng[0]*u.micron,self.wave < rng[1]*u.micron))]))
+        else:
+            self.scale(1./self.fluxMax(**kwargs).value)
+>>>>>>> Stashed changes
         self.fscale = 'Normalized'
         return
 
@@ -817,7 +850,7 @@ def checkAccess(**kwargs):
     return result
     
 
-def checkLocal(file):
+def checkLocal(inputfile):
     '''
     :Purpose: Checks if a file is present locally or within the SPLAT
                 code directory
@@ -830,13 +863,13 @@ def checkLocal(file):
        >>> splat.checkLocal('SpectralModels/BTSettl08/parameters.txt')
        True  # found it
     '''
-    if not os.path.exists(file):
-        if not os.path.exists(SPLAT_PATH+file):
+    if not os.path.exists(inputfile):
+        if not os.path.exists(SPLAT_PATH+inputfile):
             return ''
         else:
-            return SPLAT_PATH+file
+            return SPLAT_PATH+inputfile
     else:
-        return file
+        return inputfile
 
 
 def checkOnline(*args):
@@ -1143,13 +1176,13 @@ def classifyByStandard(sp, *args, **kwargs):
     unc_sys = 0.5
 
 # classification list    
-    stdfiles = spex_stdfiles
+    stdfiles = SPEX_STDFILES
     subclass = ''
     if kwargs.get('sd',False):
-        stdfiles = spex_sd_stdfiles
+        stdfiles = SPEX_SD_STDFILES
         subclass = 'sd'
     if kwargs.get('esd',False):
-        stdfiles = spex_esd_stdfiles
+        stdfiles = SPEX_ESD_STDFILES
         subclass = 'esd'
     spt_allowed = numpy.array([typeToNum(s) for s in stdfiles.keys()])
     
@@ -1905,24 +1938,24 @@ def fetchDatabase(*args, **kwargs):
 
 # locally:
     if kwargs['local']:
-        file = checkLocal(kwargs['filename'])
-        if file=='':
-            file = checkLocal(kwargs['folder']+'/'+kwargs['filename'])
-        if file=='':
+        infile = checkLocal(kwargs['filename'])
+        if infile=='':
+            infile = checkLocal(kwargs['folder']+'/'+kwargs['filename'])
+        if infile=='':
             raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
         else:
-            data = ascii.read(file, delimiter='\t',fill_values='-99.',format='tab')
+            data = ascii.read(infile, delimiter='\t',fill_values='-99.',format='tab')
 
 # check if file is present; if so, read it in, otherwise go to interpolated
 # online:
     if kwargs['online']:
-        file = checkOnline(kwargs['filename'])
-        if file=='':
-            file = checkOnline(kwargs['folder']+'/'+kwargs['filename'])
-        if file=='':
+        infile = checkOnline(kwargs['filename'])
+        if infile=='':
+            infile = checkOnline(kwargs['folder']+'/'+kwargs['filename'])
+        if infile=='':
             raise NameError('\nCould not find '+kwargs['filename']+' on the SPLAT website\n\n')
         try:
-            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(url+file).read()) 
+            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(url+infile).read()) 
             kwargs['filename'] = os.path.basename(tmp)
             data = ascii.read(os.path.basename(TMPFILENAME), delimiter='\t',fill_values='-99.',format='tab')
             os.remove(os.path.basename(TMPFILENAME))
@@ -2023,7 +2056,7 @@ def fetchDatabase(*args, **kwargs):
 #
 
 
-def filterMag(sp,filter,*args,**kwargs):
+def filterMag(sp,f,*args,**kwargs):
     '''
     :Purpose: Determine the photometric magnitude of a source based on the
                 spectrum. Spectra are convolved with the filter specified by
@@ -2089,21 +2122,21 @@ def filterMag(sp,filter,*args,**kwargs):
 
 
 # check that requested filter is in list
-    f = filter.replace(' ','_')
-    if (f not in filters.keys()):
-        print 'Filter '+filter+' not included in filterMag'
+    f = f.replace(' ','_')
+    if (f not in FILTERS.keys()):
+        print 'Filter '+f+' not included in filterMag'
         info = True
         
 # print out what's available
     if (info):
         print 'Filter names:'
-        for x in filters.keys():
-            print x+': '+filters[x]['description']    
+        for x in FILTERS.keys():
+            print x+': '+FILTERS[x]['description']    
         return numpy.nan, numpy.nan
 
 # Read in filter
     if (custom == False):
-        fwave,ftrans = numpy.genfromtxt(filterFolder+filters[f]['file'], comments='#', unpack=True, \
+        fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[f]['file'], comments='#', unpack=True, \
             missing_values = ('NaN','nan'), filling_values = (numpy.nan))
     else:
         fwave,ftrans = custom[0],custom[1]
@@ -2117,7 +2150,7 @@ def filterMag(sp,filter,*args,**kwargs):
         n = interp1d(sp.wave[wgood],sp.noise[wgood],bounds_error=False,fill_value=numpy.nan)
 # catch for models
     else:
-        print filter+': no good points'
+        print f+': no good points'
         d = interp1d(sp.wave,sp.flux,bounds_error=False,fill_value=0.)
         n = interp1d(sp.wave,sp.flux*1.e-9,bounds_error=False,fill_value=numpy.nan)
         
@@ -2158,6 +2191,51 @@ def filterMag(sp,filter,*args,**kwargs):
     if len(sp.wave[wgood]) == 0:
         err = 0.
     return val,err
+
+
+def filterProperties(f,**kwargs):
+    '''
+    :Purpose: Returns a dictionary containing key factors about a filter profile.
+    .. :Usage: info = splat.filterProperties('filter name',**kwargs)
+
+    :param 'filter name': name of filter, must be one of the specifed filters given by splat.FILTERS
+    :param verbose: print out information about filter to screen
+    :type custom: optional, default = False
+    '''
+
+    filt = f.replace(' ','_')
+    filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
+    if not os.path.exists(filterFolder):
+        filterFolder = SPLAT_URL+FILTERFOLDER
+
+    if (filt not in FILTERS.keys()):
+        print 'Filter '+f+' not among the available filters:'
+        for k in FILTERS.keys():
+            print '  '+k.replace('_',' ')+': '+FILTERS[k]['description']
+        return None
+    else:
+        report = {}
+        report['name'] = f
+        report['description'] = FILTERS[filt]['description']
+        report['zeropoint'] = FILTERS[filt]['zeropoint']
+        fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[filt]['file'], comments='#', unpack=True, \
+            missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+        report['lambda_mean'] = trapz(fwave*ftrans,fwave)/trapz(ftrans,fwave)
+        report['lambda_pivot'] = numpy.sqrt(trapz(fwave*ftrans,fwave)/trapz(ftrans/fwave,fwave))
+        fw = fwave[numpy.where(ftrans > 0.5*ftrans)]
+        report['lambda_central'] = 0.5*(numpy.max(fw)+numpy.min(fw))
+        report['lambda_fwhm'] = numpy.max(fw)-numpy.min(fw)
+        fw = fwave[numpy.where(ftrans > 0.01*ftrans)]
+        report['lambda_min'] = numpy.min(fw)
+        report['lambda_max'] = numpy.max(fw)
+        if kwargs.get('verbose',False):
+            print '\nFilter '+f+': '+report['description']
+            print 'Filter zeropoint = {} Jy'.format(report['zeropoint'])
+#            print 'Filter mid-points: mean = {:.3f} micron, pivot = {:.3f} micron, central = {:.3f} micron'.format(report['lambda_mean'],report['lambda_pivot'],report['lambda_central'],)
+            print 'Filter mid-point: = {:.3f} micron'.format(report['lambda_mean'],report['lambda_pivot'],report['lambda_central'],)
+            print 'Filter FWHM = {:.3f} micron'.format(report['lambda_fwhm'])
+            print 'Filter range = {:.3f} to {:.3f} micron\n'.format(report['lambda_min'],report['lambda_max'])
+        return report
 
 
 def getSpectrum(*args, **kwargs):
@@ -3629,11 +3707,11 @@ def typeToMag(spt, filt, **kwargs):
         return numpy.nan, numpy.nan
 
     if (filt.upper() in coeffs.keys()) == 1:
-        for filter in coeffs.keys():
-            if filt.upper() == filter:
-                coeff = coeffs[filter]['coeff']
-                fitunc = coeffs[filter]['fitunc']
-                rng = coeffs[filter]['range']
+        for f in coeffs.keys():
+            if filt.upper() == f:
+                coeff = coeffs[f]['coeff']
+                fitunc = coeffs[f]['fitunc']
+                rng = coeffs[f]['range']
     else:
         sys.stderr.write('\n Invalid filter {} given for {}\n'.format(filt,reference))
         return numpy.nan, numpy.nan
