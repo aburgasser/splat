@@ -551,15 +551,10 @@ class Spectrum(object):
          self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
          return
 
-<<<<<<< Updated upstream
-    def fluxCalibrate(self,filter,mag,**kwargs):
+    def fluxCalibrate(self,f,mag,**kwargs):
         '''
         :Purpose: Calibrates spectrum to input magnitude
         '''
-=======
-    def fluxCalibrate(self,f,mag,**kwargs):
-        '''Calibrate spectrum to input magnitude'''
->>>>>>> Stashed changes
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',False)
         self.normalize()
@@ -602,15 +597,11 @@ class Spectrum(object):
          return
 
     def normalize(self,**kwargs):
-<<<<<<< Updated upstream
         '''
         :Purpose: Normalizes spectrum to its maximum flux.
         :param maskTelluric: masks telluric regions
         :type maskTelluric: optional, default = True
         '''
-        self.scale(1./self.fluxMax(**kwargs).value)
-=======
-        '''Normalize spectrum'''
         if kwargs.get('waveRange',False) != False:
             rng = kwargs.get('waveRange')
             if not isinstance(rng,list):
@@ -620,7 +611,6 @@ class Spectrum(object):
             self.scale(1./numpy.nanmax(self.flux.value[numpy.where(numpy.logical_and(self.wave > rng[0]*u.micron,self.wave < rng[1]*u.micron))]))
         else:
             self.scale(1./self.fluxMax(**kwargs).value)
->>>>>>> Stashed changes
         self.fscale = 'Normalized'
         return
 
