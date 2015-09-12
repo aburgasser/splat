@@ -93,10 +93,42 @@
 <p class="last">These are the spectral modeling functions for SPLAT</p>
 </div>
 <dl class="function">
+<dt id="splat_model.calcLuminosity">
+<code class="descclassname">splat_model.</code><code class="descname">calcLuminosity</code><span class="sig-paren">(</span><em>sp</em>, <em>mdl=False</em>, <em>absmags=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.calcLuminosity" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Calculate luminosity from photometry and stitching models.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
+noise array elements.</li>
+<li><strong>mdl</strong> (<em>default = False</em>) &#8211; model spectrum loaded using <code class="docutils literal"><span class="pre">loadModel</span></code></li>
+<li><strong>absmags</strong> (<em>default = False</em>) &#8211; a dictionary whose keys are one of the following filters: &#8216;SDSS Z&#8217;,
+&#8216;2MASS J&#8217;, &#8216;2MASS H&#8217;, &#8216;2MASS KS&#8217;, &#8216;MKO J&#8217;, &#8216;MKO H&#8217;, &#8216;MKO K&#8217;, &#8216;SDSS R&#8217;,
+&#8216;SDSS I&#8217;, &#8216;WISE W1&#8217;, &#8216;WISE W2&#8217;, &#8216;WISE W3&#8217;, &#8216;WISE W4&#8217;, &#8216;IRAC CH1&#8217;,
+&#8216;IRAC CH2&#8217;, &#8216;IRAC CH3&#8217;, &#8216;IRAC CH4&#8217;</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="splat_model.distributionStats">
 <code class="descclassname">splat_model.</code><code class="descname">distributionStats</code><span class="sig-paren">(</span><em>x, q=[0.16, 0.5, 0.84], weights=None, sigma=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.distributionStats" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find key values along distributions based on quantile steps
-This code is derived almost entirely from triangle.py</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Find key values along distributions based on quantile steps.
+This code is derived almost entirely from triangle.py.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -303,6 +335,17 @@ Can also set individual ranges of spectral parameters by using <strong>temperatu
 <strong>temperature_step</strong> or <strong>teff_step</strong>, <strong>gravity_step</strong> or <strong>logg_step</strong>, and <strong>metallicity_step</strong> or <strong>z_step</strong>.</li>
 <li><strong>nonmetallicity</strong> (<em>optional, default = False</em>) &#8211; if True, sets metallicity = 0</li>
 <li><strong>addon</strong> (<em>optional, default = False</em>) &#8211; reads in prior calculation and starts from there. Allowed object types are tables, dictionaries and strings.</li>
+<li><strong>evolutionary_model</strong> (<em>optional, default = &#8216;Baraffe&#8217;</em>) &#8211; <dl class="docutils">
+<dt>set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for</dt>
+<dd>more details. Options include:</dd>
+</dl>
+<ul>
+<li><em>&#8216;baraffe&#8217;</em>: Evolutionary models from <a class="reference external" href="http://arxiv.org/abs/astro-ph/0302293">Baraffe et al. (2003)</a>.</li>
+<li><em>&#8216;burrows&#8217;</em>:</li>
+<li><em>&#8216;saumon&#8217;</em>: Evolutionary models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2008ApJ...689.1327S">Saumon &amp; Marley (2008)</a>.</li>
+</ul>
+</li>
+<li><strong>emodel</strong> (<em>optional, default = &#8216;Baraffe&#8217;</em>) &#8211; the same as <code class="docutils literal"><span class="pre">evolutionary_model</span></code></li>
 </ul>
 </td>
 </tr>
@@ -370,10 +413,95 @@ Can also set individual ranges of spectral parameters by using <strong>temperatu
 <dl class="function">
 <dt id="splat_model.reportModelFitResults">
 <code class="descclassname">splat_model.</code><code class="descname">reportModelFitResults</code><span class="sig-paren">(</span><em>spec</em>, <em>t</em>, <em>*arg</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.reportModelFitResults" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reports the result of model fitting parameters
-Input is an astropy Table with columns containing parameters fit, and one column for chi-square values (&#8216;chisqr&#8217;)
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Reports the result of model fitting parameters.
 Produces triangle plot, best fit model, statistics of parameters
-and saves raw data if iterative = True</p>
+and saves raw data if <code class="docutils literal"><span class="pre">iterative</span> <span class="pre">=</span> <span class="pre">True</span></code>.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>spec</strong> &#8211; Spectrum class object, which should contain wave, flux and
+noise array elements.</li>
+<li><strong>t</strong> &#8211; Must be an astropy Table with columns containing parameters fit, and one column for chi-square values (&#8216;chisqr&#8217;).</li>
+<li><strong>evol</strong> (<em>optional, default = True</em>) &#8211; computes the mass, age, temperature, radius, surface gravity, and luminosity
+by using various evolutionary model sets. See below for the possible set
+options and the Brown Dwarf Evolutionary Models page for more details.</li>
+<li><strong>emodel</strong> (<em>optional, default = &#8216;Baraffe&#8217;</em>) &#8211; <dl class="docutils">
+<dt>set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for</dt>
+<dd>more details. Options include:</dd>
+</dl>
+<ul>
+<li><em>&#8216;baraffe&#8217;</em>: Evolutionary models from <a class="reference external" href="http://arxiv.org/abs/astro-ph/0302293">Baraffe et al. (2003)</a>.</li>
+<li><em>&#8216;burrows&#8217;</em>:</li>
+<li><em>&#8216;saumon&#8217;</em>: Evolutionary models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2008ApJ...689.1327S">Saumon &amp; Marley (2008)</a>.</li>
+</ul>
+</li>
+<li><strong>stats</strong> (<em>optional, default = True</em>) &#8211; if True, prints several statistical values, including number of steps,
+best fit parameters, lowest chi2 value, median parameters and key values
+along the distribution.</li>
+<li><strong>triangle</strong> (<em>optional, default = True</em>) &#8211; creates a triangle plot, plotting the parameters against each other,
+demonstrating areas of high and low chi squared values. Useful for
+demonstrating correlations between parameters.</li>
+<li><strong>bestfit</strong> (<em>optional, default = True</em>) &#8211; if True and a best fit model is present in the desired model set, then
+plots model against spectrum and saves figure.</li>
+<li><strong>summary</strong> (<em>optional, default = True</em>) &#8211; not yet implemented</li>
+<li><strong>weight</strong> (<em>optional, default = True</em>) &#8211; if True, sets weights for computing key values along the distribution</li>
+<li><strong>filebase</strong> (<em>optional, default = &#8216;modelfit_results&#8217;</em>) &#8211; filename or filename base for output</li>
+<li><strong>stat</strong> (<em>optional, default = &#8216;chisqr&#8217;</em>) &#8211; name of the statistics column used in astropy Table <code class="docutils literal"><span class="pre">t</span></code>.</li>
+<li><strong>model_set</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; <p>desired model set of <code class="docutils literal"><span class="pre">bestfit</span></code>; options include:</p>
+<ul>
+<li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
+<li><em>&#8216;burrows06&#8217;</em>: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5,
+and sedimentation efficiency of either 0 or 100 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...640.1063B">Burrows et al. (2006)</a></li>
+<li><em>&#8216;morley12&#8217;</em>: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0
+and sedimentation efficiency of 2 to 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...756..172M">Morley et al. (2012)</a></li>
+<li><em>&#8216;morley14&#8217;</em>: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0
+and sedimentation efficiency of 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...787...78M">Morley et al. (2014)</a></li>
+<li><em>&#8216;saumon12&#8217;</em>: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...750...74S">Saumon et al. (2012)</a></li>
+<li><em>&#8216;drift&#8217;</em>: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
+</ul>
+</li>
+<li><strong>mset</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; same as <code class="docutils literal"><span class="pre">model_set</span></code></li>
+<li><strong>mask_ranges</strong> (<em>optional, default = []</em>) &#8211; mask any flux value of <code class="docutils literal"><span class="pre">spec</span></code> by specifying the wavelength range. Must be in microns.</li>
+<li><strong>sigma</strong> (<em>optional, default = 1.</em>) &#8211; when printing statistical results, prints the value at <code class="docutils literal"><span class="pre">sigma</span></code> standard
+deviations away from the mean. Only effective if <code class="docutils literal"><span class="pre">stats</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
+<li><strong>iterative</strong> (<em>optional, default = False</em>) &#8211; if True, prints quantitative results and does not plot anything</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1047+2124&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>        <span class="c"># T6.5 radio emitter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span> <span class="n">spt_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;T2&#39;</span><span class="p">,</span><span class="s">&#39;T8&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">teff</span><span class="p">,</span><span class="n">teff_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="n">spt</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="n">spt</span><span class="p">,</span><span class="s">&#39;MKO J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">mask_standard</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="n">teff</span><span class="p">,</span> <span class="mf">5.3</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">zstep</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">savestep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">reportModelFitResults</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">evol</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">triangle</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+<span class="go">    Number of steps = 169</span>
+
+<span class="go">    Best Fit parameters:</span>
+<span class="go">    Lowest chi2 value = 29567.2136599 for 169.0 degrees of freedom</span>
+<span class="go">    Effective Temperature = 918.641 (K)</span>
+<span class="go">    log Surface Gravity = 5.211</span>
+<span class="go">    Metallicity = 0.000</span>
+<span class="go">    Radius (relative to Sun) from surface fluxes = 0.096</span>
+
+<span class="go">    Median parameters:</span>
+<span class="go">    Effective Temperature = 927.875 + 71.635 - 73.237 (K)</span>
+<span class="go">    log Surface Gravity = 5.210 + 0.283 - 0.927</span>
+<span class="go">    Metallicity = 0.000 + 0.000 - 0.000</span>
+<span class="go">    Radius (relative to Sun) from surface fluxes = 0.108 + 0.015 - 0.013</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <ul class="simple">
