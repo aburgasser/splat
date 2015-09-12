@@ -626,10 +626,10 @@ def modelFitMCMC(spec, **kwargs):
     :param addon: reads in prior calculation and starts from there. Allowed object types are tables, dictionaries and strings.
     :type addon: optional, default = False
     :param evolutionary_model: set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for
-                               more details. Options include:
+        more details. Options include:
     
         - *'baraffe'*: Evolutionary models from `Baraffe et al. (2003) <http://arxiv.org/abs/astro-ph/0302293>`_.
-        - *'burrows'*: 
+        - *'burrows'*: Evolutionary models from `Burrows et al. (1997) <http://adsabs.harvard.edu/abs/1997ApJ...491..856B>`_.
         - *'saumon'*: Evolutionary models from `Saumon & Marley (2008) <http://adsabs.harvard.edu/abs/2008ApJ...689.1327S>`_.
         
     :type evolutionary_model: optional, default = 'Baraffe'
@@ -985,11 +985,11 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
                  by using various evolutionary model sets. See below for the possible set 
                  options and the Brown Dwarf Evolutionary Models page for more details.
     :type evol: optional, default = True
-    :param emodel: set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for
-                   more details. Options include:
+    :param emodel: set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for 
+        more details. Options include:
     
         - *'baraffe'*: Evolutionary models from `Baraffe et al. (2003) <http://arxiv.org/abs/astro-ph/0302293>`_.
-        - *'burrows'*: 
+        - *'burrows'*: Evolutionary models from `Burrows et al. (1997) <http://adsabs.harvard.edu/abs/1997ApJ...491..856B>`_.
         - *'saumon'*: Evolutionary models from `Saumon & Marley (2008) <http://adsabs.harvard.edu/abs/2008ApJ...689.1327S>`_.
         
     :type emodel: optional, default = 'Baraffe'

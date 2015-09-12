@@ -240,7 +240,7 @@
 
 <dl class="method">
 <dt id="splat.Spectrum.fluxCalibrate">
-<code class="descname">fluxCalibrate</code><span class="sig-paren">(</span><em>filter</em>, <em>mag</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.fluxCalibrate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fluxCalibrate</code><span class="sig-paren">(</span><em>f</em>, <em>mag</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.fluxCalibrate" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -286,7 +286,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Reports some information about this spectrum</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Reports some information about this spectrum.</td>
 </tr>
 </tbody>
 </table>
@@ -340,21 +340,6 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Scales spectrum and noise by a constant factor</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>factor</strong> &#8211; scale factor for the spectrum</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="splat.Spectrum.smooth">
-<code class="descname">smooth</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.smooth" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Smooths spectrum to a constant slit width (smooths by pixels)</p>
 </td>
 </tr>
@@ -368,6 +353,12 @@
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="splat.Spectrum.smooth">
+<code class="descname">smooth</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.smooth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Smooth spectrum to a constant slit width (smooth by pixels)</p>
 </dd></dl>
 
 <dl class="method">
@@ -434,11 +425,7 @@
 <dl class="method">
 <dt id="splat.Spectrum.snr">
 <code class="descname">snr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.snr" title="Permalink to this definition">¶</a></dt>
-<dd><div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Unfinished</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -446,16 +433,16 @@
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Unfinished</p>
+</div>
 </dd></dl>
 
 <dl class="method">
 <dt id="splat.Spectrum.surface">
 <code class="descname">surface</code><span class="sig-paren">(</span><em>radius</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.surface" title="Permalink to this definition">¶</a></dt>
-<dd><div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Unfinished</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -463,6 +450,10 @@
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Unfinished</p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -963,7 +954,7 @@ the scale factor. Minimum possible value is 1.e-9.</p>
 
 <dl class="function">
 <dt id="splat.filterMag">
-<code class="descclassname">splat.</code><code class="descname">filterMag</code><span class="sig-paren">(</span><em>sp</em>, <em>filter</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterMag" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">splat.</code><code class="descname">filterMag</code><span class="sig-paren">(</span><em>sp</em>, <em>f</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterMag" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1153,12 +1144,13 @@ uses Na I 2.206/2.209 Ca I 2.26 micron lines.</li>
 <li><strong>unc</strong> (<em>optional, default = 0.</em>) &#8211; uncertainty of <code class="docutils literal"><span class="pre">spt</span></code></li>
 <li><strong>ref</strong> (<em>optional, default = &#8216;dupuy&#8217;</em>) &#8211; <p>Abs Mag/SpT relation used to compute the absolute magnitude. Options are:</p>
 <ul>
-<li><em>faherty</em>: Abs Mag/SpT relation from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...752...56F">Faherty et al. (2012)</a>.
-Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K.</li>
 <li><em>burgasser</em>: Abs Mag/SpT relation from <a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...659..655B">Burgasser (2007)</a>.
 Allowed spectral type range is L0 to T8, and allowed filters are MKO K.</li>
+<li><em>faherty</em>: Abs Mag/SpT relation from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...752...56F">Faherty et al. (2012)</a>.
+Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K.</li>
 <li><em>dupuy</em>: Abs Mag/SpT relation from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJS..201...19D">Dupuy &amp; Liu (2012)</a>.
 Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS K.</li>
+<li><em>filippazzo</em>: Abs Mag/SpT relation from Filippazzo et al. (2015). Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J and WISE W2.</li>
 </ul>
 </li>
 </ul>
@@ -1207,6 +1199,7 @@ Allowed spectral type range is L0 to T8.</li>
 Allowed spectral type range is M6 to T8 and uses alternate coefficients for L3 to T8.</li>
 <li><em>marocco</em>: Teff/SpT relation from <a class="reference external" href="http://adsabs.harvard.edu/abs/2013AJ....146..161M">Marocco et al. (2013)</a>.
 Allowed spectral type range is M7 to T8.</li>
+<li><em>filippazzo</em>: Teff/SpT relation from Filippazzo et al. (2015). Allowed spectral type range is M6 to T9.</li>
 </ul>
 </li>
 <li><strong>set</strong> (<em>optional, default = &#8216;stephens2009&#8217;</em>) &#8211; same as <code class="docutils literal"><span class="pre">ref</span></code></li>
@@ -1260,6 +1253,7 @@ uncertainty in parsecs</p>
 <li>&#8216;NIRC2 J&#8217;, &#8216;NIRC2 H&#8217;, &#8216;NIRC2 Kp&#8217;, &#8216;NIRC2 Ks&#8217;</li>
 <li>&#8216;WIRC J&#8217;, &#8216;WIRC H&#8217;, &#8216;WIRC K&#8217;, &#8216;WIRC CH4S&#8217;, &#8216;WIRC CH4L&#8217;</li>
 <li>&#8216;WIRC CO&#8217;, &#8216;WIRC PaBeta&#8217;, &#8216;WIRC BrGamma&#8217;, &#8216;WIRC Fe2&#8217;</li>
+<li>&#8216;WISE W1&#8217;, &#8216;WISE W2&#8217;</li>
 </ul>
 </li>
 </ul>
@@ -1292,20 +1286,19 @@ uncertainty in parsecs</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Convert from numeric date to calendar date, and vice-versa.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> &#8211; a numeric date of the format &#8216;20050412&#8217;, or a date in the
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> &#8211; A numeric date of the format &#8216;20050412&#8217;, or a date in the
 calendar format &#8216;2005 Jun 12&#8217;</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Example</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">caldate</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">dateToCaldate</span><span class="p">(</span><span class="s">&#39;20050612&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">caldate</span>
-<span class="go">    2005 Jun 12</span>
+<span class="go">2005 Jun 12</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">date</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">caldateToDate</span><span class="p">(</span><span class="s">&#39;2005 June 12&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">date</span>
-<span class="go">    20050612</span>
+<span class="go">20050612</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1418,7 +1411,7 @@ angles and Dec in degrees</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Convert between string and numeric spectral types, and vise versa.</p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Converts between string and numeric spectral types, and vise versa.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
@@ -1518,17 +1511,16 @@ angles and Dec in degrees</td>
 that is, checks if you and the host are online. Alternately
 checks if a given filename is present locally or online</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
 </tbody>
 </table>
+<p class="rubric">Example</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">()</span>
-<span class="go">    True  # SPLAT&#39;s URL was detected.</span>
+<span class="go">True  # SPLAT&#39;s URL was detected.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">()</span>
-<span class="go">    False # SPLAT&#39;s URL was not detected.</span>
+<span class="go">False # SPLAT&#39;s URL was not detected.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">(</span><span class="s">&#39;SpectralModels/BTSettl08/parameters.txt&#39;</span><span class="p">)</span>
-<span class="go">    False # Could not find this online file.</span>
+<span class="go">False # Could not find this online file.</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1542,19 +1534,22 @@ checks if a given filename is present locally or online</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Checks if user has access to unpublished spectra in SPLAT library.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkAccess</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body">Must have the file .splat_access in your home directory with the correct passcode to use.</td>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkAccess</span><span class="p">()</span>
-<span class="go">    True</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Must have the file .splat_access in your home directory with the correct passcode to use.</p>
-</div>
 </dd></dl>
 
 <dl class="function">
@@ -1566,19 +1561,18 @@ checks if a given filename is present locally or online</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Checks if a spectrum file exists in the SPLAT&#8217;s library.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; a string containing the spectrum&#8217;s filename.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; A string containing the spectrum&#8217;s filename.</td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Example</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spectrum1</span> <span class="o">=</span> <span class="s">&#39;spex_prism_1315+2334_110404.fits&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkFile</span><span class="p">(</span><span class="n">spectrum1</span><span class="p">)</span>
-<span class="go">    True</span>
+<span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spectrum2</span> <span class="o">=</span> <span class="s">&#39;fake_name.fits&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkFile</span><span class="p">(</span><span class="n">spectrum2</span><span class="p">)</span>
-<span class="go">    False</span>
+<span class="go">False</span>
 </pre></div>
 </div>
 </dd></dl>
