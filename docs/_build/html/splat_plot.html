@@ -172,32 +172,24 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Primary plotting program for Spectrum objects.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Input:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><code class="docutils literal"><span class="pre">Primary</span> <span class="pre">plotting</span> <span class="pre">program</span> <span class="pre">for</span> <span class="pre">Spectrum</span> <span class="pre">objects.</span></code></td>
 </tr>
 </tbody>
 </table>
-<dl class="docutils">
-<dt>Spectrum objects, either sequentially, in list, or in list of lists</dt>
-<dd><ul class="first last simple">
+<p>:Input
+Spectrum objects, either sequentially, in list, or in list of lists</p>
+<blockquote>
+<div><ul class="simple">
 <li>Spec1, Spec2, ...: plot multiple spectra together, or separately if multiplot = True</li>
 <li>[Spec1, Spec2, ...]: plot multiple spectra together, or separately if multiplot = True</li>
 <li>[[Spec1, Spec2], [Spec3, Spec4], ..]: plot multiple sets of spectra (multiplot forced to be True)</li>
 </ul>
-</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
+</div></blockquote>
+<p>:Parameters
+file or filename or output:</p>
+<blockquote>
+<div>filename or filename base for output</div></blockquote>
 <dl class="docutils">
-<dt>file or filename or output:</dt>
-<dd>filename or filename base for output</dd>
 <dt>filetype = &#8216;pdf&#8217;:</dt>
 <dd>output filetype, generally determined from filename</dd>
 <dt>multiplot = False:</dt>
@@ -240,6 +232,8 @@ options include H2O, CH4, CO, TiO, VO, FeH, H2, HI, KI, NaI, SB (for spectral bi
 <dd>a comparison Spectrum to compare in each plot, useful for common reference standard</dd>
 <dt>noise, showNoise or uncertainty = False:</dt>
 <dd>plot the uncertainty for each spectrum</dd>
+<dt>residual = False:</dt>
+<dd>plots the residual between two spectra</dd>
 <dt>color or colors:</dt>
 <dd>color of plot lines; by default all black</dd>
 <dt>colorUnc or colorsUnc:</dt>
@@ -249,6 +243,8 @@ options include H2O, CH4, CO, TiO, VO, FeH, H2, HI, KI, NaI, SB (for spectral bi
 see <a class="reference external" href="http://matplotlib.org/api/pyplot_summary.html?highlight=colormaps#matplotlib.pyplot.colormaps">http://matplotlib.org/api/pyplot_summary.html?highlight=colormaps#matplotlib.pyplot.colormaps</a></dd>
 <dt>linestyle:</dt>
 <dd>line style of plot lines; by default all solid</dd>
+<dt>fontscale = 10:</dt>
+<dd>sets a scale factor for the fontsize</dd>
 <dt>xrange = [0.85,2.42]:</dt>
 <dd>plot range for wavelength axis</dd>
 <dt>yrange = [-0.02,1.2]*fluxMax:</dt>
