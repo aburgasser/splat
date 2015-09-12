@@ -615,8 +615,8 @@ def modelFitMCMC(spec, **kwargs):
                             **initial_gravity** or **initial_logg**, and **initial_metallicity** or **initial_z**.
     :type initial_guess: optional, default = array of random numbers within allowed ranges
     :param ranges: array of arrays indicating ranges of the effective temperature, surface gravity and metallicity of the model set.
-                            Can also set individual ranges of spectral parameters by using **temperature_range** or **teff_range**,
-                            **gravity_range** or **logg_range**, and **metallicity_range** or **z_range**.
+                    Can also set individual ranges of spectral parameters by using **temperature_range** or **teff_range**,
+                    **gravity_range** or **logg_range**, and **metallicity_range** or **z_range**.
     :type ranges: optional, default = depends on model set
     :param step_sizes: an array specifying step sizes of spectral parameters. Can also set individual step sizes by using
                         **temperature_step** or **teff_step**, **gravity_step** or **logg_step**, and **metallicity_step** or **z_step**.
@@ -625,6 +625,16 @@ def modelFitMCMC(spec, **kwargs):
     :type nonmetallicity: optional, default = False
     :param addon: reads in prior calculation and starts from there. Allowed object types are tables, dictionaries and strings.
     :type addon: optional, default = False
+    :param evolutionary_model: set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for
+                               more details. Options include:
+    
+        - *'baraffe'*: Evolutionary models from `Baraffe et al. (2003) <http://arxiv.org/abs/astro-ph/0302293>`_.
+        - *'burrows'*: 
+        - *'saumon'*: Evolutionary models from `Saumon & Marley (2008) <http://adsabs.harvard.edu/abs/2008ApJ...689.1327S>`_.
+        
+    :type evolutionary_model: optional, default = 'Baraffe'
+    :param emodel: the same as ``evolutionary_model``
+    :type emodel: optional, default = 'Baraffe'
     
     :Example:
     >>> import splat
@@ -892,7 +902,16 @@ def modelFitMCMC(spec, **kwargs):
 
 def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
     '''
-    Calculate luminosity from photometry and stitching models
+    :Purpose: Calculate luminosity from photometry and stitching models.
+    :param sp: Spectrum class object, which should contain wave, flux and 
+               noise array elements.
+    :param mdl: model spectrum loaded using ``loadModel``
+    :type mdl: default = False
+    :param absmags: a dictionary whose keys are one of the following filters: 'SDSS Z', 
+                    '2MASS J', '2MASS H', '2MASS KS', 'MKO J', 'MKO H', 'MKO K', 'SDSS R', 
+                    'SDSS I', 'WISE W1', 'WISE W2', 'WISE W3', 'WISE W4', 'IRAC CH1', 
+                    'IRAC CH2', 'IRAC CH3', 'IRAC CH4'
+    :type absmags: default = False
     
     '''
 
@@ -956,11 +975,92 @@ def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
     
 def reportModelFitResults(spec,t,*arg,**kwargs):
     '''
-    Reports the result of model fitting parameters
-    Input is an astropy Table with columns containing parameters fit, and one column for chi-square values ('chisqr')
-    Produces triangle plot, best fit model, statistics of parameters
-    and saves raw data if iterative = True
-    '''    
+    :Purpose: Reports the result of model fitting parameters. 
+              Produces triangle plot, best fit model, statistics of parameters
+              and saves raw data if ``iterative = True``.
+    :param spec: Spectrum class object, which should contain wave, flux and 
+                 noise array elements.
+    :param t: Must be an astropy Table with columns containing parameters fit, and one column for chi-square values ('chisqr').
+    :param evol: computes the mass, age, temperature, radius, surface gravity, and luminosity 
+                 by using various evolutionary model sets. See below for the possible set 
+                 options and the Brown Dwarf Evolutionary Models page for more details.
+    :type evol: optional, default = True
+    :param emodel: set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for
+                   more details. Options include:
+    
+        - *'baraffe'*: Evolutionary models from `Baraffe et al. (2003) <http://arxiv.org/abs/astro-ph/0302293>`_.
+        - *'burrows'*: 
+        - *'saumon'*: Evolutionary models from `Saumon & Marley (2008) <http://adsabs.harvard.edu/abs/2008ApJ...689.1327S>`_.
+        
+    :type emodel: optional, default = 'Baraffe'
+    :param stats: if True, prints several statistical values, including number of steps, 
+                  best fit parameters, lowest chi2 value, median parameters and key values 
+                  along the distribution.
+    :type stats: optional, default = True
+    :param triangle: creates a triangle plot, plotting the parameters against each other, 
+                     demonstrating areas of high and low chi squared values. Useful for 
+                     demonstrating correlations between parameters.
+    :type triangle: optional, default = True
+    :param bestfit: if True and a best fit model is present in the desired model set, then 
+                    plots model against spectrum and saves figure.
+    :type bestfit: optional, default = True
+    :param summary: not yet implemented
+    :type summary: optional, default = True
+    :param weight: if True, sets weights for computing key values along the distribution
+    :type weight: optional, default = True
+    :param filebase: filename or filename base for output
+    :type filebase: optional, default = 'modelfit_results'
+    :param stat: name of the statistics column used in astropy Table ``t``.
+    :type stat: optional, default = 'chisqr'
+    :param model_set: desired model set of ``bestfit``; options include:
+
+        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
+          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
+        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
+          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
+        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
+          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
+        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
+          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
+        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
+          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
+        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
+          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
+          
+    :type model_set: optional, default = ''
+    :param mset: same as ``model_set``
+    :type mset: optional, default = ''
+    :param mask_ranges: mask any flux value of ``spec`` by specifying the wavelength range. Must be in microns.
+    :type mask_ranges: optional, default = []
+    :param sigma: when printing statistical results, prints the value at ``sigma`` standard 
+                  deviations away from the mean. Only effective if ``stats = True``.
+    :type sigma: optional, default = 1.
+    :param iterative: if True, prints quantitative results and does not plot anything
+    :type iterative: optional, default = False
+    
+    :Example:
+    >>> import splat
+    >>> sp = splat.getSpectrum(shortname='1047+2124')[0]        # T6.5 radio emitter
+    >>> spt, spt_e = splat.classifyByStandard(sp,spt=['T2','T8'])
+    >>> teff,teff_e = splat.typeToTeff(spt)
+    >>> sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
+    >>> table = splat.modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100, savestep=0, verbose=False)
+    >>> splat.reportModelFitResults(sp, table, evol = True, stats = True, sigma = 2, triangle = False)
+        Number of steps = 169
+        <BLANKLINE>
+        Best Fit parameters:
+        Lowest chi2 value = 29567.2136599 for 169.0 degrees of freedom
+        Effective Temperature = 918.641 (K)
+        log Surface Gravity = 5.211 
+        Metallicity = 0.000 
+        Radius (relative to Sun) from surface fluxes = 0.096 
+        <BLANKLINE>
+        Median parameters:
+        Effective Temperature = 927.875 + 71.635 - 73.237 (K)
+        log Surface Gravity = 5.210 + 0.283 - 0.927 
+        Metallicity = 0.000 + 0.000 - 0.000 
+        Radius (relative to Sun) from surface fluxes = 0.108 + 0.015 - 0.013 
+    '''
 
     evolFlag = kwargs.get('evol',True)
     emodel = kwargs.get('emodel','Baraffe')
@@ -1133,8 +1233,8 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
 
 def distributionStats(x, q=[0.16,0.5,0.84], weights=None, sigma=None, **kwargs):
     '''
-    Find key values along distributions based on quantile steps
-    This code is derived almost entirely from triangle.py
+    :Purpose: Find key values along distributions based on quantile steps.
+              This code is derived almost entirely from triangle.py.
     '''
 
 # clean data of nans
