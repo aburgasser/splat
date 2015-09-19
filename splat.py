@@ -945,6 +945,7 @@ def classifyByIndex(sp, *args, **kwargs):
     '''
     
     str_flag = kwargs.get('string', True)
+    verbose = kwargs.get('verbose', False)
     rnd_flag = kwargs.get('round', False)
     rem_flag = kwargs.get('remeasure', True)
     nsamples = kwargs.get('nsamples', 100)
@@ -1099,6 +1100,13 @@ def classifyByIndex(sp, *args, **kwargs):
             if (sptn < coeffs[index]['range'][0] or sptn > coeffs[index]['range'][1]):
                 coeffs[index]['mask'] = 0
 
+# report individual subtypes
+    if verbose:
+        for i in coeffs.keys():
+            flg = '*'
+            if coeffs[i]['mask'] == 0:
+                flg = ''
+            print '{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc'])
     
 # round off to nearest 0.5 subtypes if desired
     if (rnd_flag):
@@ -1597,7 +1605,7 @@ def classifyGravity(sp, *args, **kwargs):
             if ind[k][0] >= grav[k][Spt][1]:
                 val = 2.0
             if verbose:
-                print k,ind[k][0], ind[k][1], val 
+                print '{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val)
         if k == 'FeH-z' or k=='KI-J':
             if numpy.isnan(grav[k][Spt][0]):
                 val = numpy.nan
