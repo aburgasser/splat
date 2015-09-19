@@ -36,35 +36,18 @@ def plotSpectrum(*args, **kwargs):
             - [[Spec1, Spec2], [Spec3, Spec4], ..]: plot multiple sets of spectra (multiplot forced to be True)
 
     :Parameters
-    file or filename or output:
-        filename or filename base for output
-    filetype = 'pdf':
-        output filetype, generally determined from filename
-    multiplot = False: 
-        creates multiple plots, depending on format of input (optional)
-    multipage = False: 
-        spreads plots across multiple pages; output file format must be PDF
-        if not set and plots span multiple pages, these pages are output sequentially as separate files
-    layout or multilayout = [1,1]:
-        defines how multiple plots are laid out on a page
-    figsize:
-        set the figure size; set to default size if not indicated
-    interactive = False:
-        if plotting to window, set this to make window interactive
-    grid = False:
-        add a grid
-
-
     title = ''
         string giving plot title
+    xrange = [0.85,2.42]:
+        plot range for wavelength axis
+    yrange = [-0.02,1.2]*fluxMax:
+        plot range for wavelength axis
     xlabel:
         wavelength axis label; by default set by wlabel and wunit keywords in first spectrum object
     ylabel:
         flux axis label; by default set by fscale, flabel and funit keywords in first spectrum object
-    legend, legends, label or labels:
-        list of strings providing legend-style labels for each spectrum plotted
-    legendLocation or labelLocation = 'upper right':
-        place of legend; options are 'upper left', 'center middle', 'lower right' (variations thereof) and 'outside'
+
+
     features:
         a list of strings indicating chemical features to label on the spectra
         options include H2O, CH4, CO, TiO, VO, FeH, H2, HI, KI, NaI, SB (for spectral binary)
@@ -72,6 +55,12 @@ def plotSpectrum(*args, **kwargs):
         add in features characteristic of these classes
     telluric = False:
         mark telluric absorption features
+    legend, legends, label or labels:
+        list of strings providing legend-style labels for each spectrum plotted
+    legendLocation or labelLocation = 'upper right':
+        place of legend; options are 'upper left', 'center middle', 'lower right' (variations thereof) and 'outside'
+    grid = False:
+        add a grid
 
     stack = 0:
         set to a numerical offset to stack spectra on top of each other
@@ -79,6 +68,7 @@ def plotSpectrum(*args, **kwargs):
         list of offsets for each spectrum, giving finer control than stack
     showZero = True:
         plot the zeropoint(s) of the spectra
+
     comparison:
         a comparison Spectrum to compare in each plot, useful for common reference standard
     noise, showNoise or uncertainty = False:
@@ -98,10 +88,30 @@ def plotSpectrum(*args, **kwargs):
     fontscale = 10:
         sets a scale factor for the fontsize
 
-    xrange = [0.85,2.42]:
-        plot range for wavelength axis
-    yrange = [-0.02,1.2]*fluxMax:
-        plot range for wavelength axis
+    inset = False:
+        place an inset panel showing a close up region of the spectral data
+    inset_xrange = False:
+        wavelength range for inset panel
+    inset_position = [0.65,0.60,0.20,0.20]
+        position of inset planet in normalized units, in order left, bottom, width, height
+    inset_features = False
+        list of features to label in inset plot
+
+    file or filename or output:
+        filename or filename base for output
+    filetype = 'pdf':
+        output filetype, generally determined from filename
+    multiplot = False: 
+        creates multiple plots, depending on format of input (optional)
+    multipage = False: 
+        spreads plots across multiple pages; output file format must be PDF
+        if not set and plots span multiple pages, these pages are output sequentially as separate files
+    layout or multilayout = [1,1]:
+        defines how multiple plots are laid out on a page
+    figsize:
+        set the figure size; set to default size if not indicated
+    interactive = False:
+        if plotting to window, set this to make window interactive
         
         
     :Example 1: A simple view of a random spectrum
@@ -149,6 +159,7 @@ def plotSpectrum(*args, **kwargs):
     filename = kwargs.get('file',filename)
     filename = kwargs.get('output',filename)
     title = kwargs.get('title','')
+    fontscale = kwargs.get('fontscale',1)
     fb = filename.split('.')[:-1]               # filebase for multiple files
     if filename != '' and len(fb) > 1:
         filebase = fb[0]
@@ -158,7 +169,6 @@ def plotSpectrum(*args, **kwargs):
         filebase = fb[0]
     else:
         filebase = filename
-    print filebase
     filetype = kwargs.get('format',filename.split('.')[-1])
     filetype.lower()
     if filetype == '':
@@ -166,23 +176,12 @@ def plotSpectrum(*args, **kwargs):
     comparison = kwargs.get('comparison',False)
     if comparison.__class__.__name__ != 'Spectrum':
         comparison = False
-    
-    
-    
-    
-    
-    
-    # NEW LINES
     residual = kwargs.get('residual',False)
-    fontscale = kwargs.get('fontscale',1)
-    # END NEW LINES
-    
-    
-    
-    
-    
-    
-    
+    inset = kwargs.get('inset',False)
+    inset_xrange = kwargs.get('inset_xrange',False)
+    inset_position = kwargs.get('inset_position',[.65, .6, .2, .2])
+#    inset_color = kwargs.get('inset_color','k')
+    inset_features = kwargs.get('inset_features',False)
     
 
 #    mask = kwargs.get('mask',False)                # not yet implemented
@@ -422,16 +421,7 @@ def plotSpectrum(*args, **kwargs):
 
                 ax.plot(comparison.wave.value,cflx,color=colorComparison,linestyle=linestyleComparison,alpha=0.5, zorder = 10)
     
-
-
-
-
-
-
-
-
-# NEW STUFF
-# Residual
+# add residual
             if residual == True and len(sp) == 2:
                 # Save flux values from first spectrum
                 if ii == 0:
@@ -447,17 +437,6 @@ def plotSpectrum(*args, **kwargs):
                         b0 = numpy.argmax(a.wave.value > bound[0])
                         b1 = numpy.argmin(a.wave.value < bound[1])
                         bound[2] = bound[2] + min(res[b0:b1])
-# END NEW STUFF
-
-
-
-
-
-
-
-
-
-
 
 # noise
             if (showNoise[ii]):
@@ -493,7 +472,7 @@ def plotSpectrum(*args, **kwargs):
                 for ii,waveRng in enumerate(feature_labels[ftr]['wavelengths']):
                     if (numpy.min(waveRng) > bound[0] and numpy.max(waveRng) < bound[1]):
                         x = (numpy.arange(0,nsamples+1.0)/nsamples)* \
-                            (numpy.nanmax(waveRng)-numpy.nanmin(waveRng)+0.1)+numpy.nanmin(waveRng)-0.05
+                            (numpy.nanmax(waveRng)-numpy.nanmin(waveRng)+0.04)+numpy.nanmin(waveRng)-0.02
                         f = interp1d(wvmax,flxmax,bounds_error=False,fill_value=0.)
                         y = numpy.nanmax(f(x))+0.5*yoff
 
@@ -509,7 +488,7 @@ def plotSpectrum(*args, **kwargs):
 
 # update offset
                         foff = [y+3*yoff if (w >= waveRng[0] and w <= waveRng[1]) else 0 for w in wvmax]
-                        flxmax = [numpy.max([x,y]) for x, y in zip(flxmax, foff)]
+                        flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
         bound[3] = numpy.max(flxmax)+1.*yoff
         ax.axis(bound)
 
@@ -543,6 +522,62 @@ def plotSpectrum(*args, **kwargs):
                 rect = patches.Rectangle((waveRng[0],bound[2]),waveRng[1]-waveRng[0],bound[3]-bound[2],facecolor='0.95',alpha=0.2,color='0.95')
                 ax.add_patch(rect)
                 ax.text(numpy.mean(waveRng),bound[2]+3*yoff,r'$\oplus$',horizontalalignment='center',fontsize=fontsize)
+
+# place inset - RIGHT NOW ONLY SETTING LIMITS WITH FIRST SPECTRUM IN LIST
+        if inset == True or inset_xrange != False:
+            ax_inset = fig[pg_n-1].add_axes(inset_position) #, axisbg='white')
+            bound2 = inset_xrange
+            b0 = numpy.argmax(sp[0].wave.value > bound2[0])
+            b1 = numpy.argmin(sp[0].wave.value < bound2[1])
+            bound2.extend([min(sp[0].flux.value[b0:b1]),max(sp[0].flux.value[b0:b1])])
+            db = (bound2[3]-bound2[2])
+            bound2[2] = bound2[2]-0.05*db
+            bound2[3] = bound2[3]+0.05*db
+            ax_inset.axis(bound2)
+            inset_fontsize = fontsize*0.7
+
+            for ii,a in enumerate(sp):
+                flx = [i+zeropoint[ii] for i in a.flux.value]
+                ax_inset.plot(a.wave.value,flx,color=colors[ii],linestyle=linestyle[ii])            
+                ax_inset.set_xlabel('')
+                ax_inset.set_ylabel('')
+                ax_inset.tick_params(axis='x', labelsize=inset_fontsize)
+                ax_inset.tick_params(axis='y', labelsize=inset_fontsize)
+#                ax_inset.legend()
+
+# inset feature labels
+            if inset_features != False:
+                f = interp1d(sp[0].wave,flx,bounds_error=False,fill_value=0.)
+                wvmax = numpy.arange(bound2[0],bound2[1],0.001)
+                flxmax = f(wvmax)
+                yoff = 0.05*(bound2[3]-bound2[2])
+                for ftr in inset_features:
+                    ftr = ftr.lower()
+                    if ftr in feature_labels:
+                        for ii,waveRng in enumerate(feature_labels[ftr]['wavelengths']):
+                            if (numpy.min(waveRng) > bound2[0] and numpy.max(waveRng) < bound2[1]):
+                                x = (numpy.arange(0,nsamples+1.0)/nsamples)* \
+                                    (numpy.nanmax(waveRng)-numpy.nanmin(waveRng)+0.04)+numpy.nanmin(waveRng)-0.02
+                                f = interp1d(wvmax,flxmax,bounds_error=False,fill_value=0.)
+                                y = numpy.nanmax(f(x))+0.5*yoff
+        
+                                if feature_labels[ftr]['type'] == 'band':
+                                    ax_inset.plot(waveRng,[y+yoff]*2,color='k',linestyle='-')
+                                    ax_inset.plot([waveRng[0]]*2,[y,y+yoff],color='k',linestyle='-')
+                                    ax_inset.text(numpy.mean(waveRng),y+2*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=inset_fontsize)
+                                else:
+                                    for w in waveRng:
+                                        ax_inset.plot([w]*2,[y,y+yoff],color='k',linestyle='-')
+                                    ax_inset.text(numpy.mean(waveRng),y+2*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=inset_fontsize)
+                                    waveRng = [waveRng[0]-0.02,waveRng[1]+0.02]   # for overlap
+        
+# update offset
+                                foff = [y+3*yoff if (w >= waveRng[0] and w <= waveRng[1]) else 0 for w in wvmax]
+                                flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
+                print bound2
+                bound2[3] = numpy.max([bound2[3],numpy.max(flxmax)+3.*yoff])
+                print bound2
+                ax_inset.axis(bound2)
 
     
 # save to file or display
