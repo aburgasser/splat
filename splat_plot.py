@@ -190,7 +190,7 @@ def plotSpectrum(*args, **kwargs):
     feature_labels = { \
         'h2o': {'label': r'H$_2$O', 'type': 'band', 'wavelengths': [[0.92,0.95],[1.08,1.20],[1.325,1.550],[1.72,2.14]]}, \
         'ch4': {'label': r'CH$_4$', 'type': 'band', 'wavelengths': [[1.1,1.24],[1.28,1.44],[1.6,1.76],[2.2,2.35]]}, \
-        'co': {'label': r'CO', 'type': 'band', 'wavelengths': [[2.28,2.39]]}, \
+        'co': {'label': r'CO', 'type': 'band', 'wavelengths': [[2.29,2.39]]}, \
         'tio': {'label': r'TiO', 'type': 'band', 'wavelengths': [[0.76,0.80],[0.825,0.831]]}, \
         'vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.04,1.08]]}, \
 #        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.86,0.90],[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
@@ -489,7 +489,7 @@ def plotSpectrum(*args, **kwargs):
 # update offset
                         foff = [y+3*yoff if (w >= waveRng[0] and w <= waveRng[1]) else 0 for w in wvmax]
                         flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
-        bound[3] = numpy.max(flxmax)+1.*yoff
+        bound[3] = numpy.max([numpy.max(flxmax)+1.*yoff,bound[3]])
         ax.axis(bound)
 
 
