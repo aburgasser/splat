@@ -239,7 +239,7 @@ def plotSpectrum(*args, **kwargs):
 
 # error check - make sure you're plotting something
     if (len(args) < 1):
-        print 'plotSpectrum needs at least one Spectrum object to plot'
+        print('plotSpectrum needs at least one Spectrum object to plot')
         return
 
 # if a list is passed, use this list
@@ -255,7 +255,7 @@ def plotSpectrum(*args, **kwargs):
             elif isinstance(a,list):
                 splist.append(a)
             else:
-                print '\nplotSpectrum: Ignoring input object {} as it is neither a Spectrum object nor a list\n\n'.format(a)
+                print('\nplotSpectrum: Ignoring input object {} as it is neither a Spectrum object nor a list\n\n'.format(a))
 
 # set up for multiplot
     if (len(splist) == 1):
@@ -310,7 +310,7 @@ def plotSpectrum(*args, **kwargs):
         else:
             files = [filebase+'.'+filetype]
 
-    #print multipage, splist
+    #print(multipage, splist)
 
     pg_n = 0        # page counter
     plt_n = 0       # plot per page counter
@@ -574,9 +574,9 @@ def plotSpectrum(*args, **kwargs):
 # update offset
                                 foff = [y+3*yoff if (w >= waveRng[0] and w <= waveRng[1]) else 0 for w in wvmax]
                                 flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
-                print bound2
+#                print(bound2)
                 bound2[3] = numpy.max([bound2[3],numpy.max(flxmax)+3.*yoff])
-                print bound2
+#                print(bound2)
                 ax_inset.axis(bound2)
 
     
