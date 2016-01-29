@@ -121,9 +121,9 @@ class ReadModel(object):
         assert len(z.keys()) <= 1, "Only one keyword (metallicity) allowed."
 
         try: model = model[0].lower()
-  	except TypeError: raise TypeError("Model can't be a number.")
+        except TypeError: raise TypeError("Model can't be a number.")
         except IndexError: model = 'baraffe'
-	finally: print("You are using " + model + "'s model.")
+        finally: print("You are using " + model + "'s model.")
 
         assert model in ['baraffe','burrows','saumon'], """
 	    Incorrect model or bad spelling. Please choose from the 
@@ -135,18 +135,18 @@ class ReadModel(object):
                     '0.120', '0.500', '1.000', '5.000', '10.000']
 
             if model == 'baraffe': 
-	        Emodels = Emodels_URL + 'Baraffe/cond_'
-	        EmodeL = 'Baraffe/cond_'
+                Emodels = Emodels_URL + 'Baraffe/cond_'
+                EmodeL = 'Baraffe/cond_'
             else: 
-	        Emodels = Emodels_URL + 'Burrows/b97_'
-	        EmodeL = 'Burrows/b97_'
+                Emodels = Emodels_URL + 'Burrows/b97_'
+                EmodeL = 'Burrows/b97_'
             num_files = len(ages); v = 0
         ########################### SAUMON MODEL ##############################
         else:
             try: metallicity = z[z.keys()[0]]
-  	    except TypeError: raise TypeError("Metallicity can't be a number.")
+            except TypeError: raise TypeError("Metallicity can't be a number.")
             except IndexError: metallicity = 'Hybrid_solar'
-	    finally: print("You are using the metallicity " + metallicity + ".")
+            finally: print("You are using the metallicity " + metallicity + ".")
 
             if metallicity == 'Hybrid_solar': Z = 'hybrid_solar_age_'
             elif metallicity == 'No_Clouds_+0.3': Z = 'nc+0.3_age_'
@@ -166,7 +166,7 @@ class ReadModel(object):
 
             Emodels = Emodels_URL + 'Saumon/' + metallicity + '/' + Z
             EmodeL = 'Saumon/' + metallicity + '/' + Z
-	    num_files = len(ages); v = 1
+            num_files = len(ages); v = 1
         #######################################################################
 
         n_tables = range(num_files)
@@ -178,9 +178,9 @@ class ReadModel(object):
         radiuses = [[] for i in n_tables]
 
         for age in n_tables:
-	    try:data =ascii.read(requests.get(Emodels+ages[age]).content,comment=';')
-	    except: 
-		data=ascii.read(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+EmodeL+ages[age],comment='#')
+            try:data =ascii.read(requests.get(Emodels+ages[age]).content,comment=';')
+            except: 
+                data=ascii.read(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+EmodeL+ages[age],comment='#')
             for line,value in enumerate(data):
                 masses[age].append(float(value[0+v]))
                 temperatures[age].append(float(value[1+v]))
@@ -324,7 +324,7 @@ class Params(ReadModel):
           try: 
               f = interp1d(Ge, Ag)
               params['age'] = f(P[1][1])
-	  except: params['age'] = float('nan')
+          except: params['age'] = float('nan')
 
           del Ge[:], Ag[:]; Ma = []
  
@@ -361,13 +361,13 @@ class Params(ReadModel):
           if params['mass'] == False:
               try: 
                   f = interp1d(Ag, Ma)
-	          params['mass'] = round(f(params['age']), 5)
-	      except: params['mass'] = float('nan')
+                  params['mass'] = round(f(params['age']), 5)
+              except: params['mass'] = float('nan')
           else:
               try: 
                   f = interp1d(Ma, Ag)
                   params['age'] = round(f(params['mass']), 5)
-	      except: params['age'] = float('nan')
+              except: params['age'] = float('nan')
           del Ag[:]
 
       ###################### WITH KNOWN MASS AND AGE ##########################
@@ -431,18 +431,18 @@ class Parameters(Params, ReadModel):
        >>> print params
     """
     def __new__(cls,*model,**kwargs):
-	 keywords = kwargs.keys()
-	 if type(kwargs[keywords[0]]) is float or \
+         keywords = kwargs.keys()
+         if type(kwargs[keywords[0]]) is float or \
 	                      type(kwargs[keywords[0]]) is int:  
-	     kwargs[keywords[0]] = [kwargs[keywords[0]]]
-	     kwargs[keywords[1]] = [kwargs[keywords[1]]]
-	 else:
+             kwargs[keywords[0]] = [kwargs[keywords[0]]]
+             kwargs[keywords[1]] = [kwargs[keywords[1]]]
+         else:
              assert len(kwargs[keywords[0]]) == len(kwargs[keywords[1]]), """
 	         Number of elements in both input lists must be equal."""
-	 assert len(keywords) == 2, "Only two keywords (lists) allowed."
+         assert len(keywords) == 2, "Only two keywords (lists) allowed."
 	 
-	 try: model = model[0]
-	 except IndexError: model = 'baraffe'
+         try: model = model[0]
+         except IndexError: model = 'baraffe'
 
          if type(model) is not dict: model = ReadModel(model)
 
@@ -453,90 +453,90 @@ class Parameters(Params, ReadModel):
          for i in range(2):
              if keywords[i].upper().startswith('T'): 
                  T = True
-	         temperature = kwargs[keywords[i]]
+                 temperature = kwargs[keywords[i]]
              elif keywords[i].upper().startswith('A'): 
-	         A = True
-	         age = kwargs[keywords[i]]
+                 A = True
+                 age = kwargs[keywords[i]]
              elif keywords[i].upper().startswith('G'): 
-	         G = True
-	         gravity = kwargs[keywords[i]]
+                 G = True
+                 gravity = kwargs[keywords[i]]
              elif keywords[i].upper().startswith('R'): 
-	         R = True
-	         radius = kwargs[keywords[i]]
+                 R = True
+                 radius = kwargs[keywords[i]]
              elif keywords[i].upper().startswith('M'): 
-	         M = True
-	         mass = kwargs[keywords[i]]
+                 M = True
+                 mass = kwargs[keywords[i]]
              elif keywords[i].upper().startswith('L'): 
-	         L = True 
-	         luminosity = kwargs[keywords[i]]
+                 L = True 
+                 luminosity = kwargs[keywords[i]]
          
-	 numberValues = len(kwargs[keywords[0]])
+         numberValues = len(kwargs[keywords[0]])
          p = [[] for i in range(numberValues)]
 
-	 if A == True and M == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,m=mass[i],a=age[i])
-	 elif A == True and L == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,l=luminosity[i],a=age[i])
-	 elif A == True and T == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,t=temperature[i],a=age[i])
-	 elif A == True and G == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,g=gravity[i],a=age[i])
-	 elif A == True and R == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,r=radius[i],a=age[i])
-	 elif M == True and R == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,r=radius[i],m=mass[i])
-	 elif M == True and L == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,l=luminosity[i],m=mass[i])
-	 elif M == True and T == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,t=temperature[i],m=mass[i])
-	 elif M == True and G == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,m=mass[i],g=gravity[i])
-	 elif R == True and T == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,r=radius[i],t=temperature[i])
-	 elif R == True and G == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,r=radius[i],g=gravity[i])
-	 elif R == True and L == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,r=radius[i],l=luminosity[i])
-	 elif G == True and T == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,g=gravity[i],t=temperature[i])
-	 elif G == True and L == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,g=gravity[i],l=luminosity[i])
-	 elif L == True and T == True:
-  	    for i in range(numberValues):
-	        p[i] = Params(model,r=luminosity[i],t=temperature[i])
+         if A == True and M == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,m=mass[i],a=age[i])
+         elif A == True and L == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,l=luminosity[i],a=age[i])
+         elif A == True and T == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,t=temperature[i],a=age[i])
+         elif A == True and G == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,g=gravity[i],a=age[i])
+         elif A == True and R == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,r=radius[i],a=age[i])
+         elif M == True and R == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,r=radius[i],m=mass[i])
+         elif M == True and L == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,l=luminosity[i],m=mass[i])
+         elif M == True and T == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,t=temperature[i],m=mass[i])
+         elif M == True and G == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,m=mass[i],g=gravity[i])
+         elif R == True and T == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,r=radius[i],t=temperature[i])
+         elif R == True and G == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,r=radius[i],g=gravity[i])
+         elif R == True and L == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,r=radius[i],l=luminosity[i])
+         elif G == True and T == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,g=gravity[i],t=temperature[i])
+         elif G == True and L == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,g=gravity[i],l=luminosity[i])
+         elif L == True and T == True:
+             for i in range(numberValues):
+                 p[i] = Params(model,r=luminosity[i],t=temperature[i])
 
-	 for i in range(numberValues):
-	     params['temperature'].append(p[i]['temperature'])
-	     params['age'].append(p[i]['age'])
+         for i in range(numberValues):
+             params['temperature'].append(p[i]['temperature'])
+             params['age'].append(p[i]['age'])
              params['gravity'].append(p[i]['gravity'])
-	     params['radius'].append(p[i]['radius'])
-	     params['mass'].append(p[i]['mass'])
-	     params['luminosity'].append(p[i]['luminosity'])
+             params['radius'].append(p[i]['radius'])
+             params['mass'].append(p[i]['mass'])
+             params['luminosity'].append(p[i]['luminosity'])
 
-	 params['temperature'] = params['temperature']*u.K
-	 params['age'] = params['age']*u.Gyr
+         params['temperature'] = params['temperature']*u.K
+         params['age'] = params['age']*u.Gyr
          params['gravity'] = params['gravity']*u.cm/u.s
-	 params['radius'] = params['radius']*u.solRad
+         params['radius'] = params['radius']*u.solRad
          params['mass'] = params['mass']*u.solMass
-	 params['luminosity'] = params['luminosity']*u.solLum
+         params['luminosity'] = params['luminosity']*u.solLum
 
          return params
 
 class PlotHist(Parameters, Params, ReadModel):
     def __new__(cls,params,bins=60):
         plt.hist(params[~isnan(params)],bins=bins)
-	return plt.show()
+        return plt.show()
