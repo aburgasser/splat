@@ -2208,7 +2208,6 @@ def filterProperties(f,**kwargs):
     :type custom: optional, default = False
     '''
 
-    dumvariable = False
     filt = f.replace(' ','_')
     filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
     if not os.path.exists(filterFolder):
