@@ -887,14 +887,14 @@ def checkOnline(*args):
     if (len(args) != 0):
         if 'http://' in args[0]:
             if requests.get(args[0]).status_code == requests.codes.ok:
-            	return args[0]
+                return args[0]
             return ''
-        else: 
-			if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
-				return SPLAT_URL+args[0]
-			return ''
+        else:
+            if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
+                return SPLAT_URL+args[0]
+            return ''
     else:
-    	return requests.get(SPLAT_URL).status_code == requests.codes.ok
+        return requests.get(SPLAT_URL).status_code == requests.codes.ok
 
 
 
