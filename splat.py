@@ -82,8 +82,6 @@ else:
     checkpath = ['splat' in r for r in sys.path]
     if max(checkpath):
         SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
-else:
-continue
 
 #################### CONSTANTS ####################
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
