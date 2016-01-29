@@ -38,10 +38,11 @@ import numpy
 import os
 import random
 import re
+import requests
 import scipy
 import string
 import sys
-import urllib2
+#import urllib2
 import warnings
 
 from astropy.io import ascii, fits            # for reading in spreadsheet
@@ -414,7 +415,7 @@ class Spectrum(object):
                     setattr(self,k,float(getattr(self,k)))
                 except:
                     setattr(self,k,numpy.nan)
-#                print getattr(self,k)
+#                print(getattr(self,k))
                 
 # information on model
         if self.model == True:
@@ -529,16 +530,16 @@ class Spectrum(object):
           :Purpose: Reports some information about this spectrum.
           '''
           if (self.model):
-              print '\n{} model with the following parmeters:'.format(self.modelset)
-              print 'Teff = {}'.format(self.teff)
-              print 'logg = {}'.format(self.logg)
-              print 'z = {}'.format(self.z)
-              print 'fsed = {}'.format(self.fsed)
-              print 'cld = {}'.format(self.cld)
-              print 'kzz = {}'.format(self.kzz)
-              print 'slit = {}\n'.format(self.slit)
+              print('\n{} model with the following parmeters:'.format(self.modelset))
+              print('Teff = {}'.format(self.teff))
+              print('logg = {}'.format(self.logg))
+              print('z = {}'.format(self.z))
+              print('fsed = {}'.format(self.fsed))
+              print('cld = {}'.format(self.cld))
+              print('kzz = {}'.format(self.kzz))
+              print('slit = {}\n'.format(self.slit))
           else:
-              print '''Spectrum of {0} taken on {1}'''.format(self.name, self.date)
+              print('\nSpectrum of {0} taken on {1}'''.format(self.name, self.date))
           return
 
     def flamToFnu(self):
@@ -678,7 +679,7 @@ class Spectrum(object):
         :type method: optional, default = 'hanning'
         '''
         overscale = kwargs.get('overscale',10.)
-        method = kwargs.get('method','hanning')
+        method = kwargs.get('method','hamming')
         kwargs['method'] = method
 
 # do nothing if requested resolution is higher than current resolution
@@ -799,14 +800,17 @@ def checkFile(filename,**kwargs):
        >>> print splat.checkFile(spectrum2)
        False
     '''
-    url = kwargs.get('url',SPLAT_URL)+'/Spectra/'
-    flag = checkOnline()
-    if (flag):
-        try:
-            open(os.path.basename(filename), 'wb').write(urllib2.urlopen(url+filename).read())
-        except urllib2.URLError:
-            flag = False
-    return flag
+    url = kwargs.get('url',SPLAT_URL)+DATA_FOLDER
+    return requests.get(url+filename).status_code == requests.codes.ok
+#    flag = checkOnline()
+#    if (flag):
+#        try:
+#            r = requests.get(url+filename)
+#            open(os.path.basename(filename), 'wb').write(r.content)
+#            open(os.path.basename(filename), 'wb').write(urllib2.urlopen(url+filename).read())
+#        except:
+#            flag = False
+#    return flag
 
 
 def checkAccess(**kwargs):
@@ -825,7 +829,7 @@ def checkAccess(**kwargs):
         home = os.environ.get('HOME')
         if home == None:
             home = './'
-        bcode = urllib2.urlopen(SPLAT_URL+access_file).read()
+        bcode = requests.get(SPLAT_URL+access_file).content
         lcode = base64.b64encode(open(home+'/'+access_file,'r').read())
         if (bcode in lcode):        # changed to partial because of EOL variations
             result = True
@@ -834,9 +838,9 @@ def checkAccess(**kwargs):
 
     if (kwargs.get('report','') != ''):
         if result == True:
-            print 'You have full access to all SPLAT data'
+            print('You have full access to all SPLAT data')
         else:
-            print 'You have access only to published data'
+            print('You have access only to published data')
     return result
     
 
@@ -874,30 +878,20 @@ def checkOnline(*args):
        >>> splat.checkOnline()
        False # SPLAT's URL was not detected.
        >>> splat.checkOnline('SpectralModels/BTSettl08/parameters.txt')
-       False # Could not find this online file.
+       '' # Could not find this online file.
     '''
     if (len(args) != 0):
         if 'http://' in args[0]:
-            try:
-                open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(args[0]).read())
-                os.remove(os.path.basename(TMPFILENAME))
-                return args[0]
-            except urllib2.URLError:
-                try:
-                    open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(SPLAT_URL+args[0]).read())
-                    os.remove(os.path.basename(TMPFILENAME))
-                    return SPLAT_URL+args[0]
-                except:
-                    return ''
-        else:
+            if requests.get(args[0]).status_code == requests.codes.ok:
+            	return args[0]
             return ''
-
+        else: 
+			if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
+				return SPLAT_URL+args[0]
+			return ''
     else:
-        try:
-            urllib2.urlopen(SPLAT_URL)
-            return SPLAT_URL
-        except urllib2.URLError:
-            return ''
+    	return requests.get(SPLAT_URL).status_code == requests.codes.ok
+
 
 
 
@@ -955,7 +949,7 @@ def classifyByIndex(sp, *args, **kwargs):
     kwargs['set'] = set
     allowed_sets = ['aganze','burgasser','reid','testi','allers']
     if (set.lower() not in allowed_sets):
-        print '\nWarning: index classification method {} not present; returning nan\n\n'.format(set)
+        print('\nWarning: index classification method {} not present; returning nan\n\n'.format(set))
         return numpy.nan, numpy.nan
 
 # measure indices if necessary
@@ -1081,7 +1075,7 @@ def classifyByIndex(sp, *args, **kwargs):
         vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))*sptfact
         coeffs[index]['spt'] = numpy.nanmean(vals)+sptoffset
         coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
-#        print index, coeffs[index]['spt'], coeffs[index]['range'], coeffs[index]['spt'] < coeffs[index]['range'][0], coeffs[index]['spt'] > coeffs[index]['range'][1]
+#        print(index, coeffs[index]['spt'], coeffs[index]['range'], coeffs[index]['spt'] < coeffs[index]['range'][0], coeffs[index]['spt'] > coeffs[index]['range'][1])
         if (coeffs[index]['spt'] < coeffs[index]['range'][0] or coeffs[index]['spt'] > coeffs[index]['range'][1]):
             coeffs[index]['mask'] = 0.
         else:
@@ -1106,7 +1100,7 @@ def classifyByIndex(sp, *args, **kwargs):
             flg = '*'
             if coeffs[i]['mask'] == 0:
                 flg = ''
-            print '{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc'])
+            print('{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc']))
     
 # round off to nearest 0.5 subtypes if desired
     if (rnd_flag):
@@ -1226,7 +1220,7 @@ def classifyByStandard(sp, *args, **kwargs):
         sspt.append(t)
         sfile.append(stdfiles[typeToNum(t,subclass=subclass)])
         if (verbose):
-            print stdfiles[typeToNum(t,subclass=subclass)], typeToNum(t,subclass=subclass), chisq, scale
+            print(stdfiles[typeToNum(t,subclass=subclass)], typeToNum(t,subclass=subclass), chisq, scale)
 
 # list of sorted standard files and spectral types
     sorted_stdfiles = [x for (y,x) in sorted(zip(stat,sfile))]
@@ -1407,7 +1401,7 @@ def classifyByTemplate(sp, *args, **kwargs):
             excludeshortname.extend(e)
         else:
             excludeshortname.append(e)
-#    print excludefile, excludekey, excludeshortname
+#    print(excludefile, excludekey, excludeshortname)
     
 # other classes
     giant = ''
@@ -1440,7 +1434,7 @@ def classifyByTemplate(sp, *args, **kwargs):
         snr=snr,spt_type=spt_type,spt_range=spt_range,published=published, \
         giant=giant,companion=companion,young=young,binary=binary,spbinary=spbinary,output='all',logic='and')
         
-#    print [x for x in compsp]
+#    print([x for x in compsp])
 #    elif ('companion' in set):
 #        lib = searchLibrary(output='all',excludefile=excludefile,snr=snr,spt=spt,companion=True,published=published,giant=False,logic='and')
 #    elif ('young' in set):
@@ -1460,7 +1454,7 @@ def classifyByTemplate(sp, *args, **kwargs):
         
 # first search for the spectra desired - parameters are set by user
     if len(lib) == 0:
-        print '\nNo templates available for comparison\n\n'
+        print('\nNo templates available for comparison\n\n')
         return numpy.nan, numpy.nan
 
     files = lib['DATA_FILE']
@@ -1468,10 +1462,10 @@ def classifyByTemplate(sp, *args, **kwargs):
     sspt = [typeToNum(s) for s in lib[spt_type]]
 
     if (verbose):
-        print '\nComparing to {} templates\n\n'.format(len(files))
+        print('\nComparing to {} templates\n\n'.format(len(files)))
     if len(files) > 100:
-        print '\nComparing to {} templates\n\n'.format(len(files))
-        print 'This may take some time!\n\n'.format(len(files))
+        print('\nComparing to {} templates\n\n'.format(len(files)))
+        print('This may take some time!\n\n'.format(len(files)))
 
 # do comparison
     stat = []
@@ -1482,7 +1476,7 @@ def classifyByTemplate(sp, *args, **kwargs):
         stat.append(chisq)
         scl.append(scale)
         if (verbose):
-            print keySpectrum(d)['NAME'][0], typeToNum(sspt[i]), chisq, scale
+            print(keySpectrum(d)['NAME'][0], typeToNum(sspt[i]), chisq, scale)
         
 # list of sorted standard files and spectral types
     sorted_dkey = [x for (y,x) in sorted(zip(stat,dkey))]
@@ -1578,7 +1572,7 @@ def classifyGravity(sp, *args, **kwargs):
     if sptn == False:
         sptn, spt_e = classifyByIndex(sp,string=False,set='allers')
         if numpy.isnan(sptn):
-            print 'Spectral type could not be determined from indices'
+            print('Spectral type could not be determined from indices')
             return numpy.nan
     if isinstance(sptn,str):
         sptn = typeToNum(sptn)
@@ -1586,7 +1580,7 @@ def classifyGravity(sp, *args, **kwargs):
 
 #Check whether the NIR SpT is within gravity sensitive range values
     if ((sptn < 16.0) or (sptn > 27.0)):
-        print 'Spectral type '+typeToNum(sptn)+' outside range for gravity classification'
+        print('Spectral type '+typeToNum(sptn)+' outside range for gravity classification')
         return numpy.nan
 
 #Creates an empty array with dimensions 4x1 to fill in later with 5 gravscore values
@@ -1605,7 +1599,7 @@ def classifyGravity(sp, *args, **kwargs):
             if ind[k][0] >= grav[k][Spt][1]:
                 val = 2.0
             if verbose:
-                print '{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val)
+                print('{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
         if k == 'FeH-z' or k=='KI-J':
             if numpy.isnan(grav[k][Spt][0]):
                 val = numpy.nan
@@ -1614,7 +1608,7 @@ def classifyGravity(sp, *args, **kwargs):
             if ind[k][0] <= grav[k][Spt][1]:
                 val = 2.0
             if verbose:
-                print k,ind[k][0], ind[k][1], val 
+                print(k,ind[k][0], ind[k][1], val)
         gravscore[k] = val
         medgrav.append(val)
 
@@ -1692,17 +1686,15 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     mask = kwargs.get('mask',numpy.zeros(len(sp1.wave)))    # mask = 1 -> ignore
     fit_ranges = kwargs.get('fit_ranges',[spex_wave_range])
     mask_ranges = kwargs.get('mask_ranges',[])
-    if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
-        mask_ranges*=u.micron
-    mask_telluric = kwargs.get('mask_telluric',False)
     mask_standard = kwargs.get('mask_standard',False)
+    mask_telluric = kwargs.get('mask_telluric',mask_standard)
     var_flag = kwargs.get('novar2',True)
     stat = kwargs.get('stat','chisqr')
     minreturn = 1.e-9
     if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
         fit_ranges*=u.micron
     
-    if (mask_standard == True):
+    if (mask_standard):
         mask_telluric == True
         
 # create interpolation function for second spectrum
@@ -1719,14 +1711,17 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 # Mask certain wavelengths
 # telluric absorption
     if (mask_telluric):
-        mask_ranges.append([0.,0.65]*u.micron)        # meant to clear out short wavelengths
-        mask_ranges.append([1.35,1.42]*u.micron)
-        mask_ranges.append([1.8,1.92]*u.micron)
-        mask_ranges.append([2.45,99.]*u.micron)        # meant to clear out long wavelengths
+        mask_ranges.append([0.,0.65])        # meant to clear out short wavelengths
+        mask_ranges.append([1.35,1.42])
+        mask_ranges.append([1.8,1.92])
+        mask_ranges.append([2.45,99.])        # meant to clear out long wavelengths
 
     if (mask_standard):
-        mask_ranges.append([0.,0.8]*u.micron)        # standard short cut
-        mask_ranges.append([2.35,99.]*u.micron)        # standard long cut
+        mask_ranges.append([0.,0.8])        # standard short cut
+        mask_ranges.append([2.35,99.])        # standard long cut
+
+    if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
+        mask_ranges*=u.micron
 
     for ranges in mask_ranges:
         mask[numpy.where(((sp1.wave >= ranges[0]) & (sp1.wave <= ranges[1])))] = 1
@@ -1786,7 +1781,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 
 # error
     else:
-        print 'Error: statistic {} for compareSpectra not available'.format(stat)
+        print('Error: statistic {} for compareSpectra not available'.format(stat))
         return numpy.nan, numpy.nan
 
 # plot spectrum compared to best spectrum
@@ -1885,7 +1880,7 @@ def designationToShortName(value):
     :param value: string with RA measured in hour angles and Dec in degrees
     :Example:
     >>> import splat
-    >>> print print splat.designationToShortName('1555.2640+0954.000')
+    >>> print splat.designationToShortName('1555.2640+0954.000')
         J1555+0954
     '''
     if isinstance(value,str):
@@ -1953,11 +1948,12 @@ def fetchDatabase(*args, **kwargs):
         if infile=='':
             raise NameError('\nCould not find '+kwargs['filename']+' on the SPLAT website\n\n')
         try:
-            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(url+infile).read()) 
+#            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(url+infile).read()) 
+            open(os.path.basename(TMPFILENAME), 'wb').write(requests.get(url+infile).content) 
             kwargs['filename'] = os.path.basename(tmp)
             data = ascii.read(os.path.basename(TMPFILENAME), delimiter='\t',fill_values='-99.',format='tab')
             os.remove(os.path.basename(TMPFILENAME))
-        except urllib2.URLError:
+        except:
             raise NameError('\nHaving a problem reading in '+kwargs['filename']+' on the SPLAT website\n\n')
 
 
@@ -2047,7 +2043,7 @@ def fetchDatabase(*args, **kwargs):
 #            float(d)
 #            date = '20'+d
 #        except ValueError:
-#            print filename+' does not contain a date'
+#            print(filename+' does not contain a date')
 #            date = ''
 #        
 #        return name, date
@@ -2122,14 +2118,14 @@ def filterMag(sp,f,*args,**kwargs):
 # check that requested filter is in list
     f = f.replace(' ','_')
     if (f not in FILTERS.keys()):
-        print 'Filter '+f+' not included in filterMag'
+        print('Filter '+f+' not included in filterMag')
         info = True
         
 # print out what's available
     if (info):
-        print 'Filter names:'
+        print('Filter names:')
         for x in FILTERS.keys():
-            print x+': '+FILTERS[x]['description']    
+            print(x+': '+FILTERS[x]['description'])
         return numpy.nan, numpy.nan
 
 # Read in filter
@@ -2148,7 +2144,7 @@ def filterMag(sp,f,*args,**kwargs):
         n = interp1d(sp.wave[wgood],sp.noise[wgood],bounds_error=False,fill_value=numpy.nan)
 # catch for models
     else:
-        print f+': no good points'
+        print(f+': no good points')
         d = interp1d(sp.wave,sp.flux,bounds_error=False,fill_value=0.)
         n = interp1d(sp.wave,sp.flux*1.e-9,bounds_error=False,fill_value=numpy.nan)
         
@@ -2207,9 +2203,9 @@ def filterProperties(f,**kwargs):
         filterFolder = SPLAT_URL+FILTERFOLDER
 
     if (filt not in FILTERS.keys()):
-        print 'Filter '+f+' not among the available filters:'
+        print('Filter '+f+' not among the available filters:')
         for k in FILTERS.keys():
-            print '  '+k.replace('_',' ')+': '+FILTERS[k]['description']
+            print('  '+k.replace('_',' ')+': '+FILTERS[k]['description'])
         return None
     else:
         report = {}
@@ -2227,12 +2223,12 @@ def filterProperties(f,**kwargs):
         report['lambda_min'] = numpy.min(fw)
         report['lambda_max'] = numpy.max(fw)
         if kwargs.get('verbose',False):
-            print '\nFilter '+f+': '+report['description']
-            print 'Filter zeropoint = {} Jy'.format(report['zeropoint'])
-#            print 'Filter mid-points: mean = {:.3f} micron, pivot = {:.3f} micron, central = {:.3f} micron'.format(report['lambda_mean'],report['lambda_pivot'],report['lambda_central'],)
-            print 'Filter mid-point: = {:.3f} micron'.format(report['lambda_mean'],report['lambda_pivot'],report['lambda_central'],)
-            print 'Filter FWHM = {:.3f} micron'.format(report['lambda_fwhm'])
-            print 'Filter range = {:.3f} to {:.3f} micron\n'.format(report['lambda_min'],report['lambda_max'])
+            print('\nFilter '+f+': '+report['description'])
+            print('Filter zeropoint = {} Jy'.format(report['zeropoint']))
+#            print('Filter mid-points: mean = {:.3f} micron, pivot = {:.3f} micron, central = {:.3f} micron'.format(report['lambda_mean'],report['lambda_pivot'],report['lambda_central'],))
+            print('Filter mid-point: = {:.3f} micron'.format(report['lambda_mean'],report['lambda_pivot'],report['lambda_central'],))
+            print('Filter FWHM = {:.3f} micron'.format(report['lambda_fwhm']))
+            print('Filter range = {:.3f} to {:.3f} micron\n'.format(report['lambda_min'],report['lambda_max']))
         return report
 
 
@@ -2293,15 +2289,15 @@ def getSpectrum(*args, **kwargs):
             return files
     
         if (len(files) == 1):
-            print '\nRetrieving 1 file\n'
+            print('\nRetrieving 1 file\n')
             result.append(Spectrum(files[0],header=search[0]))
         else:
             if (kwargs.get('lucky',False) == True):
-                print '\nRetrieving 1 lucky file\n'
+                print('\nRetrieving 1 lucky file\n')
                 ind = random.choice(range(len(files)))
                 result.append(Spectrum(files[ind],header=search[ind]))
             else:
-                print '\nRetrieving {} files\n'.format(len(files))
+                print('\nRetrieving {} files\n'.format(len(files)))
                 for i,x in enumerate(files):
                     result.append(Spectrum(x,header=search[i:i+1]))
         	
@@ -2362,7 +2358,7 @@ def keySource(keys, **kwargs):
     sdb['SELECT'] = [x in keys for x in sdb['SOURCE_KEY']]
 
     if sum(sdb['SELECT']) == 0.:
-        print 'No sources found with source key {}'.format(keys[0])
+        print('No sources found with source key {}'.format(keys[0]))
         return False
     else:
         db = sdb[:][numpy.where(sdb['SELECT']==1)]
@@ -2397,7 +2393,7 @@ def keySpectrum(keys, **kwargs):
     sdb['SELECT'] = [x in keys for x in sdb['DATA_KEY']]
 
     if sum(sdb['SELECT']) == 0.:
-        print 'No spectra found with spectrum key {}'.format(keys[0])
+        print('No spectra found with spectrum key {}'.format(keys[0]))
         return False
     else:
         s2db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
@@ -2503,7 +2499,7 @@ def estimateDistance(sp, **kwargs):
             sys.stderr.write('\nPlease specify the filter used to determine the absolute magnitude\n')
             return numpy.nan, numpy.nan
         absmag, absmag_unc = typeToMag(spt,filt,unc=spt_unc)
-        print absmag, absmag_unc
+        print(absmag, absmag_unc)
 
 # create Monte Carlo sets
     if mag_unc > 0.:
@@ -2554,7 +2550,7 @@ def measureEW(sp, *args, **kwargs):
             wave_cont = [2.2510, 2.2580, 2.2705, 2.2760]
     else:
         if len(args) < 2:
-            print 'measureEW needs at least two wavelength arrays to measure line and continuum regions'
+            print('measureEW needs at least two wavelength arrays to measure line and continuum regions')
             return numpy.nan, numpy.nan
         else:
             wave_line = args[0]
@@ -2640,7 +2636,7 @@ def measureEWSet(sp,*args,**kwargs):
         ews[0],errs[0] = measureEW(sp,[2.2020, 2.2120],[2.1965, 2.2125, 2.2175],**kwargs)
         ews[1],errs[1] = measureEW(sp,[2.2580, 2.2690],[2.2510, 2.2580, 2.2705, 2.2760],**kwargs)
     else:
-        print '{} is not one of the sets used for measureIndexSet'.format(set)
+        print('{} is not one of the sets used for measureIndexSet'.format(set))
         return numpy.nan
 
 # output dictionary of indices
@@ -2682,10 +2678,10 @@ def measureIndex(sp,*args,**kwargs):
                 
 # error checking on number of arguments provided
     if (len(args) < 2):
-        print 'measureIndex needs at least two samples to function'
+        print('measureIndex needs at least two samples to function')
         return numpy.nan, numpy.nan
     elif (len(args) < 3 and (method == 'line' or method == 'allers' or method == 'inverse_line')):
-        print method+' requires at least 3 sample regions'
+        print(method+' requires at least 3 sample regions')
         return numpy.nan, numpy.nan
 
 # define the sample vectors
@@ -2886,7 +2882,7 @@ def measureIndexSet(sp,**kwargs):
         inds[0],errs[0] = measureIndex(sp,[2.1,2.18],[1.96,2.04],method='change',sample='average',**kwargs)
         inds[1],errs[1] = measureIndex(sp,[2.2,2.28],[2.1,2.18],method='change',sample='average',**kwargs)
     else:
-        print '{} is not one of the sets used for measureIndexSet'.format(set)
+        print('{} is not one of the sets used for measureIndexSet'.format(set))
         return numpy.nan
 
 # output dictionary of indices
@@ -2992,7 +2988,7 @@ def readSpectrum(*args,**kwargs):
         if file=='':
             file = checkLocal(kwargs['folder']+os.path.basename(kwargs['filename']))
             if file=='':
-#            print 'Cannot find '+kwargs['filename']+' locally, trying online\n\n'
+#            print('Cannot find '+kwargs['filename']+' locally, trying online\n\n')
                 local = False
 
 # second pass: download file if necessary
@@ -3008,13 +3004,14 @@ def readSpectrum(*args,**kwargs):
 #                file = TMPFILENAME+'.'+ftype
                 if os.path.exists(os.path.basename(file)):
                     os.remove(os.path.basename(file))
-                open(os.path.basename(file), 'wb').write(urllib2.urlopen(url+file).read())
-#                print file
+#                open(os.path.basename(file), 'wb').write(urllib2.urlopen(url+file).read())
+                open(os.path.basename(file), 'wb').write(requests.get(url+file).content)
+#                print(file)
 #                kwargs['filename'] = os.path.basename(file)
 #               sp = Spectrum(**kwargs)
 #                os.remove(os.path.basename(tmp))
 #                return sp
-            except urllib2.URLError:
+            except:
                 raise NameError('\nProblem reading in '+file+' from SPLAT website\n\n')
     
 # determine which type of file
@@ -3062,7 +3059,7 @@ def readSpectrum(*args,**kwargs):
     flux[w] = 0.
 
 # fix to catch badly formatted files where noise column is S/N                 
-#    print flux, numpy.median(flux)
+#    print(flux, numpy.median(flux))
     if (catchSN):
           w = numpy.where(flux > stats.nanmedian(flux))
           if (stats.nanmedian(flux[w]/noise[w]) < 1.):
@@ -3123,7 +3120,7 @@ def redden(sp, **kwargs):
     if kwargs.get('normalize',False):
         absfrac = absfrac/numpy.median(absfrac)
         
-    print tau0, min(tau), max(tau), max(absfrac), min(absfrac)
+    print(tau0, min(tau), max(tau), max(absfrac), min(absfrac))
     spabs = splat.Spectrum(wave=w,flux=absfrac)
     return sp*spabs
 
@@ -3216,7 +3213,7 @@ def searchLibrary(*args, **kwargs):
 #            t = numpy.sum(source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)])
             source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)] += 1
 #            if numpy.sum(source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)]) > t:
-#                print 'rejected '+sn
+#                print('rejected '+sn)
         count+=1.
 # search by reference list
     if kwargs.get('reference',False) != False:
@@ -3431,18 +3428,18 @@ def searchLibrary(*args, **kwargs):
 # exclude by data key
     if kwargs.get('excludekey',False) != False:
         exkey = kwargs['excludekey']
-#        print file
+#        print(file)
         if len(exkey) > 0:
             if isinstance(exkey,str):
                 exkey = [exkey]
             for f in exkey:
                 spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)] += 1
-#                print spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)]
+#                print(spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)])
             count+=1.
 # exclude by filename
     if kwargs.get('excludefile',False) != False:
         file = kwargs['excludefile']
-#        print file
+#        print(file)
         if len(file) > 0:
             if isinstance(file,str):
                 file = [file]
@@ -3486,15 +3483,15 @@ def searchLibrary(*args, **kwargs):
 
 # no matches
     if len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))]) == 0:
-        print 'No spectra in the SPL database match the selection criteria'
+        print('No spectra in the SPL database match the selection criteria')
         return Table()
     else:
 
 # merge databases
-#        print numpy.sum(spectral_db['SELECT']), numpy.sum(spectral_db['SOURCE_SELECT'])
-#        print spectral_db[:][numpy.where(spectral_db['SELECT']==1)]
-#        print spectral_db['SELECT'][numpy.where(spectral_db['SOURCE_SELECT']==1)]
-#        print len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))])
+#        print(numpy.sum(spectral_db['SELECT']), numpy.sum(spectral_db['SOURCE_SELECT']))
+#        print(spectral_db[:][numpy.where(spectral_db['SELECT']==1)])
+#        print(spectral_db['SELECT'][numpy.where(spectral_db['SOURCE_SELECT']==1)])
+#        print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))]))
         db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))],source_db,keys='SOURCE_KEY')
                 
         if (ref == 'all'):
@@ -3551,7 +3548,7 @@ def test():
     ind = measureIndexSet(sp,set='burgasser')
     sys.stderr.write('\nSpectral indices for '+test_src+':\n')
     for k in ind.keys():
-        print '\t{:s}: {:4.3f}+/-{:4.3f}'.format(k, ind[k][0], ind[k][1])
+        print('\t{:s}: {:4.3f}+/-{:4.3f}'.format(k, ind[k][0], ind[k][1]))
     sys.stderr.write('...index measurement successful\n')
 
 # check classification
@@ -3791,7 +3788,7 @@ def typeToNum(input, **kwargs):
         if (0 <= spind < len(spletter)):
             output = colorclass+subclass+spletter[spind]+'{:3.1f}'.format(spdec)+ageclass+lumclass+pstr+error
         else:
-            print 'Spectral type number must be between 0 ({}0) and {} ({}9)'.format(spletter[0],len(spletter)*10.-1.,spletter[-1])
+            print('Spectral type number must be between 0 ({}0) and {} ({}9)'.format(spletter[0],len(spletter)*10.-1.,spletter[-1]))
             output = numpy.nan
 
 # spectral type -> number
@@ -3827,7 +3824,7 @@ def typeToNum(input, **kwargs):
             if (input[0] == 'b' or input[0] == 'r'):
                  colorclass = input[0]
         if (len(sptype) != 1):
-#            print 'Only spectral classes {} are handled with this routine'.format(spletter)
+#            print('Only spectral classes {} are handled with this routine'.format(spletter))
             output = numpy.nan
 # none of the above - return the input
     else:

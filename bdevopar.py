@@ -18,8 +18,9 @@
 # Standard library imports.
 #from sys import exit 
 import os
+import requests
 import sys
-from urllib2 import urlopen
+#from urllib2 import urlopen
 
 # Related third party imports.
 from scipy.interpolate import interp1d 
@@ -122,7 +123,7 @@ class ReadModel(object):
         try: model = model[0].lower()
   	except TypeError: raise TypeError("Model can't be a number.")
         except IndexError: model = 'baraffe'
-	finally: print "You are using " + model + "'s model."
+	finally: print("You are using " + model + "'s model.")
 
         assert model in ['baraffe','burrows','saumon'], """
 	    Incorrect model or bad spelling. Please choose from the 
@@ -145,7 +146,7 @@ class ReadModel(object):
             try: metallicity = z[z.keys()[0]]
   	    except TypeError: raise TypeError("Metallicity can't be a number.")
             except IndexError: metallicity = 'Hybrid_solar'
-	    finally: print "You are using the metallicity " + metallicity + "."
+	    finally: print("You are using the metallicity " + metallicity + ".")
 
             if metallicity == 'Hybrid_solar': Z = 'hybrid_solar_age_'
             elif metallicity == 'No_Clouds_+0.3': Z = 'nc+0.3_age_'
@@ -177,7 +178,7 @@ class ReadModel(object):
         radiuses = [[] for i in n_tables]
 
         for age in n_tables:
-	    try:data =ascii.read(urlopen(Emodels+ages[age]).read(),comment=';')
+	    try:data =ascii.read(requests.get(Emodels+ages[age]).content,comment=';')
 	    except: 
 		data=ascii.read(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+EmodeL+ages[age],comment='#')
             for line,value in enumerate(data):

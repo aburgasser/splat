@@ -8,8 +8,9 @@ import bdevopar
 import copy
 from datetime import datetime
 import os
+import requests
 import sys
-import urllib2
+#import urllib2
 #import matplotlib.pyplot as plt
 from matplotlib import cm
 from scipy import stats
@@ -61,7 +62,7 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
 
 # insert a switch to go between local and online here
 
-    print 'Running new version'
+    print('Running new version')
 # read in parameters of available models
     folder = splat.checkLocal(splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/')
     if folder=='':
@@ -125,12 +126,12 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
         else:
             mdls = numpy.column_stack((mdls,numpy.log10(mdl.flux.value)))
 
-    print mdls[0,:]
-    print (float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
+    print(mdls[0,:])
+    print(float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
             float(kwargs[MODEL_PARAMETER_NAMES[2]]))
-    print (mx.flatten(),my.flatten(),mz.flatten())
+    print(mx.flatten(),my.flatten(),mz.flatten())
     for i in range(nmodels):
-        print mvals['teff'][i],mvals['logg'][i],mvals['z'][i]
+        print(mvals['teff'][i],mvals['logg'][i],mvals['z'][i])
 #
 #
 #            
@@ -140,7 +141,7 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
 #
     mflx = numpy.zeros(len(mdl.wave))
     for i,w in enumerate(mflx):
-#        print i, (mdls[i],) 
+#        print(i, (mdls[i],))
 #        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),val.flatten(),\
 #            (float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])),'linear'))
 
@@ -220,7 +221,7 @@ def loadInterpolatedModel(*args,**kwargs):
         s = float(mkwargs[ms]) - float(mkwargs[ms])%float(parameters[ms][2])
         r = [max(float(parameters[ms][0]),s),min(s+float(parameters[ms][2]),float(parameters[ms][1]))]
         m = copy.deepcopy(r)
-#        print s, r, s-float(kwargs[ms])
+#        print(s, r, s-float(kwargs[ms]))
         if abs(s-float(mkwargs[ms])) < (1.e-3)*float(parameters[ms][2]):
             if float(kwargs[ms])%float(parameters[ms][2])-0.5*float(parameters[ms][2]) < 0.:
                 m[1]=m[0]
@@ -228,10 +229,10 @@ def loadInterpolatedModel(*args,**kwargs):
             else:
                 m[0] = m[1]
                 r[0] = r[1]-(1.-1.e-3)*float(parameters[ms][2])
-#        print s, r, m, s-float(kwargs[ms])
+#        print(s, r, m, s-float(kwargs[ms]))
         rng.append(r)
         mrng.append(m)
-#        print s, r, m
+#        print(s, r, m)
     mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
     mkwargs0 = mkwargs.copy()
 
@@ -400,10 +401,10 @@ def loadModel(*args, **kwargs):
     if folder=='':
         folder = splat.checkOnline(kwargs['folder'])
         if folder=='':
-            print '\nCould not find '+kwargs['folder']+' locally or on SPLAT website'
-            print '\nAvailable model set options are:'
+            print('\nCould not find '+kwargs['folder']+' locally or on SPLAT website')
+            print('\nAvailable model set options are:')
             for s in DEFINED_MODEL_SET:
-                print '\t{}'.format(s)
+                print('\t{}'.format(s))
             raise NameError()
         else:
             kwargs['folder'] = folder
@@ -462,12 +463,12 @@ def loadModel(*args, **kwargs):
             try:
                 ftype = kwargs['filename'].split('.')[-1]
                 tmp = TMPFILENAME+'.'+ftype
-                open(os.path.basename(tmp), 'wb').write(urllib2.urlopen(url+kwargs['filename']).read()) 
+                open(os.path.basename(tmp), 'wb').write(requests.get(url+kwargs['filename']).content) 
                 kwargs['filename'] = os.path.basename(tmp)
                 sp = splat.Spectrum(**kwargs)
                 os.remove(os.path.basename(tmp))
                 return sp
-            except urllib2.URLError:
+            except:
                 raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
 
 
@@ -511,11 +512,11 @@ def loadModelParameters(**kwargs):
 # read in parameter file - local and not local
     if kwargs.get('online',False):
         try:
-            open(os.path.basename(TMPFILENAME), 'wb').write(urllib2.urlopen(splat.SPLAT_URL+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+pfile).read())
+            open(os.path.basename(TMPFILENAME), 'wb').write(requests.get(splat.SPLAT_URL+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+pfile).content)
             p = ascii.read(os.path.basename(TMPFILENAME))
             os.remove(os.path.basename(TMPFILENAME))
-        except urllib2.URLError:
-            print '\n\nCannot access online models for model set {}\n'.format(set)
+        except:
+            print('\n\nCannot access online models for model set {}\n'.format(set))
 #            local = True
     else:            
         if (os.path.exists(pfile) == False):
@@ -548,7 +549,7 @@ def modelFitGrid(spec, **kwargs):
     '''
     Model fitting code to grid of models
     '''
-    print 'This function is not yet implemented'
+    print('This function is not yet implemented')
     pass
 
 
@@ -812,7 +813,7 @@ def modelFitMCMC(spec, **kwargs):
 
 # read in prior calculation and start from there
     if kwargs.get('addon',False) != False:
-        addflag = False
+        addflg = False
 # a table is passed
         if isinstance(kwargs.get('addon'),Table):
             t = kwargs.get('addon')
@@ -826,7 +827,7 @@ def modelFitMCMC(spec, **kwargs):
             try:
                 p = ascii.read(kwargs.get('addon'))
             except:
-                print '\nCould not read in parameter file {}'.format(kwargs.get('addon'))
+                print('\nCould not read in parameter file {}'.format(kwargs.get('addon')))
 
 
 # initial fit cycle
@@ -850,7 +851,7 @@ def modelFitMCMC(spec, **kwargs):
 
 # Probability that it will jump to this new point; determines if step will be taken
                     h = 1. - stats.f.cdf(chisqr1/chisqr0, eff_dof, eff_dof)
-#                    print chisqr1, chisqr0, eff_dof, h
+#                    print(chisqr1, chisqr0, eff_dof, h)
                     if numpy.random.uniform(0,1) < h:
                         param0 = copy.deepcopy(param1)
                         chisqr0 = copy.deepcopy(chisqr1)
@@ -863,11 +864,11 @@ def modelFitMCMC(spec, **kwargs):
                     
                 except:
                     if verbose:
-                        print 'Trouble with model {} T={:.2f}, logg={:.2f}, z={:.2f}'.format(m_set,param1[0],param1[1],param1[2])
+                        print('Trouble with model {} T={:.2f}, logg={:.2f}, z={:.2f}'.format(m_set,param1[0],param1[1],param1[2]))
                     continue
 
         if verbose:
-            print 'At cycle {}: fit = T={:.2f}, logg={:.2f}, z={:.2f} with chi2 = {:.1f}'.format(i,param0[0],param0[1],param0[2],chisqr0)
+            print('At cycle {}: fit = T={:.2f}, logg={:.2f}, z={:.2f} with chi2 = {:.1f}'.format(i,param0[0],param0[1],param0[2],chisqr0))
 
 # save results iteratively
         if i*savestep != 0:
@@ -896,7 +897,7 @@ def modelFitMCMC(spec, **kwargs):
     
     reportModelFitResults(spec,s,iterative=False,model_set=m_set,**kwargs)
     if verbose:
-        print '\nTotal time elapsed = {}'.format(datetime.now()-timestart)
+        print('\nTotal time elapsed = {}'.format(datetime.now()-timestart))
     return s
 
 
@@ -1135,7 +1136,7 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
     evolFlag = False
     if evolFlag:
         if 'teff' not in t.colnames or 'logg' not in t.colnames:
-            print '\nCannot compare to best fit without teff and logg parameters'
+            print('\nCannot compare to best fit without teff and logg parameters')
 
         else:
             values=bdevopar.Parameters(emodel, teff=t['teff'], grav=t['logg'])
@@ -1152,10 +1153,10 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
         if weights == True:
             weights = numpy.exp(0.5*(numpy.nanmin(t[statcolumn])-t[statcolumn]))
 
-        print '\nNumber of steps = {}'.format(len(t))    
+        print('\nNumber of steps = {}'.format(len(t)))
         
-        print '\nBest Fit parameters:'
-        print 'Lowest chi2 value = {} for {} degrees of freedom'.format(numpy.nanmin(t[statcolumn]),spec.dof)
+        print('\nBest Fit parameters:')
+        print('Lowest chi2 value = {} for {} degrees of freedom'.format(numpy.nanmin(t[statcolumn]),spec.dof))
         for p in parameters:
             sort = [x for (y,x) in sorted(zip(t[statcolumn],t[p]))]
             name = p
@@ -1164,9 +1165,9 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
             unit = ''
             if p in unit_assoc.keys():
                 unit = '('+unit_assoc[p]+')'
-            print '{} = {:.3f} {}'.format(name,sort[0],unit)
+            print('{} = {:.3f} {}'.format(name,sort[0],unit))
 
-        print '\nMedian parameters:'
+        print('\nMedian parameters:')
         for p in parameters:
             sm, mn, sp = distributionStats(t[p],sigma=sigma,weights=weights)      # +/- 1 sigma
             name = p
@@ -1175,15 +1176,15 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
             unit = ''
             if p in unit_assoc.keys():
                 unit = '('+unit_assoc[p]+')'
-            print '{} = {:.3f} + {:.3f} - {:.3f} {}'.format(name,mn,sp-mn,mn-sm,unit)
-        print '\n'
+            print('{} = {:.3f} + {:.3f} - {:.3f} {}'.format(name,mn,sp-mn,mn-sm,unit))
+        print('\n')
 
         
 # best fit model
     if bestfitFlag and mset in DEFINED_MODEL_SET:
 # check to make sure at least teff & logg are present
         if 'teff' not in t.colnames or 'logg' not in t.colnames:
-            print '\nCannot compare to best fit without teff and logg parameters'
+            print('\nCannot compare to best fit without teff and logg parameters')
 
         else:
             t.sort(statcolumn)
@@ -1198,7 +1199,7 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
 
             w = numpy.where(numpy.logical_and(spec.wave.value > 0.9,spec.wave.value < 2.35))
             diff = spec-model
-            print filebase
+            print(filebase)
             splat.plotSpectrum(spec,model,diff,uncertainty=True,telluric=True,colors=['k','r','b'], \
                 legend=legend,filename=filebase+'bestfit.eps',\
                 yrange=[1.1*numpy.nanmin(diff.flux.value[w]),1.25*numpy.nanmax([spec.flux.value[w],model.flux.value[w]])])  
@@ -1221,8 +1222,8 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
                     fmt.append(format_assoc[p])
                 else:
                     fmt.append('.2f')
-#        print labels        
-        print labels, fmt
+#        print(labels)
+        print(labels, fmt)
         fig = triangle.corner(zip(*y[::-1]), labels=list(reversed(labels)), show_titles=True, quantiles=[0.16,0.5,0.84],cmap=cm.Oranges,title_fmt=list(reversed(fmt)),plot_contours=True)
         fig.savefig(filebase+'parameters.eps')
            
