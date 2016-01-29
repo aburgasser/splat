@@ -3808,8 +3808,8 @@ def typeToNum(input, **kwargs):
             input = string.split(input,sep='+')[0]    # remove +/- sides
             input = string.split(input,sep='-')[0]    # remove +/- sides
         else:
-            input = split(input,sep='+')[0]    # remove +/- sides
-            input = split(input,sep='-')[0]    # remove +/- sides
+            input = input.split('+')[0]    # remove +/- sides
+            input = input.split('-')[0]    # remove +/- sides
         
         sptype = re.findall('[{}]'.format(spletter),input)
         if (len(sptype) == 1):
