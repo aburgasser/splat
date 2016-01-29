@@ -1137,7 +1137,9 @@ def classifyByStandard(sp, *args, **kwargs):
     :param sp: spectrum class object, which should contain wave, flux and 
                noise array elements.
     :param best: return the best fit standard type only
-    :type best: optional, default = False
+    :type best: optional, default = True
+    :param average: return an chi-square weighted type only
+    :type average: optional, default = True
     :param compareto: compare to a single standard (string or number)
     :type compareto: optional, default = False
     :param plot: generate a plot comparing best fit standard to source, can be saved to a file using the ``file`` keyword
@@ -1162,7 +1164,8 @@ def classifyByStandard(sp, *args, **kwargs):
     
     verbose = kwargs.get('verbose',False)
     method = kwargs.get('method','')
-    best_flag = kwargs.get('best',False)
+    best_flag = kwargs.get('best',True)
+    average_flag = kwargs.get('average',not best_flag)
     sptrange = kwargs.get('sptrange',[10,39])
     sptrange = kwargs.get('range',sptrange)
     if not isinstance(sptrange,list):
