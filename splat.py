@@ -29,6 +29,11 @@
 # proper SQL search for database
 # have classifybyindex return individual index classifications (e.g., 'full' keyword)
 
+# verify the version is correct
+import sys
+if sys.version_info.major != 2 and sys.version_info.major != 3:
+    raise NameError('\nSPLAT only works on Python 2.7 and 3.X\n')
+
 # imports
 import astropy
 import base64
@@ -40,9 +45,8 @@ import random
 import re
 import requests
 import scipy
-import string
-import sys
-#import urllib2
+if sys.version_info.major == 2:     # switch for those using python 3
+    import string
 import warnings
 
 from astropy.io import ascii, fits            # for reading in spreadsheet
@@ -1818,7 +1822,11 @@ def coordinateToDesignation(c):
     else:
         cc = properCoordinates(c)
 # input is [RA,Dec] pair in degrees
-    return string.replace('J{0}{1}'.format(cc.ra.to_string(unit=u.hour, sep='', precision=2, pad=True), \
+    if sys.version_info.major == 2:
+        return string.replace('J{0}{1}'.format(cc.ra.to_string(unit=u.hour, sep='', precision=2, pad=True), \
+        cc.dec.to_string(unit=u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
+    else:
+        return replace('J{0}{1}'.format(cc.ra.to_string(unit=u.hour, sep='', precision=2, pad=True), \
         cc.dec.to_string(unit=u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
 
 
@@ -3793,8 +3801,13 @@ def typeToNum(input, **kwargs):
 
 # spectral type -> number
     elif isinstance(input,str):
-        input = string.split(input,sep='+')[0]    # remove +/- sides
-        input = string.split(input,sep='-')[0]    # remove +/- sides
+        if (sys.version_info.major == 2):
+            input = string.split(input,sep='+')[0]    # remove +/- sides
+            input = string.split(input,sep='-')[0]    # remove +/- sides
+        else:
+            input = split(input,sep='+')[0]    # remove +/- sides
+            input = split(input,sep='-')[0]    # remove +/- sides
+        
         sptype = re.findall('[{}]'.format(spletter),input)
         if (len(sptype) == 1):
             output = spletter.find(sptype[0])*10.

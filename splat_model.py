@@ -10,8 +10,6 @@ from datetime import datetime
 import os
 import requests
 import sys
-#import urllib2
-#import matplotlib.pyplot as plt
 from matplotlib import cm
 from scipy import stats
 from scipy.integrate import trapz        # for numerical integration
