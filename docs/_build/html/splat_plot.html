@@ -104,10 +104,10 @@
 <dt><strong>Example 1: A simple view of a random spectrum</strong></dt>
 <dd><p class="first">This example shows various ways of displaying a random spectrum in the library</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s">&#39;T5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>   <span class="c"># select random spectrum</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>                                                   <span class="c"># this automatically generates a &quot;quicklook&quot; plot</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">)</span>                                      <span class="c"># does the same thing</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">uncertainty</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">tdwarf</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>     <span class="c"># show the spectrum uncertainty and T dwarf absorption features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;T5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># select random spectrum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>                                                   <span class="c1"># this automatically generates a &quot;quicklook&quot; plot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">)</span>                                      <span class="c1"># does the same thing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">uncertainty</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">tdwarf</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>     <span class="c1"># show the spectrum uncertainty and T dwarf absorption features</span>
 </pre></div>
 </div>
 <p class="last">The last plot should look like the following:</p>
@@ -118,11 +118,11 @@
 <dt><strong>Example 2: Compare two spectra</strong></dt>
 <dd><p class="first">Optimally scale and compare two spectra.</p>
 <div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s">&#39;T5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>   <span class="c"># select random spectrum</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spc2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s">&#39;T4&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c"># read in another random spectrum</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">spc2</span><span class="p">)</span>        <span class="c"># compare spectra to get optimal scaling</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spc2</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">comp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>                  <span class="c"># apply optimal scaling</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">spc2</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;black&#39;</span><span class="p">,</span><span class="s">&#39;red&#39;</span><span class="p">],</span><span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">spc</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">spc2</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>     <span class="c"># show the spectrum uncertainty and T dwarf absorption features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;T5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># select random spectrum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spc2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;T4&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># read in another random spectrum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">spc2</span><span class="p">)</span>        <span class="c1"># compare spectra to get optimal scaling</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spc2</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">comp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>                  <span class="c1"># apply optimal scaling</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">spc2</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="s1">&#39;red&#39;</span><span class="p">],</span><span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">spc</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">spc2</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>     <span class="c1"># show the spectrum uncertainty and T dwarf absorption features</span>
 </pre></div>
 </div>
 </dd>
@@ -131,12 +131,12 @@
 <dl class="docutils">
 <dt><strong>Example 3: Compare several spectra for a given object</strong></dt>
 <dd><p class="first">In this case we&#8217;ll look at all of the spectra of TWA 30B in the library, sorted by year and compare each to the first epoch data. This is an example of using both multiplot and multipage.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;TWA 30B&#39;</span><span class="p">)</span>         <span class="c"># get all spectra of TWA 30B</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c"># normalize the spectra</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">date</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>                   <span class="c"># observation dates</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spsort</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span><span class="n">splist</span><span class="p">))]</span>   <span class="c"># sort spectra by dates</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>                                         <span class="c"># don&#39;t forget to sort dates!</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spsort</span><span class="p">,</span><span class="n">multiplot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">layout</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">multipage</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>\   <span class="c"># here&#39;s our plot statement</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;TWA 30B&#39;</span><span class="p">)</span>         <span class="c1"># get all spectra of TWA 30B</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c1"># normalize the spectra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">date</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>                   <span class="c1"># observation dates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spsort</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span><span class="n">splist</span><span class="p">))]</span>   <span class="c1"># sort spectra by dates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>                                         <span class="c1"># don&#39;t forget to sort dates!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spsort</span><span class="p">,</span><span class="n">multiplot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">layout</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">multipage</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>\   <span class="c1"># here&#39;s our plot statement</span>
 <span class="go">    comparison=spsort[0],uncertainty=True,mdwarf=True,telluric=True,legends=dates,\</span>
 <span class="go">    legendLocation=&#39;lower left&#39;,output=&#39;TWA30B.pdf&#39;)</span>
 </pre></div>
@@ -149,12 +149,12 @@
 <dt><strong>Example 4: Display the spectra sequence of L dwarfs</strong></dt>
 <dd><blockquote class="first">
 <div>This example uses the list of standard files contained in SPLAT, and illustrates the stack feature</div></blockquote>
-<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">20</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>     <span class="c"># generate list of L spectral types</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">spex_stdfiles</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spt</span><span class="p">]</span>        <span class="c"># get the standard files</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>          <span class="c"># read in list of Spectrum objects</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c"># normalize the spectra</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">shortname</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c"># set labels to be names</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">splist</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">stack</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>\  <span class="c"># here&#39;s our plot statement</span>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">20</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>     <span class="c1"># generate list of L spectral types</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">spex_stdfiles</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spt</span><span class="p">]</span>        <span class="c1"># get the standard files</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>          <span class="c1"># read in list of Spectrum objects</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c1"># normalize the spectra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">shortname</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c1"># set labels to be names</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">splist</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">stack</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>\  <span class="c1"># here&#39;s our plot statement</span>
 <span class="go">    colorScheme=&#39;copper&#39;,legendLocation=&#39;outside&#39;,telluric=True,output=&#39;lstandards.pdf&#39;)</span>
 </pre></div>
 </div>
@@ -186,35 +186,18 @@ Spectrum objects, either sequentially, in list, or in list of lists</p>
 </ul>
 </div></blockquote>
 <p>:Parameters
-file or filename or output:</p>
+title = &#8216;&#8217;</p>
 <blockquote>
-<div>filename or filename base for output</div></blockquote>
+<div>string giving plot title</div></blockquote>
 <dl class="docutils">
-<dt>filetype = &#8216;pdf&#8217;:</dt>
-<dd>output filetype, generally determined from filename</dd>
-<dt>multiplot = False:</dt>
-<dd>creates multiple plots, depending on format of input (optional)</dd>
-<dt>multipage = False:</dt>
-<dd>spreads plots across multiple pages; output file format must be PDF
-if not set and plots span multiple pages, these pages are output sequentially as separate files</dd>
-<dt>layout or multilayout = [1,1]:</dt>
-<dd>defines how multiple plots are laid out on a page</dd>
-<dt>figsize:</dt>
-<dd>set the figure size; set to default size if not indicated</dd>
-<dt>interactive = False:</dt>
-<dd>if plotting to window, set this to make window interactive</dd>
-<dt>grid = False:</dt>
-<dd>add a grid</dd>
-<dt>title = &#8216;&#8217;</dt>
-<dd>string giving plot title</dd>
+<dt>xrange = [0.85,2.42]:</dt>
+<dd>plot range for wavelength axis</dd>
+<dt>yrange = [-0.02,1.2]*fluxMax:</dt>
+<dd>plot range for wavelength axis</dd>
 <dt>xlabel:</dt>
 <dd>wavelength axis label; by default set by wlabel and wunit keywords in first spectrum object</dd>
 <dt>ylabel:</dt>
 <dd>flux axis label; by default set by fscale, flabel and funit keywords in first spectrum object</dd>
-<dt>legend, legends, label or labels:</dt>
-<dd>list of strings providing legend-style labels for each spectrum plotted</dd>
-<dt>legendLocation or labelLocation = &#8216;upper right&#8217;:</dt>
-<dd>place of legend; options are &#8216;upper left&#8217;, &#8216;center middle&#8217;, &#8216;lower right&#8217; (variations thereof) and &#8216;outside&#8217;</dd>
 <dt>features:</dt>
 <dd>a list of strings indicating chemical features to label on the spectra
 options include H2O, CH4, CO, TiO, VO, FeH, H2, HI, KI, NaI, SB (for spectral binary)</dd>
@@ -222,6 +205,12 @@ options include H2O, CH4, CO, TiO, VO, FeH, H2, HI, KI, NaI, SB (for spectral bi
 <dd>add in features characteristic of these classes</dd>
 <dt>telluric = False:</dt>
 <dd>mark telluric absorption features</dd>
+<dt>legend, legends, label or labels:</dt>
+<dd>list of strings providing legend-style labels for each spectrum plotted</dd>
+<dt>legendLocation or labelLocation = &#8216;upper right&#8217;:</dt>
+<dd>place of legend; options are &#8216;upper left&#8217;, &#8216;center middle&#8217;, &#8216;lower right&#8217; (variations thereof) and &#8216;outside&#8217;</dd>
+<dt>grid = False:</dt>
+<dd>add a grid</dd>
 <dt>stack = 0:</dt>
 <dd>set to a numerical offset to stack spectra on top of each other</dd>
 <dt>zeropoint = [0,...]:</dt>
@@ -245,10 +234,29 @@ see <a class="reference external" href="http://matplotlib.org/api/pyplot_summary
 <dd>line style of plot lines; by default all solid</dd>
 <dt>fontscale = 10:</dt>
 <dd>sets a scale factor for the fontsize</dd>
-<dt>xrange = [0.85,2.42]:</dt>
-<dd>plot range for wavelength axis</dd>
-<dt>yrange = [-0.02,1.2]*fluxMax:</dt>
-<dd>plot range for wavelength axis</dd>
+<dt>inset = False:</dt>
+<dd>place an inset panel showing a close up region of the spectral data</dd>
+<dt>inset_xrange = False:</dt>
+<dd>wavelength range for inset panel</dd>
+<dt>inset_position = [0.65,0.60,0.20,0.20]</dt>
+<dd>position of inset planet in normalized units, in order left, bottom, width, height</dd>
+<dt>inset_features = False</dt>
+<dd>list of features to label in inset plot</dd>
+<dt>file or filename or output:</dt>
+<dd>filename or filename base for output</dd>
+<dt>filetype = &#8216;pdf&#8217;:</dt>
+<dd>output filetype, generally determined from filename</dd>
+<dt>multiplot = False:</dt>
+<dd>creates multiple plots, depending on format of input (optional)</dd>
+<dt>multipage = False:</dt>
+<dd>spreads plots across multiple pages; output file format must be PDF
+if not set and plots span multiple pages, these pages are output sequentially as separate files</dd>
+<dt>layout or multilayout = [1,1]:</dt>
+<dd>defines how multiple plots are laid out on a page</dd>
+<dt>figsize:</dt>
+<dd>set the figure size; set to default size if not indicated</dd>
+<dt>interactive = False:</dt>
+<dd>if plotting to window, set this to make window interactive</dd>
 </dl>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -268,12 +276,12 @@ see <a class="reference external" href="http://matplotlib.org/api/pyplot_summary
 This is an example of using multiplot and multipage</p>
 </dd>
 </dl>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;TWA 30B&#39;</span><span class="p">)</span>         <span class="c"># get all spectra of TWA 30B</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c"># normalize the spectra</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">date</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>                   <span class="c"># observation dates</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spsort</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">d</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span><span class="n">splis</span><span class="p">))]</span>   <span class="c"># sort spectra by dates</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>                                         <span class="c"># don&#39;t forget to sort dates!</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spsort</span><span class="p">,</span><span class="n">multiplot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">layout</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">multipage</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>\   <span class="c"># here&#39;s our plot statement</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;TWA 30B&#39;</span><span class="p">)</span>         <span class="c1"># get all spectra of TWA 30B</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c1"># normalize the spectra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">date</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>                   <span class="c1"># observation dates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spsort</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">d</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span><span class="n">splis</span><span class="p">))]</span>   <span class="c1"># sort spectra by dates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>                                         <span class="c1"># don&#39;t forget to sort dates!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spsort</span><span class="p">,</span><span class="n">multiplot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">layout</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">multipage</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>\   <span class="c1"># here&#39;s our plot statement</span>
 <span class="go">    comparison=spsort[0],uncertainty=True,mdwarf=True,telluric=True,legends=dates,           legendLocation=&#39;lower left&#39;,output=&#39;TWA30B.pdf&#39;)</span>
 </pre></div>
 </div>
@@ -284,12 +292,12 @@ This is an example of using multiplot and multipage</p>
 <dd><p class="first last">This example uses the list of standard files contained in SPLAT, and illustrates the stack feature</p>
 </dd>
 </dl>
-<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">20</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>     <span class="c"># generate list of L spectral types</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">spex_stdfiles</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spt</span><span class="p">]</span>        <span class="c"># get the standard files</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>          <span class="c"># read in list of Spectrum objects</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c"># normalize the spectra</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">shortname</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>              <span class="c"># set labels to be names</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">splist</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">stack</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>\  <span class="c"># here&#39;s our plot statement</span>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">20</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>     <span class="c1"># generate list of L spectral types</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">spex_stdfiles</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spt</span><span class="p">]</span>        <span class="c1"># get the standard files</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>          <span class="c1"># read in list of Spectrum objects</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c1"># normalize the spectra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">shortname</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>              <span class="c1"># set labels to be names</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">splist</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">stack</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>\  <span class="c1"># here&#39;s our plot statement</span>
 <span class="go">    colorScheme=&#39;copper&#39;,legendLocation=&#39;outside&#39;,telluric=True,output=&#39;lstandards.pdf&#39;)</span>
 </pre></div>
 </div>
@@ -333,7 +341,7 @@ This is an example of using multiplot and multipage</p>
     </div>
     <div class="footer" role="contentinfo">
         &copy; Copyright 2015, Adam Burgasser.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
     </div>
   </body>
 </html>
