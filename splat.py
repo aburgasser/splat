@@ -3808,15 +3808,9 @@ def typeToNum(input, **kwargs):
             input = string.split(input,sep='+')[0]    # remove +/- sides
             input = string.split(input,sep='-')[0]    # remove +/- sides
         else:
-<<<<<<< HEAD
             input = input.split('+')[0]    # remove +/- sides
             input = input.split('-')[0]    # remove +/- sides
-        
-=======
-            input = split(input,sep='+')[0]    # remove +/- sides
-            input = split(input,sep='-')[0]    # remove +/- sides
 
->>>>>>> iss7
         sptype = re.findall('[{}]'.format(spletter),input)
         if (len(sptype) == 1):
             output = spletter.find(sptype[0])*10.
