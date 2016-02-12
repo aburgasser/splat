@@ -1019,7 +1019,10 @@ def classifyByIndex(sp, *args, **kwargs):
             i2 = measureIndexSet(sp, **kwargs)
             kwargs['set'] = 'allers'
             i3 = measureIndexSet(sp, **kwargs)
-            indices = dict(i1.items() + i2.items() + i3.items())
+            if sys.version_info.major == 2:
+                indices = dict(i1.items() + i2.items() + i3.items())
+            else:
+                indices = dict(i1.items() | i2.items() | i3.items())
         sptoffset = 10.
         sptfact = 1.
         coeffs = { \
@@ -1047,7 +1050,11 @@ def classifyByIndex(sp, *args, **kwargs):
             i5 = measureIndexSet(sp, **kwargs)
             kwargs['set'] = 'tokunaga'
             i6 = measureIndexSet(sp, **kwargs)
-            indices = dict(i1.items() + i2.items() + i3.items()+ i4.items() + i5.items() + i6.items())
+            if sys.version_info.major == 2:
+                indices = dict(i1.items() + i2.items() + i3.items()+ i4.items() + i5.items() + i6.items())
+            else:
+                indices = dict(i1.items() | i2.items() | i3.items()| i4.items() | i5.items() | i6.items())
+                
 
         sptoffset = 0.0
         sptfact = 1.0
