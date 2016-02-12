@@ -142,7 +142,7 @@ This code is derived almost entirely from triangle.py.</td>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>set</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; <p>set of models to use; options include:</p>
+<li><strong>set</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; <p>set of models to use; options include:</p>
 <ul>
 <li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
@@ -191,7 +191,7 @@ from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>set</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; <p>set of models to use; options include:</p>
+<li><strong>set</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; <p>set of models to use; options include:</p>
 <ul>
 <li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
@@ -209,7 +209,7 @@ from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A
 </li>
 <li><strong>local</strong> (<em>optional, default = True</em>) &#8211; read in parameter file locally if True</li>
 <li><strong>online</strong> (<em>optional, default = False</em>) &#8211; read in parameter file online if True</li>
-<li><strong>folder</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; string of the folder name containing the model set</li>
+<li><strong>folder</strong> (<em>optional, default = ''</em>) &#8211; string of the folder name containing the model set</li>
 <li><strong>filename</strong> (<em>optional</em>) &#8211; string of the filename of the desired model</li>
 <li><strong>url</strong> (optional, default = &#8216;<a class="reference external" href="http://pono.ucsd.edu/~adam/splat/">http://pono.ucsd.edu/~adam/splat/</a>&#8216;) &#8211; string of the url to the SPLAT website</li>
 </ul>
@@ -245,8 +245,8 @@ and sedimentation efficiency (for cloudy models only).</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>parameterFile</strong> (<em>optional, default = &#8216;parameters.txt&#8217;</em>) &#8211; name of file containing parameters for spectral models</li>
-<li><strong>set</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; <p>set of models to use; options include:</p>
+<li><strong>parameterFile</strong> (<em>optional, default = 'parameters.txt'</em>) &#8211; name of file containing parameters for spectral models</li>
+<li><strong>set</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; <p>set of models to use; options include:</p>
 <ul>
 <li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
@@ -296,7 +296,7 @@ noise array elements.</li>
 <li><strong>initial_cut</strong> (<em>optional, default = 0.1</em>) &#8211; the fraction of the initial steps to be discarded. (e.g., if
 <code class="docutils literal"><span class="pre">initial_cut</span> <span class="pre">=</span> <span class="pre">0.2</span></code>, the first 20% of the samples are discarded.)</li>
 <li><strong>burn</strong> (<em>optional, default = 0.1</em>) &#8211; the same as <code class="docutils literal"><span class="pre">initial_cut</span></code></li>
-<li><strong>set</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; <p>set of models to use; options include:</p>
+<li><strong>set</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; <p>set of models to use; options include:</p>
 <ul>
 <li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
@@ -312,8 +312,8 @@ from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ..
 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
 </ul>
 </li>
-<li><strong>model</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; the same as <code class="docutils literal"><span class="pre">set</span></code></li>
-<li><strong>models</strong> (<em>optional, default = &#8216;BTSettl2008&#8217;</em>) &#8211; the same as <code class="docutils literal"><span class="pre">set</span></code></li>
+<li><strong>model</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; the same as <code class="docutils literal"><span class="pre">set</span></code></li>
+<li><strong>models</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; the same as <code class="docutils literal"><span class="pre">set</span></code></li>
 <li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
 <li><strong>mask_ranges</strong> (<em>optional, default = []</em>) &#8211; mask any flux value of <code class="docutils literal"><span class="pre">spec</span></code> by specifying the wavelength range.
 Must be in microns.</li>
@@ -324,7 +324,7 @@ Must be in microns.</li>
 <li><strong>filename</strong> (<em>optional</em>) &#8211; filename or filename base for output</li>
 <li><strong>filebase</strong> (<em>optional</em>) &#8211; the same as <code class="docutils literal"><span class="pre">filename</span></code></li>
 <li><strong>savestep</strong> (optional, default = <code class="docutils literal"><span class="pre">nsamples/10</span></code>) &#8211; indicate when to save data output (e.g. <code class="docutils literal"><span class="pre">savestep</span> <span class="pre">=</span> <span class="pre">10</span></code> will save the output every 10 samples)</li>
-<li><strong>dataformat</strong> (<em>optional, default = &#8216;ascii.csv&#8217;</em>) &#8211; output data format type</li>
+<li><strong>dataformat</strong> (<em>optional, default = 'ascii.csv'</em>) &#8211; output data format type</li>
 <li><strong>initial_guess</strong> (<em>optional, default = array of random numbers within allowed ranges</em>) &#8211; array including initial guess of the effective temperature, surface gravity and metallicity of <code class="docutils literal"><span class="pre">spec</span></code>.
 Can also set individual guesses of spectral parameters by using <strong>initial_temperature</strong> or <strong>initial_teff</strong>,
 <strong>initial_gravity</strong> or <strong>initial_logg</strong>, and <strong>initial_metallicity</strong> or <strong>initial_z</strong>.</li>
@@ -335,7 +335,7 @@ Can also set individual ranges of spectral parameters by using <strong>temperatu
 <strong>temperature_step</strong> or <strong>teff_step</strong>, <strong>gravity_step</strong> or <strong>logg_step</strong>, and <strong>metallicity_step</strong> or <strong>z_step</strong>.</li>
 <li><strong>nonmetallicity</strong> (<em>optional, default = False</em>) &#8211; if True, sets metallicity = 0</li>
 <li><strong>addon</strong> (<em>optional, default = False</em>) &#8211; reads in prior calculation and starts from there. Allowed object types are tables, dictionaries and strings.</li>
-<li><strong>evolutionary_model</strong> (<em>optional, default = &#8216;Baraffe&#8217;</em>) &#8211; <p>set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for
+<li><strong>evolutionary_model</strong> (<em>optional, default = 'Baraffe'</em>) &#8211; <p>set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for
 more details. Options include:</p>
 <ul>
 <li><em>&#8216;baraffe&#8217;</em>: Evolutionary models from <a class="reference external" href="http://arxiv.org/abs/astro-ph/0302293">Baraffe et al. (2003)</a>.</li>
@@ -343,7 +343,7 @@ more details. Options include:</p>
 <li><em>&#8216;saumon&#8217;</em>: Evolutionary models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2008ApJ...689.1327S">Saumon &amp; Marley (2008)</a>.</li>
 </ul>
 </li>
-<li><strong>emodel</strong> (<em>optional, default = &#8216;Baraffe&#8217;</em>) &#8211; the same as <code class="docutils literal"><span class="pre">evolutionary_model</span></code></li>
+<li><strong>emodel</strong> (<em>optional, default = 'Baraffe'</em>) &#8211; the same as <code class="docutils literal"><span class="pre">evolutionary_model</span></code></li>
 </ul>
 </td>
 </tr>
@@ -352,10 +352,10 @@ more details. Options include:</p>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1047+2124&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>        <span class="c"># T6.5 radio emitter</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span> <span class="n">spt_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;T2&#39;</span><span class="p">,</span><span class="s">&#39;T8&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1047+2124&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>        <span class="c1"># T6.5 radio emitter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span> <span class="n">spt_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;T2&#39;</span><span class="p">,</span><span class="s1">&#39;T8&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">teff</span><span class="p">,</span><span class="n">teff_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="n">spt</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="n">spt</span><span class="p">,</span><span class="s">&#39;MKO J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="n">spt</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">mask_standard</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="n">teff</span><span class="p">,</span> <span class="mf">5.3</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">zstep</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">savestep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="go">    Trouble with model BTSettl2008 T=1031.61, logg=5.27, z=-0.02</span>
 <span class="go">    At cycle 0: fit = T=1031.61, logg=5.27, z=0.00 with chi2 = 35948.5</span>
@@ -427,7 +427,7 @@ noise array elements.</li>
 <li><strong>evol</strong> (<em>optional, default = True</em>) &#8211; computes the mass, age, temperature, radius, surface gravity, and luminosity
 by using various evolutionary model sets. See below for the possible set
 options and the Brown Dwarf Evolutionary Models page for more details.</li>
-<li><strong>emodel</strong> (<em>optional, default = &#8216;Baraffe&#8217;</em>) &#8211; <p>set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for
+<li><strong>emodel</strong> (<em>optional, default = 'Baraffe'</em>) &#8211; <p>set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for
 more details. Options include:</p>
 <ul>
 <li><em>&#8216;baraffe&#8217;</em>: Evolutionary models from <a class="reference external" href="http://arxiv.org/abs/astro-ph/0302293">Baraffe et al. (2003)</a>.</li>
@@ -445,9 +445,9 @@ demonstrating correlations between parameters.</li>
 plots model against spectrum and saves figure.</li>
 <li><strong>summary</strong> (<em>optional, default = True</em>) &#8211; not yet implemented</li>
 <li><strong>weight</strong> (<em>optional, default = True</em>) &#8211; if True, sets weights for computing key values along the distribution</li>
-<li><strong>filebase</strong> (<em>optional, default = &#8216;modelfit_results&#8217;</em>) &#8211; filename or filename base for output</li>
-<li><strong>stat</strong> (<em>optional, default = &#8216;chisqr&#8217;</em>) &#8211; name of the statistics column used in astropy Table <code class="docutils literal"><span class="pre">t</span></code>.</li>
-<li><strong>model_set</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; <p>desired model set of <code class="docutils literal"><span class="pre">bestfit</span></code>; options include:</p>
+<li><strong>filebase</strong> (<em>optional, default = 'modelfit_results'</em>) &#8211; filename or filename base for output</li>
+<li><strong>stat</strong> (<em>optional, default = 'chisqr'</em>) &#8211; name of the statistics column used in astropy Table <code class="docutils literal"><span class="pre">t</span></code>.</li>
+<li><strong>model_set</strong> (<em>optional, default = ''</em>) &#8211; <p>desired model set of <code class="docutils literal"><span class="pre">bestfit</span></code>; options include:</p>
 <ul>
 <li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
@@ -463,7 +463,7 @@ from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ..
 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
 </ul>
 </li>
-<li><strong>mset</strong> (<em>optional, default = &#8216;&#8217;</em>) &#8211; same as <code class="docutils literal"><span class="pre">model_set</span></code></li>
+<li><strong>mset</strong> (<em>optional, default = ''</em>) &#8211; same as <code class="docutils literal"><span class="pre">model_set</span></code></li>
 <li><strong>mask_ranges</strong> (<em>optional, default = []</em>) &#8211; mask any flux value of <code class="docutils literal"><span class="pre">spec</span></code> by specifying the wavelength range. Must be in microns.</li>
 <li><strong>sigma</strong> (<em>optional, default = 1.</em>) &#8211; when printing statistical results, prints the value at <code class="docutils literal"><span class="pre">sigma</span></code> standard
 deviations away from the mean. Only effective if <code class="docutils literal"><span class="pre">stats</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
@@ -476,10 +476,10 @@ deviations away from the mean. Only effective if <code class="docutils literal">
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s">&#39;1047+2124&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>        <span class="c"># T6.5 radio emitter</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span> <span class="n">spt_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;T2&#39;</span><span class="p">,</span><span class="s">&#39;T8&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1047+2124&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>        <span class="c1"># T6.5 radio emitter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span> <span class="n">spt_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;T2&#39;</span><span class="p">,</span><span class="s1">&#39;T8&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">teff</span><span class="p">,</span><span class="n">teff_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="n">spt</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="n">spt</span><span class="p">,</span><span class="s">&#39;MKO J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="n">spt</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">mask_standard</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="n">teff</span><span class="p">,</span> <span class="mf">5.3</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">zstep</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">savestep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">reportModelFitResults</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">evol</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">triangle</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
 <span class="go">    Number of steps = 169</span>
@@ -533,7 +533,7 @@ deviations away from the mean. Only effective if <code class="docutils literal">
     </div>
     <div class="footer" role="contentinfo">
         &copy; Copyright 2015, Adam Burgasser.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
     </div>
   </body>
 </html>
