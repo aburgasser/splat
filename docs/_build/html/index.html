@@ -104,7 +104,7 @@ It is built on common python packages such as numpy, scipy, astropy and matplotl
 <dd><ul class="first last simple">
 <li>search the SPL for data and source information;</li>
 <li>access the publically-available (published) spectra contained in it;</li>
-<li>compare your near-infrared spectrum to these data</li>
+<li>compare your near-infrared spectrum to these data;</li>
 <li>make use of published empirical trends in absolute magnitudes and effective temperatures;</li>
 <li>perform basic spectral analyses such as spectral classification, gravity classification, index measurement, spectrophotometry, reddening, robust comparison statistics, basic math operations;</li>
 <li>perform advanced analyses such as MCMC spectral model fitting, spectral binary analysis, and optimized index definition;</li>
@@ -121,7 +121,7 @@ It is built on common python packages such as numpy, scipy, astropy and matplotl
 which is updated on a regular basis.
 SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by
 sending bug reports to <a class="reference external" href="mailto:aburgasser&#37;&#52;&#48;ucsd&#46;edu">aburgasser<span>&#64;</span>ucsd<span>&#46;</span>edu</a></p>
-<p>General instructions on setting up to run SPLAT are maintained at <a class="reference external" href="http://bit.ly/1AQuy9G">http://bit.ly/1AQuy9G</a></p>
+<p>Instructions on setting up and using SPLAT are maintained at <a class="reference external" href="http://www.browndwarfs.org/splat">http://www.browndwarfs.org/splat</a></p>
 <p>You should copy the file <code class="docutils literal"><span class="pre">.splat_access</span></code> into your home directory - this is your access key
 if you have priveleged access to unpublished data.</p>
 </div>
@@ -161,9 +161,10 @@ flux uncertainty.</p>
 </pre></div>
 </div>
 <ul class="simple">
-<li>To display the spectrum, use plotSpectrum</li>
+<li>To display the spectrum, use the Spectrum object&#8217;s plot function or plotSpectrum</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>which will pop up a window displaying flux vs. wavelength.
@@ -196,12 +197,19 @@ of the index:</p>
 </pre></div>
 </div>
 <ul class="simple">
+<li>You can also determine the gravity classification of a source via Allers &amp; Liu (2013)</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">young</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>   <span class="c1"># returned &#39;VL-G&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
 <li>To classify a spectrum, use the classifyByXXX methods:</li>
 </ul>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span><span class="n">unc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="nb">set</span><span class="o">=</span><span class="s1">&#39;burgasser&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span><span class="n">unc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;T5&#39;</span><span class="p">,</span><span class="s1">&#39;T9&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;T8&#39;</span><span class="p">,</span><span class="s1">&#39;T9&#39;</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;T6&#39;</span><span class="p">,</span><span class="s1">&#39;T9&#39;</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The last line returns a dictionary containing the best 5 template matches to the Spectrum sp.</p>
@@ -215,9 +223,15 @@ of the index:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">mdl</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="s1">&#39;red&#39;</span><span class="p">],</span><span class="n">legend</span><span class="o">=</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">mdl</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>All of these routines have many options worth exploring, and which are (increasingly) documented
+<p># There is also a basic Markov Chain Monte Carlo code to compare models to spectra</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.49</span><span class="p">,</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="mi">800</span><span class="p">,</span><span class="mf">5.0</span><span class="p">,</span><span class="mf">0.</span><span class="p">],</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span><span class="n">step_sizes</span><span class="o">=</span><span class="p">[</span><span class="mf">50.</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>All of these routines have many options worth exploring, and which are (partially) documented
 in the following pages. If there are capabilities
-you need, please suggest them, or even better contribute your own code!</p>
+you need, please suggest them, or note it in the &#8220;Issues&#8221; link on our github site</p>
 </div>
 <div class="section" id="authors">
 <h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
@@ -225,7 +239,8 @@ you need, please suggest them, or even better contribute your own code!</p>
 UCSD Cool Star Lab, aimed at teaching students how to do research by building
 their own analysis tools.  Contributors to SPLAT include Christian Aganze, Daniella Bardalez Gagliuffi,
 Adam Burgasser (PI), Caleb Choban, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez,
-Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis and Tomoki Tamiya.</p>
+Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya
+and Chris Theissen.</p>
 <p><em>Contents</em></p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -244,7 +259,6 @@ Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="splat_alt.html">Main SPLAT module (alternative format)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="splat_plot.html#examples">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="splat_plot.html#routines">Routines</a></li>
