@@ -3006,7 +3006,7 @@ def readSpectrum(*args,**kwargs):
         if file=='':
             file = checkLocal(kwargs['folder']+os.path.basename(kwargs['filename']))
             if file=='':
-#            print('Cannot find '+kwargs['filename']+' locally, trying online\n\n')
+#                print('Cannot find '+kwargs['filename']+' locally, trying online\n\n')
                 local = False
 
 # second pass: download file if necessary
