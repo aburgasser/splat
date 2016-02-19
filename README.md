@@ -47,10 +47,10 @@ sp = splist[0]
 sp.wave gives the wavelength values of this spectrum, sp.flux the flux values, and sp.noise the 
 flux uncertainty.
 
-You can also read in your own spectrum using the loadSpectrum function
+You can also read in your own spectrum by passing the Spectrum object a filename:
 
 ```
-sp = splat.loadSpectrum(filename='myspectrum.fits',local=True)
+sp = splat.pectrum(filename='myspectrum.fits',local=True)
 ```
 
 Note that this file must conform to the standard of the SPL data: the first column is
