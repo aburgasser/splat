@@ -2365,6 +2365,69 @@ def getSpectrum(*args, **kwargs):
     return result
 
 
+def getStandard(sptrange, **kwargs):
+    '''
+    :Purpose: Gets one or more of the pre-defined spectral standards from the SPLAT library.
+    .. :Usage: [sp] = splat.getStandard(spt,**kwargs)
+
+    :param sp: array of Spectrum class objects
+    :param spt: spectral type of standard desired ('M7'), or range of spectral types (['M8','L4'])
+
+    :param optional sd: get subdwarf standard
+    :type sd: optional, default = False
+    :param optional esd: get extreme subdwarf standard
+    :type esd: optional, default = False
+    :param optional file: return only the files
+    :type file: optional, default = False
+
+    :Example:
+    >>> import splat
+    >>> sp = splat.getStandard('M7')[0]
+        Retrieving 1 standard spectra
+    >>> sparr = splat.getStandard(['M7','L5'])
+        Retrieving 9 standard spectra
+    >>> sparr = splat.getStandard('T5',esd=True)
+        No standards are available for those criteria
+    '''
+
+    if not isinstance(sptrange,list):
+        sptrange = [sptrange,sptrange]
+    if (isinstance(sptrange[0],str) != False):
+        sptrange = [typeToNum(sptrange[0]),typeToNum(sptrange[1])]
+
+# classification list
+    stdfiles = SPEX_STDFILES
+    subclass = ''
+    if kwargs.get('sd',False):
+        stdfiles = SPEX_SD_STDFILES
+        subclass = 'sd'
+    if kwargs.get('esd',False):
+        stdfiles = SPEX_ESD_STDFILES
+        subclass = 'esd'
+
+# select among defined spectra
+    spt_allowed = numpy.array([typeToNum(s) for s in stdfiles.keys()])
+    spt_sample = spt_allowed[numpy.where(spt_allowed >= sptrange[0])]
+    spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
+
+# nothing there, return
+    if len(spt_sample) == 0:
+        print('No standards are available for those criteria')
+        return []
+    else:
+        print('Retrieving {} standard spectra'.format(len(spt_sample)))
+
+# build up file or Spectrum list
+    result = []
+    for t in spt_sample:
+        if kwargs.get('file',False):
+            result.append(stdfiles[typeToNum(t,subclass=subclass)])
+        else:
+            result.append(Spectrum(file=stdfiles[typeToNum(t,subclass=subclass)]))
+
+    return result
+
+
 # simple number checker
 def isNumber(s):
     '''
