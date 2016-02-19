@@ -2519,29 +2519,29 @@ def keySpectrum(keys, **kwargs):
         return db
 
 
-def loadSpectrum(*args, **kwargs):
-    '''
-    .. note:: deprecated
-    '''
-    if kwargs.get('file',False) != False:
-        return Spectrum(**kwargs)
-    if kwargs.get('filename',False) != False:
-        return Spectrum(**kwargs)
-    if kwargs.get('idkey',False) != False:
-        return Spectrum(**kwargs)
+#def loadSpectrum(*args, **kwargs):
+#    '''
+#    .. note:: deprecated
+#    '''
+#    if kwargs.get('file',False) != False:
+#        return Spectrum(**kwargs)
+#    if kwargs.get('filename',False) != False:
+#        return Spectrum(**kwargs)
+#    if kwargs.get('idkey',False) != False:
+#        return Spectrum(**kwargs)
 
 # check primary argument
-    if len(args) > 0:
-        if isinstance(args[0],str):
-            kwargs['filename'] = args[0]
-            return Spectrum(**kwargs)
-        if isinstance(args[0],int):
-            kwargs['idkey'] = args[0]
-            return Spectrum(**kwargs)
+#    if len(args) > 0:
+#        if isinstance(args[0],str):
+#            kwargs['filename'] = args[0]
+#            return Spectrum(**kwargs)
+#        if isinstance(args[0],int):
+#            kwargs['idkey'] = args[0]
+#            return Spectrum(**kwargs)
 
 # couldn't find what you're looking for
-    raise NameError('\nNo filename or idkey specified in loadSpectrum\n\n')
-    return False
+#    raise NameError('\nNo filename or idkey specified in loadSpectrum\n\n')
+#    return False
 
 
 def estimateDistance(sp, **kwargs):
@@ -3656,7 +3656,7 @@ def test():
 #    sp = getSpectrum(shortname=test_src)[0]
     sp = getSpectrum(spt=['L5','T5'],lucky=True)[0]
     sp.info()
-    sys.stderr.write('\n...getSpectrum and loadSpectrum successful\n')
+    sys.stderr.write('\n...getSpectrum successful\n')
 
 # check searchLibrary
     list = searchLibrary(young=True,output='DATA_FILE')
