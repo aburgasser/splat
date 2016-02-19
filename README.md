@@ -138,7 +138,7 @@ SPLAT is an experimental, collaborative project of research students in Adam Bur
 UCSD Cool Star Lab, aimed at teaching students how to do research by building 
 their own analysis tools.  Contributors to SPLAT include Christian Aganze, Daniella Bardalez Gagliuffi,
 Adam Burgasser (PI), Caleb Choban, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez,
-Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Melisa Tallis, Chris Theissen.
+Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Melisa Tallis, Tomoki Tamiya and Chris Theissen.
 
 
 
