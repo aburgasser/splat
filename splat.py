@@ -319,13 +319,16 @@ class Spectrum(object):
             if isinstance(args[0],int):
                 self.idkey = args[0]
 
+
         if self.idkey != False:
 #            self.idkey = kwargs.get('idkey',self.idkey)
             sdb = keySpectrum(self.idkey)
             if sdb != False:
                 self.filename = sdb['DATA_FILE'][0]
         elif self.model == False and self.filename != '':
-            t = searchLibrary(file=self.filename)
+            kwargs['filename']=self.filename
+            kwargs['silent']=True
+            t = searchLibrary(**kwargs)
             if len(t) > 0:
                 sdb = t
         else:
@@ -356,13 +359,14 @@ class Spectrum(object):
                 self.noise = rs['noise']
                 self.header = rs['header']
             except:
-                raise NameError('\nCould not load up spectral file {:s}'.format(kwargs.get('filename','')))
+                raise NameError('\nCould not load spectral file {:s}, recheck the filename and path'.format(kwargs.get('filename','')))
 
 # empty spectrum vessel (used for copying)
         else:
             self.wave = []
             self.flux = []
             self.noise = []
+            print ('Warning: not information provided, creating an empty Spectrum object')
 
 # process spectral data
         if len(self.wave) > 0:
@@ -804,6 +808,7 @@ def checkFile(filename,**kwargs):
        >>> print splat.checkFile(spectrum2)
        False
     '''
+    print checkFile.__doc__
     url = kwargs.get('url',SPLAT_URL)+DATA_FOLDER
     return requests.get(url+filename).status_code == requests.codes.ok
 #    flag = checkOnline()
@@ -3037,13 +3042,12 @@ def readSpectrum(*args,**kwargs):
 
 # fits file
     if (ftype == 'fit' or ftype == 'fits'):
-        data = fits.open(file)
-        if 'NAXIS3' in data[0].header.keys():
-            d = data[0].data[0,:,:]
-        else:
-            d = data[0].data
-        header = data[0].header
-        data.close()
+        with fits.open(file) as data:
+            if 'NAXIS3' in data[0].header.keys():
+                d = numpy.copy(data[0].data[0,:,:])
+            else:
+                d =  numpy.copy(data[0].data)
+            header = data[0].header
 
 # ascii file
     else:
@@ -3283,8 +3287,6 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['SPTN'] >= spt_range[0],source_db['SPTN'] <= spt_range[1]))] += 1
         count+=1.
 
-
-
 # search by magnitude range
     if kwargs.get('jmag',False) != False:
         mag = kwargs['jmag']
@@ -3308,7 +3310,6 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['KMAGN'] >= mag[0],source_db['KMAGN'] <= mag[1]))] += 1
         count+=1.
 
-
 # young
     if (kwargs.get('young','') != ''):
         source_db['YOUNG'] = [i != '' for i in source_db['GRAVITY_CLASS_CRUZ']] or [i != '' for i in source_db['GRAVITY_CLASS_ALLERS']]
@@ -3322,7 +3323,6 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(source_db['GRAVITY_CLASS_CRUZ'] == flag)] += 1
         source_db['SELECT'][numpy.where(source_db['GRAVITY_CLASS_ALLERS'] == flag)] += 1
         count+=1.
-
 
 # specific cluster
     if (kwargs.get('cluster','') != '' and isinstance(kwargs.get('cluster'),str)):
@@ -3381,7 +3381,6 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(source_db['SBINARY_FLAG'] == kwargs.get('sbinary'))] += 1
         count+=1.
 
-
 # companions
     if (kwargs.get('companion','') != ''):
         source_db['COMPANION_FLAG'] = [i != '' for i in source_db['COMPANION_NAME']]
@@ -3410,9 +3409,13 @@ def searchLibrary(*args, **kwargs):
         count+=1.
 
 # VLM dwarfs by default
-    if (kwargs.get('vlm',True)):
-        source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == 'VLM')] += 1
-        count+=1.
+    if (kwargs.get('vlm','') != ''):
+        if (kwargs.get('vlm') == True):
+            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == 'VLM')] += 1
+            count+=1.
+        if (kwargs.get('vlm') == False):
+            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] != 'VLM')] += 1
+            count+=1.
 
 # select source keys
     if (count > 0):
@@ -3443,27 +3446,27 @@ def searchLibrary(*args, **kwargs):
         for f in file:
             spectral_db['SELECT'][numpy.where(spectral_db['DATA_FILE'] == f)] += 1
         count+=1.
+
 # exclude by data key
     if kwargs.get('excludekey',False) != False:
         exkey = kwargs['excludekey']
-#        print(file)
         if len(exkey) > 0:
             if isinstance(exkey,str):
                 exkey = [exkey]
             for f in exkey:
                 spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)] += 1
-#                print(spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)])
             count+=1.
+
 # exclude by filename
     if kwargs.get('excludefile',False) != False:
         file = kwargs['excludefile']
-#        print(file)
         if len(file) > 0:
             if isinstance(file,str):
                 file = [file]
             for f in file:
                 spectral_db['SELECT'][numpy.where(spectral_db['DATA_FILE'] != f)] += 1
             count+=1.
+
 # search by observation date range
     if kwargs.get('date',False) != False:
         date = kwargs['date']
@@ -3476,6 +3479,7 @@ def searchLibrary(*args, **kwargs):
         spectral_db['DATEN'] = [float(x) for x in spectral_db['OBSERVATION_DATE']]
         spectral_db['SELECT'][numpy.where(numpy.logical_and(spectral_db['DATEN'] >= date[0],spectral_db['DATEN'] <= date[1]))] += 1
         count+=1.
+
 # search by S/N range
     if kwargs.get('snr',False) != False:
         snr = kwargs['snr']
@@ -3501,7 +3505,8 @@ def searchLibrary(*args, **kwargs):
 
 # no matches
     if len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))]) == 0:
-        print('No spectra in the SPL database match the selection criteria')
+        if not kwargs.get('silent',False):
+            print('No spectra in the SPL database match the selection criteria')
         return Table()
     else:
 
