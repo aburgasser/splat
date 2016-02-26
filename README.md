@@ -16,15 +16,15 @@ plot/tabulate your results.
 
 SPLAT is best forked from this github site, which is updated on a semi-regular basis.
 SPLAT has not yet reached v1.0, so bugs are rampant. Please help us knock them down by 
-sending bug reports to aburgasser@ucsd.edu 
+sending bug reports to aburgasser@ucsd.edu or noting them on the github page ("Issues")
 
-General instructions on setting up to run SPLAT are maintained at http://bit.ly/1AQuy9G
+Documentation on setting up and using SPLAT are maintained at http://www.browndwarfs.org/splat
 
 You should copy the file .splat_access into your home directory - this is your access key
 
 ## Using SPLAT
 
-The best place to start is the code documentation, housed at http://bit.ly/1zPZgi2
+The best place to start is the code documentation, housed at http://www.browndwarfs.org/splat
 
 Here are some examples:
 
@@ -44,13 +44,13 @@ aspects of the spectrum and it source. For example, selecting the first spectrum
 sp = splist[0]
 ```
 
-sp.wave gives the wavelengths of this spectrum, sp.flux the flux values, and sp.noise the 
+sp.wave gives the wavelength values of this spectrum, sp.flux the flux values, and sp.noise the 
 flux uncertainty.
 
-You can also read in your own spectrum using the loadSpectrum function
+You can also read in your own spectrum by passing the Spectrum object a filename:
 
 ```
-sp = splat.loadSpectrum(filename='myspectrum.fits',local=True)
+sp = splat.pectrum(filename='myspectrum.fits',local=True)
 ```
 
 Note that this file must conform to the standard of the SPL data: the first column is
@@ -64,9 +64,10 @@ sp = splat.getSpectrum(shortname='0415-0935')[0]
 sp.fluxCalibrate('2MASS J',14.0)
 ```
 
-* To display the spectrum, use plotSpectrum
+* To display the spectrum, use the Spectrum object's plot function or plotSpectrum
 
 ```
+sp.plot()
 splat.plotSpectrum(sp)
 ```
 
@@ -84,8 +85,6 @@ sp1 = splat.getSpectrum(shortname='0415-0935')[0]
 sp2 = splat.getSpectrum(shortname='1217-0311')[1]
 splat.plotSpectrum(sp1,sp2,colors=['k','r'])
 ```
-
-SPLAT can compare an arbitrary number of spectra.
 
 * To measure spectral indices, use measureIndex or measureIndexSet:
 
@@ -108,19 +107,25 @@ print indices['H2O-J']		# returns value, error
 sp = splat.getSpectrum(shortname='0415-0935')[0]
 spt,unc = splat.classifyByIndex(sp,set='burgasser')
 spt,unc = splat.classifyByStandard(sp)
+spt,unc = splat.classifyByTemplate(sp,spt=['M7','L0'])
 ```
 
 * To compare a spectrum to another spectrum or a model, use compareSpectra:
 
 ```
 sp = splat.getSpectrum(shortname='0415-0935')[0]
-mdl = splat.loadModel(teff=700,logg=5.0)			# currently BTSettl08 only
+mdl = splat.loadModel(teff=700,logg=5.0,set='BTSettl2008')    # currently BTSettl08 only
 chi,scale = splat.compareSpectra(sp,mdl)
 mdl.scale(scale)
 splat.plotSpectrum(sp,mdl,colors=['k','r'])
 ```
 
-This can be placed in a for loop or MCMC chain for best-fit parameter determination.
+There is a prototype MCMC fitting program that can determine the best fitting model to a spectrum as well
+
+```
+sp = splat.getSpectrum(shortname='0415-0935')[0]
+table = splat.modelFitMCMC(sp,initial_guess=[800,5.0,0.],nsamples=1000,step_sizes=[50.,0.5,0.])
+```
 
 
 All of these routines have many options worth exploring, and we are continually adding
@@ -133,7 +138,7 @@ SPLAT is an experimental, collaborative project of research students in Adam Bur
 UCSD Cool Star Lab, aimed at teaching students how to do research by building 
 their own analysis tools.  Contributors to SPLAT include Christian Aganze, Daniella Bardalez Gagliuffi,
 Adam Burgasser (PI), Caleb Choban, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez,
-Alex Mendez, Johnny Parra, Julian Pilate-Hutcherson, Maitrayee Sahi and Melisa Tallis.
+Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Melisa Tallis, Tomoki Tamiya and Chris Theissen.
 
 
 
