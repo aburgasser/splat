@@ -29,8 +29,7 @@ Routines
 Data Access
 ^^^^^^^^^^^^^^
 .. autofunction:: splat.getSpectrum
-.. autofunction:: splat.loadSpectrum
-.. autofunction:: splat.readSpectrum
+.. autofunction:: splat.getStandard
 .. autofunction:: splat.searchLibrary
 .. autofunction:: splat.fetchDatabase
 .. autofunction:: splat.keySource

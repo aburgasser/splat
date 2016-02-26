@@ -998,19 +998,7 @@ energy flux.</td>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
 noise array elements.</li>
-<li><strong>filter</strong> &#8211; <p>Name of filter, must be one of the following:</p>
-<ul>
-<li>&#8216;2MASS J&#8217;, &#8216;2MASS H&#8217;, &#8216;2MASS Ks&#8217;</li>
-<li>&#8216;MKO J&#8217;, &#8216;MKO H&#8217;, &#8216;MKO K&#8217;, MKO Kp&#8217;, &#8216;MKO Ks&#8217;</li>
-<li>&#8216;NICMOS F090M&#8217;, &#8216;NICMOS F095N&#8217;, &#8216;NICMOS F097N&#8217;, &#8216;NICMOS F108N&#8217;</li>
-<li>&#8216;NICMOS F110M&#8217;, &#8216;NICMOS F110W&#8217;, &#8216;NICMOS F113N&#8217;, &#8216;NICMOS F140W&#8217;</li>
-<li>&#8216;NICMOS F145M&#8217;, &#8216;NICMOS F160W&#8217;, &#8216;NICMOS F164N&#8217;, &#8216;NICMOS F165M&#8217;</li>
-<li>&#8216;NICMOS F166N&#8217;, &#8216;NICMOS F170M&#8217;, &#8216;NICMOS F187N&#8217;, &#8216;NICMOS F190N&#8217;</li>
-<li>&#8216;NIRC2 J&#8217;, &#8216;NIRC2 H&#8217;, &#8216;NIRC2 Kp&#8217;, &#8216;NIRC2 Ks&#8217;</li>
-<li>&#8216;WIRC J&#8217;, &#8216;WIRC H&#8217;, &#8216;WIRC K&#8217;, &#8216;WIRC CH4S&#8217;, &#8216;WIRC CH4L&#8217;</li>
-<li>&#8216;WIRC CO&#8217;, &#8216;WIRC PaBeta&#8217;, &#8216;WIRC BrGamma&#8217;, &#8216;WIRC Fe2&#8217;</li>
-</ul>
-</li>
+<li><strong>filter</strong> &#8211; name of filter</li>
 <li><strong>info</strong> (<em>optional, default = False</em>) &#8211; give the filter names available</li>
 <li><strong>custom</strong> (<em>optional, default = False</em>) &#8211; specify to a 2 x N vector array specifying the wavelengths and transmissions for a custom filter</li>
 <li><strong>ab</strong> (<em>optional, default = False</em>) &#8211; compute AB magnitudes</li>
@@ -1117,6 +1105,45 @@ noise array elements.</li>
 </dd></dl>
 
 <dl class="function">
+<dt id="splat.getStandard">
+<code class="descclassname">splat.</code><code class="descname">getStandard</code><span class="sig-paren">(</span><em>sptrange</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.getStandard" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets one or more of the pre-defined spectral standards from the SPLAT library.</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; array of Spectrum class objects</li>
+<li><strong>spt</strong> &#8211; spectral type of standard desired (&#8216;M7&#8217;), or range of spectral types ([&#8216;M8&#8217;,&#8217;L4&#8217;])</li>
+<li><strong>sd</strong> (<em>optional, default = False</em>) &#8211; get subdwarf standard</li>
+<li><strong>esd</strong> (<em>optional, default = False</em>) &#8211; get extreme subdwarf standard</li>
+<li><strong>file</strong> (<em>optional, default = False</em>) &#8211; return only the files</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">(</span><span class="s1">&#39;M7&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">    Retrieving 1 standard spectra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sparr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">([</span><span class="s1">&#39;M7&#39;</span><span class="p">,</span><span class="s1">&#39;L5&#39;</span><span class="p">])</span>
+<span class="go">    Retrieving 9 standard spectra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sparr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">(</span><span class="s1">&#39;T5&#39;</span><span class="p">,</span><span class="n">esd</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    No standards are available for those criteria</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="splat.isNumber">
 <code class="descclassname">splat.</code><code class="descname">isNumber</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.isNumber" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -1141,11 +1168,74 @@ noise array elements.</li>
 </dd></dl>
 
 <dl class="function">
+<<<<<<< HEAD
 <dt id="splat.loadSpectrum">
 <code class="descclassname">splat.</code><code class="descname">loadSpectrum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.loadSpectrum" title="Permalink to this definition">¶</a></dt>
 <dd><div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">deprecated</p>
+=======
+<dt id="splat.keySource">
+<code class="descclassname">splat.</code><code class="descname">keySource</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.keySource" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a source key and returns a table with the source information</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; source key or a list of source keys</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
+<span class="go">    SOURCE_KEY           NAME              DESIGNATION    ... NOTE SELECT</span>
+<span class="go">    ---------- ------------------------ ----------------- ... ---- ------</span>
+<span class="go">         10001 SDSS J000013.54+255418.6 J00001354+2554180 ...        True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">([</span><span class="mi">10105</span><span class="p">,</span> <span class="mi">10623</span><span class="p">])</span>
+<span class="go">    SOURCE_KEY          NAME             DESIGNATION    ... NOTE SELECT</span>
+<span class="go">    ---------- ---------------------- ----------------- ... ---- ------</span>
+<span class="go">         10105 2MASSI J0103320+193536 J01033203+1935361 ...        True</span>
+<span class="go">         10623 SDSS J09002368+2539343 J09002368+2539343 ...        True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
+<span class="go">    No sources found with source key 1000001</span>
+<span class="go">    False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat.keySpectrum">
+<code class="descclassname">splat.</code><code class="descname">keySpectrum</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.keySpectrum" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a spectrum key and returns a table with the spectrum and source information</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; spectrum key or a list of source keys</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
+<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
+<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
+<span class="go">       10001      10443 10001_10443.fits ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">([</span><span class="mi">10123</span><span class="p">,</span> <span class="mi">11298</span><span class="p">])</span>
+<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
+<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
+<span class="go">       11298      10118 11298_10118.fits ...</span>
+<span class="go">       10123      10145 10123_10145.fits ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
+<span class="go">    No spectra found with spectrum key 1000001</span>
+<span class="go">    False</span>
+</pre></div>
+>>>>>>> master
 </div>
 </dd></dl>
 
