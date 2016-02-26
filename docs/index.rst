@@ -165,6 +165,7 @@ and Chris Theissen.
    :maxdepth: 3
 
    splat
+   splat_db
    splat_plot
    splat_model
    bdevopar
