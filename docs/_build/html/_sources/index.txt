@@ -19,7 +19,7 @@ It is built on common python packages such as numpy, scipy, astropy and matplotl
 SPLAT tools will allow you to:
     * search the SPL for data and source information;
     * access the publically-available (published) spectra contained in it;
-    * compare your near-infrared spectrum to these data
+    * compare your near-infrared spectrum to these data;
     * make use of published empirical trends in absolute magnitudes and effective temperatures;
     * perform basic spectral analyses such as spectral classification, gravity classification, index measurement, spectrophotometry, reddening, robust comparison statistics, basic math operations;
     * perform advanced analyses such as MCMC spectral model fitting, spectral binary analysis, and optimized index definition;
@@ -36,7 +36,7 @@ which is updated on a regular basis.
 SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by 
 sending bug reports to aburgasser@ucsd.edu 
 
-General instructions on setting up to run SPLAT are maintained at http://bit.ly/1AQuy9G
+Instructions on setting up and using SPLAT are maintained at http://www.browndwarfs.org/splat
 
 You should copy the file ``.splat_access`` into your home directory - this is your access key
 if you have priveleged access to unpublished data.
@@ -78,8 +78,9 @@ flux uncertainty.
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> sp.fluxCalibrate('2MASS J',14.0)
 
-* To display the spectrum, use plotSpectrum
+* To display the spectrum, use the Spectrum object's plot function or plotSpectrum
 
+>>> sp.plot()
 >>> splat.plotSpectrum(sp)
 
 which will pop up a window displaying flux vs. wavelength. 
@@ -112,12 +113,18 @@ of the index:
 
 >>> print indices['sH2O-J']		# returns value, error
 
+* You can also determine the gravity classification of a source via Allers & Liu (2013)
+
+>>> sp = splat.getSpectrum(young=True, lucky=True)[0]
+>>> print splat.classifyGravity(sp)   # returned 'VL-G'
+
+
 * To classify a spectrum, use the classifyByXXX methods:
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> spt,unc = splat.classifyByIndex(sp,set='burgasser')
 >>> spt,unc = splat.classifyByStandard(sp,spt=['T5','T9'])
->>> result = splat.classifyByTemplate(sp,spt=['T8','T9'],nbest=5)
+>>> result = splat.classifyByTemplate(sp,spt=['T6','T9'],nbest=5)
 
 The last line returns a dictionary containing the best 5 template matches to the Spectrum sp.
 
@@ -130,9 +137,17 @@ The last line returns a dictionary containing the best 5 template matches to the
 >>> mdl.scale(scale)
 >>> splat.plotSpectrum(sp,mdl,colors=['black','red'],legend=[sp.name,mdl.name])
 
-All of these routines have many options worth exploring, and which are (increasingly) documented 
+
+# There is also a basic Markov Chain Monte Carlo code to compare models to spectra
+
+>>> sp = splat.getSpectrum(shortname='0415-0935')[0]
+>>> sp.fluxCalibrate('2MASS J',14.49,absolute=True)
+>>> table = splat.modelFitMCMC(sp,initial_guess=[800,5.0,0.],nsamples=300,step_sizes=[50.,0.5,0.])
+
+
+All of these routines have many options worth exploring, and which are (partially) documented 
 in the following pages. If there are capabilities
-you need, please suggest them, or even better contribute your own code!
+you need, please suggest them, or note it in the "Issues" link on our github site
 
 Authors
 --------
@@ -141,7 +156,8 @@ SPLAT is an experimental, collaborative project of research students in Adam Bur
 UCSD Cool Star Lab, aimed at teaching students how to do research by building 
 their own analysis tools.  Contributors to SPLAT include Christian Aganze, Daniella Bardalez Gagliuffi,
 Adam Burgasser (PI), Caleb Choban, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez,
-Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis and Tomoki Tamiya.
+Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya
+and Chris Theissen.
 
 *Contents*
 
@@ -149,7 +165,7 @@ Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa
    :maxdepth: 3
 
    splat
-   splat_alt
+   splat_db
    splat_plot
    splat_model
    bdevopar

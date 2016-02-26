@@ -9,30 +9,32 @@ import astropy
 import os
 import re
 import requests
+import splat
 import sys
 #from scipy import stats
-#import numpy
-#from astropy.io import ascii            # for reading in spreadsheet
-#from astropy.table import Table
-import splat
+import numpy
+from astropy.io import ascii, fits            # for reading in spreadsheet
+from astropy.table import Table, join            # for reading in table files
 
 DB_FOLDER = '/db/'
 ORIGINAL_DB = 'db_spexprism.txt'
 SOURCES_DB = 'source_data.txt'
 SPECTRA_DB = 'spectral_data.txt'
 PHOTOMETRY_DB = 'photometry_data.txt'
+BIBFILE = 'biblibrary.bib'
 TMPFILENAME = 'splattmpfile'
 
 # change the command prompt
 sys.ps1 = 'splat db> '
 
 
-
-
-def assignSourceID(coordinate,**kwargs)
+def assignSourceID(coordinate,**kwargs):
     '''
-    Purpose
+    :Purpose:
         Assigns a source ID based on current source database and possible overlap.
+
+    :Note:
+        **Currently not functional**
 
     :Required parameters:
         :param coordinate: astropy Coordinate object with coordinates (RA, Dec) of source, to check against current database
@@ -50,10 +52,13 @@ def assignSourceID(coordinate,**kwargs)
     pass
 
 
-def assignSpectralID(**kwargs)
+def assignSpectralID(**kwargs):
     '''
-    Purpose
+    :Purpose:
         Assigns a spectral ID based on current spectral database
+
+    :Note:
+        **Currently not functional**
 
     :Required parameters:
         None
@@ -68,11 +73,105 @@ def assignSpectralID(**kwargs)
     pass
 
 
-def bibtext(bibcode,**kwargs)
+def bibTexParser(bib_tex,**kwargs):
+    '''
+    :Purpose:
+        Parses a bibtex segment and returns a dictionary of parameter fields
+
+    :Required parameters:
+        :param bib_tex: String containing bibtex data in standard format
+
+    :Optional parameters:
+        None
+
+    :Output:
+        A dictionary containing the parsed bibtex information
+
+    '''
+    bib_dict = {"bib_tex": bib_tex}
+    bib_tex.strip('\n')
+    # get bib code
+    begin = bib_tex.find('{')  
+    end = bib_tex.find(',')
+    bib_dict["bibcode"] = bib_tex[begin+1:end]
+    bib_tex = bib_tex[end+1:]   # remove bib code line
+    
+    bib_tex =  bib_tex.split(',\n')  # this moght not always work for author lists
+    
+    for line in bib_tex:
+        line = line.strip()
+        line = line.replace('{','').replace('}','').replace('\"','').replace('\n','').replace('\t','') 
+        line = line.split('=')
+        line[0] = line[0].strip()
+        line[1] = line[1].strip()
+        bib_dict[line[0]] = line[1]
+        
+    return bib_dict
+
+
+def getBibTex(bibcode,**kwargs):
     '''
     Purpose
         Takes a bibcode and returns a dictionary containing the bibtex information; looks either in internal SPLAT
             or user-supplied bibfile, or seeks online. If nothing found, gives a soft warning and returns False
+
+    :Note:
+        **Currently not functional**
+
+    :Required parameters:
+        :param bibcode: Bibcode string to look up (e.g., '2014ApJ...787..126L')
+
+    :Optional parameters:
+        :param biblibrary: Filename for biblibrary to use in place of SPLAT internal one
+        :type string: optional, default = ''
+        :param online: If True, go directly online; if False, do not try to go online 
+        :type logical: optional, default = null
+
+    :Output:
+        - A dictionary containing the bibtex fields, or False if not found
+
+    '''
+
+# go online first
+    if kwargs.get('online',False) and checkOnline():
+        bib_tex = getBibTexOnline(bibcode)
+
+# read locally first
+    else:
+        biblibrary = kwargs.get('biblibrary', splat.SPLAT_PATH+DB_FOLDER+BIBFILE)
+# check the file
+        if not os.path.exists(biblibrary):
+            print('Could not find bibtex library {}'.format(biblibrary))
+            biblibrary = splat.SPLAT_PATH+DB_FOLDER+BIBFILE
+
+        if not os.path.exists(biblibrary):
+            raise NameError('Could not find SPLAT main bibtext library {}; something is wrong'.format(biblibrary))
+
+
+        with open(biblibrary, 'r') as bib_file:
+            text = bib_file.read()
+            #print re.search('@[A-Z]+{' + bib_code, bib_file)        
+            in_lib = re.search('@[a-z]+{' + bibcode, text)
+            if in_lib == None:  
+                print('Bibcode {} not in bibtex library {}; checking online'.format(bibcode,biblibrary))
+                bib_tex = getBibTexOnline(bibcode)
+            else:
+                begin = text.find(re.search('@[a-z]+{' + bibcode, text).group(0))
+                text = text[begin:]
+                end = text.find('\n@')
+                bib_tex = text[:end]
+
+    if bib_tex == False:
+        return False
+    else:
+        return bibTexParser(bib_tex)
+
+
+def getBibTexOnline(bibcode):
+    '''
+    Purpose
+        Takes a bibcode and searches for the bibtex information online through NASA ADS; requires user to be online.
+            If successful, returns full bibtex string block; otherwise False.
 
     :Required parameters:
         :param bibcode: Bibcode string to look up (e.g., '2014ApJ...787..126L')
@@ -84,10 +183,134 @@ def bibtext(bibcode,**kwargs)
         :type logical: optional, default = null
 
     :Output:
-        - A dictionary containing the bibtext fields, or False if not found
+        - A string block of the basic bibtex information
 
     '''
-    pass
+    if (checkOnline() == False):
+        return False
+
+    url_begin = "http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode="
+    url_end = "&data_type=BIBTEX"
+    url = url_begin + bibcode + url_end
+    bib_tex = requests.get(url).content
+    
+    # Check if content is in html which means bad bib_code was given
+    if "<HTML>" in bib_tex:
+        print('{} is not a valid online bib code.'.format(bibcode))
+        return False       
+        
+    # Cut off extraneous info from website before the bibtex code
+    else:
+        begin = bib_tex.find('@')
+        bib_tex = bib_tex[begin:]
+        return bib_tex
+
+
+
+def checkFile(filename,**kwargs):
+    '''
+    :Purpose: Checks if a spectrum file exists in the SPLAT's library.
+    :param filename: A string containing the spectrum's filename.
+    :Example:
+       >>> import splat
+       >>> spectrum1 = 'spex_prism_1315+2334_110404.fits'
+       >>> print splat.checkFile(spectrum1)
+       True
+       >>> spectrum2 = 'fake_name.fits'
+       >>> print splat.checkFile(spectrum2)
+       False
+    '''
+    url = kwargs.get('url',splat.SPLAT_URL)+DATA_FOLDER
+    return requests.get(url+filename).status_code == requests.codes.ok
+#    flag = checkOnline()
+#    if (flag):
+#        try:
+#            r = requests.get(url+filename)
+#            open(os.path.basename(filename), 'wb').write(r.content)
+#            open(os.path.basename(filename), 'wb').write(urllib2.urlopen(url+filename).read())
+#        except:
+#            flag = False
+#    return flag
+
+
+def checkAccess(**kwargs):
+    '''
+    :Purpose: Checks if user has access to unpublished spectra in SPLAT library.
+    :Example:
+       >>> import splat
+       >>> print splat.checkAccess()
+       True
+    :Note: Must have the file .splat_access in your home directory with the correct passcode to use.
+    '''
+    access_file = '.splat_access'
+    result = False
+
+    try:
+        home = os.environ.get('HOME')
+        if home == None:
+            home = './'
+        bcode = requests.get(splat.SPLAT_URL+access_file).content
+        lcode = base64.b64encode(open(home+'/'+access_file,'r').read())
+        if (bcode in lcode):        # changed to partial because of EOL variations
+            result = True
+    except:
+        result = False
+
+    if (kwargs.get('report','') != ''):
+        if result == True:
+            print('You have full access to all SPLAT data')
+        else:
+            print('You have access only to published data')
+    return result
+
+
+def checkLocal(inputfile):
+    '''
+    :Purpose: Checks if a file is present locally or within the SPLAT
+                code directory
+    :Example:
+       >>> import splat
+       >>> splat.checkLocal('splat.py')
+       True  # found the code
+       >>> splat.checkLocal('parameters.txt')
+       False  # can't find this file
+       >>> splat.checkLocal('SpectralModels/BTSettl08/parameters.txt')
+       True  # found it
+    '''
+    if not os.path.exists(inputfile):
+        if not os.path.exists(splat.SPLAT_PATH+inputfile):
+            return ''
+        else:
+            return splat.SPLAT_PATH+inputfile
+    else:
+        return inputfile
+
+
+def checkOnline(*args):
+    '''
+    :Purpose: Checks if SPLAT's URL is accessible from your machine--
+                that is, checks if you and the host are online. Alternately
+                checks if a given filename is present locally or online
+    :Example:
+       >>> import splat
+       >>> splat.checkOnline()
+       True  # SPLAT's URL was detected.
+       >>> splat.checkOnline()
+       False # SPLAT's URL was not detected.
+       >>> splat.checkOnline('SpectralModels/BTSettl08/parameters.txt')
+       '' # Could not find this online file.
+    '''
+    if (len(args) != 0):
+        if 'http://' in args[0]:
+            if requests.get(args[0]).status_code == requests.codes.ok:
+                return args[0]
+            return ''
+        else:
+            if requests.get(splat.SPLAT_URL+args[0]).status_code == requests.codes.ok:
+                return splat.SPLAT_URL+args[0]
+            return ''
+    else:
+        return requests.get(splat.SPLAT_URL).status_code == requests.codes.ok
 
 
 def fetchDatabase(*args, **kwargs):
@@ -97,7 +320,7 @@ def fetchDatabase(*args, **kwargs):
     kwargs['filename'] = kwargs.get('filename',ORIGINAL_DB)
     kwargs['filename'] = kwargs.get('file',kwargs['filename'])
     kwargs['folder'] = kwargs.get('folder',DB_FOLDER)
-    url = kwargs.get('url',SPLAT_URL)+kwargs['folder']
+    url = kwargs.get('url',splat.SPLAT_URL)+kwargs['folder']
     local = kwargs.get('local',True)
     online = kwargs.get('online',not local and checkOnline())
     local = not online
@@ -204,13 +427,13 @@ def fetchDatabase(*args, **kwargs):
     data['COMPANION'] = ['companion' in x for x in data['LIBRARY']]
 
 # add in shortnames
-    data['SHORTNAME'] = [designationToShortName(x) for x in data['DESIGNATION']]
+    data['SHORTNAME'] = [splat.designationToShortName(x) for x in data['DESIGNATION']]
 
 # create literature spt
     data['LIT_TYPE'] = data['OPT_TYPE']
     w = numpy.where(numpy.logical_and(data['LIT_TYPE'] == '',data['NIR_TYPE'] != ''))
     data['LIT_TYPE'][w] = data['NIR_TYPE'][w]
-    sptn = [typeToNum(x) for x in data['LIT_TYPE']]
+    sptn = [splat.typeToNum(x) for x in data['LIT_TYPE']]
     w = numpy.where(numpy.logical_and(sptn > 29.,data['NIR_TYPE'] != ''))
     data['LIT_TYPE'][w] = data['NIR_TYPE'][w]
 #    w = numpy.where(numpy.logical_and(data['lit_type'] == '',typeToNum(data['spex_type']) > 17.))
@@ -220,10 +443,13 @@ def fetchDatabase(*args, **kwargs):
 
 
 
-def getPhotometry(coordinate,**kwargs)
+def getPhotometry(coordinate,**kwargs):
     '''
     Purpose
         Downloads photometry for a source using astroquery (?)
+
+    :Note:
+        **Currently not functional**
 
     :Required parameters:
         :param coordinate: astropy Coordinate object with coordinates (RA, Dec) of source to be searched
@@ -254,10 +480,13 @@ def getPhotometry(coordinate,**kwargs)
 
 
 
-def importSpectra(input,**kwargs)
+def importSpectra(input,**kwargs):
     '''
     Purpose
         imports a set of spectra into the SPLAT library; requires manager access.
+
+    :Note:
+        **Currently not functional**
 
     :Required parameters:
         :param input: Can be one of the following:
@@ -327,7 +556,7 @@ def keySource(keys, **kwargs):
     if isinstance(keys,list) == False:
         keys = [keys]
 
-    sdb = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+    sdb = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
     sdb['SELECT'] = [x in keys for x in sdb['SOURCE_KEY']]
 
     if sum(sdb['SELECT']) == 0.:
@@ -362,14 +591,14 @@ def keySpectrum(keys, **kwargs):
     if isinstance(keys,list) == False:
         keys = [keys]
 
-    sdb = ascii.read(SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
+    sdb = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
     sdb['SELECT'] = [x in keys for x in sdb['DATA_KEY']]
 
     if sum(sdb['SELECT']) == 0.:
         print('No spectra found with spectrum key {}'.format(keys[0]))
         return False
     else:
-        s2db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+        s2db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
         db = join(sdb[:][numpy.where(sdb['SELECT']==1)],s2db,keys='SOURCE_KEY')
         return db
 
@@ -386,14 +615,14 @@ def searchLibrary(*args, **kwargs):
     :type combine: optional, default = 'and'
     :Example:
     >>> import splat
-    >>> print splat.searchLibrary(shortname = '2213-2136')
+    >>> print SearchLibrary(shortname = '2213-2136')
         DATA_KEY SOURCE_KEY    DATA_FILE     ... SHORTNAME  SELECT_2
         -------- ---------- ---------------- ... ---------- --------
            11590      11586 11590_11586.fits ... J2213-2136      1.0
            11127      11586 11127_11586.fits ... J2213-2136      1.0
            10697      11586 10697_11586.fits ... J2213-2136      1.0
            10489      11586 10489_11586.fits ... J2213-2136      1.0
-    >>> print splat.searchLibrary(shortname = '2213-2136', output = 'OBSERVATION_DATE')
+    >>> print SearchLibrary(shortname = '2213-2136', output = 'OBSERVATION_DATE')
         OBSERVATION_DATE
         ----------------
                 20110908
@@ -417,8 +646,8 @@ def searchLibrary(*args, **kwargs):
         raise ValueError('\nLogical operator '+logic+' not supported\n\n')
 
 # read in source database and add in shortnames and skycoords
-    source_db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t', fill_values='-99.', format='tab')
-    source_db['SHORTNAME'] = [designationToShortName(x) for x in source_db['DESIGNATION']]
+    source_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t', fill_values='-99.', format='tab')
+    source_db['SHORTNAME'] = [splat.designationToShortName(x) for x in source_db['DESIGNATION']]
 
 # first search by source parameters
     source_db['SELECT'] = numpy.zeros(len(source_db['RA']))
@@ -509,8 +738,8 @@ def searchLibrary(*args, **kwargs):
         if not isinstance(spt_range,list):        # one value = only this type
             spt_range = [spt_range,spt_range]
         if isinstance(spt_range[0],str):          # convert to numerical spt
-            spt_range = [typeToNum(spt_range[0]),typeToNum(spt_range[1])]
-        source_db['SPTN'] = [typeToNum(x) for x in source_db[spt_type]]
+            spt_range = [splat.typeToNum(spt_range[0]),splat.typeToNum(spt_range[1])]
+        source_db['SPTN'] = [splat.typeToNum(x) for x in source_db[spt_type]]
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['SPTN'] >= spt_range[0],source_db['SPTN'] <= spt_range[1]))] += 1
         count+=1.
 
@@ -658,7 +887,7 @@ def searchLibrary(*args, **kwargs):
 
 
 # read in spectral database
-    spectral_db = ascii.read(SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
+    spectral_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
     spectral_db['SELECT'] = numpy.zeros(len(spectral_db['DATA_KEY']))
     count = 0.
 

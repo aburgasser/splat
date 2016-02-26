@@ -24,9 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/logo.ico"/>
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.3 documentation" href="index.html" />
-    <link rel="next" title="SPLAT Plotting Routines" href="splat_plot.html" />
-    <link rel="prev" title="Main SPLAT module" href="splat.html" /> 
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.3 documentation" href="index.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -38,12 +36,6 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="splat_plot.html" title="SPLAT Plotting Routines"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="splat.html" title="Main SPLAT module"
-             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
@@ -52,12 +44,6 @@
             <p class="logo"><a href="index.html">
               <img class="logo" src="_static/logo.jpg" alt="Logo"/>
             </a></p>
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="splat.html"
-                        title="previous chapter">Main SPLAT module</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="splat_plot.html"
-                        title="next chapter">SPLAT Plotting Routines</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -990,19 +976,6 @@ uncertainty in parsecs</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.fetchDatabase">
-<code class="descclassname">splat.</code><code class="descname">fetchDatabase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.fetchDatabase" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Get the SpeX Database from either online repository or local drive</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="splat.filterMag">
 <code class="descclassname">splat.</code><code class="descname">filterMag</code><span class="sig-paren">(</span><em>sp</em>, <em>f</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterMag" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -1162,70 +1135,6 @@ noise array elements.</li>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">isNumber</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="go">    True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">isNumber</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span>
-<span class="go">    False</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat.keySource">
-<code class="descclassname">splat.</code><code class="descname">keySource</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.keySource" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a source key and returns a table with the source information</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; source key or a list of source keys</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
-<span class="go">    SOURCE_KEY           NAME              DESIGNATION    ... NOTE SELECT</span>
-<span class="go">    ---------- ------------------------ ----------------- ... ---- ------</span>
-<span class="go">         10001 SDSS J000013.54+255418.6 J00001354+2554180 ...        True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">([</span><span class="mi">10105</span><span class="p">,</span> <span class="mi">10623</span><span class="p">])</span>
-<span class="go">    SOURCE_KEY          NAME             DESIGNATION    ... NOTE SELECT</span>
-<span class="go">    ---------- ---------------------- ----------------- ... ---- ------</span>
-<span class="go">         10105 2MASSI J0103320+193536 J01033203+1935361 ...        True</span>
-<span class="go">         10623 SDSS J09002368+2539343 J09002368+2539343 ...        True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
-<span class="go">    No sources found with source key 1000001</span>
-<span class="go">    False</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat.keySpectrum">
-<code class="descclassname">splat.</code><code class="descname">keySpectrum</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.keySpectrum" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a spectrum key and returns a table with the spectrum and source information</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; spectrum key or a list of source keys</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
-<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
-<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
-<span class="go">       10001      10443 10001_10443.fits ...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">([</span><span class="mi">10123</span><span class="p">,</span> <span class="mi">11298</span><span class="p">])</span>
-<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
-<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
-<span class="go">       11298      10118 11298_10118.fits ...</span>
-<span class="go">       10123      10145 10123_10145.fits ...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
-<span class="go">    No spectra found with spectrum key 1000001</span>
 <span class="go">    False</span>
 </pre></div>
 </div>
@@ -1426,50 +1335,6 @@ using Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245)</dd>
 <dt><strong>Note</strong></dt>
 <dd>This routine is still in beta form; only the CCM89 currently works</dd>
 </dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat.searchLibrary">
-<code class="descclassname">splat.</code><code class="descname">searchLibrary</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.searchLibrary" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Search the SpeX database to extract the key reference for that Spectrum</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>output</strong> (<em>optional, default = 'all'</em>) &#8211; returns desired output of selected results</li>
-<li><strong>logic</strong> (<em>optional, default = 'and'</em>) &#8211; search logic, can be <code class="docutils literal"><span class="pre">and</span></code> or <code class="docutils literal"><span class="pre">or</span></code></li>
-<li><strong>combine</strong> (<em>optional, default = 'and'</em>) &#8211; same as logic</li>
-</ul>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">searchLibrary</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s1">&#39;2213-2136&#39;</span><span class="p">)</span>
-<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... SHORTNAME  SELECT_2</span>
-<span class="go">    -------- ---------- ---------------- ... ---------- --------</span>
-<span class="go">       11590      11586 11590_11586.fits ... J2213-2136      1.0</span>
-<span class="go">       11127      11586 11127_11586.fits ... J2213-2136      1.0</span>
-<span class="go">       10697      11586 10697_11586.fits ... J2213-2136      1.0</span>
-<span class="go">       10489      11586 10489_11586.fits ... J2213-2136      1.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">searchLibrary</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s1">&#39;2213-2136&#39;</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;OBSERVATION_DATE&#39;</span><span class="p">)</span>
-<span class="go">    OBSERVATION_DATE</span>
-<span class="go">    ----------------</span>
-<span class="go">            20110908</span>
-<span class="go">            20080829</span>
-<span class="go">            20060902</span>
-<span class="go">            20051017</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Note that this is currently only and AND search - need to figure out how to a full SQL style search</p>
-</div>
 </dd></dl>
 
 <dl class="function">
@@ -1718,12 +1583,6 @@ Allowed spectral type range is M7 to T8.</li>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="splat_plot.html" title="SPLAT Plotting Routines"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="splat.html" title="Main SPLAT module"
-             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
