@@ -520,18 +520,43 @@ noise array elements.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.loadSpectrum">
-<code class="descclassname">splat.</code><code class="descname">loadSpectrum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.loadSpectrum" title="Permalink to this definition">¶</a></dt>
-<dd><div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">deprecated</p>
+<dt id="splat.getStandard">
+<code class="descclassname">splat.</code><code class="descname">getStandard</code><span class="sig-paren">(</span><em>sptrange</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.getStandard" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets one or more of the pre-defined spectral standards from the SPLAT library.</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> &#8211; array of Spectrum class objects</li>
+<li><strong>spt</strong> &#8211; spectral type of standard desired (&#8216;M7&#8217;), or range of spectral types ([&#8216;M8&#8217;,&#8217;L4&#8217;])</li>
+<li><strong>sd</strong> (<em>optional, default = False</em>) &#8211; get subdwarf standard</li>
+<li><strong>esd</strong> (<em>optional, default = False</em>) &#8211; get extreme subdwarf standard</li>
+<li><strong>file</strong> (<em>optional, default = False</em>) &#8211; return only the files</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">(</span><span class="s1">&#39;M7&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">    Retrieving 1 standard spectra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sparr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">([</span><span class="s1">&#39;M7&#39;</span><span class="p">,</span><span class="s1">&#39;L5&#39;</span><span class="p">])</span>
+<span class="go">    Retrieving 9 standard spectra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sparr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">(</span><span class="s1">&#39;T5&#39;</span><span class="p">,</span><span class="n">esd</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    No standards are available for those criteria</span>
+</pre></div>
 </div>
 </dd></dl>
-
-<dl class="function">
-<dt id="splat.readSpectrum">
-<code class="descclassname">splat.</code><code class="descname">readSpectrum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.readSpectrum" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="function">
 <dt id="splat.searchLibrary">
@@ -977,19 +1002,7 @@ energy flux.</td>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
 noise array elements.</li>
-<li><strong>filter</strong> &#8211; <p>Name of filter, must be one of the following:</p>
-<ul>
-<li>&#8216;2MASS J&#8217;, &#8216;2MASS H&#8217;, &#8216;2MASS Ks&#8217;</li>
-<li>&#8216;MKO J&#8217;, &#8216;MKO H&#8217;, &#8216;MKO K&#8217;, MKO Kp&#8217;, &#8216;MKO Ks&#8217;</li>
-<li>&#8216;NICMOS F090M&#8217;, &#8216;NICMOS F095N&#8217;, &#8216;NICMOS F097N&#8217;, &#8216;NICMOS F108N&#8217;</li>
-<li>&#8216;NICMOS F110M&#8217;, &#8216;NICMOS F110W&#8217;, &#8216;NICMOS F113N&#8217;, &#8216;NICMOS F140W&#8217;</li>
-<li>&#8216;NICMOS F145M&#8217;, &#8216;NICMOS F160W&#8217;, &#8216;NICMOS F164N&#8217;, &#8216;NICMOS F165M&#8217;</li>
-<li>&#8216;NICMOS F166N&#8217;, &#8216;NICMOS F170M&#8217;, &#8216;NICMOS F187N&#8217;, &#8216;NICMOS F190N&#8217;</li>
-<li>&#8216;NIRC2 J&#8217;, &#8216;NIRC2 H&#8217;, &#8216;NIRC2 Kp&#8217;, &#8216;NIRC2 Ks&#8217;</li>
-<li>&#8216;WIRC J&#8217;, &#8216;WIRC H&#8217;, &#8216;WIRC K&#8217;, &#8216;WIRC CH4S&#8217;, &#8216;WIRC CH4L&#8217;</li>
-<li>&#8216;WIRC CO&#8217;, &#8216;WIRC PaBeta&#8217;, &#8216;WIRC BrGamma&#8217;, &#8216;WIRC Fe2&#8217;</li>
-</ul>
-</li>
+<li><strong>filter</strong> &#8211; name of filter</li>
 <li><strong>info</strong> (<em>optional, default = False</em>) &#8211; give the filter names available</li>
 <li><strong>custom</strong> (<em>optional, default = False</em>) &#8211; specify to a 2 x N vector array specifying the wavelengths and transmissions for a custom filter</li>
 <li><strong>ab</strong> (<em>optional, default = False</em>) &#8211; compute AB magnitudes</li>

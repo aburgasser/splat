@@ -151,15 +151,38 @@ SPEX_ESD_STDFILES = { \
 # filters
 FILTER_FOLDER = '/reference/Filters/'
 FILTERS = { \
-    'BESSEL_I': {'file': 'bessel_i.txt', 'description': 'Bessel I-band', 'zeropoint': 2405.3}, \
     '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band', 'zeropoint': 1594.0}, \
     '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band', 'zeropoint': 1024.0}, \
     '2MASS_KS': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7}, \
-    'MKO_J': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 0.}, \
-    'MKO_H': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 0.}, \
-    'MKO_K': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere', 'zeropoint': 0.}, \
-    'MKO_KP': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band', 'zeropoint': 0.}, \
-    'MKO_KS': {'file': 'mko_ks.txt', 'description': 'MKO Ks-band', 'zeropoint': 0.}, \
+    'BESSEL_I': {'file': 'bessel_i.txt', 'description': 'Bessel I-band', 'zeropoint': 2405.3}, \
+    'HAWK_Y': {'file': 'hawk-y.txt', 'description': 'HAWK Y-band', 'zeropoint': 2092.9}, \
+    'HAWK_J': {'file': 'hawk-j.txt', 'description': 'HAWK J-band', 'zeropoint': 1543.5}, \
+    'HAWK_H': {'file': 'hawk-h.txt', 'description': 'HAWK H-band', 'zeropoint': 1053.6}, \
+    'HAWK_H2': {'file': 'hawk-h2.txt', 'description': 'HAWK H2-band', 'zeropoint': 688.8}, \
+    'HAWK_CH4': {'file': 'hawk-ch4.txt', 'description': 'HAWK CH4-band', 'zeropoint': 1093.4}, \
+    'HAWK_KS': {'file': 'hawk-ks.txt', 'description': 'HAWK Ks-band', 'zeropoint': 675.3}, \
+    'HAWK_BRG': {'file': 'hawk-brg.txt', 'description': 'HAWK Brackett Gamma', 'zeropoint': 638.9}, \
+    'FOURSTAR_J': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR J-band', 'zeropoint': 1581.2}, \
+    'FOURSTAR_J1': {'file': 'fourstar-j1.txt', 'description': 'FOURSTAR J1-band', 'zeropoint': 1978.7}, \
+    'FOURSTAR_J2': {'file': 'fourstar-j2.txt', 'description': 'FOURSTAR J2-band', 'zeropoint': 1774.5}, \
+    'FOURSTAR_J3': {'file': 'fourstar-j3.txt', 'description': 'FOURSTAR J3-band', 'zeropoint': 1488.8}, \
+    'FOURSTAR_H': {'file': 'fourstar-h.txt', 'description': 'FOURSTAR H-band', 'zeropoint': 1054.9}, \
+    'FOURSTAR_H_SHORT': {'file': 'fourstar-hshort.txt', 'description': 'FOURSTAR H short', 'zeropoint': 1119.1}, \
+    'FOURSTAR_H_LONG': {'file': 'fourstar-hlong.txt', 'description': 'FOURSTAR H long', 'zeropoint': 980.7}, \
+    'FOURSTAR_KS': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR Ks-band', 'zeropoint': 675.7}, \
+    'IRAC_CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9}, \
+    'IRAC_CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7}, \
+    'IRAC_CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0}, \
+    'IRAC_CH4': {'file': 'irac4.txt', 'description': 'IRAC Channel 4 (8.0 micron)', 'zeropoint': 64.13}, \
+    'MKO_J_ATM': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3}, \
+    'MKO_H_ATM': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9}, \
+    'MKO_K_ATM': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere', 'zeropoint': 647.7}, \
+    'MKO_J': {'file': 'mko_j.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3}, \
+    'MKO_H': {'file': 'mko_h.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9}, \
+    'MKO_K': {'file': 'mko_ks.txt', 'description': 'MKO K-band', 'zeropoint': 647.7}, \
+    'MKO_KP': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band', 'zeropoint': 693.7}, \
+    'MKO_LP': {'file': 'mko_lp.txt', 'description': 'MKO Lp-band', 'zeropoint': 248.3}, \
+    'MKO_MP': {'file': 'mko_mp.txt', 'description': 'MKO Mp-band', 'zeropoint': 164.7}, \
     'NICMOS_F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M', 'zeropoint': 2255.0}, \
     'NICMOS_F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N', 'zeropoint': 2044.6}, \
     'NICMOS_F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N', 'zeropoint': 2275.4}, \
@@ -186,6 +209,33 @@ FILTERS = { \
     'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'WIRC Fe II', 'zeropoint': 1019.7}, \
     'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'WIRC Fe II', 'zeropoint': 248.0}, \
     'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'WIRC Fe II', 'zeropoint': 165.8}, \
+    'PANSTARRS_I': {'file': 'panstarrs-i.txt', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6}, \
+    'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2584.6}, \
+    'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2584.6}, \
+    'UKIDSS_Z': {'file': 'ukidss-z.txt', 'description': 'UKIDSS Z-band', 'zeropoint': 2261.4}, \
+    'UKIDSS_Y': {'file': 'ukidss-y.txt', 'description': 'UKIDSS Y-band', 'zeropoint': 2057.2}, \
+    'UKIDSS_J': {'file': 'ukidss-j.txt', 'description': 'UKIDSS J-band', 'zeropoint': 1556.8}, \
+    'UKIDSS_H': {'file': 'ukidss-h.txt', 'description': 'UKIDSS H-band', 'zeropoint': 1038.3}, \
+    'UKIDSS_K': {'file': 'ukidss-k.txt', 'description': 'UKIDSS K-band', 'zeropoint': 644.1}, \
+    'VISTA_Z': {'file': 'vista_z.txt', 'description': 'VISTA Z-band', 'zeropoint': 2263.81}, \
+    'VISTA_Y': {'file': 'vista_y.txt', 'description': 'VISTA Y-band', 'zeropoint': 2087.32}, \
+    'VISTA_J': {'file': 'vista_j.txt', 'description': 'VISTA J-band', 'zeropoint': 1554.03}, \
+    'VISTA_H': {'file': 'vista_h.txt', 'description': 'VISTA H-band', 'zeropoint': 1030.40}, \
+    'VISTA_KS': {'file': 'vista_ks.txt', 'description': 'VISTA Ks-band', 'zeropoint': 674.83}, \
+    'WFCAM_Z': {'file': 'wfcam-z.txt', 'description': 'UKIRT WFCAM Z', 'zeropoint': 2261.3}, \
+    'WFCAM_Y': {'file': 'wfcam-y.txt', 'description': 'UKIRT WFCAM Y', 'zeropoint': 2040.9}, \
+    'WFCAM_J': {'file': 'wfcam-j.txt', 'description': 'UKIRT WFCAM J', 'zeropoint': 1548.7}, \
+    'WFCAM_H': {'file': 'wfcam-h.txt', 'description': 'UKIRT WFCAM H', 'zeropoint': 1027.1}, \
+    'WFCAM_H2': {'file': 'wfcam-h2.txt', 'description': 'UKIRT WFCAM H2', 'zeropoint': 677.1}, \
+    'WFCAM_BRG': {'file': 'wfcam-brg.txt', 'description': 'UKIRT WFCAM Brackett Gamma', 'zeropoint': 645.5}, \
+    'WFCAM_K': {'file': 'wfcam-k.txt', 'description': 'UKIRT WFCAM K', 'zeropoint': 630.0}, \
+    'WIRCAM_Y': {'file': 'wircam-cfht-y.txt', 'description': 'CFHT WIRCAM Y', 'zeropoint': 2073.32}, \
+    'WIRCAM_J': {'file': 'wircam-cfht-j.txt', 'description': 'CFHT WIRCAM J', 'zeropoint': 1551.01}, \
+    'WIRCAM_H': {'file': 'wircam-cfht-h.txt', 'description': 'CFHT WIRCAM H', 'zeropoint': 1044.35}, \
+    'WIRCAM_KS': {'file': 'wircam-cfht-ks.txt', 'description': 'CFHT WIRCAM Ks', 'zeropoint': 674.62}, \
+    'WIRCAM_KCONT': {'file': 'wircam-cfht-kcont.txt', 'description': 'CFHT WIRCAM K-cont', 'zeropoint': 636.17}, \
+    'WIRCAM_CH4_OFF': {'file': 'wircam-cfht-ch4s.txt', 'description': 'CFHT WIRCAM CH4-on', 'zeropoint': 987.39}, \
+    'WIRCAM_CH4_ON': {'file': 'wircam-cfht-ch4l.txt', 'description': 'CFHT WIRCAM CH4-off', 'zeropoint': 1076.31}, \
     'WIRC_J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont', 'zeropoint': 0.}, \
     'WIRC_H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont', 'zeropoint': 0.}, \
     'WIRC_K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont', 'zeropoint': 0.}, \
@@ -195,10 +245,6 @@ FILTERS = { \
     'WIRC_FE2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II', 'zeropoint': 0.}, \
     'WIRC_BRGAMMA': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma', 'zeropoint': 0.}, \
     'WIRC_PABETA': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta', 'zeropoint': 0.}, \
-    'IRAC CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9}, \
-    'IRAC CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7}, \
-    'IRAC CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0}, \
-    'IRAC CH4': {'file': 'irac4.txt', 'description': 'IRAC Channel 4 (8.0 micron)', 'zeropoint': 64.13}, \
     'WISE_W1': {'file': 'wise_w1.txt', 'description': 'WISE W1 (3.5 micron)', 'zeropoint': 309.54}, \
     'WISE_W2': {'file': 'wise_w2.txt', 'description': 'WISE W2 (4.6 micron)', 'zeropoint': 171.79}, \
     'WISE_W3': {'file': 'wise_w3.txt', 'description': 'WISE W3 (13 micron)', 'zeropoint': 31.67}, \
@@ -1959,18 +2005,8 @@ def filterMag(sp,f,*args,**kwargs):
 
     :param sp: Spectrum class object, which should contain wave, flux and
                  noise array elements.
-    :param filter: Name of filter, must be one of the following:
-
-                    - '2MASS J', '2MASS H', '2MASS Ks'
-                    - 'MKO J', 'MKO H', 'MKO K', MKO Kp', 'MKO Ks'
-                    - 'NICMOS F090M', 'NICMOS F095N', 'NICMOS F097N', 'NICMOS F108N'
-                    - 'NICMOS F110M', 'NICMOS F110W', 'NICMOS F113N', 'NICMOS F140W'
-                    - 'NICMOS F145M', 'NICMOS F160W', 'NICMOS F164N', 'NICMOS F165M'
-                    - 'NICMOS F166N', 'NICMOS F170M', 'NICMOS F187N', 'NICMOS F190N'
-                    - 'NIRC2 J', 'NIRC2 H', 'NIRC2 Kp', 'NIRC2 Ks'
-                    - 'WIRC J', 'WIRC H', 'WIRC K', 'WIRC CH4S', 'WIRC CH4L'
-                    - 'WIRC CO', 'WIRC PaBeta', 'WIRC BrGamma', 'WIRC Fe2'
-
+    :param filter: name of filter
+    
     :param info: give the filter names available
     :type info: optional, default = False
     :param custom: specify to a 2 x N vector array specifying the wavelengths and transmissions for a custom filter
@@ -2013,6 +2049,7 @@ def filterMag(sp,f,*args,**kwargs):
 
 # check that requested filter is in list
     f = f.replace(' ','_')
+    f.upper()
     if (f not in FILTERS.keys()):
         print('Filter '+f+' not included in filterMag')
         info = True
@@ -2206,6 +2243,69 @@ def getSpectrum(*args, **kwargs):
     return result
 
 
+def getStandard(sptrange, **kwargs):
+    '''
+    :Purpose: Gets one or more of the pre-defined spectral standards from the SPLAT library.
+    .. :Usage: [sp] = splat.getStandard(spt,**kwargs)
+
+    :param sp: array of Spectrum class objects
+    :param spt: spectral type of standard desired ('M7'), or range of spectral types (['M8','L4'])
+
+    :param optional sd: get subdwarf standard
+    :type sd: optional, default = False
+    :param optional esd: get extreme subdwarf standard
+    :type esd: optional, default = False
+    :param optional file: return only the files
+    :type file: optional, default = False
+
+    :Example:
+    >>> import splat
+    >>> sp = splat.getStandard('M7')[0]
+        Retrieving 1 standard spectra
+    >>> sparr = splat.getStandard(['M7','L5'])
+        Retrieving 9 standard spectra
+    >>> sparr = splat.getStandard('T5',esd=True)
+        No standards are available for those criteria
+    '''
+
+    if not isinstance(sptrange,list):
+        sptrange = [sptrange,sptrange]
+    if (isinstance(sptrange[0],str) != False):
+        sptrange = [typeToNum(sptrange[0]),typeToNum(sptrange[1])]
+
+# classification list
+    stdfiles = SPEX_STDFILES
+    subclass = ''
+    if kwargs.get('sd',False):
+        stdfiles = SPEX_SD_STDFILES
+        subclass = 'sd'
+    if kwargs.get('esd',False):
+        stdfiles = SPEX_ESD_STDFILES
+        subclass = 'esd'
+
+# select among defined spectra
+    spt_allowed = numpy.array([typeToNum(s) for s in stdfiles.keys()])
+    spt_sample = spt_allowed[numpy.where(spt_allowed >= sptrange[0])]
+    spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
+
+# nothing there, return
+    if len(spt_sample) == 0:
+        print('No standards are available for those criteria')
+        return []
+    else:
+        print('Retrieving {} standard spectra'.format(len(spt_sample)))
+
+# build up file or Spectrum list
+    result = []
+    for t in spt_sample:
+        if kwargs.get('file',False):
+            result.append(stdfiles[typeToNum(t,subclass=subclass)])
+        else:
+            result.append(Spectrum(file=stdfiles[typeToNum(t,subclass=subclass)]))
+
+    return result
+
+
 # simple number checker
 def isNumber(s):
     '''
@@ -2224,31 +2324,6 @@ def isNumber(s):
     except ValueError:
         return False
 
-
-
-def loadSpectrum(*args, **kwargs):
-    '''
-    .. note:: deprecated
-    '''
-    if kwargs.get('file',False) != False:
-        return Spectrum(**kwargs)
-    if kwargs.get('filename',False) != False:
-        return Spectrum(**kwargs)
-    if kwargs.get('idkey',False) != False:
-        return Spectrum(**kwargs)
-
-# check primary argument
-    if len(args) > 0:
-        if isinstance(args[0],str):
-            kwargs['filename'] = args[0]
-            return Spectrum(**kwargs)
-        if isinstance(args[0],int):
-            kwargs['idkey'] = args[0]
-            return Spectrum(**kwargs)
-
-# couldn't find what you're looking for
-    raise NameError('\nNo filename or idkey specified in loadSpectrum\n\n')
-    return False
 
 
 def estimateDistance(sp, **kwargs):
@@ -2988,7 +3063,7 @@ def test():
 #    sp = getSpectrum(shortname=test_src)[0]
     sp = getSpectrum(spt=['L5','T5'],lucky=True)[0]
     sp.info()
-    sys.stderr.write('\n...getSpectrum and loadSpectrum successful\n')
+    sys.stderr.write('\n...getSpectrum successful\n')
 
 # check searchLibrary
     list = searchLibrary(young=True,output='DATA_FILE')
