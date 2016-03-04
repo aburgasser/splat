@@ -728,8 +728,6 @@ class Spectrum(object):
 # determine which type of file
         ftype = filename.split('.')[-1]
 
-# reformat data into N x 3 array
-
 # fits file
         if (ftype == 'fit' or ftype == 'fits'):
             try:
@@ -741,8 +739,7 @@ class Spectrum(object):
 
 # ascii file - by default space delimited (could make this more flexible)
         else:
-#            try:
-#                t = Table(data,names=['wavelength ({})'.format(self.wave.unit),'flux ({})'.format(self.flux.unit),'uncertainty ({})'.format(self.noise.unit)])
+            try:
                 t = Table([self.wave.value,self.flux.value,self.noise.value],names=['wavelength','flux','uncertainty'])
                 if kwargs.get('header',True):
                     hd = ['{} = {}'.format(k,self.header[k]) for k in self.header.keys()]
@@ -750,8 +747,8 @@ class Spectrum(object):
                     hd.sort()
                     t.meta['comments']=hd
                 ascii.write(t,output=filename,format=kwargs.get('format','commented_header'))
-#            except:
-#                raise NameError('Problem saving spectrum object to file {}'.format(filename))
+            except:
+                raise NameError('Problem saving spectrum object to file {}'.format(filename))
         return
 
     def scale(self,factor):
