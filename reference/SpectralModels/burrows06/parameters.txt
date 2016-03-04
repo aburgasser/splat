@@ -1,0 +1,4 @@
+teff	logg	z	fsed	cld	kzz
+700	4.5	-0.5	nc,f100	nc	eq
+2000	5.5	0.5			
+100	0.5	0.5			
