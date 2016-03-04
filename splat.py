@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 # WORKING COPY OF SPLAT CODE LIBRARY
 # based on routines developed by:
 #    Christian Aganze
@@ -49,7 +51,7 @@ if sys.version_info.major == 2:     # switch for those using python 3
     import string
 import warnings
 
-from astropy.io import ascii, fits            # for reading in spreadsheet
+from astropy.io import fits            # for reading in spreadsheet
 from astropy.table import Table, join            # for reading in table files
 from astropy.coordinates import SkyCoord      # coordinate conversion
 from astropy import units as u            # standard units
@@ -87,10 +89,10 @@ else:
 #################### CONSTANTS ####################
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 DATA_FOLDER = '/reference/Spectra/'
-#DB_FOLDER = '/db/'
-#SOURCES_DB = 'source_data.txt'
-#SPECTRA_DB = 'spectral_data.txt'
-#ORIGINAL_DB = 'db_spexprism.txt'
+
+# explicitly read in source and spectral databases
+DB_SOURCES = fetchDatabase(DB_SOURCES_FILE)
+DB_SPECTRA = fetchDatabase(DB_SPECTRA_FILE)
 
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
@@ -130,6 +132,8 @@ SPEX_STDFILES = { \
     'T7.0': '10159_10513.fits',\
     'T8.0': '10126_10349.fits',\
     'T9.0': '11536_10509.fits'}
+# EMPTY DICTIONARY
+SPEX_STDS = {}
 
 SPEX_SD_STDFILES = { \
     'sdM5.5': '11670_11134.fits',\
@@ -140,12 +144,16 @@ SPEX_SD_STDFILES = { \
     'sdL0.0': '11972_10248.fits',\
     'sdL3.5': '10364_10946.fits',\
     'sdL4.0': '10203_11241.fits'}
+# EMPTY DICTIONARY
+SPEX_SD_STDS = {}
 
 SPEX_ESD_STDFILES = { \
     'esdM5.0': '10229_10163.fits',\
 #    'esdM6.5': '_10579.fits',\
     'esdM7.0': '10521_10458.fits',\
     'esdM8.5': '10278_10400.fits'}
+# EMPTY DICTIONARY
+SPEX_ESD_STDS = {}
 
 
 # filters
@@ -347,7 +355,7 @@ class Spectrum(object):
         self.resolution = kwargs.get('resolution',150)    # default placeholder
         self.slitpixelwidth = kwargs.get('slitwidth',3.33)        # default placeholder
         self.slitwidth = self.slitpixelwidth*spex_pixel_scale
-        self.header = kwargs.get('header',Table())
+        self.header = kwargs.get('header',fits.PrimaryHDU())
         self.filename = kwargs.get('file','')
         self.filename = kwargs.get('filename',self.filename)
         self.idkey = kwargs.get('idkey',False)
@@ -369,15 +377,21 @@ class Spectrum(object):
 
         if self.idkey != False:
 #            self.idkey = kwargs.get('idkey',self.idkey)
-            sdb = keySpectrum(self.idkey)
-            if sdb != False:
-                self.filename = sdb['DATA_FILE'][0]
+            try:
+                sdb = keySpectrum(self.idkey)
+                if sdb != False:
+                    self.filename = sdb['DATA_FILE'][0]
+            except:
+                print('Warning: problem reading in spectral database, a known problem for Python 3.X')
         elif self.model == False and self.filename != '':
             kwargs['filename']=self.filename
             kwargs['silent']=True
-            t = searchLibrary(**kwargs)
-            if len(t) > 0:
-                sdb = t
+            try:
+                t = searchLibrary(**kwargs)
+                if len(t) > 0:
+                    sdb = t
+            except:
+                print('Warning: problem reading in source or spectral database, a known problem for Python 3.X')            
         else:
             sdb = False
 
@@ -385,7 +399,7 @@ class Spectrum(object):
         kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DATA_FOLDER)
         self.simplefilename = os.path.basename(self.filename)
         self.file = self.filename
-        self.name = kwargs.get('name',self.filename)
+        self.name = kwargs.get('name',self.simplefilename)
         kwargs['filename'] = self.filename
 
 # option 3: wave and flux are given
@@ -484,6 +498,17 @@ class Spectrum(object):
             self.modelset = kwargs.get('set','')
             self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.logg)
             self.fscale = 'Surface'
+
+# populate header            
+        kconv = ['designation','name','shortname','ra','dec','slitwidth','source_key','data_key','observer',\
+            'data_reference','discovery_reference','program_pi','program_number','airmass','reduction_spextool_version',\
+            'reduction_person','reduction_date','observation_date','julian_date','median_snr','resolution','airmass']
+        for k in kconv:
+            try:
+                self.header[k] = getattr(self,k)
+            except:
+                self.header[k] = ''
+
         self.history = ['Loaded']
 
 
@@ -688,6 +713,45 @@ class Spectrum(object):
         self.slitpixelwidth = copy.deepcopy(self.slitpixelwidth_original)
         self.slitwidth = self.slitpixelwidth*spex_pixel_scale
         self.fscale = ''
+        return
+
+    def export(self,*args,**kwargs):
+        '''
+        :Purpose: export spectrum object to a file, either fits or ascii depending on file extension
+        '''
+        filename = self.simplefilename
+        if len(args) > 0:
+            filename = args[0]
+        filename = kwargs.get('filename',filename)
+        filename = kwargs.get('file',filename)
+
+# determine which type of file
+        ftype = filename.split('.')[-1]
+
+# reformat data into N x 3 array
+
+# fits file
+        if (ftype == 'fit' or ftype == 'fits'):
+            try:
+                data = numpy.vstack((self.wave.value,self.flux.value,self.noise.value)).T
+                hdu = fits.PrimaryHDU(data,header=self.header)
+                hdu.writeto(filename,clobber=True)
+            except:
+                raise NameError('Problem saving spectrum object to file {}'.format(filename))
+
+# ascii file - by default space delimited (could make this more flexible)
+        else:
+#            try:
+#                t = Table(data,names=['wavelength ({})'.format(self.wave.unit),'flux ({})'.format(self.flux.unit),'uncertainty ({})'.format(self.noise.unit)])
+                t = Table([self.wave.value,self.flux.value,self.noise.value],names=['wavelength','flux','uncertainty'])
+                if kwargs.get('header',True):
+                    hd = ['{} = {}'.format(k,self.header[k]) for k in self.header.keys()]
+                    hd = list(set(hd))
+                    hd.sort()
+                    t.meta['comments']=hd
+                ascii.write(t,output=filename,format=kwargs.get('format','commented_header'))
+#            except:
+#                raise NameError('Problem saving spectrum object to file {}'.format(filename))
         return
 
     def scale(self,factor):
