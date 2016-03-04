@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Known Bugs &mdash; SpeX Prism Library Analysis Toolkit 0.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/logo.ico"/>
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.3 documentation" href="index.html" />
+    <link rel="prev" title="Brown Dwarf Evolutionary Models" href="bdevopar.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bdevopar.html" title="Brown Dwarf Evolutionary Models"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Known Bugs</a><ul>
+<li><a class="reference internal" href="#high-priority">High priority</a></li>
+<li><a class="reference internal" href="#medium-priority">Medium priority</a></li>
+<li><a class="reference internal" href="#low-priority">Low priority</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="bdevopar.html"
+                        title="previous chapter">Brown Dwarf Evolutionary Models</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bugs.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="known-bugs">
+<h1>Known Bugs<a class="headerlink" href="#known-bugs" title="Permalink to this headline">¶</a></h1>
+<p>As of 29 July 2015</p>
+<div class="section" id="high-priority">
+<h2>High priority<a class="headerlink" href="#high-priority" title="Permalink to this headline">¶</a></h2>
+<p>Currently broken or doesn&#8217;t exist and should:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Documentation incomplete</li>
+<li>MCMC fitting code in splat_model.py currently not functional (temporary code in place)</li>
+<li><code class="docutils literal"><span class="pre">searchLibrary</span></code> needs to be ditched in exchange for SQL</li>
+<li>calling <code class="docutils literal"><span class="pre">searchLibrary(spt</span> <span class="pre">=</span> <span class="pre">sp,</span> <span class="pre">logic</span> <span class="pre">=</span> <span class="pre">“and”)</span></code> returns the full database</li>
+<li>no <code class="docutils literal"><span class="pre">plotIndices</span></code> function</li>
+<li>no <code class="docutils literal"><span class="pre">spectralBinary</span></code> function</li>
+<li>no tabular output of data</li>
+<li>need a reddening function</li>
+<li>young objects are not properly selected by <code class="docutils literal"><span class="pre">searchLibrary</span></code> - these need to be better labeled in source database</li>
+<li>need a bibliography tool (feed in bibcode, get out citation information)</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="medium-priority">
+<h2>Medium priority<a class="headerlink" href="#medium-priority" title="Permalink to this headline">¶</a></h2>
+<p>Annoying but functional:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">plotSpectrum</span></code>: add inset plots</li>
+<li><code class="docutils literal"><span class="pre">plotSpectrum</span></code>: if you set don&#8217;t set &#8220;multipage&#8221; then layout doesn&#8217;t do anything</li>
+<li><code class="docutils literal"><span class="pre">plotSpectrum</span></code>: font scaling is not consistent for all devices - add a fontScale parameter</li>
+<li>dividing two spectra cannot be plotted - not sure why</li>
+<li>need a way to store/read in indices</li>
+<li>evolutionary models may not be returning accurate values - this needs to be validated</li>
+<li>if an error occurs or you stop a spectrum download midway, that (blank) file persists and causes problems - deleting in advance does not seem to work</li>
+<li>not entirely sure EW program is returning correct values</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="low-priority">
+<h2>Low priority<a class="headerlink" href="#low-priority" title="Permalink to this headline">¶</a></h2>
+<p>Would be nice if these worked better, or some convenient things to add:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">compareSpectra</span></code> and <code class="docutils literal"><span class="pre">plotSpectrum</span></code>: would be nice if this plotted the difference spectrum</li>
+<li><code class="docutils literal"><span class="pre">plotSpectrum</span></code>: add in alternate feature labeling</li>
+<li><code class="docutils literal"><span class="pre">plotSpectrum</span></code>: add more atomic/molecular features</li>
+<li>add in subdwarf and gravity standards</li>
+<li>add in mean templates (from Kelle Cruz)</li>
+<li>model fitting that is grid style (i.e., not MCMC)</li>
+<li>visualization for evolutionary model parameters</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bdevopar.html" title="Brown Dwarf Evolutionary Models"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Adam Burgasser.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>
