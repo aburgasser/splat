@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 """
 .. note::
          These are the plotting functions for the SPLAT code 

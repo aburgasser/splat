@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 """
 .. note::
          These are the database functions for SPLAT 
@@ -17,10 +19,10 @@ from astropy.io import ascii, fits            # for reading in spreadsheet
 from astropy.table import Table, join            # for reading in table files
 
 DB_FOLDER = '/db/'
-ORIGINAL_DB = 'db_spexprism.txt'
-SOURCES_DB = 'source_data.txt'
-SPECTRA_DB = 'spectral_data.txt'
-PHOTOMETRY_DB = 'photometry_data.txt'
+DB_ORIGINAL_FILE = 'db_spexprism.txt'
+DB_SOURCES_FILE = 'source_data.txt'
+DB_SPECTRA_FILE = 'spectral_data.txt'
+DB_PHOTOMETRY_FILE = 'photometry_data.txt'
 BIBFILE = 'biblibrary.bib'
 TMPFILENAME = 'splattmpfile'
 
@@ -317,7 +319,10 @@ def fetchDatabase(*args, **kwargs):
     '''
     :Purpose: Get the SpeX Database from either online repository or local drive
     '''
-    kwargs['filename'] = kwargs.get('filename',ORIGINAL_DB)
+    filename = DB_ORIGINAL_FILE
+    if len(args) > 0:
+        filename = args[0]
+    kwargs['filename'] = kwargs.get('filename',filename)
     kwargs['filename'] = kwargs.get('file',kwargs['filename'])
     kwargs['folder'] = kwargs.get('folder',DB_FOLDER)
     url = kwargs.get('url',splat.SPLAT_URL)+kwargs['folder']
@@ -351,7 +356,11 @@ def fetchDatabase(*args, **kwargs):
         if infile=='':
             raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
         else:
-            data = ascii.read(infile, delimiter='\t',fill_values='-99.',format='tab')
+            try:
+                data = ascii.read(infile, delimiter='\t',fill_values='-99.',format='tab')
+            except:
+                raise NameError('\nCould not load {}: this may be a decoding error\n'.format(infile))
+
 
 # check if file is present; if so, read it in, otherwise go to interpolated
 # online:
@@ -372,38 +381,49 @@ def fetchDatabase(*args, **kwargs):
 
 
 # clean up blanks and convert numerical values to numbers
-    data['RA'][numpy.where(data['RA'] == '')] = '0.'
+#    if 'RA' in data.keys():
+#        data['RA'][numpy.where(data['RA'] == '')] = '0.'
 #    data['ran'] = [float(x) for x in data['ra']]
-    data['DEC'][numpy.where(data['DEC'] == '')] = '0.'
+#    if 'DEC' in data.keys():
+#        data['DEC'][numpy.where(data['DEC'] == '')] = '0.'
 #    data['decn'] = [float(x) for x in data['dec']]
-    data['2MASS_J'][numpy.where(data['2MASS_J'] == '')] = '99.'
+#    if '2MASS_J' in data.keys():
+#        data['2MASS_J'][numpy.where(data['2MASS_J'] == '')] = '99.'
 #    data['jmagn'] = [float(x) for x in data['jmag']]
-    data['2MASS_H'][numpy.where(data['2MASS_H'] == '')] = '99.'
+#    if '2MASS_H' in data.keys():
+#        data['2MASS_H'][numpy.where(data['2MASS_H'] == '')] = '99.'
 #    data['hmagn'] = [float(x) for x in data['hmag']]
-    data['2MASS_KS'][numpy.where(data['2MASS_KS'] == '')] = '99.'
+#    if '2MASS_KS' in data.keys():
+#        data['2MASS_KS'][numpy.where(data['2MASS_KS'] == '')] = '99.'
 #    data['kmagn'] = [float(x) for x in data['kmag']]
-    data['2MASS_J_UNC'][numpy.where(data['2MASS_J_UNC'] == '')] = '99.'
+#    if '2MASS_J_UNC' in data.keys():
+#        data['2MASS_J_UNC'][numpy.where(data['2MASS_J_UNC'] == '')] = '99.'
 #    data['jmag_errorn'] = [float(x) for x in data['jmag_error']]
-    data['2MASS_H_UNC'][numpy.where(data['2MASS_H_UNC'] == '')] = '99.'
+#    if '2MASS_H_UNC' in data.keys():
+#        data['2MASS_H_UNC'][numpy.where(data['2MASS_H_UNC'] == '')] = '99.'
 #    data['hmag_errorn'] = [float(x) for x in data['hmag_error']]
-    data['2MASS_KS'][numpy.where(data['2MASS_KS_UNC'] == '')] = '99.'
+#    if '2MASS_KS_UNC' in data.keys():
+#        data['2MASS_KS'][numpy.where(data['2MASS_KS_UNC'] == '')] = '99.'
 #    data['kmag_errorn'] = [float(x) for x in data['kmag_error']]
-    data['RESOLUTION'][numpy.where(data['RESOLUTION'] == '')] = '120'
+#    if 'RESOLUTION' in data.keys():
+#        data['RESOLUTION'][numpy.where(data['RESOLUTION'] == '')] = '120'
 #    data['resolutionn'] = [float(x) for x in data['resolution']]
-    data['AIRMASS'][numpy.where(data['AIRMASS'] == '')] = '1.'
+#    if 'AIRMASS' in data.keys():
+#       data['AIRMASS'][numpy.where(data['AIRMASS'] == '')] = '1.'
 #    data['airmassn'] = [float(x) for x in data['airmass']]
-    data['MEDIAN_SNR'][numpy.where(data['MEDIAN_SNR'] == '')] = '0'
+#    if 'MEDIAN_SNR' in data.keys():
+#        data['MEDIAN_SNR'][numpy.where(data['MEDIAN_SNR'] == '')] = '0'
 #    data['median_snrn'] = [float(x) for x in data['median_snr']]
 
 # convert coordinates to SkyCoord format
 #    data['skycoords'] = data['ra']
-    s = []
-    for i in numpy.arange(len(data['RA'])):
-        try:        # to deal with a blank string
-            s.append(SkyCoord(ra=float(data['RA'][i])*u.degree,dec=float(data['DEC'][i])*u.degree,frame='icrs'))
-        except:
-            s.append(SkyCoord(ra=0.*u.degree,dec=0.*u.degree,frame='icrs'))
-    data['SKYCOORDS'] = s
+#    s = []
+#    for i in numpy.arange(len(data['RA'])):
+#        try:        # to deal with a blank string
+#            s.append(SkyCoord(ra=float(data['RA'][i])*u.degree,dec=float(data['DEC'][i])*u.degree,frame='icrs'))
+#        except:
+#            s.append(SkyCoord(ra=0.*u.degree,dec=0.*u.degree,frame='icrs'))
+#    data['SKYCOORDS'] = s
 
 # add in RA/Dec (TEMPORARY)
 #    ra = []
@@ -415,27 +435,27 @@ def fetchDatabase(*args, **kwargs):
 #    data['ra'] = ra
 #    data['dec'] = dec
 
-    data['YOUNG'] = ['young' in x for x in data['LIBRARY']]
-    data['SUBDWARF'] = ['subdwarf' in x for x in data['LIBRARY']]
-    data['BINARY'] = ['binary' in x for x in data['LIBRARY']]
-    data['SPBINARY'] = ['sbinary' in x for x in data['LIBRARY']]
-    data['BLUE'] = ['blue' in x for x in data['LIBRARY']]
-    data['RED'] = ['red' in x for x in data['LIBRARY']]
-    data['GIANT'] = ['giant' in x for x in data['LIBRARY']]
-    data['WD'] = ['wd' in x for x in data['LIBRARY']]
-    data['STANDARD'] = ['std' in x for x in data['LIBRARY']]
-    data['COMPANION'] = ['companion' in x for x in data['LIBRARY']]
+#    data['YOUNG'] = ['young' in x for x in data['LIBRARY']]
+#    data['SUBDWARF'] = ['subdwarf' in x for x in data['LIBRARY']]
+#    data['BINARY'] = ['binary' in x for x in data['LIBRARY']]
+#    data['SPBINARY'] = ['sbinary' in x for x in data['LIBRARY']]
+#    data['BLUE'] = ['blue' in x for x in data['LIBRARY']]
+#    data['RED'] = ['red' in x for x in data['LIBRARY']]
+#    data['GIANT'] = ['giant' in x for x in data['LIBRARY']]
+#    data['WD'] = ['wd' in x for x in data['LIBRARY']]
+#    data['STANDARD'] = ['std' in x for x in data['LIBRARY']]
+#    data['COMPANION'] = ['companion' in x for x in data['LIBRARY']]
 
 # add in shortnames
-    data['SHORTNAME'] = [splat.designationToShortName(x) for x in data['DESIGNATION']]
+#    data['SHORTNAME'] = [splat.designationToShortName(x) for x in data['DESIGNATION']]
 
 # create literature spt
-    data['LIT_TYPE'] = data['OPT_TYPE']
-    w = numpy.where(numpy.logical_and(data['LIT_TYPE'] == '',data['NIR_TYPE'] != ''))
-    data['LIT_TYPE'][w] = data['NIR_TYPE'][w]
-    sptn = [splat.typeToNum(x) for x in data['LIT_TYPE']]
-    w = numpy.where(numpy.logical_and(sptn > 29.,data['NIR_TYPE'] != ''))
-    data['LIT_TYPE'][w] = data['NIR_TYPE'][w]
+#    data['LIT_TYPE'] = data['OPT_TYPE']
+#    w = numpy.where(numpy.logical_and(data['LIT_TYPE'] == '',data['NIR_TYPE'] != ''))
+#    data['LIT_TYPE'][w] = data['NIR_TYPE'][w]
+#    sptn = [splat.typeToNum(x) for x in data['LIT_TYPE']]
+#    w = numpy.where(numpy.logical_and(sptn > 29.,data['NIR_TYPE'] != ''))
+#    data['LIT_TYPE'][w] = data['NIR_TYPE'][w]
 #    w = numpy.where(numpy.logical_and(data['lit_type'] == '',typeToNum(data['spex_type']) > 17.))
 #    data['lit_type'][w] = data['spex_type'][w]
 
@@ -556,7 +576,9 @@ def keySource(keys, **kwargs):
     if isinstance(keys,list) == False:
         keys = [keys]
 
-    sdb = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+#    sdb = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+#    sdb = fetchDatabase(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB)
+    sdb = splat.DB_SOURCES
     sdb['SELECT'] = [x in keys for x in sdb['SOURCE_KEY']]
 
     if sum(sdb['SELECT']) == 0.:
@@ -591,14 +613,18 @@ def keySpectrum(keys, **kwargs):
     if isinstance(keys,list) == False:
         keys = [keys]
 
-    sdb = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
+#    sdb = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
+#    sdb = fetchDatabase(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB)
+    sdb = splat.DB_SPECTRA
     sdb['SELECT'] = [x in keys for x in sdb['DATA_KEY']]
 
     if sum(sdb['SELECT']) == 0.:
         print('No spectra found with spectrum key {}'.format(keys[0]))
         return False
     else:
-        s2db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+#        s2db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+#        s2db = fetchDatabase(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB)
+        s2db = splat.DB_SOURCES
         db = join(sdb[:][numpy.where(sdb['SELECT']==1)],s2db,keys='SOURCE_KEY')
         return db
 
@@ -646,7 +672,9 @@ def searchLibrary(*args, **kwargs):
         raise ValueError('\nLogical operator '+logic+' not supported\n\n')
 
 # read in source database and add in shortnames and skycoords
-    source_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t', fill_values='-99.', format='tab')
+#    source_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t', fill_values='-99.', format='tab')
+#    source_db = fetchDatabase(SOURCES_DB)
+    source_db = splat.DB_SOURCES
     source_db['SHORTNAME'] = [splat.designationToShortName(x) for x in source_db['DESIGNATION']]
 
 # first search by source parameters
@@ -654,11 +682,13 @@ def searchLibrary(*args, **kwargs):
     count = 0.
 
 # search by source key
-    if kwargs.get('sourcekey',False) != False:
-        sk = kwargs['sourcekey']
-        if isinstance(sk,int):
-            sk = [sk]
-        for s in sk:
+    idkey = kwargs.get('sourcekey',False)
+    idkey = kwargs.get('idkey',idkey)
+    idkey = kwargs.get('id',idkey)
+    if idkey != False:
+        if isinstance(idkey,int):
+            idkey = [idkey]
+        for s in idkey:
             source_db['SELECT'][numpy.where(source_db['SOURCE_KEY'] == s)] += 1
         count+=1.
 # search by name
@@ -887,7 +917,9 @@ def searchLibrary(*args, **kwargs):
 
 
 # read in spectral database
-    spectral_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
+#    spectral_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
+#    spectral_db = fetchDatabase(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB)
+    spectral_db = splat.DB_SPECTRA
     spectral_db['SELECT'] = numpy.zeros(len(spectral_db['DATA_KEY']))
     count = 0.
 
