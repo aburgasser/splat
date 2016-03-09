@@ -356,7 +356,8 @@ class Spectrum(object):
         self.resolution = kwargs.get('resolution',150)    # default placeholder
         self.slitpixelwidth = kwargs.get('slitwidth',3.33)        # default placeholder
         self.slitwidth = self.slitpixelwidth*spex_pixel_scale
-        self.header = kwargs.get('header',fits.PrimaryHDU())
+#        self.header = kwargs.get('header',fits.PrimaryHDU())
+        self.header = kwargs.get('header',{})
         self.filename = kwargs.get('file','')
         self.filename = kwargs.get('filename',self.filename)
         self.idkey = kwargs.get('idkey',False)
@@ -733,7 +734,9 @@ class Spectrum(object):
         if (ftype == 'fit' or ftype == 'fits'):
             try:
                 data = numpy.vstack((self.wave.value,self.flux.value,self.noise.value)).T
-                hdu = fits.PrimaryHDU(data,header=self.header)
+                hdu = fits.PrimaryHDU(data)
+                for k in self.header.keys():
+                    hdu.header[k] = self.header[k]
                 hdu.writeto(filename,clobber=True)
             except:
                 raise NameError('Problem saving spectrum object to file {}'.format(filename))
