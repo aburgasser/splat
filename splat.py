@@ -60,12 +60,6 @@ from scipy import stats, signal
 from scipy.integrate import trapz        # for numerical integration
 from scipy.interpolate import interp1d
 
-# local application/library specific import
-#import bdevopar as splevol
-from splat_db import *
-from splat_model import *
-from splat_plot import *
-
 # suppress warnings - probably not an entirely safe approach!
 numpy.seterr(all='ignore')
 warnings.simplefilter("ignore")
@@ -85,6 +79,13 @@ else:
     checkpath = ['splat' in r for r in sys.path]
     if max(checkpath):
         SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
+
+# local application/library specific import
+#import bdevopar as splevol
+from splat_db import *
+from splat_model import *
+from splat_plot import *
+
 
 #################### CONSTANTS ####################
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
