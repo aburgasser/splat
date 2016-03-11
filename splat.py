@@ -1297,7 +1297,7 @@ def classifyByStandard(sp, *args, **kwargs):
         sptrange = [typeToNum(sptrange[0]),typeToNum(sptrange[1])]
     unc_sys = 0.5
 
-# classification list
+# classification spectra
     stdfiles = SPEX_STDFILES
     subclass = ''
     if kwargs.get('sd',False):
