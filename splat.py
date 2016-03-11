@@ -1255,7 +1255,7 @@ def classifyByStandard(sp, *args, **kwargs):
                 <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_, fitting only in
                 the 0.9-1.4 micron region.
 
-    .. :Usage: spt,unc = splat.classifyByStandard(sp, \**kwargs) (Do we need this?)
+    .. :Usage: spt,unc = splat.classifyByStandard(sp, \**kwargs)
 
     :param sp: spectrum class object, which should contain wave, flux and
                noise array elements.
@@ -1291,22 +1291,13 @@ def classifyByStandard(sp, *args, **kwargs):
     average_flag = kwargs.get('average',not best_flag)
     sptrange = kwargs.get('sptrange',[10,39])
     sptrange = kwargs.get('range',sptrange)
+    sptrange = kwargs.get('spt',sptrange)
     if not isinstance(sptrange,list):
         sptrange = [sptrange,sptrange]
     if (isinstance(sptrange[0],str) != False):
         sptrange = [typeToNum(sptrange[0]),typeToNum(sptrange[1])]
     unc_sys = 0.5
 
-# classification spectra
-    stdfiles = SPEX_STDFILES
-    subclass = ''
-    if kwargs.get('sd',False):
-        stdfiles = SPEX_SD_STDFILES
-        subclass = 'sd'
-    if kwargs.get('esd',False):
-        stdfiles = SPEX_ESD_STDFILES
-        subclass = 'esd'
-    spt_allowed = numpy.array([typeToNum(s) for s in stdfiles.keys()])
 
 # if you just want to compare to one standard
     cspt = kwargs.get('compareto',False)
@@ -1320,11 +1311,29 @@ def classifyByStandard(sp, *args, **kwargs):
         mkwargs['sptrange'] =[cspt,cspt]
         return classifyByStandard(sp,**mkwargs)
 
-#    stdsptnum = numpy.arange(30)+10.
-#    stdsptstr = ['M'+str(n) for n in numpy.arange(10)]
-#    stdsptstr.append(['L'+str(n) for n in numpy.arange(10)])
-#    stdsptstr.append(['T'+str(n) for n in numpy.arange(10)])
+# read in standards is necessary
+    initiateStandards(**kwargs)
 
+# get standards
+#    stds = getStandard(sptrange,**kwargs)
+
+# assign subclasses
+    if kwargs.get('sd',False):
+        stds = splat.SPEX_SD_STDS
+        subclass = 'sd'
+    elif kwargs.get('esd',False):
+        stds = splat.SPEX_ESD_STDS
+        subclass = 'esd'
+    else:
+        stds = splat.SPEX_STDS
+        subclass = ''
+
+# select desired spectral range
+    spt_allowed = numpy.array([typeToNum(s) for s in stds.keys()])
+    spt_sample = spt_allowed[numpy.where(spt_allowed >= sptrange[0])]
+    spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
+
+# determine comparison range based on method
     if (method == 'kirkpatrick'):
         comprng = [0.9,1.4]*u.micron         # as prescribed in Kirkpatrick et al. 2010, ApJS,
     else:
@@ -1339,24 +1348,19 @@ def classifyByStandard(sp, *args, **kwargs):
 # compute fitting statistics
     stat = []
     sspt = []
-    sfile = []
-    spt_sample = spt_allowed[numpy.where(spt_allowed >= sptrange[0])]
-    spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
 
     for t in spt_sample:
-        spstd = Spectrum(file=stdfiles[typeToNum(t,subclass=subclass)])
-        chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],stat=compstat,novar2=True)
+        chisq,scale = compareSpectra(sp,stds[typeToNum(t,subclass=subclass)],fit_ranges=[comprng],stat=compstat,novar2=True)
         stat.append(chisq)
         sspt.append(t)
-        sfile.append(stdfiles[typeToNum(t,subclass=subclass)])
         if (verbose):
-            print(stdfiles[typeToNum(t,subclass=subclass)], typeToNum(t,subclass=subclass), chisq, scale)
+            print(t, chisq, scale)
 
 # list of sorted standard files and spectral types
-    sorted_stdfiles = [x for (y,x) in sorted(zip(stat,sfile))]
     sorted_stdsptnum = [x for (y,x) in sorted(zip(stat,sspt))]
 
 # select either best match or an ftest-weighted average
+# note that these are NUMBERS
     if (best_flag or len(stat) == 1):
         sptn = sorted_stdsptnum[0]
         sptn_e = unc_sys
@@ -1383,7 +1387,8 @@ def classifyByStandard(sp, *args, **kwargs):
 
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
-        spstd = Spectrum(file=sorted_stdfiles[0])
+#        spstd = Spectrum(file=sorted_stdfiles[0])
+        spstd = getStandard(typeToNum(sorted_stdsptnum[0],subclass=subclass))
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],stat=compstat)
         spstd.scale(scale)
         if kwargs.get('colors',False) == False:
@@ -1393,6 +1398,8 @@ def classifyByStandard(sp, *args, **kwargs):
         plotSpectrum(sp,spstd,**kwargs)
 
     return spt, sptn_e
+
+
 
 
 def classifyByTemplate(sp, *args, **kwargs):
@@ -2308,67 +2315,106 @@ def getSpectrum(*args, **kwargs):
     return result
 
 
-def getStandard(sptrange, **kwargs):
+
+def getStandard(spt, **kwargs):
     '''
-    :Purpose: Gets one or more of the pre-defined spectral standards from the SPLAT library.
+    :Purpose: Gets one of the pre-defined spectral standards from the SPLAT library.
+    NOTE: THIS PROGRAM MAY BE OBSOLETE
+
     .. :Usage: [sp] = splat.getStandard(spt,**kwargs)
 
     :param sp: array of Spectrum class objects
-    :param spt: spectral type of standard desired ('M7'), or range of spectral types (['M8','L4'])
+    :param spt: spectral type of standard desired ('M7')
 
     :param optional sd: get subdwarf standard
     :type sd: optional, default = False
     :param optional esd: get extreme subdwarf standard
     :type esd: optional, default = False
-    :param optional file: return only the files
-    :type file: optional, default = False
 
     :Example:
     >>> import splat
     >>> sp = splat.getStandard('M7')[0]
-        Retrieving 1 standard spectra
-    >>> sparr = splat.getStandard(['M7','L5'])
-        Retrieving 9 standard spectra
+        Spectrum of VB 8
     >>> sparr = splat.getStandard('T5',esd=True)
-        No standards are available for those criteria
+        Type esdT5.0 is not in esd standards: try one of the following:
+        ['esdM5.0', 'esdM7.0', 'esdM8.5']
     '''
 
-    if not isinstance(sptrange,list):
-        sptrange = [sptrange,sptrange]
-    if (isinstance(sptrange[0],str) != False):
-        sptrange = [typeToNum(sptrange[0]),typeToNum(sptrange[1])]
+#    if not isinstance(sptrange,list):
+#        sptrange = [sptrange,sptrange]
 
-# classification list
-    stdfiles = SPEX_STDFILES
-    subclass = ''
+# make sure standards are read in
+    initiateStandards(**kwargs)
+
+# get standards
     if kwargs.get('sd',False):
-        stdfiles = SPEX_SD_STDFILES
+        stds = splat.SPEX_SD_STDS
         subclass = 'sd'
-    if kwargs.get('esd',False):
-        stdfiles = SPEX_ESD_STDFILES
+    elif kwargs.get('esd',False):
+        stds = splat.SPEX_ESD_STDS
         subclass = 'esd'
+    else:
+        stds = splat.SPEX_STDS
+        subclass = ''
 
-# select among defined spectra
-    spt_allowed = numpy.array([typeToNum(s) for s in stdfiles.keys()])
-    spt_sample = spt_allowed[numpy.where(spt_allowed >= sptrange[0])]
-    spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
+# set up subtype to use, convert to number then back to string
+    if (isinstance(spt,str) != False):
+        spt = typeToNum(spt)
+    spt = typeToNum(spt,subclass=subclass)
+
+# select among defined spectra - just getting closest match
+#    spt_allowed = numpy.array([typeToNum(s) for s in stds.keys()])
+#    spt_sample = spt_allowed[numpy.where(spt_allowed >= sptrange[0])]
+#    spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
 
 # nothing there, return
-    if len(spt_sample) == 0:
-        print('No standards are available for those criteria')
+    if spt not in stds.keys():
+        print('Type {} is not in {} standards: try one of the following:'.format(spt,subclass))
+        print(sorted(stds.keys()))
         return []
     else:
-        print('Retrieving {} standard spectra'.format(len(spt_sample)))
+        return [stds[spt]]
 
 # build up file or Spectrum list
-    result = []
-    for t in spt_sample:
-        if kwargs.get('file',False):
-            result.append(stdfiles[typeToNum(t,subclass=subclass)])
-        else:
-            result.append(Spectrum(file=stdfiles[typeToNum(t,subclass=subclass)]))
+#    result = {}
+#    for t in spt_sample:
+#        result[typeToNum(t,subclass=subclass)] = stds[typeToNum(t,subclass=subclass)]
+#
+#    return result
 
-    return result
+
+def initiateStandards(**kwargs):
+    '''
+    :Purpose: Initiates the spectral standards (dwarf, subdwarf or extreme subdwarf) in the SpeX library.
+    .. :Usage: splat.initateStandards(**kwargs)
+
+    :param optional sd: get subdwarf standard
+    :type sd: optional, default = False
+    :param optional esd: get extreme subdwarf standard
+    :type esd: optional, default = False
+
+    :Example:
+    >>> import splat
+    >>> splat.initiateStandards()
+    >>> splat.SPEX_SDS['M5']
+    '''
+
+# choose what kind of standards desired - d, sd, esd
+# and read in standards into dictionary if they haven't been already
+    if kwargs.get('sd',False):
+        if len(splat.SPEX_SD_STDS) == 0:
+            for t in splat.SPEX_SD_STDFILES.keys():
+                splat.SPEX_SD_STDS[t] = Spectrum(file=splat.SPEX_SD_STDFILES[t])
+    elif kwargs.get('esd',False):
+        if len(splat.SPEX_ESD_STDS) == 0:
+            for t in splat.SPEX_ESD_STDFILES.keys():
+                splat.SPEX_ESD_STDS[t] = Spectrum(file=splat.SPEX_ESD_STDFILES[t])
+    else:
+        if len(splat.SPEX_STDS) == 0:
+            for t in splat.SPEX_STDFILES.keys():
+                splat.SPEX_STDS[t] = Spectrum(file=splat.SPEX_STDFILES[t])
+
+    return
 
 
 # simple number checker
