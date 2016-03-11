@@ -1353,8 +1353,8 @@ def classifyByStandard(sp, *args, **kwargs):
         chisq,scale = compareSpectra(sp,stds[typeToNum(t,subclass=subclass)],fit_ranges=[comprng],stat=compstat,novar2=True)
         stat.append(chisq)
         sspt.append(t)
-        if (verbose):
-            print(t, chisq, scale)
+#        if (verbose):
+#            print(t, chisq, scale)
 
 # list of sorted standard files and spectral types
     sorted_stdsptnum = [x for (y,x) in sorted(zip(stat,sspt))]
@@ -1388,7 +1388,8 @@ def classifyByStandard(sp, *args, **kwargs):
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
 #        spstd = Spectrum(file=sorted_stdfiles[0])
-        spstd = getStandard(typeToNum(sorted_stdsptnum[0],subclass=subclass))
+#        print(typeToNum(sorted_stdsptnum[0],subclass=subclass))
+        spstd = getStandard(typeToNum(sorted_stdsptnum[0],subclass=subclass))[0]
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],stat=compstat)
         spstd.scale(scale)
         if kwargs.get('colors',False) == False:
@@ -1713,15 +1714,19 @@ def classifyGravity(sp, *args, **kwargs):
             return numpy.nan
     if isinstance(sptn,str):
         sptn = typeToNum(sptn)
-    Spt = typeToNum(numpy.floor(sptn))
+    Spt = typeToNum(numpy.round(sptn))
 
 #Check whether the NIR SpT is within gravity sensitive range values
     if ((sptn < 16.0) or (sptn > 27.0)):
         print('Spectral type '+typeToNum(sptn)+' outside range for gravity classification')
         return numpy.nan
 
+# print spt if verbose
+    if verbose:
+        print('\nGravity Classification:\n\tSpT = {}'.format(Spt))
+
 #Creates an empty array with dimensions 4x1 to fill in later with 5 gravscore values
-    gravscore = {}
+    gravscore = {'spt': Spt}
     medgrav = []
 
 # Use the spt to pick the column that contains the
@@ -1736,7 +1741,7 @@ def classifyGravity(sp, *args, **kwargs):
             if ind[k][0] >= grav[k][Spt][1]:
                 val = 2.0
             if verbose:
-                print('{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
+                print('\t{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
         if k == 'FeH-z' or k=='KI-J':
             if numpy.isnan(grav[k][Spt][0]):
                 val = numpy.nan
@@ -1745,7 +1750,7 @@ def classifyGravity(sp, *args, **kwargs):
             if ind[k][0] <= grav[k][Spt][1]:
                 val = 2.0
             if verbose:
-                print(k,ind[k][0], ind[k][1], val)
+                print('\t{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
         gravscore[k] = val
         medgrav.append(val)
 
@@ -1761,6 +1766,11 @@ def classifyGravity(sp, *args, **kwargs):
        gravscore['gravity_class'] = 'INT-G'
     elif gravscore['score'] >= 1.5:
        gravscore['gravity_class'] = 'VL-G'
+
+# print spt if verbose
+    if verbose:
+        print('\tGravity Class = {}\n'.format(gravscore['gravity_class']))
+
 
 # plot spectrum against standard
     if (kwargs.get('plot',False) != False):
