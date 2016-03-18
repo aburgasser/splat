@@ -104,11 +104,105 @@ def bibTexParser(bib_tex,**kwargs):
         line = line.strip()
         line = line.replace('{','').replace('}','').replace('\"','').replace('\n','').replace('\t','') 
         line = line.split('=')
-        line[0] = line[0].strip()
+        line[0] = line[0].strip().lower()
         line[1] = line[1].strip()
         bib_dict[line[0]] = line[1]
+
+# Journal massaging
+    if bib_dict['journal'] == '\\apj':
+        bib_dict['journal'] = 'ApJ'
+    elif bib_dict['journal'] == '\\apjs':
+        bib_dict['journal'] = 'ApJS'
+    elif bib_dict['journal'] == '\\aj':
+        bib_dict['journal'] = 'AJ'
+    elif bib_dict['journal'] == '\\araa':
+        bib_dict['journal'] = 'AR&A'
+    elif bib_dict['journal'] == '\\aap':
+        bib_dict['journal'] = 'A&A'
+    elif bib_dict['journal'] == '\\mnras':
+        bib_dict['journal'] = 'MNRAS'
+    elif bib_dict['journal'] == '\\pasp':
+        bib_dict['journal'] = 'PASP'
+    elif bib_dict['journal'] == '\\pnas':
+        bib_dict['journal'] = 'PNAS'
+    else:
+        pass
+
+
         
     return bib_dict
+
+
+def shortRef(bib_dict,**kwargs):
+    '''
+    :Purpose:
+        Takes a bibtex dictionary and returns a short (in-line) version of the citation
+
+    :Required parameters:
+        :param bib_tex: Dictionary output from bibTexParser, else a bibcode that is fed into bibTexParser
+
+    :Optional parameters:
+        None
+
+    :Output:
+        A string of the format ``Burgasser, A. J., et al. (2006, ApJ, 710, 1142)``
+
+    '''
+    if type(bib_dict) is not dict:
+        if type(bib_dict) is str:
+            bib_dict = getBibTex(bib_dict,**kwargs)
+        else:
+            raise NameError('Input to shortRef is neither a bibcode nor a bibTex dictionary')
+
+    authors = bib_dict['author'].split(' and ')
+    if len(authors) == 1:
+        output = '{}'.format(authors[0].replace('~',' '))
+    elif len(authors) == 2:
+        output = '{} & {}'.format(authors[0].replace('~',' '),authors[1].replace('~',' '))
+#    elif len(a) == 3:
+#        output = '{}, {} & {}'.format(a[0].replace('~',' '),a[1].replace('~',' '),a[2].replace('~',' '))
+#    else:
+#        output = '{}, {}, {}, et al.'.format(a[0].replace('~',' '),a[1].replace('~',' '),a[2].replace('~',' '))
+    else:
+        output = '{} et al.'.format(authors[0].replace('~',' '))
+
+    return output+' ({}, {}, {}, {})'.format(bib_dict['year'],bib_dict['journal'],bib_dict['volume'],bib_dict['pages'])
+
+
+def longRef(bib_dict,**kwargs):
+    '''
+    :Purpose:
+        Takes a bibtex dictionary and returns a long (in-line) version of the citation
+
+    :Required parameters:
+        :param bib_tex: Dictionary output from bibTexParser, else a bibcode that is fed into bibTexParser
+
+    :Optional parameters:
+        None
+
+    :Output:
+        A string of the format ``Burgasser, A. J., Cruz, K. L., Cushing, M., et al. SpeX Spectroscopy of Unresolved Very Low Mass Binaries. 
+        I. Identification of 17 Candidate Binaries Straddling the L Dwarf/T Dwarf Transition. ApJ 710, 1142 (2010)``
+
+    '''
+    if type(bib_dict) is not dict:
+        if type(bib_dict) is str:
+            bib_dict = getBibTex(bib_dict,**kwargs)
+        else:
+            raise NameError('Input to shortRef is neither a bibcode nor a bibTex dictionary')
+
+    authors = bib_dict['Author'].split(' and ')
+    if len(authors) == 1:
+        output = '{}'.format(authors[0].replace('~',' '))
+    elif len(authors) == 2:
+        output = '{} & {}'.format(authors[0].replace('~',' '),authors[1].replace('~',' '))
+    elif len(authors) == 3:
+        output = '{}, {} & {}'.format(authors[0].replace('~',' '),authors[1].replace('~',' '),authors[2].replace('~',' '))
+    else:
+        output = '{}, {}, {}, et al'.format(authors[0].replace('~',' '),authors[1].replace('~',' '),authors[2].replace('~',' '))
+
+    return output+'. {}. {}, {}, {} ({})'.format(bib_dict['title'],bib_dict['journal'],bib_dict['volume'],bib_dict['pages'],bib_dict['year'])
+
 
 
 def getBibTex(bibcode,**kwargs):
@@ -134,7 +228,7 @@ def getBibTex(bibcode,**kwargs):
 
     '''
 
-# go online first
+# go online first if directed to do so
     if kwargs.get('online',False) and checkOnline():
         bib_tex = getBibTexOnline(bibcode)
 
@@ -635,7 +729,7 @@ def searchLibrary(*args, **kwargs):
     :Purpose: Search the SpeX database to extract the key reference for that Spectrum
     :param output: returns desired output of selected results
     :type output: optional, default = 'all'
-    :param logic: search logic, can be ``and`` or ``or``
+    :param logic: search logic, can be and`` or ``or``
     :type logic: optional, default = 'and'
     :param combine: same as logic
     :type combine: optional, default = 'and'

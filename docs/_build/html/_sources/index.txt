@@ -6,10 +6,6 @@ SPLAT: The SpeX Prism Library Analysis Toolkit
 ===============================================
 
 
-
-Overview
---------
-
 SPLAT is a python-based spectral access and analysis package designed to interface  
 with the SpeX Prism Library (SPL: http://www.browndwarfs.org/spexprism), 
 an online repository of over
@@ -164,15 +160,15 @@ and Chris Theissen.
 .. toctree::
    :maxdepth: 3
 
+   installation
+   quickstart
    splat
-<<<<<<< HEAD
    splat_db
-=======
->>>>>>> master
    splat_plot
    splat_model
    bdevopar
    bugs
+   api
 
 *Search*
 

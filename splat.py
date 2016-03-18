@@ -457,7 +457,7 @@ class Spectrum(object):
             self.flam = self.flux
             self.nu = self.wave.to('Hz',equivalencies=u.spectral())
             self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
-            self.fnunit = u.Jansky
+            self.fnu_unit = u.Jansky
 # calculate variance
             self.variance = self.noise**2
             self.dof = numpy.round(len(self.wave)/self.slitpixelwidth)
@@ -488,6 +488,7 @@ class Spectrum(object):
                 except:
                     setattr(self,k,numpy.nan)
 #                print(getattr(self,k))
+        
 
 # information on model
         if self.model == True:
@@ -499,7 +500,7 @@ class Spectrum(object):
             self.kzz = kwargs.get('kzz',numpy.nan)
             self.slit = kwargs.get('slit',numpy.nan)
             self.modelset = kwargs.get('set','')
-            self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.logg)
+            self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.z)
             self.fscale = 'Surface'
 
 # populate header            
@@ -609,21 +610,35 @@ class Spectrum(object):
         return sp
 
     def info(self):
-          '''
-          :Purpose: Reports some information about this spectrum.
-          '''
-          if (self.model):
-              print('\n{} model with the following parmeters:'.format(self.modelset))
-              print('Teff = {}'.format(self.teff))
-              print('logg = {}'.format(self.logg))
-              print('z = {}'.format(self.z))
-              print('fsed = {}'.format(self.fsed))
-              print('cld = {}'.format(self.cld))
-              print('kzz = {}'.format(self.kzz))
-              print('slit = {}\n'.format(self.slit))
-          else:
-              print('\nSpectrum of {0} taken on {1}'''.format(self.name, self.date))
-          return
+        '''
+        :Purpose: Reports some information about this spectrum.
+        '''
+        if (self.model):
+            print('\n{} model with the following parmeters:'.format(self.modelset))
+            print('Teff = {} K'.format(self.teff))
+            print('logg = {} cm/s2'.format(self.logg))
+            print('z = {}'.format(self.z))
+            print('fsed = {}'.format(self.fsed))
+            print('cld = {}'.format(self.cld))
+            print('kzz = {}'.format(self.kzz))
+            print('Smoothed to slit width {} arcseconds\n'.format(self.slit))
+        else:
+#            print('\nSpectrum of {0} observed on {1}'''.format(self.name, self.date))
+            text = ['Spectrum of','Observed on','Observed by','at an airmass of','Full source designation is', 'Median S/N =','SPLAT source key is','SPLAT spectrum key is']
+            ref = ['name','date','observer','airmass','designation','median_snr','source_key','data_key']
+            for i,k in enumerate(ref):
+                try:
+                    if getattr(self,k) != '':
+                        print('\t{} {}'.format(text[i],getattr(self,k)))
+                except:
+                    pass
+            try:
+                bib = getBibTex(self.data_reference)
+                print('\tData published in {}'.format(shortRef(bib)))
+            except:
+                pass
+#        print('\nPlot spectrum using .plot()')
+        return
 
     def flamToFnu(self):
          '''
@@ -1767,6 +1782,8 @@ def classifyGravity(sp, *args, **kwargs):
        gravscore['gravity_class'] = 'INT-G'
     elif gravscore['score'] >= 1.5:
        gravscore['gravity_class'] = 'VL-G'
+    else:
+       gravscore['gravity_class'] = 'UNKNOWN'
 
 # print spt if verbose
     if verbose:
@@ -2188,12 +2205,12 @@ def filterMag(sp,f,*args,**kwargs):
     if (ab):
         fnu = fwave.to('Hz',equivalencies=u.spectral())
         fconst = 3631*u.jansky
-        fconst = fconst.to(sp.fnunit,equivalencies=u.spectral())
+        fconst = fconst.to(sp.fnu_unit,equivalencies=u.spectral())
         d = interp1d(sp.nu,sp.fnu,bounds_error=False,fill_value=0.)
         n = interp1d(sp.nu,sp.noise,bounds_error=False,fill_value=0.)
         b = trapz((ftrans/fnu)/fconst,fnu)
         for i in numpy.arange(nsamples):
-            a = trapz(ftrans*(d(fnu)+numpy.random.normal(0,1)*n(fnu))*sp.fnunit/fnu,fnu)
+            a = trapz(ftrans*(d(fnu)+numpy.random.normal(0,1)*n(fnu))*sp.fnu_unit/fnu,fnu)
             result.append(-2.5*numpy.log10(a/b))
 
     val = numpy.nanmean(result)
