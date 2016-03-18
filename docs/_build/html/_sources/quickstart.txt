@@ -1,47 +1,9 @@
-.. SpeX Prism Library Analysis Toolkit documentation master file, created by
-   sphinx-quickstart on Sat Jul 11 20:07:28 2015.
-
-
-SPLAT: The SpeX Prism Library Analysis Toolkit
+Quickstart
 ===============================================
 
-
-SPLAT is a python-based spectral access and analysis package designed to interface  
-with the SpeX Prism Library (SPL: http://www.browndwarfs.org/spexprism), 
-an online repository of over
-1500 low-resolution, near-infrared spectra of low-temperature stars and brown dwarfs.
-It is built on common python packages such as numpy, scipy, astropy and matplotlib.  
-
-SPLAT tools will allow you to:
-    * search the SPL for data and source information;
-    * access the publically-available (published) spectra contained in it;
-    * compare your near-infrared spectrum to these data;
-    * make use of published empirical trends in absolute magnitudes and effective temperatures;
-    * perform basic spectral analyses such as spectral classification, gravity classification, index measurement, spectrophotometry, reddening, robust comparison statistics, basic math operations;
-    * perform advanced analyses such as MCMC spectral model fitting, spectral binary analysis, and optimized index definition;
-    * transform observable to physical parameters using evolutionary models; and
-    * plot/tabulate/publish your results.  
-
-**Note that many of these features are currently under development.**
-
-Installation and Dependencies
---------
-
-SPLAT is best forked from the github site http://github.org/aburgasser/splat, 
-which is updated on a regular basis.
-SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by 
-sending bug reports to aburgasser@ucsd.edu 
-
-Instructions on setting up and using SPLAT are maintained at http://www.browndwarfs.org/splat
-
-You should copy the file ``.splat_access`` into your home directory - this is your access key
-if you have priveleged access to unpublished data.
-
-Using SPLAT
---------
-
 SPLAT is best used in the ipython or ipython notebook; all of the necessary data is
-included in the github install, so you won't need to be online to run anything
+included in the github install, so you shouldn't need to be online to run anything
+unless you are using proprietary data (these are not distributed with the package).
 
 Here are some examples:
 
@@ -92,7 +54,7 @@ You can also compare multiple spectra:
 
 You can add several extras to this to label features, plot uncertainties, 
 indicate telluric absorption regions, make multi-panel and multi-page plots
-of lists of spectra, etc. Be sure to look through the plotting 
+of lists of spectra, etc. Be sure to look through the SPLAT plotting 
 subpackage for more details.
 
 
@@ -109,10 +71,20 @@ of the index:
 
 >>> print indices['sH2O-J']		# returns value, error
 
-* You can also determine the gravity classification of a source via Allers & Liu (2013)
+* You can also determine the gravity classification of a source via Allers & Liu (2013):
 
 >>> sp = splat.getSpectrum(young=True, lucky=True)[0]
->>> print splat.classifyGravity(sp)   # returned 'VL-G'
+>>> splat.classifyGravity(sp,verbose=True)
+
+This returns:
+
+>>> Gravity Classification:
+>>>   SpT = L1.0
+>>>   VO-z: 1.193+/-0.018 => 1.0
+>>>   FeH-z: 1.096+/-0.026 => 2.0
+>>>   H-cont: 0.973+/-0.010 => 2.0
+>>>   KI-J: 1.044+/-0.008 => 2.0
+>>>   Gravity Class = VL-G
 
 
 * To classify a spectrum, use the classifyByXXX methods:
@@ -120,21 +92,30 @@ of the index:
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> spt,unc = splat.classifyByIndex(sp,set='burgasser')
 >>> spt,unc = splat.classifyByStandard(sp,spt=['T5','T9'])
->>> result = splat.classifyByTemplate(sp,spt=['T6','T9'],nbest=5)
+>>> bestMatches = splat.classifyByTemplate(sp,spt=['T6','T9'],nbest=5)
 
-The last line returns a dictionary containing the best 5 template matches to the Spectrum sp.
+The last line returns a dictionary containing the best 5 template matches to the Spectrum sp. 
+Note that this can take a long time to run!
 
 
 * To compare a spectrum to another spectrum or a model, use compareSpectra:
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
->>> mdl = splat.loadModel(teff=700,logg=5.0)			# loads a BTSettl08 model by default
+>>> mdl = splat.loadModel(teff=700,logg=5.0)			# BTSettl08 model by default
 >>> chi,scale = splat.compareSpectra(sp,mdl)
 >>> mdl.scale(scale)
 >>> splat.plotSpectrum(sp,mdl,colors=['black','red'],legend=[sp.name,mdl.name])
 
+The available spectral models are 
 
-# There is also a basic Markov Chain Monte Carlo code to compare models to spectra
+  * 'BTSettl08' (Allard et al. 2008)
+  * 'drift' (Witte et al. 2008)
+  * 'burrows06' (Burrows et al. 2006)
+  * 'saumon12' (Saumon & Marley 2012)
+  * 'morley12' (Morley et al. 2012)
+  * 'morley14; (Morley et al. 2014)
+
+* There is also a basic Markov Chain Monte Carlo code to compare models to spectra (Note: still in development)
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> sp.fluxCalibrate('2MASS J',14.49,absolute=True)
@@ -142,33 +123,10 @@ The last line returns a dictionary containing the best 5 template matches to the
 
 
 All of these routines have many options worth exploring, and which are (partially) documented 
-in the following pages. If there are capabilities
+in the following pages. If there are other capabilities
 you need, please suggest them, or note it in the "Issues" link on our github site
 
-Authors
---------
 
-SPLAT is an experimental, collaborative project of research students in Adam Burgasser's
-UCSD Cool Star Lab, aimed at teaching students how to do research by building 
-their own analysis tools.  Contributors to SPLAT include Christian Aganze, Daniella Bardalez Gagliuffi,
-Adam Burgasser (PI), Caleb Choban, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez,
-Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya
-and Chris Theissen.
-
-*Contents*
-
-.. toctree::
-   :maxdepth: 3
-
-   installation
-   quickstart
-   splat
-   splat_db
-   splat_plot
-   splat_model
-   bdevopar
-   bugs
-   api
 
 *Search*
 

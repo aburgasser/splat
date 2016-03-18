@@ -43,6 +43,12 @@ sys.ps1 = 'splat model> '
 #        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
 
 
+def getModel(*args, **kwargs):
+    '''
+    Redundant routine with loadModel
+    '''
+    return loadModel(*args, **kwargs)
+
 
 
 def loadInterpolatedModel_NEW(*args,**kwargs):
