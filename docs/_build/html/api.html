@@ -100,14 +100,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#other-spectral-analyses">Other Spectral Analyses</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#source-analysis">Source Analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#conversion-routines">Conversion Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plotting-routines">Plotting Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modeling-routines">Modeling Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#evolutionary-model-routines">Evolutionary Model Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-calculation-routines">Other Calculation Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bibtex-routines">BibTeX Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#i-o-routines">I/O Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#other-routines">Other Routines</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#splat-database-access-routines">SPLAT Database Access Routines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#splat-plotting-routines">SPLAT Plotting Routines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#splat-modeling-routines">SPLAT Modeling Routines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#evolutionary-model-routines">Evolutionary Model Routines</a></li>
 </ul>
 </li>
 </ul>
@@ -254,8 +254,80 @@ noise array elements.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.searchLibrary">
-<code class="descclassname">splat.</code><code class="descname">searchLibrary</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.searchLibrary" title="Permalink to this definition">¶</a></dt>
+<dt id="splat_db.getPhotometry">
+<code class="descclassname">splat_db.</code><code class="descname">getPhotometry</code><span class="sig-paren">(</span><em>coordinate</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.getPhotometry" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Purpose</dt>
+<dd>Downloads photometry for a source using astroquery (?)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first"><strong>Currently not functional</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Required parameters:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">param coordinate:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">astropy Coordinate object with coordinates (RA, Dec) of source to be searched</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional parameters:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param radius:</th><td class="field-body">radius in arcseconds for matching</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type float:</th><td class="field-body">optional, default = 5.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param validate:</th><td class="field-body">Ask for validation from user for matched photometry</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = False</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param 2MASS:</th><td class="field-body">Download 2MASS photometry</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = True</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param SDSS:</th><td class="field-body">Download 2MASS photometry</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = True</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param UKIDSS:</th><td class="field-body">Download 2MASS photometry</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = True</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param WISE:</th><td class="field-body">Download 2MASS photometry</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = True</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param DENIS:</th><td class="field-body">Download 2MASS photometry</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = True</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><ul class="first last simple">
+<li>A table? filename? if new photometry</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_db.searchLibrary">
+<code class="descclassname">splat_db.</code><code class="descname">searchLibrary</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.searchLibrary" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -298,8 +370,8 @@ noise array elements.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.fetchDatabase">
-<code class="descclassname">splat.</code><code class="descname">fetchDatabase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.fetchDatabase" title="Permalink to this definition">¶</a></dt>
+<dt id="splat_db.fetchDatabase">
+<code class="descclassname">splat_db.</code><code class="descname">fetchDatabase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.fetchDatabase" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -311,8 +383,8 @@ noise array elements.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.keySource">
-<code class="descclassname">splat.</code><code class="descname">keySource</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.keySource" title="Permalink to this definition">¶</a></dt>
+<dt id="splat_db.keySource">
+<code class="descclassname">splat_db.</code><code class="descname">keySource</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.keySource" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -343,8 +415,8 @@ noise array elements.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.keySpectrum">
-<code class="descclassname">splat.</code><code class="descname">keySpectrum</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.keySpectrum" title="Permalink to this definition">¶</a></dt>
+<dt id="splat_db.keySpectrum">
+<code class="descclassname">splat_db.</code><code class="descname">keySpectrum</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.keySpectrum" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1220,27 +1292,142 @@ angles and Dec in degrees</td>
 </dd></dl>
 
 </div>
-<div class="section" id="i-o-routines">
-<h3>I/O Routines<a class="headerlink" href="#i-o-routines" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="plotting-routines">
+<h3>Plotting Routines<a class="headerlink" href="#plotting-routines" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
-<dt id="splat.checkOnline">
-<code class="descclassname">splat.</code><code class="descname">checkOnline</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.checkOnline" title="Permalink to this definition">¶</a></dt>
+<dt id="splat_plot.plotSpectrum">
+<code class="descclassname">splat_plot.</code><code class="descname">plotSpectrum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_plot.plotSpectrum" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if SPLAT&#8217;s URL is accessible from your machine&#8211;
-that is, checks if you and the host are online. Alternately
-checks if a given filename is present locally or online</p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><code class="docutils literal"><span class="pre">Primary</span> <span class="pre">plotting</span> <span class="pre">program</span> <span class="pre">for</span> <span class="pre">Spectrum</span> <span class="pre">objects.</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>:Input
+Spectrum objects, either sequentially, in list, or in list of lists</p>
+<blockquote>
+<div><ul class="simple">
+<li>Spec1, Spec2, ...: plot multiple spectra together, or separately if multiplot = True</li>
+<li>[Spec1, Spec2, ...]: plot multiple spectra together, or separately if multiplot = True</li>
+<li>[[Spec1, Spec2], [Spec3, Spec4], ..]: plot multiple sets of spectra (multiplot forced to be True)</li>
+</ul>
+</div></blockquote>
+<p>:Parameters
+title = &#8216;&#8217;</p>
+<blockquote>
+<div>string giving plot title</div></blockquote>
+<dl class="docutils">
+<dt>xrange = [0.85,2.42]:</dt>
+<dd>plot range for wavelength axis</dd>
+<dt>yrange = [-0.02,1.2]*fluxMax:</dt>
+<dd>plot range for wavelength axis</dd>
+<dt>xlabel:</dt>
+<dd>wavelength axis label; by default set by wlabel and wunit keywords in first spectrum object</dd>
+<dt>ylabel:</dt>
+<dd>flux axis label; by default set by fscale, flabel and funit keywords in first spectrum object</dd>
+<dt>features:</dt>
+<dd>a list of strings indicating chemical features to label on the spectra
+options include H2O, CH4, CO, TiO, VO, FeH, H2, HI, KI, NaI, SB (for spectral binary)</dd>
+<dt>mdwarf, ldwarf, tdwarf, young, binary = False:</dt>
+<dd>add in features characteristic of these classes</dd>
+<dt>telluric = False:</dt>
+<dd>mark telluric absorption features</dd>
+<dt>legend, legends, label or labels:</dt>
+<dd>list of strings providing legend-style labels for each spectrum plotted</dd>
+<dt>legendLocation or labelLocation = &#8216;upper right&#8217;:</dt>
+<dd>place of legend; options are &#8216;upper left&#8217;, &#8216;center middle&#8217;, &#8216;lower right&#8217; (variations thereof) and &#8216;outside&#8217;</dd>
+<dt>grid = False:</dt>
+<dd>add a grid</dd>
+<dt>stack = 0:</dt>
+<dd>set to a numerical offset to stack spectra on top of each other</dd>
+<dt>zeropoint = [0,...]:</dt>
+<dd>list of offsets for each spectrum, giving finer control than stack</dd>
+<dt>showZero = True:</dt>
+<dd>plot the zeropoint(s) of the spectra</dd>
+<dt>comparison:</dt>
+<dd>a comparison Spectrum to compare in each plot, useful for common reference standard</dd>
+<dt>noise, showNoise or uncertainty = False:</dt>
+<dd>plot the uncertainty for each spectrum</dd>
+<dt>residual = False:</dt>
+<dd>plots the residual between two spectra</dd>
+<dt>color or colors:</dt>
+<dd>color of plot lines; by default all black</dd>
+<dt>colorUnc or colorsUnc:</dt>
+<dd>color of uncertainty lines; by default same as line color but reduced opacity</dd>
+<dt>colorScheme or colorMap:</dt>
+<dd>color map to apply based on matplotlib colormaps;
+see <a class="reference external" href="http://matplotlib.org/api/pyplot_summary.html?highlight=colormaps#matplotlib.pyplot.colormaps">http://matplotlib.org/api/pyplot_summary.html?highlight=colormaps#matplotlib.pyplot.colormaps</a></dd>
+<dt>linestyle:</dt>
+<dd>line style of plot lines; by default all solid</dd>
+<dt>fontscale = 10:</dt>
+<dd>sets a scale factor for the fontsize</dd>
+<dt>inset = False:</dt>
+<dd>place an inset panel showing a close up region of the spectral data</dd>
+<dt>inset_xrange = False:</dt>
+<dd>wavelength range for inset panel</dd>
+<dt>inset_position = [0.65,0.60,0.20,0.20]</dt>
+<dd>position of inset planet in normalized units, in order left, bottom, width, height</dd>
+<dt>inset_features = False</dt>
+<dd>list of features to label in inset plot</dd>
+<dt>file or filename or output:</dt>
+<dd>filename or filename base for output</dd>
+<dt>filetype = &#8216;pdf&#8217;:</dt>
+<dd>output filetype, generally determined from filename</dd>
+<dt>multiplot = False:</dt>
+<dd>creates multiple plots, depending on format of input (optional)</dd>
+<dt>multipage = False:</dt>
+<dd>spreads plots across multiple pages; output file format must be PDF
+if not set and plots span multiple pages, these pages are output sequentially as separate files</dd>
+<dt>layout or multilayout = [1,1]:</dt>
+<dd>defines how multiple plots are laid out on a page</dd>
+<dt>figsize:</dt>
+<dd>set the figure size; set to default size if not indicated</dd>
+<dt>interactive = False:</dt>
+<dd>if plotting to window, set this to make window interactive</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example 1:</th><td class="field-body"><p class="first">A simple view of a random spectrum
+&gt;&gt;&gt; import splat
+&gt;&gt;&gt; spc = splat.getSpectrum(spt = &#8216;T5&#8217;, lucky=True)[0]
+&gt;&gt;&gt; spc.plot()                       # this automatically generates a &#8220;quicklook&#8221; plot
+&gt;&gt;&gt; splat.plotSpectrum(spc)          # does the same thing
+&gt;&gt;&gt; splat.plotSpectrum(spc,uncertainty=True,tdwarf=True)     # show the spectrum uncertainty and T dwarf absorption features</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">()</span>
-<span class="go">True  # SPLAT&#39;s URL was detected.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">()</span>
-<span class="go">False # SPLAT&#39;s URL was not detected.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">(</span><span class="s1">&#39;SpectralModels/BTSettl08/parameters.txt&#39;</span><span class="p">)</span>
-<span class="go">&#39;&#39; # Could not find this online file.</span>
+<tr class="field-even field"><th class="field-name">Example 2:</th><td class="field-body"><dl class="first docutils">
+<dt>Viewing a set of spectra for a given object</dt>
+<dd><p class="first last">In this case we&#8217;ll look at all of the spectra of TWA 30B in the library, sorted by year and compared to the first epoch data
+This is an example of using multiplot and multipage</p>
+</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;TWA 30B&#39;</span><span class="p">)</span>         <span class="c1"># get all spectra of TWA 30B</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c1"># normalize the spectra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">date</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>                   <span class="c1"># observation dates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spsort</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">d</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span><span class="n">splis</span><span class="p">))]</span>   <span class="c1"># sort spectra by dates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>                                         <span class="c1"># don&#39;t forget to sort dates!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spsort</span><span class="p">,</span><span class="n">multiplot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">layout</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">multipage</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>\   <span class="c1"># here&#39;s our plot statement</span>
+<span class="go">    comparison=spsort[0],uncertainty=True,mdwarf=True,telluric=True,legends=dates,           legendLocation=&#39;lower left&#39;,output=&#39;TWA30B.pdf&#39;)</span>
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example 3:</th><td class="field-body"><dl class="first docutils">
+<dt>Display the spectra sequence of L dwarfs</dt>
+<dd><p class="first last">This example uses the list of standard files contained in SPLAT, and illustrates the stack feature</p>
+</dd>
+</dl>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">20</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>     <span class="c1"># generate list of L spectral types</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">spex_stdfiles</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spt</span><span class="p">]</span>        <span class="c1"># get the standard files</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>          <span class="c1"># read in list of Spectrum objects</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c1"># normalize the spectra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">shortname</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>              <span class="c1"># set labels to be names</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">splist</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">stack</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>\  <span class="c1"># here&#39;s our plot statement</span>
+<span class="go">    colorScheme=&#39;copper&#39;,legendLocation=&#39;outside&#39;,telluric=True,output=&#39;lstandards.pdf&#39;)</span>
 </pre></div>
 </div>
 </td>
@@ -1250,51 +1437,102 @@ checks if a given filename is present locally or online</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.checkAccess">
-<code class="descclassname">splat.</code><code class="descname">checkAccess</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.checkAccess" title="Permalink to this definition">¶</a></dt>
+<dt id="splat_plot.plotIndices">
+<code class="descclassname">splat_plot.</code><code class="descname">plotIndices</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_plot.plotIndices" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if user has access to unpublished spectra in SPLAT library.</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkAccess</span><span class="p">()</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first last">Must have the file .splat_access in your home directory with the correct passcode to use.</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><code class="docutils literal"><span class="pre">Plot</span> <span class="pre">index-index</span> <span class="pre">plots.</span></code></td>
 </tr>
 </tbody>
 </table>
+<p>Not currently implemented</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.checkFile">
-<code class="descclassname">splat.</code><code class="descname">checkFile</code><span class="sig-paren">(</span><em>filename</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.checkFile" title="Permalink to this definition">¶</a></dt>
+<dt id="splat_plot.plotSED">
+<code class="descclassname">splat_plot.</code><code class="descname">plotSED</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_plot.plotSED" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if a spectrum file exists in the SPLAT&#8217;s library.</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><code class="docutils literal"><span class="pre">Plot</span> <span class="pre">SED</span> <span class="pre">photometry</span> <span class="pre">with</span> <span class="pre">SpeX</span> <span class="pre">spectrum.</span></code></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> &#8211; A string containing the spectrum&#8217;s filename.</p>
-</td>
+</tbody>
+</table>
+<p>Not currently implemented</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_plot.plotStandardSequence">
+<code class="descclassname">splat_plot.</code><code class="descname">plotStandardSequence</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_plot.plotStandardSequence" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><code class="docutils literal"><span class="pre">Compare</span> <span class="pre">spectrum</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">standard</span> <span class="pre">sequence.</span></code></td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spectrum1</span> <span class="o">=</span> <span class="s1">&#39;spex_prism_1315+2334_110404.fits&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkFile</span><span class="p">(</span><span class="n">spectrum1</span><span class="p">)</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spectrum2</span> <span class="o">=</span> <span class="s1">&#39;fake_name.fits&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkFile</span><span class="p">(</span><span class="n">spectrum2</span><span class="p">)</span>
-<span class="go">False</span>
-</pre></div>
+</tbody>
+</table>
+<p>Not currently implemented</p>
+</dd></dl>
+
 </div>
+<div class="section" id="modeling-routines">
+<h3>Modeling Routines<a class="headerlink" href="#modeling-routines" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat_model.getModel">
+<code class="descclassname">splat_model.</code><code class="descname">getModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.getModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redundant routine with loadModel</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.loadModel">
+<code class="descclassname">splat_model.</code><code class="descname">loadModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModel" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Load up a model spectrum based on parameters</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>set</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; <p>set of models to use; options include:</p>
+<ul>
+<li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
+<li><em>&#8216;burrows06&#8217;</em>: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5,
+and sedimentation efficiency of either 0 or 100 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...640.1063B">Burrows et al. (2006)</a></li>
+<li><em>&#8216;morley12&#8217;</em>: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0
+and sedimentation efficiency of 2 to 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...756..172M">Morley et al. (2012)</a></li>
+<li><em>&#8216;morley14&#8217;</em>: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0
+and sedimentation efficiency of 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...787...78M">Morley et al. (2014)</a></li>
+<li><em>&#8216;saumon12&#8217;</em>: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...750...74S">Saumon et al. (2012)</a></li>
+<li><em>&#8216;drift&#8217;</em>: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
+</ul>
+</li>
+<li><strong>local</strong> (<em>optional, default = True</em>) &#8211; read in parameter file locally if True</li>
+<li><strong>online</strong> (<em>optional, default = False</em>) &#8211; read in parameter file online if True</li>
+<li><strong>folder</strong> (<em>optional, default = ''</em>) &#8211; string of the folder name containing the model set</li>
+<li><strong>filename</strong> (<em>optional</em>) &#8211; string of the filename of the desired model</li>
+<li><strong>url</strong> (optional, default = &#8216;<a class="reference external" href="http://pono.ucsd.edu/~adam/splat/">http://pono.ucsd.edu/~adam/splat/</a>&#8216;) &#8211; string of the url to the SPLAT website</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Model Parameters:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">Below are parameters that define the model:</p>
+<ul class="last simple">
+<li><em>teff</em>: effective temperature of the model</li>
+<li><em>logg</em>: surface gravity of the model</li>
+<li><em>z</em>: metallicity of the model</li>
+<li><em>fsed</em>: sedimentation efficiency of the model</li>
+<li><em>cld</em>: cloud shape function of the model</li>
+<li><em>kzz</em>: vertical eddy diffusion coefficient of the model</li>
+<li><em>slit</em>: slit weight of the model</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -1302,8 +1540,11 @@ checks if a given filename is present locally or online</p>
 </dd></dl>
 
 </div>
-<div class="section" id="other-routines">
-<h3>Other Routines<a class="headerlink" href="#other-routines" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="evolutionary-model-routines">
+<h3>Evolutionary Model Routines<a class="headerlink" href="#evolutionary-model-routines" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="other-calculation-routines">
+<h3>Other Calculation Routines<a class="headerlink" href="#other-calculation-routines" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="splat.test">
 <code class="descclassname">splat.</code><code class="descname">test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.test" title="Permalink to this definition">¶</a></dt>
@@ -1334,25 +1575,168 @@ checks if a given filename is present locally or online</p>
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="splat_model.distributionStats">
+<code class="descclassname">splat_model.</code><code class="descname">distributionStats</code><span class="sig-paren">(</span><em>x, q=[0.16, 0.5, 0.84], weights=None, sigma=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.distributionStats" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Find key values along distributions based on quantile steps.
+This code is derived almost entirely from triangle.py.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
+<div class="section" id="bibtex-routines">
+<h3>BibTeX Routines<a class="headerlink" href="#bibtex-routines" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat_db.getBibTex">
+<code class="descclassname">splat_db.</code><code class="descname">getBibTex</code><span class="sig-paren">(</span><em>bibcode</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.getBibTex" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Purpose</dt>
+<dd><dl class="first last docutils">
+<dt>Takes a bibcode and returns a dictionary containing the bibtex information; looks either in internal SPLAT</dt>
+<dd>or user-supplied bibfile, or seeks online. If nothing found, gives a soft warning and returns False</dd>
+</dl>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first"><strong>Currently not functional</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Required parameters:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param bibcode:</th><td class="field-body">Bibcode string to look up (e.g., &#8216;2014ApJ...787..126L&#8217;)</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional parameters:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">param biblibrary:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">Filename for biblibrary to use in place of SPLAT internal one</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type string:</th><td class="field-body">optional, default = &#8216;&#8217;</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param online:</th><td class="field-body">If True, go directly online; if False, do not try to go online</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = null</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><ul class="first last simple">
+<li>A dictionary containing the bibtex fields, or False if not found</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
-<div class="section" id="splat-database-access-routines">
-<h2>SPLAT Database Access Routines<a class="headerlink" href="#splat-database-access-routines" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="i-o-routines">
+<h3>I/O Routines<a class="headerlink" href="#i-o-routines" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat_db.checkOnline">
+<code class="descclassname">splat_db.</code><code class="descname">checkOnline</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.checkOnline" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if SPLAT&#8217;s URL is accessible from your machine&#8211;
+that is, checks if you and the host are online. Alternately
+checks if a given filename is present locally or online</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">()</span>
+<span class="go">True  # SPLAT&#39;s URL was detected.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">()</span>
+<span class="go">False # SPLAT&#39;s URL was not detected.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">(</span><span class="s1">&#39;SpectralModels/BTSettl08/parameters.txt&#39;</span><span class="p">)</span>
+<span class="go">&#39;&#39; # Could not find this online file.</span>
+</pre></div>
 </div>
-<div class="section" id="splat-plotting-routines">
-<h2>SPLAT Plotting Routines<a class="headerlink" href="#splat-plotting-routines" title="Permalink to this headline">¶</a></h2>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_db.checkAccess">
+<code class="descclassname">splat_db.</code><code class="descname">checkAccess</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.checkAccess" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if user has access to unpublished spectra in SPLAT library.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkAccess</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
 </div>
-<div class="section" id="splat-modeling-routines">
-<h2>SPLAT Modeling Routines<a class="headerlink" href="#splat-modeling-routines" title="Permalink to this headline">¶</a></h2>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first last">Must have the file .splat_access in your home directory with the correct passcode to use.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_db.checkFile">
+<code class="descclassname">splat_db.</code><code class="descname">checkFile</code><span class="sig-paren">(</span><em>filename</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.checkFile" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if a spectrum file exists in the SPLAT&#8217;s library.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> &#8211; A string containing the spectrum&#8217;s filename.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spectrum1</span> <span class="o">=</span> <span class="s1">&#39;spex_prism_1315+2334_110404.fits&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkFile</span><span class="p">(</span><span class="n">spectrum1</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spectrum2</span> <span class="o">=</span> <span class="s1">&#39;fake_name.fits&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkFile</span><span class="p">(</span><span class="n">spectrum2</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
 </div>
-<div class="section" id="evolutionary-model-routines">
-<h2>Evolutionary Model Routines<a class="headerlink" href="#evolutionary-model-routines" title="Permalink to this headline">¶</a></h2>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <p><em>Search</em></p>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
 <li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
 </ul>
+</div>
 </div>
 </div>
 

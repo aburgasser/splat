@@ -94,6 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
             
@@ -141,12 +142,32 @@
   <div class="section" id="installation-and-dependencies">
 <h1>Installation and Dependencies<a class="headerlink" href="#installation-and-dependencies" title="Permalink to this headline">¶</a></h1>
 <p>SPLAT is best forked from the github site <a class="reference external" href="http://github.org/aburgasser/splat">http://github.org/aburgasser/splat</a>,
-which is updated on a regular basis.
-SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by
-sending bug reports to <a class="reference external" href="mailto:aburgasser&#37;&#52;&#48;ucsd&#46;edu">aburgasser<span>&#64;</span>ucsd<span>&#46;</span>edu</a></p>
-<p>Instructions on setting up and using SPLAT are maintained at <a class="reference external" href="http://www.browndwarfs.org/splat">http://www.browndwarfs.org/splat</a></p>
-<p>You should copy the file <code class="docutils literal"><span class="pre">.splat_access</span></code> into your home directory - this is your access key
-if you have priveleged access to unpublished data.</p>
+which is updated on a regular basis. Make sure the folder you download the package to is either in your <code class="docutils literal"><span class="pre">PATH</span></code> or <code class="docutils literal"><span class="pre">PYTHON_PATH</span></code> system variable.</p>
+<p>Once you have this in place, You should copy the file <code class="docutils literal"><span class="pre">.splat_access</span></code> into your home directory - this is your access key if you have priveleged access to unpublished data.</p>
+<p>SPLAT has been tested in Python 2.7.X and 3.5.X. It works best in ipython and ipython notebook.</p>
+<p>The SPLAT code uses the following external packages:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.astropy.org/">astropy</a></li>
+<li><a class="reference external" href="http://matplotlib.org/">matplotlib</a></li>
+<li><a class="reference external" href="http://www.numpy.org/">numpy</a></li>
+<li><a class="reference external" href="http://docs.python-requests.org/en/master/">requests</a></li>
+<li><a class="reference external" href="https://www.scipy.org/">scipy</a></li>
+<li><a class="reference external" href="https://pypi.python.org/pypi/triangle_plot">triangle</a></li>
+</ul>
+<p>and the following internal (python) packages:</p>
+<ul class="simple">
+<li>base64</li>
+<li>copy</li>
+<li>datetime</li>
+<li>math</li>
+<li>os</li>
+<li>random</li>
+<li>re</li>
+<li>sys</li>
+<li>warnings</li>
+</ul>
+<p>SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by
+sending bug reports to <a class="reference external" href="mailto:aburgasser&#37;&#52;&#48;ucsd&#46;edu">aburgasser<span>&#64;</span>ucsd<span>&#46;</span>edu</a> or start an issue on the github site.</p>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
