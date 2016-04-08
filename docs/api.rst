@@ -5,17 +5,18 @@ Main SPLAT Routines
 --------------------
 
 Data Access
-^^^^^^^^^^^^^^
+^^^^^^^^^^^
 .. autofunction:: splat.getSpectrum
 .. autofunction:: splat.getStandard
-.. autofunction:: splat.searchLibrary
-.. autofunction:: splat.fetchDatabase
-.. autofunction:: splat.keySource
-.. autofunction:: splat.keySpectrum
+.. autofunction:: splat_db.getPhotometry
+.. autofunction:: splat_db.searchLibrary
+.. autofunction:: splat_db.fetchDatabase
+.. autofunction:: splat_db.keySource
+.. autofunction:: splat_db.keySpectrum
 
 
 Spectral Classification
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat.classifyByIndex
 .. autofunction:: splat.classifyByStandard
 .. autofunction:: splat.classifyByTemplate
@@ -24,7 +25,7 @@ Spectral Classification
 
 
 Other Spectral Analyses
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat.compareSpectra
 .. autofunction:: splat.filterMag
 .. autofunction:: splat.measureIndex
@@ -34,14 +35,14 @@ Other Spectral Analyses
 
 
 Source Analysis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 .. autofunction:: splat.typeToMag
 .. autofunction:: splat.typeToTeff
 .. autofunction:: splat.estimateDistance
 
 
 Conversion Routines
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
    
 .. autofunction:: splat.caldateToDate
 .. autofunction:: splat.dateToCaldate
@@ -53,34 +54,51 @@ Conversion Routines
 .. autofunction:: splat.isNumber
 
 
-I/O Routines
-^^^^^^^^^^^^^^
-
-.. autofunction:: splat.checkOnline
-.. autofunction:: splat.checkAccess
-.. autofunction:: splat.checkFile
-.. autofunction:: splat.checkLocalFile
-
-Other Routines
-^^^^^^^^^^^^^^
-.. autofunction:: splat.test
-.. autofunction:: splat.weightMeanVar
+Plotting Routines
+^^^^^^^^^^^^^^^^^
+.. autofunction:: splat.Spectrum.plot
+.. autofunction:: splat_plot.plotSpectrum
+.. autofunction:: splat_plot.plotIndices
+.. autofunction:: splat_plot.plotSED
+.. autofunction:: splat_plot.plotStandardSequence
 
 
-SPLAT Database Access Routines
---------------------------------
+Modeling Routines
+^^^^^^^^^^^^^^^^^
+.. autofunction:: splat_model.getModel
+.. autofunction:: splat_model.loadModel
+.. autofunction:: splat_model.fitGrid
+.. autofunction:: splat_model.fitMCMC
 
-
-SPLAT Plotting Routines
---------------------------------
-
-
-SPLAT Modeling Routines
---------------------------------
 
 
 Evolutionary Model Routines
---------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Other Calculation Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: splat.test
+.. autofunction:: splat.weightMeanVar
+.. autofunction:: splat_model.distributionStats
+
+
+
+BibTeX Routines
+^^^^^^^^^^^^^^^
+
+.. autofunction:: splat_db.getBibTex
+
+
+I/O Routines
+^^^^^^^^^^^^
+
+.. autofunction:: splat_db.checkOnline
+.. autofunction:: splat_db.checkAccess
+.. autofunction:: splat_db.checkFile
+.. autofunction:: splat_db.checkLocalFile
+
+
 
 
 

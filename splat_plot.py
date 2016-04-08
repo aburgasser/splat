@@ -27,6 +27,25 @@ import sys
 sys.ps1 = 'splat plot> '
 
 
+def plotIndices(*args, **kwargs):
+    '''
+    :Purpose: ``Plot index-index plots.``
+
+    Not currently implemented
+    '''
+    pass
+    return
+
+def plotSED(*args, **kwargs):
+    '''
+    :Purpose: ``Plot SED photometry with SpeX spectrum.``
+
+    Not currently implemented
+    '''
+    pass
+    return
+
+
 def plotSpectrum(*args, **kwargs):
     '''
     :Purpose: ``Primary plotting program for Spectrum objects.``
@@ -611,5 +630,15 @@ def plotSpectrum(*args, **kwargs):
     return fig
 
 
-  
+def plotStandardSequence(*args, **kwargs):
+    '''
+    :Purpose: ``Compare spectrum to a standard sequence.``
+
+    Not currently implemented
+    '''
+    pass
+    return
+
+
+
     
