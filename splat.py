@@ -232,6 +232,10 @@ FILTERS = { \
     'VISTA_J': {'file': 'vista_j.txt', 'description': 'VISTA J-band', 'zeropoint': 1554.03}, \
     'VISTA_H': {'file': 'vista_h.txt', 'description': 'VISTA H-band', 'zeropoint': 1030.40}, \
     'VISTA_KS': {'file': 'vista_ks.txt', 'description': 'VISTA Ks-band', 'zeropoint': 674.83}, \
+    'WFC3_F127M': {'file': 'wfc3_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 2261.3}, \
+    'WFC3_F139M': {'file': 'wfc3_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 2261.3}, \
+    'WFC3_F164N': {'file': 'wfc3_F164M.txt', 'description': 'WFC3 F164N', 'zeropoint': 2261.3}, \
+    'WFC3_F167N': {'file': 'wfc3_F160W.txt', 'description': 'WFC3 F160W', 'zeropoint': 2261.3}, \
     'WFCAM_Z': {'file': 'wfcam-z.txt', 'description': 'UKIRT WFCAM Z', 'zeropoint': 2261.3}, \
     'WFCAM_Y': {'file': 'wfcam-y.txt', 'description': 'UKIRT WFCAM Y', 'zeropoint': 2040.9}, \
     'WFCAM_J': {'file': 'wfcam-j.txt', 'description': 'UKIRT WFCAM J', 'zeropoint': 1548.7}, \
@@ -1442,16 +1446,18 @@ def classifyByTemplate(sp, *args, **kwargs):
 
     :param sp: Spectrum class object, which should contain wave, flux and
                noise array elements.
+    :param spt or spt_range: restrict the spectral type range over which templates are chosen
+    :type best: optional, default = None
     :param best: return only the best fit template type
     :type best: optional, default = False
+    :param nbest: number of best fitting spectra to return
+    :type nbest: optional, default = 1
     :param plot: generate a plot comparing best fit standard to source, can be save to a file using the file keyword
     :type plot: optional, default = False
     :param file: output spectrum plot to a file
     :type file: optional, default = ''
     :param method: set to ``'kirkpatrick'`` to follow the `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_ method, fitting only to the 0.9-1.4 micron band
     :type method: optional, default = ''
-    :param nbest: number of best fitting spectra to return
-    :type nbest: optional, default = 1
     :param set: string defining which spectral template set you want to compare to; several options which can be combined:
 
             - *m dwarf*: fit to M dwarfs only
@@ -2792,6 +2798,7 @@ def measureIndexSet(sp,**kwargs):
     :param sp: Spectrum class object, which should contain wave, flux and noise array elements
     :param set: string defining which indices set you want to use; options include:
 
+            - *bardalez*: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J, H-dip, K-slope, J-slope, J-curve, H-bump, H2O-Y from `Bardalez Gagliuffi et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...794..143B>`_
             - *burgasser*: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J from `Burgasser et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...637.1067B>`_
             - *tokunaga*: K1, K2 from `Tokunaga & Kobayashi (1999) <http://adsabs.harvard.edu/abs/1999AJ....117.1010T>`_
             - *reid*: H2O-A, H2O-B from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_
