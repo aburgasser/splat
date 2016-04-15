@@ -2983,12 +2983,16 @@ def metallicity(sp,**kwargs):
 def properCoordinates(c):
     '''
     :Purpose: Converts various coordinate forms to the proper SkyCoord format. Convertible forms include lists and strings.
-    :param c: coordinate to be converted. Can be a list or a string.
+
+    :param c: coordinate to be converted. Can be a list (ra, dec) or a string.
+
     :Example:
     >>> import splat
     >>> print splat.properCoordinates([104.79, 25.06])
         <SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg>
     >>> print splat.properCoordinates('06:59:09.60 +25:03:36.0')
+        <SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg>
+    >>> print splat.properCoordinates('J06590960+2503360')
         <SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg>
     '''
     if isinstance(c,SkyCoord):
@@ -2997,7 +3001,10 @@ def properCoordinates(c):
         return SkyCoord(c[0]*u.deg,c[1]*u.deg,frame='icrs')
 # input is sexigessimal string
     elif isinstance(c,str):
-        return SkyCoord(c,'icrs', unit=(u.hourangle, u.deg))
+        if c[0] == 'J':
+            return designationToCoordinate(c)
+        else:
+            return SkyCoord(c,'icrs', unit=(u.hourangle, u.deg))
     else:
         raise ValueError('\nCould not parse input format\n\n')
 

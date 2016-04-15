@@ -838,29 +838,30 @@ def searchLibrary(*args, **kwargs):
         count+=1.
 # search by coordinate - NOTE: THIS IS VERY SLOW RIGHT NOW
     if kwargs.get('coordinate',False) != False:
+        print('\nWarning, search by coordinates may take a few minutes\n')
         coord = kwargs['coordinate']
         if isinstance(coord,SkyCoord):
             cc = coord
         else:
-            cc = properCoordinates(coord)
+            cc = splat.properCoordinates(coord)
 # calculate skycoords
-        if 'SKYCOORDS' not in source_db.keys():
+        if 'SKYCOORD' not in source_db.keys():
             s = []
-            print('\nWarning, search by coordinates will take a few minutes the first time\n')
             for i in numpy.arange(len(source_db['RA'])):
                 try:        # to deal with a blank string
                     s.append(SkyCoord(ra=float(source_db['RA'][i])*u.degree,dec=float(source_db['DEC'][i])*u.degree,frame='icrs'))
                 except:
                     s.append(SkyCoord(ra=numpy.nan*u.degree,dec=numpy.nan*u.degree,frame='icrs'))
-                if numpy.mod(i,len(source_db['RA'])/10.) < 1 and i != 0:
-                    print('\b{:.0f}%...'.format(100*i/len(source_db['RA'])))
-            source_db['SKYCOORDS'] = s
-        print('measuring separations')
-        source_db['SEPARATION'] = [cc.separation(source_db['SKYCOORDS'][i]).arcsecond for i in numpy.arange(len(source_db['SKYCOORDS']))]
-        print('done')
+#                if numpy.mod(i,len(source_db['RA'])/10.) < 1 and i != 0:
+#                    print('\b{:.0f}%...'.format(100*i/len(source_db['RA'])))
+            source_db['SKYCOORD'] = s
+#        print('measuring separations')
+#        source_db['SEPARATION'] = [cc.separation(source_db['SKYCOORDS'][i]).arcsecond for i in numpy.arange(len(source_db['SKYCOORDS']))]
+        source_db['SEPARATION'] = [cc.separation(c).arcsecond for c in source_db['SKYCOORD']]
+#        print('done')
         source_db['SELECT'][numpy.where(source_db['SEPARATION'] <= radius)] += 1
         count+=1.
-        print(count,numpy.max(source_db['SELECT']))
+#        print(count,numpy.max(source_db['SELECT']))
 
 # search by spectral type
     spt_range = kwargs.get('spt_range',False)
@@ -998,7 +999,7 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(source_db['CARBON'] == kwargs.get('carbon'))] += 1
         count+=1.
 
-# VLM dwarfs by default
+# VLM dwarfs
     if (kwargs.get('vlm','') != ''):
         if (kwargs.get('vlm') == True):
             source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == 'VLM')] += 1
@@ -1019,6 +1020,8 @@ def searchLibrary(*args, **kwargs):
     else:
         source_keys = source_db['SOURCE_KEY']
 
+#    print(count,numpy.max(source_db['SELECT']),len(source_db[:][numpy.where(source_db['SELECT']==1)]),len(source_keys))
+
 
 # read in spectral database
 #    spectral_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
@@ -1028,6 +1031,7 @@ def searchLibrary(*args, **kwargs):
     count = 0.
 
     spectral_db['SOURCE_SELECT'] = [x in source_keys for x in spectral_db['SOURCE_KEY']]
+#    print(source_keys,spectral_db['SOURCE_KEY'][numpy.where(spectral_db['SOURCE_SELECT']==True)])
 
 # search by filename
     file = kwargs.get('file','')
@@ -1092,22 +1096,30 @@ def searchLibrary(*args, **kwargs):
         spectral_db['SELECT'] = numpy.ones(len(spectral_db['DATA_KEY']))
 
 # limit access to public data for most users
-    if (not checkAccess() or kwargs.get('published',False) or kwargs.get('public',False)):
+#    print(count,numpy.max(spectral_db['SOURCE_SELECT']),numpy.max(spectral_db['SELECT']))
+#    print(len(spectral_db[:][numpy.where(spectral_db['SELECT']==1)]))
+#    print(len(spectral_db[:][numpy.where(spectral_db['SOURCE_SELECT']==True)]))
+#    print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]))
+    if (not splat.checkAccess() or kwargs.get('published',False) or kwargs.get('public',False)):
         spectral_db['SELECT'][numpy.where(spectral_db['PUBLISHED'] != 'Y')] = 0.
 
 # no matches
-    if len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))]) == 0:
+#    print(count,numpy.max(spectral_db['SOURCE_SELECT']),numpy.max(spectral_db['SELECT']))
+#    print(len(spectral_db[:][numpy.where(spectral_db['SELECT']==1)]))
+#    print(len(spectral_db[:][numpy.where(spectral_db['SOURCE_SELECT']==True)]))
+#    print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]))
+    if len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]) == 0:
         if not kwargs.get('silent',False):
             print('No spectra in the SPL database match the selection criteria')
         return Table()
     else:
 
 # merge databases
-        print(numpy.sum(spectral_db['SELECT']), numpy.sum(spectral_db['SOURCE_SELECT']))
-        print(spectral_db[:][numpy.where(spectral_db['SELECT']==1)])
-        print(spectral_db['SELECT'][numpy.where(spectral_db['SOURCE_SELECT']==1)])
-        print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))]))
-        db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))],source_db,keys='SOURCE_KEY')
+#        print(numpy.sum(spectral_db['SELECT']), numpy.sum(spectral_db['SOURCE_SELECT']))
+#        print(spectral_db[:][numpy.where(spectral_db['SELECT']==1)])
+#        print(spectral_db['SELECT'][numpy.where(spectral_db['SOURCE_SELECT']==True)])
+#        print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]))
+        db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))],source_db,keys='SOURCE_KEY')
 
         if (ref == 'all'):
             return db
