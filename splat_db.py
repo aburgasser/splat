@@ -17,6 +17,8 @@ import sys
 import numpy
 from astropy.io import ascii, fits            # for reading in spreadsheet
 from astropy.table import Table, join            # for reading in table files
+from astropy.coordinates import SkyCoord
+from astropy import units as u            # standard units
 
 DB_FOLDER = '/db/'
 DB_ORIGINAL_FILE = 'db_spexprism.txt'
@@ -769,7 +771,8 @@ def searchLibrary(*args, **kwargs):
 #    source_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t', fill_values='-99.', format='tab')
 #    source_db = fetchDatabase(SOURCES_DB)
     source_db = splat.DB_SOURCES
-    source_db['SHORTNAME'] = [splat.designationToShortName(x) for x in source_db['DESIGNATION']]
+    if 'SHORTNAME' not in source_db.keys():
+        source_db['SHORTNAME'] = [splat.designationToShortName(x) for x in source_db['DESIGNATION']]
 
 # first search by source parameters
     source_db['SELECT'] = numpy.zeros(len(source_db['RA']))
@@ -841,16 +844,23 @@ def searchLibrary(*args, **kwargs):
         else:
             cc = properCoordinates(coord)
 # calculate skycoords
-        s = []
-        for i in numpy.arange(len(source_db['RA'])):
-            try:        # to deal with a blank string
-                s.append(SkyCoord(ra=float(source_db['RA'][i])*u.degree,dec=float(source_db['DEC'][i])*u.degree,frame='icrs'))
-            except:
-                s.append(SkyCoord(ra=numpy.nan*u.degree,dec=numpy.nan*u.degree,frame='icrs'))
-        source_db['SKYCOORDS'] = s
+        if 'SKYCOORDS' not in source_db.keys():
+            s = []
+            print('\nWarning, search by coordinates will take a few minutes the first time\n')
+            for i in numpy.arange(len(source_db['RA'])):
+                try:        # to deal with a blank string
+                    s.append(SkyCoord(ra=float(source_db['RA'][i])*u.degree,dec=float(source_db['DEC'][i])*u.degree,frame='icrs'))
+                except:
+                    s.append(SkyCoord(ra=numpy.nan*u.degree,dec=numpy.nan*u.degree,frame='icrs'))
+                if numpy.mod(i,len(source_db['RA'])/10.) < 1 and i != 0:
+                    print('\b{:.0f}%...'.format(100*i/len(source_db['RA'])))
+            source_db['SKYCOORDS'] = s
+        print('measuring separations')
         source_db['SEPARATION'] = [cc.separation(source_db['SKYCOORDS'][i]).arcsecond for i in numpy.arange(len(source_db['SKYCOORDS']))]
+        print('done')
         source_db['SELECT'][numpy.where(source_db['SEPARATION'] <= radius)] += 1
         count+=1.
+        print(count,numpy.max(source_db['SELECT']))
 
 # search by spectral type
     spt_range = kwargs.get('spt_range',False)
@@ -1093,10 +1103,10 @@ def searchLibrary(*args, **kwargs):
     else:
 
 # merge databases
-#        print(numpy.sum(spectral_db['SELECT']), numpy.sum(spectral_db['SOURCE_SELECT']))
-#        print(spectral_db[:][numpy.where(spectral_db['SELECT']==1)])
-#        print(spectral_db['SELECT'][numpy.where(spectral_db['SOURCE_SELECT']==1)])
-#        print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))]))
+        print(numpy.sum(spectral_db['SELECT']), numpy.sum(spectral_db['SOURCE_SELECT']))
+        print(spectral_db[:][numpy.where(spectral_db['SELECT']==1)])
+        print(spectral_db['SELECT'][numpy.where(spectral_db['SOURCE_SELECT']==1)])
+        print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))]))
         db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==1))],source_db,keys='SOURCE_KEY')
 
         if (ref == 'all'):
