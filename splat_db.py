@@ -999,6 +999,13 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(source_db['CARBON'] == kwargs.get('carbon'))] += 1
         count+=1.
 
+# peculiars
+    if (kwargs.get('peculiar','') != ''):
+#        kwargs['vlm'] = False
+        source_db['PECULIAR'] = ['p' in i for i in source_db['LIT_TYPE']]
+        source_db['SELECT'][numpy.where(source_db['PECULIAR'] == kwargs.get('peculiar'))] += 1
+        count+=1.
+
 # VLM dwarfs
     if (kwargs.get('vlm','') != ''):
         if (kwargs.get('vlm') == True):
@@ -1027,7 +1034,8 @@ def searchLibrary(*args, **kwargs):
 #    spectral_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
 #    spectral_db = fetchDatabase(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB)
     spectral_db = splat.DB_SPECTRA
-    spectral_db['SELECT'] = numpy.zeros(len(spectral_db['DATA_KEY']))
+# having to force dtype here so SELECT remains an integer
+    spectral_db['SELECT'] = Table.Column(numpy.zeros(len(spectral_db['DATA_KEY'])),dtype=int)
     count = 0.
 
     spectral_db['SOURCE_SELECT'] = [x in source_keys for x in spectral_db['SOURCE_KEY']]

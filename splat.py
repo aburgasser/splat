@@ -434,7 +434,6 @@ class Spectrum(object):
             self.wave = []
             self.flux = []
             self.noise = []
-            print ('Warning: not information provided, creating an empty Spectrum object')
 
 # process spectral data
         if len(self.wave) > 0:
@@ -476,6 +475,8 @@ class Spectrum(object):
             self.variance_original = copy.deepcopy(self.variance)
 #        self.resolution = copy.deepcopy(self.resolution)
 #        self.slitpixelwidth = copy.deepcopy(self.slitpixelwidth)
+        else:
+            print ('Warning: not information provided, creating an empty Spectrum object')
 
 # populate information on source and spectrum from database
         if sdb != False:
@@ -1172,24 +1173,24 @@ def classifyByIndex(sp, *args, **kwargs):
             'coeff': [37.5013, -97.8144, 55.4580, 10.8822]}}
 
 # Aganze et al. 2015 (in preparation)
-    elif (set.lower() == 'aganze'):
-        if (rem_flag or len(args) == 0):
-            kwargs['set'] = 'geballe'
-            i1 = measureIndexSet(sp, **kwargs)
-            kwargs['set'] = 'slesnick'
-            i2 = measureIndexSet(sp, **kwargs)
-            kwargs['set'] = 'allers'
-            i3 = measureIndexSet(sp, **kwargs)
-            kwargs['set'] = 'burgasser'
-            i4 = measureIndexSet(sp, **kwargs)
-            kwargs['set'] = 'reid'
-            i5 = measureIndexSet(sp, **kwargs)
-            kwargs['set'] = 'tokunaga'
-            i6 = measureIndexSet(sp, **kwargs)
-            if sys.version_info.major == 2:
-                indices = dict(i1.items() + i2.items() + i3.items()+ i4.items() + i5.items() + i6.items())
-            else:
-                indices = dict(i1.items() | i2.items() | i3.items()| i4.items() | i5.items() | i6.items())
+#    elif (set.lower() == 'aganze'):
+#        if (rem_flag or len(args) == 0):
+#            kwargs['set'] = 'geballe'
+#            i1 = measureIndexSet(sp, **kwargs)
+#            kwargs['set'] = 'slesnick'
+#            i2 = measureIndexSet(sp, **kwargs)
+#            kwargs['set'] = 'allers'
+#            i3 = measureIndexSet(sp, **kwargs)
+#            kwargs['set'] = 'burgasser'
+#            i4 = measureIndexSet(sp, **kwargs)
+#            kwargs['set'] = 'reid'
+#            i5 = measureIndexSet(sp, **kwargs)
+#            kwargs['set'] = 'tokunaga'
+#            i6 = measureIndexSet(sp, **kwargs)
+#            if sys.version_info.major == 2:
+#                indices = dict(i1.items() + i2.items() + i3.items()+ i4.items() + i5.items() + i6.items())
+#            else:
+#                indices = dict(i1.items() | i2.items() | i3.items()| i4.items() | i5.items() | i6.items())
                 
 
         sptoffset = 0.0
@@ -1496,6 +1497,7 @@ def classifyByTemplate(sp, *args, **kwargs):
     nbest = kwargs.get('nbest',1)
     verbose = kwargs.get('verbose',False)
     published = kwargs.get('published','')
+    published = kwargs.get('public',published)
     set = kwargs.get('select','')
 #   placeholder for a systematic uncertainty term
     unc_sys = 0.
@@ -1590,6 +1592,8 @@ def classifyByTemplate(sp, *args, **kwargs):
     if 'not spectral binary' in set.lower():
         spbinary = False
 
+# REARRANGE THIS - SEND IN KWARGS WITH OUTPUT, LOGIC SET, AND THE REST ARE UP TO USER?
+
     lib = searchLibrary(excludefile=excludefile,excludekey=excludekey,excludeshortname=excludeshortname, \
         snr=snr,spt_type=spt_type,spt_range=spt_range,published=published, \
         giant=giant,companion=companion,young=young,binary=binary,spbinary=spbinary,output='all',logic='and')
@@ -1631,6 +1635,9 @@ def classifyByTemplate(sp, *args, **kwargs):
     stat = []
     scl = []
     for i,d in enumerate(dkey):
+
+# INSERT TRY STATEMNT HERE?
+
         s = Spectrum(idkey=d)
         chisq,scale = compareSpectra(sp,s,fit_ranges=[comprng],stat='chisqr',novar2=True,*kwargs)
         stat.append(chisq)
@@ -2156,7 +2163,7 @@ def filterMag(sp,f,*args,**kwargs):
 # check that requested filter is in list
     f = f.replace(' ','_')
     f.upper()
-    if (f not in FILTERS.keys()):
+    if (f not in FILTERS.keys() and isinstance(custom,bool)):
         print('Filter '+f+' not included in filterMag')
         info = True
 
@@ -2168,7 +2175,7 @@ def filterMag(sp,f,*args,**kwargs):
         return numpy.nan, numpy.nan
 
 # Read in filter
-    if (custom == False):
+    if isinstance(custom,bool):
         fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[f]['file'], comments='#', unpack=True, \
             missing_values = ('NaN','nan'), filling_values = (numpy.nan))
     else:
