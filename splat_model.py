@@ -913,6 +913,9 @@ def modelFitMCMC(spec, **kwargs):
 def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
     '''
     :Purpose: Calculate luminosity from photometry and stitching models.
+
+    THIS IS CURRENTLY BEING WRITTEN - DO NOT USE!
+
     :param sp: Spectrum class object, which should contain wave, flux and 
                noise array elements.
     :param mdl: model spectrum loaded using ``loadModel``
@@ -982,6 +985,7 @@ def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
 # optional report the various pieces and percentages of whole ()
 #
 # absmags is a dictionary whose keys are filter names and whose elements are 2-element lists of value and uncertainty        
+
     
 def reportModelFitResults(spec,t,*arg,**kwargs):
     '''
