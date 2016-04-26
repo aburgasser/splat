@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 """
 .. note::
          Using a suite of evolutionary models, this code translates 
@@ -13,7 +15,6 @@
         Getting different interpolated values than similar code in IDL
         need to verify outputs with original models
 '''
-
 
 # Standard library imports.
 #from sys import exit 

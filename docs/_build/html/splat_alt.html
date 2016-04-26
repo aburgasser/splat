@@ -1,76 +1,141 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Main SPLAT module (alternative format) &mdash; SpeX Prism Library Analysis Toolkit 0.3 documentation</title>
-    
-    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.3',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Main SPLAT module (alternative format) &mdash; SpeX Prism Library Analysis Toolkit 0.5 documentation</title>
+  
+
+  
+  
     <link rel="shortcut icon" href="_static/logo.ico"/>
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.3 documentation" href="index.html" /> 
-  </head>
-  <body role="document">
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
-      </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-            <p class="logo"><a href="index.html">
-              <img class="logo" src="_static/logo.jpg" alt="Logo"/>
-            </a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/splat_alt.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> SpeX Prism Library Analysis Toolkit
+          
+
+          
+            
+            <img src="_static/logo.jpg" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.5
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+            
+          
         </div>
       </div>
+    </nav>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">SpeX Prism Library Analysis Toolkit</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Main SPLAT module (alternative format)</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/splat_alt.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="main-splat-module-alternative-format">
 <h1>Main SPLAT module (alternative format)<a class="headerlink" href="#main-splat-module-alternative-format" title="Permalink to this headline">¶</a></h1>
@@ -182,6 +247,19 @@
 <tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Subtracts two spectra</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> &#8211; the other spectrum to subtract from the object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="splat.Spectrum.export">
+<code class="descname">export</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.export" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">export spectrum object to a file, either fits or ascii depending on file extension</td>
 </tr>
 </tbody>
 </table>
@@ -976,19 +1054,6 @@ uncertainty in parsecs</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.fetchDatabase">
-<code class="descclassname">splat.</code><code class="descname">fetchDatabase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.fetchDatabase" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Get the SpeX Database from either online repository or local drive</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="splat.filterMag">
 <code class="descclassname">splat.</code><code class="descname">filterMag</code><span class="sig-paren">(</span><em>sp</em>, <em>f</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterMag" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -1119,25 +1184,25 @@ noise array elements.</li>
 
 <dl class="function">
 <dt id="splat.getStandard">
-<code class="descclassname">splat.</code><code class="descname">getStandard</code><span class="sig-paren">(</span><em>sptrange</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.getStandard" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">splat.</code><code class="descname">getStandard</code><span class="sig-paren">(</span><em>spt</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.getStandard" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets one or more of the pre-defined spectral standards from the SPLAT library.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets one of the pre-defined spectral standards from the SPLAT library.</td>
 </tr>
 </tbody>
 </table>
+<p>NOTE: THIS PROGRAM MAY BE OBSOLETE</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>sp</strong> &#8211; array of Spectrum class objects</li>
-<li><strong>spt</strong> &#8211; spectral type of standard desired (&#8216;M7&#8217;), or range of spectral types ([&#8216;M8&#8217;,&#8217;L4&#8217;])</li>
+<li><strong>spt</strong> &#8211; spectral type of standard desired (&#8216;M7&#8217;)</li>
 <li><strong>sd</strong> (<em>optional, default = False</em>) &#8211; get subdwarf standard</li>
 <li><strong>esd</strong> (<em>optional, default = False</em>) &#8211; get extreme subdwarf standard</li>
-<li><strong>file</strong> (<em>optional, default = False</em>) &#8211; return only the files</li>
 </ul>
 </td>
 </tr>
@@ -1147,11 +1212,42 @@ noise array elements.</li>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">(</span><span class="s1">&#39;M7&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">    Retrieving 1 standard spectra</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sparr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">([</span><span class="s1">&#39;M7&#39;</span><span class="p">,</span><span class="s1">&#39;L5&#39;</span><span class="p">])</span>
-<span class="go">    Retrieving 9 standard spectra</span>
+<span class="go">    Spectrum of VB 8</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sparr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">(</span><span class="s1">&#39;T5&#39;</span><span class="p">,</span><span class="n">esd</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="go">    No standards are available for those criteria</span>
+<span class="go">    Type esdT5.0 is not in esd standards: try one of the following:</span>
+<span class="go">    [&#39;esdM5.0&#39;, &#39;esdM7.0&#39;, &#39;esdM8.5&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat.initiateStandards">
+<code class="descclassname">splat.</code><code class="descname">initiateStandards</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.initiateStandards" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Initiates the spectral standards (dwarf, subdwarf or extreme subdwarf) in the SpeX library.</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sd</strong> (<em>optional, default = False</em>) &#8211; get subdwarf standard</li>
+<li><strong>esd</strong> (<em>optional, default = False</em>) &#8211; get extreme subdwarf standard</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">initiateStandards</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">SPEX_SDS</span><span class="p">[</span><span class="s1">&#39;M5&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1175,70 +1271,6 @@ noise array elements.</li>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">isNumber</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="go">    True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">isNumber</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span>
-<span class="go">    False</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat.keySource">
-<code class="descclassname">splat.</code><code class="descname">keySource</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.keySource" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a source key and returns a table with the source information</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; source key or a list of source keys</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
-<span class="go">    SOURCE_KEY           NAME              DESIGNATION    ... NOTE SELECT</span>
-<span class="go">    ---------- ------------------------ ----------------- ... ---- ------</span>
-<span class="go">         10001 SDSS J000013.54+255418.6 J00001354+2554180 ...        True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">([</span><span class="mi">10105</span><span class="p">,</span> <span class="mi">10623</span><span class="p">])</span>
-<span class="go">    SOURCE_KEY          NAME             DESIGNATION    ... NOTE SELECT</span>
-<span class="go">    ---------- ---------------------- ----------------- ... ---- ------</span>
-<span class="go">         10105 2MASSI J0103320+193536 J01033203+1935361 ...        True</span>
-<span class="go">         10623 SDSS J09002368+2539343 J09002368+2539343 ...        True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
-<span class="go">    No sources found with source key 1000001</span>
-<span class="go">    False</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat.keySpectrum">
-<code class="descclassname">splat.</code><code class="descname">keySpectrum</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.keySpectrum" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a spectrum key and returns a table with the spectrum and source information</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; spectrum key or a list of source keys</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
-<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
-<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
-<span class="go">       10001      10443 10001_10443.fits ...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">([</span><span class="mi">10123</span><span class="p">,</span> <span class="mi">11298</span><span class="p">])</span>
-<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
-<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
-<span class="go">       11298      10118 11298_10118.fits ...</span>
-<span class="go">       10123      10145 10123_10145.fits ...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
-<span class="go">    No spectra found with spectrum key 1000001</span>
 <span class="go">    False</span>
 </pre></div>
 </div>
@@ -1430,50 +1462,6 @@ using Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245)</dd>
 <dt><strong>Note</strong></dt>
 <dd>This routine is still in beta form; only the CCM89 currently works</dd>
 </dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat.searchLibrary">
-<code class="descclassname">splat.</code><code class="descname">searchLibrary</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.searchLibrary" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Search the SpeX database to extract the key reference for that Spectrum</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>output</strong> (<em>optional, default = 'all'</em>) &#8211; returns desired output of selected results</li>
-<li><strong>logic</strong> (<em>optional, default = 'and'</em>) &#8211; search logic, can be <code class="docutils literal"><span class="pre">and</span></code> or <code class="docutils literal"><span class="pre">or</span></code></li>
-<li><strong>combine</strong> (<em>optional, default = 'and'</em>) &#8211; same as logic</li>
-</ul>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">searchLibrary</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s1">&#39;2213-2136&#39;</span><span class="p">)</span>
-<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... SHORTNAME  SELECT_2</span>
-<span class="go">    -------- ---------- ---------------- ... ---------- --------</span>
-<span class="go">       11590      11586 11590_11586.fits ... J2213-2136      1.0</span>
-<span class="go">       11127      11586 11127_11586.fits ... J2213-2136      1.0</span>
-<span class="go">       10697      11586 10697_11586.fits ... J2213-2136      1.0</span>
-<span class="go">       10489      11586 10489_11586.fits ... J2213-2136      1.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">searchLibrary</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s1">&#39;2213-2136&#39;</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;OBSERVATION_DATE&#39;</span><span class="p">)</span>
-<span class="go">    OBSERVATION_DATE</span>
-<span class="go">    ----------------</span>
-<span class="go">            20110908</span>
-<span class="go">            20080829</span>
-<span class="go">            20060902</span>
-<span class="go">            20051017</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Note that this is currently only and AND search - need to figure out how to a full SQL style search</p>
-</div>
 </dd></dl>
 
 <dl class="function">
@@ -1708,26 +1696,62 @@ Allowed spectral type range is M7 to T8.</li>
 </div>
 
 
+           </div>
           </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Adam Burgasser.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">SpeX Prism Library Analysis Toolkit 0.3 documentation</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &copy; Copyright 2015, Adam Burgasser.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.5',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

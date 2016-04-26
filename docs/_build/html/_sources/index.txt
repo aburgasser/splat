@@ -6,10 +6,6 @@ SPLAT: The SpeX Prism Library Analysis Toolkit
 ===============================================
 
 
-
-Overview
---------
-
 SPLAT is a python-based spectral access and analysis package designed to interface  
 with the SpeX Prism Library (SPL: http://www.browndwarfs.org/spexprism), 
 an online repository of over
@@ -34,9 +30,9 @@ Installation and Dependencies
 SPLAT is best forked from the github site http://github.org/aburgasser/splat, 
 which is updated on a regular basis.
 SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by 
-sending bug reports to aburgasser@ucsd.edu 
+sending bug reports to aburgasser@ucsd.edu or start an issue on the github site.
 
-Instructions on setting up and using SPLAT are maintained at http://www.browndwarfs.org/splat
+Instructions on setting up and using SPLAT are maintained at http://www.browndwarfs.org/splat.
 
 You should copy the file ``.splat_access`` into your home directory - this is your access key
 if you have priveleged access to unpublished data.
@@ -45,11 +41,13 @@ Using SPLAT
 --------
 
 SPLAT is best used in the ipython or ipython notebook; all of the necessary data is
-included in the github install, so you won't need to be online to run anything
+included in the github install, so you won't need to be online to run anything.
 
 Here are some examples:
 
-* The best way to read in a spectrum is to use getSpectrum:
+* The best way to read in a spectrum is to use getSpectrum_:
+
+.. _getSpectrum: api.html#splat.getSpectrum
 
 >>> import splat
 >>> splist = splat.getSpectrum(shortname='0415-0935')
@@ -73,12 +71,17 @@ Note that this file must conform to the standard of the SPL data: the first colu
 wavelength in microns, second column flux in f_lambda units, third column (optional) is 
 flux uncertainty.
 
-* To flux calibrate the spectrum, use the object's built in ``fluxCalibrate()`` method:
+* To flux calibrate the spectrum, use the object's built in fluxCalibrate_ method:
+
+.. _fluxCalibrate: api.html#splat.Spectrum.fluxCalibrate
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> sp.fluxCalibrate('2MASS J',14.0)
 
-* To display the spectrum, use the Spectrum object's plot function or plotSpectrum
+* To display the spectrum, use the Spectrum object's plot_ function or plotSpectrum_ :
+
+.. _plot: api.html#splat.Spectrum.plot
+.. _plotSpectrum: api.html#splat_plot.plotSpectrum
 
 >>> sp.plot()
 >>> splat.plotSpectrum(sp)
@@ -102,7 +105,10 @@ subpackage for more details.
 
 SPLAT can analyze and compare an arbitrary number of spectra.
 
-* To measure spectral indices, use measureIndex or measureIndexSet:
+* To measure spectral indices, use measureIndex_ or measureIndexSet_:
+
+.. _measureIndex: api.html#splat.measureIndex
+.. _measureIndexSet: api.html#splat.measureIndexSet
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> value, error = splat.measureIndex(sp,[1.14,1.165],[1.21,1.235],method='integrate')
@@ -113,23 +119,29 @@ of the index:
 
 >>> print indices['sH2O-J']		# returns value, error
 
-* You can also determine the gravity classification of a source via Allers & Liu (2013)
+* You can also determine the gravity classification of a source via `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ using classifyGravity_:
+
+.. _classifyGravity: api.html#splat.classifyGravity
 
 >>> sp = splat.getSpectrum(young=True, lucky=True)[0]
 >>> print splat.classifyGravity(sp)   # returned 'VL-G'
 
 
-* To classify a spectrum, use the classifyByXXX methods:
+* To classify a spectrum, use the various classifyByXXX_ methods:
+
+.. _classifyByXXX: api.html#spectral-classification
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> spt,unc = splat.classifyByIndex(sp,set='burgasser')
 >>> spt,unc = splat.classifyByStandard(sp,spt=['T5','T9'])
 >>> result = splat.classifyByTemplate(sp,spt=['T6','T9'],nbest=5)
 
-The last line returns a dictionary containing the best 5 template matches to the Spectrum sp.
+The last line returns a dictionary containing the best 5 template matches to the Spectrum ``sp``.
 
 
-* To compare a spectrum to another spectrum or a model, use compareSpectra:
+* To compare a spectrum to another spectrum or a model, use compareSpectra_ :
+
+.. _compareSpectra: api.html#splat.compareSpectra
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> mdl = splat.loadModel(teff=700,logg=5.0)			# loads a BTSettl08 model by default
@@ -138,43 +150,43 @@ The last line returns a dictionary containing the best 5 template matches to the
 >>> splat.plotSpectrum(sp,mdl,colors=['black','red'],legend=[sp.name,mdl.name])
 
 
-# There is also a basic Markov Chain Monte Carlo code to compare models to spectra
+# There is also a basic Markov Chain Monte Carlo code to compare models to spectra called modelFitMCMC_:
+
+.. _modelFitMCMC: api.html#splat_model.modelFitMCMC
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> sp.fluxCalibrate('2MASS J',14.49,absolute=True)
 >>> table = splat.modelFitMCMC(sp,initial_guess=[800,5.0,0.],nsamples=300,step_sizes=[50.,0.5,0.])
 
 
-All of these routines have many options worth exploring, and which are (partially) documented 
-in the following pages. If there are capabilities
-you need, please suggest them, or note it in the "Issues" link on our github site
+All of these routines have many options worth exploring, and which are (increasingly) documented on this website. If there are capabilities
+you need, please suggest them to aburgasser@ucsd.edu, or note it in the "Issues" link on our `github site <https://github.com/aburgasser/splat>`_.
 
-Authors
---------
+Acknowledgements
+----------------
 
-SPLAT is an experimental, collaborative project of research students in Adam Burgasser's
-UCSD Cool Star Lab, aimed at teaching students how to do research by building 
-their own analysis tools.  Contributors to SPLAT include Christian Aganze, Daniella Bardalez Gagliuffi,
-Adam Burgasser (PI), Caleb Choban, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez,
-Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya
-and Chris Theissen.
+SPLAT is an experimental, collaborative project of research students in `Adam Burgasser's
+UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at teaching students how to do research by building their own analysis tools.  Contributors to SPLAT have included Christian Aganze, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya and Chris Theissen.
+
+This project is supported by the National Aeronautics and Space Administration under Grant No. NNX15AI75G.
 
 *Contents*
 
 .. toctree::
    :maxdepth: 3
 
+   installation
+   quickstart
    splat
+   splat_db
    splat_plot
    splat_model
    bdevopar
    bugs
-
+   api
+   :ref:`genindex`
+   
 *Search*
-
-
-
-
 
 * :ref:`genindex`
 * :ref:`modindex`

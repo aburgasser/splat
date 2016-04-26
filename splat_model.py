@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 """
 .. note::
          These are the spectral modeling functions for SPLAT 
@@ -40,6 +42,12 @@ sys.ps1 = 'splat model> '
 #    if max(checkpath):
 #        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
 
+
+def getModel(*args, **kwargs):
+    '''
+    Redundant routine with loadModel
+    '''
+    return loadModel(*args, **kwargs)
 
 
 
@@ -710,7 +718,10 @@ def modelFitMCMC(spec, **kwargs):
     mask = kwargs.get('mask',numpy.zeros(len(spec.wave)))
 # plotting and reporting keywords
     showRadius = kwargs.get('radius', spec.fscale == 'Absolute')
-    filebase = kwargs.get('filebase', 'fit_'+spec.shortname+'_'+m_set)
+    try:
+        filebase = kwargs.get('filebase', 'fit_'+spec.name+'_'+m_set)
+    except:
+        filebase = kwargs.get('filebase', 'fit_'+m_set)
     filebase = kwargs.get('filename',filebase)
     kwargs['filebase'] = filebase
     savestep = kwargs.get('savestep', nsample/10)
