@@ -86,15 +86,15 @@ if SPLAT_PATH == './':
 from splat_db import *
 from splat_model import *
 from splat_plot import *
-
+#import splat_db
 
 #################### CONSTANTS ####################
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 DATA_FOLDER = '/reference/Spectra/'
 
 # explicitly read in source and spectral databases
-DB_SOURCES = fetchDatabase(DB_SOURCES_FILE)
-DB_SPECTRA = fetchDatabase(DB_SPECTRA_FILE)
+DB_SOURCES = fetchDatabase(splat.DB_SOURCES_FILE)
+DB_SPECTRA = fetchDatabase(splat.DB_SPECTRA_FILE)
 
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
