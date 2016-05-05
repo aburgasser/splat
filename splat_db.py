@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function, division
 
 """
@@ -12,6 +13,7 @@ import os
 import re
 import requests
 import splat
+#from splat import SPLAT_PATH, SPLAT_URL
 import sys
 #from scipy import stats
 import numpy
@@ -27,6 +29,11 @@ DB_SPECTRA_FILE = 'spectral_data.txt'
 DB_PHOTOMETRY_FILE = 'photometry_data.txt'
 BIBFILE = 'biblibrary.bib'
 TMPFILENAME = 'splattmpfile'
+#SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
+#DATA_FOLDER = '/reference/Spectra/'
+
+#DB_SOURCES = fetchDatabase(splat.DB_SOURCES_FILE)
+#DB_SPECTRA = fetchDatabase(splat.DB_SPECTRA_FILE)
 
 # change the command prompt
 sys.ps1 = 'splat db> '
@@ -883,27 +890,27 @@ def searchLibrary(*args, **kwargs):
         mag = kwargs['jmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
-        source_db['JMAGN'] = [float('0'+x) for x in source_db['2MASS_J']]
+        source_db['JMAGN'] = [float('0'+x) for x in source_db['J_2MASS']]
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['JMAGN'] >= mag[0],source_db['JMAGN'] <= mag[1]))] += 1
         count+=1.
     if kwargs.get('hmag',False) != False:
         mag = kwargs['hmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
-        source_db['HMAGN'] = [float('0'+x) for x in source_db['2MASS_H']]
+        source_db['HMAGN'] = [float('0'+x) for x in source_db['H_2MASS']]
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['HMAGN'] >= mag[0],source_db['HMAGN'] <= mag[1]))] += 1
         count+=1.
     if kwargs.get('kmag',False) != False:
         mag = kwargs['kmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
-        source_db['KMAGN'] = [float('0'+x) for x in source_db['2MASS_KS']]
+        source_db['KMAGN'] = [float('0'+x) for x in source_db['KS_2MASS']]
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['KMAGN'] >= mag[0],source_db['KMAGN'] <= mag[1]))] += 1
         count+=1.
 
 # young
     if (kwargs.get('young','') != ''):
-        source_db['YOUNG'] = [i != '' for i in source_db['GRAVITY_CLASS_CRUZ']] or [i != '' for i in source_db['GRAVITY_CLASS_ALLERS']]
+        source_db['YOUNG'] = [i != '' for i in source_db['GRAVITY_CLASS_OPTICAL']] or [i != '' for i in source_db['GRAVITY_CLASS_NIR']]
         source_db['SELECT'][numpy.where(source_db['YOUNG'] == kwargs.get('young'))] += 1
         count+=1.
 
@@ -911,8 +918,8 @@ def searchLibrary(*args, **kwargs):
     flag = kwargs.get('gravity_class','')
     flag = kwargs.get('gravity',flag)
     if (flag != ''):
-        source_db['SELECT'][numpy.where(source_db['GRAVITY_CLASS_CRUZ'] == flag)] += 1
-        source_db['SELECT'][numpy.where(source_db['GRAVITY_CLASS_ALLERS'] == flag)] += 1
+        source_db['SELECT'][numpy.where(source_db['GRAVITY_CLASS_OPTICAL'] == flag)] += 1
+        source_db['SELECT'][numpy.where(source_db['GRAVITY_CLASS_NIR'] == flag)] += 1
         count+=1.
 
 # specific cluster
@@ -948,13 +955,13 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(source_db['SD_FLAG'] == True)] += 1
         count+=1.
 
-# red
+# red - THIS NEEDS TO BE CHANGED
     if (kwargs.get('red','') != ''):
         source_db['RED'] = ['red' in i for i in source_db['LIBRARY']]
         source_db['SELECT'][numpy.where(source_db['RED'] == kwargs.get('red'))] += 1
         count+=1.
 
-# blue
+# blue - THIS NEEDS TO BE CHANGED
     if (kwargs.get('blue','') != ''):
         source_db['BLUE'] = ['blue' in i for i in source_db['LIBRARY']]
         source_db['SELECT'][numpy.where(source_db['BLUE'] == kwargs.get('blue'))] += 1
@@ -1144,5 +1151,5 @@ if __name__ == '__main__':
     spt,spt_e = splat.classifyByStandard(sp,spt=['T2','T8'])
     teff,teff_e = splat.typeToTeff(spt)
     sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
-    table = modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
+    table = splat.modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
 

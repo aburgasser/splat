@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function, division
 
 # WORKING COPY OF SPLAT CODE LIBRARY
@@ -469,7 +470,7 @@ class Spectrum(object):
             self.dof = numpy.round(len(self.wave)/self.slitpixelwidth)
 # signal to noise
             w = numpy.where(self.flux.value > numpy.median(self.flux.value))
-            self.snr = numpy.nanmean(self.flux.value[w]/self.noise.value[w])
+            self.snr = numpy.nanmedian(self.flux.value[w]/self.noise.value[w])
 
 # preserve original values
             self.wave_original = copy.deepcopy(self.wave)
@@ -973,8 +974,12 @@ def checkAccess(**kwargs):
         home = os.environ.get('HOME')
         if home == None:
             home = './'
+#        print(home)
+#        print(SPLAT_URL+access_file)
         bcode = requests.get(SPLAT_URL+access_file).content
+#        print(bcode)
         lcode = base64.b64encode(open(home+'/'+access_file,'r').read())
+#        print(lcode)
         if (bcode in lcode):        # changed to partial because of EOL variations
             result = True
     except:
@@ -1024,17 +1029,20 @@ def checkOnline(*args):
        >>> splat.checkOnline('SpectralModels/BTSettl08/parameters.txt')
        '' # Could not find this online file.
     '''
-    if (len(args) != 0):
-        if 'http://' in args[0]:
-            if requests.get(args[0]).status_code == requests.codes.ok:
-            	return args[0]
-            return ''
+    try:
+        if (len(args) != 0):
+            if 'http://' in args[0]:
+                if requests.get(args[0]).status_code == requests.codes.ok:
+                	return args[0]
+                return ''
+            else:
+                if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
+                    return SPLAT_URL+args[0]
+                return ''
         else:
-            if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
-                return SPLAT_URL+args[0]
-            return ''
-    else:
-    	return requests.get(SPLAT_URL).status_code == requests.codes.ok
+        	return requests.get(SPLAT_URL).status_code == requests.codes.ok
+    except:
+        return ''
 
 
 
@@ -1741,7 +1749,7 @@ def classifyGravity(sp, *args, **kwargs):
         sptn, spt_e = classifyByIndex(sp,string=False,set='allers')
         if numpy.isnan(sptn):
             print('Spectral type could not be determined from indices')
-            return numpy.nan
+            return ''
     if isinstance(sptn,str):
         sptn = typeToNum(sptn)
     Spt = typeToNum(numpy.round(sptn))
@@ -1749,7 +1757,7 @@ def classifyGravity(sp, *args, **kwargs):
 #Check whether the NIR SpT is within gravity sensitive range values
     if ((sptn < 16.0) or (sptn > 27.0)):
         print('Spectral type '+typeToNum(sptn)+' outside range for gravity classification')
-        return numpy.nan
+        return ''
 
 # print spt if verbose
     if verbose:
@@ -3282,6 +3290,102 @@ def test():
     sys.stderr.write('\n>>>>>>>>>>>> SPLAT TEST SUCCESSFUL; HAVE FUN! <<<<<<<<<<<<\n\n')
 
 
+def typeToColor(spt,color, **kwargs):
+    """
+    :Purpose: Takes a spectral type and optionally a color (string) and returns the typical color of the source. 
+    :param spt: string or integer of the spectral type
+    :param color: string indicating color; e.g., color='i-z' (note that case does not matter)
+    :type color: optional, default = 'J-K'
+    :param ref: Abs Mag/SpT relation used to compute the absolute magnitude. Options are:
+
+        - *skrzypek* (default): Color trends from `Skryzpek et al. (2015) <http://adsabs.harvard.edu/abs/2015A%26A...574A..78S>`_.
+          Spectral type range is M5 to T8
+          Colors include i-z, z-Y, Y-J, J-H, H-K, K-W1, W1-W2, and combinations therein.
+
+
+    :type ref: optional, default = 'dupuy'
+    :param nsamples: number of Monte Carlo samples for error computation
+    :type nsamples: optional, default = 100
+    :param unc: uncertainty of ``spt``; if included, returns a tuple with color and uncertainty
+    :type unc: optional, default = 0.
+    :param verbose: Give feedback while in operation
+    :type verbose: optional, default = False
+    :Example:
+        >>> import splat
+        >>> print splat.typeToColor('L3', 'J-K')
+            XXXX
+        >>> print splat.typeToMag('M5', 'i-K', ref = 'skrzypek', unc=0.5)
+            (XXXX, XXXX)
+        >>> print splat.typeToMag('M0', 'i-z', ref = 'skrzypek')
+            Spectral Type is out of range for Color/SpT trends from Skryzpek et al. (2015)
+            nan
+    """
+
+#Keywords
+    nsamples = kwargs.get('nsamples', 100)
+    ref = kwargs.get('ref', 'skrzypek')
+    unc = kwargs.get('unc', 0.)
+
+#Convert spectral type string to number
+    if (type(spt) == str):
+        spt = typeToNum(spt, uncertainty=unc)
+    else:
+        spt = copy.deepcopy(spt)
+
+#Faherty
+    if (ref.lower() == 'skrzypek'):
+        reference = 'Skrzypek et al. (2015)'
+        rng = [15,38]
+        filters = ['i','z','y','j','h','k','w1','w2']
+        values = { \
+            'i-z': [0.91,1.45,1.77,1.93,1.99,2.01,2.02,2.04,2.1,2.2,2.33,2.51,2.71,2.93,3.15,3.36,3.55,3.7,3.82,3.9,3.95,3.98,4.01,4.08], \
+            'z-y': [0.47,0.6,0.7,0.77,0.82,0.86,0.88,0.9,0.92,0.94,0.97,1.0,1.04,1.09,1.16,1.23,1.33,1.43,1.55,1.68,1.81,1.96,2.11,2.26], \
+            'y-j': [0.55,0.67,0.78,0.87,0.96,1.04,1.11,1.18,1.23,1.27,1.31,1.33,1.35,1.21,1.2,1.19,1.19,1.18,1.18,1.17,1.16,1.16,1.15,1.15], \
+            'j-h': [0.45,0.53,0.56,0.58,0.6,0.63,0.67,0.73,0.79,0.86,0.91,0.96,0.97,0.96,0.9,0.8,0.65,0.46,0.25,0.02,-0.19,-0.35,-0.43,-0.36], \
+            'h-k': [0.32,0.39,0.44,0.47,0.51,0.54,0.58,0.63,0.67,0.71,0.74,0.75,0.75,0.71,0.65,0.56,0.45,0.31,0.16,0.01,-0.11,-0.19,-0.2,-0.09], \
+            'k-w1': [0.11,0.22,0.25,0.26,0.27,0.29,0.33,0.4,0.48,0.56,0.65,0.72,0.77,0.79,0.79,0.76,0.71,0.65,0.59,0.55,0.54,0.59,0.7,0.9], \
+            'w1-w2': [0.17,0.21,0.24,0.26,0.27,0.27,0.28,0.28,0.29,0.3,0.32,0.36,0.41,0.48,0.57,0.68,0.82,0.99,1.19,1.43,1.7,2.02,2.38,2.79]}
+
+    else:
+        sys.stderr.write('\n Do not have color set {}\n\n'.format(ref))
+        return numpy.nan
+
+    if kwargs.get('verbose',False):
+        print('\nUsing the SpT/color trends from {}\n'.format(reference))
+
+# spectral type array
+    if (rng[0] <= spt <= rng[1]):
+
+# fill in extra colors - a little inefficient right now  
+        if color.lower() not in values.keys():
+            for i in numpy.arange(len(values.keys())):
+                for a in values.keys():
+                    for b in values.keys():
+                        f1 = a.split('-')
+                        f2 = b.split('-')
+                        if f1[-1] == f2[0]:
+                            k = '{}-{}'.format(f1[0],f2[-1])
+                            if k not in values.keys():
+                                values[k] = [sum(x) for x in zip(values[a], values[b])]
+
+        if color.lower() in values.keys():
+            f = interp1d(numpy.arange(rng[0],rng[1]+1),values[color.lower()],bounds_error=False,fill_value=0.)
+            if (unc > 0.):
+                vals = [f(x) for x in numpy.random.normal(spt, unc, nsamples)]
+                return numpy.nanmean(vals), numpy.nanstd(vals)
+            else:
+                return float(f(spt))
+        else:
+            sys.stderr.write('\n Color {} is not in reference set for {}\n\n'.format(color,reference))
+            return numpy.nan
+
+    else:
+        sys.stderr.write('\n Spectral type {} is outside the range for reference set {}\n\n'.format(typeToNum(spt),reference))
+        return numpy.nan
+
+
+
+
 def typeToMag(spt, filt, **kwargs):
     """
     :Purpose: Takes a spectral type and a filter, and returns absolute magnitude
@@ -3698,5 +3802,5 @@ def weightedMeanVar(vals, winp, *args, **kwargs):
 
 
 # run test program if calling from command line
-if __name__ == "__main__":
-    test()
+if __name__ == '__main__':
+    splat.test()
