@@ -469,14 +469,13 @@ class Spectrum(object):
             self.variance = self.noise**2
             self.dof = numpy.round(len(self.wave)/self.slitpixelwidth)
 # signal to noise
-            w = numpy.where(self.flux.value > numpy.median(self.flux.value))
-            self.snr = numpy.nanmedian(self.flux.value[w]/self.noise.value[w])
-
+            self.snr = self.computeSN()
 # preserve original values
             self.wave_original = copy.deepcopy(self.wave)
             self.flux_original = copy.deepcopy(self.flux)
             self.noise_original = copy.deepcopy(self.noise)
             self.variance_original = copy.deepcopy(self.variance)
+            self.resolution_original = copy.deepcopy(self.resolution)
 #        self.resolution = copy.deepcopy(self.resolution)
 #        self.slitpixelwidth = copy.deepcopy(self.slitpixelwidth)
         else:
@@ -522,7 +521,7 @@ class Spectrum(object):
             except:
                 self.header[k] = ''
 
-        self.history = ['Loaded']
+        self.history = ['Spectrum successfully loaded']
 
 
     def __copy__(self):
@@ -547,16 +546,19 @@ class Spectrum(object):
         :Purpose: Adds two spectra
         :param other: the other spectrum to add to the object
         '''
-        sp = self.copy()
+        sp = copy.deepcopy(self)
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.add(self.flux,f(self.wave)*other.funit)
         sp.variance = sp.variance+n(self.wave)*(other.funit**2)
         sp.noise = sp.variance**0.5
+        sp.snr = sp.computeSN()
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
         sp.name = self.name+' + '+other.name
+        sp.history.append('Sum of {} and {}'.format(sp.name,other.name))
+
         return sp
 
     def __sub__(self,other):
@@ -564,16 +566,18 @@ class Spectrum(object):
         :Purpose: Subtracts two spectra
         :param other: the other spectrum to subtract from the object
         '''
-        sp = self.copy()
+        sp = copy.deepcopy(self)
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.subtract(self.flux,f(self.wave)*other.funit)
         sp.variance = sp.variance+n(self.wave)*(other.funit**2)
         sp.noise = sp.variance**0.5
+        sp.snr = sp.computeSN()
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
         sp.name = self.name+' - '+other.name
+        sp.history.append('Subtraction of {} from {}'.format(sp.name,other.name))
         return sp
 
     def __mul__(self,other):
@@ -581,18 +585,20 @@ class Spectrum(object):
         :Purpose: Multiplies two spectra
         :param other: the other spectrum to multiply by the object
         '''
-        sp = self.copy()
+        sp = copy.deepcopy(self)
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.multiply(self.flux,f(self.wave)*other.funit)
         sp.variance = numpy.multiply(sp.flux**2,(\
             numpy.divide(self.variance.value,sp.flux.value**2)+numpy.divide(n(self.wave),f(self.wave)**2)))
         sp.noise = sp.variance**0.5
+        sp.snr = sp.computeSN()
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
         sp.name = self.name+' x '+other.name
         sp.funit = sp.flux.unit
+        sp.history.append('Product of {} and {}'.format(sp.name,other.name))
         return sp
 
     def __div__(self,other):
@@ -600,7 +606,7 @@ class Spectrum(object):
         :Purpose: Divides two spectra
         :param other: the other spectrum to divide by the object
         '''
-        sp = self.copy()
+        sp = copy.deepcopy(self)
         f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
         n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
         sp.flux = numpy.divide(self.flux,f(self.wave)*other.funit)
@@ -610,13 +616,23 @@ class Spectrum(object):
 # clean up infinities
         sp.flux = numpy.where(numpy.absolute(sp.flux) == numpy.inf, numpy.nan, sp.flux)*u.erg/u.erg
         sp.noise = numpy.where(numpy.absolute(sp.noise) == numpy.inf, numpy.nan, sp.noise)*u.erg/u.erg
+        sp.snr = sp.computeSN()
         sp.variance = numpy.where(numpy.absolute(sp.variance) == numpy.inf, numpy.nan, sp.variance)*u.erg/u.erg
         sp.flux_original=sp.flux
         sp.noise_original=sp.noise
         sp.variance_original=sp.variance
         sp.name = self.name+' / '+other.name
         sp.funit = sp.flux.unit
+        sp.history.append('Division of {} by {}'.format(sp.name,other.name))
         return sp
+
+    def computeSN(self):
+        '''
+        :Purpose: Compute a representative S/N value
+        .. note:: Unfinished
+        '''
+        w = numpy.where(self.flux.value > numpy.median(self.flux.value))
+        return numpy.nanmedian(self.flux.value[w]/self.noise.value[w])
 
     def info(self):
         '''
@@ -650,14 +666,16 @@ class Spectrum(object):
         return
 
     def flamToFnu(self):
-         '''
-         :Purpose: Converts flux density from :math:`F_\\lambda` to :math:`F_\\nu`, the later in Jy
-         '''
-         self.funit = u.Jy
-         self.flabel = 'F_nu'
-         self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
-         self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
-         return
+        '''
+        :Purpose: Converts flux density from :math:`F_\\lambda` to :math:`F_\\nu`, the later in Jy
+        '''
+        self.funit = u.Jy
+        self.flabel = 'F_nu'
+        self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
+        self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
+        self.snr = self.computeSN()
+        self.history.append('Converted from flam to fnu units')
+        return
 
     def fluxCalibrate(self,f,mag,**kwargs):
         '''
@@ -674,6 +692,12 @@ class Spectrum(object):
                 self.fscale = 'Absolute'
             if (apparent):
                 self.fscale = 'Apparent'
+        if (absolute):
+            self.history.append('Flux calibrated with {} filter to an absolute magnitude of {}'.format(f,mag))
+        else:
+            self.history.append('Flux calibrated with {} filter to an apparent magnitude of {}'.format(f,mag))
+        self.snr = self.computeSN()
+
         return
 
 # determine maximum flux, by default in non telluric regions
@@ -694,15 +718,17 @@ class Spectrum(object):
                 numpy.logical_and(self.wave > 0.9*u.micron,self.wave < 2.3*u.micron))])*self.funit
 
     def fnuToFlam(self):
-         '''
-         :Purpose: Converts flux density from :math:`F_\\nu` to :math:`F_\\lambda`, the later in erg/s/cm2/Hz
-         '''
-         self.funit = u.erg/(u.cm**2 * u.s * u.micron)
-         self.flabel = 'F_lam'
-         self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
-         self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
-         self.variance = self.noise**2
-         return
+        '''
+        :Purpose: Converts flux density from :math:`F_\\nu` to :math:`F_\\lambda`, the later in erg/s/cm2/Hz
+        '''
+        self.funit = u.erg/(u.cm**2 * u.s * u.micron)
+        self.flabel = 'F_lam'
+        self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
+        self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
+        self.variance = self.noise**2
+        self.snr = self.computeSN()
+        self.history.append('Converted from Fnu to Flam units')
+        return
 
     def normalize(self,**kwargs):
         '''
@@ -720,6 +746,8 @@ class Spectrum(object):
         else:
             self.scale(1./self.fluxMax(**kwargs).value)
         self.fscale = 'Normalized'
+        self.history.append('Normalized')
+        self.snr = self.computeSN()
         return
 
     def plot(self,**kwargs):
@@ -739,8 +767,11 @@ class Spectrum(object):
         self.resolution = copy.deepcopy(self.resolution_original)
         self.slitpixelwidth = copy.deepcopy(self.slitpixelwidth_original)
         self.slitwidth = self.slitpixelwidth*spex_pixel_scale
+        self.snr = self.computeSN()
         self.fscale = ''
+        self.history.append('Returned to original state')
         return
+
 
     def export(self,*args,**kwargs):
         '''
@@ -778,10 +809,16 @@ class Spectrum(object):
                 ascii.write(t,output=filename,format=kwargs.get('format','commented_header'))
             except:
                 raise NameError('Problem saving spectrum object to file {}'.format(filename))
+        self.history.append('Spectrum saved to {}'.format(filename))
         return
 
+
+    def save(self,*args,**kwargs):
+        self.export(*args,**kwargs)
+
+
     def scale(self,factor):
-         '''
+        '''
         :Purpose: Smooths spectrum to a constant slit width (smooths by pixels)
         :param method: the type of window to create. See http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html for more details.
         :type method: optional, default = 'hanning'
@@ -792,11 +829,13 @@ class Spectrum(object):
         :type resolution: optional, default = 150
         :type slitwidth: optional, default = slitpixelwidth * 0.15
         '''
-         self.flux = self.flux*factor
-         self.noise = self.noise*factor
-         self.variance = self.noise**2
-         self.fscale = 'Scaled'
-         return
+        self.flux = self.flux*factor
+        self.noise = self.noise*factor
+        self.variance = self.noise**2
+        self.snr = self.computeSN()
+        self.fscale = 'Scaled'
+        self.history.append('Spectrum scaled by a factor of {}'.format(factor))
+        return
 
     def smooth(self,**kwargs):
         '''Smooth spectrum to a constant slit width (smooth by pixels)'''
@@ -849,10 +888,11 @@ class Spectrum(object):
              self.flux = f(self.wave)*self.funit
              self.variance = v(self.wave)*self.funit**2
              self.noise = numpy.array([n**0.5 for n in self.variance])
+             self.snr = self.computeSN()
              self.slitpixelwidth = self.slitpixelwidth*self.resolution/resolution
              self.resolution = resolution
              self.slitwidth = self.slitpixelwidth*spex_pixel_scale
-             self.history = ['Smoothed to constant resolution {}'.format(self.resolution)]
+             self.history.append('Smoothed to constant resolution {}'.format(self.resolution))
         return
 
     def smoothToSlitPixelWidth(self,width,**kwargs):
@@ -872,10 +912,11 @@ class Spectrum(object):
             self.flux = signal.convolve(self.flux, window/numpy.sum(window), mode='same')
             self.variance = signal.convolve(self.variance, window/numpy.sum(window), mode='same')/neff
             self.noise = numpy.array([n**0.5 for n in self.variance])
+            self.snr = self.computeSN()
             self.resolution = self.resolution*self.slitpixelwidth/width
             self.slitpixelwidth = width
             self.slitwidth = self.slitpixelwidth*spex_pixel_scale
-            self.history = ['Smoothed to slit width of {}'.format(self.slitwidth)]
+            self.history.append('Smoothed to slit width of {}'.format(self.slitwidth))
         return
 
     def smoothToSlitWidth(self,width,**kwargs):
@@ -889,14 +930,6 @@ class Spectrum(object):
         kwargs['method'] = method
         pwidth = width/spex_pixel_scale
         self.smoothToSlitPixelWidth(pwidth,**kwargs)
-        return
-
-    def snr(self):
-        '''
-        :Purpose: Compute a representative S/N value
-        .. note:: Unfinished
-        '''
-        pass
         return
 
     def surface(self,radius):
@@ -1229,11 +1262,15 @@ def classifyByIndex(sp, *args, **kwargs):
         return numpy.nan, numpy.nan
 
     for index in coeffs.keys():
-        vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))*sptfact
-        coeffs[index]['spt'] = numpy.nanmean(vals)+sptoffset
-        coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
-#        print(index, coeffs[index]['spt'], coeffs[index]['range'], coeffs[index]['spt'] < coeffs[index]['range'][0], coeffs[index]['spt'] > coeffs[index]['range'][1])
-        if (coeffs[index]['spt'] < coeffs[index]['range'][0] or coeffs[index]['spt'] > coeffs[index]['range'][1]):
+        if indices[index][1] > 0.:
+            vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))*sptfact
+            coeffs[index]['spt'] = numpy.nanmean(vals)+sptoffset
+            coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
+        else:
+            coeffs[index]['spt'] = numpy.nan
+            coeffs[index]['sptunc'] = numpy.nan
+
+        if (coeffs[index]['spt'] < coeffs[index]['range'][0] or coeffs[index]['spt'] > coeffs[index]['range'][1] or numpy.isnan(coeffs[index]['spt'])):
             coeffs[index]['mask'] = 0.
         else:
             coeffs[index]['mask'] = 1.
@@ -1736,7 +1773,7 @@ def classifyGravity(sp, *args, **kwargs):
         'FeH-z':{'M5.0':[numpy.nan,numpy.nan],'M6.0':[1.068,1.039],'M7.0':[1.103,1.056],'M8.0':[1.146,1.074],'M9.0': [1.167,1.086],'L0.0': [1.204,1.106],'L1.0':[1.252,1.121],'L2.0':[1.298,1.142],'L3.0': [1.357,1.163],'L4.0': [1.370,1.164],'L5.0': [1.258,1.138],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
         'VO-z': {'M5.0':[numpy.nan,numpy.nan],'M6.0':[numpy.nan,numpy.nan],'M7.0': [numpy.nan,numpy.nan],'M8.0': [numpy.nan,numpy.nan],'M9.0': [numpy.nan,numpy.nan],'L0.0': [1.122,1.256],'L1.0': [1.112,1.251],'L2.0': [1.110,1.232],'L3.0': [1.097,1.187],'L4.0': [1.073,1.118],'L5.0': [numpy.nan,numpy.nan],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
         'KI-J': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [1.042,1.028], 'M7.0': [1.059,1.036],'M8.0': [1.077,1.046],'M9.0': [1.085,1.053],'L0.0': [1.098,1.061],'L1.0': [1.114,1.067],'L2.0': [1.133,1.073],'L3.0': [1.135,1.075],'L4.0': [1.126,1.072],'L5.0': [1.094,1.061],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
-        'H-cont': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [.988,.994], 'M7.0': [.981,.990],'M8.0': [.963,.984],'M9.0': [.949,.979],'L0.0': [.935,.972],'L1.0': [.914,.968],'L2.0': [.906,.964],'L3.0': [.898,.960],'L4.0': [.885,.954],'L5.0': [.869,.949],'L6.0': [.874,.950],'L7.0': [numpy.nan,numpy.nan]}}
+        'H-cont': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [.988,.994], 'M7.0': [.981,.990],'M8.0': [.963,.984],'M9.0': [.949,.979],'L0.0': [.935,.972],'L1.0': [.914,.968],'L2.0': [.906,.964],'L3.0': [.898,.960],'L4.0': [.885,.954],'L5.0': [.869,.949],'L6.0': [.874,.950],'L7.0': [0.888,0.952]}}
 
 # Calculate Allers indices and their uncertainties
     ind = kwargs.get('indices',False)
