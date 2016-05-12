@@ -300,16 +300,17 @@ def plotSpectrum(*args, **kwargs):
     tot_sp = len([item for sublist in splist for item in sublist])    # Total number of spectra
     
 # prep legend
-    legend = kwargs.get('legend',['' for x in range(tot_sp)])
+    legend = kwargs.get('legend',[str() for x in range(tot_sp)])
     legend = kwargs.get('legends',legend)
     legend = kwargs.get('label',legend)
     legend = kwargs.get('labels',legend)
     if(len(legend) < tot_sp):
-        legend.extend(['' for x in range(tot_sp-len(legend))])
+        legend.extend([str() for x in range(tot_sp-len(legend))])
+    if not isinstance(legend,list):
+        legend = [legend]
     legendLocation = kwargs.get('legendLocation','upper right')       # sets legend location
     legendLocation = kwargs.get('labelLocation',legendLocation)       # sets legend location
 
-    
 # now run a loop through the input subarrays
     plt.close('all')
 

@@ -2,25 +2,25 @@ from __future__ import print_function, division
 
 """
 .. note::
-         These are the database functions for SPLAT 
+         These are functions related to the EUCLID analysis based on SPLAT tools 
 """
 
-import astropy
+#import astropy
 #import copy
 #from datetime import datetime
-import os
-import re
-import requests
+#import os
+#import re
+#import requests
 #from splat import SPLAT_PATH, SPLAT_URL
-import sys
 #from scipy import stats
-from astropy.io import ascii, fits            # for reading in spreadsheet
-from astropy.table import Table, join            # for reading in table files
-from astropy.coordinates import SkyCoord
+#from astropy.io import ascii, fits            # for reading in spreadsheet
+#from astropy.table import Table, join            # for reading in table files
+#from astropy.coordinates import SkyCoord
 
 import copy
-import splat
 import numpy
+import splat
+import sys
 from astropy import units as u            # standard units
 from scipy.interpolate import interp1d
 
@@ -36,6 +36,27 @@ sys.ps1 = 'splat euclid> '
 # program to convert spex spectra in to euclid spectra
 
 def spexToEuclid(sp):
+	'''
+    :Purpose: Convert a SpeX file into EUCLID form, using the resolution and wavelength coverage
+    				defined from the Euclid Red Book (`Laurijs et al. 2011 <http://sci.esa.int/euclid/48983-euclid-definition-study-report-esa-sre-2011-12/>`_). This function changes the input Spectrum
+    				objects, which can be restored by the Spectrum.reset() method.
+
+    :param sp: Spectrum class object, which should contain wave, flux and noise array elements
+
+    :Example:
+       >>> import splat
+       >>> sp = splat.getSpectrum(lucky=True)[0]   				# grab a random file
+       >>> splat.spexToEuclid(sp)
+       >>> min(sp.wave), max(sp.wave)
+		(<Quantity 1.25 micron>, <Quantity 1.8493000000000364 micron>)
+       >>> sp.history
+		[``'Spectrum successfully loaded``',
+		 ``'Converted to EUCLID format``']
+       >>> sp.reset()
+       >>> min(sp.wave), max(sp.wave)
+		(<Quantity 0.6454827785491943 micron>, <Quantity 2.555659770965576 micron>)
+	'''
+
 	sp.resolution = EUCLID_RESOLUTION
 	sp.slitpixelwidth = EUCLID_SLITWIDTH
 	f = interp1d(sp.wave,sp.flux)
@@ -54,6 +75,30 @@ def spexToEuclid(sp):
 
 # adds noise to spectrum
 def addEuclidNoise(sp):
+	'''
+    :Purpose: Adds Gaussian noise to a EUCLID-formatted spectrum assuming a constant noise
+    			model of 3e-15 erg/s/cm2/micron (as extrapolated from the Euclid Red Book; 
+    			Laurijs et al. 2011 <http://sci.esa.int/euclid/48983-euclid-definition-study-report-esa-sre-2011-12/>`_).
+    			Note that noise is added to both flux and (in quadrature) variance. This function creates a
+    			new Spectrum object so as not to corrupt the original data. 
+
+    :param sp: Spectrum class object, which should contain wave, flux and noise array elements
+
+    :Output: Spectrum object with Euclid noise added in
+
+    :Example:
+       >>> import splat
+       >>> sp = splat.getSpectrum(lucky=True)[0]   				# grab a random file
+       >>> splat.spexToEuclid(sp)
+       >>> sp.normalize()
+       >>> sp.scale(1.e-14)
+       >>> sp.computeSN()
+       		115.96374031163553
+       >>> sp_noisy = splat.addEculidNoise(sp)
+       >>> sp_noisy.computeSN()
+       		3.0847209519763172
+	'''
+
 	sp2 = copy.deepcopy(sp)
 	bnoise = numpy.zeros(len(sp2.noise))+EUCLID_NOISE
 	bnoise.to(sp2.funit,equivalencies=u.spectral())
@@ -67,37 +112,42 @@ def addEuclidNoise(sp):
 
 
 if __name__ == '__main__':
-    ofold = '/Users/adam/projects/splat/euclid/'
-    sp = splat.getSpectrum(shortname='J0559-1404')[0]
-    spt = 'T4.5'
-    filter = 'MKO H'
-    m1 = splat.typeToMag(spt,filter)[0]
-    m2 = 21
-    d2 = splat.estimateDistance(sp,spt=spt,mag=m2, absmag=m1)[0]
-    m3 = 19
-    d3 = splat.estimateDistance(sp,spt=spt,mag=m3, absmag=m1)[0]
+	'''
+	Test function for splat_euclid functions, taking an 0559-1404 spectrum and plotting a 3 
+	apparent magnitudes with corresponding distances
+	'''
 
-    spexToEuclid(sp)
-    sp.normalize()
-    sp.fluxCalibrate(filter,m2)
-    print(sp.snr)
-    sp2 = addEuclidNoise(sp)
-    print(sp2.snr)
-    sp.fluxCalibrate(filter,m3)
-    sp3 = addEuclidNoise(sp)
-    print(sp3.snr)
-    sp.normalize()
-    sp2.normalize()
-    sp3.normalize()
-    cls1 = splat.classifyByIndex(sp)
-    cls2 = splat.classifyByIndex(sp2)
-    cls3 = splat.classifyByIndex(sp3)
-    splat.plotSpectrum(sp,sp3,sp2,colors=['k','b','r'],stack=0.5,xrange=EUCLID_WAVERANGE,\
-    	yrange=[-0.3,2.2],output=ofold+'spectral_degradation.eps',legend=[\
-    	'J0559-1404 MH = {:.1f}, SpT = {}+/-{:.1f}'.format(m1,cls1[0],cls1[1]),\
-    	'H = {:.1f}, d = {:.1f} pc, SpT = {}+/-{:.1f}'.format(m3,d3,cls3[0],cls3[1]),\
-    	'H = {:.1f}, d = {:.1f} pc, SpT = {}+/-{:.1f}'.format(m2,d2,cls2[0],cls2[1])])
-    print('For H = {}, SpT = {}+/-{}'.format(m1,spt[0],spt[1]))
-    print('For H = {}, SpT = {}+/-{}'.format(m3,spt[0],spt[1]))
-    print('For H = {}, SpT = {}+/-{}'.format(m2,spt[0],spt[1]))
+	ofold = '/Users/adam/projects/splat/euclid/'
+	sp = splat.getSpectrum(shortname='J0559-1404')[0]
+	spt = 'T4.5'
+	filter = 'MKO H'
+	m1 = splat.typeToMag(spt,filter)[0]
+	m2 = 21
+	d2 = splat.estimateDistance(sp,spt=spt,mag=m2, absmag=m1)[0]
+	m3 = 19
+	d3 = splat.estimateDistance(sp,spt=spt,mag=m3, absmag=m1)[0]
+
+	spexToEuclid(sp)
+	sp.normalize()
+	sp.fluxCalibrate(filter,m2)
+	print(sp.snr)
+	sp2 = addEuclidNoise(sp)
+	print(sp2.snr)
+	sp.fluxCalibrate(filter,m3)
+	sp3 = addEuclidNoise(sp)
+	print(sp3.snr)
+	sp.normalize()
+	sp2.normalize()
+	sp3.normalize()
+	cls1 = splat.classifyByIndex(sp)
+	cls2 = splat.classifyByIndex(sp2)
+	cls3 = splat.classifyByIndex(sp3)
+	splat.plotSpectrum(sp,sp3,sp2,colors=['k','b','r'],stack=0.5,xrange=EUCLID_WAVERANGE,\
+		yrange=[-0.3,2.2],output=ofold+'spectral_degradation.eps',legend=[\
+		'J0559-1404 MH = {:.1f}, SpT = {}+/-{:.1f}'.format(m1,cls1[0],cls1[1]),\
+		'H = {:.1f}, d = {:.1f} pc, SpT = {}+/-{:.1f}'.format(m3,d3,cls3[0],cls3[1]),\
+		'H = {:.1f}, d = {:.1f} pc, SpT = {}+/-{:.1f}'.format(m2,d2,cls2[0],cls2[1])])
+	print('For H = {}, SpT = {}+/-{}'.format(m1,spt[0],spt[1]))
+	print('For H = {}, SpT = {}+/-{}'.format(m3,spt[0],spt[1]))
+	print('For H = {}, SpT = {}+/-{}'.format(m2,spt[0],spt[1]))
 

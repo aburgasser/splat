@@ -186,9 +186,34 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Adds two spectra</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">A representation of addition for Spectrum objects which correctly interpolates as a function of wavelength and combines variances</p>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> &#8211; the other spectrum to add to the object</td>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">a new Spectrum object equal to the spectral sum of the inputs</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span> <span class="o">+</span> <span class="n">sp2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span>
+<span class="go"> Spectrum of 2MASS J17373467+5953434 + WISE J174928.57-380401.6</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="splat.Spectrum.__copy__">
+<code class="descname">__copy__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.__copy__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Make a copy of a Spectrum object</td>
 </tr>
 </tbody>
 </table>
@@ -201,9 +226,21 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Divides two spectra</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">A representation of division for Spectrum objects which correctly interpolates as a function of wavelength and combines variances</p>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> &#8211; the other spectrum to divide by the object</td>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">a new Spectrum object equal to the spectral ratio of the inputs</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span><span class="o">/</span><span class="n">sp2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span>
+<span class="go"> Spectrum of 2MASS J17373467+5953434 + WISE J174928.57-380401.6</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -216,9 +253,21 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Multiplies two spectra</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">A representation of multiplication for Spectrum objects which correctly interpolates as a function of wavelength and combines variances</p>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> &#8211; the other spectrum to multiply by the object</td>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">a new Spectrum object equal to the spectral product of the inputs</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span> <span class="o">*</span> <span class="n">sp2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span>
+<span class="go"> Spectrum of 2MASS J17373467+5953434 x WISE J174928.57-380401.6</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -244,9 +293,59 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Subtracts two spectra</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">A representation of subtraction for Spectrum objects which correctly interpolates as a function of wavelength and combines variances</p>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> &#8211; the other spectrum to subtract from the object</td>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">a new Spectrum object equal to the spectral difference of the inputs</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span> <span class="o">-</span> <span class="n">sp2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span>
+<span class="go"> Spectrum of 2MASS J17373467+5953434 - WISE J174928.57-380401.6</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="splat.Spectrum.computeSN">
+<code class="descname">computeSN</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.computeSN" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Compute a representative S/N value as the median value of S/N among the top 50% of flux values</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">the S/N value</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">115.96374031163553</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="splat.Spectrum.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.copy" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Make a copy of a Spectrum object</td>
 </tr>
 </tbody>
 </table>
@@ -259,7 +358,39 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">export spectrum object to a file, either fits or ascii depending on file extension</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  Spectrum.export and <a class="reference external" href="api.html#splat.Spectrum.save">Spectrum.save</a> function in the same manner.</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> (<em>optional, default = Spectrum.simplefilename</em>) &#8211; String specifying the filename to save</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">An ascii or fits file with the data</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s1">&#39;/Users/adam/myspectrum.txt&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy.io</span> <span class="kn">import</span> <span class="n">ascii</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">ascii</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;/Users/adam/myspectrum.txt&#39;</span><span class="p">,</span><span class="n">format</span><span class="o">=</span><span class="s1">&#39;tab&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span>
+<span class="go"> &lt;Table length=564&gt;</span>
+<span class="go">   wavelength          flux          uncertainty</span>
+<span class="go">    float64          float64           float64</span>
+<span class="go"> -------------- ----------------- -----------------</span>
+<span class="go"> 0.645418405533               0.0               nan</span>
+<span class="go"> 0.647664904594 6.71920214475e-16 3.71175052033e-16</span>
+<span class="go"> 0.649897933006 1.26009925777e-15 3.85722895842e-16</span>
+<span class="go"> 0.652118623257 7.23781818374e-16 3.68178778862e-16</span>
+<span class="go"> 0.654327988625 1.94569566622e-15 3.21007116982e-16</span>
+<span class="go"> ...</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -272,7 +403,17 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Converts flux density from <img class="math" src="_images/math/e1916dec86178b195fc5d357c2cfbd4ece2df50e.png" alt="F_\lambda"/> to <img class="math" src="_images/math/36dd6a238ddc38050c7edd17747c3876e433715e.png" alt="F_\nu"/>, the later in Jy</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Converts flux density from <img class="math" src="_images/math/e1916dec86178b195fc5d357c2cfbd4ece2df50e.png" alt="F_\lambda"/> to <img class="math" src="_images/math/36dd6a238ddc38050c7edd17747c3876e433715e.png" alt="F_\nu"/>, the latter in Jy. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in <img class="math" src="_images/math/36dd6a238ddc38050c7edd17747c3876e433715e.png" alt="F_\nu"/> units.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">flamToFnu</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">flux</span><span class="o">.</span><span class="n">unit</span>
+<span class="go"> Unit(&quot;Jy&quot;)</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -280,12 +421,30 @@
 
 <dl class="method">
 <dt id="splat.Spectrum.fluxCalibrate">
-<code class="descname">fluxCalibrate</code><span class="sig-paren">(</span><em>f</em>, <em>mag</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.fluxCalibrate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fluxCalibrate</code><span class="sig-paren">(</span><em>filter</em>, <em>mag</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.fluxCalibrate" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Calibrates spectrum to input magnitude</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Flux calibrates a spectrum given a filter and a magnitude. The filter must be one of those listed in splat.FILTERS.keys(). It is possible to specifically set the magnitude to be absolute (by default it is apparent).  This function changes the Spectrum object&#8217;s flux, noise and variance arrays.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filter</strong> (<em>string, default = None</em>) &#8211; name of filter</li>
+<li><strong>mag</strong> (<em>float, default = None</em>) &#8211; magnitude to scale too</li>
+<li><strong>absolute</strong> (<em>Boolean, optional, default = False</em>) &#8211; given magnitude is an absolute magnitude</li>
+<li><strong>apparent</strong> (<em>Boolean, optional, default = False</em>) &#8211; given magnitude is an apparent magnitude</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">15.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
+<span class="go"> (15.002545668628173, 0.017635234089677564)</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -298,9 +457,23 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Determines maximum flux of spectrum</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Reports the maximum flux of a Spectrum object ignoring nan&#8217;s.</p>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>maskTelluric</strong> (<em>optional, default = True</em>) &#8211; masks telluric regions</td>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>maskTelluric</strong> (<em>optional, default = True</em>) &#8211; masks telluric regions</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><p class="first">maximum flux (with units)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxMax</span><span class="p">()</span>
+<span class="go">&lt;Quantity 1.0 erg / (cm2 micron s)&gt;</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -313,7 +486,20 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Converts flux density from <img class="math" src="_images/math/36dd6a238ddc38050c7edd17747c3876e433715e.png" alt="F_\nu"/> to <img class="math" src="_images/math/e1916dec86178b195fc5d357c2cfbd4ece2df50e.png" alt="F_\lambda"/>, the later in erg/s/cm2/Hz</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Converts flux density from <img class="math" src="_images/math/36dd6a238ddc38050c7edd17747c3876e433715e.png" alt="F_\nu"/> to <img class="math" src="_images/math/e1916dec86178b195fc5d357c2cfbd4ece2df50e.png" alt="F_\lambda"/>, the latter in erg/s/cm2/Hz. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in <img class="math" src="_images/math/e1916dec86178b195fc5d357c2cfbd4ece2df50e.png" alt="F_\lambda"/> units.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">flamToFnu</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">flux</span><span class="o">.</span><span class="n">unit</span>
+<span class="go"> Unit(&quot;Jy&quot;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fnuToFlam</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">flux</span><span class="o">.</span><span class="n">unit</span>
+<span class="go"> Unit(&quot;erg / (cm2 micron s)&quot;)</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -326,7 +512,28 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Reports some information about this spectrum.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Returns a summary of properties for the Spectrum object</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">Text summary</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+<span class="go"> Spectrum of NLTT 184</span>
+<span class="go"> Observed on 20071012</span>
+<span class="go"> at an airmass of 1.145</span>
+<span class="go"> Full source designation is J00054517+0723423</span>
+<span class="go"> Median S/N = 97.0</span>
+<span class="go"> SPLAT source key is 10012.0</span>
+<span class="go"> SPLAT spectrum key is 10857</span>
+<span class="go"> Data published in Kirkpatrick, J. D. et al. (2010, ApJS, 190, 100-146)</span>
+<span class="go"> History:</span>
+<span class="go"> Spectrum successfully loaded</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -339,9 +546,26 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Normalizes spectrum to its maximum flux.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Normalize a spectrum to a maximum value of 1 (in its current units)</p>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>maskTelluric</strong> (<em>optional, default = True</em>) &#8211; masks telluric regions</td>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>waveRange</strong> (<em>optional, default = None</em>) &#8211; choose the wavelength range to normalize; can be a list specifying minimum and maximum or a single number to normalize around a particular point</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><p class="first">maximum flux (with units)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxMax</span><span class="p">()</span>
+<span class="go">&lt;Quantity 1.0 erg / (cm2 micron s)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">waverange</span><span class="o">=</span><span class="p">[</span><span class="mf">2.25</span><span class="p">,</span><span class="mf">2.3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxMax</span><span class="p">()</span>
+<span class="go">&lt;Quantity 1.591310977935791 erg / (cm2 micron s)&gt;</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -354,7 +578,23 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Plots spectrum. See SPLAT Plotting Routines page for more details.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">calls the <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum</a> function, by default showing the noise spectrum and zeropoints. See the <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum</a> API listing for details.</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><p class="first">A plot of the Spectrum object</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
@@ -367,7 +607,35 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Resets to original spectrum</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Restores a Spectrum to its original read-in state, removing scaling and smoothing. This routine changes the Spectrum object directly and there is no output.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxMax</span><span class="p">()</span>
+<span class="go">&lt;Quantity 4.561630292384622e-15 erg / (cm2 micron s)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxMax</span><span class="p">()</span>
+<span class="go">&lt;Quantity 0.9999999403953552 erg / (cm2 micron s)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxMax</span><span class="p">()</span>
+<span class="go">&lt;Quantity 4.561630292384622e-15 erg / (cm2 micron s)&gt;</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="splat.Spectrum.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.save" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  <a class="reference external" href="api.html#splat.Spectrum.export">Spectrum.export</a> and Spectrum.save function in the same manner.</td>
 </tr>
 </tbody>
 </table>
@@ -375,20 +643,62 @@
 
 <dl class="method">
 <dt id="splat.Spectrum.scale">
-<code class="descname">scale</code><span class="sig-paren">(</span><em>factor</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.scale" title="Permalink to this definition">¶</a></dt>
+<code class="descname">scale</code><span class="sig-paren">(</span><em>factor</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.scale" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Smooths spectrum to a constant slit width (smooths by pixels)</p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Scales a Spectrum object&#8217;s flux and noise values by a constant factor. This routine changes the Spectrum object directly.</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>method</strong> (<em>optional, default = 'hanning'</em>) &#8211; the type of window to create. See <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html">http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html</a> for more details.</li>
-<li><strong>slitpixelwidth</strong> (<em>optional, default = 3.33</em>) &#8211; Width of the slit measured in subpixel values.</li>
-<li><strong>slitwidth</strong> (<em>optional, default = slitpixelwidth * 0.15</em>) &#8211; Actual width of the slit, measured in arc seconds. Default value is the <code class="docutils literal"><span class="pre">slitpixelwidth</span></code> multiplied by the spectrograph pixel scale of 0.15 arcseconds.</li>
-<li><strong>resolution</strong> (<em>optional, default = 150</em>) &#8211; </li>
-</ul>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>factor</strong> (<em>required, default = None</em>) &#8211; A floating point number used to scale the Spectrum object</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><p class="first">maximum flux (with units)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxMax</span><span class="p">()</span>
+<span class="go">&lt;Quantity 1.0577336634332284e-14 erg / (cm2 micron s)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">124.5198</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">1.e15</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxMax</span><span class="p">()</span>
+<span class="go">&lt;Quantity 1.0577336549758911 erg / (cm2 micron s)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">124.51981</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="splat.Spectrum.showHistory">
+<code class="descname">showHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.showHistory" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Report history of actions taken on a Spectrum object. This can also be retrieved by printing the attribute Spectrum.history</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">List of actions taken on spectrum</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">15.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">showHistory</span><span class="p">()</span>
+<span class="go"> Spectrum successfully loaded</span>
+<span class="go"> Spectrum normalized</span>
+<span class="go"> Flux calibrated with 2MASS J filter to an apparent magnitude of 15.0</span>
+</pre></div>
+</div>
 </td>
 </tr>
 </tbody>
@@ -398,7 +708,44 @@
 <dl class="method">
 <dt id="splat.Spectrum.smooth">
 <code class="descname">smooth</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.smooth" title="Permalink to this definition">¶</a></dt>
-<dd><p>Smooth spectrum to a constant slit width (smooth by pixels)</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Smoothes a spectrum either by selecting a constant slit width (smooth in spectral dispersion space), pixel width (smooth in pixel space) or resolution (smooth in velocity space). One of these options must be selected for any smoothing to happen. Changes spectrum directly.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>method</strong> (<em>optional, default = Hanning</em>) &#8211; the type of smoothing window to use. See <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html">http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html</a> for more details.</li>
+<li><strong>resolution</strong> (<em>optional, default = None</em>) &#8211; Constant resolution to smooth toe(see <a href="#id19"><span class="problematic" id="id20">smoothResolution_</span></a>)</li>
+<li><strong>slitPixelWidth</strong> (<em>optional, default = None</em>) &#8211; Number of pixels to smooth in pixel space (see <a class="reference external" href="api.html#splat.Spectrum.smoothToSlitPixelWidth">smoothToSlitPixelWidth</a>)</li>
+<li><strong>slitWidth</strong> (<em>optional, default = None</em>) &#8211; Number of pixels to smooth in angular space (see <a class="reference external" href="api.html#splat.Spectrum.smoothToPixelWidth">smoothToPixelWidth</a>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">smoothfluxMax</span><span class="p">()</span>
+<span class="go">&lt;Quantity 1.0577336634332284e-14 erg / (cm2 micron s)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">124.5198</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">1.e15</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxMax</span><span class="p">()</span>
+<span class="go">&lt;Quantity 1.0577336549758911 erg / (cm2 micron s)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">124.51981</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -408,14 +755,29 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Smooths spectrum to a constant resolution</p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Smoothes a spectrum to a constant or resolution (smooth in velocity space). Changes spectrum directly.  Note that no smoothing is done if requested resolution is greater than the current resolution</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>resolution</strong> &#8211; resolution for smoothing the spectrum</li>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>resolution</strong> (<em>required</em>) &#8211; number giving the desired resolution</li>
+<li><strong>method</strong> (<em>optional, default = Hanning</em>) &#8211; the type of smoothing window to use. See <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html">http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html</a> for more details.</li>
 <li><strong>overscale</strong> (<em>optional, default = 10.</em>) &#8211; used for computing number of samples in the window</li>
-<li><strong>method</strong> (<em>optional, default = 'hanning'</em>) &#8211; the type of window to create. See <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html">http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html</a> for more details.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">resolution</span><span class="p">()</span>
+<span class="go">120</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">21.550974</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">smoothToResolution</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">resolution</span><span class="p">()</span>
+<span class="go">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">49.459522314460855</span>
+</pre></div>
+</div>
 </td>
 </tr>
 </tbody>
@@ -429,13 +791,32 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Smooths spectrum to a constant slit width</p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Smoothes a spectrum to a constant slit pixel width (smooth in pixel space). Changes spectrum directly.  Note that no smoothing is done if requested width is greater than the current slit width.</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>width</strong> &#8211; width for smoothing the spectrum</li>
-<li><strong>method</strong> (<em>optional, default = 'hanning'</em>) &#8211; the type of window to create. See <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html">http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html</a> for more details.</li>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>width</strong> (<em>required</em>) &#8211; number giving the desired smoothing scale in pixels</li>
+<li><strong>method</strong> (<em>optional, default = Hanning</em>) &#8211; the type of smoothing window to use. See <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html">http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html</a> for more details.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">slitpixelwidth</span>
+<span class="go">3.33</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">resolution</span>
+<span class="go">120</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">105.41789</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">smoothToSlitPixelWidth</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">slitpixelwidth</span>
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">resolution</span>
+<span class="go">39.96</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">235.77536310249229</span>
+</pre></div>
+</div>
 </td>
 </tr>
 </tbody>
@@ -449,34 +830,39 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Smooths spectrum to a constant slit width (smooths by pixels)</p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Smoothes a spectrum to a constant slit angular width (smooth in dispersion space). Changes spectrum directly.  Note that no smoothing is done if requested width is greater than the current slit width.</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>width</strong> &#8211; width for smoothing the spectrum</li>
-<li><strong>method</strong> (<em>optional, default = 'hanning'</em>) &#8211; the type of window to create. See <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html">http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html</a> for more details.</li>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>width</strong> (<em>required</em>) &#8211; number giving the desired smoothing scale in arcseconds</li>
+<li><strong>method</strong> (<em>optional, default = Hanning</em>) &#8211; the type of smoothing window to use. See <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html">http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html</a> for more details.</li>
 </ul>
 </td>
 </tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="splat.Spectrum.snr">
-<code class="descname">snr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.snr" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Compute a representative S/N value</td>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><p class="first">maximum flux (with units)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">slitwidth</span>
+<span class="go">0.4995</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">resolution</span>
+<span class="go">120</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">105.41789</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">smoothToSlitWidth</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">slitwidth</span>
+<span class="go">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">resolution</span>
+<span class="go">29.97</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">258.87135134070593</span>
+</pre></div>
+</div>
+</td>
 </tr>
 </tbody>
 </table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Unfinished</p>
-</div>
 </dd></dl>
 
 <dl class="method">
@@ -494,6 +880,31 @@
 <p class="first admonition-title">Note</p>
 <p class="last">Unfinished</p>
 </div>
+</dd></dl>
+
+<dl class="method">
+<dt id="splat.Spectrum.waveRange">
+<code class="descname">waveRange</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.waveRange" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Return the wavelength range of the current Spectrum object.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">2-element array giving minimum and maximum of wavelength range</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">slitwidth</span>
+<span class="go">[&lt;Quantity 0.6447611451148987 micron&gt;, &lt;Quantity 2.5517737865448 micron&gt;]</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -662,6 +1073,7 @@ noise array elements.</li>
 </li>
 <li><strong>string</strong> (<em>optional, default = False</em>) &#8211; return spectral type as a string (uses typeToNum)</li>
 <li><strong>round</strong> (<em>optional, default = False</em>) &#8211; rounds off to nearest 0.5 subtypes</li>
+<li><strong>allmeasures</strong> (<em>optional, default = False</em>) &#8211; Set to True to return all of the index values and individual subtypes</li>
 <li><strong>remeasure</strong> (<em>optional, default = True</em>) &#8211; force remeasurement of indices</li>
 <li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of Monte Carlo samples for error computation</li>
 <li><strong>nloop</strong> (<em>optional, default = 5</em>) &#8211; number of testing loops to see if spectral type is within a certain range</li>
@@ -674,7 +1086,7 @@ noise array elements.</li>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0559-1404&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="s1">&#39;burgasser&#39;</span><span class="p">,</span> <span class="nb">round</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="s1">&#39;burgasser&#39;</span><span class="p">,</span> <span class="nb">round</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="go">    (&#39;T4.5&#39;, 0.2562934083414341)</span>
 </pre></div>
 </div>
@@ -693,45 +1105,72 @@ noise array elements.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Determine the spectral type and uncertainty for a
-spectrum by direct comparison to spectral standards.
-Standards span M0-T9 and include the standards listed in
-<a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a>
-with addition of UGPS 0722-0540  as the T9 standard.  Returns the best
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Determine the spectral type and uncertainty for a
+spectrum by direct comparison to defined spectral standards.
+Dwarf standards span M0-T9 and include the standards listed in
+<a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...637.1067B">Burgasser et al. (2006)</a>, <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a> and <a class="reference external" href="http://adsabs.harvard.edu/abs/2011ApJ...743...50C">Cushing et al. (2011)</a>.
+Comparison to subdwarf and extreme subdwarf standards may also be done.
+Returns the best
 match or an F-test weighted mean and uncertainty. There is an option
 to follow the procedure of <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a>, fitting only in
-the 0.9-1.4 micron region.</td>
+the 0.9-1.4 micron region.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">A tuple listing the best match standard and uncertainty based on F-test weighting and systematic uncertainty of 0.5 subtypes</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
+noise array elements.</li>
+<li><strong>sp</strong> &#8211; required</li>
+<li><strong>sptrange</strong> (<em>optional, default = ['M0','T9']</em>) &#8211; Set to the spectral type range over which comparisons should be made, can be a two-element array of strings or numbers</li>
+<li><strong>statistic</strong> (<em>optional, default = 'chisqr'</em>) &#8211; <p>string defining which statistic to use in comparison; available options are:</p>
+<ul>
+<li><em>&#8216;chisqr&#8217;</em>: compare by computing chi squared value (requires spectra with noise values)</li>
+<li><em>&#8216;stddev&#8217;</em>: compare by computing standard deviation</li>
+<li><em>&#8216;stddev_norm&#8217;</em>: compare by computing normalized standard deviation</li>
+<li><em>&#8216;absdev&#8217;</em>: compare by computing absolute deviation</li>
+</ul>
+</li>
+<li><strong>method</strong> (<em>optional, default = ''</em>) &#8211; <p>set to <code class="docutils literal"><span class="pre">'kirkpatrick'</span></code> to follow the <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a> method, fitting only to the 0.9-1.4 micron band</p>
+</li>
+<li><strong>best</strong> (<em>optional, default = True</em>) &#8211; Set to True to return the best fit standard type</li>
+<li><strong>average</strong> (<em>optional, default = False</em>) &#8211; Set to True to return an chi-square weighted type only</li>
+<li><strong>compareto</strong> (<em>optional, default = None</em>) &#8211; Set to the single standard (string or number) you want to compare to</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to generate a plot comparing best fit template to source; can also set keywords associated with <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum</a> routine</li>
+<li><strong>string</strong> (<em>optional, default = True</em>) &#8211; return spectral type as a string</li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; Set to True to give extra feedback</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
+<p>Users can also set keyword parameters defined in <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum</a> and <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra</a> routine.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sp</strong> &#8211; spectrum class object, which should contain wave, flux and
-noise array elements.</li>
-<li><strong>best</strong> (<em>optional, default = True</em>) &#8211; return the best fit standard type only</li>
-<li><strong>average</strong> (<em>optional, default = True</em>) &#8211; return an chi-square weighted type only</li>
-<li><strong>compareto</strong> (<em>optional, default = False</em>) &#8211; compare to a single standard (string or number)</li>
-<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; generate a plot comparing best fit standard to source, can be saved to a file using the <code class="docutils literal"><span class="pre">file</span></code> keyword</li>
-<li><strong>file</strong> (<em>optional, default = ''</em>) &#8211; output spectrum plot to a file</li>
-<li><strong>method</strong> (<em>optional, default = ''</em>) &#8211; <p>set to <code class="docutils literal"><span class="pre">'kirkpatrick'</span></code> to follow the <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a>  method, fitting only to the 0.9-1.4 micron band</p>
-</li>
-<li><strong>sptrange</strong> (<em>optional, default = ['M0','T9']</em>) &#8211; constraint spectral type range to fit, can be strings or numbers</li>
-<li><strong>string</strong> (<em>optional, default = True</em>) &#8211; return spectral type as a string</li>
-<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">string</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;kirkpatrick&#39;</span><span class="p">,</span><span class="n">plot</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="go">    (&#39;L4.5&#39;, 0.7138959194725174)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    Using dwarf standards</span>
+<span class="go">    Type M3.0: statistic = 5763368.10355, scale = 0.000144521824721</span>
+<span class="go">    Type M2.0: statistic = 5613862.67356, scale = 0.000406992798674</span>
+<span class="go">    Type T8.0: statistic = 18949835.2087, scale = 9.70960919364</span>
+<span class="go">    Type T9.0: statistic = 21591485.163, scale = 29.1529786804</span>
+<span class="go">    Type L8.0: statistic = 3115605.62687, scale = 1.36392504072</span>
+<span class="go">    Type L9.0: statistic = 2413450.79206, scale = 0.821131769522</span>
+<span class="go">    ...</span>
+<span class="go">    Best match to L1.0 spectral standard</span>
+<span class="go">    Best spectral type = L1.0+/-0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
+<span class="go">    (&#39;L1.0&#39;, 0.5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">sd</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">average</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    (&#39;sdL0.0:&#39;, 1.8630159149200021)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -743,41 +1182,40 @@ noise array elements.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Determine the spectral type and uncertainty for a
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Determine the spectral type and uncertainty for a
 spectrum by direct comparison to a large set of spectra in
-the library. One can select down the spectra by using the set
-command. Returns the best match or an F-test weighted mean and
-uncertainty. There is an option to follow  the procedure of
+the library. Returns a dictionary with the best spectral type (F-test weighted mean and
+uncertainty), and arrays for the N best-matching Spectrum objects, scale factors, spectral types and comparison statistics.
+There is an option to follow the procedure of
 <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a>,
-fitting only in the 0.9-1.4 micron region.</td>
+fitting only in the 0.9-1.4 micron region.
+It is strongly encouraged that users winnow down the templates used in the comparison
+by selecting templates using the <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> options or optionally the <code class="docutils literal"><span class="pre">set</span></code> parameter.</p>
+</td>
 </tr>
-</tbody>
-</table>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><p class="first">Returns a dictionary containing the following keys:</p>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">A dictionary containing the following keys:</p>
 <ul class="simple">
-<li><strong>result</strong>: a tuple containing the spectral type and its uncertainty)</li>
-<li><strong>chisquare</strong>: array of nbest chi-square values</li>
-<li><strong>name</strong>: array of nbest source names</li>
-<li><strong>scale</strong>: array of nbest optimal scale factors</li>
-<li><strong>spectra</strong>: array of nbest Spectrum objects</li>
-<li><strong>spt</strong>: array of nbest spectral types</li>
+<li><strong>result</strong>: a tuple containing the spectral type and its uncertainty based on F-test statistic</li>
+<li><strong>statistic</strong>: array of N best statistical comparison values</li>
+<li><strong>scale</strong>: array of N best optimal scale factors</li>
+<li><strong>spectra</strong>: array of N best Spectrum objects</li>
+<li><strong>spt</strong>: array of N best spectral types</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
 noise array elements.</li>
-<li><strong>best</strong> (<em>optional, default = False</em>) &#8211; return only the best fit template type</li>
-<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; generate a plot comparing best fit standard to source, can be save to a file using the file keyword</li>
-<li><strong>file</strong> (<em>optional, default = ''</em>) &#8211; output spectrum plot to a file</li>
-<li><strong>method</strong> (<em>optional, default = ''</em>) &#8211; <p>set to <code class="docutils literal"><span class="pre">'kirkpatrick'</span></code> to follow the <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a> method, fitting only to the 0.9-1.4 micron band</p>
+<li><strong>sp</strong> &#8211; required</li>
+<li><strong>statistic</strong> (<em>optional, default = 'chisqr'</em>) &#8211; <p>string defining which statistic to use in comparison; available options are:</p>
+<ul>
+<li><em>&#8216;chisqr&#8217;</em>: compare by computing chi squared value (requires spectra with noise values)</li>
+<li><em>&#8216;stddev&#8217;</em>: compare by computing standard deviation</li>
+<li><em>&#8216;stddev_norm&#8217;</em>: compare by computing normalized standard deviation</li>
+<li><em>&#8216;absdev&#8217;</em>: compare by computing absolute deviation</li>
+</ul>
 </li>
-<li><strong>nbest</strong> (<em>optional, default = 1</em>) &#8211; number of best fitting spectra to return</li>
-<li><strong>set</strong> (<em>optional, default = ''</em>) &#8211; <p>string defining which spectral template set you want to compare to; several options which can be combined:</p>
+<li><strong>select</strong> (<em>optional, default = ''</em>) &#8211; <p>string defining which spectral template set you want to compare to; several options which can be combined:</p>
 <ul>
 <li><em>m dwarf</em>: fit to M dwarfs only</li>
 <li><em>l dwarf</em>: fit to M dwarfs only</li>
@@ -790,23 +1228,63 @@ noise array elements.</li>
 <li><em>subdwarf</em>: only subdwarfs</li>
 <li><em>single</em>: only dwarfs not indicated a binaries</li>
 <li><em>spectral binaries</em>: only dwarfs indicated to be spectral binaries</li>
-<li><em>standard</em>: only spectral standards (use classifyByStandard instead)</li>
+<li><em>standard</em>: only spectral standards (Note: use <a class="reference external" href="api.html#splat.classifyByStandard">classifyByStandard</a> instead)</li>
 </ul>
 </li>
+<li><strong>method</strong> (<em>optional, default = ''</em>) &#8211; <p>set to <code class="docutils literal"><span class="pre">'kirkpatrick'</span></code> to follow the <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a> method, fitting only to the 0.9-1.4 micron band</p>
+</li>
+<li><strong>best</strong> (<em>optional, default = False</em>) &#8211; Set to True to return only the best fit template type</li>
+<li><strong>nbest</strong> (<em>optional, default = 1</em>) &#8211; Set to the number of best fitting spectra to return</li>
+<li><strong>maxtemplates</strong> (<em>optional, default = 100</em>) &#8211; Set to the maximum number of templates that should be fit</li>
+<li><strong>force</strong> (<em>optional, default = False</em>) &#8211; By default, classifyByTemplate won&#8217;t proceed if you have more than 100 templates; set this parameter to True to ignore that constraint</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to generate a plot comparing best fit template to source; can also set keywords associated with <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum</a> routine</li>
 <li><strong>string</strong> (<em>optional, default = True</em>) &#8211; return spectral type as a string</li>
-<li><strong>spt_type</strong> (<em>optional, default = 'literature'</em>) &#8211; specify which spectral classification type to return; can be &#8216;spex&#8217;, &#8216;opt&#8217;, &#8216;nir&#8217;, or &#8216;lit&#8217;</li>
 <li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
 </ul>
 </td>
 </tr>
+</tbody>
+</table>
+<p>Users can also set keyword parameters defined in <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum</a> and <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> routines</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">string</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="nb">set</span><span class="o">=</span><span class="s1">&#39;l dwarf, high sn&#39;</span><span class="p">,</span> <span class="n">spt_type</span><span class="o">=</span><span class="s1">&#39;spex&#39;</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="go">    (&#39;L4.5&#39;, 0.7138959194725174)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">string</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">26</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">    Too many templates (171) for classifyByTemplate; set force=True to override this</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">string</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">26</span><span class="p">],</span><span class="n">snr</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">    Comparing to 98 templates</span>
+<span class="go">    LHS 102B L5.0 10488.1100432 11.0947838116</span>
+<span class="go">    2MASSI J0013578-223520 L4.0 7037.37441677 136.830522173</span>
+<span class="go">    SDSS J001608.44-004302.3 L5.5 15468.6209466 274.797693706</span>
+<span class="go">    2MASSI J0028394+150141 L4.5 63696.1897668 187.266152375</span>
+<span class="go">    ...</span>
+<span class="go">    Best match = DENIS-P J153941.96-052042.4 with spectral type L4:</span>
+<span class="go">    Mean spectral type = L4.5+/-0.718078660103</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
+<span class="go">    {&#39;result&#39;: (&#39;L4.5&#39;, 0.71807866010293797),</span>
+<span class="go">     &#39;scale&#39;: [3.0379089778408642e-14,</span>
+<span class="go">      96.534933767992072,</span>
+<span class="go">      3.812718429200959,</span>
+<span class="go">      2.9878801833735986e-14,</span>
+<span class="go">      3.0353579048704484e-14],</span>
+<span class="go">     &#39;spectra&#39;: [Spectrum of DENIS-P J153941.96-052042.4,</span>
+<span class="go">      Spectrum of 2MASSI J0443058-320209,</span>
+<span class="go">      Spectrum of SDSSp J053951.99-005902.0,</span>
+<span class="go">      Spectrum of 2MASSI J1104012+195921,</span>
+<span class="go">      Spectrum of 2MASS J17502484-0016151],</span>
+<span class="go">     &#39;spt&#39;: [24.0, 25.0, 25.0, 24.0, 25.5],</span>
+<span class="go">     &#39;statistic&#39;: [&lt;Quantity 2108.997879536768&gt;,</span>
+<span class="go">      &lt;Quantity 2205.640664932956&gt;,</span>
+<span class="go">      &lt;Quantity 2279.316858783139&gt;,</span>
+<span class="go">      &lt;Quantity 2579.0089210846527&gt;,</span>
+<span class="go">      &lt;Quantity 2684.003187310027&gt;]}</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -818,30 +1296,47 @@ noise array elements.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Determine the gravity classification of a brown dwarf using the method of <a class="reference external" href="http://adsabs.harvard.edu/abs/2013ApJ...772...79A">Allers &amp; Liu (2013)</a></p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Determine the gravity classification of a brown dwarf using the method of <a class="reference external" href="http://adsabs.harvard.edu/abs/2013ApJ...772...79A">Allers &amp; Liu (2013)</a>.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
+<li><strong>sp</strong> (<em>required</em>) &#8211; Spectrum class object, which should contain wave, flux and
 noise array elements. Must be between M6.0 and L7.0.</li>
-<li><strong>indices</strong> (<em>optional, default = False</em>) &#8211; specify indices set using <code class="docutils literal"><span class="pre">measureIndexSet</span></code>.</li>
 <li><strong>spt</strong> (<em>optional, default = False</em>) &#8211; spectral type of <code class="docutils literal"><span class="pre">sp</span></code>. Must be between M6.0 and L7.0</li>
-<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; plot against spectral standard</li>
-<li><strong>allscores</strong> (<em>optional, default = False</em>) &#8211; returns the full result, including the gravity scores from different indices</li>
-<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
+<li><strong>indices</strong> (<em>optional, default = 'allers'</em>) &#8211; specify indices set using <code class="docutils literal"><span class="pre">measureIndexSet</span></code>.</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to plot sources against closest dwarf spectral standard</li>
+<li><strong>allscores</strong> (<em>optional, default = False</em>) &#8211; Set to True to return a dictionary containing the gravity scores from individual indices</li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; Give feedback while computing</li>
 </ul>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><p class="first">Either a string specifying the gravity classification or a dictionary specifying the gravity scores for each index</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
 <span class="go">    FLD-G</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">allscores</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
-<span class="go">    {&#39;VO-z&#39;: 0.0, &#39;FeH-z&#39;: 1.0, &#39;gravity_class&#39;: &#39;FLD-G&#39;, &#39;H-cont&#39;: 0.0, &#39;KI-J&#39;: 1.0, &#39;score&#39;: 0.5}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">allscores</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    Gravity Classification:</span>
+<span class="go">        SpT = L4.0</span>
+<span class="go">        VO-z: 1.012+/-0.029 =&gt; 0.0</span>
+<span class="go">        FeH-z: 1.299+/-0.031 =&gt; 1.0</span>
+<span class="go">        H-cont: 0.859+/-0.032 =&gt; 0.0</span>
+<span class="go">        KI-J: 1.114+/-0.038 =&gt; 1.0</span>
+<span class="go">        Gravity Class = FLD-G</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
+<span class="go">    {&#39;FeH-z&#39;: 1.0,</span>
+<span class="go">     &#39;H-cont&#39;: 0.0,</span>
+<span class="go">     &#39;KI-J&#39;: 1.0,</span>
+<span class="go">     &#39;VO-z&#39;: 0.0,</span>
+<span class="go">     &#39;gravity_class&#39;: &#39;FLD-G&#39;,</span>
+<span class="go">     &#39;score&#39;: 0.5,</span>
+<span class="go">     &#39;spt&#39;: &#39;L4.0&#39;}</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -853,29 +1348,29 @@ noise array elements. Must be between M6.0 and L7.0.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Compare two spectra against each other. Returns the stat value as well as
-the scale factor. Minimum possible value is 1.e-9.</p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Compare two spectra against each other using a pre-selected statistic. Returns the value of the desired statistic as well as the optimal scale factor. Minimum possible value for statistic is 1.e-9.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sp1</strong> &#8211; Spectrum class object</li>
-<li><strong>sp2</strong> &#8211; Spectrum class object to compare with <code class="docutils literal"><span class="pre">sp1</span></code></li>
-<li><strong>weights</strong> (<em>optional, default = [1, ..., 1] for len(sp1.wave)</em>) &#8211; set weights for flux values of <code class="docutils literal"><span class="pre">sp1</span></code></li>
-<li><strong>mask</strong> (<em>optional, default = [0, ..., 0] for len(sp1.wave)</em>) &#8211; mask any flux value of <code class="docutils literal"><span class="pre">sp1</span></code>; has to be an array with length equal as <code class="docutils literal"><span class="pre">sp1</span></code> with only 0 (unmask) or 1 (mask).</li>
-<li><strong>fit_ranges</strong> (<em>optional, default = [0.65,2.45]</em>) &#8211; wavelength range, measured in microns</li>
-<li><strong>mask_ranges</strong> (<em>optional, default = []</em>) &#8211; mask any flux value of <code class="docutils literal"><span class="pre">sp1</span></code> by specifying the wavelength range. Must be in microns</li>
-<li><strong>mask_telluric</strong> (<em>optional, default = False</em>) &#8211; masks certain wavelengths to avoid effects from telluric absorption</li>
-<li><strong>mask_standard</strong> (<em>optional, default = False</em>) &#8211; same as <code class="docutils literal"><span class="pre">mask_telluric</span></code></li>
-<li><strong>novar2</strong> (<em>optional, default = False</em>) &#8211; compute without using variance of <code class="docutils literal"><span class="pre">sp2</span></code></li>
-<li><strong>stat</strong> (<em>optional, default = 'chisqr'</em>) &#8211; <p>string defining which statistical method to use; available options are:</p>
+<li><strong>sp1</strong> (<em>required</em>) &#8211; First spectrum class object, which sets the wavelength scale</li>
+<li><strong>sp2</strong> (<em>required</em>) &#8211; Second spectrum class object, interpolated onto the wavelength scale of sp1</li>
+<li><strong>statistic</strong> (<em>optional, default = 'chisqr'</em>) &#8211; <p>string defining which statistic to use in comparison; available options are:</p>
 <ul>
-<li><em>&#8216;chisqr&#8217;</em>: compare by computing chi squared value</li>
+<li><em>&#8216;chisqr&#8217;</em>: compare by computing chi squared value (requires spectra with noise values)</li>
 <li><em>&#8216;stddev&#8217;</em>: compare by computing standard deviation</li>
 <li><em>&#8216;stddev_norm&#8217;</em>: compare by computing normalized standard deviation</li>
 <li><em>&#8216;absdev&#8217;</em>: compare by computing absolute deviation</li>
 </ul>
 </li>
-<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; plot <code class="docutils literal"><span class="pre">sp1</span></code> with scaled <code class="docutils literal"><span class="pre">sp2</span></code></li>
+<li><strong>fit_ranges</strong> (<em>optional, default = [0.65,2.45]</em>) &#8211; 2-element array or nested array of 2-element arrays specifying the wavelength ranges to be used for the fit, assumed to be measured in microns. This is effectively the opposite of mask_ranges.</li>
+<li><strong>weights</strong> (<em>optional, default = [1, ..., 1] for len(sp1.wave)</em>) &#8211; Array specifying the weights for individual wavelengths; must be an array with length equal to the wavelength scale of <code class="docutils literal"><span class="pre">sp1</span></code>; need not be normalized</li>
+<li><strong>mask_ranges</strong> (<em>optional, default = None</em>) &#8211; Multi-vector array setting wavelength boundaries for masking data, assumed to be in microns</li>
+<li><strong>mask</strong> (<em>optional, default = [0, ..., 0] for len(sp1.wave)</em>) &#8211; Array specifiying which wavelengths to mask; must be an array with length equal to the wavelength scale of <code class="docutils literal"><span class="pre">sp1</span></code> with only 0 (OK) or 1 (mask).</li>
+<li><strong>mask_telluric</strong> (<em>optional, default = False</em>) &#8211; Set to True to mask pre-defined telluric absorption regions</li>
+<li><strong>mask_standard</strong> (<em>optional, default = False</em>) &#8211; Like <code class="docutils literal"><span class="pre">mask_telluric</span></code>, with a slightly tighter cut of 0.80-2.35 micron</li>
+<li><strong>novar2</strong> (<em>optional, default = True</em>) &#8211; Set to True to compute statistic without considering variance of <code class="docutils literal"><span class="pre">sp2</span></code></li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to plot <code class="docutils literal"><span class="pre">sp1</span></code> with scaled <code class="docutils literal"><span class="pre">sp2</span></code> and difference spectrum overlaid</li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; Set to True to report things as you&#8217;re going along</li>
 </ul>
 </td>
 </tr>
@@ -886,14 +1381,19 @@ the scale factor. Minimum possible value is 1.e-9.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s1">&#39;2346-3153&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">    Retrieving 1 file</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s1">&#39;1421+1827&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">)</span>
-<span class="go">    (&lt;Quantity 17633.117108524682&gt;, 1.1354366238893992e-15)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sp1</span><span class="o">.</span><span class="n">wave</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">[</span><span class="mi">200</span><span class="p">:</span><span class="mi">300</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">m_range</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.3</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">m</span><span class="p">,</span> <span class="n">mask_ranges</span> <span class="o">=</span> <span class="n">m_range</span><span class="p">,</span> <span class="n">novar2</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
-<span class="go">    (&lt;Quantity 18980.062433571456&gt;, 1.1694685419610533e-15)</span>
+<span class="go">    Retrieving 1 file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;chisqr&#39;</span><span class="p">)</span>
+<span class="go">    (&lt;Quantity 19927.74527822856&gt;, 0.94360732593223595)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;stddev&#39;</span><span class="p">)</span>
+<span class="go">    (&lt;Quantity 3.0237604611215705 erg2 / (cm4 micron2 s2)&gt;, 0.98180983971456637)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;absdev&#39;</span><span class="p">)</span>
+<span class="go">    (&lt;Quantity 32.99816249949072 erg / (cm2 micron s)&gt;, 0.98155779612333172)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;chisqr&#39;</span><span class="p">,</span> <span class="n">novar2</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">    (&lt;Quantity 17071.690727945213&gt;, 0.94029474635786015)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -907,11 +1407,13 @@ the scale factor. Minimum possible value is 1.e-9.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Converts right ascension and declination into a designation string</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>c</strong> &#8211; RA and Dec to be converted; can be a SkyCoord object with units of degrees,
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>c</strong> &#8211; RA and Dec coordinate to be converted; can be a SkyCoord object with units of degrees,
 a list with RA and Dec in degrees, or a string with RA measured in hour
 angles and Dec in degrees</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body">Designation string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -930,21 +1432,23 @@ angles and Dec in degrees</td>
 
 <dl class="function">
 <dt id="splat.dateToCaldate">
-<code class="descclassname">splat.</code><code class="descname">dateToCaldate</code><span class="sig-paren">(</span><em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.dateToCaldate" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">splat.</code><code class="descname">dateToCaldate</code><span class="sig-paren">(</span><em>date</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.dateToCaldate" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Converts numeric date to calendar date</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> &#8211; string in the form &#8216;YYYYMMDD&#8217;</td>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>date</strong> &#8211; String in the form &#8216;YYYYMMDD&#8217;</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body">Date in format YYYY MMM DD</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">dateToCaldate</span><span class="p">(</span><span class="s1">&#39;19940523&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">dateToCaldate</span><span class="p">(</span><span class="s1">&#39;19940523&#39;</span><span class="p">)</span>
 <span class="go">    1994 May 23</span>
 </pre></div>
 </div>
@@ -957,22 +1461,26 @@ angles and Dec in degrees</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Convert a designation into a RA, Dec tuple or ICRS</p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Convert a designation srtring into a RA, Dec tuple or ICRS SkyCoord objects (default)</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>value</strong> &#8211; string with RA measured in hour angles and Dec in degrees</li>
-<li><strong>icrs</strong> (<em>optional, defualt = True</em>) &#8211; returns coordinate in ICRS frame if <code class="docutils literal"><span class="pre">True</span></code></li>
+<li><strong>value</strong> (<em>required</em>) &#8211; Designation string with RA measured in hour angles and Dec in degrees</li>
+<li><strong>icrs</strong> (<em>optional, defualt = True</em>) &#8211; returns astropy SkyCoord coordinate in ICRS frame if <code class="docutils literal"><span class="pre">True</span></code></li>
 </ul>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><p class="first">Coordinate, either as [RA, Dec] or SkyCoord object</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">designationToCoordinate</span><span class="p">(</span><span class="s1">&#39;1555.2640+0954.000&#39;</span><span class="p">)</span>
-<span class="go">    &lt;SkyCoord (ICRS): ra=238.86 deg, dec=9.9 deg&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">designationToCoordinate</span><span class="p">(</span><span class="s1">&#39;J1555264+0954120&#39;</span><span class="p">)</span>
+<span class="go">&lt;SkyCoord (ICRS): (ra, dec) in deg</span>
+<span class="go">    (238.8585, 9.90333333)&gt;</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -986,14 +1494,16 @@ angles and Dec in degrees</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Produce a shortened version of designation</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> &#8211; string with RA measured in hour angles and Dec in degrees</td>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>required</em>) &#8211; Designation string with RA measured in hour angles and Dec in degrees</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body">Shorthand designation string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">designationToShortName</span><span class="p">(</span><span class="s1">&#39;1555.2640+0954.000&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">designationToShortName</span><span class="p">(</span><span class="s1">&#39;J1555264+0954120&#39;</span><span class="p">)</span>
 <span class="go">    J1555+0954</span>
 </pre></div>
 </div>
@@ -1054,42 +1564,51 @@ uncertainty in parsecs</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.filterMag">
-<code class="descclassname">splat.</code><code class="descname">filterMag</code><span class="sig-paren">(</span><em>sp</em>, <em>f</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterMag" title="Permalink to this definition">¶</a></dt>
+<dt id="splat.filterInfo">
+<code class="descclassname">splat.</code><code class="descname">filterInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterInfo" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Determine the photometric magnitude of a source based on the
-spectrum. Spectra are convolved with the filter specified by
-the <code class="docutils literal"><span class="pre">filter</span></code> input.  By default this filter is also
-convolved with a model of Vega to extract Vega magnitudes,
-but the user can also specify AB magnitudes, photon flux or
-energy flux.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Prints out the current list of filters in the SPLAT reference library.</td>
 </tr>
 </tbody>
 </table>
-<table class="docutils field-list" frame="void" rules="none">
+</dd></dl>
+
+<dl class="function">
+<dt id="splat.filterMag">
+<code class="descclassname">splat.</code><code class="descname">filterMag</code><span class="sig-paren">(</span><em>sp</em>, <em>filter</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterMag" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Determine the photometric magnitude of a source based on its
+spectrum. Spectral fluxes are convolved with the filter profile specified by
+the <code class="docutils literal"><span class="pre">filter</span></code> input.  By default this filter is also
+convolved with a model of Vega to extract Vega magnitudes,
+but the user can also specify AB magnitudes, photon flux or
+energy flux.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp</strong> (<em>required</em>) &#8211; Spectrum class object, which should contain wave, flux and
 noise array elements.</li>
-<li><strong>filter</strong> &#8211; name of filter</li>
-<li><strong>info</strong> (<em>optional, default = False</em>) &#8211; give the filter names available</li>
-<li><strong>custom</strong> (<em>optional, default = False</em>) &#8211; specify to a 2 x N vector array specifying the wavelengths and transmissions for a custom filter</li>
-<li><strong>ab</strong> (<em>optional, default = False</em>) &#8211; compute AB magnitudes</li>
+<li><strong>filter</strong> (<em>required</em>) &#8211; String giving name of filter, which can either be one of the predefined filters listed in splat.FILTERS.keys() or a custom filter name</li>
+<li><strong>custom</strong> (<em>optional, default = None</em>) &#8211; A 2 x N vector array specifying the wavelengths and transmissions for a custom filter</li>
+<li><strong>notch</strong> (<em>optional, default = None</em>) &#8211; A 2 element array that specifies the lower and upper wavelengths for a notch filter (100% transmission within, 0% transmission without)</li>
 <li><strong>vega</strong> (<em>optional, default = True</em>) &#8211; compute Vega magnitudes</li>
+<li><strong>ab</strong> (<em>optional, default = False</em>) &#8211; compute AB magnitudes</li>
 <li><strong>energy</strong> (<em>optional, default = False</em>) &#8211; compute energy flux</li>
 <li><strong>photon</strong> (<em>optional, default = False</em>) &#8211; compute photon flux</li>
-<li><strong>filterFolder</strong> (<em>optional, default = ''</em>) &#8211; folder containing the filter transmission files</li>
-<li><strong>vegaFile</strong> (<em>optional, default = ''</em>) &#8211; name of file containing Vega flux file, must be within <code class="docutils literal"><span class="pre">filterFolder</span></code></li>
+<li><strong>filterFolder</strong> (<em>optional, default = splat.FILTER_FOLDER</em>) &#8211; folder containing the filter transmission files</li>
+<li><strong>vegaFile</strong> (<em>optional, default = vega_kurucz.txt</em>) &#8211; name of file containing Vega flux file, must be within <code class="docutils literal"><span class="pre">filterFolder</span></code></li>
 <li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of samples to use in Monte Carlo error estimation</li>
+<li><strong>info</strong> (<em>optional, default = False</em>) &#8211; List the predefined filter names available</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -1104,27 +1623,43 @@ noise array elements.</li>
 
 <dl class="function">
 <dt id="splat.filterProperties">
-<code class="descclassname">splat.</code><code class="descname">filterProperties</code><span class="sig-paren">(</span><em>f</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterProperties" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">splat.</code><code class="descname">filterProperties</code><span class="sig-paren">(</span><em>filter</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterProperties" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Returns a dictionary containing key factors about a filter profile.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Returns a dictionary containing key parameters for a particular filter.</p>
+</td>
 </tr>
-</tbody>
-</table>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name'</strong> (<em>'filter</em>) &#8211; name of filter, must be one of the specifed filters given by splat.FILTERS</li>
-<li><strong>verbose</strong> &#8211; print out information about filter to screen</li>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filter</strong> (<em>required</em>) &#8211; name of filter, must be one of the specifed filters given by splat.FILTERS.keys()</li>
+<li><strong>verbose</strong> (<em>optional, default = True</em>) &#8211; print out information about filter to screen</li>
 </ul>
 </td>
 </tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
 </tbody>
 </table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">filterProperties</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
+<span class="go">Filter 2MASS J: 2MASS J-band</span>
+<span class="go">Zeropoint = 1594.0 Jy</span>
+<span class="go">Pivot point: = 1.252 micron</span>
+<span class="go">FWHM = 0.323 micron</span>
+<span class="go">Wavelength range = 1.066 to 1.442 micron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">filterProperties</span><span class="p">(</span><span class="s1">&#39;2MASS X&#39;</span><span class="p">)</span>
+<span class="go">Filter 2MASS X not among the available filters:</span>
+<span class="go">  2MASS H: 2MASS H-band</span>
+<span class="go">  2MASS J: 2MASS J-band</span>
+<span class="go">  2MASS KS: 2MASS Ks-band</span>
+<span class="go">  BESSEL I: Bessel I-band</span>
+<span class="go">  FOURSTAR H: FOURSTAR H-band</span>
+<span class="go">  FOURSTAR H LONG: FOURSTAR H long</span>
+<span class="go">  FOURSTAR H SHORT: FOURSTAR H short</span>
+<span class="go">  ...</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -1134,7 +1669,7 @@ noise array elements.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets a spectrum from the SPLAT library using various selection criteria.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets a spectrum from the SPLAT library using various selection criteria. Calls <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. See <a href="#id21"><span class="problematic" id="id22">splat.searchLibrary_</span></a> for full list of search parameters.</td>
 </tr>
 </tbody>
 </table>
@@ -1142,30 +1677,7 @@ noise array elements.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sp</strong> &#8211; array of Spectrum class objects, each of which should contain wave, flux and
-noise array elements.</li>
-<li><strong>name</strong> (<em>optional</em>) &#8211; search by source name (e.g., <code class="docutils literal"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">'Gliese</span> <span class="pre">570D'</span></code>)</li>
-<li><strong>shortname</strong> (<em>optional</em>) &#8211; search be short name (e.g. <code class="docutils literal"><span class="pre">shortname</span> <span class="pre">=</span> <span class="pre">'J1457-2124'</span></code>)</li>
-<li><strong>designation</strong> (<em>optional</em>) &#8211; search by full designation (e.g., <code class="docutils literal"><span class="pre">designation</span> <span class="pre">=</span> <span class="pre">'J11040127+1959217'</span></code>)</li>
-<li><strong>coordinate</strong> (<em>optional</em>) &#8211; search around a coordinate by a radius specified by radius keyword (e.g., <code class="docutils literal"><span class="pre">coordinate</span> <span class="pre">=</span> <span class="pre">[180.,+30.],</span> <span class="pre">radius</span> <span class="pre">=</span> <span class="pre">10.</span></code>)</li>
-<li><strong>radius</strong> (<em>optional, default = 10</em>) &#8211; search radius in arcseconds for coordinate search</li>
-<li><strong>spt</strong> (<em>optional</em>) &#8211; search by SpeX spectral type; single value is exact, two-element array gives range (e.g., <code class="docutils literal"><span class="pre">spt</span> <span class="pre">=</span> <span class="pre">'M7'</span></code> or <code class="docutils literal"><span class="pre">spt</span> <span class="pre">=</span> <span class="pre">[24,39]</span></code>)</li>
-<li><strong>spex_spt</strong> (<em>optional</em>) &#8211; same as <code class="docutils literal"><span class="pre">spt</span></code></li>
-<li><strong>opt_spt</strong> (<em>optional</em>) &#8211; same as <code class="docutils literal"><span class="pre">spt</span></code> for literature optical spectral types</li>
-<li><strong>nir_spt</strong> (<em>optional</em>) &#8211; same as <code class="docutils literal"><span class="pre">spt</span></code> for literature NIR spectral types</li>
-<li><strong>jmag, hmag, kmag</strong> (<em>optional</em>) &#8211; select based on faint limit or range of J, H or Ks magnitudes (e.g., <code class="docutils literal"><span class="pre">jmag</span> <span class="pre">=</span> <span class="pre">[12,15]</span></code>)</li>
-<li><strong>snr</strong> (<em>optional</em>) &#8211; search on minimum or range of S/N ratios (e.g., <code class="docutils literal"><span class="pre">snr</span> <span class="pre">=</span> <span class="pre">30.</span></code> or <code class="docutils literal"><span class="pre">snr</span> <span class="pre">=</span> <span class="pre">[50.,100.]</span></code>)</li>
-<li><strong>subdwarf, young, binary, spbinary, red, blue, giant, wd, standard</strong> (<em>optional</em>) &#8211; classes to search on (e.g., <code class="docutils literal"><span class="pre">young</span> <span class="pre">=</span> <span class="pre">True</span></code>)</li>
-<li><strong>logic</strong> (<em>optional, default = 'and'</em>) &#8211; search logic, can be <code class="docutils literal"><span class="pre">and</span></code> or <code class="docutils literal"><span class="pre">or</span></code></li>
-<li><strong>combine</strong> (<em>optional, default = 'and'</em>) &#8211; same as logic</li>
-<li><strong>date</strong> (<em>optional</em>) &#8211; search by date (e.g., <code class="docutils literal"><span class="pre">date</span> <span class="pre">=</span> <span class="pre">'20040322'</span></code>) or range of dates (e.g., <code class="docutils literal"><span class="pre">date=[20040301,20040330]</span></code>)</li>
-<li><strong>reference</strong> (<em>optional</em>) &#8211; search by list of references (bibcodes) (e.g., <code class="docutils literal"><span class="pre">reference</span> <span class="pre">=</span> <span class="pre">'2011ApJS..197...19K'</span></code>)</li>
-<li><strong>sort</strong> (<em>optional, default = True</em>) &#8211; sort results based on Right Ascension</li>
-<li><strong>list</strong> (<em>optional, default = False</em>) &#8211; if True, return just a list of the data files (can be done with searchLibrary as well)</li>
-<li><strong>lucky</strong> (<em>optional, default = False</em>) &#8211; if True, return one randomly selected spectrum from the selected sample</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body">An array of Spectrum objects that satisfy the search criteria</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
@@ -1189,24 +1701,17 @@ noise array elements.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets one of the pre-defined spectral standards from the SPLAT library.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Gets one of the pre-defined spectral standards from the SPLAT library.</p>
+</td>
 </tr>
-</tbody>
-</table>
-<p>NOTE: THIS PROGRAM MAY BE OBSOLETE</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sp</strong> &#8211; array of Spectrum class objects</li>
-<li><strong>spt</strong> &#8211; spectral type of standard desired (&#8216;M7&#8217;)</li>
-<li><strong>sd</strong> (<em>optional, default = False</em>) &#8211; get subdwarf standard</li>
-<li><strong>esd</strong> (<em>optional, default = False</em>) &#8211; get extreme subdwarf standard</li>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>spt</strong> (<em>required</em>) &#8211; Spectral type of standard desired, either string (&#8216;M7&#8217;) or numberic (17)</li>
+<li><strong>sd</strong> (<em>optional, default = False</em>) &#8211; Set to True to get a subdwarf standard</li>
+<li><strong>esd</strong> (<em>optional, default = False</em>) &#8211; Set to True to get an extreme subdwarf standard</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -1227,27 +1732,23 @@ noise array elements.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Initiates the spectral standards (dwarf, subdwarf or extreme subdwarf) in the SpeX library.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Initiates the spectral standards in the SpeX library. By default this loads the dwarfs standards, but you can also specify loading of subdwarf and extreme subdwarf standards as well. Once loaded, these standards remain in memory.</p>
+</td>
 </tr>
-</tbody>
-</table>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sd</strong> (<em>optional, default = False</em>) &#8211; get subdwarf standard</li>
-<li><strong>esd</strong> (<em>optional, default = False</em>) &#8211; get extreme subdwarf standard</li>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sd</strong> (<em>optional, default = False</em>) &#8211; Set equal to True to load subdwarf standards</li>
+<li><strong>esd</strong> (<em>optional, default = False</em>) &#8211; Set equal to True to load extreme subdwarf standards</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">initiateStandards</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">SPEX_SDS</span><span class="p">[</span><span class="s1">&#39;M5&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">SPEX_STDS</span><span class="p">[</span><span class="s1">&#39;M5.0&#39;</span><span class="p">]</span>
+<span class="go">Spectrum of Gl51</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1261,9 +1762,11 @@ noise array elements.</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Checks if something is a number.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> &#8211; object to be checked</td>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<em>required</em>) &#8211; object to be checked</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body">True or False</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -1361,6 +1864,7 @@ output is index value and uncertainty</td>
 <li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and noise array elements</li>
 <li><strong>set</strong> (<em>optional, default = 'burgasser'</em>) &#8211; <p>string defining which indices set you want to use; options include:</p>
 <ul>
+<li><em>bardalez</em>: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J, H-dip, K-slope, J-slope, J-curve, H-bump, H2O-Y from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...794..143B">Bardalez Gagliuffi et al. (2014)</a></li>
 <li><em>burgasser</em>: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...637.1067B">Burgasser et al. (2006)</a></li>
 <li><em>tokunaga</em>: K1, K2 from <a class="reference external" href="http://adsabs.harvard.edu/abs/1999AJ....117.1010T">Tokunaga &amp; Kobayashi (1999)</a></li>
 <li><em>reid</em>: H2O-A, H2O-B from <a class="reference external" href="http://adsabs.harvard.edu/abs/2001AJ....121.1710R">Reid et al. (2001)</a></li>
@@ -1424,7 +1928,7 @@ output is index value and uncertainty</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Converts various coordinate forms to the proper SkyCoord format. Convertible forms include lists and strings.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>c</strong> &#8211; coordinate to be converted. Can be a list or a string.</td>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>c</strong> &#8211; coordinate to be converted. Can be a list (ra, dec) or a string.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
@@ -1434,6 +1938,8 @@ output is index value and uncertainty</td>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">properCoordinates</span><span class="p">([</span><span class="mf">104.79</span><span class="p">,</span> <span class="mf">25.06</span><span class="p">])</span>
 <span class="go">    &lt;SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">properCoordinates</span><span class="p">(</span><span class="s1">&#39;06:59:09.60 +25:03:36.0&#39;</span><span class="p">)</span>
+<span class="go">    &lt;SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">properCoordinates</span><span class="p">(</span><span class="s1">&#39;J06590960+2503360&#39;</span><span class="p">)</span>
 <span class="go">    &lt;SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg&gt;</span>
 </pre></div>
 </div>
@@ -1488,6 +1994,48 @@ using Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245)</dd>
 <li>If <code class="docutils literal"><span class="pre">compareSpectra</span></code> functions properly</li>
 <li>If <code class="docutils literal"><span class="pre">plotSpectrum</span></code> functions properly</li>
 </ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat.typeToColor">
+<code class="descclassname">splat.</code><code class="descname">typeToColor</code><span class="sig-paren">(</span><em>spt</em>, <em>color</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.typeToColor" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Takes a spectral type and optionally a color (string) and returns the typical color of the source.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>spt</strong> &#8211; string or integer of the spectral type</li>
+<li><strong>color</strong> (<em>optional, default = 'J-K'</em>) &#8211; string indicating color; e.g., color=&#8217;i-z&#8217; (note that case does not matter)</li>
+<li><strong>ref</strong> (<em>optional, default = 'dupuy'</em>) &#8211; <p>Abs Mag/SpT relation used to compute the absolute magnitude. Options are:</p>
+<ul>
+<li><em>skrzypek</em> (default): Color trends from <a class="reference external" href="http://adsabs.harvard.edu/abs/2015A%26A...574A..78S">Skryzpek et al. (2015)</a>.
+Spectral type range is M5 to T8
+Colors include i-z, z-Y, Y-J, J-H, H-K, K-W1, W1-W2, and combinations therein.</li>
+</ul>
+</li>
+<li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of Monte Carlo samples for error computation</li>
+<li><strong>unc</strong> (<em>optional, default = 0.</em>) &#8211; uncertainty of <code class="docutils literal"><span class="pre">spt</span></code>; if included, returns a tuple with color and uncertainty</li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; Give feedback while in operation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToColor</span><span class="p">(</span><span class="s1">&#39;L3&#39;</span><span class="p">,</span> <span class="s1">&#39;J-K&#39;</span><span class="p">)</span>
+<span class="go">    XXXX</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M5&#39;</span><span class="p">,</span> <span class="s1">&#39;i-K&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">,</span> <span class="n">unc</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">    (XXXX, XXXX)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">,</span> <span class="s1">&#39;i-z&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">)</span>
+<span class="go">    Spectral Type is out of range for Color/SpT trends from Skryzpek et al. (2015)</span>
+<span class="go">    nan</span>
+</pre></div>
+</div>
 </td>
 </tr>
 </tbody>

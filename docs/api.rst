@@ -1,8 +1,17 @@
 API
 ===============================================
 
-Main SPLAT Routines
---------------------
+SPLAT Classes
+-------------
+
+Spectrum
+^^^^^^^^
+.. autoclass:: splat.Spectrum
+	:members:
+
+
+SPLAT Routines
+--------------
 
 Data Access
 ^^^^^^^^^^^
@@ -21,13 +30,20 @@ Spectral Classification
 .. autofunction:: splat.classifyByStandard
 .. autofunction:: splat.classifyByTemplate
 .. autofunction:: splat.classifyGravity
+.. autofunction:: splat.initiateStandards
 .. autofunction:: splat.metallicity
+
+
+Spectrophotometry
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: splat.filterInfo
+.. autofunction:: splat.filterProperties
+.. autofunction:: splat.filterMag
 
 
 Other Spectral Analyses
 ^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat.compareSpectra
-.. autofunction:: splat.filterMag
 .. autofunction:: splat.measureIndex
 .. autofunction:: splat.measureIndexSet
 .. autofunction:: splat.measureEW
@@ -75,13 +91,17 @@ Modeling Routines
 Evolutionary Model Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+EUCLID Analysis Routines
+^^^^^^^^^^^^^^^^^
+.. autofunction:: splat_euclid.spexToEuclid
+.. autofunction:: splat_euclid.addEuclidNoise
+
 
 Other Calculation Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat.test
 .. autofunction:: splat.weightMeanVar
 .. autofunction:: splat_model.distributionStats
-
 
 
 BibTeX Routines
