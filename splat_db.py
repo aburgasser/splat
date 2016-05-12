@@ -175,6 +175,16 @@ def shortRef(bib_dict,**kwargs):
     else:
         output = '{} et al.'.format(authors[0].replace('~',' '))
 
+# fill in missing data
+    if 'year' not in bib_dict.keys():
+        bib_dict['year'] = ''
+    if 'journal' not in bib_dict.keys():
+        bib_dict['journal'] = ''
+    if 'volume' not in bib_dict.keys():
+        bib_dict['volume'] = ''
+    if 'pages' not in bib_dict.keys():
+        bib_dict['pages'] = ''
+
     return output+' ({}, {}, {}, {})'.format(bib_dict['year'],bib_dict['journal'],bib_dict['volume'],bib_dict['pages'])
 
 
@@ -209,6 +219,18 @@ def longRef(bib_dict,**kwargs):
         output = '{}, {} & {}'.format(authors[0].replace('~',' '),authors[1].replace('~',' '),authors[2].replace('~',' '))
     else:
         output = '{}, {}, {}, et al'.format(authors[0].replace('~',' '),authors[1].replace('~',' '),authors[2].replace('~',' '))
+
+# fill in missing data
+    if 'year' not in bib_dict.keys():
+        bib_dict['year'] = ''
+    if 'title' not in bib_dict.keys():
+        bib_dict['title'] = ''
+    if 'journal' not in bib_dict.keys():
+        bib_dict['journal'] = ''
+    if 'volume' not in bib_dict.keys():
+        bib_dict['volume'] = ''
+    if 'pages' not in bib_dict.keys():
+        bib_dict['pages'] = ''
 
     return output+'. {}. {}, {}, {} ({})'.format(bib_dict['title'],bib_dict['journal'],bib_dict['volume'],bib_dict['pages'],bib_dict['year'])
 
@@ -736,6 +758,35 @@ def keySpectrum(keys, **kwargs):
 def searchLibrary(*args, **kwargs):
     '''
     :Purpose: Search the SpeX database to extract the key reference for that Spectrum
+
+    :param optional name: search by source name (e.g., ``name = 'Gliese 570D'``)
+    :param optional shortname: search be short name (e.g. ``shortname = 'J1457-2124'``)
+    :param optional designation: search by full designation (e.g., ``designation = 'J11040127+1959217'``)
+    :param optional coordinate: search around a coordinate by a radius specified by radius keyword (e.g., ``coordinate = [180.,+30.], radius = 10.``)
+    :param radius: search radius in arcseconds for coordinate search
+    :type radius: optional, default = 10
+    :param optional spt: search by SpeX spectral type; single value is exact, two-element array gives range (e.g., ``spt = 'M7'`` or ``spt = [24,39]``)
+    :param optional spex_spt: same as ``spt``
+    :param optional opt_spt: same as ``spt`` for literature optical spectral types
+    :param optional nir_spt: same as ``spt`` for literature NIR spectral types
+    :param optional jmag, hmag, kmag: select based on faint limit or range of J, H or Ks magnitudes (e.g., ``jmag = [12,15]``)
+    :param optional snr: search on minimum or range of S/N ratios (e.g., ``snr = 30.`` or ``snr = [50.,100.]``)
+    :param optional subdwarf, young, binary, spbinary, red, blue, giant, wd, standard: classes to search on (e.g., ``young = True``)
+    :param logic: search logic, can be ``and`` or ``or``
+    :type logic: optional, default = 'and'
+    :param combine: same as logic
+    :type combine: optional, default = 'and'
+    :param optional date: search by date (e.g., ``date = '20040322'``) or range of dates (e.g., ``date=[20040301,20040330]``)
+    :param optional reference: search by list of references (bibcodes) (e.g., ``reference = '2011ApJS..197...19K'``)
+    :param sort: sort results based on Right Ascension
+    :type sort: optional, default = True
+    :param list: if True, return just a list of the data files (can be done with searchLibrary as well)
+    :type list: optional, default = False
+    :param lucky: if True, return one randomly selected spectrum from the selected sample
+    :type lucky: optional, default = False
+
+
+    
     :param output: returns desired output of selected results
     :type output: optional, default = 'all'
     :param logic: search logic, can be and`` or ``or``

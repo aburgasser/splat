@@ -90,7 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Main SPLAT module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#the-splat-object">The SPLAT object</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-splat-spectrum-object">The SPLAT Spectrum object</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#built-in-commands">Built-in Commands</a></li>
 </ul>
 </li>
@@ -154,9 +154,9 @@
 <h1>Main SPLAT module<a class="headerlink" href="#main-splat-module" title="Permalink to this headline">¶</a></h1>
 <p>The primary SPLAT module contains the definition of the core Spectrum object and associated function,
 standard classification and spectral analysis routines, and helper functions.</p>
-<div class="section" id="the-splat-object">
-<h2>The SPLAT object<a class="headerlink" href="#the-splat-object" title="Permalink to this headline">¶</a></h2>
-<p>Spectal data are manipulated through a SPLAT class object, which contains the relevant data (wavelength,
+<div class="section" id="the-splat-spectrum-object">
+<h2>The SPLAT Spectrum object<a class="headerlink" href="#the-splat-spectrum-object" title="Permalink to this headline">¶</a></h2>
+<p>Spectal data are manipulated as a Spectrum object, which contains the relevant data (wavelength,
 flux, uncertainty) and additional information on the source and/or observation.  A Spectrum object is
 the output of the various database access routines:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1"># note that getSpectrum returns a list</span>
@@ -170,10 +170,39 @@ the output of the various database access routines:</p>
 </pre></div>
 </div>
 <p>Note that this file must conform to the standard of the SPL data: the first column is
-wavelength in microns, second column flux in f_lambda units, third column (optional) is
+wavelength in microns, second column flux in <div class="system-message">
+<p class="system-message-title">System Message: WARNING/2 (<tt class="docutils">F_\\lambda</tt>)</p>
+latex exited with error
+[stdout]
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=latex)
+ restricted \write18 enabled.
+entering extended mode
+(./math.tex
+LaTeX2e &lt;2014/05/01&gt;
+Babel &lt;3.9k&gt; and hyphenation patterns for 78 languages loaded.
+
+! LaTeX Error: File `article.cls&#8217; not found.
+
+Type X to quit or &lt;RETURN&gt; to proceed,
+or enter new name. (Default extension: cls)
+
+Enter file name: 
+! Emergency stop.
+&lt;read *&gt; 
+         
+l.3 \usepackage
+               [utf8x]{inputenc}^^M
+No pages of output.
+Transcript written on math.log.
+</div>
+ units, third column (optional) is
 flux uncertainty. The file can be a fits or ascii file.</p>
+<p>You can also access a file based on its unique spectum key</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="mi">10002</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>There are many aspects of the Spectrum object that can be referenced or set, all of which are
-described in the API entry. Some primary examples:</p>
+described in the <a class="reference external" href="api.html#spectrum">API entry</a>. Some primary examples:</p>
 <dl class="docutils">
 <dt><code class="docutils literal"><span class="pre">sp.wave</span></code>, <code class="docutils literal"><span class="pre">sp.flux</span></code>, <code class="docutils literal"><span class="pre">sp.noise</span></code></dt>
 <dd>Wavelengths, flux density (per wavelength) values, and flux uncertainty of the spectrum (uncertainty = NaN for models)</dd>
@@ -185,27 +214,34 @@ described in the API entry. Some primary examples:</p>
 <dd>Median estimate of spectrum signal-to-noise</dd>
 <dt><code class="docutils literal"><span class="pre">sp.header</span></code></dt>
 <dd>Fits header (dictionary) from original file, if present</dd>
-<dt><code class="docutils literal"><span class="pre">sp.teff</span></code>, <code class="docutils literal"><span class="pre">sp.logg</span></code>, <code class="docutils literal"><span class="pre">sp.z</span></code>, <code class="docutils literal"><span class="pre">sp.fsed</span></code>, <code class="docutils literal"><span class="pre">sp.cld</span></code>, <code class="docutils literal"><span class="pre">sp.kzz</span></code>,</dt>
+<dt><code class="docutils literal"><span class="pre">sp.teff</span></code>, <code class="docutils literal"><span class="pre">sp.logg</span></code>, <code class="docutils literal"><span class="pre">sp.z</span></code>, <code class="docutils literal"><span class="pre">sp.fsed</span></code>, <code class="docutils literal"><span class="pre">sp.cld</span></code>, <code class="docutils literal"><span class="pre">sp.kzz</span></code></dt>
 <dd>If Spectrum is a model, these values give the effective temperature (in K), log surface gravity (cm/s<sup>2</sup>),
 log metallicity (relative to Sun), sedimentation efficient f:sub: sed(for Saumon &amp; Marley 2012 models),
 cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffusion constant</dd>
 </dl>
-<p>The class <code class="docutils literal"><span class="pre">info()</span></code> command produces a summary of the Spectrum object&#8217;s primary information:</p>
-<p>&gt;&gt;&gt;sp.info()</p>
 <div class="section" id="built-in-commands">
 <h3>Built-in Commands<a class="headerlink" href="#built-in-commands" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>To scale a spectrum</li>
-<li>To flux calibrate the spectrum, use the object&#8217;s built in <code class="docutils literal"><span class="pre">fluxCalibrate()</span></code> method:</li>
+<li>Information on the Spectrum object</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.0</span><span class="p">)</span>
+<p>The <code class="docutils literal"><span class="pre">info()</span></code> command produces a summary of the Spectrum object&#8217;s primary information:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">showHistory()</span></code> command provides a summary of actions taken to maniupate a Spectrum object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">showHistory</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If you make changes to your Spectrum object, you can in many cases return it to its original state using the <code class="docutils literal"><span class="pre">reset()</span></code> function</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li>To display the spectrum, use the Spectrum object&#8217;s plot function</li>
+<li>To display the spectrum, use the Spectrum object&#8217;s plot function, which makes use of the many options available in the <a class="reference external" href="splat_plot.html">plotSpectrum</a> routine</li>
 </ul>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Awesome source&#39;</span><span class="p">,</span> <span class="n">telluric</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">file</span><span class="o">=</span><span class="s1">&#39;plot_output.eps&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You can save this display by adding a filename:</p>
@@ -213,21 +249,263 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 </pre></div>
 </div>
 <ul class="simple">
-<li>Spectral math</li>
+<li>Saving a spectrum</li>
 </ul>
+<p>A spectrum contained in a Spectrum object can be output to a file using the built-in export() or save() commands; both fits and tab-delimited ascii outputs are supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;myspectrum.fits&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="spectral-analysis">
 <h2>Spectral Analysis<a class="headerlink" href="#spectral-analysis" title="Permalink to this headline">¶</a></h2>
 <p>SPLAT has several routines to do basic spectral analysis and combining of spectra.</p>
+<ul class="simple">
+<li>Scaling a spectrum</li>
+</ul>
+<p>Spectra can be scaled by an arbitrary factor:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">1.e9</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or simply normalized:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>Spectral math</li>
+</ul>
+<p>Spectrum objects can be manipulated through normal arithmetic operations, which function on a wavelength-by-wavelength scale and properly propogate uncertainties</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span><span class="o">+</span><span class="n">sp2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span><span class="o">-</span><span class="n">sp2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span><span class="o">*</span><span class="n">sp2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span><span class="o">/</span><span class="n">sp2</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="spectrophotometry">
 <h2>Spectrophotometry<a class="headerlink" href="#spectrophotometry" title="Permalink to this headline">¶</a></h2>
-<p>SPLAT allows spectrophotometry of spectra using common filters in the red optical and near-infared.</p>
+<p>SPLAT allows spectrophotometry of spectra using common filters in the red optical and near-infrared. The filter transmission files are stored in the SPLAT reference library, and are accessed by name.  A list of current filters can be made by through the <a href="#id1"><span class="problematic" id="id2">``</span></a>filterInfo()``_ routine:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterInfo</span><span class="p">()</span>
+<span class="go">  2MASS H: 2MASS H-band</span>
+<span class="go">  2MASS J: 2MASS J-band</span>
+<span class="go">  2MASS KS: 2MASS Ks-band</span>
+<span class="go">  BESSEL I: Bessel I-band</span>
+<span class="go">  FOURSTAR H: FOURSTAR H-band</span>
+<span class="go">  FOURSTAR H LONG: FOURSTAR H long</span>
+<span class="go">  ...</span>
+</pre></div>
+</div>
+<p>You can access specific information about a given filter profile with the <a href="#id3"><span class="problematic" id="id4">``</span></a>filterProperties()``_ routine</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">filterProperties</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
+<span class="go">        Filter 2MASS J: 2MASS J-band</span>
+<span class="go">        Zeropoint = 1594.0 Jy</span>
+<span class="go">        Pivot point: = 1.252 micron</span>
+<span class="go">        FWHM = 0.280 micron</span>
+<span class="go">        Wavelength range = 1.075 to 1.416 micron</span>
+</pre></div>
+</div>
+<p>The <a href="#id5"><span class="problematic" id="id6">``</span></a>filterMag()``_ routine determines the photometric magnitude of a source based on its spectrum, by convolving fluxes with a defined filter profile:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)</span>
+<span class="go">    (14.346586427733005, 0.032091919093387822)</span>
+</pre></div>
+</div>
+<p>By default the filter is convolved with a model of Vega to extract Vega magnitudes, but the user can also set the <code class="docutils literal"><span class="pre">ab</span></code> parameter to get AB magnitudes, the <code class="docutils literal"><span class="pre">photon</span></code> parameter to get photon flux, or the <code class="docutils literal"><span class="pre">energy</span></code> parameter to get total energy flux:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">ab</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    (15.245064259793901, 0.031168695728282524)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">energy</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">        (&lt;Quantity 7.907663172914481e-13 erg / (cm2 s)&gt;,</span>
+<span class="go">         &lt;Quantity 2.090970538372485e-14 erg / (cm2 s)&gt;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">photon</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">        (&lt;Quantity 1.954421499626954e-24 1 / (cm2 s)&gt;,</span>
+<span class="go">         &lt;Quantity 5.53673880346918e-26 1 / (cm2 s)&gt;)</span>
+</pre></div>
+</div>
+<p>One can measure photometry for custom filters using the <code class="docutils literal"><span class="pre">custom</span></code> parameter:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fwave</span><span class="p">,</span><span class="n">ftrans</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="s1">&#39;my_custom_filter.txt&#39;</span><span class="p">,</span><span class="n">unpack</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">fwave</span><span class="p">,</span><span class="n">ftans</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;Custom&#39;</span><span class="p">,</span><span class="n">custom</span> <span class="o">=</span> <span class="n">filt</span><span class="p">)</span>
+<span class="go">        (13.097348489365396, 0.046530636178618558)</span>
+</pre></div>
+</div>
+<p>or define a simple notch filter with the two end wavelengthts:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;Custom&#39;</span><span class="p">,</span><span class="n">notch</span><span class="o">=</span><span class="p">[</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">1.3</span><span class="p">])</span>
+<span class="go">        (14.301864415761377, 0.031774478113182188)</span>
+</pre></div>
+</div>
+<p>Finally, to flux calibrate a spectrum to a given magnitude, use the Spectrum object&#8217;s built in <a href="#id7"><span class="problematic" id="id8">``</span></a>fluxCalibrate()``_ method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This routine can take <code class="docutils literal"><span class="pre">absolute</span></code> as a parameter flag to indicate that the spectra are absolutely flux calibrated:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;L5&#39;</span><span class="p">,</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fscale</span>
+<span class="go">        &#39;Absolute&#39;</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="classification">
 <h2>Classification<a class="headerlink" href="#classification" title="Permalink to this headline">¶</a></h2>
-<p>SPLAT contains several different methods for classifying a spectrum, using both indices and</p>
+<p>SPLAT contains several different methods for classifying a spectrum:</p>
+<ul class="simple">
+<li>Classifying by Indices</li>
+</ul>
+<p>SPLAT contains the spectral index/spectral type classification relations from the following studies:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2001AJ....121.1710R">Reid et al. (2001)</a></li>
+<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2001ApJ...552L.147T">Testi et al. (2001)</a></li>
+<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...657..511A">Allers et al. (2007)</a></li>
+<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...659..655B">Burgasser (2007)</a>.</li>
+</ul>
+</div></blockquote>
+<p>These can be accessed through the <a href="#id9"><span class="problematic" id="id10">``</span></a>classifyByIndices``_ routine, which returns the average subtype and uncertainty:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0559-1404&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="s1">&#39;burgasser&#39;</span><span class="p">,</span> <span class="nb">round</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">        (&#39;T4.5&#39;, 0.2562934083414341)</span>
+</pre></div>
+</div>
+<p>Using the <code class="docutils literal"><span class="pre">allmeasures</span></code> parameter provides the index values and individual index spectral types in a dictionary:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;2320+4123&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="s1">&#39;reid&#39;</span><span class="p">,</span> <span class="n">allmeasures</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">        {&#39;H2O-A&#39;: {&#39;index&#39;: 0.76670417987511119,</span>
+<span class="go">          &#39;index_e&#39;: 0.76670417987511119,</span>
+<span class="go">          &#39;spt&#39;: 18.791162413674424,</span>
+<span class="go">          &#39;spt_e&#39;: 1.1944901925036935},</span>
+<span class="go">         &#39;H2O-B&#39;: {&#39;index&#39;: 0.83184397268498511,</span>
+<span class="go">          &#39;index_e&#39;: 0.83184397268498511,</span>
+<span class="go">          &#39;spt&#39;: 19.956823648632948,</span>
+<span class="go">          &#39;spt_e&#39;: 1.0460714823631427},</span>
+<span class="go">         &#39;result&#39;: (&#39;M9.5&#39;, 0.78695752933890462)}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>Classifying by Standards</li>
+</ul>
+<p>SPLAT contains spectral standards for dwarf classes M0 through T9, drawn from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...637.1067B">Burgasser et al. (2006)</a>, <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a> and <a class="reference external" href="http://adsabs.harvard.edu/abs/2011ApJ...743...50C">Cushing et al. (2011)</a>. There are also M and L subdwarf and M extreme subdwarf standards.  These may be used to infer spectral classifications by &#8220;closest match&#8221;, using all or part of the near-infrared spectrum.</p>
+<p>The routine for this is <a href="#id11"><span class="problematic" id="id12">``</span></a>classifyByStandard``_, which by default simply matches to the best-fitting standard:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0805+4812&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<span class="go">        (&#39;T0.0&#39;, 0.5)</span>
+</pre></div>
+</div>
+<p>You can also return an uncertainty-weighted mean classifiction using average=True:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">average</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    (&#39;L7.0::&#39;, 2.1064575737396338)</span>
+</pre></div>
+</div>
+<p>and fit to specific regions using either the <code class="docutils literal"><span class="pre">fit_ranges</span></code> parameter or setting <code class="docutils literal"><span class="pre">method='kirkpatrick'</span></code> to conform with the <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a> method of near-infrared spectral classification:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;kirkpatrick&#39;</span><span class="p">)</span>
+<span class="go">    (&#39;L7.0&#39;, 0.5)</span>
+</pre></div>
+</div>
+<p>Subdwarf and extreme subdwarf standards can be accessed by setting the <code class="docutils literal"><span class="pre">sd</span></code> or <code class="docutils literal"><span class="pre">esd</span></code> parameters to True.  Finally, setting <code class="docutils literal"><span class="pre">plot</span></code> to True will bring up a comparison plot between the source and best fit standard.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;kirkpatrick&#39;</span><span class="p">,</span><span class="n">plot</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    (&#39;L7.0&#39;, 0.5)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/classifyByStandard_example1.png"><img alt="_images/classifyByStandard_example1.png" class="align-center" src="_images/classifyByStandard_example1.png" style="width: 400px;" /></a>
+<p>Note that the first time you run classifyByStandard, the standards must be initially read in to the dictionaries <code class="docutils literal"><span class="pre">splat.SPEX_STDS</span></code>, <code class="docutils literal"><span class="pre">splat.SPEX_SD_STDS</span></code> and <code class="docutils literal"><span class="pre">splat.SPEX_ESD_</span> <span class="pre">STDS</span></code>. This can be prompted using the <code class="docutils literal"><span class="pre">initiateStandards()</span></code> routine:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">initiateStandards</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>One the standards are loaded, subsequent calls to <code class="docutils literal"><span class="pre">classifyByStandard</span></code> are much faster.</p>
+<ul class="simple">
+<li>Classifying by Templates</li>
+</ul>
+<p>You can also classify sources by comparing to individual template spectra in the library. The <code class="docutils literal"><span class="pre">classifyByTemplate``_</span> <span class="pre">routine</span> <span class="pre">behaves</span> <span class="pre">similarly</span> <span class="pre">to</span> <span class="pre">``classifyByStandard``_,</span> <span class="pre">but</span> <span class="pre">has</span> <span class="pre">the</span> <span class="pre">option</span> <span class="pre">of</span> <span class="pre">returning</span> <span class="pre">a</span> <span class="pre">dictionary</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">``nbest</span></code> best matches sorted by whatever statistic is desired (set with the <code class="docutils literal"><span class="pre">statistic</span></code> parameter; see <a href="#id14"><span class="problematic" id="id15">``</span></a>compareSpectra``_).  Because each template must be read in, it is strongly recommended that users downselect the templates using keywords associated with <a href="#id16"><span class="problematic" id="id17">``</span></a>searchLibrary``_:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">26</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">        Too many templates (1819) for classifyByTemplate; set force=True to override this</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">26</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">    Too many templates (210) for classifyByTemplate; set force=True to override this</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">26</span><span class="p">],</span><span class="n">snr</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    Comparing to 58 templates</span>
+<span class="go">    LHS 102B L5.0 10488.1100432 11.0947838116</span>
+<span class="go">    SDSS J001608.44-004302.3 L5.5 15468.6209466 274.797693706</span>
+<span class="go">        2MASS J00250365+4759191AB L4.0 28458.3112163 4.19176819291</span>
+<span class="go">        2MASS J00332386-1521309 L4.0 29141.2681221 2.2567421444e-14</span>
+<span class="go">    ...</span>
+<span class="go">    Best match = DENIS-P J153941.96-052042.4 with spectral type L4:</span>
+<span class="go">    Mean spectral type = L4.5+/-0.724296125146</span>
+</pre></div>
+</div>
+<p>Note that the program doesn&#8217;t proceed automatically if there are more than 100 templates; you can override this using the <code class="docutils literal"><span class="pre">force</span></code> parameter:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">26</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">        Comparing to 210 templates</span>
+<span class="go">        This may take some time!</span>
+<span class="go">        SDSS J000112.18+153535.5 L4.0 24551.836698 14.3533608111</span>
+<span class="go">        SDSS J000250.98+245413.8 L5.5 15517.679593 51.274551132</span>
+<span class="go">        ...</span>
+<span class="go">        Best match = 2MASS J17461199+5034036 with spectral type L5</span>
+<span class="go">        Mean spectral type = L5.0+/-0.42094300506</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>You can also downselect templates using the <code class="docutils literal"><span class="pre">select</span></code> parameter for the following predefined template sets:</dt>
+<dd><ul class="first last simple">
+<li>select = <cite>m dwarf</cite>: fit to M dwarfs only</li>
+<li>select = <cite>l dwarf</cite>: fit to M dwarfs only</li>
+<li>select = <cite>t dwarf</cite>: fit to M dwarfs only</li>
+<li>select = <cite>vlm</cite>: fit to M7-T9 dwarfs</li>
+<li>select = <cite>optical</cite>: only optical classifications</li>
+<li>select = <cite>high sn</cite>: median S/N greater than 100</li>
+<li>select = <cite>young</cite>: only young/low surface gravity dwarfs</li>
+<li>select = <cite>companion</cite>: only companion dwarfs</li>
+<li>select = <cite>subdwarf</cite>: only subdwarfs</li>
+<li>select = <cite>single</cite>: only dwarfs not indicated a binaries</li>
+<li>select = <cite>spectral binaries</cite>: only dwarfs indicated to be spectral binaries</li>
+<li>select = <cite>standard</cite>: only spectral standards (in this case it is better to use the <a href="#id18"><span class="problematic" id="id19">``</span></a>classifyByStandard``_ routine instead)</li>
+</ul>
+</dd>
+</dl>
+<p>These sets can be combined:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">select</span><span class="o">=</span><span class="s1">&#39;l dwarfs, young&#39;</span><span class="p">,</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">        Comparing to 79 templates</span>
+<span class="go">        SDSS J000112.18+153535.5 L4.0 24551.836698 14.3533608111</span>
+<span class="go">        2MASS J00193927-3724392 L3.0 10299.0508807 16.2807901643</span>
+<span class="go">        2MASS J0028208+224905 L5.0 19350.1803596 12.281257449</span>
+<span class="go">        ...</span>
+<span class="go">        Best match = 2MASS J10224821+5825453 with spectral type L1beta</span>
+<span class="go">        Mean spectral type = L0.5+/-0.86022832423</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>Gravity Classification</li>
+</ul>
+<p>The <a href="#id20"><span class="problematic" id="id21">``</span></a>classifyGravity``_ routine uses the index-based method of <a class="reference external" href="http://adsabs.harvard.edu/abs/2013ApJ...772...79A">Allers &amp; Liu (2013)</a> to determine gravity scores from VO, FeH, K I and H-band continuum indices.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<span class="go">    FLD-G</span>
+</pre></div>
+</div>
+<p>In its default mode it also determines the classification of the source using the
+<a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...657..511A">Allers et al. (2007)</a> index-based scheme, but you can also force an spectral type by setting the <code class="docutils literal"><span class="pre">spt</span></code> parameter:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="s1">&#39;L5&#39;</span><span class="p">)</span>
+<span class="go">    FLD-G</span>
+</pre></div>
+</div>
+<p>Finally, the routine will return a dictionary of all index scores by setting the <code class="docutils literal"><span class="pre">allscores</span></code> parameter to True:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">allscores</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">    Gravity Classification:</span>
+<span class="go">        SpT = L4.0</span>
+<span class="go">        VO-z: 1.012+/-0.029 =&gt; 0.0</span>
+<span class="go">        FeH-z: 1.299+/-0.031 =&gt; 1.0</span>
+<span class="go">        H-cont: 0.859+/-0.032 =&gt; 0.0</span>
+<span class="go">        KI-J: 1.114+/-0.038 =&gt; 1.0</span>
+<span class="go">        Gravity Class = FLD-G</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
+<span class="go">    {&#39;FeH-z&#39;: 1.0,</span>
+<span class="go">     &#39;H-cont&#39;: 0.0,</span>
+<span class="go">     &#39;KI-J&#39;: 1.0,</span>
+<span class="go">     &#39;VO-z&#39;: 0.0,</span>
+<span class="go">     &#39;gravity_class&#39;: &#39;FLD-G&#39;,</span>
+<span class="go">     &#39;score&#39;: 0.5,</span>
+<span class="go">     &#39;spt&#39;: &#39;L4.0&#39;}</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="potentially-useful-program-constants">
 <h2>Potentially Useful Program Constants<a class="headerlink" href="#potentially-useful-program-constants" title="Permalink to this headline">¶</a></h2>
@@ -258,11 +536,6 @@ by using the spectral type as the referring key:</dd>
 <dt><code class="docutils literal"><span class="pre">splat.FILTERS</span></code></dt>
 <dd>A dictionary containing information on all of the filters used in SPLAT photometry. The command:</dd>
 </dl>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">FILTERS</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-</pre></div>
-</div>
-<blockquote>
-<div>will produce an (unordered) list of filters</div></blockquote>
 </div>
 <div class="section" id="additional-programs">
 <h2>Additional Programs<a class="headerlink" href="#additional-programs" title="Permalink to this headline">¶</a></h2>
