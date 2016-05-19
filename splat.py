@@ -562,7 +562,8 @@ class Spectrum(object):
         sp.name = self.name+' + '+other.name
         ref = ['date','observer','airmass','designation','source_key','data_key']
         for r in ref:
-            setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
+            if r in self.__dict__.keys() and r in other.__dict__.keys():
+                setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
         sp.history.append('Sum of {} and {}'.format(self.name,other.name))
 # reset original
         sp.original = copy.deepcopy(sp)
@@ -593,7 +594,8 @@ class Spectrum(object):
         sp.name = self.name+' - '+other.name
         ref = ['date','observer','airmass','designation','source_key','data_key']
         for r in ref:
-            setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
+            if r in self.__dict__.keys() and r in other.__dict__.keys():
+                setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
         sp.history.append('Subtraction of {} by {}'.format(self.name,other.name))
 # reset original
         sp.original = copy.deepcopy(sp)
@@ -630,7 +632,8 @@ class Spectrum(object):
         sp.name = self.name+' x '+other.name
         ref = ['date','observer','airmass','designation','source_key','data_key']
         for r in ref:
-            setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
+            if r in self.__dict__.keys() and r in other.__dict__.keys():
+                setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
         sp.history.append('Product of {} by {}'.format(self.name,other.name))
 # reset original
         sp.original = copy.deepcopy(sp)
@@ -666,7 +669,8 @@ class Spectrum(object):
         sp.name = self.name+' / '+other.name
         ref = ['date','observer','airmass','designation','source_key','data_key']
         for r in ref:
-            setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
+            if r in self.__dict__.keys() and r in other.__dict__.keys():
+                setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
         sp.history.append('Division of {} by {}'.format(self.name,other.name))
 # reset original
         sp.original = copy.deepcopy(sp)
@@ -2661,9 +2665,9 @@ def filterMag(sp,filter,*args,**kwargs):
 
     :Example:
     >>> import splat
-    >>> spc = splat.getSpectrum(shortname='1507-1627')[0]
-    >>> spc.fluxCalibrate('2MASS J',14.5)
-    >>> print splat.filterMag(spc,'MKO J')
+    >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
+    >>> sp.fluxCalibrate('2MASS J',14.5)
+    >>> splat.filterMag(sp,'MKO J')
         (14.345894376898123, 0.027596454828421831)
     '''
 # keyword parameters
@@ -3652,8 +3656,15 @@ def readSpectrum(*args,**kwargs):
     noise[w] = numpy.nan
 
 # fix nans in flux
-    w = numpy.where(numpy.isnan(flux) == True)
-    flux[w] = 0.
+#    w = numpy.where(numpy.isnan(flux) == True)
+#    flux[w] = 0.
+
+# remove all parts of spectrum that are nans
+    w = numpy.where(numpy.logical_and(numpy.isnan(wave) == False,numpy.isnan(flux) == False))
+    wave = wave[w]
+    flux = flux[w]
+    noise = noise[w]
+
 
 # fix to catch badly formatted files where noise column is S/N
 #    print(flux, numpy.median(flux))
