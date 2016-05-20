@@ -1733,7 +1733,6 @@ def classifyByStandard(sp, *args, **kwargs):
     '''
 
     verbose = kwargs.get('verbose',False)
-    method = kwargs.get('method','')
     best_flag = kwargs.get('best',True)
     average_flag = kwargs.get('average',not best_flag)
     best_flag = not average_flag
@@ -1790,10 +1789,16 @@ def classifyByStandard(sp, *args, **kwargs):
     spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
 
 # determine comparison range based on method
-    if (method == 'kirkpatrick'):
-        comprng = [0.9,1.4]*u.micron         # as prescribed in Kirkpatrick et al. 2010, ApJS,
+    if (kwargs.get('method','') == 'kirkpatrick'):
+        fit_ranges = [[0.9,1.4]]         # as prescribed in Kirkpatrick et al. 2010, ApJS,
     else:
-        comprng = [0.7,2.45]*u.micron       # by default, compare whole spectrum
+        fit_ranges = [[0.7,2.45]]       # by default, compare whole spectrum
+    fit_ranges = kwargs.get('fitrange',fit_ranges)
+    fit_ranges = kwargs.get('fitrng',fit_ranges)
+    fit_ranges = kwargs.get('comprange',fit_ranges)
+    fit_ranges = kwargs.get('comprng',fit_ranges)
+    if not isinstance(fit_ranges[0],list):
+        fit_ranges = [fit_ranges]
 
 
 # compute fitting statistics
@@ -1801,7 +1806,7 @@ def classifyByStandard(sp, *args, **kwargs):
     sspt = []
 
     for t in spt_sample:
-        chisq,scale = compareSpectra(sp,stds[typeToNum(t,subclass=subclass)],fit_ranges=[comprng],statistic=statistic,novar2=True)
+        chisq,scale = compareSpectra(sp,stds[typeToNum(t,subclass=subclass)],fit_ranges=fit_ranges,statistic=statistic,novar2=True)
         stat.append(chisq)
         sspt.append(t)
         if (verbose):
@@ -1845,7 +1850,7 @@ def classifyByStandard(sp, *args, **kwargs):
 #        spstd = Spectrum(file=sorted_stdfiles[0])
 #        print(typeToNum(sorted_stdsptnum[0],subclass=subclass))
         spstd = getStandard(typeToNum(sorted_stdsptnum[0],subclass=subclass))[0]
-        chisq,scale = compareSpectra(sp,spstd,fit_ranges=[comprng],statistic=statistic)
+        chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
         spstd.scale(scale)
         if kwargs.get('colors',False) == False:
             kwargs['colors'] = ['k','r','b']
@@ -1980,9 +1985,15 @@ def classifyByTemplate(sp, *args, **kwargs):
 #   placeholder for a systematic uncertainty term
     unc_sys = 0.
     if (kwargs.get('method','') == 'kirkpatrick'):
-        comprng = [0.9,1.4]*u.micron         # as prescribed in Kirkpatrick et al. 2010, ApJS,
+        fit_ranges = [[0.9,1.4]]         # as prescribed in Kirkpatrick et al. 2010, ApJS,
     else:
-        comprng = [0.7,2.45]*u.micron       # by default, compare whole spectrum
+        fit_ranges = [[0.7,2.45]]       # by default, compare whole spectrum
+    fit_ranges = kwargs.get('fitrange',fit_ranges)
+    fit_ranges = kwargs.get('fitrng',fit_ranges)
+    fit_ranges = kwargs.get('comprange',fit_ranges)
+    fit_ranges = kwargs.get('comprng',fit_ranges)
+    if not isinstance(fit_ranges[0],list):
+        fit_ranges = [fit_ranges]
 
 #  canned searches
 #  constrain spectral types
@@ -1995,14 +2006,13 @@ def classifyByTemplate(sp, *args, **kwargs):
     else:
         spt_type = 'LIT_TYPE'
 
-    if ('m dwarf' in select.lower()):
-#        spt = [10,19.9]
+    if ('m dwarf' in select.lower() or kwargs.get('mdwarf',False)):
         spt = [numpy.max([10,spt[0]]),numpy.min([19.9,spt[-1]])]
-    if ('l dwarf' in select.lower()):
+    if ('l dwarf' in select.lower() or kwargs.get('ldwarf',False)):
         spt = [numpy.max([20,spt[0]]),numpy.min([29.9,spt[-1]])]
-    if ('t dwarf' in select.lower()):
+    if ('t dwarf' in select.lower() or kwargs.get('tdwarf',False)):
         spt = [numpy.max([30,spt[0]]),numpy.min([39.9,spt[-1]])]
-    if ('vlm' in select.lower()):
+    if ('vlm' in select.lower() or kwargs.get('vlm',False)):
         spt = [numpy.max([17,spt_range[0]]),numpy.min([39.9,spt_range[-1]])]
 
 #  constrain S/N
@@ -2046,27 +2056,27 @@ def classifyByTemplate(sp, *args, **kwargs):
 
 # other classes
     giant = ''
-    if 'giant' in select.lower():
+    if 'giant' in select.lower() or kwargs.get('giant',False):
         giant = True
     if 'not giant' in select.lower():
         giant = False
     companion = ''
-    if 'companion' in select.lower():
+    if 'companion' in select.lower() or kwargs.get('companion',False):
         companion = True
     if 'not companion' in select.lower():
         companion = False
     young = ''
-    if 'young' in select.lower():
+    if 'young' in select.lower() or kwargs.get('young',False):
         young = True
     if 'not young' in select.lower():
         young = False
     binary = ''
-    if 'binary' in select.lower():
+    if 'binary' in select.lower() or kwargs.get('binary',False):
         binary = True
     if 'not binary' in select.lower():
         binary = False
     spbinary = ''
-    if 'spectral binary' in select.lower():
+    if 'spectral binary' in select.lower() or kwargs.get('sbinary',False):
         spbinary = True
     if 'not spectral binary' in select.lower():
         spbinary = False
@@ -2103,7 +2113,7 @@ def classifyByTemplate(sp, *args, **kwargs):
 # INSERT TRY STATEMNT HERE?
 
         s = Spectrum(idkey=d)
-        stt,scale = compareSpectra(sp,s,fit_ranges=[comprng],statistic=statistic,novar2=True,*kwargs)
+        stt,scale = compareSpectra(sp,s,fit_ranges=fit_ranges,statistic=statistic,novar2=True,*kwargs)
         stat.append(stt)
         scl.append(scale)
         if (verbose):
@@ -2359,12 +2369,19 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     weights = kwargs.get('weights',numpy.zeros(len(sp1.wave))) # these will be set to 1 later
     mask = kwargs.get('mask',numpy.zeros(len(sp1.wave)))    # mask = 1 -> ignore
     fit_ranges = kwargs.get('fit_ranges',[spex_wave_range])
+    fit_ranges = kwargs.get('fit_range',fit_ranges)
+    fit_ranges = kwargs.get('fitrange',fit_ranges)
+    fit_ranges = kwargs.get('fitrng',fit_ranges)
+    fit_ranges = kwargs.get('comprange',fit_ranges)
+    fit_ranges = kwargs.get('comprng',fit_ranges)
     mask_ranges = kwargs.get('mask_ranges',[])
     mask_standard = kwargs.get('mask_standard',False)
     mask_telluric = kwargs.get('mask_telluric',mask_standard)
     var_flag = kwargs.get('novar2',True)
     stat = kwargs.get('statistic','chisqr')
     minreturn = 1.e-60
+    if not isinstance(fit_ranges[0],list):
+        fit_ranges = [fit_ranges]
     if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
         fit_ranges*=u.micron
 
@@ -2689,10 +2706,11 @@ def filterMag(sp,filter,*args,**kwargs):
 
 
 # check that requested filter is in list
+    filter0 = filter
     filter = filter.replace(' ','_')
     filter.upper()
     if (filter not in FILTERS.keys() and isinstance(custom,bool) and isinstance(notch,bool)):
-        print('Filter '+filter+' not included in filterMag')
+        print('\nFilter '+filter+' not included in filterMag\n')
         info = True
 
 # print out what's available
@@ -2718,16 +2736,24 @@ def filterMag(sp,filter,*args,**kwargs):
     fwave = fwave[~numpy.isnan(ftrans)]*u.micron   # temporary fix
     ftrans = ftrans[~numpy.isnan(ftrans)]
 
+# check that spectrum and filter cover the same wavelength ranges
+    if numpy.nanmax(fwave) < numpy.nanmin(sp.wave) or numpy.nanmin(fwave) > numpy.nanmax(sp.wave):
+        print('\nWarning: no overlap between spectrum for {} and filter {}'.format(sp.name,filter0))
+        return numpy.nan, numpy.nan
+
+    if numpy.nanmin(fwave) < numpy.nanmin(sp.wave) or numpy.nanmax(fwave) > numpy.nanmax(sp.wave):
+        print('\nWarning: spectrum for {} does not span full filter profile for {}'.format(sp.name,filter0))
+
 # interpolate spectrum onto filter wavelength function
     wgood = numpy.where(~numpy.isnan(sp.noise))
     if len(sp.wave[wgood]) > 0:
         d = interp1d(sp.wave[wgood].value,sp.flux[wgood].value,bounds_error=False,fill_value=0.)
-        n = interp1d(sp.wave[wgood].value,sp.noise[wgood].value,bounds_error=False,fill_value=numpy.nan)
+        n = interp1d(sp.wave[wgood].value,sp.noise[wgood].value,bounds_error=False,fill_value=0)
 # catch for models
     else:
         print(f+': no good points')
         d = interp1d(sp.wave.value,sp.flux.value,bounds_error=False,fill_value=0.)
-        n = interp1d(sp.wave.value,sp.flux.value*1.e-9,bounds_error=False,fill_value=numpy.nan)
+        n = interp1d(sp.wave.value,sp.flux.value*1.e-9,bounds_error=False,fill_value=0.)
 
     result = []
     if (vega):
@@ -2739,6 +2765,7 @@ def filterMag(sp,filter,*args,**kwargs):
         vflux.to(sp.funit,equivalencies=u.spectral_density(vwave))
 # interpolate Vega onto filter wavelength function
         v = interp1d(vwave.value,vflux.value,bounds_error=False,fill_value=0.)
+        val = -2.5*numpy.log10(trapz(ftrans*d(fwave.value),fwave.value)/trapz(ftrans*v(fwave.value),fwave.value))
         for i in numpy.arange(nsamples):
 #            result.append(-2.5*numpy.log10(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave)/trapz(ftrans*v(fwave)*sp.funit,fwave)))
             result.append(-2.5*numpy.log10(trapz(ftrans*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)/trapz(ftrans*v(fwave.value),fwave.value)))
@@ -2753,16 +2780,19 @@ def filterMag(sp,filter,*args,**kwargs):
         d = interp1d(nu.value,fnu.value,bounds_error=False,fill_value=0.)
         n = interp1d(nu.value,noisenu.value,bounds_error=False,fill_value=0.)
         b = trapz((ftrans/filtnu.value)*fconst.value,filtnu.value)
+        val = -2.5*numpy.log10(trapz(ftrans*d(filtnu.value)/filtnu.value,filtnu.value)/b)
         for i in numpy.arange(nsamples):
             a = trapz(ftrans*(d(filtnu.value)+numpy.random.normal(0,1)*n(filtnu.value))/filtnu.value,filtnu.value)
             result.append(-2.5*numpy.log10(a/b))
         outunit = 1.
     elif (energy):
+        val = trapz(ftrans*d(fwave.value),fwave.value)
         for i in numpy.arange(nsamples):
             result.append(trapz(ftrans*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value))
         outunit = u.erg/u.s/u.cm**2
     elif (photons):
         convert = const.h.to('erg s')*const.c.to('micron/s')
+        val = trapz(ftrans*fwave.value*convert.value*d(fwave.value),fwave.value)
         for i in numpy.arange(nsamples):
             result.append(trapz(ftrans*fwave.value*convert.value*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value))
         outunit = 1./u.s/u.cm**2
@@ -2770,7 +2800,7 @@ def filterMag(sp,filter,*args,**kwargs):
         raise NameError('\nfilterMag not given the correct quantity to compute photometry\n\n')
 
 
-    val = numpy.nanmean(result)*outunit
+#    val = numpy.nanmean(result)*outunit
     err = numpy.nanstd(result)*outunit
     if len(sp.wave[wgood]) == 0:
         err = 0.
