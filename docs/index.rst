@@ -182,6 +182,7 @@ This project is supported by the National Aeronautics and Space Administration u
    splat_plot
    splat_model
    bdevopar
+   splat_euclid
    bugs
    api
    :ref:`genindex`
