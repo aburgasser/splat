@@ -9,7 +9,6 @@ from __future__ import print_function, division
 import astropy
 #import copy
 #from datetime import datetime
-import csv
 import glob
 import os
 import re
@@ -26,7 +25,6 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u            # standard units
 from astroquery.simbad import Simbad
 from astroquery.vizier import Vizier
-from PyQt4 import QtGui, QtCore
 
 DB_FOLDER = '/db/'
 DB_ORIGINAL_FILE = 'db_spexprism.txt'
@@ -43,56 +41,6 @@ TMPFILENAME = 'splattmpfile'
 
 # change the command prompt
 sys.ps1 = 'splat db> '
-
-# WINDOW class for examining spreadsheets
-class Window(QtGui.QWidget):
-    def __init__(self, rows, columns):
-        QtGui.QWidget.__init__(self)
-        self.table = QtGui.QTableWidget(rows, columns, self)
-        for column in range(columns - 1):
-            for row in range(rows - 1):
-                item = QtGui.QTableWidgetItem('Text%d' % row)
-                self.table.setItem(row, column, item)
-        self.buttonOpen = QtGui.QPushButton('Open', self)
-        self.buttonSave = QtGui.QPushButton('Save', self)
-        self.buttonOpen.clicked.connect(self.handleOpen)
-        self.buttonSave.clicked.connect(self.handleSave)
-        layout = QtGui.QVBoxLayout(self)
-        layout.addWidget(self.table)
-        layout.addWidget(self.buttonOpen)
-        layout.addWidget(self.buttonSave)
-
-    def handleSave(self):
-        path = QtGui.QFileDialog.getSaveFileName(
-                self, 'Save File', '', 'CSV(*.csv)')
-        if path:
-            with open(unicode(path), 'wb') as stream:
-                writer = csv.writer(stream)
-                for row in range(self.table.rowCount()):
-                    rowdata = []
-                    for column in range(self.table.columnCount()):
-                        item = self.table.item(row, column)
-                        if item is not None:
-                            rowdata.append(
-                                unicode(item.text()).encode('utf8'))
-                        else:
-                            rowdata.append('')
-                    writer.writerow(rowdata)
-
-    def handleOpen(self):
-        path = QtGui.QFileDialog.getOpenFileName(
-                self, 'Open File', '', 'CSV(*.csv)')
-        if path:
-            with open(unicode(path), 'rb') as stream:
-                self.table.setRowCount(0)
-                self.table.setColumnCount(0)
-                for rowdata in csv.reader(stream):
-                    row = self.table.rowCount()
-                    self.table.insertRow(row)
-                    self.table.setColumnCount(len(rowdata))
-                    for column, data in enumerate(rowdata):
-                        item = QtGui.QTableWidgetItem(data.decode('utf8'))
-                        self.table.setItem(row, column, item)
 
 
 def assignSourceID(coordinate,**kwargs):
@@ -1252,11 +1200,6 @@ def importSpectra(*args,**kwargs):
         - Photometry DB update file: spreadsheet containing update to photometry_data.txt, saved locally as UPDATE_photometry_data.txt
 
     '''
-# check user access
-    if splat.checkAccess() == False:
-        print('\nSpectra may only be imported into library by designated manager; please email {}'.format(splat.SPLAT_EMAIL))
-        return
-
     data_folder = kwargs.get('data_folder','./')
     review_folder = kwargs.get('review_folder','./')
     simbad_radius = kwargs.get('simbad_radius',15.*u.arcsec)
@@ -1307,12 +1250,11 @@ def importSpectra(*args,**kwargs):
     t_spec['MEDIAN_SNR'] = Column([sp.computeSN() for sp in splist],dtype='float')
     t_spec['SPEX_TYPE'] = Column([splat.classifyByStandard(sp,string=True)[0] for sp in splist],dtype='str')
     t_spec['SPEX_GRAVITY_CLASSIFICATION'] = Column([splat.classifyGravity(sp,string=True) for sp in splist],dtype='str')
-    t_src['GRAVITY_CLASS_NIR'] = t_spec['SPEX_GRAVITY_CLASSIFICATION']
     t_spec['PUBLISHED'] = Column(['N' for sp in splist],dtype='str')
 
-#    for c in splist[0].header.keys():
-#        if c != 'HISTORY':
-#            print('{} {}'.format(c,splist[0].header[c]))
+    for c in splist[0].header.keys():
+        if c != 'HISTORY':
+            print('{} {}'.format(c,splist[0].header[c]))
 
 # populate source data table from fits file header
     t_src['SOURCE_KEY'] = t_spec['SOURCE_KEY']
@@ -1334,10 +1276,10 @@ def importSpectra(*args,**kwargs):
 # prep comparison sample as the standards
     compdict = {}
     for i,sp in enumerate(splist):
-        compdict[str(t_spec['DATA_KEY'][i])] = {'observed': sp, 'comparison': splat.SPEX_STDS[t_spec['SPEX_TYPE'][i]], 'comparison_type': '{} standard'.format(t_spec['SPEX_TYPE'][i])}
+        compdict[str(t_spec['DATA_KEY'][i])] = {'observed': sp, 'comparison': splat.SPEX_STDS[t_spec['SPEX_TYPE'][i]], 'comparison_type': 'standard'}
 
 # now do a SIMBAD search for sources based on coordinates
-    print('\nSIMBAD search')
+    print('SIMBAD search')
     sb = Simbad()
     votfields = ['otype','parallax','sptype','propermotions','rot','rvz_radvel','rvz_error',\
     'rvz_bibcode','fluxdata(B)','fluxdata(V)','fluxdata(R)','fluxdata(I)','fluxdata(g)','fluxdata(r)',\
@@ -1349,7 +1291,7 @@ def importSpectra(*args,**kwargs):
         t_sim = sb.query_region(des,radius=simbad_radius)
 # source found in query
         if isinstance(t_sim,Table):
-            print('\nSource {} Designation = {} {} match(es)'.format(i+1,des,len(t_sim)))
+            print('\nSource {} Designation = {} {} match'.format(i,des,len(t_sim)))
             c = splat.designationToCoordinate(des)
 # many sources found
             if len(t_sim) > 1:      # take the closest position
@@ -1363,17 +1305,14 @@ def importSpectra(*args,**kwargs):
                 t_sim['sep'] = [c.separation(SkyCoord(str(t_sim['RA'][0]),str(t_sim['DEC'][0]),unit=(u.hourangle,u.degree))).arcsecond]
             print(t_sim)
 
-# update coordinates
-            c = splat.properCoordinates('{} {}'.format(t_sim['RA'][0],t_sim['DEC'][0]))
-            t_src['DESIGNATION'][i] = splat.coordinateToDesignation(c)
-            t_src['RA'][i] = c.ra.value
-            t_src['DEC'][i] = c.dec.value
-
 # check if source is in the library already; if so, fill in source info
-            if t_sim['MAIN_ID'][0] in splat.DB_SOURCES['SIMBAD_NAME']:
+            if t_sim['MAIN_ID'] in splat.DB_SOURCES['SIMBAD_NAME']:
                 for c in t_src.keys():
-                    t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'][0])][0]
-                    t_spec['SOURCE_KEY'][i] = t_src['SOURCE_KEY'][i]
+#                    print(c, t_src[c][i])
+#                    print(splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0])
+                    t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0]
+#                t_src['SOURCE_KEY'][i] = splat.DB_SOURCES['SOURCE_KEY'][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])]
+#                print(t_src['SOURCE_KEY'][i],splat.DB_SOURCES['NAME'][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0])
 
 # grab library spectra and see if any were taken on the same date (possible redundancy)
                 matchlib = splat.searchLibrary(idkey=t_src['SOURCE_KEY'][i])
@@ -1382,14 +1321,14 @@ def importSpectra(*args,**kwargs):
                     mkey = matchlib['DATA_KEY'][numpy.where(matchlib['OBSERVATION_DATE'] == t_spec['OBSERVATION_DATE'][i])]
                     print('Previous spectrum found in library for data key {}'.format(mkey))
                     compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(mkey)
-                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'repeat spectrum: {}'.format(mkey)
+                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'repeat spectrum'
 # no previous observation on this date - retain the spectrum with the highest S/N
                 else:
                     if len(matchlib) > 1:
                         matchlib.sort('MEDIAN_SNR')
                         matchlib.reverse()
                     compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(matchlib['DATA_KEY'][0])
-                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'alternate spectrum: {} taken on {}'.format(matchlib['DATA_KEY'][0],matchlib['OBSERVATION_DATE'][0])
+                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'alternate spectrum'
 
 # SIMBAD source is not in the library - fill in source information
             else:
@@ -1415,11 +1354,12 @@ def importSpectra(*args,**kwargs):
                 t_src['PARALLEX_REF'][i] = t_sim['PLX_BIBCODE'][0]
                 t_src['MU_RA'][i] = t_sim['PMRA'][0]
                 t_src['MU_DEC'][i] = t_sim['PMDEC'][0]
-#                try:            # this is in case MU is not present
-                t_src['MU'][i] = (t_sim['PMRA'][0]**2+t_sim['PMDEC'][0]**2)**0.5
-                t_src['MU_E'][i] = t_sim['PM_ERR_MAJA'][0]
-#                except:
-#                    pass
+                try:            # this is in case MU is not present
+                    t_src['MU'][i] = (t_sim['PMRA'][0]**2+t_sim['PMDEC'][0]**2)**0.5
+                    t_src['MU_E'][i] = ((t_sim['PM_ERR_MAJA'][0]*t_sim['PMRA'][0]/t_src['MU'][i])**2+\
+                        (t_sim['PM_ERR_MAJA'][0]*t_sim['PMRA'][0]/t_src['MU'][i])**2)**0.5
+                except:
+                    pass
                 t_src['MU_REF'][i] = t_sim['PM_BIBCODE'][0]
                 t_src['RV'][i] = t_sim['RVZ_RADVEL'][0]
                 t_src['RV_E'][i] = t_sim['RVZ_ERROR'][0]
@@ -1441,7 +1381,7 @@ def importSpectra(*args,**kwargs):
 #                    print(c, t_src[c][i])
 #                    print(splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0])
                     t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SHORTNAME'] == t_src['SHORTNAME'][i])][0]
-                    t_spec['SOURCE_KEY'][i] = t_src['SOURCE_KEY'][i]
+                    print(c,t_src[c][i])
 
 # grab library spectra and see if any were taken on the same date (possible redundancy)
                 print(t_src['SOURCE_KEY'][i])
@@ -1451,16 +1391,28 @@ def importSpectra(*args,**kwargs):
                     mkey = matchlib['DATA_KEY'][numpy.where(matchlib['OBSERVATION_DATE'] == t_spec['OBSERVATION_DATE'][i])]
                     print('Previous spectrum found in library for data key {}'.format(mkey))
                     compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(mkey)
-                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'repeat spectrum: {}'.format(mkey)
+                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'repeat spectrum'
 # no previous observation on this date - retain the spectrum with the highest S/N
                 else:
                     if len(matchlib) > 1:
                         matchlib.sort('MEDIAN_SNR')
                         matchlib.reverse()
                     compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(matchlib['DATA_KEY'][0])
-                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'alternate spectrum: {} taken on {}'.format(matchlib['DATA_KEY'][0],matchlib['OBSERVATION_DATE'][0])
+                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'alternate spectrum'
             else:
                 t_src['NAME'][i] = t_src['DESIGNATION'][i]
+
+# output database updates
+    t_src.remove_column('SHORTNAME')
+    t_src.remove_column('SELECT')
+    t_spec.remove_column('SELECT')   
+    t_spec.remove_column('SOURCE_SELECT')
+    t_spec['NOTE'] = Column([compdict[c]['comparison_type'] for c in compdict.keys()],dtype='str')
+    t_src.write(review_folder+'source_update.csv',format='ascii.csv')
+    t_spec.write(review_folder+'spectrum_update.csv',format='ascii.csv')
+#    for c in compdict.keys():
+#        print(c,compdict[c]['observed'],compdict[c]['comparison'],compdict[c]['comparison_type'])
+#    print('\n')
 
 # generate check plots
     junk = [sp.normalize() for sp in splist]
@@ -1474,32 +1426,8 @@ def importSpectra(*args,**kwargs):
         clist.extend(['k','r'])
     splat.plotSpectrum(plotlist,multiplot=True,layout=[2,2],multipage=True,legends=legends,output=review_folder+'review_plots.pdf',colors=clist,fontscale=0.5)
 
-# output database updates
-    t_src.remove_column('SHORTNAME')
-    t_src.remove_column('SELECT')
-    t_spec.remove_column('SELECT')   
-    t_spec.remove_column('SOURCE_SELECT')
-    for i in numpy.arange(len(t_spec['NOTE'])):
-        t_spec['NOTE'][i] = compdict[str(t_spec['DATA_KEY'][i])]['comparison_type']
-    t_src.write(review_folder+'source_update.csv',format='ascii.csv')
-    t_spec.write(review_folder+'spectrum_update.csv',format='ascii.csv')
-#    for c in compdict.keys():
-#        print(c,compdict[c]['observed'],compdict[c]['comparison'],compdict[c]['comparison_type'])
-#    print('\n')
 
 
-# open up windows to review spreadsheets
-# NOTE: WOULD LIKE TO MAKE THIS AUTOMATICALLY OPEN FILE
-#    app = QtGui.QApplication(sys.argv)
-#    window = Window(10, 5)
-#    window.resize(640, 480)
-#    window.show()
-#    app.exec_()
-
-    print('\nSpectral plots and update speadsheets now available in {}'.format(review_folder))
-    response = raw_input('Please review and edit, and press any key when you are finished...')
-
-# NEXT STEP - MOVE FILES TO APPROPRIATE PLACES, UPDATE MAIN DATABASES
 
 
 
