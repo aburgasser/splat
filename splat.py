@@ -51,7 +51,6 @@ from scipy.interpolate import interp1d
 #################### CONSTANTS ####################
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 DATA_FOLDER = '/reference/Spectra/'
-SPLAT_EMAIL = 'aburgasser@gmail.com'
 
 # suppress warnings - probably not an entirely safe approach!
 numpy.seterr(all='ignore')
