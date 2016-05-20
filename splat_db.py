@@ -20,6 +20,7 @@ import sys
 import numpy
 from astropy.io import ascii, fits            # for reading in spreadsheet
 from astropy.table import Column, Table, join            # for reading in table files
+from astropy.time import Time            # for reading in table files
 from astropy.coordinates import SkyCoord
 from astropy import units as u            # standard units
 from astroquery.simbad import Simbad
@@ -1232,10 +1233,11 @@ def importSpectra(*args,**kwargs):
     t_spec['DATA_FILE'] = Column([os.path.basename(f) for f in files],dtype='str')
     if 'DATE_OBS' in splist[0].header:
         t_spec['OBSERVATION_DATE'] = Column([sp.header['DATE_OBS'].replace('-','') for sp in splist],dtype='str')
+        t_spec['JULIAN_DATE'] = Column([Time(sp.header['DATE_OBS']).mjd for sp in splist],dtype='str')
     if 'TIME_OBS' in splist[0].header:
         t_spec['OBSERVATION_TIME'] = Column([sp.header['TIME_OBS'].replace(':',' ') for sp in splist],dtype='str')
     if 'MJD_OBS' in splist[0].header:
-        t_spec['JULIAN_DATE'] = Column([sp.header['MJD_OBS'] for sp in splist],dtype='float')
+        t_spec['JULIAN_DATE'] = Column([sp.header['MJD_OBS'] for sp in splist],dtype='str')
     if 'OBSERVER' in splist[0].header:
         t_spec['OBSERVER'] = Column([sp.header['OBSERVER'] for sp in splist],dtype='str')
     if 'RESOLUTION' in splist[0].header:
@@ -1244,12 +1246,11 @@ def importSpectra(*args,**kwargs):
         t_spec['AIRMASS'] = Column([sp.header['AIRMASS'] for sp in splist],dtype='float')
     if 'VERSION' in splist[0].header:
         t_spec['REDUCTION_SPEXTOOL_VERSION'] = Column([sp.header['VERSION'] for sp in splist],dtype='str')
+        t_spec['REDUCTION_SPEXTOOL_VERSION'] = ['v{}'.format(v.split('v')[-1]) for v in t_spec['REDUCTION_SPEXTOOL_VERSION']]
     t_spec['MEDIAN_SNR'] = Column([sp.computeSN() for sp in splist],dtype='float')
     t_spec['SPEX_TYPE'] = Column([splat.classifyByStandard(sp,string=True)[0] for sp in splist],dtype='str')
     t_spec['SPEX_GRAVITY_CLASSIFICATION'] = Column([splat.classifyGravity(sp,string=True) for sp in splist],dtype='str')
-    for c in splat.DB_SPECTRA.keys():
-        if c not in t_spec.keys():
-            t_spec[c] = Column([splat.DB_SPECTRA[c][0] for sp in splist],dtype=type(splat.DB_SPECTRA[c][0]))
+    t_spec['PUBLISHED'] = Column(['N' for sp in splist],dtype='str')
 
     for c in splist[0].header.keys():
         if c != 'HISTORY':
@@ -1263,7 +1264,7 @@ def importSpectra(*args,**kwargs):
             sp.header['RA'] = sp.header['TCS_RA']
             sp.header['DEC'] = sp.header['TCS_DEC']
     t_src['DESIGNATION'] = ['J{}+{}'.format(sp.header['RA'],sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('J+','J') for sp in splist]
-    t_src['SHORTNAME'] = ['J{}+{}'.format(sp.header['RA'],sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('J+','J') for sp in splist]
+    t_src['SHORTNAME'] = [splat.designationToShortName(d) for d in t_src['DESIGNATION']]
     coord = [splat.properCoordinates(s) for s in t_src['DESIGNATION']]
     t_src['RA'] = [c.ra.value for c in coord]
     t_src['DEC'] = [c.dec.value for c in coord]
@@ -1311,7 +1312,7 @@ def importSpectra(*args,**kwargs):
 #                    print(splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0])
                     t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0]
 #                t_src['SOURCE_KEY'][i] = splat.DB_SOURCES['SOURCE_KEY'][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])]
-                print(t_src['SOURCE_KEY'][i],splat.DB_SOURCES['NAME'][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0])
+#                print(t_src['SOURCE_KEY'][i],splat.DB_SOURCES['NAME'][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0])
 
 # grab library spectra and see if any were taken on the same date (possible redundancy)
                 matchlib = splat.searchLibrary(idkey=t_src['SOURCE_KEY'][i])
@@ -1375,14 +1376,12 @@ def importSpectra(*args,**kwargs):
 
 # no source found in SIMBAD: just check library - TO BE DONE LATER
         else:
-            if t_sim['MAIN_ID'] in splat.DB_SOURCES['SIMBAD_NAME']:
+            if t_src['SHORTNAME'][i] in splat.DB_SOURCES['SHORTNAME']:
                 for c in t_src.keys():
 #                    print(c, t_src[c][i])
 #                    print(splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0])
-                    t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0]
-                    print(c,tsrc[c][i])
-#                t_src['SOURCE_KEY'][i] = splat.DB_SOURCES['SOURCE_KEY'][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])]
-                print(t_src['SOURCE_KEY'][i],splat.DB_SOURCES['NAME'][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'])][0])
+                    t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SHORTNAME'] == t_src['SHORTNAME'][i])][0]
+                    print(c,t_src[c][i])
 
 # grab library spectra and see if any were taken on the same date (possible redundancy)
                 print(t_src['SOURCE_KEY'][i])
@@ -1400,9 +1399,15 @@ def importSpectra(*args,**kwargs):
                         matchlib.reverse()
                     compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(matchlib['DATA_KEY'][0])
                     compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'alternate spectrum'
-            pass
+            else:
+                t_src['NAME'][i] = t_src['DESIGNATION'][i]
 
 # output database updates
+    t_src.remove_column('SHORTNAME')
+    t_src.remove_column('SELECT')
+    t_spec.remove_column('SELECT')   
+    t_spec.remove_column('SOURCE_SELECT')
+    t_spec['NOTE'] = Column([compdict[c]['comparison_type'] for c in compdict.keys()],dtype='str')
     t_src.write(review_folder+'source_update.csv',format='ascii.csv')
     t_spec.write(review_folder+'spectrum_update.csv',format='ascii.csv')
 #    for c in compdict.keys():
@@ -1410,16 +1415,14 @@ def importSpectra(*args,**kwargs):
 #    print('\n')
 
 # generate check plots
-    complist = [compdict[c]['comparison'] for c in compdict.keys()]
-    comptype = [compdict[c]['comparison_type'] for c in compdict.keys()]
     junk = [sp.normalize() for sp in splist]
-    junk = [sp.normalize() for sp in complist]
+    junk = [compdict[c]['comparison'].normalize() for c in compdict.keys()]
     plotlist = []
     legends = []
     clist = []
-    for i,sp in enumerate(splist):
-        plotlist.append([sp,complist[i]])
-        legends.extend([sp.name,complist[i].name+' '+comptype[i]])
+    for c in compdict.keys():
+        plotlist.append([compdict[c]['observed'],compdict[c]['comparison']])
+        legends.extend([compdict[c]['observed'].name,'{} {}'.format(compdict[c]['comparison'].name,compdict[c]['comparison_type'])])
         clist.extend(['k','r'])
     splat.plotSpectrum(plotlist,multiplot=True,layout=[2,2],multipage=True,legends=legends,output=review_folder+'review_plots.pdf',colors=clist,fontscale=0.5)
 
