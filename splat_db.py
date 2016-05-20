@@ -1381,7 +1381,12 @@ def importSpectra(*args,**kwargs):
     complist = [compdict[c]['comparison'] for c in compdict.keys()]
     junk = [sp.normalize() for sp in splist]
     junk = [sp.normalize() for sp in complist]
-    splat.plotSpectrum(splist,multiplot=True,layout=[2,2],multipage=True,comparison=complist,legends=t_src['NAME'],output=review_folder+'review_plots.pdf')
+    plotlist = []
+    legends = []
+    for i,sp in enumerate(splist):
+        plotlist.append([sp,complist[i]])
+        legends.append([sp.name,complist[i].name])
+    splat.plotSpectrum(plotlist,multiplot=True,layout=[2,2],multipage=True,legends=legends,output=review_folder+'review_plots.pdf')
 
 
 
