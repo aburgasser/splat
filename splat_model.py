@@ -779,7 +779,8 @@ def modelFitMCMC(spec, **kwargs):
     param0_init = kwargs.get('initial_guess',[\
         numpy.random.uniform(teff_range[0],teff_range[1]),\
         numpy.random.uniform(logg_range[0],logg_range[1]),\
-        numpy.random.uniform(z_range[0],z_range[1])])
+#        numpy.random.uniform(z_range[0],z_range[1])])
+        numpy.random.uniform(0.,0.)])
     if len(param0_init) < 3:
         param0_init.append(0.0)
         
