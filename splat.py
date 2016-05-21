@@ -744,6 +744,88 @@ class Spectrum(object):
 #        print('\nPlot spectrum using .plot()')
         return
 
+    def export(self,*args,**kwargs):
+        '''
+        :Purpose: Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  Spectrum.export and Spectrum.save_ function in the same manner.
+
+        .. _Spectrum.save : api.html#splat.Spectrum.save
+
+        :param filename: String specifying the filename to save
+        :type filename: optional, default = Spectrum.simplefilename
+
+        :Output: An ascii or fits file with the data
+
+        :Example:
+           >>> import splat
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> sp.export('/Users/adam/myspectrum.txt')
+           >>> from astropy.io import ascii
+           >>> data = ascii.read('/Users/adam/myspectrum.txt',format='tab')
+           >>> data
+            <Table length=564>
+              wavelength          flux          uncertainty   
+               float64          float64           float64     
+            -------------- ----------------- -----------------
+            0.645418405533               0.0               nan
+            0.647664904594 6.71920214475e-16 3.71175052033e-16
+            0.649897933006 1.26009925777e-15 3.85722895842e-16
+            0.652118623257 7.23781818374e-16 3.68178778862e-16
+            0.654327988625 1.94569566622e-15 3.21007116982e-16
+            ...
+        '''
+
+        '''
+        :Purpose: export spectrum object to a file, either fits or ascii depending on file extension
+        '''
+        filename = self.simplefilename
+        if len(args) > 0:
+            filename = args[0]
+        filename = kwargs.get('filename',filename)
+        filename = kwargs.get('file',filename)
+
+# determine which type of file
+        ftype = filename.split('.')[-1]
+
+# fits file
+        if (ftype == 'fit' or ftype == 'fits'):
+            try:
+                data = numpy.vstack((self.wave.value,self.flux.value,self.noise.value)).T
+                hdu = fits.PrimaryHDU(data)
+                for k in self.header.keys():
+                    hdu.header[k] = self.header[k]
+                hdu.writeto(filename,clobber=True)
+            except:
+                raise NameError('Problem saving spectrum object to file {}'.format(filename))
+
+# ascii file - by default space delimited (could make this more flexible)
+        else:
+            try:
+                t = Table([self.wave.value,self.flux.value,self.noise.value],names=['wavelength','flux','uncertainty'])
+                if kwargs.get('header',True):
+                    kys = self.header.keys()
+                    while 'HISTORY' in kys:
+                        kys.remove('HISTORY')
+                    hd = ['{} = {}'.format(k,self.header[k]) for k in kys]
+                    hd = list(set(hd))
+                    hd.sort()
+                    t.meta['comments']=hd
+#                ascii.write(t,output=filename,format=kwargs.get('format','commented_header'))
+                t.write(filename,format='ascii.tab')
+            except:
+                raise NameError('Problem saving spectrum object to file {}'.format(filename))
+        self.history.append('Spectrum saved to {}'.format(filename))
+        return
+
+
+    def save(self,*args,**kwargs):
+        '''
+        :Purpose: Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  Spectrum.export_ and Spectrum.save function in the same manner.
+
+        .. _Spectrum.export : api.html#splat.Spectrum.export
+        '''
+        self.export(*args,**kwargs)
+
+
     def flamToFnu(self):
         '''
         :Purpose: Converts flux density from :math:`F_\\lambda` to :math:`F_\\nu`, the latter in Jy. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in :math:`F_\\nu` units.
@@ -947,87 +1029,6 @@ class Spectrum(object):
         self.original = copy.deepcopy(self)
         return
 
-
-    def export(self,*args,**kwargs):
-        '''
-        :Purpose: Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  Spectrum.export and Spectrum.save_ function in the same manner.
-
-        .. _Spectrum.save : api.html#splat.Spectrum.save
-
-        :param filename: String specifying the filename to save
-        :type filename: optional, default = Spectrum.simplefilename
-
-        :Output: An ascii or fits file with the data
-
-        :Example:
-           >>> import splat
-           >>> sp = splat.getSpectrum(lucky=True)[0]
-           >>> sp.export('/Users/adam/myspectrum.txt')
-           >>> from astropy.io import ascii
-           >>> data = ascii.read('/Users/adam/myspectrum.txt',format='tab')
-           >>> data
-            <Table length=564>
-              wavelength          flux          uncertainty   
-               float64          float64           float64     
-            -------------- ----------------- -----------------
-            0.645418405533               0.0               nan
-            0.647664904594 6.71920214475e-16 3.71175052033e-16
-            0.649897933006 1.26009925777e-15 3.85722895842e-16
-            0.652118623257 7.23781818374e-16 3.68178778862e-16
-            0.654327988625 1.94569566622e-15 3.21007116982e-16
-            ...
-        '''
-
-        '''
-        :Purpose: export spectrum object to a file, either fits or ascii depending on file extension
-        '''
-        filename = self.simplefilename
-        if len(args) > 0:
-            filename = args[0]
-        filename = kwargs.get('filename',filename)
-        filename = kwargs.get('file',filename)
-
-# determine which type of file
-        ftype = filename.split('.')[-1]
-
-# fits file
-        if (ftype == 'fit' or ftype == 'fits'):
-            try:
-                data = numpy.vstack((self.wave.value,self.flux.value,self.noise.value)).T
-                hdu = fits.PrimaryHDU(data)
-                for k in self.header.keys():
-                    hdu.header[k] = self.header[k]
-                hdu.writeto(filename,clobber=True)
-            except:
-                raise NameError('Problem saving spectrum object to file {}'.format(filename))
-
-# ascii file - by default space delimited (could make this more flexible)
-        else:
-            try:
-                t = Table([self.wave.value,self.flux.value,self.noise.value],names=['wavelength','flux','uncertainty'])
-                if kwargs.get('header',True):
-                    kys = self.header.keys()
-                    while 'HISTORY' in kys:
-                        kys.remove('HISTORY')
-                    hd = ['{} = {}'.format(k,self.header[k]) for k in kys]
-                    hd = list(set(hd))
-                    hd.sort()
-                    t.meta['comments']=hd
-#                ascii.write(t,output=filename,format=kwargs.get('format','commented_header'))
-                t.write(filename,format='ascii.tab')
-            except:
-                raise NameError('Problem saving spectrum object to file {}'.format(filename))
-        self.history.append('Spectrum saved to {}'.format(filename))
-        return
-
-
-    def save(self,*args,**kwargs):
-        '''
-        :Purpose: Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  Spectrum.export_ and Spectrum.save function in the same manner.
-
-        .. _Spectrum.export : api.html#splat.Spectrum.export
-        '''
-        self.export(*args,**kwargs)
 
 
     def scale(self,factor,**kwargs):
@@ -1274,6 +1275,52 @@ class Spectrum(object):
          '''
          pass
          return
+
+    def trim(self,range,**kwargs):
+        '''
+        :Purpose: Trims a spectrum to be within a certain wavelength range or set of ranges. Data outside of these ranges are excised from the wave, flux and noise arrays. The full spectrum can be restored with the reset() procedure.
+
+        :param range: the range(s) over which the spectrum is retained - a series of nested 2-element arrays
+
+        .. _smoothToResolution : api.html#splat.Spectrum.smoothToResolution
+        .. _smoothToPixelWidth : api.html#splat.Spectrum.smoothToPixelWidth
+        .. _smoothToSlitPixelWidth : api.html#splat.Spectrum.smoothToSlitPixelWidth
+
+        :Example:
+           >>> import splat
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> sp.smoothfluxMax()
+           <Quantity 1.0577336634332284e-14 erg / (cm2 micron s)>
+           >>> sp.computeSN()
+           124.5198
+           >>> sp.scale(1.e15)
+           >>> sp.fluxMax()
+           <Quantity 1.0577336549758911 erg / (cm2 micron s)>
+           >>> sp.computeSN()
+           124.51981
+        '''
+
+        if isinstance(range,float):
+            range = [range-0.1,range+0.1]
+        if ~isinstance(range[0],list):
+            range = [range]
+        mask = numpy.zeros(len(self.wave))
+        for r in range:
+            if ~isinstance(r[0],astropy.units.quantity.Quantity):
+                r*=u.micron
+            mask[numpy.where(((self.wave.value >= r[0].value) & (self.wave.value <= r[1].value)))] = 1
+        w = numpy.where(mask == 1)
+        self.wave = self.wave[w]
+        self.flux = self.flux[w]
+        self.noise = self.noise[w]
+        self.variance = self.variance[w]
+        self.flam = self.flux
+        self.nu = self.wave.to('Hz',equivalencies=u.spectral())
+        self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
+        self.noisenu = self.noise.to('Jy',equivalencies=u.spectral_density(self.wave))
+        self.snr = self.computeSN()
+        self.history.append('Spectrum trimmed to ranges {}'.format(range))
+
 
     def waveRange(self):
         '''
@@ -2369,7 +2416,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     '''
     weights = kwargs.get('weights',numpy.zeros(len(sp1.wave))) # these will be set to 1 later
     mask = kwargs.get('mask',numpy.zeros(len(sp1.wave)))    # mask = 1 -> ignore
-    fit_ranges = kwargs.get('fit_ranges',[spex_wave_range])
+    fit_ranges = kwargs.get('fit_ranges',[spex_wave_range.value])
     fit_ranges = kwargs.get('fit_range',fit_ranges)
     fit_ranges = kwargs.get('fitrange',fit_ranges)
     fit_ranges = kwargs.get('fitrng',fit_ranges)
@@ -2381,10 +2428,13 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     var_flag = kwargs.get('novar2',True)
     stat = kwargs.get('statistic','chisqr')
     minreturn = 1.e-60
-    if not isinstance(fit_ranges[0],list):
-        fit_ranges = [fit_ranges]
+# THERE IS A MAJOR FLAW HERE
     if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
         fit_ranges*=u.micron
+#    if ~isinstance(fit_ranges[0],list) or ~isinstance(fit_ranges[0],'numpy.ndarray'):
+#        print(type(fit_ranges[0]))
+#        fit_ranges = [fit_ranges]
+#    print(fit_ranges)
 
     if (mask_standard):
         mask_telluric == True
@@ -2416,11 +2466,12 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         mask_ranges*=u.micron
 
     for ranges in mask_ranges:
-        mask[numpy.where(((sp1.wave >= ranges[0]) & (sp1.wave <= ranges[1])))] = 1
+        mask[numpy.where(numpy.logical_and(sp1.wave >= ranges[0],sp1.wave <= ranges[1]))]= 1
 
 # set the weights
     for ranges in fit_ranges:
-        weights[numpy.where(((sp1.wave >= ranges[0]) & (sp1.wave <= ranges[1])))] = 1
+        print(ranges)
+        weights[numpy.where(numpy.logical_and(sp1.wave >= ranges[0],sp1.wave <= ranges[1]))] = 1
 
 # mask flux < 0
     mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
