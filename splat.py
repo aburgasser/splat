@@ -84,8 +84,8 @@ from splat_euclid import *
 
 
 # explicitly read in source and spectral databases
-DB_SOURCES = fetchDatabase(splat.DB_SOURCES_FILE)
-DB_SPECTRA = fetchDatabase(splat.DB_SPECTRA_FILE)
+DB_SOURCES = fetchDatabase(splat.DB_FOLDER+splat.DB_SOURCES_FILE)
+DB_SPECTRA = fetchDatabase(splat.DB_FOLDER+splat.DB_SPECTRA_FILE)
 
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
@@ -2470,7 +2470,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 
 # set the weights
     for ranges in fit_ranges:
-        print(ranges)
+#        print(ranges)
         weights[numpy.where(numpy.logical_and(sp1.wave >= ranges[0],sp1.wave <= ranges[1]))] = 1
 
 # mask flux < 0
@@ -3102,7 +3102,7 @@ def isNumber(s):
 
 
 
-def estimateDistance(sp, **kwargs):
+def estimateDistance(*args, **kwargs):
     '''
     :Purpose: Takes the apparent magnitude and either takes or determines the absolute
                 magnitude, then uses the magnitude/distance relation to estimate the
@@ -3150,12 +3150,23 @@ def estimateDistance(sp, **kwargs):
 
     mag = kwargs.get('mag', False)
     mag_unc = kwargs.get('mag_unc', 0.)
+    mag_unc = kwargs.get('mag_e', mag_unc)
     absmag = kwargs.get('absmag', False)
     absmag_unc = kwargs.get('absmag_unc', 0.)
+    absmag_unc = kwargs.get('absmag_e', absmag_unc)
     spt = kwargs.get('spt', False)
-    spt_unc = kwargs.get('spt_e', 0.)
+    spt_unc = kwargs.get('spt_unc', 0.)
+    spt_unc = kwargs.get('spt_e', spt_unc)
     nsamples = kwargs.get('nsamples', 100)
     filt = kwargs.get('filter', False)
+
+# require spectum object if filter, magnitude and spt not all provided
+    if mag == False or filt == False or spt == False:
+        if len(args) == 0:
+            sys.stderr.write('\nYou must include the Spectrum object if you do not specify filter, magnitude and spt\n')
+            return numpy.nan, numpy.nan
+        else:
+            sp = args[0]
 
 # if no apparent magnitude then calculate from spectrum
     if (mag == False):
@@ -3175,7 +3186,7 @@ def estimateDistance(sp, **kwargs):
             sys.stderr.write('\nPlease specify the filter used to determine the absolute magnitude\n')
             return numpy.nan, numpy.nan
         absmag, absmag_unc = typeToMag(spt,filt,unc=spt_unc)
-        print(absmag, absmag_unc)
+#        print(absmag, absmag_unc)
 
 # create Monte Carlo sets
     if mag_unc > 0.:
@@ -3949,7 +3960,7 @@ def typeToColor(spt,color, **kwargs):
     unc = kwargs.get('unc', 0.)
 
 #Convert spectral type string to number
-    if (type(spt) == str):
+    if isinstance(spt,str):
         spt = typeToNum(spt, uncertainty=unc)
     else:
         spt = copy.deepcopy(spt)
@@ -4002,7 +4013,7 @@ def typeToColor(spt,color, **kwargs):
             return numpy.nan
 
     else:
-        sys.stderr.write('\n Spectral type {} is outside the range for reference set {}\n\n'.format(typeToNum(spt),reference))
+        sys.stderr.write('\n Spectral type {} is outside the range for reference set {}\n\n'.format(splat.typeToNum(spt),reference))
         return numpy.nan
 
 
@@ -4049,7 +4060,7 @@ def typeToMag(spt, filt, **kwargs):
     unc = kwargs.get('unc', 0.)
 
 #Convert spectral type string to number
-    if (type(spt) == str):
+    if isinstance(spt,str):
         spt = typeToNum(spt, uncertainty=unc)
     else:
         spt = copy.deepcopy(spt)
@@ -4134,7 +4145,7 @@ def typeToMag(spt, filt, **kwargs):
             abs_mag = numpy.polyval(coeff, spt-sptoffset)
             return abs_mag, fitunc
     else:
-        sys.stderr.write('\nSpectral Type is out of range for %s Abs Mag/SpT relation\n' % reference)
+        sys.stderr.write('\nSpectral Type {} is out of range for {}\n'.format(splat.typeToNum(spt),reference))
         return numpy.nan, numpy.nan
 
 
@@ -4188,7 +4199,7 @@ def typeToNum(input, **kwargs):
 
 # number -> spectral type
     if (isNumber(input)):
-        spind = int(abs(input/10))
+        spind = int(abs(input/10.))
         spdec = numpy.around(input,1)-spind*10.
         pstr = ''
         if (unc > 1.):
