@@ -4219,9 +4219,11 @@ def typeToNum(input, **kwargs):
         if (sys.version_info.major == 2):
             input = string.split(input,sep='+')[0]    # remove +/- sides
             input = string.split(input,sep='-')[0]    # remove +/- sides
+            input = string.split(input,sep='/')[0]    # remove / in spectral types
         else:
             input = input.split('+')[0]    # remove +/- sides
             input = input.split('-')[0]    # remove +/- sides
+            input = input.split('/')[0]    # remove / in spectral types
 
         sptype = re.findall('[{}]'.format(spletter),input)
         if (len(sptype) == 1):
@@ -4256,6 +4258,7 @@ def typeToNum(input, **kwargs):
             output = numpy.nan
 # none of the above - return the input
     else:
+        print('\nWarning: could not recognize format of spectral type {}\n'.format(input))
         output = input
     return output
 

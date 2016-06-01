@@ -1045,7 +1045,7 @@ def searchLibrary(*args, **kwargs):
     count = 0.
 
     spectral_db['SOURCE_SELECT'] = [x in source_keys for x in spectral_db['SOURCE_KEY']]
-#    print(source_keys,spectral_db['SOURCE_KEY'][numpy.where(spectral_db['SOURCE_SELECT']==True)])
+#    print(spectral_db['SOURCE_KEY'][numpy.where(spectral_db['SOURCE_SELECT']==True)])
 
 # search by filename
     file = kwargs.get('file','')
@@ -1109,6 +1109,7 @@ def searchLibrary(*args, **kwargs):
     else:
         spectral_db['SELECT'] = numpy.ones(len(spectral_db['DATA_KEY']))
 
+
 # limit access to public data for most users
 #    print(count,numpy.max(spectral_db['SOURCE_SELECT']),numpy.max(spectral_db['SELECT']))
 #    print(len(spectral_db[:][numpy.where(spectral_db['SELECT']==1)]))
@@ -1116,6 +1117,9 @@ def searchLibrary(*args, **kwargs):
 #    print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]))
     if (not splat.checkAccess() or kwargs.get('published',False) or kwargs.get('public',False)):
         spectral_db['SELECT'][numpy.where(spectral_db['PUBLISHED'] != 'Y')] = 0.
+
+#    print(spectral_db['SOURCE_KEY'][numpy.where(spectral_db['SELECT']==1)])
+#    print(spectral_db['SOURCE_KEY'][numpy.where(spectral_db['SOURCE_SELECT']==True)])
 
 # no matches
 #    print(count,numpy.max(spectral_db['SOURCE_SELECT']),numpy.max(spectral_db['SELECT']))
@@ -1204,7 +1208,12 @@ def importSpectra(*args,**kwargs):
 
 # make sure relevant files and folders are in place
     if not os.path.exists(review_folder):
-        raise NameError('\nCannot find review folder {}'.format(review_folder))
+        try:
+            os.makedirs(review_folder)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+#        raise NameError('\nCannot find review folder {}'.format(review_folder))
     if not os.path.exists(data_folder):
         raise NameError('\nCannot find data folder {}'.format(data_folder))
     if not os.path.exists('{}/published'.format(review_folder)):
@@ -1601,6 +1610,7 @@ def importSpectra(*args,**kwargs):
 
 # merge and export
     for col in t_spec.colnames:
+#        print(col,splat.DB_SPECTRA[col].dtype)
         tmp = t_spec[col].astype(splat.DB_SPECTRA[col].dtype)
         t_spec.replace_column(col,tmp)
     t_merge = vstack([splat.DB_SPECTRA,t_spec])
