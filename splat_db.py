@@ -1198,11 +1198,15 @@ def importSpectra(*args,**kwargs):
     '''
 # check user access
     if splat.checkAccess() == False:
-        print('\nSpectra may only be imported into library by designated manager; please email {}'.format(splat.SPLAT_EMAIL))
+        print('\nSpectra may only be imported into library by designated manager; please email {}\n'.format(splat.SPLAT_EMAIL))
         return
 
     data_folder = kwargs.get('data_folder','./')
-    review_folder = kwargs.get('review_folder','./')
+    if data_folder[-1] != '/':
+        data_folder+='/'
+    review_folder = kwargs.get('review_folder','{}/review/'.format(data_folder))
+    if review_folder[-1] != '/':
+        review_folder+='/'
     simbad_radius = kwargs.get('simbad_radius',45.*u.arcsec)
     kwargs['verbose'] = True
 

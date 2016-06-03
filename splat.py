@@ -1398,14 +1398,14 @@ def checkAccess(**kwargs):
     result = False
 
     try:
-        home = os.environ.get('HOME')
+        home = os.path.expanduser("~")
         if home == None:
             home = './'
 #        print(home)
 #        print(SPLAT_URL+access_file)
         bcode = requests.get(SPLAT_URL+access_file).content
 #        print(bcode)
-        lcode = base64.b64encode(open(home+'/'+access_file,'r').read())
+        lcode = base64.b64encode(open(home+'/'+access_file,'r').read().encode())
 #        print(lcode)
         if (bcode in lcode):        # changed to partial because of EOL variations
             result = True
