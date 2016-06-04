@@ -1259,31 +1259,36 @@ def importSpectra(*args,**kwargs):
 # populate spectral data table from fits file header
     if kwargs.get('verbose',False):
         print('\nGenerating initial input tables')
-    t_spec['DATA_KEY'] = Column([spectrum_id0+i+1 for i in numpy.arange(len(splist))],dtype='i')
-    t_spec['SOURCE_KEY'] = Column([source_id0+i+1 for i in numpy.arange(len(splist))],dtype='i')
-    t_spec['DATA_FILE'] = Column([os.path.basename(f) for f in files],dtype='str')
-    if 'DATE_OBS' in splist[0].header:
-        t_spec['OBSERVATION_DATE'] = Column([sp.header['DATE_OBS'].replace('-','') for sp in splist],dtype='str')
-        t_spec['JULIAN_DATE'] = Column([Time(sp.header['DATE_OBS']).mjd for sp in splist],dtype='str')
-    if 'TIME_OBS' in splist[0].header:
-        t_spec['OBSERVATION_TIME'] = Column([sp.header['TIME_OBS'].replace(':',' ') for sp in splist],dtype='str')
-    if 'MJD_OBS' in splist[0].header:
-        t_spec['JULIAN_DATE'] = Column([sp.header['MJD_OBS'] for sp in splist],dtype='str')
-    if 'OBSERVER' in splist[0].header:
-        t_spec['OBSERVER'] = Column([sp.header['OBSERVER'] for sp in splist],dtype='str')
-    t_spec['REDUCTION_PERSON'] = t_spec['OBSERVER']
-    if 'RESOLUTION' in splist[0].header:
-        t_spec['RESOLUTION'] = Column([150. for sp in splist],dtype='float')
+#    t_spec['DATA_KEY'] = Column([spectrum_id0+i+1 for i in numpy.arange(len(splist))],dtype='i')
+#    t_spec['SOURCE_KEY'] = Column([source_id0+i+1 for i in numpy.arange(len(splist))],dtype='i')
+#    t_spec['DATA_FILE'] = Column([os.path.basename(f) for f in files],dtype='str')
+#    t_spec['REDUCTION_PERSON'] = t_spec['OBSERVER']
+#    t_spec['RESOLUTION'] = Column([150. for sp in splist],dtype='float')
+#    t_spec['DATE_OBS'] = Column([' '*50 for sp in splist],dtype='str')        # force string
+#    t_spec['TIME_OBS'] = Column([' '*50 for sp in splist],dtype='str')        # force string
+#    t_spec['JULIAN_DATE'] = Column([' '*50 for sp in splist],dtype='str')        # force string
+#    t_spec['OBSERVER'] = Column([' '*50 for sp in splist],dtype='str')        # force string
+#    t_spec['AIRMASS'] = Column([0. for sp in splist],dtype='float')        # force string
+#    t_spec['VERSION'] = Column([' '*50 for sp in splist],dtype='str')        # force string
     for i,sp in enumerate(splist):
+        if 'DATE_OBS' in sp.header:
+            t_spec['OBSERVATION_DATE'][i] = sp.header['DATE_OBS'].replace('-','')
+            t_spec['JULIAN_DATE'][i] = Time(sp.header['DATE_OBS']).mjd
+        if 'TIME_OBS' in sp.header:
+            t_spec['OBSERVATION_TIME'][i] = sp.header['TIME_OBS'].replace(':',' ')
+        if 'MJD_OBS' in sp.header:
+            t_spec['JULIAN_DATE'][i] = sp.header['MJD_OBS']
+        if 'OBSERVER' in sp.header:
+            t_spec['OBSERVER'][i] = sp.header['OBSERVER']
         if 'RESOLUTION' in sp.header:
             t_spec['RESOLUTION'][i] = sp.header['RESOLUTION']
         elif 'RES' in sp.header:
             t_spec['RESOLUTION'][i] = sp.header['RES']
-    if 'AIRMASS' in splist[0].header:
-        t_spec['AIRMASS'] = Column([sp.header['AIRMASS'] for sp in splist],dtype='float')
-    if 'VERSION' in splist[0].header:
-        t_spec['REDUCTION_SPEXTOOL_VERSION'] = Column([sp.header['VERSION'] for sp in splist],dtype='str')
-        t_spec['REDUCTION_SPEXTOOL_VERSION'] = ['v{}'.format(v.split('v')[-1]) for v in t_spec['REDUCTION_SPEXTOOL_VERSION']]
+        if 'AIRMASS' in sp.header:
+            t_spec['AIRMASS'][i] = float(sp.header['AIRMASS'])
+        if 'VERSION' in sp.header:
+            v = sp.header['VERSION']
+            t_spec['REDUCTION_SPEXTOOL_VERSION'][i] = 'v{}'.format(v.split('v')[-1])
     t_spec['MEDIAN_SNR'] = Column([sp.computeSN() for sp in splist],dtype='float')
     t_spec['SPEX_TYPE'] = Column([splat.classifyByStandard(sp,string=True)[0] for sp in splist],dtype='str')
     t_spec['SPEX_GRAVITY_CLASSIFICATION'] = Column([splat.classifyGravity(sp,string=True) for sp in splist],dtype='str')
@@ -1300,7 +1305,8 @@ def importSpectra(*args,**kwargs):
         if 'TCS_RA' in sp.header.keys():
             sp.header['RA'] = sp.header['TCS_RA']
             sp.header['DEC'] = sp.header['TCS_DEC']
-    t_src['DESIGNATION'] = ['J{}+{}'.format(sp.header['RA'],sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('J+','J').replace(' ','') for sp in splist]
+        sp.header['RA'] = sp.header['RA'].replace('+','')
+    t_src['DESIGNATION'] = ['J{}+{}'.format(sp.header['RA'].replace('+',''),sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('++','+').replace('J+','J').replace(' ','') for sp in splist]
     t_src['SHORTNAME'] = [splat.designationToShortName(d) for d in t_src['DESIGNATION']]
     coord = [splat.properCoordinates(s) for s in t_src['DESIGNATION']]
     t_src['RA'] = [c.ra.value for c in coord]
@@ -1387,6 +1393,8 @@ def importSpectra(*args,**kwargs):
                 t_src['SIMBAD_NAME'][i] = t_sim['MAIN_ID'][0]
                 t_src['NAME'][i] = t_src['SIMBAD_NAME'][i]
                 t_src['SIMBAD_OTYPE'][i] = t_sim['OTYPE'][0]
+                if not isinstance(t_sim['SP_TYPE'][0],str):
+                    t_sim['SP_TYPE'][0] = str(t_sim['SP_TYPE'][0])
                 spt = t_sim['SP_TYPE'][0]
                 spt.replace(' ','')
                 t_src['SIMBAD_SPT'][i] = spt
@@ -1483,7 +1491,7 @@ def importSpectra(*args,**kwargs):
 # add in distance if spectral type and magnitude are known
     for i,spt in enumerate(t_src['LIT_TYPE']):
         if spt != '' and float('{}0'.format(t_src['J_2MASS'][i])) != 0.0:
-            print(spt,t_src['J_2MASS'][i],t_src['J_2MASS_E'][i])
+#            print(spt,t_src['J_2MASS'][i],t_src['J_2MASS_E'][i])
             dist = splat.estimateDistance(spt=spt,filter='2MASS J',mag=float(t_src['J_2MASS'][i]),mag_e=float(t_src['J_2MASS_E'][i]))
             if not numpy.isnan(dist[0]):
                 t_src['DISTANCE_PHOT'][i] = dist[0]
@@ -1543,7 +1551,7 @@ def importSpectra(*args,**kwargs):
         plotlist.append([compdict[c]['observed'],compdict[c]['comparison']])
         legends.extend(['Data Key: {} Source Key: {}\n{}'.format(c,compdict[c]['source_key'],compdict[c]['observed'].name),'{} {}'.format(compdict[c]['comparison'].name,compdict[c]['comparison_type'])])
         clist.extend(['k','r'])
-    splat.plotSpectrum(plotlist,multiplot=True,layout=[2,2],multipage=True,legends=legends,output=review_folder+'review_plots.pdf',colors=clist,fontscale=0.5)
+    splat.plotSpectrum(plotlist,multiplot=True,layout=[2,2],multipage=True,legends=legends,output=review_folder+'/review_plots.pdf',colors=clist,fontscale=0.5)
 
 # output database updates
     t_src.remove_column('SHORTNAME')
@@ -1552,8 +1560,8 @@ def importSpectra(*args,**kwargs):
     t_spec.remove_column('SOURCE_SELECT')
     for i in numpy.arange(len(t_spec['NOTE'])):
         t_spec['NOTE'][i] = compdict[str(t_spec['DATA_KEY'][i])]['comparison_type']
-    t_src.write(review_folder+'source_update.csv',format='ascii.csv')
-    t_spec.write(review_folder+'spectrum_update.csv',format='ascii.csv')
+    t_src.write(review_folder+'/source_update.csv',format='ascii.csv')
+    t_spec.write(review_folder+'/spectrum_update.csv',format='ascii.csv')
 
 # open up windows to review spreadsheets
 # NOTE: WOULD LIKE TO MAKE THIS AUTOMATICALLY OPEN FILE
@@ -1569,7 +1577,7 @@ def importSpectra(*args,**kwargs):
 
 # NEXT STEP - MOVE FILES TO APPROPRIATE PLACES, UPDATE MAIN DATABASES
 # source db
-    t_src = fetchDatabase(review_folder+'source_update.csv',csv=True)
+    t_src = fetchDatabase(review_folder+'/source_update.csv',csv=True)
 #    if 'SIMBAD_SEP' in t_src.keys():
 #        t_src.remove_column('SIMBAD_SEP')
 
