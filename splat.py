@@ -508,12 +508,13 @@ class Spectrum(object):
             try:
                 self.header[k] = getattr(self,k)
             except:
-                self.header[k] = ''
+                if k.upper() not in self.header.keys():
+                    self.header[k] = ''
 
         self.history = ['Spectrum successfully loaded']
 # create a copy to store as the original
         self.original = copy.deepcopy(self)
-
+        return
 
     def __copy__(self):
         '''
@@ -927,15 +928,18 @@ class Spectrum(object):
            >>> sp.fluxMax()
            <Quantity 1.0 erg / (cm2 micron s)>
         '''
-        if kwargs.get('maskTelluric',True):
-            return numpy.nanmax(self.flux.value[numpy.where(\
+        if kwargs.get('maskTelluric',True):            
+            try:
+                return numpy.nanmax(self.flux.value[numpy.where(\
                 numpy.logical_or(\
                     numpy.logical_and(self.wave > 0.9*u.micron,self.wave < 1.35*u.micron),
                     numpy.logical_and(self.wave > 1.42*u.micron,self.wave < 1.8*u.micron),
                     numpy.logical_and(self.wave > 1.92*u.micron,self.wave < 2.3*u.micron)))])*self.funit
-        else:
-            return numpy.nanmax(self.flux.value[numpy.where(\
-                numpy.logical_and(self.wave > 0.9*u.micron,self.wave < 2.3*u.micron))])*self.funit
+            except:
+                pass
+        
+        return numpy.nanmax(self.flux.value[numpy.where(\
+                numpy.logical_and(self.wave > nanmin(self.wave)+0.1*(nanmax(self.wave)-nanmin(self.wave)),self.wave < nanmax(self.wave)-0.1*(nanmax(self.wave)-nanmin(self.wave))))])*self.funit
 
 
     def normalize(self,**kwargs):
@@ -2575,7 +2579,7 @@ def coordinateToDesignation(c):
         return string.replace('J{0}{1}'.format(cc.ra.to_string(unit=u.hour, sep='', precision=2, pad=True), \
         cc.dec.to_string(unit=u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
     else:
-        return replace('J{0}{1}'.format(cc.ra.to_string(unit=u.hour, sep='', precision=2, pad=True), \
+        return str.replace('J{0}{1}'.format(cc.ra.to_string(unit=u.hour, sep='', precision=2, pad=True), \
         cc.dec.to_string(unit=u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
 
 
@@ -3715,6 +3719,7 @@ def readSpectrum(*args,**kwargs):
 # fits file
     if (ftype == 'fit' or ftype == 'fits'):
         with fits.open(file) as data:
+            data.verify('silentfix+warn')
             if 'NAXIS3' in data[0].header.keys():
                 d = numpy.copy(data[0].data[0,:,:])
             else:
@@ -3982,6 +3987,7 @@ def typeToColor(spt,color, **kwargs):
     else:
         sys.stderr.write('\n Do not have color set {}\n\n'.format(ref))
         return numpy.nan
+    tmpval = copy.deepcopy(values)
 
     if kwargs.get('verbose',False):
         print('\nUsing the SpT/color trends from {}\n'.format(reference))
@@ -3991,15 +3997,15 @@ def typeToColor(spt,color, **kwargs):
 
 # fill in extra colors - a little inefficient right now  
         if color.lower() not in values.keys():
-            for i in numpy.arange(len(values.keys())):
-                for a in values.keys():
-                    for b in values.keys():
+            for i in numpy.arange(len(tmpval.keys())):
+                for a in tmpval.keys():
+                    for b in tmpval.keys():
                         f1 = a.split('-')
                         f2 = b.split('-')
                         if f1[-1] == f2[0]:
                             k = '{}-{}'.format(f1[0],f2[-1])
                             if k not in values.keys():
-                                values[k] = [sum(x) for x in zip(values[a], values[b])]
+                                values[k] = [sum(x) for x in zip(tmpval[a], tmpval[b])]
 
         if color.lower() in values.keys():
             f = interp1d(numpy.arange(rng[0],rng[1]+1),values[color.lower()],bounds_error=False,fill_value=0.)
