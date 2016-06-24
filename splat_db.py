@@ -26,7 +26,7 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u            # standard units
 from astroquery.simbad import Simbad
 from astroquery.vizier import Vizier
-from PyQt4 import QtGui, QtCore
+#from PyQt4 import QtGui, QtCore
 from shutil import copyfile
 
 DB_FOLDER = '/db/'
@@ -47,54 +47,49 @@ TMPFILENAME = 'splattmpfile'
 sys.ps1 = 'splat db> '
 
 # WINDOW class for examining spreadsheets
-class Window(QtGui.QWidget):
-    def __init__(self, rows, columns):
-        QtGui.QWidget.__init__(self)
-        self.table = QtGui.QTableWidget(rows, columns, self)
-        for column in range(columns - 1):
-            for row in range(rows - 1):
-                item = QtGui.QTableWidgetItem('Text%d' % row)
-                self.table.setItem(row, column, item)
-        self.buttonOpen = QtGui.QPushButton('Open', self)
-        self.buttonSave = QtGui.QPushButton('Save', self)
-        self.buttonOpen.clicked.connect(self.handleOpen)
-        self.buttonSave.clicked.connect(self.handleSave)
-        layout = QtGui.QVBoxLayout(self)
-        layout.addWidget(self.table)
-        layout.addWidget(self.buttonOpen)
-        layout.addWidget(self.buttonSave)
+#
 
-    def handleSave(self):
-        path = QtGui.QFileDialog.getSaveFileName(
-                self, 'Save File', '', 'CSV(*.csv)')
-        if path:
-            with open(unicode(path), 'wb') as stream:
-                writer = csv.writer(stream)
-                for row in range(self.table.rowCount()):
-                    rowdata = []
-                    for column in range(self.table.columnCount()):
-                        item = self.table.item(row, column)
-                        if item is not None:
-                            rowdata.append(
-                                unicode(item.text()).encode('utf8'))
-                        else:
-                            rowdata.append('')
-                    writer.writerow(rowdata)
 
-    def handleOpen(self):
-        path = QtGui.QFileDialog.getOpenFileName(
-                self, 'Open File', '', 'CSV(*.csv)')
-        if path:
-            with open(unicode(path), 'rb') as stream:
-                self.table.setRowCount(0)
-                self.table.setColumnCount(0)
-                for rowdata in csv.reader(stream):
-                    row = self.table.rowCount()
-                    self.table.insertRow(row)
-                    self.table.setColumnCount(len(rowdata))
-                    for column, data in enumerate(rowdata):
-                        item = QtGui.QTableWidgetItem(data.decode('utf8'))
-                        self.table.setItem(row, column, item)
+def processModels(**kwargs):
+    '''
+    :Purpose: Generates a set of smoothed models and SEDs for an input model set; this is a function that requires 'superuser' access
+    '''
+
+    if splat.checkAccess() is not True:
+        print('\nThis routine may only be run by SPLAT administrators\n')
+        return
+
+# ALLARD files
+    if kwargs.get('model',' ').lower() == 'btsettl2015':
+        basefolder = os.path.expanduser("~")+'/models/allard/cifist2015/BT-Settl_M-0.0a+0.0/'
+        files = glob.glob(basefolder+'lte*.7')
+        teff = [100.*float(f[len(basefolder)+3:len(basefolder)+8]) for f in files]
+        logg = [float(f[len(basefolder)+9:len(basefolder)+12]) for f in files]
+        z = [float(f[len(basefolder)+12:len(basefolder)+16]) for f in files]
+
+# baseline spectrum for wavelength solution        
+        ospex = splat.Spectrum(10001) 
+#        uspex = splat.Spectrum(12160)      - need to make this file available before using
+
+        for f in files:
+# read in file
+            print('\nReading in file {}'.format(f))
+            data = ascii.read(f,format='tab')
+            wave  = numpy.array([float(x[0][0:13])/1.e4 for x in data])
+            flux = numpy.array([10.**(float(x[0][13:25].replace('D','e'))-8.) for x in data])
+
+# generate SpeX formats using a baseline spectrum
+# THIS IS A TEMPORARY SET UP  
+            w = numpy.where(numpy.logical_and(wave >= 0.6,wave <= 2.5))
+            sp = splat.Spectrum(wave=wave[w],flux=flux[w])
+            wn = wave[numpy.where(numpy.logical_and(wave >= 1.6,wave <= 1.7))]
+            sp.resolution = wn[1]/(wn[1]-wn[0])
+            sp.smooth(resolution=200)
+            s03 = sp.copy()
+
+
+
+
 
 
 def bibTexParser(bib_tex,**kwargs):
@@ -569,6 +564,11 @@ def getPhotometry(coordinate,**kwargs):
         - A table? filename? if new photometry
 
     '''
+
+# check if online
+    if splat.checkOnline() == '':
+        print('\nYou are currently not online; cannot do a Vizier query')
+        return Table()
 
     radius = kwargs.get('radius',30.*u.arcsec)
 
@@ -1146,6 +1146,124 @@ def searchLibrary(*args, **kwargs):
 
 
 
+def querySimbad(t_src,**kwargs):
+    '''
+    Purpose
+        Internal function that queries Simbad and populates data for source table.
+
+    :Note:
+        **this program is in beta testing; bugs/errors are likely**
+
+    :Required parameters:
+        :param table: an astropy Table object, requires the presence of DESIGNATION column
+
+    :Optional parameters:
+        :param simbad_radius = 30 arcseconds: circular radius to search for sources
+        :type simbad_radius: optional, must be an angular quantity
+        :param export = '': filename to which to export resulting table to; note that populated table is returned
+        :type export: optional, string 
+    '''    
+# parameters 
+    simbad_radius = kwargs.get('simbad_radius',30.*u.arcsec)
+    verbose = kwargs.get('verbose',True)
+# checks
+    if 'DESIGNATION' not in t_src.keys():
+        raise NameError('\nDESIGNATION column is required for input table to querySimbad\n')
+    if 'SIMBAD_SEP' not in t_src.keys():
+        t_src['SIMBAD_SEP'] = Column(numpy.zeros(len(t_src)),dtype='float')
+# must be online
+    if not splat.checkOnline():
+        print('\nYou are currently not online so cannot query Simbad\n')
+        return t_src
+
+# if necessary, populate columns that are expected for source database
+    for c in splat.DB_SOURCES.keys():
+        if c not in t_src.keys():
+            t_src[c] = Column([' '*50 for des in t_src['DESIGNATION']],dtype='str')
+
+# prep Simbad search
+    sb = Simbad()
+    votfields = ['otype','parallax','sptype','propermotions','rot','rvz_radvel','rvz_error',\
+    'rvz_bibcode','fluxdata(B)','fluxdata(V)','fluxdata(R)','fluxdata(I)','fluxdata(g)','fluxdata(r)',\
+    'fluxdata(i)','fluxdata(z)','fluxdata(J)','fluxdata(H)','fluxdata(K)']
+    for v in votfields:
+        sb.add_votable_fields(v)
+
+# search by source
+    for i,des in enumerate(t_src['DESIGNATION']):
+        print(i,des)
+        c = splat.designationToCoordinate(des)
+        t_sim = sb.query_region(c,radius=simbad_radius)
+# source found in query
+        if isinstance(t_sim,Table):
+# many sources found
+#            if len(t_sim) >= 1:      # take the closest position
+            if verbose:
+                print('\nSource {} Designation = {} {} match(es)'.format(i+1,des,len(t_sim)))
+                print(t_sim)
+
+            sep = [c.separation(SkyCoord(str(t_sim['RA'][lp]),str(t_sim['DEC'][lp]),unit=(u.hourangle,u.degree))).arcsecond for lp in numpy.arange(len(t_sim))]
+            t_sim['sep'] = sep
+            t_sim.sort('sep')
+            if len(t_sim) > 1:
+                while len(t_sim)>1:
+                    t_sim.remove_row(1) 
+# one source found
+#            else:
+#                t_sim['sep'] = [c.separation(SkyCoord(str(t_sim['RA'][0]),str(t_sim['DEC'][0]),unit=(u.hourangle,u.degree))).arcsecond]
+
+# fill in information
+            t_src['SIMBAD_NAME'][i] = t_sim['MAIN_ID'][0]
+            t_src['NAME'][i] = t_src['SIMBAD_NAME'][i]
+            t_src['SIMBAD_OTYPE'][i] = t_sim['OTYPE'][0]
+            if not isinstance(t_sim['SP_TYPE'][0],str):
+                t_sim['SP_TYPE'][0] = str(t_sim['SP_TYPE'][0])
+            spt = t_sim['SP_TYPE'][0]
+            spt.replace(' ','')
+            t_src['SIMBAD_SPT'][i] = spt
+            t_src['SIMBAD_SPT_REF'][i] = t_sim['SP_BIBCODE'][0]
+            t_src['SIMBAD_SEP'][i] = t_sim['sep'][0]
+            if spt != '':
+                t_src['LIT_TYPE'][i] = t_src['SIMBAD_SPT'][i]
+                t_src['LIT_TYPE_REF'][i] = t_src['SIMBAD_SPT_REF'][i]
+            t_src['DESIGNATION'][i] = 'J{}{}'.format(t_sim['RA'][0],t_sim['DEC'][0]).replace(' ','').replace('.','')
+            coord = splat.properCoordinates(t_src['DESIGNATION'][i])
+            t_src['RA'][i] = coord.ra.value
+            t_src['DEC'][i] = coord.dec.value
+            t_src['OBJECT_TYPE'][i] = 'VLM'
+            if 'I' in t_sim['SP_TYPE'][0] and 'V' not in t_sim['SP_TYPE'][0]:
+                t_src['LUMINOSITY_CLASS'][i] = 'I{}'.format(t_sim['SP_TYPE'][0].split('I',1)[1])
+                t_src['OBJECT_TYPE'][i] = 'GIANT'
+            if 'VI' in t_sim['SP_TYPE'][0] or 'sd' in t_sim['SP_TYPE'][0]:
+                t_src['METALLICITY_CLASS'][i] = '{}sd'.format(t_sim['SP_TYPE'][0].split('sd',1)[0])
+            t_src['PARALLAX'][i] = t_sim['PLX_VALUE'][0]
+            t_src['PARALLAX_E'][i] = t_sim['PLX_ERROR'][0]
+            t_src['PARALLEX_REF'][i] = t_sim['PLX_BIBCODE'][0]
+            t_src['MU_RA'][i] = t_sim['PMRA'][0]
+            t_src['MU_DEC'][i] = t_sim['PMDEC'][0]
+#                try:            # this is in case MU is not present
+            t_src['MU'][i] = (t_sim['PMRA'][0]**2+t_sim['PMDEC'][0]**2)**0.5
+            t_src['MU_E'][i] = t_sim['PM_ERR_MAJA'][0]
+#                except:
+#                    pass
+            t_src['MU_REF'][i] = t_sim['PM_BIBCODE'][0]
+            t_src['RV'][i] = t_sim['RVZ_RADVEL'][0]
+            t_src['RV_E'][i] = t_sim['RVZ_ERROR'][0]
+            t_src['RV_REF'][i] = t_sim['RVZ_BIBCODE'][0]
+            t_src['VSINI'][i] = t_sim['ROT_Vsini'][0]
+            t_src['VSINI_E'][i] = t_sim['ROT_err'][0]
+            t_src['VSINI_REF'][i] = t_sim['ROT_bibcode'][0]
+            t_src['J_2MASS'][i] = t_sim['FLUX_J'][0]
+            t_src['J_2MASS_E'][i] = t_sim['FLUX_ERROR_J'][0]
+            t_src['H_2MASS'][i] = t_sim['FLUX_H'][0]
+            t_src['H_2MASS_E'][i] = t_sim['FLUX_ERROR_H'][0]
+            t_src['KS_2MASS'][i] = t_sim['FLUX_K'][0]
+            t_src['KS_2MASS_E'][i] = t_sim['FLUX_ERROR_K'][0]
+
+    return
+
+
+
 
 def importSpectra(*args,**kwargs):
     '''
@@ -1153,62 +1271,55 @@ def importSpectra(*args,**kwargs):
         imports a set of spectra into the SPLAT library; requires manager access.
 
     :Note:
-        **Currently not functional**
-
-    :Required parameters:
-        :param input: Can be one of the following:
-            - A string or array of strings containing spectra filenames, which must either be fits files
-                or an ascii files with three columns (tab- or comma-delimited) containing wavelength, flux and noise.
-            - A string filename for a spreadsheet (ascii, tab- or comma-delimited) listing the input spectra, one per row.
-                At least one column must be ``filename``; the remaining may be one of the optional inputs listed below
+        **this program is in beta testing; bugs/errors are likely**
 
     :Optional parameters:
-        :param source_key: Source identification key if a source is already in the SPLAT database; use this for a *new* observation of a previously observed source
-        :type long: optional, default = null
-        :param spectrum_key: Spectrum identification if a spectrum is already in the SPLAT database; use this for a *replacing* a previous observation
-        :type long: optional, default = null
-        :param name: Source name
-        :type string: optional, default = ''
-        :param ra: Source Right Ascension (used for searching for catalog information)
-        :type double: optional, default = null
-        :param dec: Source Declination (used for searching for catalog information)
-        :type double: optional, default = null
-        :param designation: Source designation (e.g., 'J1234567+0123456'; used for searching for catalog information)
-        :type string: optional, default = ''
-        :param opt_type: Source optical spectral type (e.g., 'M7')
-        :type string: optional, default = ''
-        :param opt_type_reference: Bibcode for optical type reference (e.g., '2014ApJ...787..126L')
-        :type string: optional, default = ''
-        :param nir_type: Source near-infrared spectral type (e.g., 'M7')
-        :type string: optional, default = ''
-        :param nir_type_reference: Bibcode for optical type reference (e.g., '2014ApJ...787..126L')
-        :type string: optional, default = ''
-        :param publication_reference: Publication reference bibcode (e.g., '2014ApJ...787..126L')
-        :type string: optional, default = ''
-        :param observer: Name of observer
-        :type string: optional, default = ''
-        :param date_observed: Observation date (e.g., '20100425', '2010 Apr 25')
-        :type string: optional, default = ''
+        :param data_folder = "./": Full path to folder containing data; by default this is the current directory
+        :param review_folder = "./review/": Full path to folder in which review materials will be kept; by default a new folder ``review`` will be created inside the data_folder
+        :param spreadsheet = "": Filename for a spreadsheet (ascii, tab- or comma-delimited) listing the input spectra, one per row. At least one column must be named ``filename`` or ``file`` that contains the name of the data file; the following columns are also recommended:
+
+            * ``designation``: source desigation; e.g., ``J15420830-2621138`` (strongly recommended)
+            * ``ra`` and ``dec``: Right Ascension and declination in decimal format (only needed if no designation column provided)
+            * ``name``: source name, designation will be used if not provided
+            * ``type``, ``opt_type``, ``nir_type``: spectral type of source (string); ``type`` will default to ``lit_type``
+            * ``date`` or ``observation_date``: date of observation in format YYYYMMDD
+            * ``slit``: slit width used (for computing resolution)
+            * ``airmass``: airmass of observation
+            * ``observer``: last name of primary observer
+            * ``data_reference``: bibcode of data reference
 
     :Output:
-        - Source DB update file: spreadsheet containing update to source_data.txt, saved locally as UPDATE_source_data.txt
+        - Source DB update file: spreadsheet containing update to source_data.txt, saved in review folder as source_data.txt
         - Spectral DB update file: spreadsheet containing update to spectral_data.txt, saved locally as UPDATE_spectral_data.txt
         - Photometry DB update file: spreadsheet containing update to photometry_data.txt, saved locally as UPDATE_photometry_data.txt
 
     '''
 # check user access
     if splat.checkAccess() == False:
-        print('\nSpectra may only be imported into library by designated manager; please email {}\n'.format(splat.SPLAT_EMAIL))
-        return
+        print('\nSpectra may only be imported into library by designated manager or while online; please email {}'.format(splat.SPLAT_EMAIL))
+#        return
 
-    data_folder = kwargs.get('data_folder','./')
+# check online
+#    if splat.checkOnline() == False:
+#        print('\nWarning! You are not currently online so you will not be able to retrieve SIMBAD and Vizier data\n')
+
+# program constants
+    simbad_radius = kwargs.get('simbad_radius',30.*u.arcsec)
+
+# set up optional inputs
+    data_folder = kwargs.get('data_folder','')
+    data_folder = kwargs.get('dfolder',data_folder)
+    data_folder = kwargs.get('folder',data_folder)
     if data_folder[-1] != '/':
         data_folder+='/'
     review_folder = kwargs.get('review_folder','{}/review/'.format(data_folder))
+    review_folder = kwargs.get('rfolder',review_folder)
     if review_folder[-1] != '/':
         review_folder+='/'
-    simbad_radius = kwargs.get('simbad_radius',45.*u.arcsec)
-    kwargs['verbose'] = True
+    spreadsheet = kwargs.get('spreadsheet','')
+    spreadsheet = kwargs.get('sheet',spreadsheet)
+    spreadsheet = kwargs.get('entry',spreadsheet)
+    verbose = kwargs.get('verbose',True)
 
 # make sure relevant files and folders are in place
     if not os.path.exists(review_folder):
@@ -1233,44 +1344,66 @@ def importSpectra(*args,**kwargs):
             if exception.errno != errno.EEXIST:
                 raise
 
-# first search for *.fits and *.txt files in data folder
-    if kwargs.get('verbose',False):
-        print('\nLooking up files in {} and reading in'.format(data_folder))
-    files = glob.glob(data_folder+'*.fits')+glob.glob(data_folder+'*.txt')
-    if len(files) == 0:
-        print('\nNo spectral files in {}'.format(data_folder))
-        return
+# if spreadsheet is given, use this to generate list of files
+    if spreadsheet != '':
+        try:
+            t_input = fetchDatabase(spreadsheet)        
+        except:
+            try:
+                t_input = fetchDatabase(data_folder+spreadsheet)        
+            except:
+                raise NameError('\nCould not find spreadsheet {} in local or data directories\n'.format(spreadsheet))
+        t_input_keys = [str.upper(k) for k in t_input.keys()]   # normalize capitalization
+        if 'FILENAME' in t_input.keys():
+            files = t_input['FILENAME']
+        elif 'FILE' in t_input.keys():
+            files = t_input['FILE']
+        elif 'FILES' in t_input.keys():
+            files = t_input['FILES']
+        else:
+            raise NameError('\nSpreadsheet {} does not have a column named filename; aborting\n'.format(spreadsheet))
+        if data_folder not in files[0]:
+            files = [data_folder+f for f in files]
 
-# read in files into Spectrum objects
-    splist = []
-    for f in files:
-        splist.append(splat.Spectrum(filename=f))
+# otherwise search for *.fits and *.txt files in data folder
+    else:
+        files = glob.glob(data_folder+'*.fits')+glob.glob(data_folder+'*.txt')
+        if len(files) == 0:
+            raise NameError('\nNo spectral files in {}\n'.format(data_folder))
 
 # prep tables containing information
     t_spec = Table()
     for c in splat.DB_SPECTRA.keys():
-        t_spec[c] = Column([' '*50 for sp in splist],dtype='str')
+        t_spec[c] = Column([' '*200 for f in files],dtype='str')
     t_src = Table()
     for c in splat.DB_SOURCES.keys():
-        t_src[c] = Column([' '*50 for sp in splist],dtype='str')
+        t_src[c] = Column([' '*200 for f in files],dtype='str')
     source_id0 = numpy.max(splat.DB_SOURCES['SOURCE_KEY'])
     spectrum_id0 = numpy.max(splat.DB_SPECTRA['DATA_KEY'])
 
-# populate spectral data table from fits file header
-    if kwargs.get('verbose',False):
+# read in files into Spectrum objects
+    if verbose:
+        print('\nReading in {} files from {}'.format(len(files),data_folder))
+#    splist = []
+    t_spec['DATA_FILE'] = Column(files,dtype='str')
+    t_spec['SPECTRUM'] = [splat.Spectrum(filename=f) for f in files]
+#    for f in files:
+#        splist.append()
+
+# populate spec array
+    if verbose:
         print('\nGenerating initial input tables')
-#    t_spec['DATA_KEY'] = Column([spectrum_id0+i+1 for i in numpy.arange(len(splist))],dtype='i')
-#    t_spec['SOURCE_KEY'] = Column([source_id0+i+1 for i in numpy.arange(len(splist))],dtype='i')
-#    t_spec['DATA_FILE'] = Column([os.path.basename(f) for f in files],dtype='str')
-#    t_spec['REDUCTION_PERSON'] = t_spec['OBSERVER']
-#    t_spec['RESOLUTION'] = Column([150. for sp in splist],dtype='float')
-#    t_spec['DATE_OBS'] = Column([' '*50 for sp in splist],dtype='str')        # force string
-#    t_spec['TIME_OBS'] = Column([' '*50 for sp in splist],dtype='str')        # force string
-#    t_spec['JULIAN_DATE'] = Column([' '*50 for sp in splist],dtype='str')        # force string
-#    t_spec['OBSERVER'] = Column([' '*50 for sp in splist],dtype='str')        # force string
-#    t_spec['AIRMASS'] = Column([0. for sp in splist],dtype='float')        # force string
-#    t_spec['VERSION'] = Column([' '*50 for sp in splist],dtype='str')        # force string
-    for i,sp in enumerate(splist):
+    t_spec['SOURCE_KEY'] = Column(numpy.arange(len(files))+source_id0+1,dtype='int')
+    t_spec['DATA_KEY'] = Column(numpy.arange(len(files))+spectrum_id0+1,dtype='int')
+#    t_spec['SPECTRUM'] = [sp for sp in splist]
+    t_spec['QUALITY_FLAG'] = Column(['OK' for f in t_spec['DATA_FILE']],dtype='str')
+    t_spec['PUBLISHED'] = Column(['N' for f in t_spec['DATA_FILE']],dtype='str')
+#  measurements
+    t_spec['MEDIAN_SNR'] = Column([sp.computeSN() for sp in t_spec['SPECTRUM']],dtype='float')
+    t_spec['SPEX_TYPE'] = Column([splat.classifyByStandard(sp,string=True,method='kirkpatrick')[0] for sp in t_spec['SPECTRUM']],dtype='str')
+    t_spec['SPEX_GRAVITY_CLASSIFICATION'] = Column([splat.classifyGravity(sp,string=True) for sp in t_spec['SPECTRUM']],dtype='str')
+# populate spectral data table from fits file header
+    for i,sp in enumerate(t_spec['SPECTRUM']):
         if 'DATE_OBS' in sp.header:
             t_spec['OBSERVATION_DATE'][i] = sp.header['DATE_OBS'].replace('-','')
             t_spec['JULIAN_DATE'][i] = Time(sp.header['DATE_OBS']).mjd
@@ -1285,160 +1418,176 @@ def importSpectra(*args,**kwargs):
         elif 'RES' in sp.header:
             t_spec['RESOLUTION'][i] = sp.header['RES']
         if 'AIRMASS' in sp.header:
-            t_spec['AIRMASS'][i] = float(sp.header['AIRMASS'])
+            t_spec['AIRMASS'][i] = sp.header['AIRMASS']
         if 'VERSION' in sp.header:
             v = sp.header['VERSION']
             t_spec['REDUCTION_SPEXTOOL_VERSION'][i] = 'v{}'.format(v.split('v')[-1])
-    t_spec['MEDIAN_SNR'] = Column([sp.computeSN() for sp in splist],dtype='float')
-    t_spec['SPEX_TYPE'] = Column([splat.classifyByStandard(sp,string=True)[0] for sp in splist],dtype='str')
-    t_spec['SPEX_GRAVITY_CLASSIFICATION'] = Column([splat.classifyGravity(sp,string=True) for sp in splist],dtype='str')
-    t_spec['QUALITY_FLAG'] = Column(['OK' for sp in splist],dtype='str')
-    t_spec['PUBLISHED'] = Column(['N' for sp in splist],dtype='str')
+# populate spectral data table from spreadsheet 
+    if spreadsheet != '':
+#        if 'FILENAME' in t_input_keys:
+#            t_spec['DATA_FILE'] = t_input['FILENAME']
+        if 'DATE' in t_input_keys:
+            t_spec['OBSERVATION_DATE'] = [splat.properDate(str(a),output='YYYYMMDD') for a in t_input['DATE']]
+            t_spec['JULIAN_DATE'] = [Time(splat.properDate(a,output='YYYY-MM-DD')).mjd for a in t_spec['OBSERVATION_DATE']]
+        if 'RESOLUTION' in t_input_keys:
+            t_spec['RESOLUTION'] = [r for r in t_input['RESOLUTION']]
+        if 'SLIT' in t_input_keys:
+            t_spec['RESOLUTION'] = [150.*0.5/float(s) for s in t_input['SLIT']]
+        if 'AIRMASS' in t_input_keys:
+            t_spec['AIRMASS'] = t_input['AIRMASS']
+        if 'OBSERVER' in t_input_keys:
+            t_spec['OBSERVER'] = t_input['OBSERVER']
+        if 'DATA_REFERENCE' in t_input_keys:
+            t_spec['DATA_REFERENCE'] = t_input['DATA_REFERENCE']
+            for i,ref in enumerate(t_spec['DATA_REFERENCE']):
+                if ref != '':
+                    t_spec['PUBLISHED'][i] = 'Y'
 
 #    for c in splist[0].header.keys():
 #        if c != 'HISTORY':
 #            print('{} {}'.format(c,splist[0].header[c]))
 
-# populate source data table from fits file header
     t_src['SOURCE_KEY'] = t_spec['SOURCE_KEY']
-    for sp in splist:
-        if 'TCS_RA' in sp.header.keys():
+    t_src['GRAVITY_CLASS_NIR'] = t_spec['SPEX_GRAVITY_CLASSIFICATION']
+    t_src['GRAVITY_CLASS_NIR_REF'] = Column(['SPL' for sp in t_spec['SPECTRUM']],dtype='str')
+    t_spec['COMPARISON_SPECTRUM'] = [splat.SPEX_STDS[spt] for spt in t_spec['SPEX_TYPE']]
+    t_spec['COMPARISON_TEXT'] = ['{} standard'.format(spt) for spt in t_spec['SPEX_TYPE']]
+
+# determine coordinates as best as possible
+    for sp in t_spec['SPECTRUM']:
+        if 'TCS_RA' in sp.header.keys() and 'TCS_DEC' in sp.header.keys():
             sp.header['RA'] = sp.header['TCS_RA']
             sp.header['DEC'] = sp.header['TCS_DEC']
-        sp.header['RA'] = sp.header['RA'].replace('+','')
-    t_src['DESIGNATION'] = ['J{}+{}'.format(sp.header['RA'].replace('+',''),sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('++','+').replace('J+','J').replace(' ','') for sp in splist]
-    t_src['SHORTNAME'] = [splat.designationToShortName(d) for d in t_src['DESIGNATION']]
-    coord = [splat.properCoordinates(s) for s in t_src['DESIGNATION']]
-    t_src['RA'] = [c.ra.value for c in coord]
-    t_src['DEC'] = [c.dec.value for c in coord]
-    for c in splat.DB_SOURCES.keys():
-        if c not in t_src.keys():
-#            t_src[c] = Column([splat.DB_SOURCES[c][0] for sp in splist],dtype=type(splat.DB_SOURCES[c][0]))
-            t_src[c] = Column([' '*50 for sp in splist],dtype='str')        # force string
-    t_src['NIR_TYPE'] = t_spec['SPEX_TYPE']
-    t_src['LIT_TYPE'] = t_spec['SPEX_TYPE']
-    t_src['NIR_TYPE_REF'] = Column(['SPL' for sp in splist],dtype='str')
-    t_src['LIT_TYPE_REF'] = Column(['SPL' for sp in splist],dtype='str')
-    t_src['GRAVITY_CLASS_NIR'] = t_spec['SPEX_GRAVITY_CLASSIFICATION']
-    t_src['GRAVITY_CLASS_NIR_REF'] = Column(['SPL' for sp in splist],dtype='str')
-    t_src['SIMBAD_SEP'] = Column([0. for sp in splist],dtype='float')
+            sp.header['RA'] = sp.header['RA'].replace('+','')
+        if t_src['DESIGNATION'][i] == '' and sp_header['RA'] != '' and sp_header['DEC'] != '':
+            t_src['DESIGNATION'][i] = 'J{}+{}'.format(sp.header['RA'].replace('+',''),sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('++','+').replace('J+','J').replace(' ','')
+        if t_src['RA'][i] == '' and t_src['DESIGNATION'][i] != '':
+            coord = splat.properCoordinates(t_src['DESIGNATION'][i])
+            t_src['RA'][i] = coord.ra.value
+            t_src['DEC'][i] = coord.dec.value
 
-# prep comparison sample as the standards
-    compdict = {}
-    for i,sp in enumerate(splist):
-        compdict[str(t_spec['DATA_KEY'][i])] = {'observed': sp, 'comparison': splat.SPEX_STDS[t_spec['SPEX_TYPE'][i]], 'comparison_type': '{} standard'.format(t_spec['SPEX_TYPE'][i]), 'source_key': str(t_spec['SOURCE_KEY'][i])}
+# populate source data table from spreadsheet
+    if spreadsheet != '':
+        if 'DESIGNATION' in t_input_keys:
+            t_src['DESIGNATION'] = t_input['DESIGNATION']
+            t_src['NAME'] = t_src['DESIGNATION']
+#            coord = [splat.properCoordinates(s) for s in t_src['DESIGNATION']]
+#            t_src['RA'] = [c.ra.value for c in coord]
+#            t_src['DEC'] = [c.dec.value for c in coord]
+        if 'NAME' in t_input_keys:
+            t_src['NAME'] = t_input['NAME']
+        if 'RA' in t_input_keys and 'DEC' in t_input_keys:
+            if splat.isNumber(t_input['RA'][0]):
+                t_src['RA'] = t_input['RA']
+                t_src['DEC'] = t_input['DEC']
+        if 'TYPE' in t_input_keys:
+            t_src['LIT_TYPE'] = t_input['TYPE']
+        if 'OPT_TYPE' in t_input_keys:
+            t_src['OPT_TYPE'] = t_input['OPT_TYPE']
+        if 'NIR_TYPE' in t_input_keys:
+            t_src['NIR_TYPE'] = t_input['NIR_TYPE']
+    t_src['SHORTNAME'] = [splat.designationToShortName(d) for d in t_src['DESIGNATION']]
+#    for c in splat.DB_SOURCES.keys():
+#        if c not in t_src.keys():
+#            t_src[c] = Column([' '*50 for sp in splist],dtype='str')        # force string
+
+# transfer spectral types
+    for i,t in enumerate(t_src['NIR_TYPE']):
+        if t == '':
+            t_src['NIR_TYPE'][i] = t_spec['SPEX_TYPE'][i]
+            t_src['NIR_TYPE_REF'][i] = 'SPL'
+        if t_src['LIT_TYPE'][i] == '':
+            t_src['LIT_TYPE'][i] = t_spec['SPEX_TYPE'][i]
+            t_src['LIT_TYPE_REF'][i] = 'SPL'
+
 
 # now do a SIMBAD search for sources based on coordinates
-    if kwargs.get('verbose',False):
+    if verbose:
         print('\nSIMBAD search')
-    sb = Simbad()
-    votfields = ['otype','parallax','sptype','propermotions','rot','rvz_radvel','rvz_error',\
-    'rvz_bibcode','fluxdata(B)','fluxdata(V)','fluxdata(R)','fluxdata(I)','fluxdata(g)','fluxdata(r)',\
-    'fluxdata(i)','fluxdata(z)','fluxdata(J)','fluxdata(H)','fluxdata(K)']
-    for v in votfields:
-        sb.add_votable_fields(v)
+    querySimbad(t_src)
+
 
     for i,des in enumerate(t_src['DESIGNATION']):
-        c = splat.designationToCoordinate(des)
-        t_sim = sb.query_region(c,radius=simbad_radius)
-# source found in query
-        if isinstance(t_sim,Table):
-            if kwargs.get('verbose',False):
-                print('\nSource {} Designation = {} {} match(es)'.format(i+1,des,len(t_sim)))
-# many sources found
-            if len(t_sim) > 1:      # take the closest position
-                sep = [c.separation(SkyCoord(str(t_sim['RA'][lp]),str(t_sim['DEC'][lp]),unit=(u.hourangle,u.degree))).arcsecond for lp in numpy.arange(len(t_sim))]
-                t_sim['sep'] = sep
-                t_sim.sort('sep')
-#                while len(t_sim)>1:
-#                    t_sim.remove_row(1) 
-# one source found
-            else:
-                t_sim['sep'] = [c.separation(SkyCoord(str(t_sim['RA'][0]),str(t_sim['DEC'][0]),unit=(u.hourangle,u.degree))).arcsecond]
-            if kwargs.get('verbose',False):
-                print(t_sim)
-
-# update coordinates
-            c = splat.properCoordinates('{} {}'.format(t_sim['RA'][0],t_sim['DEC'][0]))
-            t_src['DESIGNATION'][i] = splat.coordinateToDesignation(c)
-            t_src['RA'][i] = c.ra.value
-            t_src['DEC'][i] = c.dec.value
-
 # check if source is in the library already; if so, fill in source info
-            if t_sim['MAIN_ID'][0] in splat.DB_SOURCES['SIMBAD_NAME']:
-                for c in t_src.keys():
-                    t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_sim['MAIN_ID'][0])][0]
-                    t_spec['SOURCE_KEY'][i] = t_src['SOURCE_KEY'][i]
+        if t_src['SIMBAD_NAME'][i] != '' and t_src['SIMBAD_NAME'][i] in splat.DB_SOURCES['SIMBAD_NAME']:
+            for c in t_src.keys():
+                if t_src[c][i] == '':
+                    t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_src['MAIN_ID'][i])][0]
+            t_spec['SOURCE_KEY'][i] = t_src['SOURCE_KEY'][i]
 
 # grab library spectra and see if any were taken on the same date (possible redundancy)
-                matchlib = splat.searchLibrary(idkey=t_src['SOURCE_KEY'][i],date=t_spec['OBSERVATION_DATE'][i])
+            matchlib = splat.searchLibrary(idkey=t_src['SOURCE_KEY'][i],date=t_spec['OBSERVATION_DATE'][i])
 # previous observation on this date found - retain in case this is a better spectrum
-                if len(matchlib) > 0.:
-                    mkey = matchlib['DATA_KEY'][0]
-                    if kwargs.get('verbose',False):
-                        print('Previous spectrum found in library for data key {}'.format(mkey))
-                    compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(mkey)
-                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'repeat spectrum: {}'.format(mkey)
+            if len(matchlib) > 0.:
+                mkey = matchlib['DATA_KEY'][0]
+                if verbose:
+                    print('Previous spectrum found in library for data key {}'.format(mkey))
+                t_spec['COMPARISON_SPECTRUM'][i] = splat.Spectrum(mkey)
+                t_spec['COMPARISON_TEXT'][i] = 'repeat spectrum: {}'.format(mkey)
+#                compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(mkey)
+#                compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'repeat spectrum: {}'.format(mkey)
 # no previous observation on this date - retain the spectrum with the highest S/N
-                else:
-                    matchlib = splat.searchLibrary(idkey=t_src['SOURCE_KEY'][i])
-                    if len(matchlib) > 0:
-                        matchlib.sort('MEDIAN_SNR')
-                        matchlib.reverse()
-                        compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(matchlib['DATA_KEY'][0])
-                        compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'alternate spectrum: {} taken on {}'.format(matchlib['DATA_KEY'][0],matchlib['OBSERVATION_DATE'][0])
+            else:
+                matchlib = splat.searchLibrary(idkey=t_src['SOURCE_KEY'][i])
+                if len(matchlib) > 0:
+                    matchlib.sort('MEDIAN_SNR')
+                    matchlib.reverse()
+                    t_spec['COMPARISON_SPECTRUM'][i] = splat.Spectrum(matchlib['DATA_KEY'][0])
+                    t_spec['COMPARISON_TEXT'][i] = 'alternate spectrum: {} taken on {}'.format(matchlib['DATA_KEY'][0],matchlib['OBSERVATION_DATE'][0])
+#                    compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(matchlib['DATA_KEY'][0])
+#                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'alternate spectrum: {} taken on {}'.format(matchlib['DATA_KEY'][0],matchlib['OBSERVATION_DATE'][0])
 
 # SIMBAD source is not in the library - fill in source information
-            else:
-                t_src['SIMBAD_NAME'][i] = t_sim['MAIN_ID'][0]
-                t_src['NAME'][i] = t_src['SIMBAD_NAME'][i]
-                t_src['SIMBAD_OTYPE'][i] = t_sim['OTYPE'][0]
-                if not isinstance(t_sim['SP_TYPE'][0],str):
-                    t_sim['SP_TYPE'][0] = str(t_sim['SP_TYPE'][0])
-                spt = t_sim['SP_TYPE'][0]
-                spt.replace(' ','')
-                t_src['SIMBAD_SPT'][i] = spt
-                t_src['SIMBAD_SPT_REF'][i] = t_sim['SP_BIBCODE'][0]
-                t_src['SIMBAD_SEP'][i] = t_sim['sep'][0]
-                if spt != '':
-                    t_src['LIT_TYPE'][i] = t_src['SIMBAD_SPT'][i]
-                    t_src['LIT_TYPE_REF'][i] = t_src['SIMBAD_SPT_REF'][i]
-                t_src['DESIGNATION'][i] = 'J{}{}'.format(t_sim['RA'][0],t_sim['DEC'][0]).replace(' ','').replace('.','')
-                coord = splat.properCoordinates(t_src['DESIGNATION'][i])
-                t_src['RA'][i] = coord.ra.value
-                t_src['DEC'][i] = coord.dec.value
-                t_src['OBJECT_TYPE'][i] = 'VLM'
-                if 'I' in t_sim['SP_TYPE'][0] and 'V' not in t_sim['SP_TYPE'][0]:
-                    t_src['LUMINOSITY_CLASS'][i] = 'I{}'.format(t_sim['SP_TYPE'][0].split('I',1)[1])
-                    t_src['OBJECT_TYPE'][i] = 'GIANT'
-                if 'VI' in t_sim['SP_TYPE'][0] or 'sd' in t_sim['SP_TYPE'][0]:
-                    t_src['METALLICITY_CLASS'][i] = '{}sd'.format(t_sim['SP_TYPE'][0].split('sd',1)[0])
-                t_src['PARALLAX'][i] = t_sim['PLX_VALUE'][0]
-                t_src['PARALLAX_E'][i] = t_sim['PLX_ERROR'][0]
-                t_src['PARALLEX_REF'][i] = t_sim['PLX_BIBCODE'][0]
-                t_src['MU_RA'][i] = t_sim['PMRA'][0]
-                t_src['MU_DEC'][i] = t_sim['PMDEC'][0]
-#                try:            # this is in case MU is not present
-                t_src['MU'][i] = (t_sim['PMRA'][0]**2+t_sim['PMDEC'][0]**2)**0.5
-                t_src['MU_E'][i] = t_sim['PM_ERR_MAJA'][0]
-#                except:
-#                    pass
-                t_src['MU_REF'][i] = t_sim['PM_BIBCODE'][0]
-                t_src['RV'][i] = t_sim['RVZ_RADVEL'][0]
-                t_src['RV_E'][i] = t_sim['RVZ_ERROR'][0]
-                t_src['RV_REF'][i] = t_sim['RVZ_BIBCODE'][0]
-                t_src['VSINI'][i] = t_sim['ROT_Vsini'][0]
-                t_src['VSINI_E'][i] = t_sim['ROT_err'][0]
-                t_src['VSINI_REF'][i] = t_sim['ROT_bibcode'][0]
-                t_src['J_2MASS'][i] = t_sim['FLUX_J'][0]
-                t_src['J_2MASS_E'][i] = t_sim['FLUX_ERROR_J'][0]
-                t_src['H_2MASS'][i] = t_sim['FLUX_H'][0]
-                t_src['H_2MASS_E'][i] = t_sim['FLUX_ERROR_H'][0]
-                t_src['KS_2MASS'][i] = t_sim['FLUX_K'][0]
-                t_src['KS_2MASS_E'][i] = t_sim['FLUX_ERROR_K'][0]
+#             else:
+#                 t_src['SIMBAD_NAME'][i] = t_sim['MAIN_ID'][0]
+#                 t_src['NAME'][i] = t_src['SIMBAD_NAME'][i]
+#                 t_src['SIMBAD_OTYPE'][i] = t_sim['OTYPE'][0]
+#                 if not isinstance(t_sim['SP_TYPE'][0],str):
+#                     t_sim['SP_TYPE'][0] = str(t_sim['SP_TYPE'][0])
+#                 spt = t_sim['SP_TYPE'][0]
+#                 spt.replace(' ','')
+#                 t_src['SIMBAD_SPT'][i] = spt
+#                 t_src['SIMBAD_SPT_REF'][i] = t_sim['SP_BIBCODE'][0]
+#                 t_src['SIMBAD_SEP'][i] = t_sim['sep'][0]
+#                 if spt != '':
+#                     t_src['LIT_TYPE'][i] = t_src['SIMBAD_SPT'][i]
+#                     t_src['LIT_TYPE_REF'][i] = t_src['SIMBAD_SPT_REF'][i]
+#                 t_src['DESIGNATION'][i] = 'J{}{}'.format(t_sim['RA'][0],t_sim['DEC'][0]).replace(' ','').replace('.','')
+#                 coord = splat.properCoordinates(t_src['DESIGNATION'][i])
+#                 t_src['RA'][i] = coord.ra.value
+#                 t_src['DEC'][i] = coord.dec.value
+#                 t_src['OBJECT_TYPE'][i] = 'VLM'
+#                 if 'I' in t_sim['SP_TYPE'][0] and 'V' not in t_sim['SP_TYPE'][0]:
+#                     t_src['LUMINOSITY_CLASS'][i] = 'I{}'.format(t_sim['SP_TYPE'][0].split('I',1)[1])
+#                     t_src['OBJECT_TYPE'][i] = 'GIANT'
+#                 if 'VI' in t_sim['SP_TYPE'][0] or 'sd' in t_sim['SP_TYPE'][0]:
+#                     t_src['METALLICITY_CLASS'][i] = '{}sd'.format(t_sim['SP_TYPE'][0].split('sd',1)[0])
+#                 t_src['PARALLAX'][i] = t_sim['PLX_VALUE'][0]
+#                 t_src['PARALLAX_E'][i] = t_sim['PLX_ERROR'][0]
+#                 t_src['PARALLEX_REF'][i] = t_sim['PLX_BIBCODE'][0]
+#                 t_src['MU_RA'][i] = t_sim['PMRA'][0]
+#                 t_src['MU_DEC'][i] = t_sim['PMDEC'][0]
+# #                try:            # this is in case MU is not present
+#                 t_src['MU'][i] = (t_sim['PMRA'][0]**2+t_sim['PMDEC'][0]**2)**0.5
+#                 t_src['MU_E'][i] = t_sim['PM_ERR_MAJA'][0]
+# #                except:
+# #                    pass
+#                 t_src['MU_REF'][i] = t_sim['PM_BIBCODE'][0]
+#                 t_src['RV'][i] = t_sim['RVZ_RADVEL'][0]
+#                 t_src['RV_E'][i] = t_sim['RVZ_ERROR'][0]
+#                 t_src['RV_REF'][i] = t_sim['RVZ_BIBCODE'][0]
+#                 t_src['VSINI'][i] = t_sim['ROT_Vsini'][0]
+#                 t_src['VSINI_E'][i] = t_sim['ROT_err'][0]
+#                 t_src['VSINI_REF'][i] = t_sim['ROT_bibcode'][0]
+#                 t_src['J_2MASS'][i] = t_sim['FLUX_J'][0]
+#                 t_src['J_2MASS_E'][i] = t_sim['FLUX_ERROR_J'][0]
+#                 t_src['H_2MASS'][i] = t_sim['FLUX_H'][0]
+#                 t_src['H_2MASS_E'][i] = t_sim['FLUX_ERROR_H'][0]
+#                 t_src['KS_2MASS'][i] = t_sim['FLUX_K'][0]
+#                 t_src['KS_2MASS_E'][i] = t_sim['FLUX_ERROR_K'][0]
 
 # no source found in SIMBAD: just check library
-        else:
+        elif t_src['SIMBAD_NAME'][i] == '':
             if t_src['SHORTNAME'][i] in splat.DB_SOURCES['SHORTNAME']:
                 for c in t_src.keys():
                     t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SHORTNAME'] == t_src['SHORTNAME'][i])][0]
@@ -1449,44 +1598,51 @@ def importSpectra(*args,**kwargs):
 # previous observation on this date found - retain in case this is a better spectrum
                 if len(matchlib) > 0.:
                     mkey = matchlib['DATA_KEY'][0]
-                    if kwargs.get('verbose',False):
+                    if verbose:
                         print('Previous spectrum found in library for data key {}'.format(mkey))
-                    compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(mkey)
-                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'repeat spectrum: {}'.format(mkey)
+                    t_spec['COMPARISON_SPECTRUM'][i] = splat.Spectrum(mkey)
+                    t_spec['COMPARISON_TEXT'][i] = 'repeat spectrum: {}'.format(mkey)
+#                    compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(mkey)
+#                    compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'repeat spectrum: {}'.format(mkey)
 # no previous observation on this date - retain the spectrum with the highest S/N
                 else:
                     matchlib = splat.searchLibrary(idkey=t_src['SOURCE_KEY'][i])
                     if len(matchlib) > 0:
                         matchlib.sort('MEDIAN_SNR')
                         matchlib.reverse()
-                        compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(matchlib['DATA_KEY'][0])
-                        compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'alternate spectrum: {} taken on {}'.format(matchlib['DATA_KEY'][0],matchlib['OBSERVATION_DATE'][0])
-            else:
-                t_src['NAME'][i] = t_src['DESIGNATION'][i]
+                        t_spec['COMPARISON_SPECTRUM'][i] = splat.Spectrum(matchlib['DATA_KEY'][0])
+                        t_spec['COMPARISON_TEXT'][i] = 'alternate spectrum: {} taken on {}'.format(matchlib['DATA_KEY'][0],matchlib['OBSERVATION_DATE'][0])
+#                        compdict[str(t_spec['DATA_KEY'][i])]['comparison'] = splat.Spectrum(matchlib['DATA_KEY'][0])
+#                        compdict[str(t_spec['DATA_KEY'][i])]['comparison_type'] = 'alternate spectrum: {} taken on {}'.format(matchlib['DATA_KEY'][0],matchlib['OBSERVATION_DATE'][0])
 
-# fill in missing photometry with Vizier query
-#    v = Vizier(columns=["*", "+_r"], catalog=catalog_2mass)
-    for i,jmag in enumerate(t_src['J_2MASS']):
-        if float('{}0'.format(jmag)) == 0.0:
-            t_vizier = splat.getPhotometry(splat.properCoordinates(t_src['DESIGNATION'][i]),radius=30.*u.arcsec,catalog='2MASS')
-#            t_vizier = v.query_region(splat.properCoordinates(t_src['DESIGNATION'][i]),radius=30.*u.arcsec)[0]
-#            if len(t_vizier) > 1:
-#                t_vizier.sort('_r')
-            if len(t_vizier) > 0:
-                t_vizier.sort('_r')
-#                print(len(t_vizier),t_vizier.keys())
-                while len(t_vizier)>1:
-                    t_vizier.remove_row(1) 
-                if kwargs.get('verbose',False):
-                    print('\n{}'.format(t_src['DESIGNATION'][i]))
-                    print(t_vizier)
-                t_src['DESIGNATION'][i] = 'J{}'.format(t_vizier['_2MASS'][0])
-                t_src['J_2MASS'][i] = t_vizier['Jmag'][0]
-                t_src['J_2MASS_E'][i] = t_vizier['e_Jmag'][0]
-                t_src['H_2MASS'][i] = t_vizier['Hmag'][0]
-                t_src['H_2MASS_E'][i] = t_vizier['e_Hmag'][0]
-                t_src['KS_2MASS'][i] = t_vizier['Kmag'][0]
-                t_src['KS_2MASS_E'][i] = t_vizier['e_Kmag'][0]
+# fill in missing 2MASS photometry with Vizier query
+    if verbose:
+        print('\n2MASS photometry from Vizier')
+
+    if splat.checkOnline() == '':
+        if verbose:
+            print('\nCould not perform Vizier search, you are not online')
+    else:
+        for i,jmag in enumerate(t_src['J_2MASS']):
+            if float('{}0'.format(jmag)) == 0.0:
+                t_vizier = splat.getPhotometry(splat.properCoordinates(t_src['DESIGNATION'][i]),radius=30.*u.arcsec,catalog='2MASS')
+
+    # multiple sources; choose the closest
+                if len(t_vizier) > 0:
+                    t_vizier.sort('_r')
+    #                print(len(t_vizier),t_vizier.keys())
+    #                while len(t_vizier)>1:
+    #                    t_vizier.remove_row(1) 
+                    if verbose:
+                        print('\n{}'.format(t_src['DESIGNATION'][i]))
+                        print(t_vizier)
+                    t_src['DESIGNATION'][i] = 'J{}'.format(t_vizier['_2MASS'][0])
+                    t_src['J_2MASS'][i] = t_vizier['Jmag'][0]
+                    t_src['J_2MASS_E'][i] = t_vizier['e_Jmag'][0]
+                    t_src['H_2MASS'][i] = t_vizier['Hmag'][0]
+                    t_src['H_2MASS_E'][i] = t_vizier['e_Hmag'][0]
+                    t_src['KS_2MASS'][i] = t_vizier['Kmag'][0]
+                    t_src['KS_2MASS_E'][i] = t_vizier['e_Kmag'][0]
 
 # add in distance if spectral type and magnitude are known
     for i,spt in enumerate(t_src['LIT_TYPE']):
@@ -1507,9 +1663,11 @@ def importSpectra(*args,**kwargs):
 # compute J-K excess and color extremity
         if spt != '' and float('{}0'.format(t_src['J_2MASS'][i])) != 0.0 and float('{}0'.format(t_src['KS_2MASS'][i])) != 0.0:
             t_src['JK_EXCESS'][i] = float(t_src['J_2MASS'][i])-float(t_src['KS_2MASS'][i])-splat.typeToColor(spt,'J-K')
-            if t_src['JK_EXCESS'][i] > 0.3:
+            if t_src['JK_EXCESS'][i] == numpy.nan:
+                t_src['JK_EXCESS'][i] = ''
+            elif t_src['JK_EXCESS'][i] > 0.3:
                 t_src['COLOR_EXTREMITY'][i] == 'RED'
-            if t_src['JK_EXCESS'][i] < -0.3:
+            elif t_src['JK_EXCESS'][i] < -0.3:
                 t_src['COLOR_EXTREMITY'][i] == 'BLUE'
 
 # clear up zeros
@@ -1542,24 +1700,29 @@ def importSpectra(*args,**kwargs):
             t_src['GRAVITY_CLASS_NIR_REF'][i] = ''
 
 # generate check plots
-    tmp = [sp.normalize() for sp in splist]
-    tmp = [compdict[c]['comparison'].normalize() for c in compdict.keys()]
-    plotlist = []
-    legends = []
-    clist = []
-    for c in compdict.keys():
-        plotlist.append([compdict[c]['observed'],compdict[c]['comparison']])
-        legends.extend(['Data Key: {} Source Key: {}\n{}'.format(c,compdict[c]['source_key'],compdict[c]['observed'].name),'{} {}'.format(compdict[c]['comparison'].name,compdict[c]['comparison_type'])])
-        clist.extend(['k','r'])
-    splat.plotSpectrum(plotlist,multiplot=True,layout=[2,2],multipage=True,legends=legends,output=review_folder+'/review_plots.pdf',colors=clist,fontscale=0.5)
+    legend = []
+    for i,sp in enumerate(t_spec['SPECTRUM']):
+        legend.extend(['Data Key: {} Source Key: {}\n{}'.format(t_spec['DATA_KEY'][i],t_spec['SOURCE_KEY'][i],t_spec['SPECTRUM'][i].name),'{} {}'.format(t_spec['COMPARISON_SPECTRUM'][i].name,t_spec['COMPARISON_TEXT'][i])])
+    splat.plotBatch([s for s in t_spec['SPECTRUM']],comparisons=[s for s in t_spec['COMPARISON_SPECTRUM']],normalize=True,output=review_folder+'/review_plots.pdf',legend=legend,noise=True,telluric=True)
+
 
 # output database updates
-    t_src.remove_column('SHORTNAME')
-    t_src.remove_column('SELECT')
-    t_spec.remove_column('SELECT')   
-    t_spec.remove_column('SOURCE_SELECT')
-    for i in numpy.arange(len(t_spec['NOTE'])):
-        t_spec['NOTE'][i] = compdict[str(t_spec['DATA_KEY'][i])]['comparison_type']
+    if 'SHORTNAME' in t_src.keys():
+        t_src.remove_column('SHORTNAME')
+    if 'SELECT' in t_src.keys():
+        t_src.remove_column('SELECT')
+    if 'SELECT' in t_spec.keys():
+        t_spec.remove_column('SELECT')   
+    if 'SOURCE_SELECT' in t_spec.keys():
+        t_spec.remove_column('SOURCE_SELECT')
+    if 'SPECTRUM' in t_spec.keys():
+        t_spec.remove_column('SPECTRUM')
+    if 'COMPARISON_SPECTRUM' in t_spec.keys():
+        t_spec.remove_column('COMPARISON_SPECTRUM')
+    if 'COMPARISON_TEXT' in t_spec.keys():
+        t_spec.remove_column('COMPARISON_TEXT')
+#    for i in numpy.arange(len(t_spec['NOTE'])):
+#        t_spec['NOTE'][i] = compdict[str(t_spec['DATA_KEY'][i])]['comparison_type']
     t_src.write(review_folder+'/source_update.csv',format='ascii.csv')
     t_spec.write(review_folder+'/spectrum_update.csv',format='ascii.csv')
 
@@ -1572,7 +1735,7 @@ def importSpectra(*args,**kwargs):
 #    app.exec_()
 
     print('\nSpectral plots and update speadsheets now available in {}'.format(review_folder))
-    response = raw_input('Please review and edit, and press any key when you are finished...')
+    response = raw_input('Please review and edit, and press any key when you are finished...\n')
 
 
 # NEXT STEP - MOVE FILES TO APPROPRIATE PLACES, UPDATE MAIN DATABASES
@@ -1598,27 +1761,27 @@ def importSpectra(*args,**kwargs):
 # move files
     for i,file in enumerate(t_spec['DATA_FILE']):
         t_spec['DATA_FILE'][i] = '{}_{}.fits'.format(t_spec['DATA_KEY'][i],t_spec['SOURCE_KEY'][i])
-        print(file[-4:])
+        print(file[-4:],t_spec['DATA_FILE'][i])
         if file[-4:] == 'fits':
             if t_spec['PUBLISHED'][i] == 'Y':
-                copyfile(data_folder+file,'{}/published/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
-                if kwargs.get('verbose',False):
-                    print('Moved {} to {}/published/'.format(t_spec['DATA_FILE'][i],review_folder))
+                copyfile(file,'{}/published/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
+#                if verbose:
+#                    print('Moved {} to {}/published/'.format(t_spec['DATA_FILE'][i],review_folder))
             else:
-                copyfile(data_folder+file,'{}/unpublished/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
-                if kwargs.get('verbose',False):
-                    print('Moved {} to {}/unpublished/'.format(t_spec['DATA_FILE'][i],review_folder))
+                copyfile(file,'{}/unpublished/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
+#                if verbose:
+#                    print('Moved {} to {}/unpublished/'.format(t_spec['DATA_FILE'][i],review_folder))
         else:
             print(data_folder+file)
-            sp = splat.Spectrum(file=data_folder+file)
+            sp = splat.Spectrum(file=file)
             if t_spec['PUBLISHED'][i] == 'Y':
                 sp.export('{}/published/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
-                if kwargs.get('verbose',False):
-                    print('Moved {} to {}/published/'.format(t_spec['DATA_FILE'][i],review_folder))
+#                if verbose:
+#                    print('Moved {} to {}/published/'.format(t_spec['DATA_FILE'][i],review_folder))
             else:
                 sp.export('{}/unpublished/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
-                if kwargs.get('verbose',False):
-                    print('Moved {} to {}/unpublished/'.format(t_spec['DATA_FILE'][i],review_folder))
+#                if verbose:
+#                    print('Moved {} to {}/unpublished/'.format(t_spec['DATA_FILE'][i],review_folder))
 
 # merge and export
     for col in t_spec.colnames:
@@ -1631,11 +1794,13 @@ def importSpectra(*args,**kwargs):
         t_merge.remove_column('SHORTNAME')
     if 'SELECT' in t_merge.keys():
         t_merge.remove_column('SELECT')
+    if 'SOURCE_SELECT' in t_merge.keys():
+        t_merge.remove_column('SOURCE_SELECT')
     if 'DATEN' in t_merge.keys():
         t_merge.remove_column('DATEN')
     t_merge.write(review_folder+splat.DB_SPECTRA_FILE,format='ascii.tab')
 
-    if kwargs.get('verbose',False):
+    if verbose:
         print('\nDatabases updated; be sure to move these from {} to {}{}'.format(review_folder,splat.SPLAT_PATH,splat.DB_FOLDER))
         print('and to move spectral files from {}/published and {}/unpublished/\n'.format(review_folder,review_folder))
 
@@ -1657,9 +1822,8 @@ if __name__ == '__main__':
 
 
     def test_ingest():
-        data_folder = '/Users/adam/projects/splat/adddata/daniella/spectra_160219/'
-        review_folder = '/Users/adam/projects/splat/adddata/review/'
-        importSpectra(data_folder=data_folder, review_folder=review_folder)
+        data_folder = '/Users/adam/projects/splat/adddata/done/Dawson_upsco/'
+        importSpectra(data_folder=data_folder,spreadsheet=data_folder+'upload.csv')
 
     def test_combine():
 # source db

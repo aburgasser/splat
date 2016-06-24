@@ -72,11 +72,11 @@ Conversion Routines
 
 Plotting Routines
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: splat.Spectrum.plot
 .. autofunction:: splat_plot.plotSpectrum
-.. autofunction:: splat_plot.plotIndices
+.. autofunction:: splat_plot.plotBatch
+.. autofunction:: splat_plot.plotSequence
 .. autofunction:: splat_plot.plotSED
-.. autofunction:: splat_plot.plotStandardSequence
+.. autofunction:: splat_plot.plotIndices
 
 
 Modeling Routines

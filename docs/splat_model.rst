@@ -9,6 +9,7 @@ SPLAT Spectral Modeling
 .. toctree
    :maxdepth: 3
 
+The SPLAT spectral modeling package provides tools for reading in and 
 
 .. automodule:: splat_model
  :members:
