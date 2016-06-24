@@ -302,8 +302,8 @@ class Spectrum(object):
     '''
     :Description: Primary class for containing spectral and source data for SpeX Prism Library.
 
-    :param model:
-    :type model: optional, default = False
+    :param ismodel:
+    :type ismodel: optional, default = False
     :param wlabel: label of wavelength
     :type wlabel: optional, default = 'Wavelength'
     :param wunit: unit in which wavelength is measured
@@ -344,7 +344,7 @@ class Spectrum(object):
     def __init__(self, *args, **kwargs):
 # some presets
         sdb = False
-        self.model = kwargs.get('model',False)
+        self.ismodel = kwargs.get('ismodel',False)
         self.wlabel = kwargs.get('wlabel',r'Wavelength')
         self.wunit = kwargs.get('wunit',u.micron)
         self.wunit_label = kwargs.get('wunit_label',r'$\mu$m')
@@ -384,7 +384,7 @@ class Spectrum(object):
                     self.filename = sdb['DATA_FILE'][0]
             except:
                 print('Warning: problem reading in spectral database, a known problem for Python 3.X')
-        elif self.model == False and self.filename != '':
+        elif self.ismodel == False and self.filename != '':
             kwargs['filename']=self.filename
             kwargs['silent']=True
             try:
@@ -468,7 +468,7 @@ class Spectrum(object):
 #            self.resolution_original = copy.deepcopy(self.resolution)
 #            self.slitpixelwidth_original = copy.deepcopy(self.slitpixelwidth)
         else:
-            print ('Warning: not information provided, creating an empty Spectrum object')
+            print ('Warning: Creating an empty Spectrum object')
 
 # populate information on source and spectrum from database
         if sdb != False:
@@ -488,7 +488,7 @@ class Spectrum(object):
         
 
 # information on model
-        if self.model == True:
+        if self.ismodel == True:
             self.teff = kwargs.get('teff',numpy.nan)
             self.logg = kwargs.get('logg',numpy.nan)
             self.z = kwargs.get('z',numpy.nan)
@@ -496,7 +496,7 @@ class Spectrum(object):
             self.cld = kwargs.get('cld',numpy.nan)
             self.kzz = kwargs.get('kzz',numpy.nan)
             self.slit = kwargs.get('slit',numpy.nan)
-            self.modelset = kwargs.get('set','')
+            self.modelset = kwargs.get('model','')
             self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.z)
             self.fscale = 'Surface'
 
@@ -714,7 +714,7 @@ class Spectrum(object):
             History:
             Spectrum successfully loaded
         '''
-        if (self.model):
+        if (self.ismodel):
             print('\n{} model with the following parmeters:'.format(self.modelset))
             print('Teff = {} K'.format(self.teff))
             print('logg = {} cm/s2'.format(self.logg))
@@ -786,7 +786,7 @@ class Spectrum(object):
 
 # determine which type of file
         ftype = filename.split('.')[-1]
-
+        print(filename,ftype)
 # fits file
         if (ftype == 'fit' or ftype == 'fits'):
             try:
@@ -891,9 +891,6 @@ class Spectrum(object):
             (15.002545668628173, 0.017635234089677564)
         '''
 
-        '''
-        :Purpose: Calibrates spectrum to input magnitude
-        '''
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',not absolute)
 #        self.normalize(silent=True)
@@ -1193,6 +1190,8 @@ class Spectrum(object):
             self.resolution = resolution
             self.slitwidth = self.slitpixelwidth*spex_pixel_scale
             self.history.append('Smoothed to a constant resolution of {}'.format(self.resolution))
+        else:
+            print('\nTarget resolution {} less than current resolution {}; no change made'.format(resolution,self.resolution))
         return
 
     def smoothToSlitPixelWidth(self,width,**kwargs):
@@ -1363,32 +1362,6 @@ def caldateToDate(d):
     return d[:4]+str((months.index(d[5:8])+1)/100.)[2:4]+d[-2:]
 
 
-def checkFile(filename,**kwargs):
-    '''
-    :Purpose: Checks if a spectrum file exists in the SPLAT's library.
-    :param filename: A string containing the spectrum's filename.
-    :Example:
-       >>> import splat
-       >>> spectrum1 = 'spex_prism_1315+2334_110404.fits'
-       >>> print splat.checkFile(spectrum1)
-       True
-       >>> spectrum2 = 'fake_name.fits'
-       >>> print splat.checkFile(spectrum2)
-       False
-    '''
-    url = kwargs.get('url',SPLAT_URL)+DATA_FOLDER
-    return requests.get(url+filename).status_code == requests.codes.ok
-#    flag = checkOnline()
-#    if (flag):
-#        try:
-#            r = requests.get(url+filename)
-#            open(os.path.basename(filename), 'wb').write(r.content)
-#            open(os.path.basename(filename), 'wb').write(urllib2.urlopen(url+filename).read())
-#        except:
-#            flag = False
-#    return flag
-
-
 def checkAccess(**kwargs):
     '''
     :Purpose: Checks if user has access to unpublished spectra in SPLAT library.
@@ -1422,6 +1395,53 @@ def checkAccess(**kwargs):
         else:
             print('You have access only to published data')
     return result
+
+
+def checkFile(filename,**kwargs):
+    '''
+    :Purpose: Checks if a spectrum file exists in the SPLAT's library.
+    :param filename: A string containing the spectrum's filename.
+    :Example:
+       >>> import splat
+       >>> spectrum1 = 'spex_prism_1315+2334_110404.fits'
+       >>> print splat.checkFile(spectrum1)
+       True
+       >>> spectrum2 = 'fake_name.fits'
+       >>> print splat.checkFile(spectrum2)
+       False
+    '''
+    url = kwargs.get('url',SPLAT_URL)+DATA_FOLDER
+    return requests.get(url+filename).status_code == requests.codes.ok
+#    flag = checkOnline()
+#    if (flag):
+#        try:
+#            r = requests.get(url+filename)
+#            open(os.path.basename(filename), 'wb').write(r.content)
+#            open(os.path.basename(filename), 'wb').write(urllib2.urlopen(url+filename).read())
+#        except:
+#            flag = False
+#    return flag
+
+
+def checkKeys(input,parameters,**kwargs):
+    '''
+    :Purpose: Checks the input kwargs keys against the expected parameters of a function to make sure the right parameters are passed.
+
+    :param input: input dictionary to a function (i.e., kwargs).
+    :param parameters: allowed parameters for the function
+    :param forcekey: (optional, default = False) if True, raises a Value Error if an incorrect parameter is passed
+    '''
+    kflag = False
+    forcekey = kwargs.get('forcekey',False)
+    for k in input.keys():
+        if k not in parameters:
+            print('\nParameter Warning!\nUnknown input keyword {}'.format(k))
+            kflag = True
+    if kflag:
+        if forcekey:
+            raise ValueError('Valid keywords are {}\n'.format(parameters))
+        else:
+            print('Valid keywords are {}\n'.format(parameters))
 
 
 def checkLocal(inputfile):
@@ -3069,14 +3089,17 @@ def initiateStandards(**kwargs):
         if len(splat.SPEX_SD_STDS) == 0:
             for t in splat.SPEX_SD_STDFILES.keys():
                 splat.SPEX_SD_STDS[t] = Spectrum(file=splat.SPEX_SD_STDFILES[t])
+                splat.SPEX_SD_STDS[t].normalize()
     elif kwargs.get('esd',False):
         if len(splat.SPEX_ESD_STDS) == 0:
             for t in splat.SPEX_ESD_STDFILES.keys():
                 splat.SPEX_ESD_STDS[t] = Spectrum(file=splat.SPEX_ESD_STDFILES[t])
+                splat.SPEX_ESD_STDS[t].normalize()
     else:
         if len(splat.SPEX_STDS) == 0:
             for t in splat.SPEX_STDFILES.keys():
                 splat.SPEX_STDS[t] = Spectrum(file=splat.SPEX_STDFILES[t])
+                splat.SPEX_STDS[t].normalize()
 
     return
 
@@ -3653,6 +3676,159 @@ def properCoordinates(c):
             return SkyCoord(c,'icrs', unit=(u.hourangle, u.deg))
     else:
         raise ValueError('\nCould not parse input format\n\n')
+
+
+def properDate(d,**kwargs):
+    '''
+    :Purpose: Converts various date formats into a standardized date of YYYY-MM-DD
+
+    :param d: Date to be converted.
+    :param format: Optional input format of the following form:
+        * 'YYYY-MM-DD': e.g., 2011-04-03 (this is default output)
+        * 'YYYYMMDD': e.g., 20110403
+        * 'YYMMDD': e.g., 20110403
+        * 'MM/DD/YY': e.g., 03/04/11
+        * 'MM/DD/YYYY': e.g., 03/04/2011
+        * 'YYYY/MM/DD': e.g., 2011/03/04
+        * 'DD/MM/YYYY': e.g., 04/03/2011
+        * 'DD MMM YYYY': e.g., 04 Mar 2011
+        * 'YYYY MMM DD': e.g., 2011 Mar 04
+    :type format: Optional, string
+    :param output: Format of the output based on the prior list
+    :type output: Optional, string
+
+    :Example:
+    >>> import splat
+    >>> splat.properDate('20030502')
+        '2003-05-02'
+    >>> splat.properDate('2003/05/02')
+        '02-2003-05'
+    >>> splat.properDate('2003/05/02',format='YYYY/MM/DD')
+        '2003-05-02'
+    >>> splat.properDate('2003/05/02',format='YYYY/MM/DD',output='YYYY MMM DD')
+        '2003 May 02'
+    '''
+
+    dformat = kwargs.get('format','')
+    oformat = kwargs.get('output','YYYY-MM-DD')
+# some defaults
+    if '/' in d and dformat == '':       # default American style
+        if len(d) <= 8:
+            dformat = 'MM/DD/YY'
+        else:
+            dformat = 'MM/DD/YYYY'
+    elif True in [c.lower() in d.lower() for c in splat.months] and dformat == '':
+        if not splat.isNumber(d.replace(' ','')[4]):
+            dformat = 'YYYY MMM DD'
+        else:
+            dformat = 'DD MMM YYYY'
+    elif splat.isNumber(d) and dformat == '':
+        if len(d) <= 6:
+            dformat = 'YYMMDD'
+        else:
+            dformat = 'YYYYMMDD'
+    else:
+        pass
+
+# no idea
+    if dformat == '':
+        print('\nCould not determine format of input date; please provide a format string\n')
+        return d
+
+# case statement for conversion to YYYY-MM-DD
+    if dformat == 'YYYYMMDD':
+        dp = d[:4]+'-'+d[4:6]+'-'+d[-2:]
+    elif dformat == 'YYMMDD':
+        dp = '20'+d[:2]+'-'+d[2:4]+'-'+d[-2:]
+    elif dformat == 'MM/DD/YYYY':
+        tmp = d.split('/')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        if len(tmp[1]) == 1:
+            tmp[1] = '0'+tmp[1]
+        dp = tmp[2]+'-'+tmp[0]+'-'+tmp[1]
+    elif dformat == 'MM/DD/YY':
+        tmp = d.split('/')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        if len(tmp[1]) == 1:
+            tmp[1] = '0'+tmp[1]
+        dp = '20'+tmp[2]+'-'+tmp[0]+'-'+tmp[1]
+    elif dformat == 'YYYY/MM/DD':
+        tmp = d.split('/')
+        if len(tmp[2]) == 1:
+            tmp[2] = '0'+tmp[2]
+        if len(tmp[1]) == 1:
+            tmp[1] = '0'+tmp[1]
+        dp = tmp[0]+'-'+tmp[1]+'-'+tmp[2]
+    elif dformat == 'DD/MM/YYYY':
+        tmp = d.split('/')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        if len(tmp[1]) == 1:
+            tmp[1] = '0'+tmp[1]
+        dp = tmp[2]+'-'+tmp[1]+'-'+tmp[0]
+    elif dformat == 'DD/MM/YY':
+        tmp = d.split('/')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        if len(tmp[1]) == 1:
+            tmp[1] = '0'+tmp[1]
+        dp = '20'+tmp[2]+'-'+tmp[1]+'-'+tmp[0]
+    elif dformat == 'DD MMM YYYY':
+        tmp = d.split(' ')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        for i,c in enumerate(splat.months):
+            if c.lower() == tmp[1].lower():
+                mref = str(i+1)
+        if len(mref) == 1:
+            mref = '0'+mref
+        dp = tmp[2]+'-'+mref+'-'+tmp[0]
+    elif dformat == 'YYYY MMM DD':
+        tmp = d.split(' ')
+        if len(tmp[2]) == 1:
+            tmp[2] = '0'+tmp[2]
+        for i,c in enumerate(splat.months):
+            if c.lower() == tmp[1].lower():
+                mref = str(i+1)
+        if len(mref) == 1:
+            mref = '0'+mref
+        dp = tmp[0]+'-'+mref+'-'+tmp[2]
+    else:
+        dp = d
+
+# case statement for conversion from YYYY-MM-DD to desired output format
+    if oformat == 'YYYYMMDD':
+        df = dp.replace('-','')
+    elif oformat == 'YYMMDD':
+        df = dp.replace('-','')[2:]
+    elif oformat == 'MM/DD/YYYY':
+        tmp = dp.split('-')
+        df = tmp[1]+'/'+tmp[2]+'/'+tmp[0]
+    elif oformat == 'MM/DD/YY':
+        tmp = dp.split('-')
+        df = tmp[1]+'/'+tmp[2]+'/'+tmp[0][2:]
+    elif oformat == 'YYYY/MM/DD':
+        tmp = dp.split('-')
+        df = tmp[0]+'/'+tmp[1]+'/'+tmp[2]
+    elif oformat == 'DD/MM/YYYY':
+        tmp = dp.split('-')
+        df = tmp[2]+'/'+tmp[1]+'/'+tmp[0]
+    elif oformat == 'DD/MM/YY':
+        tmp = dp.split('-')
+        df = tmp[2]+'/'+tmp[1]+'/'+tmp[0][2:]
+    elif oformat == 'DD MMM YYYY':
+        tmp = dp.split('-')
+        df = tmp[2]+' '+splat.months[int(tmp[1])-1]+' '+tmp[0]
+    elif oformat == 'YYYY MMM DD':
+        tmp = dp.split('-')
+        df = tmp[0]+' '+splat.months[int(tmp[1])-1]+' '+tmp[2]
+    else:
+        df = dp
+
+    return df
+
 
 
 def readSpectrum(*args,**kwargs):
