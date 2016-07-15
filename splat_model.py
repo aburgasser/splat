@@ -138,7 +138,7 @@ def loadInterpolatedModel_NEW(*args,**kwargs):
     print(float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
             float(kwargs[MODEL_PARAMETER_NAMES[2]]))
     print(mx.flatten(),my.flatten(),mz.flatten())
-    for i in range(nmodels):
+    for i in numpy.arange(nmodels):
         print(mvals['teff'][i],mvals['logg'][i],mvals['z'][i])
 #
 #
@@ -930,8 +930,8 @@ def modelFitMCMC(spec, **kwargs):
     chisqrs = [chisqr0]    
     params = [param0]
     radii = [TEN_PARSEC*numpy.sqrt(alpha0)]
-    for i in range(nsample):
-        for j in range(len(param0)):
+    for i in numpy.arange(nsample):
+        for j in numpy.arange(len(param0)):
             if param_step[j] > 0.:          # efficient consideration - if statement or just run a model?
                 param1 = copy.deepcopy(param0)
                 param1[j] = numpy.random.normal(param1[j],param_step[j])

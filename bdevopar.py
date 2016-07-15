@@ -21,6 +21,7 @@ from __future__ import print_function, division
 import os
 import requests
 import sys
+import numpy
 #from urllib2 import urlopen
 
 # Related third party imports.
@@ -170,7 +171,7 @@ class ReadModel(object):
             num_files = len(ages); v = 1
         #######################################################################
 
-        n_tables = range(num_files)
+        n_tables = numpy.arange(num_files)
   
         masses = [[] for i in n_tables]
         temperatures = [[] for i in n_tables]
@@ -244,7 +245,7 @@ class Params(ReadModel):
       try: model = args[0]
       except IndexError: model = ReadModel('baraffe')
 
-      for i in range(numberKeys):
+      for i in numpy.arange(numberKeys):
          if keywords[i][0].upper().startswith('T'): 
             if params['temperature'] == 0: 
                params['temperature'] = float(kwargs[keywords[i]])
@@ -296,7 +297,7 @@ class Params(ReadModel):
       Ag, Ma, Te, Le, Ge, Re = [],[],[],[],[],[]
       input_type = 'mass_age'
       valid_ages = []
-      n_tables = range(len(model['age']))
+      n_tables = numpy.arange(len(model['age']))
 
       ############### WITH TWO KNOWN PARAMETERS, SPIT OUT AGE #################
       if (params['mass'] == False) and (params['age'] == False):
@@ -451,7 +452,7 @@ class Parameters(Params, ReadModel):
 	           'radius':[],'mass':[],'luminosity':[]}
          T, A, G, R, M, L = False,False,False,False,False,False
 
-         for i in range(2):
+         for i in numpy.arange(2):
              if keywords[i].upper().startswith('T'): 
                  T = True
                  temperature = kwargs[keywords[i]]
@@ -472,55 +473,55 @@ class Parameters(Params, ReadModel):
                  luminosity = kwargs[keywords[i]]
          
          numberValues = len(kwargs[keywords[0]])
-         p = [[] for i in range(numberValues)]
+         p = [[] for i in numpy.arange(numberValues)]
 
          if A == True and M == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,m=mass[i],a=age[i])
          elif A == True and L == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,l=luminosity[i],a=age[i])
          elif A == True and T == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,t=temperature[i],a=age[i])
          elif A == True and G == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,g=gravity[i],a=age[i])
          elif A == True and R == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,r=radius[i],a=age[i])
          elif M == True and R == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,r=radius[i],m=mass[i])
          elif M == True and L == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,l=luminosity[i],m=mass[i])
          elif M == True and T == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,t=temperature[i],m=mass[i])
          elif M == True and G == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,m=mass[i],g=gravity[i])
          elif R == True and T == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,r=radius[i],t=temperature[i])
          elif R == True and G == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,r=radius[i],g=gravity[i])
          elif R == True and L == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,r=radius[i],l=luminosity[i])
          elif G == True and T == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,g=gravity[i],t=temperature[i])
          elif G == True and L == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,g=gravity[i],l=luminosity[i])
          elif L == True and T == True:
-             for i in range(numberValues):
+             for i in numpy.arange(numberValues):
                  p[i] = Params(model,r=luminosity[i],t=temperature[i])
 
-         for i in range(numberValues):
+         for i in numpy.arange(numberValues):
              params['temperature'].append(p[i]['temperature'])
              params['age'].append(p[i]['age'])
              params['gravity'].append(p[i]['gravity'])

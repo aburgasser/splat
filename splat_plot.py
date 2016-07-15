@@ -454,14 +454,14 @@ def plotSpectrum(*args, **kwargs):
     tot_sp = len([item for sublist in splist for item in sublist])    # Total number of spectra
     
 # prep legend
-    legend = kwargs.get('legend',[str() for x in range(tot_sp)])
+    legend = kwargs.get('legend',[str() for x in numpy.arange(tot_sp)])
     legend = kwargs.get('legends',legend)
     legend = kwargs.get('label',legend)
     legend = kwargs.get('labels',legend)
     if not isinstance(legend,list):
         legend = [legend]
     if(len(legend) < tot_sp):
-        legend.extend([str() for x in range(tot_sp-len(legend))])
+        legend.extend([str() for x in numpy.arange(tot_sp-len(legend))])
     legendLocation = kwargs.get('legendLocation','upper right')       # sets legend location
     legendLocation = kwargs.get('labelLocation',legendLocation)       # sets legend location
 
@@ -475,18 +475,16 @@ def plotSpectrum(*args, **kwargs):
         numpages = int(len(splist) / nplot) + 1
         if (len(splist) % nplot == 0):
                numpages -= 1
-        fig = range(numpages)
+        fig = []
         
     if multipage == True and filetype == 'pdf':
         pdf_pages = PdfPages(filename)
         
     if multipage == False:
         if len(splist) > 1:
-            files = [filebase+'{}.'.format(i+1)+filetype for i in range(len(splist))]
+            files = [filebase+'{}.'.format(i+1)+filetype for i in numpy.arange(len(splist))]
         else:
             files = [filebase+'.'+filetype]
-
-    #print(multipage, splist)
 
     pg_n = 0        # page counter
     plt_n = 0       # plot per page counter
@@ -496,7 +494,7 @@ def plotSpectrum(*args, **kwargs):
 # set specific plot parameters
         if (sp[0].__class__.__name__ != 'Spectrum'):
             raise ValueError('\nInput to plotSpectrum has wrong format:\n\n{}\n\n'.format(args[0]))
-        zeropoint = kwargs.get('zeropoint',[0. for x in range(len(sp))])
+        zeropoint = kwargs.get('zeropoint',[0. for x in numpy.arange(len(sp))])
 
 # settings that work if the spectrum was read in as legitmate Spectrum object
         try:
@@ -510,14 +508,14 @@ def plotSpectrum(*args, **kwargs):
         ymax = [s.fluxMax().value for s in sp]
         yrng = kwargs.get('yrange',map(lambda x: x*numpy.nanmax(ymax)+numpy.nanmax(zeropoint),[-0.02,1.2]))
         bound.extend(yrng)
-        linestyle = kwargs.get('linestyle',['steps' for x in range(len(sp))])
+        linestyle = kwargs.get('linestyle',['steps' for x in numpy.arange(len(sp))])
         linestyle = kwargs.get('linestyles',linestyle)
         if (len(linestyle) < len(sp)):
-            linestyle.extend(['steps' for x in range(len(sp)-len(linestyle))])
+            linestyle.extend(['steps' for x in numpy.arange(len(sp)-len(linestyle))])
 
 # colors
 # by default all black lines
-        colors = kwargs.get('colors',['k' for x in range(len(sp))])
+        colors = kwargs.get('colors',['k' for x in numpy.arange(len(sp))])
         colors = kwargs.get('color',colors)
         if not isinstance(colors,list):
             colors = [colors]
@@ -527,11 +525,11 @@ def plotSpectrum(*args, **kwargs):
         colorScheme = kwargs.get('colorScheme',None)
         colorScheme = kwargs.get('colorMap',colorScheme)
         if (colorScheme != None):
-            values = range(len(sp))
+            values = numpy.arange(len(sp))
             color_map = plt.get_cmap(colorScheme)
             norm  = colmap.Normalize(vmin=0, vmax=1.0*values[-1])
             scalarMap = cm.ScalarMappable(norm=norm, cmap=color_map)
-            for i in range(len(sp)):
+            for i in numpy.arange(len(sp)):
                 colors[i] = scalarMap.to_rgba(values[i])
         colorsUnc = kwargs.get('colorsUnc',colors)
         colorsUnc = kwargs.get('colorUnc',colorsUnc)
@@ -541,13 +539,13 @@ def plotSpectrum(*args, **kwargs):
 
 
 # show uncertainties
-        showNoise = kwargs.get('showNoise',[False for x in range(len(sp))])
+        showNoise = kwargs.get('showNoise',[False for x in numpy.arange(len(sp))])
         showNoise = kwargs.get('noise',showNoise)
         showNoise = kwargs.get('uncertainty',showNoise)
         if not isinstance(showNoise, list):
             showNoise = [showNoise]
         if (len(showNoise) < len(sp)):
-            showNoise.extend([True for x in range(len(sp)-len(showNoise))])
+            showNoise.extend([True for x in numpy.arange(len(sp)-len(showNoise))])
 
 # zero points - by default true
         showZero = kwargs.get('showZero',[True for x in numpy.arange(len(sp))])
@@ -564,7 +562,11 @@ def plotSpectrum(*args, **kwargs):
 #                ax = range(nplot)
 #                t = tuple([tuple([i+b*multilayout[1] for i in range(multilayout[1])]) for b in range(multilayout[0])])
 #                fig[pg_n], ax = plt.subplots(multilayout[0], multilayout[1], sharex = True, sharey = True)
-                fig[pg_n] = plt.figure()
+#
+# NOTE THE FOLLOWING LINE IS HAVING PROBLEMS IN PYTHON3
+#
+#
+                fig.append(plt.figure())
                 pg_n += 1
             ax = fig[pg_n-1].add_subplot(multilayout[0], multilayout[1], plt_n+1)
             
@@ -573,11 +575,11 @@ def plotSpectrum(*args, **kwargs):
             plt.close('all')
 #            ax = range(1)
             plt_n = 0
-            fig = [0]
+            fig = []
             if (kwargs.get('figsize') != None):
-                fig[0] = plt.figure(figsize = kwargs.get('figsize'))
+                fig.append(plt.figure(figsize = kwargs.get('figsize')))
             else:
-                fig[0] = plt.figure()
+                fig.append(plt.figure())
             ax = fig[0].add_subplot(111)
         
         for ii, a in enumerate(sp):
@@ -755,9 +757,7 @@ def plotSpectrum(*args, **kwargs):
 # update offset
                                 foff = [y+3*yoff if (w >= waveRng[0] and w <= waveRng[1]) else 0 for w in wvmax]
                                 flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
-#                print(bound2)
                 bound2[3] = numpy.max([bound2[3],numpy.max(flxmax)+3.*yoff])
-#                print(bound2)
                 ax_inset.axis(bound2)
 
     
@@ -776,7 +776,7 @@ def plotSpectrum(*args, **kwargs):
 
 # save figures in multipage format and write off pdf file
     if (multipage == True):    
-        for pg_n in range(numpages):
+        for pg_n in numpy.arange(numpages):
 #            fig[pg_n].text(0.5, 0.04, xlabel, ha = 'center', va = 'center')
 #            fig[pg_n].text(0.06, 0.5, ylabel, ha = 'center', va = 'center', rotation = 'vertical')
             fig[pg_n].tight_layout
@@ -876,8 +876,8 @@ if __name__ == '__main__':
     def test_plotBatch():
         data_folder = '/Users/adam/projects/splat/adddata/done/daniella/'
         files = glob.glob(data_folder+'*.fits')
-#        plotBatch(files,classify=True,output=out_folder+'plotBatch_test1.pdf',telluric=True)
-#        plotBatch(data_folder+'*.fits',classify=True,output=out_folder+'plotBatch_test2.pdf',noise=True)
+        plotBatch(files,classify=True,output=out_folder+'plotBatch_test1.pdf',telluric=True)
+        plotBatch(data_folder+'*.fits',classify=True,output=out_folder+'plotBatch_test2.pdf',noise=True)
         splist = [splat.Spectrum(file=f) for f in files]
         plotBatch(splist,classify=True,output=out_folder+'plotBatch_test3.pdf',features=['h2o','feh','co'],legend=[s.name for s in splist])
         return
@@ -894,8 +894,8 @@ if __name__ == '__main__':
         splat.plotSequence(sp,telluric=True,stack=0.3)
         return
 
-#    test_plotBatch()
-    test_plotSequence()
+    test_plotBatch()
+#    test_plotSequence()
 
 
     
