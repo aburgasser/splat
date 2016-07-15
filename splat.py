@@ -786,7 +786,7 @@ class Spectrum(object):
 
 # determine which type of file
         ftype = filename.split('.')[-1]
-        print(filename,ftype)
+#        print(filename,ftype)
 # fits file
         if (ftype == 'fit' or ftype == 'fits'):
             try:
@@ -3000,7 +3000,7 @@ def getSpectrum(*args, **kwargs):
         else:
             if (kwargs.get('lucky',False) == True):
                 print('\nRetrieving 1 lucky file\n')
-                ind = random.choice(range(len(files)))
+                ind = random.choice(numpy.arange(len(files)))
                 result.append(Spectrum(files[ind],header=search[ind]))
             else:
                 print('\nRetrieving {} files\n'.format(len(files)))
@@ -3291,16 +3291,14 @@ def measureEW(sp, *args, **kwargs):
     fCont = f(wave_cont)
     nCont = n(wave_cont)
 
-    if noiseFlag == True:
-#linear fit to continuum
-        pCont = numpy.poly1d(numpy.polyfit(wave_cont,fCont,1))
-        fContFit = pCont(wLine)
-        ew = trapz((numpy.ones(len(fLine))-(fLine/fContFit)), wLine)*1e4
-        return ew*u.angstrom, numpy.nan
+# first compute value
+    pCont = numpy.poly1d(numpy.polyfit(wave_cont,fCont,1))
+    fContFit = pCont(wLine)
+    ew = trapz((numpy.ones(len(fLine))-(fLine/fContFit)), wLine)*1e4
 #monte carlo
-    else:
-        ew=[]
-        for i in range(nsamples):
+    if noiseFlag == False:
+        ews=[]
+        for i in numpy.arange(nsamples):
 #generate simulated fluxes
 #            fContVar = fCont+numpy.random.normal(0.,1.)*nCont
 #            fLineVar = fLine+numpy.random.normal(0.,1.)*nLine
@@ -3310,7 +3308,7 @@ def measureEW(sp, *args, **kwargs):
 #linear fit to continuum
             pCont = numpy.poly1d(numpy.polyfit(wave_cont,fContVar,1))
             fContFit = pCont(wLine)
-            ew.append(trapz((numpy.ones(len(fLineVar))-(fLineVar/fContFit)), wLine)*1e4)
+            ews.append(trapz((numpy.ones(len(fLineVar))-(fLineVar/fContFit)), wLine)*1e4)
 
 # some error checking
 #            plt.plot(wLine,fContFit,color='r')
@@ -3319,7 +3317,9 @@ def measureEW(sp, *args, **kwargs):
 
 # following line is more correct but having problem with output
 #       return numpy.nanmean(ew)*u.angstrom, numpy.nanstd(ew)*u.angstrom
-        return numpy.nanmean(ew), numpy.nanstd(ew)
+        return ew*u.angstrom, numpy.nanstd(ew)*u.angstrom
+    else:
+        return ew*u.angstrom, numpy.nan
 
 
 def measureEWSet(sp,*args,**kwargs):
@@ -3375,7 +3375,7 @@ def measureIndex(sp,*args,**kwargs):
 # keyword parameters
     method = kwargs.get('method','ratio')
     sample = kwargs.get('sample','integrate')
-    nsamples = kwargs.get('nsamples',100)
+    nsamples = kwargs.get('nsamples',1000)
     noiseFlag = kwargs.get('nonoise',False)
 
 # create interpolation functions
@@ -3399,7 +3399,8 @@ def measureIndex(sp,*args,**kwargs):
         return numpy.nan, numpy.nan
 
 # define the sample vectors
-    values = numpy.zeros((len(args),nsamples))
+    value = numpy.zeros(len(args))
+    value_sim = numpy.zeros((len(args),nsamples))
 
 # loop over all sampling regions
     for i,waveRng in enumerate(args):
@@ -3407,6 +3408,20 @@ def measureIndex(sp,*args,**kwargs):
             (numpy.nanmax(waveRng)-numpy.nanmin(waveRng))+numpy.nanmin(waveRng)
         yNum = f(xNum)
         yNum_e = s(xNum)
+
+# first compute the actual value
+        if (sample == 'integrate'):
+            value[i] = trapz(yNum,xNum)
+        elif (sample == 'average'):
+            value[i] = numpy.nanmean(yNum)
+        elif (sample == 'median'):
+            value[i] = numpy.median(yNum)
+        elif (sample == 'maximum'):
+            value[i] = numpy.nanmax(yNum)
+        elif (sample == 'minimum'):
+            value[i] = numpy.nanmin(yNum)
+        else:
+            value[i] = numpy.nanmean(yNum)
 
 # now do MonteCarlo measurement of value and uncertainty
         for j in numpy.arange(0,nsamples):
@@ -3423,40 +3438,49 @@ def measureIndex(sp,*args,**kwargs):
 
 # choose function for measuring indices
             if (sample == 'integrate'):
-                values[i,j] = trapz(yVar,xNum)
+                value_sim[i,j] = trapz(yVar,xNum)
             elif (sample == 'average'):
-                values[i,j] = numpy.nanmean(yVar)
+                value_sim[i,j] = numpy.nanmean(yVar)
             elif (sample == 'median'):
-                values[i,j] = numpy.median(yVar)
+                value_sim[i,j] = numpy.median(yVar)
             elif (sample == 'maximum'):
-                values[i,j] = numpy.nanmax(yVar)
+                value_sim[i,j] = numpy.nanmax(yVar)
             elif (sample == 'minimum'):
-                values[i,j] = numpy.nanmin(yVar)
+                value_sim[i,j] = numpy.nanmin(yVar)
             else:
-                values[i,j] = numpy.nanmean(yVar)
+                value_sim[i,j] = numpy.nanmean(yVar)
 
 # compute index based on defined method
 # default is a simple ratio
     if (method == 'ratio'):
-        vals = values[0,:]/values[1,:]
+        val = value[0]/value[1]
+        vals = value_sim[0,:]/value_sim[1,:]
     elif (method == 'line'):
-        vals = 0.5*(values[0,:]+values[1,:])/values[2,:]
+        val = 0.5*(value[0]+value[1])/value[2]
+        vals = 0.5*(value_sim[0,:]+value_sim[1,:])/value_sim[2,:]
     elif (method == 'inverse_line'):
-        vals = 2.*values[0,:]/(values[1,:]+values[2,:])
+        val = 2.*value[0]/(value[1]+value[2])
+        vals = 2.*value_sim[0,:]/(value_sim[1,:]+value_sim[2,:])
     elif (method == 'change'):
-        vals = 2.*(values[0,:]-values[1,:])/(values[0,:]+values[1,:])
+        val = 2.*(value[0]-value[1])/(value[0]+value[1])
+        vals = 2.*(value_sim[0,:]-value_sim[1,:])/(value_sim[0,:]+value_sim[1,:])
     elif (method == 'allers'):
-        vals = (((numpy.mean(args[0])-numpy.mean(args[1]))/(numpy.mean(args[2])-numpy.mean(args[1])))*values[2,:] \
-            + ((numpy.mean(args[2])-numpy.mean(args[0]))/(numpy.mean(args[2])-numpy.mean(args[1])))*values[1,:]) \
-            /values[0,:]
+        val = (((numpy.mean(args[0])-numpy.mean(args[1]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value[2] \
+            + ((numpy.mean(args[2])-numpy.mean(args[0]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value[1]) \
+            /value[0]
+        vals = (((numpy.mean(args[0])-numpy.mean(args[1]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value_sim[2,:] \
+            + ((numpy.mean(args[2])-numpy.mean(args[0]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value_sim[1,:]) \
+            /value_sim[0,:]
     else:
-        vals = values[0,:]/values[1,:]
+        val = value[0]/value[1]
+        vals = value_sim[0,:]/value_sim[1,:]
+
 
 # output mean, standard deviation
     if (noiseFlag):
-        return numpy.nanmean(vals), numpy.nan
+        return val, numpy.nan
     else:
-        return numpy.nanmean(vals), numpy.nanstd(vals)
+        return val, numpy.nanstd(vals)
 
 
 # wrapper function for measuring specific sets of indices
@@ -3621,7 +3645,7 @@ def metallicity(sp,**kwargs):
     >>> print splat.metallicity(sp)
         (-0.50726104530066363, 0.24844773591243882)
     '''
-    nsamples = kwargs.get('nsamples',100)
+    nsamples = kwargs.get('nsamples',1000)
 
     coeff_feh = [-1.039,0.092,0.119]
     coeff_feh_e = [0.17,0.023,0.033]
@@ -3641,12 +3665,14 @@ def metallicity(sp,**kwargs):
     if cai is False:
         cai, cai_e = ew['Ca I 2.26']
 
+    mh = coeff_mh[0]+(nai/h2ok2)*coeff_mh[1]+(cai/h2ok2)*coeff_mh[2]
 
-    mh = numpy.ones(nsamples)*coeff_mh[0]+\
+# simulate uncertainties
+    mhsim = numpy.ones(nsamples)*coeff_mh[0]+\
         (numpy.random.normal(nai,nai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[1]+\
         (numpy.random.normal(cai,cai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[2]
 
-    return numpy.nanmean(mh), numpy.sqrt(numpy.nanstd(mh)**2+mh_unc**2)
+    return mh, numpy.sqrt(numpy.nanstd(mhsim)**2+mh_unc**2)
 
 
 def properCoordinates(c):
@@ -4162,7 +4188,7 @@ def typeToColor(spt,color, **kwargs):
 
     else:
         sys.stderr.write('\n Do not have color set {}\n\n'.format(ref))
-        return numpy.nan
+        return numpy.nan, numpy.nan
     tmpval = copy.deepcopy(values)
 
     if kwargs.get('verbose',False):
@@ -4187,16 +4213,16 @@ def typeToColor(spt,color, **kwargs):
             f = interp1d(numpy.arange(rng[0],rng[1]+1),values[color.lower()],bounds_error=False,fill_value=0.)
             if (unc > 0.):
                 vals = [f(x) for x in numpy.random.normal(spt, unc, nsamples)]
-                return numpy.nanmean(vals), numpy.nanstd(vals)
+                return float(f(spt)), numpy.nanstd(vals)
             else:
-                return float(f(spt))
+                return float(f(spt)), numpy.nan
         else:
             sys.stderr.write('\n Color {} is not in reference set for {}\n\n'.format(color,reference))
-            return numpy.nan
+            return numpy.nan, numpy.nan
 
     else:
         sys.stderr.write('\n Spectral type {} is outside the range for reference set {}\n\n'.format(splat.typeToNum(spt),reference))
-        return numpy.nan
+        return numpy.nan, numpy.nan
 
 
 
