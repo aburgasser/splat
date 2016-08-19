@@ -8,27 +8,37 @@ from __future__ import print_function, division
 import astropy
 import bdevopar
 import copy
-from datetime import datetime
+#from datetime import datetime
+import numpy
 import os
+import pwd
 import requests
+import splat
 import sys
+import time
 from matplotlib import cm
+import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.integrate import trapz        # for numerical integration
-from scipy.interpolate import griddata
-import numpy
+from scipy.interpolate import griddata, interp1d
+import scipy.optimize as op
 from astropy.io import ascii            # for reading in spreadsheet
 from astropy.table import Table
-import splat
+import astropy.units as u
 import triangle
 
 SPECTRAL_MODEL_FOLDER = '/reference/SpectralModels/'
 MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']
+MODEL_PARAMETER_TITLES = ['$T_{eff}$','$log\ g$','$[M/H]$','$f_{sed}$','$cld$','$log\ \kappa_{zz}$','$slit$']
+MODEL_PARAMETER_UNITS = [u.K,u.cm/u.s/u.s,u.m/u.m,u.m/u.m,u.m/u.m,u.m/u.m,u.arcsec]
 MODEL_PARAMETERS = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
 DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
 DEFINED_MODEL_NAME = ['BT-Settled (2008)','Burrows (2006)','Morley (2012)','Morley (2014)','Saumon (2012)','Drift (2008)']
 TMPFILENAME = 'splattmpfile'
-TEN_PARSEC = 443344480.     # ten parsecs in solar radii
+
+# physical parameters
+RADIUS_SUN = 6.963e10*u.cm                          # radius of sun in cm
+TEN_PARSEC = (10.*u.pc).to(u.cm)/RADIUS_SUN          # ten parsecs in solar radii
 
 # change the command prompt
 sys.ps1 = 'splat model> '
@@ -590,43 +600,44 @@ def loadModelParameters(**kwargs):
 # keyword parameters
     pfile = kwargs.get('parameterFile','parameters.txt')
 
-# legitimate model set?
-    if kwargs.get('model',False) not in DEFINED_MODEL_SET:
-        raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(kwargs.get('model',False),DEFINED_MODEL_SET))
+# model set
+    mset = kwargs.get('model',DEFINED_MODEL_SET[0])
+    mset = kwargs.get('set',mset)
+    mset = kwargs.get('model_set',mset)
+    if mset not in DEFINED_MODEL_SET:
+        raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(mset,DEFINED_MODEL_SET))
     
 
 # read in parameter file - local and not local
     if kwargs.get('online',False):
         try:
-            open(os.path.basename(TMPFILENAME), 'wb').write(requests.get(splat.SPLAT_URL+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'+pfile).content)
+            open(os.path.basename(TMPFILENAME), 'wb').write(requests.get(splat.SPLAT_URL+SPECTRAL_MODEL_FOLDER+mset+'/'+pfile).content)
             p = ascii.read(os.path.basename(TMPFILENAME))
             os.remove(os.path.basename(TMPFILENAME))
         except:
-            print('\n\nCannot access online models for model set {}\n'.format(kwargs['model']))
+            print('\n\nCannot access online models for model set {}\n'.format(mset))
 #            local = True
     else:            
         if (os.path.exists(pfile) == False):
-            pfile = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'+os.path.basename(pfile)
+            pfile = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+os.path.basename(pfile)
             if (os.path.exists(pfile) == False):
                 raise NameError('\nCould not find parameter file {}'.format(pfile))
         p = ascii.read(pfile)
 
 # populate output parameter structure
-    parameters = {'model': kwargs['model'], 'url': splat.SPLAT_URL}
+    parameters = {'model': mset, 'url': splat.SPLAT_URL}
     for ms in MODEL_PARAMETER_NAMES[0:3]:
         if ms in p.colnames:
             parameters[ms] = [float(x) for x in p[ms]]
         else:
-            raise ValueError('\n\nModel set {} does not have defined parameter range for {}'.format(kwargs['model'],ms))
+            raise ValueError('\n\nModel set {} does not have defined parameter range for {}'.format(mset,ms))
     for ms in MODEL_PARAMETER_NAMES[3:6]:
         if ms in p.colnames:
             parameters[ms] = str(p[ms][0]).split(",")
         else:
-            raise ValueError('\n\nModel set {} does not have defined parameter list for {}'.format(kwargs['model'],ms))
+            raise ValueError('\n\nModel set {} does not have defined parameter list for {}'.format(mset,ms))
 
     return parameters
-
-
 
 
 #### the following codes are in progress
@@ -637,6 +648,7 @@ def modelFitGrid(spec, **kwargs):
     '''
     print('This function is not yet implemented')
     pass
+
 
 
 def modelFitMCMC(spec, **kwargs):
@@ -783,7 +795,7 @@ def modelFitMCMC(spec, **kwargs):
 #   using the following equivalent terms: teff = temperature, logg = gravity, z = metallicity
 
 # MCMC keywords
-    timestart = datetime.now()
+    timestart = time.time()
     nsample = kwargs.get('nsamples', 1000)
     burn = kwargs.get('initial_cut', 0.1)  # what fraction of the initial steps are to be discarded
     burn = kwargs.get('burn', burn)  # what fraction of the initial steps are to be discarded
@@ -792,10 +804,9 @@ def modelFitMCMC(spec, **kwargs):
     m_set = kwargs.get('models', m_set)
     verbose = kwargs.get('verbose', False)
 # masking keywords
-    mask_ranges = kwargs.get('mask_ranges',[])
-    mask_telluric = kwargs.get('mask_telluric',False)
-    mask_standard = kwargs.get('mask_standard',True)
-    mask = kwargs.get('mask',numpy.zeros(len(spec.wave)))
+#    mask_ranges = kwargs.get('mask_ranges',[])
+#    mask_telluric = kwargs.get('mask_telluric',False)
+#    mask_standard = kwargs.get('mask_standard',True)
 # plotting and reporting keywords
     showRadius = kwargs.get('radius', spec.fscale == 'Absolute')
     try:
@@ -816,24 +827,7 @@ def modelFitMCMC(spec, **kwargs):
 #    ystep = kwargs.get('ystep', 20)
 
 # set mask   
-    if (mask_standard == True):
-        mask_telluric = True
-   
-    if mask_telluric == True:
-        mask_ranges.append([0.,0.65])        # meant to clear out short wavelengths
-        mask_ranges.append([1.35,1.42])
-        mask_ranges.append([1.8,1.92])
-        mask_ranges.append([2.45,99.]) 
-        
-    if mask_standard == True:
-        mask_ranges.append([0.,0.8])        # standard short cut
-        mask_ranges.append([2.35,99.])      # standard long cut
-        
-    for ranges in mask_ranges:
-        mask[numpy.where(((spec.wave.value >= ranges[0]) & (spec.wave.value <= ranges[1])))] = 1
-    kwargs['mask_ranges'] = mask_ranges
-    kwargs['mask_telluric'] = mask_telluric
-    kwargs['mask_standard'] = mask_standard
+    mask = kwargs.get('mask',splat.generateMask(spec.wave,**kwargs))
     
 # set the degrees of freedom    
     try:
@@ -987,7 +981,7 @@ def modelFitMCMC(spec, **kwargs):
     
     reportModelFitResults(spec,s,iterative=False,model_set=m_set,**kwargs)
     if verbose:
-        print('\nTotal time elapsed = {}'.format(datetime.now()-timestart))
+        print('\nTotal time elapsed = {}'.format(time.time()-timestart))
     return s
 
 
@@ -1352,12 +1346,560 @@ def distributionStats(x, q=[0.16,0.5,0.84], weights=None, sigma=None, **kwargs):
         return numpy.interp(q, cdf, xsorted).tolist()
 
 
+# ------------------------------
+# EMCEE suite
+# ------------------------------
 
-if __name__ == '__main__':
-    basefolder = '/Users/adam/projects/splat/exercises/ex9/'
+
+def modelFitEMCEE(spec, **kwargs):
+    '''
+    :Purpose: Uses the ``emcee`` package by Dan Foreman-Mackey et al. to perform 
+        Goodman & Weare's Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler
+        to fit a spectrum to a set of atmosphere models. 
+        Returns the best estimate of the effective temperature, surface 
+        gravity, and (if selected) metallicity.  Includes an estimate of the time required to run, prompts
+        user if they want to proceed, and shows progress with iterative saving of outcomes
+    :param spec: Spectrum class object, which should contain wave, flux and noise array elements.
+    :param nwalkers: number of MCMC walkers, should have at least 20
+    :type nwalkers: optional, default = 20
+    :param nsamples: number of MCMC samples, for model fitting about 500 seems OK
+    :type nsamples: optional, default = 500
+    :param burn_fraction: the fraction of the initial steps to be discarded. (e.g., if 
+                ``burn_fraction = 0.2``, the first 20% of the samples are discarded.)
+    :type burn_fraction: optional, default = 0.5
+    :param initial_guess: array including initial guess of the model parameters.
+            Can also set individual guesses of spectral parameters by using 
+            **initial_temperature**, **initial_teff**, or **t0**;
+            **initial_gravity**, **initial_logg** or **g0**; 
+            and **initial_metallicity**, **initial_z** or **z0**.
+    :type initial_guess: optional, default = array of random numbers within allowed ranges
+    :param limits: list of 2-element arrays indicating ranges of the model parameters to limit the parameter space.
+            Can also set individual ranges of spectral parameters by using 
+            **temperature_range**, **teff_range** or **t_range**;
+            **gravity_range**, **logg_range** or **g_range**;
+            and **metallicity_range** or **z_range**.
+    :type limits: optional, default = depends on model set
+    :param prior_scatter: array giving the widths of the normal distributions from which to draw prior parameter values
+    :type prior_scatter: optional, default = [25,0.1,0.1]
+    :param model: set of models to use (``set`` and ``model_set`` do the same); options include:
+
+        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
+          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
+        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
+          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
+        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
+          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
+        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
+          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
+        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
+          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
+        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
+          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
+    
+    :type model: optional, default = 'BTSettl2008'
+    :param radius: set to True to calculate and returns radius of object [NOT CURRENT IMPLEMENTED]
+    :type radius: optional, default = False
+    :param save: save interim results to a .dat file based on output filename
+    :type save: optional, default = True
+    :param output: base filename for output (``filename`` and ``outfile`` do the same); 
+        outputs will include (each can be set individually with associated keywords):
+        - ``filename_iterative.dat``: interative saved data
+        - ``filename_summary.txt``: summary of results
+        - ``filename_corner.eps``: corner plot of parameters
+        - ``filename_comparison.eps``: plot spectrum compared to best fit model
+    :type output: optional, default = None
+    :param plot_format: file type for diagnostic plots
+    :type plot: optional, default = 'pdf'
+    :param noprompt: don't prompt user to continue of emcee run will be > 10 minutes
+    :type noprompt: optional, default = False
+    :param verbose: give lots of feedback
+    :type verbose: optional, default = False
+
+    In addition, the parameters for compareSpectra_, generateMask_, plotSpectrum_; see SPLAT API for details.
+
+    .. _plotSpectrum: api.html#splat_plot.plotSpectrum
+    .. _plotSpectrum: api.html#splat.compareSpectra
+    .. _generateMask api.html#splat.generateMask
+    
+    Note: modelfitEMCEE requires external packages: 
+        - ``emceee``: http://dan.iel.fm/emcee/current
+        -``corner``: http://corner.readthedocs.io/en/latest
+
+    :Example:
+    >>> import splat
+    >>> sp = splat.Spectrum(shortname='1507-1627')[0]
+    >>> spt,spt_e = splat.classifyByStandard(sp)
+    >>> teff,teff_e = splat.typeToTeff(spt)
+    >>> result = modelFitEMCEE(sp,t0=teff,g0=5.0,fit_metallicity=False,\
+    >>>    nwalkers=50,nsamples=500,output='/Users/adam/test_modelfitEMCEE')
+        Estimated time to compute = 9228 seconds = 153.8 minutes = 2.56 hours = 0.11 days
+        Do you want to continue? [Y/n]: 
+        Progress: [**************************************************]
+    
+    Results are saved in test_modelfitEMCEE_interative.dat, *_chains.pdf, *_comparison.pdf, *_corner.pdf, and *_summary.txt
+    '''
+
+# check that emcee package is installed
+    try:
+        import emcee
+    except:
+        raise NameError('\nYou must install emcee to run this program; see http://dan.iel.fm/emcee/current/')
+
+    start_time = time.time()
+
+# keywords
+    nwalkers = kwargs.get('nwalkers', 10)
+    nsamples = kwargs.get('nsamples', 1000)
+    burn_fraction = kwargs.get('burn_fraction', 0.5)  # what fraction of the initial steps are to be discarded
+    prior_scale = {'teff': 25, 'logg': 0.1, 'z': 0.1, 'radius': 0.001*RADIUS_SUN.value}
+    prior_scale['teff'] = kwargs.get('t_scale',prior_scale['teff'])
+    prior_scale['logg'] = kwargs.get('g_scale',prior_scale['logg'])
+    prior_scale['z'] = kwargs.get('z_scale',prior_scale['z'])
+    verbose = kwargs.get('verbose', False)
+    feedback_width = 50
+# plotting and reporting keywords
+    showRadius = kwargs.get('radius', spec.fscale == 'Absolute')
+    filebase = kwargs.get('output', 'fit_')
+    filebase = kwargs.get('filename',filebase)
+    filebase = kwargs.get('outfile',filebase)
+    plot_format = kwargs.get('plot_format','pdf')
+
+# model parameters
+    model_set = kwargs.get('set', 'BTSettl2008')
+    model_set = kwargs.get('model', model_set)
+    model_set = kwargs.get('model_set', model_set)
+
+# prep outputs
+    file_iterative = kwargs.get('file_iterative',os.path.splitext(filebase)[0]+'_iterative.dat')
+    file_chains = kwargs.get('file_chains',os.path.splitext(filebase)[0]+'_chains.'+plot_format)
+    file_corner = kwargs.get('file_corner',os.path.splitext(filebase)[0]+'_corner.'+plot_format)
+    file_comparison = kwargs.get('file_comparison',os.path.splitext(filebase)[0]+'_comparison.'+plot_format)
+    file_bestcomparison = kwargs.get('file_bestcomparison',os.path.splitext(filebase)[0]+'_bestcomparison.'+plot_format)
+    file_summary = kwargs.get('file_summary',os.path.splitext(filebase)[0]+'_summary.txt')
+    if kwargs.get('save',True):
+        f = open(file_iterative,'w')
+        f.close()
+
+# set limits for models - input or set by model itself
+    mlimits = splat.loadModelParameters(model=model_set) # Range parameters can fall in
+    teff_range = kwargs.get('teff_range',mlimits['teff'][0:2])
+    teff_range = kwargs.get('temperature_range',teff_range)
+    teff_range = kwargs.get('t_range',teff_range)
+    logg_range = kwargs.get('logg_range',mlimits['logg'][0:2])
+    logg_range = kwargs.get('gravity_range',logg_range)
+    logg_range = kwargs.get('g_range',logg_range)
+    z_range = kwargs.get('z_range',mlimits['z'][0:2])
+    z_range = kwargs.get('metallicity_range',z_range)
+    limits = kwargs.get('limits', [teff_range,logg_range,z_range])
+
+# create a mask
+    mask = kwargs.get('mask',splat.generateMask(spec.wave,**kwargs))
+
+# set initial parameters
+    parameters0 = kwargs.get('initial_guess',[\
+        numpy.random.uniform(teff_range[0],teff_range[1]),\
+        numpy.random.uniform(logg_range[0],logg_range[1]),\
+        0.0])
+    if len(parameters0) < 3:
+        parameters0.append(0.0)
+        
+    parameters0[0] = kwargs.get('initial_temperature',parameters0[0])
+    parameters0[0] = kwargs.get('initial_teff',parameters0[0])
+    parameters0[0] = kwargs.get('t0',parameters0[0])
+    parameters0[1] = kwargs.get('initial_gravity',parameters0[1])
+    parameters0[1] = kwargs.get('initial_logg',parameters0[1])
+    parameters0[1] = kwargs.get('g0',parameters0[1])
+    parameters0[2] = kwargs.get('initial_metallicity',parameters0[2])
+    parameters0[2] = kwargs.get('initial_z',parameters0[2])
+    parameters0[2] = kwargs.get('z0',parameters0[2])
+
+    if not kwargs.get('fit_metallicity',False):
+        parameters0 = parameters0[0:2]
+
+    parameter_names = MODEL_PARAMETER_NAMES[:len(parameters0)]
+    parameter_titles = MODEL_PARAMETER_TITLES[:len(parameters0)]
+    parameter_units = MODEL_PARAMETER_UNITS[:len(parameters0)]
+
+# add in radius as a calculated parameter - THIS IS NOT WORKING AND NEEDS TO BE SOLVED
+#    if showRadius:
+#        parameters0.append(0.1*RADIUS_SUN.value)
+#        parameter_names.append('radius')
+#        parameter_titles.append('R')
+#        parameter_units.append(u.cm)
+
+    nparameters = len(parameters0)
+    pscale = [prior_scale[p] for p in parameter_names]
+    initial_parameters = [parameters0+pscale*numpy.random.randn(len(parameters0)) for i in range(nwalkers)]
+
+# check the time it should take to run model, and that user has models
+    testtimestart = time.time()
+    try:
+        mdl = splat.getModel(teff=2125,logg=5.1,z=-0.2,set='BTSettl2008')
+    except:
+        raise ValueError('\nProblem reading in a test model; make sure you have the full SPLAT model set installed')
+    testtimeend = time.time()
+    time_estimate = (testtimeend-testtimestart)*nwalkers*nsamples*1.2
+    print('Estimated time to compute = {:.0f} seconds = {:.1f} minutes = {:.2f} hours'.\
+        format(time_estimate,time_estimate/60.,time_estimate/3600.))
+    if time_estimate > 600. and not kwargs.get('noprompt',False):
+        resp = input('Do you want to continue? [Y/n]: ')
+        if resp.lower()[0] == 'n':
+            print('\nAborting')
+            return
+
+# run EMCEE with iterative saving and updates
+    model_params = {'model': model_set, 'limits': limits, 'mask': mask}
+    sampler = emcee.EnsembleSampler(nwalkers, nparameters, modelFitEMCEE_lnprob, args=(spec.wave.value,spec.flux.value,spec.noise.value,model_params))
+    sys.stdout.write("\n")
+    for i, result in enumerate(sampler.sample(initial_parameters, iterations=nsamples)):
+        if i > 0:
+            ch = sampler.chain[:,:i,:]
+            radii = ((sampler.blobs[:i]*(kwargs.get('distance',10.)*u.pc.to(u.cm)/RADIUS_SUN)**2)**0.5).value.reshape(-1)
+            cr = ch.reshape((-1, nparameters))
+            mcr = numpy.append(cr.transpose(),[radii],axis=0).transpose()
+            lnp = sampler.lnprobability[:,:i].reshape(-1)
+            print(lnp)
+            if kwargs.get('use_weights',False) != False:
+                parameter_weights = numpy.exp(lnp-numpy.max(lnp))
+            else:
+                parameter_weights = numpy.ones(len(lnp))
+            bparam,mparam,qparam = modelFitEMCEE_bestparameters(mcr,lnp,parameter_weights=parameter_weights)
+            print(bparam)
+    #        lnp = result[1]
+    #        scales = result[-1]
+    #        radii = ((scales*(kwargs.get('distance',10.)*u.pc.to(u.cm)/RADIUS_SUN)**2)**0.5).value.reshape(-1)
+            n = int((feedback_width+1) * float(i) / nsamples)
+            resp = '\rProgress: [{0}{1}]'.format('*' * n, ' ' * (feedback_width - n))
+            for kkk in range(nparameters-1):
+                resp+=' {:s}={:.2f}'.format(MODEL_PARAMETER_NAMES[kkk],bparam[kkk])
+            resp+='R={:.2f} lnP={:e}'.format(bparam[-1],lnp[-1])
+            print(resp)
+    # save iteratively
+            position = result[0]
+            print(position)
+            if kwargs.get('save',True) and i > 0:
+                modelFitEMCEE_plotchains(ch,file_chains)
+                modelFitEMCEE_plotcomparison(cr,spec,file_comparison,model=model_set,draws=5,parameter_weights=parameter_weights)
+                modelFitEMCEE_plotbestcomparison(spec,bparam[:-1],file_bestcomparison,model=model_set)
+                modelFitEMCEE_plotcorner(mcr,file_corner,parameter_weights=parameter_weights,**kwargs)
+                f = open(file_iterative, 'a')
+                for k in range(position.shape[0]):
+                    f.write('{0:4d} {1:s} {2:e}\n'.format(k, ' '.join([str(mmm) for mmm in position[k]]),lnp[k]))
+                f.close()
+    sys.stdout.write("\n")
+
+# burn out the initial section
+    orig_samples = sampler.chain.reshape((-1, nparameters))
+    orig_lnp = sampler.lnprobability.reshape(-1)
+    orig_radii = ((numpy.array(sampler.blobs).reshape(-1)*(kwargs.get('distance',10.)*u.pc.to(u.cm)/RADIUS_SUN)**2)**0.5).value.reshape(-1)
+    samples = sampler.chain[:, (burn_fraction*nsamples):, :].reshape((-1, nparameters))
+    lnp = orig_lnp[(burn_fraction*nsamples*nwalkers):]
+    radii = orig_radii[(burn_fraction*nsamples*nwalkers):]
+    merged_samples = numpy.append(samples.transpose(),[radii],axis=0).transpose()
+
+    print(orig_radii.shape,orig_samples.shape,orig_lnp.shape)
+    print(radii.shape,samples.shape,lnp.shape,sampler.chain.shape)
+
+# determine parameters
+    if kwargs.get('use_weights',False) != False:
+        parameter_weights = numpy.exp(lnp-numpy.max(lnp))
+    else:
+        parameter_weights = numpy.ones(len(lnp))
+
+    bparam,mparam,qparam = modelFitEMCEE_bestparameters(merged_samples,lnp,parameter_weights=parameter_weights)
+    print(bparam)
+
+
+# reporting
+    modelFitEMCEE_plotchains(sampler.chain,file_chains)
+    modelFitEMCEE_plotcomparison(samples,spec,file_comparison,model=model_set,draws=20,parameter_weights=parameter_weights,**kwargs)
+    modelFitEMCEE_plotbestcomparison(spec,bparam[:-1],file_bestcomparison,model=model_set,**kwargs)
+    modelFitEMCEE_plotcorner(merged_samples,file_corner,parameter_weights=parameter_weights,**kwargs)
+
+    end_time = time.time()
+    total_time = (end_time-start_time)
+    if kwargs.get('verbose',False):
+        print('Total run time = {:.0f} seconds or {:.2f} hours'.format(total_time,total_time/3600.))
+
+    skwargs = {'burn_fraction': burn_fraction, 'filebase': filebase, 'total_time': total_time, 'mask': mask, 'model': model_set}
+    modelFitEMCEE_summary(sampler,spec,file_summary,**skwargs)
+    return sampler
+
+
+
+def modelFitEMCEE_bestparameters(values,lnp,**kwargs):
+    '''
+    Return three sets of parameters: by quantiles, the weighted mean, and the best values
+    '''
+    parameter_weights = kwargs.get('parameter_weights',numpy.ones(values.shape[-1]))
+    quantiles = kwargs.get('quantiles',[16,50,84])
+
+    quant_parameters = []
+    best_parameters = []
+    mean_parameters = []
+    for i in range(values.shape[-1]):
+        q = numpy.percentile(values[:,i],quantiles)
+        quant_parameters.append([q[1],q[2]-q[1],q[1]-q[0]])
+        mean_parameters.append(numpy.sum(parameter_weights*values[:,i])/numpy.sum(parameter_weights))
+        best_parameters.append(values[numpy.where(lnp == numpy.max(lnp)),i].reshape(-1)[0])
+    return best_parameters,mean_parameters,quant_parameters
+
+
+def modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params):
+    mparam = copy.deepcopy(model_params)
+    for i in range(len(theta)):
+        mparam[MODEL_PARAMETER_NAMES[i]] = theta[i]
+    mdl = splat.getModel(**mparam)
+    if len(mdl.wave) == 0:
+        resp = '\nProblem reading in model '
+        for k,v in enumerate(theta):
+            resp+='{} = {}, '.format(MODEL_PARAMETER_NAMES[k],v)
+        print(resp)
+        return -1.e30,0.
+#    chi,scl = splat.compareSpectra(sp,mdl,**model_params)
+    chi,scl = splat.compareSpectra(splat.Spectrum(wave=x,flux=y,noise=yerr),mdl,**model_params)
+    lnp = -0.5*chi
+    if model_params.get('noise_scaling',False):
+        f = interp1d(mdl.wave.value,mdl.flux.value*scl,bounds_error=False,fill_value=0.)
+        inv_sigma2 = 1./(yerr**2+f(x)**2*numpy.exp(theta[-1]))
+        lnp = -0.5*numpy.nansum((1.-mparam['mask'])*((y-f(x))**2*inv_sigma2-numpy.log(inv_sigma2)))
+#            inv_sigma2 = 1./yerr**2
+#            lnp = -0.5*numpy.nansum((y-f(x))**2*inv_sigma2)
+    return lnp,scl
+#    except:
+#        resp = '\nProblem comparing model '
+#        for k,v in enumerate(theta):
+#            resp+='{} = {}, '.format(MODEL_PARAMETER_NAMES[k],v)
+#        print(resp+' to data')
+#    return -numpy.inf
+
+
+def modelFitEMCEE_lnprior_limits(theta,limits):
+    '''
+    compute the log of the probability assuming a uniform distribution
+    with hard limits; if outside limits, probability returns -infinity
+    '''
+    for i,t in enumerate(theta):
+        try:
+            if t < numpy.min(limits[i]) or t > numpy.max(limits[i]):
+                return -1.e30
+        except:
+            pass
+    return 0.0
+
+
+def modelFitEMCEE_lnprior_normal(theta,meansds):
+    '''
+    compute the log of the probability assuming a normal distribution
+    there probably needs to be better error checking here
+    '''
+    lnp = 0.0
+    for i,t in enumerate(theta):
+        try:
+            lnp-=0.5*(((t-meansds[i][0])/meansds[i][1])**2-numpy.log(meansds[i][1]))
+        except:
+            pass
+    return lnp
+
+def modelFitEMCEE_lnprob(theta,x,y,yerr,model_params):
+#    lnp = 0.
+#    if kwargs.get('normal_priors',None) != None and kwargs.get('priors_meansds',None) != None:
+#        lnp+=modelFitEMCEE_lnprior_normal(theta,kwargs.get('priors_meansds'),**kwargs)
+#    if kwargs.get('limits',None) != None:
+    lnp0 = modelFitEMCEE_lnprior_limits(theta,model_params['limits'])
+    if not numpy.isfinite(lnp0):
+        return -1.e30
+    lnp,scale = modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params)
+    return lnp0+lnp, scale
+
+
+def modelFitEMCEE_plotchains(chains,file,**kwargs):
+    plt.figure(1,figsize=kwargs.get('figsize',[8,4*chains.shape[-1]]))
+    for i in range(chains.shape[-1]):
+        plt.subplot(int('{}1{}'.format(chains.shape[-1],i+1)))
+        xr = [0,chains.shape[1]-1]
+        yr = [numpy.min(chains[:,:,i]),numpy.max(chains[:,:,i])]
+        yr[0] -= 0.05*(numpy.max(chains[:,:,i])-numpy.min(chains[:,:,i]))
+        yr[1] += 0.05*(numpy.max(chains[:,:,i])-numpy.min(chains[:,:,i]))
+#        print(yr)
+        for j in range(chains.shape[0]):
+            plt.plot(numpy.arange(chains.shape[1]),chains[j,:,i],'k-',alpha=0.4)
+        if kwargs.get('burn_fraction',0) > 0:
+            plt.plot([chains.shape[1]*kwargs.get('burn_fraction')]*2,yr,'k:')
+            mn = numpy.mean(chains[:,chains.shape[1]*kwargs.get('burn_fraction'):,i])
+        else:
+            mn = numpy.mean(chains[:,:,i])
+        plt.axis(xr+yr)
+        plt.plot(xr,[mn]*2,'r-')
+        plt.xlabel('Steps')
+        plt.ylabel(r''+MODEL_PARAMETER_TITLES[i]+' ('+MODEL_PARAMETER_UNITS[i].to_string()+')')
+    try:
+        plt.savefig(file)
+    except:
+        print('\nProblem saving chains plot to {}'.format(file))
+    return plt
+
+
+def modelFitEMCEE_plotcomparison(samples,spec,file,**kwargs):
+    '''
+    for now just plotting best model
+    would like to do draws from posterior instead
+    '''
+# extract best fit values
+    draws = kwargs.get('draws',1)
+    pargs = (spec,)
+    legend = [spec.name]
+    colors = ['k']
+    alpha = [0]
+    tbl = Table()
+    tbl['parameter_weights'] = kwargs.get('parameter_weights',numpy.ones(samples.shape[0]))
+    tbl['parameter_weights'] = numpy.max(tbl['parameter_weights'])-tbl['parameter_weights']
+    for i in range(samples.shape[-1]):
+        tbl[MODEL_PARAMETER_NAMES[i]] = samples[:,i]
+    tbl.sort('parameter_weights')
+    tblu = astropy.table.unique(tbl,keys=MODEL_PARAMETER_NAMES[:samples.shape[-1]])
+    draws = numpy.min([draws,len(tblu)])
+    for k in range(draws):
+        mkwargs = copy.deepcopy(kwargs)
+        mlegend = r''
+        for i in range(samples.shape[-1]):
+            mkwargs[MODEL_PARAMETER_NAMES[i]] = tblu[MODEL_PARAMETER_NAMES[i]][k]
+            mlegend+='{:s}={:.2f} '.format(MODEL_PARAMETER_TITLES[i],mkwargs[MODEL_PARAMETER_NAMES[i]])
+        mdl = splat.getModel(**mkwargs)
+#    print(mdl.teff,mdl.logg)
+        stat,scl = splat.compareSpectra(spec,mdl,**kwargs)
+        mdl.scale(scl)
+        pargs = pargs + (mdl,)
+        legend.append(mlegend)
+        colors.append('grey')
+        alpha.append(tblu['parameter_weights'][k])
+    print(*pargs)
+    return splat.plotSpectrum(*pargs,colors=colors,alpha=alpha,\
+        uncertainty=True,telluric=True,file=file,legend=legend)
+
+
+def modelFitEMCEE_plotbestcomparison(spec,mparam,file,**kwargs):
+    '''
+    for now just plotting best model
+    would like to do draws from posterior instead
+    '''
+
+# extract best fit values
+    mkwargs = copy.deepcopy(kwargs)
+    mlegend = r''
+    print(mparam)
+    for i,m in enumerate(mparam):
+        mkwargs[MODEL_PARAMETER_NAMES[i]] = m
+        mlegend+='{:s}={:.2f} '.format(MODEL_PARAMETER_TITLES[i],float(m))
+    print(mkwargs)
+    mdl = splat.getModel(**mkwargs)
+#    print(mdl.teff,mdl.logg)
+    stat,scl = splat.compareSpectra(spec,mdl,**kwargs)
+    mdl.scale(scl)
+    return splat.plotSpectrum(spec,mdl,spec-mdl,colors=['k','b','grey'],uncertainty=True,telluric=True,file=file,\
+        legend=[spec.name,mlegend,r'difference ($\chi^2$ = {:.0f})'.format(stat)])
+
+def modelFitEMCEE_plotcorner(samples,file,**kwargs):
+    try:
+        import corner
+    except:
+        print('\nYou must install corner to display corner plot; see https://github.com/dfm/corner.py')
+        return None
+
+    if len(kwargs.get('truths',[])) == 0:
+        truths = [numpy.inf for i in range(samples.shape[-1])]
+
+    labels = [r''+MODEL_PARAMETER_TITLES[i]+' ('+MODEL_PARAMETER_UNITS[i].to_string()+')' for i in range(samples.shape[-1]-1)]
+    labels.append(r'Radius (R$_{\odot}$)')
+    weights = kwargs.get('parameter_weights',numpy.ones(samples.shape[0]))
+
+    fig = corner.corner(samples, quantiles=[0.16, 0.5, 0.84], truths=truths, \
+            labels=labels, show_titles=True, weights=weights,\
+            title_kwargs={"fontsize": kwargs.get('fontsize',12)})
+
+    try:
+        fig.savefig(file)
+    except:
+        print('\nProblem saving corner plot to {}'.format(file))
+    return fig
+
+
+def modelFitEMCEE_summary(sampler,spec,file,**kwargs):
+    '''
+    for now just plotting best model
+    would like to do draws from posterior instead
+    '''
+
+# extract best fit values
+    base_samples = sampler.chain
+    nwalkers = base_samples.shape[0]
+    nsamples = base_samples.shape[1]
+    nparameters = base_samples.shape[2]
+    samples = base_samples[:, (kwargs['burn_fraction']*nsamples):, :].reshape((-1, nparameters))
+
+    f = open(file,'w')
+    f.write('EMCEE fitting analysis of spectrum of {} using the models of {}'.format(spec.name,kwargs['model']))
+    f.write('\nFitting performed on {} by {}'.format(time.strftime("%Y %h %d %I:%M:%S"),pwd.getpwuid(os.getuid())[0]))
+    f.write('\n\nMCMC paramters:')
+    f.write('\n\tNumber of walkers = {}'.format(nwalkers))
+    f.write('\n\tNumber of samples = {}'.format(nsamples))
+    f.write('\n\tNumber of fit parameters = {}'.format(nparameters))
+    f.write('\n\tBurn-in fraction = {}'.format(kwargs['burn_fraction']))
+
+    f.write('\n\nBest fit parameters')
+    for i in range(nparameters):
+        fit = numpy.percentile(samples[:,i], [16, 50, 84])
+        f.write('\n\t{} = {}+{}-{} {}'.format(MODEL_PARAMETER_TITLES[i],fit[1],fit[2]-fit[1],fit[1]-fit[0],MODEL_PARAMETER_UNITS[i].to_string()))
+
+    mkwargs = copy.deepcopy(kwargs)
+    for i in range(samples.shape[-1]):
+        mkwargs[MODEL_PARAMETER_NAMES[i]] = numpy.median(samples[:,i])
+    mdl = splat.getModel(**mkwargs)
+    stat,scl = splat.compareSpectra(spec,mdl,**kwargs)
+
+# copmute DOF
+    try:
+        dof = spec.dof
+    except:
+        dof = len(spec.wave)
+    if len(kwargs.get('mask',[])) > 0:
+        dof = dof*(numpy.sum(1.-kwargs['mask']))/len(kwargs['mask'])
+    dof = dof-nparameters-1
+
+    f.write('\n\nResidual chi^2 = {:.0f} for {:.0f} degrees of freedom'.format(stat,dof))
+    f.write('\nProbability that model matches data = {:.4f}'.format(stats.chi2.sf(stat,dof)))
+    f.write('\nSource/model scale factor = {:.2f} implying a radius of {:.3f} solar radii at 10 pc\n'.format(scl,scl**0.5*TEN_PARSEC))
+
+    f.write('\n\nFitting completed in {:.1f} seconds = {:.2f} hours'.format(kwargs['total_time'],kwargs['total_time']/3600.))
+    f.write('\nResults may be found in the files {}*'.format(kwargs['filebase']))
+    f.close()
+    return 
+
+
+
+
+# TESTING ROUTINES
+def test_modelfitEMCEE(folder):
+#    tbl = splat.searchLibrary(spt=['M7','T8'])
+#    sp = splat.Spectrum(numpy.random.choice(tbl['DATA_KEY']))
+    folder='/Users/adam/projects/splat/code/testing/'
+    sp = splat.getSpectrum(shortname='1507-1627')[0]
+    sp.fluxCalibrate('2MASS J',12.32,absolute=True)
+    spt,spt_e = splat.classifyByStandard(sp,method='kirkpatrick')
+    teff,teff_e = splat.typeToTeff('L5')
+    print('\nPerforming emcee model fit of {} with SpT = {} and initial Teff = {}\n'.format(sp.name,spt,teff))
+# this takes about 1 hour
+    return modelFitEMCEE(sp,t0=teff,g0=5.0,z0=0.,noprompt=True,use_weights=True,fit_metallicity=False,nwalkers=10,nsamples=100,output=folder+'test_modelfitEMCEE',verbose=True)
+
+def test_modelfitMCMC(folder):
     sp = splat.getSpectrum(shortname='1047+2124')[0]        # T6.5 radio emitter
     spt,spt_e = splat.classifyByStandard(sp,spt=['T2','T8'])
     teff,teff_e = splat.typeToTeff(spt)
     sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
-    table = modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
+    return modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
+
+
+if __name__ == '__main__':
+    basefolder = '/Users/adam/projects/splat/code/testing/'
+    test_modelfitEMCEE(basefolder)
 

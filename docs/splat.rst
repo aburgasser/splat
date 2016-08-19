@@ -32,7 +32,7 @@ You can also read in your own spectrum by passing a filename
 >>> sp = splat.Spectrum(filename='PATH_TO/myspectrum.fits')
 
 Note that this file must conform to the standard of the SPL data: the first column is
-wavelength in microns, second column flux in :math:`F_\\lambda` units, third column (optional) is 
+wavelength in microns, second column flux in F_lambda units, third column (optional) is 
 flux uncertainty. The file can be a fits or ascii file.
 
 You can also access a file based on its unique spectum key

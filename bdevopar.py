@@ -32,22 +32,22 @@ from math import isnan
 import matplotlib.pyplot as plt
 #from numpy import isnan
 #import splat
-#from splat import SPLAT_PATH, EVOLUTIONARY_MODEL_FOLDER
+from splat import SPLAT_PATH, SPLAT_URL
 
 #set the SPLAT PATH, either from set environment variable or from sys.path
-SPLAT_PATH = './'
-if os.environ.get('SPLAT_PATH') != None:
-    SPLAT_PATH = os.environ['SPLAT_PATH']
-else:
-    checkpath = ['splat' in r for r in sys.path]
-    if max(checkpath):
-        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
-
+#SPLAT_PATH = './'
+#if os.environ.get('SPLAT_PATH') != None:
+#    SPLAT_PATH = os.environ['SPLAT_PATH']
+#else:
+#    checkpath = ['splat' in r for r in sys.path]
+#    if max(checkpath):
+#        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
+#
 EVOLUTIONARY_MODEL_FOLDER = '/reference/EvolutionaryModels/'
+EMODELS = ['baraffe','burrows','saumon']
 
 # change the command prompt
 sys.ps1 = 'splat evolve> '
-
 
 
 ###############################################################################
@@ -67,9 +67,9 @@ class ReadModel(object):
     :param model: 
         - **baraffe:** 
           Isochrones from Baraffe et. la models (2003), described in the 
-	  following paper: "Evolutionary models for cool brown dwarfs and 
-	  extrasolar giant planets. The case of HD 20945": `Here 
-	  <http://arxiv.org/abs/astro-ph/0302293>`_. Original model's `URL 
+	       following paper: "Evolutionary models for cool brown dwarfs and 
+	       extrasolar giant planets. The case of HD 20945": `Here 
+	       <http://arxiv.org/abs/astro-ph/0302293>`_. Original model's `URL 
           <https://perso.ens-lyon.fr/isabelle.baraffe/COND03_models>`_.
           Ages (in Gyr) used for interpolation were the following: 
 
@@ -117,19 +117,17 @@ class ReadModel(object):
 	     further discussed in the section belowed.
     """
     def __new__(cls, *model, **z): 
-        Emodels_URL = 'http://pono.ucsd.edu/~adam/splat/EvolutionaryModels/'
-
         assert len(model) <= 1, "Only one argument (model) allowed."
         assert len(z.keys()) <= 1, "Only one keyword (metallicity) allowed."
 
         try: model = model[0].lower()
         except TypeError: raise TypeError("Model can't be a number.")
         except IndexError: model = 'baraffe'
-        finally: print("You are using " + model + "'s model.")
+        finally: print("You are using " + model + "'s models.")
 
-        assert model in ['baraffe','burrows','saumon'], """
-	    Incorrect model or bad spelling. Please choose from the 
-	    following models: 'baraffe', 'burrows', or 'saumon'.\n"""
+        assert model in EMODELS, "\nModel {} not in allowed model sets; please use: {}\n".format(model,' '.join(EMODELS))
+#	    Incorrect model or bad spelling. Please choose from the 
+#	    following models: 'baraffe', 'burrows', or 'saumon'.\n"""
 
         ##################### BARAFFE OR BURROWS MODEL #########################
         if model == 'baraffe' or model == 'burrows':
@@ -137,27 +135,28 @@ class ReadModel(object):
                     '0.120', '0.500', '1.000', '5.000', '10.000']
 
             if model == 'baraffe': 
-                Emodels = Emodels_URL + 'Baraffe/cond_'
-                EmodeL = 'Baraffe/cond_'
+                prefix = 'Baraffe/cond_'
             else: 
-                Emodels = Emodels_URL + 'Burrows/b97_'
-                EmodeL = 'Burrows/b97_'
+                prefix = 'Burrows/b97_'
             num_files = len(ages); v = 0
         ########################### SAUMON MODEL ##############################
         else:
-            try: metallicity = z[z.keys()[0]]
+            try: metallicity = z[list(z.keys())[0]]
             except TypeError: raise TypeError("Metallicity can't be a number.")
             except IndexError: metallicity = 'Hybrid_solar'
             finally: print("You are using the metallicity " + metallicity + ".")
 
             if metallicity == 'Hybrid_solar': Z = 'hybrid_solar_age_'
+            elif metallicity == 'solar': Z = 'hybrid_solar_age_'
+            elif metallicity == '+0.3': Z = 'nc+0.3_age_'
+            elif metallicity == '-0.3': Z = 'nc-0.3_age_'
             elif metallicity == 'No_Clouds_+0.3': Z = 'nc+0.3_age_'
             elif metallicity == 'No_Clouds_-0.3': Z = 'nc-0.3_age_'
             elif metallicity == 'No_Clouds_Solar': Z = 'no_solar_age_'
             elif metallicity == 'f2_solar': Z = 'f2_solar_age_'
             else: raise NameError("The inputted metallicity '" + metallicity +\
 	     "' does not exist. Make sure spelling \n           is correct."+\
-	     " Please choose from the following: 'Hybrid_solar',\n           "\
+	     " Please choose from the following: 'solar', '+0.3','-0.3', 'Hybrid_solar',\n           "\
 	     +"'No_Clouds_+0.3', 'No_Clouds_-0.3', 'No_Clouds_Solar',\n "+\
 	     "          or 'f2_solar'.\n")
 
@@ -166,33 +165,39 @@ class ReadModel(object):
                     '0.300','0.400','0.600','0.800','1.000','1.500','2.000',
                     '3.000','4.000','6.000','8.000','10.000']
 
-            Emodels = Emodels_URL + 'Saumon/' + metallicity + '/' + Z
-            EmodeL = 'Saumon/' + metallicity + '/' + Z
+            prefix = 'Saumon/' + metallicity + '/' + Z
             num_files = len(ages); v = 1
         #######################################################################
 
-        n_tables = numpy.arange(num_files)
+        n_tables = numpy.arange(len(ages))
   
         masses = [[] for i in n_tables]
         temperatures = [[] for i in n_tables]
         luminosities = [[] for i in n_tables]
         gravities = [[] for i in n_tables]
-        radiuses = [[] for i in n_tables]
+        radii = [[] for i in n_tables]
 
-        for age in n_tables:
-            try:data =ascii.read(requests.get(Emodels+ages[age]).content,comment=';')
-            except: 
-                data=ascii.read(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+EmodeL+ages[age],comment='#')
+        for i,age in enumerate(ages):
+            mfile = prefix+'{:05d}.txt'.format(int(float(age)*1000.))
+            try:
+                data=ascii.read(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+mfile,comment='#')
+            except:
+                try:
+                    print('Could not read in model file {} locally; trying online'.format(mfile))
+                    data =ascii.read(requests.get(SPLAT_URL+EVOLUTIONARY_MODEL_FOLDER+mfile).content,comment='#',delimiter='\t')
+                except: 
+                    raise ValueError('Could not find model file {} locally or online; aborting'.format(mfile))
+
             for line,value in enumerate(data):
-                masses[age].append(float(value[0+v]))
-                temperatures[age].append(float(value[1+v]))
-                luminosities[age].append(float(value[2+v]))
-                gravities[age].append(float(value[3+v]))
-                radiuses[age].append(float(value[4+v]))
+                masses[i].append(float(value[0+v]))
+                temperatures[i].append(float(value[1+v]))
+                luminosities[i].append(float(value[2+v]))
+                gravities[i].append(float(value[3+v]))
+                radii[i].append(float(value[4+v]))
 
-        return {'mass':masses, 'gravity':gravities, 'radius':radiuses,
+        return {'mass':masses, 'gravity':gravities, 'radius':radii,
                 'luminosity':luminosities, 'temperature':temperatures, 
-		'age':[float(i) for i in ages]}
+		        'age':[float(i) for i in ages]}
 
 ############################### End of class ReadModel ########################
 ###############################################################################
@@ -237,7 +242,7 @@ class Params(ReadModel):
     """
     def __new__(cls, *args, **kwargs):
       ################# Check User Inputted Keywords ##########################
-      keywords = kwargs.keys()
+      keywords = list(kwargs.keys())
       numberKeys = len(keywords)
       params = {'temperature':0, 'luminosity':0, 
                 'age':0, 'gravity':0, 'mass':0, 'radius':0}
@@ -433,7 +438,7 @@ class Parameters(Params, ReadModel):
        >>> print params
     """
     def __new__(cls,*model,**kwargs):
-         keywords = kwargs.keys()
+         keywords = list(kwargs.keys())
          if type(kwargs[keywords[0]]) is float or \
 	                      type(kwargs[keywords[0]]) is int:  
              kwargs[keywords[0]] = [kwargs[keywords[0]]]
@@ -531,10 +536,10 @@ class Parameters(Params, ReadModel):
 
          params['temperature'] = params['temperature']*u.K
          params['age'] = params['age']*u.Gyr
-         params['gravity'] = params['gravity']*u.cm/u.s
+         params['gravity'] = params['gravity']
          params['radius'] = params['radius']*u.solRad
          params['mass'] = params['mass']*u.solMass
-         params['luminosity'] = params['luminosity']*u.solLum
+         params['luminosity'] = params['luminosity']
 
          return params
 
@@ -542,3 +547,34 @@ class PlotHist(Parameters, Params, ReadModel):
     def __new__(cls,params,bins=60):
         plt.hist(params[~isnan(params)],bins=bins)
         return plt.show()
+
+
+def test_bdevolpar_basic():
+    t = [1200.,1100.,1000.]
+    g = [4.5,4.8,5.1]
+    p = Parameters(temperature=t, gravity=g)
+    for i,teff in enumerate(t):
+        for k in p.keys():
+            print('{} = {}'.format(k,p[k][i]))
+        print('\n')
+    return True
+
+def test_bdevolpar_accuracy():
+    model = ReadModel('burrows')
+    for i in range(len(model['mass'][0])-2):
+        t = [model['temperature'][j][i] for j in range(len(model['age']))]
+        plt.semilogx(model['age'],t,color='grey')
+    age_samp = 10.**(numpy.arange(1,100)/100.*4-3.)
+    mass_samp = [0.002,0.005,0.01,0.02,0.05,0.1,0.2]
+    for m in mass_samp:
+        p = Parameters('burrows',age=age_samp,mass=[m for i in range(len(age_samp))])
+        plt.semilogx(age_samp,p['temperature'],color='r')
+
+    plt.show()
+    return True
+
+
+if __name__ == '__main__':
+#    test_bdevolpar_basic()
+    test_bdevolpar_accuracy()
+

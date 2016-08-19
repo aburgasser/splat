@@ -91,7 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">SPLAT Spectral Modeling</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SPLAT Spectral Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
@@ -117,7 +117,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -141,6 +141,7 @@
             
   <div class="section" id="splat-spectral-modeling">
 <h1>SPLAT Spectral Modeling<a class="headerlink" href="#splat-spectral-modeling" title="Permalink to this headline">¶</a></h1>
+<p>The SPLAT spectral modeling package provides tools for reading in and</p>
 <span class="target" id="module-splat_model"></span><dl class="function">
 <dt id="splat_model.calcLuminosity">
 <code class="descclassname">splat_model.</code><code class="descname">calcLuminosity</code><span class="sig-paren">(</span><em>sp</em>, <em>mdl=False</em>, <em>absmags=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.calcLuminosity" title="Permalink to this definition">¶</a></dt>
@@ -203,7 +204,7 @@ This code is derived almost entirely from triangle.py.</td>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>set</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; <p>set of models to use; options include:</p>
+<li><strong>model</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; <p>set of models to use; options include:</p>
 <ul>
 <li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
@@ -248,45 +249,78 @@ from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Load up a model spectrum based on parameters</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Loads up a model spectrum based on a set of input parameters.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>set</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; <p>set of models to use; options include:</p>
+</tbody>
+</table>
+<p>The models may be any one of the following listed below.
+A Spectrum object with the wavelength and surface fluxes (F_lambda in units of erg/cm^2/s/mu{m}) is returned</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>model</strong> &#8211; <p>The model set to use; may be one of the following:</p>
 <ul>
-<li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
-from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
-<li><em>&#8216;burrows06&#8217;</em>: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5,
-and sedimentation efficiency of either 0 or 100 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...640.1063B">Burrows et al. (2006)</a></li>
-<li><em>&#8216;morley12&#8217;</em>: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0
-and sedimentation efficiency of 2 to 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...756..172M">Morley et al. (2012)</a></li>
-<li><em>&#8216;morley14&#8217;</em>: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0
-and sedimentation efficiency of 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...787...78M">Morley et al. (2014)</a></li>
-<li><em>&#8216;saumon12&#8217;</em>: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0
-from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...750...74S">Saumon et al. (2012)</a></li>
-<li><em>&#8216;drift&#8217;</em>: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0
-from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
+<li><em>&#8216;BTSettl2008&#8217;</em>: default model set from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
 </ul>
+<p>with effective temperatures of 400 to 2900 K (steps of 100 K); surface gravities of 3.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity of -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.3, and 0.5 for temperatures greater than 2000 K only;
+cloud opacity is fixed in this model, and equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: &#8216;btsettled&#8217;,&#8217;btsettl&#8217;,&#8217;allard&#8217;,&#8217;allard12&#8217;)
+- <em>&#8216;burrows06&#8217;</em>: model set from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...640.1063B">Burrows et al. (2006)</a>
+with effective temperatures of 700 to 2000 K (steps of 50 K); surface gravities of 4.5 to 5.5 in units of cm/s^2 (steps of 0.1 dex); metallicity of -0.5, 0.0 and 0.5; and either no clouds or grain size 100 microns (fsed = &#8216;nc&#8217; or &#8216;f100&#8217;).
+equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: &#8216;burrows&#8217;,&#8217;burrows2006&#8217;)
+- <em>&#8216;morley12&#8217;</em>: model set from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...756..172M">Morley et al. (2012)</a>
+with effective temperatures of 400 to 1300 K (steps of 50 K); surface gravities of 4.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and sedimentation efficiency (fsed) of 2, 3, 4 or 5;
+metallicity is fixed to solar, equilibrium chemistry is assumed, and there are no clouds associated with this model (alternate designations: &#8216;morley2012&#8217;)
+- <em>&#8216;morley14&#8217;</em>: model set from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...787...78M">Morley et al. (2014)</a>
+with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex);
+metallicity is fixed to solar, equilibrium chemistry is assumed, sedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: &#8216;morley2014&#8217;)
+- <em>&#8216;saumon12&#8217;</em>: model set from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...750...74S">Saumon et al. (2012)</a>
+with effective temperatures of 400 to 1500 K (steps of 50 K); and surface gravities of 3.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex);
+metallicity is fixed to solar, equilibrium chemistry is assumed, and no clouds are associated with these models (alternate designations: &#8216;saumon&#8217;,&#8217;saumon2012&#8217;)
+- <em>&#8216;drift&#8217;</em>: model set from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a>
+with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex);
+cloud opacity is fixed in this model, equilibrium chemistry is assumed (alternate designations: &#8216;witte&#8217;,&#8217;witte2011&#8217;,&#8217;helling&#8217;)</p>
 </li>
 <li><strong>local</strong> (<em>optional, default = True</em>) &#8211; read in parameter file locally if True</li>
 <li><strong>online</strong> (<em>optional, default = False</em>) &#8211; read in parameter file online if True</li>
 <li><strong>folder</strong> (<em>optional, default = ''</em>) &#8211; string of the folder name containing the model set</li>
-<li><strong>filename</strong> (<em>optional</em>) &#8211; string of the filename of the desired model</li>
+<li><strong>filename</strong> (<em>optional, default = False</em>) &#8211; string of the filename of the desired model</li>
+<li><strong>force</strong> &#8211; force the filename to be exactly as specified</li>
 <li><strong>url</strong> (optional, default = &#8216;<a class="reference external" href="http://pono.ucsd.edu/~adam/splat/">http://pono.ucsd.edu/~adam/splat/</a>&#8216;) &#8211; string of the url to the SPLAT website</li>
 </ul>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name" colspan="2">Model Parameters:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">Below are parameters that define the model:</p>
-<ul class="last simple">
-<li><em>teff</em>: effective temperature of the model</li>
-<li><em>logg</em>: surface gravity of the model</li>
-<li><em>z</em>: metallicity of the model</li>
-<li><em>fsed</em>: sedimentation efficiency of the model</li>
-<li><em>cld</em>: cloud shape function of the model</li>
-<li><em>kzz</em>: vertical eddy diffusion coefficient of the model</li>
-<li><em>slit</em>: slit weight of the model</li>
+<tr class="field-even field"><th class="field-name" colspan="2">Model Parameters:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">The following parameters may be set:</p>
+<ul class="simple">
+<li><em>teff</em>: effective temperature of the model in K (e.g. teff = 1000)</li>
+<li><em>logg</em>: log_10 of the surface gravity of the model in cm/s^2 units (e.g. logg = 5.0)</li>
+<li><em>z</em>: log_10 of metallicity of the model relative to solar metallicity (e.g. z = -0.5)</li>
+<li><em>fsed</em>: sedimentation efficiency of the model (e.g. fsed = &#8216;f2&#8217;)</li>
+<li><em>cld</em>: cloud shape function of the model (e.g. cld = &#8216;f50&#8217;)</li>
+<li><em>kzz</em>: vertical eddy diffusion coefficient of the model (e.g. kzz = 2)</li>
+<li><em>slit</em>: slit weight of the model in arcseconds (e.g. slit = 0.3)</li>
+<li><em>sed</em>: if set to True, returns a broad-band spectrum spanning 0.3-30 micron (applies only for BTSettl2008 models with Teff &lt; 2000 K)</li>
 </ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mdl</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">loadModel</span><span class="p">(</span><span class="n">teff</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span><span class="n">logg</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mdl</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+<span class="go">     BTSettl2008 model with the following parmeters:</span>
+<span class="go">     Teff = 1000 K</span>
+<span class="go">     logg = 5.0 cm/s2</span>
+<span class="go">     z = 0.0</span>
+<span class="go">     fsed = nc</span>
+<span class="go">     cld = nc</span>
+<span class="go">     kzz = eq</span>
+<span class="go">     Smoothed to slit width 0.5 arcseconds</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mdl</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">loadModel</span><span class="p">(</span><span class="n">teff</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span><span class="n">logg</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;burrows&#39;</span><span class="p">)</span>
+<span class="go">     Input value for teff = 2500 out of range for model set burrows06</span>
+<span class="go">     Warning: Creating an empty Spectrum object</span>
+</pre></div>
+</div>
 </td>
 </tr>
 </tbody>
@@ -307,7 +341,7 @@ and sedimentation efficiency (for cloudy models only).</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>parameterFile</strong> (<em>optional, default = 'parameters.txt'</em>) &#8211; name of file containing parameters for spectral models</li>
-<li><strong>set</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; <p>set of models to use; options include:</p>
+<li><strong>model</strong> &#8211; <p>set of models to use; options include:</p>
 <ul>
 <li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
@@ -412,12 +446,12 @@ more details. Options include:</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1047+2124&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>        <span class="c1"># T6.5 radio emitter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span> <span class="n">spt_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;T2&#39;</span><span class="p">,</span><span class="s1">&#39;T8&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">teff</span><span class="p">,</span><span class="n">teff_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="n">spt</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="n">spt</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">mask_standard</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="n">teff</span><span class="p">,</span> <span class="mf">5.3</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">zstep</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">savestep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="n">spt</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">mask_standard</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="n">teff</span><span class="p">,</span> <span class="mf">5.3</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">zstep</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">savestep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">    Trouble with model BTSettl2008 T=1031.61, logg=5.27, z=-0.02</span>
 <span class="go">    At cycle 0: fit = T=1031.61, logg=5.27, z=0.00 with chi2 = 35948.5</span>
 <span class="go">    Trouble with model BTSettl2008 T=1031.61, logg=5.27, z=-0.13</span>
@@ -457,7 +491,7 @@ more details. Options include:</p>
 <span class="go">    [(0.16, 938.96254520460286), (0.5, 1029.3222563137401), (0.84, 1095.8574021575118)]</span>
 
 <span class="go">    Total time elapsed = 0:01:46.340169</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">table</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">table</span>
 <span class="go">         teff          logg      z       radius         chisqr</span>
 <span class="go">    ------------- ------------- --- --------------- -------------</span>
 <span class="go">    1031.60790828 5.26704520744 0.0  0.103152256465 29402.3750247</span>
@@ -536,13 +570,13 @@ deviations away from the mean. Only effective if <code class="docutils literal">
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1047+2124&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>        <span class="c1"># T6.5 radio emitter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span> <span class="n">spt_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;T2&#39;</span><span class="p">,</span><span class="s1">&#39;T8&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">teff</span><span class="p">,</span><span class="n">teff_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="n">spt</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="n">spt</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">mask_standard</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="n">teff</span><span class="p">,</span> <span class="mf">5.3</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">zstep</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">savestep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">reportModelFitResults</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">evol</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">triangle</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="n">spt</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">mask_standard</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="n">teff</span><span class="p">,</span> <span class="mf">5.3</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">zstep</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">savestep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">reportModelFitResults</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">evol</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">triangle</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 <span class="go">    Number of steps = 169</span>
 
 <span class="go">    Best Fit parameters:</span>
@@ -562,9 +596,9 @@ deviations away from the mean. Only effective if <code class="docutils literal">
 </dd></dl>
 
 <ul class="simple">
-<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
 </div>
 

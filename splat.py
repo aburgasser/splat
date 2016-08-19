@@ -5,21 +5,26 @@ from __future__ import print_function, division
 # based on routines developed by:
 #    Christian Aganze
 #    Daniella Bardalez Gagliuffi
+#    Jessica Birky
 #    Adam Burgasser
 #    Caleb Choban
+#    Andrew Davis
 #    Ivanna Escala
 #    Aishwarya Iyer
 #    Yuhui Jin
 #    Michael Lopez
 #    Alex Mendez
 #    Gretel Mercado
+#    Elizabeth Moreno
 #    Jonathan Parra
 #    Maitrayee Sahi
 #    Adrian Suarez
 #    Melisa Tallis
 #    Chris Theissen
 #    Tomoki Tamiya
+#    Russell van Linge
 
+__version__ = '0.5.dev'
 import sys
 if sys.version_info.major != 2 and sys.version_info.major != 3:
     raise NameError('\nSPLAT only works on Python 2.7 and 3.X\n')
@@ -309,15 +314,15 @@ class Spectrum(object):
     :param wunit: unit in which wavelength is measured
     :type wunit: optional, default = ``u.micron``
     :param wunit_label: label of the unit of wavelength
-    :type wunit_label: optional, default = :math:`\\mu m`
+    :type wunit_label: optional, default = `\mu m`
     :param flabel: label of flux density
-    :type flabel: optional, default = :math:`F_\\lambda`
+    :type flabel: optional, default = F_\lambda`
     :param fscale: string describing how flux density is scaled
     :type fscale: optional, default = ''
     :param funit: unit in which flux density is measured
     :type funit: optional, default = ``u.erg/(u.cm**2 * u.s * u.micron)``
     :param funit_label: label of the unit of flux density
-    :type funit_label: optional, default = :math:`erg\;cm^{-2} s^{-1} \\mu m^{-1}`
+    :type funit_label: optional, default = erg cm^-2 s^-1 micron^-1`
     :param resolution:
     :type resolution: optional, default = 150
     :param slitpixelwidth: Width of the slit measured in subpixel values.
@@ -829,7 +834,7 @@ class Spectrum(object):
 
     def flamToFnu(self):
         '''
-        :Purpose: Converts flux density from :math:`F_\\lambda` to :math:`F_\\nu`, the latter in Jy. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in :math:`F_\\nu` units.
+        :Purpose: Converts flux density from F_lambda to F_nu, the latter in Jy. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in F_nu units.
         
         :Example:
            >>> import splat
@@ -848,7 +853,7 @@ class Spectrum(object):
 
     def fnuToFlam(self):
         '''
-        :Purpose: Converts flux density from :math:`F_\\nu` to :math:`F_\\lambda`, the latter in erg/s/cm2/Hz. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in :math:`F_\\lambda` units.
+        :Purpose: Converts flux density from F_nu to F_lambda, the latter in erg/s/cm2/Hz. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in F_lambda units.
         
         :Example:
            >>> import splat
@@ -936,7 +941,7 @@ class Spectrum(object):
                 pass
         
         return numpy.nanmax(self.flux.value[numpy.where(\
-                numpy.logical_and(self.wave > nanmin(self.wave)+0.1*(nanmax(self.wave)-nanmin(self.wave)),self.wave < nanmax(self.wave)-0.1*(nanmax(self.wave)-nanmin(self.wave))))])*self.funit
+                numpy.logical_and(self.wave > numpy.nanmin(self.wave)+0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave)),self.wave < numpy.nanmax(self.wave)-0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave))))])*self.funit
 
 
     def normalize(self,**kwargs):
@@ -2439,16 +2444,15 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         (<Quantity 17071.690727945213>, 0.94029474635786015)
     '''
     weights = kwargs.get('weights',numpy.zeros(len(sp1.wave))) # these will be set to 1 later
-    mask = kwargs.get('mask',numpy.zeros(len(sp1.wave)))    # mask = 1 -> ignore
     fit_ranges = kwargs.get('fit_ranges',[spex_wave_range.value])
     fit_ranges = kwargs.get('fit_range',fit_ranges)
     fit_ranges = kwargs.get('fitrange',fit_ranges)
     fit_ranges = kwargs.get('fitrng',fit_ranges)
     fit_ranges = kwargs.get('comprange',fit_ranges)
     fit_ranges = kwargs.get('comprng',fit_ranges)
-    mask_ranges = kwargs.get('mask_ranges',[])
-    mask_standard = kwargs.get('mask_standard',False)
-    mask_telluric = kwargs.get('mask_telluric',mask_standard)
+#    mask_ranges = kwargs.get('mask_ranges',[])
+#    mask_standard = kwargs.get('mask_standard',False)
+#    mask_telluric = kwargs.get('mask_telluric',mask_standard)
     var_flag = kwargs.get('novar2',True)
     stat = kwargs.get('statistic','chisqr')
     minreturn = 1.e-60
@@ -2460,8 +2464,6 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 #        fit_ranges = [fit_ranges]
 #    print(fit_ranges)
 
-    if (mask_standard):
-        mask_telluric == True
 
 # create interpolation function for second spectrum
     f = interp1d(sp2.wave,sp2.flux,bounds_error=False,fill_value=0.)
@@ -2475,36 +2477,19 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
  #   vtot = sp1.variance
 
 # Mask certain wavelengths
-# telluric absorption
-    if (mask_telluric):
-        mask_ranges.append([0.,0.65])        # meant to clear out short wavelengths
-        mask_ranges.append([1.35,1.42])
-        mask_ranges.append([1.8,1.92])
-        mask_ranges.append([2.45,99.])        # meant to clear out long wavelengths
-
-    if (mask_standard):
-        mask_ranges.append([0.,0.8])        # standard short cut
-        mask_ranges.append([2.35,99.])        # standard long cut
-
-    if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
-        mask_ranges*=u.micron
-
-    for ranges in mask_ranges:
-        mask[numpy.where(numpy.logical_and(sp1.wave >= ranges[0],sp1.wave <= ranges[1]))]= 1
+    mask = splat.generateMask(sp1.wave,**kwargs)
+# mask flux < 0
+    mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
 
 # set the weights
     for ranges in fit_ranges:
 #        print(ranges)
         weights[numpy.where(numpy.logical_and(sp1.wave >= ranges[0],sp1.wave <= ranges[1]))] = 1
 
-# mask flux < 0
-    mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
-
 # combine weights and mask together to one array
     weights = weights*(1.-mask)
 
 # comparison statistics
-
 # switch to standard deviation if no uncertainty
     if numpy.isnan(numpy.nanmax(vtot)):
         stat = 'stddev'
@@ -2959,6 +2944,42 @@ def filterProperties(filter,**kwargs):
             print('FWHM = {:.3f} micron'.format(report['lambda_fwhm']))
             print('Wavelength range = {:.3f} to {:.3f} micron\n'.format(report['lambda_min'],report['lambda_max']))
         return report
+
+def generateMask(wave,**kwargs):
+    '''
+    :Purpose: Generates a mask array based on wavelength vector and optional inputs on what to mask.
+
+    :Output: A mask array, where 0 = OK and 1 = ignore
+
+    :Example:
+    '''
+
+# generate initial mask structure
+    mask = numpy.zeros(len(wave))
+    mask_ranges = kwargs.get('mask_ranges',[])
+
+# mask telluric bands
+    if kwargs.get('mask_telluric',False):
+        mask_ranges.append([0.,0.65])        # meant to clear out short wavelengths
+        mask_ranges.append([1.35,1.42])
+        mask_ranges.append([1.8,1.92])
+        mask_ranges.append([2.45,99.])        # meant to clear out long wavelengths
+
+# a standardized masking
+    if kwargs.get('mask_standard',False):
+        mask_ranges.append([0.,0.8])        # standard short cut
+        mask_ranges.append([1.35,1.42])
+        mask_ranges.append([1.8,1.92])
+        mask_ranges.append([2.35,99.])        # standard long cut
+
+# make sure mask_ranges array has same units as wave array
+    if ~isinstance(wave[0],astropy.units.quantity.Quantity):
+        mask_ranges*=wave.unit
+
+# generate mask
+    for ranges in mask_ranges:
+        mask[numpy.where(numpy.logical_and(wave >= ranges[0],wave <= ranges[1]))]= 1
+    return mask
 
 
 def getSpectrum(*args, **kwargs):
@@ -4034,102 +4055,6 @@ def redden(sp, **kwargs):
 
 
 
-
-def test():
-    '''
-    :Purpose: Tests the SPLAT Code
-    :Checks the following:
-
-        - If you are online and can see the SPLAT website
-        - If you have access to unpublished spectra
-        - If you can search for and load a spectrum
-        - If ``searchLibrary`` functions properly
-        - If index measurement routines functions properly
-        - If classification routines function properly
-        - If ``typeToTeff`` functions properly
-        - If flux calibration and normalization function properly
-        - If ``loadModel`` functions properly
-        - If ``compareSpectra`` functions properly
-        - If ``plotSpectrum`` functions properly
-    '''
-
-    test_src = 'Random'
-
-    sys.stderr.write('\n\n>>>>>>>>>>>> TESTING SPLAT CODE <<<<<<<<<<<<\n')
-# check you are online
-    if checkOnline():
-        sys.stderr.write('\n...you are online and can see SPLAT website\n')
-    else:
-        sys.stderr.write('\n...you are NOT online or cannot see SPLAT website\n')
-
-# check your access
-    if checkAccess():
-        sys.stderr.write('\n...you currently HAVE access to unpublished spectra\n')
-    else:
-        sys.stderr.write('\n...you currently DO NOT HAVE access to unpublished spectra\n')
-
-# check you can search for and load a spectrum
-#    sp = getSpectrum(shortname=test_src)[0]
-    sp = getSpectrum(spt=['L5','T5'],lucky=True)[0]
-    sp.info()
-    sys.stderr.write('\n...getSpectrum successful\n')
-
-# check searchLibrary
-    list = searchLibrary(young=True,output='DATA_FILE')
-    sys.stderr.write('\n{} young spectra in the SPL  ...searchLibrary successful\n'.format(len(list)))
-
-# check index measurement
-    ind = measureIndexSet(sp,set='burgasser')
-    sys.stderr.write('\nSpectral indices for '+test_src+':\n')
-    for k in ind.keys():
-        print('\t{:s}: {:4.3f}+/-{:4.3f}'.format(k, ind[k][0], ind[k][1]))
-    sys.stderr.write('...index measurement successful\n')
-
-# check classification
-    spt, spt_e = classifyByIndex(sp,set='burgasser')
-    sys.stderr.write('\n...index classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
-
-    spt, spt_e = classifyByStandard(sp,method='kirkpatrick')
-    sys.stderr.write('\n...standard classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
-
-    grav = classifyGravity(sp)
-    sys.stderr.write('\n...gravity class of '+test_src+' = {}; successful\n'.format(grav))
-
-# check SpT -> Teff
-    teff, teff_e = typeToTeff(spt,unc=spt_e)
-    sys.stderr.write('\n...Teff of '+test_src+' = {:.1f}+/-{:.1f} K; successful\n'.format(teff,teff_e))
-
-# check flux calibration
-    sp.normalize()
-    sp.fluxCalibrate('2MASS J',15.0,apparent=True)
-    mag,mag_e = filterMag(sp,'MKO J')
-    sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f}+/-{:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag,mag_e))
-
-# check models
-#   mdl = loadModel(teff=1000,logg=5.0,set='BTSettl2008')
-    logg = 5.2
-    if grav == 'VL-G':
-        logg = 4.2
-    elif grav == 'INT-G':
-        logg = 4.6
-    mdl = loadModel(teff=teff,logg=logg,set='BTSettl2008')
-    sys.stderr.write('\n...interpolated model generation successful\n')
-
-# check normalization
-    sys.stderr.write('\n...normalization successful\n')
-
-# check compareSpectrum
-    chi, scale = compareSpectra(sp,mdl,mask_standard=True,stat='chisqr')
-    sys.stderr.write('\nScaling model: chi^2 = {}, scale = {}'.format(chi,scale))
-    sys.stderr.write('\n...compareSpectra successful\n'.format(chi,scale))
-
-# check plotSpectrum
-    mdl.scale(scale)
-    plotSpectrum(sp,mdl,colors=['k','r'],title='If this appears everything is OK: close window')
-    sys.stderr.write('\n...plotSpectrum successful\n')
-    sys.stderr.write('\n>>>>>>>>>>>> SPLAT TEST SUCCESSFUL; HAVE FUN! <<<<<<<<<<<<\n\n')
-
-
 def typeToColor(spt,color, **kwargs):
     """
     :Purpose: Takes a spectral type and optionally a color (string) and returns the typical color of the source. 
@@ -4645,6 +4570,119 @@ def weightedMeanVar(vals, winp, *args, **kwargs):
     return mn,numpy.sqrt(var)
 
 
+#####################
+# TESTING FUNCTIONS #
+#####################
+
+def test():
+    '''
+    :Purpose: Tests the SPLAT Code
+    :Checks the following:
+
+        - If you are online and can see the SPLAT website
+        - If you have access to unpublished spectra
+        - If you can search for and load a spectrum
+        - If ``searchLibrary`` functions properly
+        - If index measurement routines functions properly
+        - If classification routines function properly
+        - If ``typeToTeff`` functions properly
+        - If flux calibration and normalization function properly
+        - If ``loadModel`` functions properly
+        - If ``compareSpectra`` functions properly
+        - If ``plotSpectrum`` functions properly
+    '''
+
+    test_src = 'Random'
+
+    sys.stderr.write('\n\n>>>>>>>>>>>> TESTING SPLAT CODE <<<<<<<<<<<<\n')
+# check you are online
+    if checkOnline():
+        sys.stderr.write('\n...you are online and can see SPLAT website\n')
+    else:
+        sys.stderr.write('\n...you are NOT online or cannot see SPLAT website\n')
+
+# check your access
+    if checkAccess():
+        sys.stderr.write('\n...you currently HAVE access to unpublished spectra\n')
+    else:
+        sys.stderr.write('\n...you currently DO NOT HAVE access to unpublished spectra\n')
+
+# check you can search for and load a spectrum
+#    sp = getSpectrum(shortname=test_src)[0]
+    sp = getSpectrum(spt=['L5','T5'],lucky=True)[0]
+    sp.info()
+    sys.stderr.write('\n...getSpectrum successful\n')
+
+# check searchLibrary
+    list = searchLibrary(young=True,output='DATA_FILE')
+    sys.stderr.write('\n{} young spectra in the SPL  ...searchLibrary successful\n'.format(len(list)))
+
+# check index measurement
+    ind = measureIndexSet(sp,set='burgasser')
+    sys.stderr.write('\nSpectral indices for '+test_src+':\n')
+    for k in ind.keys():
+        print('\t{:s}: {:4.3f}+/-{:4.3f}'.format(k, ind[k][0], ind[k][1]))
+    sys.stderr.write('...index measurement successful\n')
+
+# check classification
+    spt, spt_e = classifyByIndex(sp,set='burgasser')
+    sys.stderr.write('\n...index classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
+
+    spt, spt_e = classifyByStandard(sp,method='kirkpatrick')
+    sys.stderr.write('\n...standard classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
+
+    grav = classifyGravity(sp)
+    sys.stderr.write('\n...gravity class of '+test_src+' = {}; successful\n'.format(grav))
+
+# check SpT -> Teff
+    teff, teff_e = typeToTeff(spt,unc=spt_e)
+    sys.stderr.write('\n...Teff of '+test_src+' = {:.1f}+/-{:.1f} K; successful\n'.format(teff,teff_e))
+
+# check flux calibration
+    sp.normalize()
+    sp.fluxCalibrate('2MASS J',15.0,apparent=True)
+    mag,mag_e = filterMag(sp,'MKO J')
+    sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f}+/-{:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag,mag_e))
+
+# check models
+#   mdl = loadModel(teff=1000,logg=5.0,set='BTSettl2008')
+    logg = 5.2
+    if grav == 'VL-G':
+        logg = 4.2
+    elif grav == 'INT-G':
+        logg = 4.6
+    mdl = loadModel(teff=teff,logg=logg,set='BTSettl2008')
+    sys.stderr.write('\n...interpolated model generation successful\n')
+
+# check normalization
+    sys.stderr.write('\n...normalization successful\n')
+
+# check compareSpectrum
+    chi, scale = compareSpectra(sp,mdl,mask_standard=True,stat='chisqr')
+    sys.stderr.write('\nScaling model: chi^2 = {}, scale = {}'.format(chi,scale))
+    sys.stderr.write('\n...compareSpectra successful\n'.format(chi,scale))
+
+# check plotSpectrum
+    mdl.scale(scale)
+    plotSpectrum(sp,mdl,colors=['k','r'],title='If this appears everything is OK: close window')
+    sys.stderr.write('\n...plotSpectrum successful\n')
+    sys.stderr.write('\n>>>>>>>>>>>> SPLAT TEST SUCCESSFUL; HAVE FUN! <<<<<<<<<<<<\n\n')
+
+
+
+def test_pubdata():
+    s = splat.searchLibrary(published=True)
+    print('Checking {} spectra'.format(len(s)))
+    for f in s['DATA_FILE']:
+        try:
+            hdulist = fits.open(splat.SPLAT_PATH+splat.DATA_FOLDER+f)
+        except:
+            print('Fits read failed on file {}'.format(f))
+    return
+
+
 # run test program if calling from command line
 if __name__ == '__main__':
-    splat.test()
+
+    test_gooddata()
+#    splat.test()
