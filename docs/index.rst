@@ -10,38 +10,45 @@ SPLAT is a python-based spectral access and analysis package designed to interfa
 with the SpeX Prism Library (SPL: http://www.browndwarfs.org/spexprism), 
 an online repository of over
 1500 low-resolution, near-infrared spectra of low-temperature stars and brown dwarfs.
-It is built on common python packages such as numpy, scipy, astropy and matplotlib.  
+It is built on common python packages such as astropy, matplotlib, numpy, pandas and scipy.  
 
-SPLAT tools will allow you to:
+SPLAT tools allow you to:
     * search the SPL for data and source information;
     * access the publically-available (published) spectra contained in it;
     * compare your near-infrared spectrum to these data;
     * make use of published empirical trends in absolute magnitudes and effective temperatures;
     * perform basic spectral analyses such as spectral classification, gravity classification, index measurement, spectrophotometry, reddening, robust comparison statistics, basic math operations;
-    * perform advanced analyses such as MCMC spectral model fitting, spectral binary analysis, and optimized index definition;
+    * perform advanced analyses such as MCMC spectral model fitting;
+    * transform observables using empirical trends;
     * transform observable to physical parameters using evolutionary models; and
     * plot/tabulate/publish your results.  
 
 **Note that many of these features are currently under development.**
 
 Installation and Dependencies
---------
+-----------------------------
 
 SPLAT is best forked from the github site http://github.org/aburgasser/splat, 
 which is updated on a regular basis.
 SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by 
 sending bug reports to aburgasser@ucsd.edu or start an issue on the github site.
 
+You may also obtain splat using pip_:
+
+.._pip: https://pip.pypa.io/en/stable/
+
+>>> pip install splat
+
 Instructions on setting up and using SPLAT are maintained at http://www.browndwarfs.org/splat.
 
-You should copy the file ``.splat_access`` into your home directory - this is your access key
-if you have priveleged access to unpublished data.
+Copy the file ``.splat_access`` into your home directory - this is your access key
+if you have priveleged access to unpublished data in the SPL.
 
 Using SPLAT
---------
+-----------
 
-SPLAT is best used in the ipython or ipython notebook; all of the necessary data is
-included in the github install, so you won't need to be online to run anything.
+SPLAT is best used in the **ipython** or **ipython notebook**; all of the necessary data is
+included in the github/pip install, so you don't need to be online to run most programs.
 
 Here are some examples:
 
@@ -54,22 +61,23 @@ Here are some examples:
 >>> splist = splat.getSpectrum(young=True)
 >>> splist = splat.getSpectrum(spt=['M7','L5'],jmag=[14.,99.])
 
-In each case, splist is a list of Spectrum objects, which is the container of various 
+In each case, splist is a list of Spectrum_ objects, which is the container of various 
 aspects of the spectrum and it source properties. For example, selecting the first spectrum,
 
+.. _Spectrum: splat.html?highlight=spectrum#the-splat-spectrum-object
 
 >>> sp = splist[0]
 
 ``sp.wave`` gives the wavelengths of this spectrum, ``sp.flux`` the flux values, and ``sp.noise`` the 
-flux uncertainty.
+flux uncertainty. There are several other elements to the Spectrum_ object that can be accessed using ``sp.info()``.
 
 You can also read in your own spectrum by passing a filename
 
 >>> sp = splat.Spectrum(filename='PATH_TO/myspectrum.fits')
 
-Note that this file must conform to the standard of the SPL data: the first column is
+Note that this file must conform to the following standard: the first column is
 wavelength in microns, second column flux in f_lambda units, third column (optional) is 
-flux uncertainty.
+flux uncertainty in f_lambda units.
 
 * To flux calibrate the spectrum, use the object's built in fluxCalibrate_ method:
 
@@ -166,7 +174,7 @@ Acknowledgements
 ----------------
 
 SPLAT is an experimental, collaborative project of research students in `Adam Burgasser's
-UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at teaching students how to do research by building their own analysis tools.  Contributors to SPLAT have included Christian Aganze, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Alex Mendez, Gretel Mercado, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya and Chris Theissen.
+UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at teaching students how to do research by building their own analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Alex Mendez, Gretel Mercado, Elizabeth Moreno, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen and Russell van Linge.
 
 This project is supported by the National Aeronautics and Space Administration under Grant No. NNX15AI75G.
 

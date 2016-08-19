@@ -205,7 +205,7 @@ def plotSpectrum(*args, **kwargs):
             - [Spec1, Spec2, ...]: plot multiple spectra together, or separately if multiplot = True
             - [[Spec1, Spec2], [Spec3, Spec4], ..]: plot multiple sets of spectra (multiplot forced to be True)
 
-    :Parameters
+    :Parameters:
     title = ''
         string giving plot title
     xrange = [0.85,2.42]:
@@ -765,8 +765,7 @@ def plotSpectrum(*args, **kwargs):
         if multipage == False:
             if filebase != '' and (plts % nplot == 3 or plts == len(splist)-1):
                 plt.savefig(files[plts], format=filetype)
-
-    if filename == '':
+    if filename == '' and not kwargs.get('web',False):
         plt.show()
         if (kwargs.get('interactive',False) != False):
             plt.ion()        # make window interactive 

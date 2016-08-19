@@ -1407,6 +1407,9 @@ def importSpectra(*args,**kwargs):
         if 'DATE_OBS' in sp.header:
             t_spec['OBSERVATION_DATE'][i] = sp.header['DATE_OBS'].replace('-','')
             t_spec['JULIAN_DATE'][i] = Time(sp.header['DATE_OBS']).mjd
+        if 'DATE' in sp.header:
+            t_spec['OBSERVATION_DATE'][i] = sp.header['DATE'].replace('-','')
+            t_spec['JULIAN_DATE'][i] = Time(sp.header['DATE']).mjd
         if 'TIME_OBS' in sp.header:
             t_spec['OBSERVATION_TIME'][i] = sp.header['TIME_OBS'].replace(':',' ')
         if 'MJD_OBS' in sp.header:
@@ -1417,6 +1420,8 @@ def importSpectra(*args,**kwargs):
             t_spec['RESOLUTION'][i] = sp.header['RESOLUTION']
         elif 'RES' in sp.header:
             t_spec['RESOLUTION'][i] = sp.header['RES']
+        elif 'SLITW' in sp.header:
+            t_spec['RESOLUTION'][i] = 200.*0.3/sp.header['SLITW']       # this is for new spex
         if 'AIRMASS' in sp.header:
             t_spec['AIRMASS'][i] = sp.header['AIRMASS']
         if 'VERSION' in sp.header:
@@ -1459,13 +1464,15 @@ def importSpectra(*args,**kwargs):
             sp.header['RA'] = sp.header['TCS_RA']
             sp.header['DEC'] = sp.header['TCS_DEC']
             sp.header['RA'] = sp.header['RA'].replace('+','')
+        print(len(t_src['DESIGNATION'][i]),sp.header['RA'],sp.header['DEC'])
         if t_src['DESIGNATION'][i] == '' and sp_header['RA'] != '' and sp_header['DEC'] != '':
             t_src['DESIGNATION'][i] = 'J{}+{}'.format(sp.header['RA'].replace('+',''),sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('++','+').replace('J+','J').replace(' ','')
+            print(t_src['DESIGNATION'][i])
         if t_src['RA'][i] == '' and t_src['DESIGNATION'][i] != '':
             coord = splat.properCoordinates(t_src['DESIGNATION'][i])
             t_src['RA'][i] = coord.ra.value
             t_src['DEC'][i] = coord.dec.value
-
+    print(t_src['DESIGNATION'])
 # populate source data table from spreadsheet
     if spreadsheet != '':
         if 'DESIGNATION' in t_input_keys:
@@ -1822,8 +1829,8 @@ if __name__ == '__main__':
 
 
     def test_ingest():
-        data_folder = '/Users/adam/projects/splat/adddata/done/Dawson_upsco/'
-        importSpectra(data_folder=data_folder,spreadsheet=data_folder+'upload.csv')
+        data_folder = '/Users/adam/projects/splat/adddata/simp/prism/'
+        importSpectra(data_folder=data_folder) #,spreadsheet=data_folder+'upload.csv')
 
     def test_combine():
 # source db

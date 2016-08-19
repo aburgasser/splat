@@ -92,7 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Brown Dwarf Evolutionary Models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Brown Dwarf Evolutionary Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
@@ -117,7 +117,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -151,11 +151,11 @@
 <tr class="field-odd field"><th class="field-name">Description:</th><td class="field-body"><p class="first">Allows the user to input a list of parameters.</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">)</span>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.04</span><span class="p">,</span><span class="mf">0.06</span><span class="p">,</span><span class="mf">0.07</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.003</span><span class="p">,</span><span class="mf">0.004</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">params</span> <span class="o">=</span> <span class="n">ParamsList</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">masses</span><span class="o">=</span><span class="n">m</span><span class="p">,</span><span class="n">ages</span><span class="o">=</span><span class="n">a</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">params</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">params</span>
 </pre></div>
 </div>
 </td>
@@ -191,7 +191,7 @@ mass, temperature, luminosity, gravity, or radius.</p>
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>Returns the interpolated parameters.</p>
 <ul>
 <li><p class="first"><strong>Examples:</strong></p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s1">&#39;hybrid_solar&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s1">&#39;hybrid_solar&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mass</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s1">&#39;nc+0.3&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">mss</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
@@ -203,7 +203,7 @@ mass, temperature, luminosity, gravity, or radius.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">adf</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">MASSSS</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s1">&#39;f2_solar&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s1">&#39;f2_solar&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">burrows</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">L</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">Gradfty</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;burrows&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s1">&#39;f2_solar&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">baraffe</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
@@ -246,10 +246,10 @@ other physical properties as a function of time.</td>
 Isochrones from Baraffe et. la models (2003), described in the
 following paper: &#8220;Evolutionary models for cool brown dwarfs and
 extrasolar giant planets. The case of HD 20945&#8221;: <a class="reference external" href="http://arxiv.org/abs/astro-ph/0302293">Here</a>. Original model&#8217;s <a class="reference external" href="https://perso.ens-lyon.fr/isabelle.baraffe/COND03_models">URL</a>.
-Ages (in Gyr) used for interpolation were the following:<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bdevopar</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">)[</span><span class="s1">&#39;age&#39;</span><span class="p">]</span>
+Ages (in Gyr) used for interpolation were the following:<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bdevopar</span> <span class="k">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">)[</span><span class="s1">&#39;age&#39;</span><span class="p">]</span>
 <span class="go">[0.001, 0.005, 0.01, 0.05, 0.1, 0.12, 0.5, 1.0, 5.0, 10.0]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;BaRaFfE&#39;</span><span class="p">)[</span><span class="s1">&#39;age&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;BaRaFfE&#39;</span><span class="p">)[</span><span class="s1">&#39;age&#39;</span><span class="p">]</span>
 <span class="go">[0.001, 0.005, 0.01, 0.05, 0.1, 0.12, 0.5, 1.0, 5.0, 10.0]</span>
 </pre></div>
 </div>
@@ -271,8 +271,8 @@ Isochrones from Saumon &amp; Marley models (2008), described in
 Original models&#8217; URL and the README used to differentiate
 between metallicites are found <a class="reference external" href="https://laws.lanl.gov/x7/dsaumon/BD_evolution/">here.</a>
 Brown dwarfs ages used here are as follows:<blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bdevopar</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">)[</span><span class="s1">&#39;age&#39;</span><span class="p">]</span>
+<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bdevopar</span> <span class="k">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">)[</span><span class="s1">&#39;age&#39;</span><span class="p">]</span>
 <span class="go">[0.003, 0.004, 0.006, 0.008, 0.01, 0.015, 0.02, 0.03, 0.04,</span>
 <span class="go">0.06, 0.08, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5,</span>
 <span class="go">2.0, 3.0, 4.0, 6.0, 8.0, 10.0]</span>
@@ -289,7 +289,7 @@ Brown dwarfs ages used here are as follows:<blockquote>
 <li><strong>f2_solar:</strong> Atmosphere model is cloudless Fsed=2) with [M/H]=0</li>
 <li><strong>hybrid_solar</strong> Atmosphere cloudless(Fsed=2 to nc) with [M/H]=0</li>
 </ul>
-<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bdevopar</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bdevopar</span> <span class="k">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">,</span><span class="n">metallicity</span><span class="o">=</span><span class="s1">&#39;nc_solar&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">,</span><span class="n">metallicity</span><span class="o">=</span><span class="s1">&#39;f2_solar&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">saumon</span> <span class="o">=</span> <span class="n">ReadModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">,</span><span class="n">metallicity</span><span class="o">=</span><span class="s1">&#39;hybri_solar&#39;</span><span class="p">)</span>
@@ -314,9 +314,9 @@ further discussed in the section belowed.</td>
 </dd></dl>
 
 <ul class="simple">
-<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
 </div>
 

@@ -35,7 +35,7 @@ Spectral Classification
 
 
 Spectrophotometry
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 .. autofunction:: splat.filterInfo
 .. autofunction:: splat.filterProperties
 .. autofunction:: splat.filterMag
@@ -92,7 +92,7 @@ Evolutionary Model Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 EUCLID Analysis Routines
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat_euclid.spexToEuclid
 .. autofunction:: splat_euclid.addEuclidNoise
 
