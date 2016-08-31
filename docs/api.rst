@@ -79,29 +79,49 @@ Plotting Routines
 .. autofunction:: splat_plot.plotIndices
 
 
+Other Calculation Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: splat.test
+.. autofunction:: splat.weightMeanVar
+.. autofunction:: splat_model.distributionStats
+
+
+I/O Routines
+^^^^^^^^^^^^
+.. autofunction:: splat_db.checkOnline
+.. autofunction:: splat_db.checkAccess
+.. autofunction:: splat_db.checkFile
+.. autofunction:: splat_db.checkLocalFile
+
+
 Modeling Routines
-^^^^^^^^^^^^^^^^^
+-----------------
+
+Spectral Modeling Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat_model.getModel
 .. autofunction:: splat_model.loadModel
 .. autofunction:: splat_model.fitGrid
 .. autofunction:: splat_model.fitMCMC
 
 
-
 Evolutionary Model Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: splat_evolve.loadEvolModel
+.. autofunction:: splat_evolve.modelParameters
+.. autofunction:: splat_evolve.modelParametersSingle
+.. autofunction:: splat_evolve.plotModelParameters
+
+
+Specialty Packages
+------------------
+
 
 EUCLID Analysis Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat_euclid.spexToEuclid
 .. autofunction:: splat_euclid.addEuclidNoise
 
-
-Other Calculation Routines
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: splat.test
-.. autofunction:: splat.weightMeanVar
-.. autofunction:: splat_model.distributionStats
 
 
 BibTeX Routines
@@ -110,13 +130,6 @@ BibTeX Routines
 .. autofunction:: splat_db.getBibTex
 
 
-I/O Routines
-^^^^^^^^^^^^
-
-.. autofunction:: splat_db.checkOnline
-.. autofunction:: splat_db.checkAccess
-.. autofunction:: splat_db.checkFile
-.. autofunction:: splat_db.checkLocalFile
 
 
 

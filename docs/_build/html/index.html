@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SPLAT: The SpeX Prism Library Analysis Toolkit &mdash; SpeX Prism Library Analysis Toolkit 0.5 documentation</title>
+  <title>SPLAT: The SpeX Prism Library Analysis Toolkit &mdash; SpeX Prism Library Analysis Toolkit 0.5.dev documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5 documentation" href="#"/>
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5.dev documentation" href="#"/>
         <link rel="next" title="Installation and Dependencies" href="installation.html"/> 
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5
+                0.5.dev
               </div>
             
           
@@ -91,8 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
@@ -318,13 +317,7 @@ UCSD Cool Star Lab</a>, aimed at teaching students how to do research by buildin
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="bugs.html#high-priority">High priority</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bugs.html#medium-priority">Medium priority</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bugs.html#low-priority">Low priority</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="api.html#splat-classes">SPLAT Classes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#spectrum">Spectrum</a></li>
@@ -338,12 +331,18 @@ UCSD Cool Star Lab</a>, aimed at teaching students how to do research by buildin
 <li class="toctree-l3"><a class="reference internal" href="api.html#source-analysis">Source Analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#conversion-routines">Conversion Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#plotting-routines">Plotting Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#modeling-routines">Modeling Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#evolutionary-model-routines">Evolutionary Model Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#euclid-analysis-routines">EUCLID Analysis Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#other-calculation-routines">Other Calculation Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#bibtex-routines">BibTeX Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#i-o-routines">I/O Routines</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#modeling-routines">Modeling Routines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#spectral-modeling-routines">Spectral Modeling Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#evolutionary-model-routines">Evolutionary Model Routines</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#specialty-packages">Specialty Packages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#euclid-analysis-routines">EUCLID Analysis Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#bibtex-routines">BibTeX Routines</a></li>
 </ul>
 </li>
 </ul>
@@ -376,7 +375,7 @@ UCSD Cool Star Lab</a>, aimed at teaching students how to do research by buildin
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, Adam Burgasser.
+        &copy; Copyright 2016, Adam Burgasser.
 
     </p>
   </div>
@@ -398,7 +397,7 @@ UCSD Cool Star Lab</a>, aimed at teaching students how to do research by buildin
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5',
+            VERSION:'0.5.dev',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

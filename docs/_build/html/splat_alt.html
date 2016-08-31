@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Main SPLAT module (alternative format) &mdash; SpeX Prism Library Analysis Toolkit 0.5 documentation</title>
+  <title>Main SPLAT module (alternative format) &mdash; SpeX Prism Library Analysis Toolkit 0.5.dev documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5 documentation" href="index.html"/> 
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5.dev documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.5
+                0.5.dev
               </div>
             
           
@@ -90,9 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Model Package</a></li>
 </ul>
 
             
@@ -1586,6 +1584,23 @@ noise array elements.</li>
 </dd></dl>
 
 <dl class="function">
+<dt id="splat.generateMask">
+<code class="descclassname">splat.</code><code class="descname">generateMask</code><span class="sig-paren">(</span><em>wave</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.generateMask" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Generates a mask array based on wavelength vector and optional inputs on what to mask.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body">A mask array, where 0 = OK and 1 = ignore</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="splat.getSpectrum">
 <code class="descclassname">splat.</code><code class="descname">getSpectrum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.getSpectrum" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -2219,7 +2234,7 @@ Allowed spectral type range is M7 to T8.</li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, Adam Burgasser.
+        &copy; Copyright 2016, Adam Burgasser.
 
     </p>
   </div>
@@ -2241,7 +2256,7 @@ Allowed spectral type range is M7 to T8.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5',
+            VERSION:'0.5.dev',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
