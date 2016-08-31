@@ -53,162 +53,261 @@ sys.ps1 = 'splat model> '
 #        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
 
 
+#######################################################
+#######################################################
+##################   MODEL LOADING  ###################
+#######################################################
+#######################################################
+
+
+
+def loadModel(*args, **kwargs):
+    '''
+    .. Note: this needs some clean up    
+
+    Purpose: 
+        Loads up a model spectrum based on a set of input parameters. The models may be any one of the following listed below. For parameters between the model grid points, loadModel calls the function `loadInterpolatedModel()`_.
+
+    .. _`loadInterpolatedModel()` : api.html#splat_model.loadInterpolatedModel
+
+    Required Inputs:
+        :param: **model**: The model set to use; may be one of the following:
+
+            - *BTSettl2008*: (default) model set from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  with effective temperatures of 400 to 2900 K (steps of 100 K); surface gravities of 3.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity of -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.3, and 0.5 for temperatures greater than 2000 K only; cloud opacity is fixed in this model, and equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `btsettled`, `btsettl`, `allard`, `allard12`)
+            - *burrows06*: model set from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_ with effective temperatures of 700 to 2000 K (steps of 50 K); surface gravities of 4.5 to 5.5 in units of cm/s^2 (steps of 0.1 dex); metallicity of -0.5, 0.0 and 0.5; and either no clouds or grain size 100 microns (fsed = 'nc' or 'f100'). equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `burrows`, `burrows2006`)
+            - *morley12*: model set from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_ with effective temperatures of 400 to 1300 K (steps of 50 K); surface gravities of 4.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and sedimentation efficiency (fsed) of 2, 3, 4 or 5; metallicity is fixed to solar, equilibrium chemistry is assumed, and there are no clouds associated with this model (alternate designations: `morley2012`)
+            - *morley14*: model set from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, sedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: `morley2014`)
+            - *saumon12*: model set from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_ with effective temperatures of 400 to 1500 K (steps of 50 K); and surface gravities of 3.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, and no clouds are associated with these models (alternate designations: `saumon`, `saumon2012`)
+            - *drift*: model set from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_ with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex); cloud opacity is fixed in this model, equilibrium chemistry is assumed (alternate designations: `witte`, `witte2011`, `helling`)
+        
+    Optional Inputs:
+        :param: **teff**: effective temperature of the model in K (e.g. `teff` = 1000)
+        :param: **logg**: log10 of the surface gravity of the model in cm/s^2 units (e.g. `logg` = 5.0)
+        :param: **z**: log10 of metallicity of the model relative to solar metallicity (e.g. `z` = -0.5)
+        :param: **fsed**: sedimentation efficiency of the model (e.g. `fsed` = 'f2')
+        :param: **cld**: cloud shape function of the model (e.g. `cld` = 'f50')
+        :param: **kzz**: vertical eddy diffusion coefficient of the model (e.g. `kzz` = 2)
+        :param: **slit**: slit weight of the model in arcseconds (e.g. `slit` = 0.3)
+        :param: **sed**: if set to True, returns a broad-band spectrum spanning 0.3-30 micron (applies only for BTSettl2008 models with Teff < 2000 K)
+
+        :param: **local**: set to True to force program to read in local models (default = True)
+        :param: **online**: set to True to force program to read in models from SPLAT webpage (default = False)
+        :param: **folder**: string of the folder name containing the model set (default = '')
+        :param: **filename**: string of the filename of the desired model; should be a space-delimited file containing columns for wavelength (units of microns) and surface flux (F_lambda units of erg/cm^2/s/micron) (default = '')
+        :param: **force**: force the filename to be exactly as specified
+        :param: **url**: string of the url to the SPLAT website (default = 'http://www.browndwarfs.org/splat/')
+
+    Output:
+        A SPLAT Spectrum object of the interpolated model with wavelength in microns and surface fluxes in F_lambda units of erg/cm^2/s/micron.
+
+    Example:
+
+    >>> import splat
+    >>> mdl = splat.loadModel(teff=1000,logg=5.0)
+    >>> mdl.info()
+        BTSettl2008 model with the following parmeters:
+        Teff = 1000 K
+        logg = 5.0 cm/s2
+        z = 0.0
+        fsed = nc
+        cld = nc
+        kzz = eq
+        Smoothed to slit width 0.5 arcseconds
+    >>> mdl = splat.loadModel(teff=2500,logg=5.0,model='burrows')
+        Input value for teff = 2500 out of range for model set burrows06
+        Warning: Creating an empty Spectrum object
+    '''
+
+
+# path to model and set local/online
+# by default assume models come from local SPLAT directory
+    local = kwargs.get('local',True)
+    online = kwargs.get('online',not local and splat.checkOnline() != '')
+    local = not online
+    kwargs['local'] = local
+    kwargs['online'] = online
+    kwargs['folder'] = kwargs.get('folder','')
+    kwargs['ismodel'] = True
+    kwargs['force'] = kwargs.get('force',False)
+    url = kwargs.get('url',splat.SPLAT_URL)
+
+
+# a filename has been passed - assume this file is a local file
+# and check that the path is correct if its fully provided
+# otherwise assume path is inside model set folder
+    if (len(args) > 0):
+        kwargs['filename'] = args[0]
+        if not os.path.exists(kwargs['filename']):
+            kwargs['filename'] = kwargs['folder']+os.path.basename(kwargs['filename'])
+            if not os.path.exists(kwargs['filename']):
+                raise NameError('\nCould not find model file {} or {}'.format(kwargs['filename'],kwargs['folder']+os.path.basename(kwargs['filename'])))
+            else:
+                return splat.Spectrum(**kwargs)
+        else:
+            return splat.Spectrum(**kwargs)
+
+
+#    elif:
+#        loadInterpolatedModel(**kwargs)
+
+
+# set up the model set
+    kwargs['model'] = kwargs.get('model','BTSettl2008')
+    kwargs['model'] = kwargs.get('set',kwargs['model'])
+    if kwargs.get('sed',False):
+        kwargs['model'] = 'BTSettl2008'
+
+# set replacements
+    if kwargs['model'].lower() == 'btsettl2008' or kwargs['model'].lower() == 'btsettl' or kwargs['model'].lower() == 'btsettled' or kwargs['model'].lower() == 'allard' or kwargs['model'].lower() == 'allard12' or kwargs['model'].lower() == 'allard2012':
+        kwargs['model'] = 'BTSettl2008'
+    if kwargs['model'].lower() == 'burrows06' or kwargs['model'].lower() == 'burrows' or kwargs['model'].lower() == 'burrows2006':
+        kwargs['model'] = 'burrows06'
+    if kwargs['model'].lower() == 'morley12' or kwargs['model'].lower() == 'morley2012':
+        kwargs['model'] = 'morley12'
+    if kwargs['model'].lower() == 'morley14' or kwargs['model'].lower() == 'morley2014':
+        kwargs['model'] = 'morley14'
+    if kwargs['model'].lower() == 'saumon12' or kwargs['model'].lower() == 'saumon' or kwargs['model'].lower() == 'saumon2012':
+        kwargs['model'] = 'saumon12'
+    if kwargs['model'].lower() == 'drift' or kwargs['model'].lower() == 'witte' or kwargs['model'].lower() == 'witte2011' or kwargs['model'].lower() == 'witte11' or kwargs['model'].lower() == 'helling':
+        kwargs['model'] = 'drift'
+    kwargs['folder'] = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
+
+# preset defaults
+    for ms in MODEL_PARAMETER_NAMES:
+        kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
+
+# some special defaults
+    if kwargs['model'] == 'morley12':
+        if kwargs['fsed'] == 'nc':
+            kwargs['fsed'] = 'f3'
+    if kwargs['model'] == 'morley14':
+        if kwargs['fsed'] == 'nc':
+            kwargs['fsed'] = 'f5'
+        if kwargs['cld'] == 'nc':
+            kwargs['cld'] = 'f50'
+
+
+# check that folder/set is present either locally or online
+# if not present locally but present online, switch to this mode
+# if not present at either raise error
+    folder = splat.checkLocal(kwargs['folder'])
+    if folder=='':
+        folder = splat.checkOnline(kwargs['folder'])
+        if folder=='':
+            print('\nCould not find '+kwargs['folder']+' locally or on SPLAT website')
+            print('\nAvailable model set options are:')
+            for s in DEFINED_MODEL_SET:
+                print('\t{}'.format(s))
+            raise NameError()
+        else:
+            kwargs['folder'] = folder
+            kwargs['local'] = False
+            kwargs['online'] = True
+    else:
+        kwargs['folder'] = folder
+
+# generate model filename
+    kwargs['filename'] = kwargs['folder']+kwargs['model']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
+        format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],float(kwargs['slit']))
+    kwargs['name'] = kwargs['model']
+    if kwargs.get('sed',False):
+        kwargs['filename'] = kwargs['folder']+kwargs['model']+'_{:.0f}_{:.1f}_{:.1f}_nc_nc_eq_sed.txt'.\
+            format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001)
+        kwargs['name'] = kwargs['model']+' SED'
+
+# get model parameters
+#        parameters = loadModelParameters(**kwargs)
+#        kwargs['path'] = kwargs.get('path',parameters['path'])
+# check that given parameters are in range
+#        for ms in MODEL_PARAMETER_NAMES[0:3]:
+#            if (float(kwargs[ms]) < parameters[ms][0] or float(kwargs[ms]) > parameters[ms][1]):
+#                raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+#        for ms in MODEL_PARAMETER_NAMES[3:6]:
+#            if (kwargs[ms] not in parameters[ms]):
+#                raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+
+
+# check if file is present; if so, read it in, otherwise go to interpolated
+# locally:
+    if kwargs.get('local',True) == True:
+        file = splat.checkLocal(kwargs['filename'])
+        if file=='':
+            if kwargs['force']:
+                raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
+            else:
+                return loadInterpolatedModel(**kwargs)
+#                kwargs['local']=False
+#                kwargs['online']=True
+        else:
+            try:
+                return splat.Spectrum(**kwargs)
+            except:
+                raise NameError('\nProblem reading in '+kwargs['filename']+' locally\n\n')
+
+# online:
+    if kwargs['online']:
+        file = splat.checkOnline(kwargs['filename'])
+        if file=='':
+            if kwargs['force']:
+                raise NameError('\nCould not find '+kwargs['filename']+' online\n\n')
+            else:
+                return loadInterpolatedModel(**kwargs)
+        else:
+            try:
+                ftype = kwargs['filename'].split('.')[-1]
+                tmp = TMPFILENAME+'.'+ftype
+                open(os.path.basename(tmp), 'wb').write(requests.get(url+kwargs['filename']).content) 
+                kwargs['filename'] = os.path.basename(tmp)
+                sp = splat.Spectrum(**kwargs)
+                os.remove(os.path.basename(tmp))
+                return sp
+            except:
+                raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
 
 
 def getModel(*args, **kwargs):
     '''
-    Redundant routine with loadModel
+    Purpose: 
+        Redundant routine with `loadModel()`_ to match syntax of `getSpectrum()`_
+
+    .. _`loadModel()` : api.html#splat_model.loadModel
+    .. _`getSpectrum()` : api.html#splat.getSpectrum
+
     '''
     return loadModel(*args, **kwargs)
 
 
 
-def loadInterpolatedModel_NEW(*args,**kwargs):
-# path to model
-#    kwargs['path'] = kwargs.get('path',SPLAT_PATH+SPECTRAL_MODEL_FOLDER)
-#    if not os.path.exists(kwargs['path']):
-#        kwargs['remote'] = True
-#        kwargs['path'] = SPLAT_URL+SPECTRAL_MODEL_FOLDER        
-#    kwargs['model'] = kwargs.get('model','BTSettl2008')
-#    kwargs['model'] = True
-#    for ms in MODEL_PARAMETER_NAMES:
-#        kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
-
-# first get model parameters
-    pfile = 'parameters_new.txt'
-#    parameters = loadModelParameters(**kwargs)
-
-# insert a switch to go between local and online here
-
-    print('Running new version')
-# read in parameters of available models
-    folder = splat.checkLocal(splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/')
-    if folder=='':
-        raise NameError('\n\nCould not locate spectral model folder {} locally\n'.format(SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'))
-    pfile = splat.checkLocal(folder+pfile)
-    if pfile=='':
-        raise NameError('\n\nCould not locate parameter list in folder {} locally\n'.format(folder))
-    parameters = ascii.read(pfile)
-#    numpy.genfromtxt(folder+pfile, comments='#', unpack=False, \
-#        missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
-
- 
-# check that given parameters are in range
-    for ms in MODEL_PARAMETER_NAMES[0:3]:
-        if (float(kwargs[ms]) < min(parameters[ms]) or float(kwargs[ms]) > max(parameters[ms])):
-            raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
-    for ms in MODEL_PARAMETER_NAMES[3:7]:
-        if (kwargs[ms] not in parameters[ms]):
-            raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
-
-# now identify grid points around input parameters
-# first set up a mask for digital parameters
-    mask = numpy.ones(len(parameters[MODEL_PARAMETER_NAMES[0]]))
-    for ms in MODEL_PARAMETER_NAMES[3:7]:
-        m = [1 if a == kwargs[ms] else 0 for a in parameters[ms]]
-        mask = mask*m
-    
-# identify grid points around input parameters
-# 3x3 grid for teff, logg, z
-# note interpolation and model ranges are separate
-    dist = numpy.zeros(len(parameters[MODEL_PARAMETER_NAMES[0]]))
-    for ms in MODEL_PARAMETER_NAMES[0:3]:
-# first get step size
-        ps = list(set(parameters[ms]))
-        ps.sort()
-        pps = numpy.abs(ps-ps[int(0.5*len(ps))])
-        pps.sort()
-        step = pps[1]
-        dist = dist + ((kwargs[ms]-parameters[ms])/step)**2
-
-# apply digital constraints
-    ddist = dist/mask    
-
-# find "closest" models
-    mvals = {}
-    for ms in MODEL_PARAMETER_NAMES[0:3]:
-        mvals[ms] = [x for (y,x) in sorted(zip(ddist,parameters[ms]))]
-
-
-# this is a guess as to how many models we need to get unique parameter values
-    nmodels = 12
-    mx,my,mz = numpy.meshgrid(mvals[MODEL_PARAMETER_NAMES[0]][0:nmodels],mvals[MODEL_PARAMETER_NAMES[1]][0:nmodels],mvals[MODEL_PARAMETER_NAMES[2]][0:nmodels])
-    mkwargs = kwargs.copy()
-
-    for i,w in enumerate(numpy.zeros(nmodels)):
-        for ms in MODEL_PARAMETER_NAMES[0:3]:
-            mkwargs[ms] = mvals[ms][i]
-        mdl = loadModel(**mkwargs)
-        if i == 0:
-            mdls = numpy.log10(mdl.flux.value)
-        else:
-            mdls = numpy.column_stack((mdls,numpy.log10(mdl.flux.value)))
-
-    print(mdls[0,:])
-    print(float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
-            float(kwargs[MODEL_PARAMETER_NAMES[2]]))
-    print(mx.flatten(),my.flatten(),mz.flatten())
-    for i in numpy.arange(nmodels):
-        print(mvals['teff'][i],mvals['logg'][i],mvals['z'][i])
-#
-#
-#            
-## THIS NEXT PART IS BROKEN!
-#
-#
-#
-    mflx = numpy.zeros(len(mdl.wave))
-    for i,w in enumerate(mflx):
-#        print(i, (mdls[i],))
-#        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),val.flatten(),\
-#            (float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])),'linear'))
-
-        m = mdls[i,:]
-        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),m.flatten(),\
-            (float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
-            float(kwargs[MODEL_PARAMETER_NAMES[2]])),'linear'))
-    
-    return splat.Spectrum(wave=mdl.wave,flux=mflx*mdl.funit,**kwargs)
-
-
-
-
 def loadInterpolatedModel(*args,**kwargs):
     '''
-    .. not sure what force does
-    :Purpose: Loads interpolated model spectrum based on parameters
-    :param model: set of models to use; options include:
+    Purpose: 
+        Generates as spectral model with is interpolated between model parameter grid points. This routine is called by `loadModel()`_, or it can be called on its own.
 
-        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
-          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
-        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
-          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
-        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
-          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
-        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
-          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
-        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
-          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
-        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
-          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
-          
-    :type model: optional, default = 'BTSettl2008'
-    :param local: read in parameter file locally if True
-    :type local: optional, default = True
-    :param url: string of the url to the SPLAT website
-    :type url: optional, default = 'http://pono.ucsd.edu/~adam/splat/'
+    .. _`loadModel()` : api.html#splat_model.loadModel
 
-    :Model Parameters: Below are parameters that define the model:
+    Required Inputs:
+        :param model: set of models to use; see options in `loadModel()`_
 
-        - *teff*: effective temperature of the model
-        - *logg*: surface gravity of the model
-        - *z*: metallicity of the model
-        - *fsed*: sedimentation efficiency of the model
-        - *cld*: cloud shape function of the model
-        - *kzz*: vertical eddy diffusion coefficient of the model
-        - *slit*: slit weight of the model
+    Optional Inputs:
+        :param: The parameters for `loadModel()`_ can also be used here.
+
+    Output:
+        A SPLAT Spectrum object of the interpolated model with wavelength in microns and surfae fluxes in F_lambda units of erg/cm^2/s/micron.
+
+    Example:
+
+    >>> import splat
+    >>> mdl = splat.loadModel(teff=1000,logg=5.0)
+    >>> mdl.info()
+        morley12 model with the following parmeters:
+        Teff = 540 K
+        logg = 4.7 cm/s2
+        z = 0.0
+        fsed = f3
+        cld = nc
+        kzz = eq
+        Smoothed to slit width 0.5 arcseconds
     '''
-
 # attempt to generalize models to extra dimensions
     mkwargs = kwargs.copy()
     mkwargs['force'] = True
@@ -352,251 +451,26 @@ def loadInterpolatedModel(*args,**kwargs):
     return splat.Spectrum(wave=md111.wave,flux=mflx*md111.funit,**kwargs)
 
 
-def loadModel(*args, **kwargs):
-    '''
-    :Purpose: Loads up a model spectrum based on a set of input parameters. 
-    The models may be any one of the following listed below. 
-    A Spectrum object with the wavelength and surface fluxes (F_lambda in units of erg/cm^2/s/\mu{m}) is returned
-
-    :param model: The model set to use; may be one of the following:
-
-        - *'BTSettl2008'*: default model set from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  
-        with effective temperatures of 400 to 2900 K (steps of 100 K); surface gravities of 3.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity of -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.3, and 0.5 for temperatures greater than 2000 K only;
-        cloud opacity is fixed in this model, and equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: 'btsettled','btsettl','allard','allard12')
-        - *'burrows06'*: model set from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
-        with effective temperatures of 700 to 2000 K (steps of 50 K); surface gravities of 4.5 to 5.5 in units of cm/s^2 (steps of 0.1 dex); metallicity of -0.5, 0.0 and 0.5; and either no clouds or grain size 100 microns (fsed = 'nc' or 'f100').
-        equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: 'burrows','burrows2006')
-        - *'morley12'*: model set from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
-        with effective temperatures of 400 to 1300 K (steps of 50 K); surface gravities of 4.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and sedimentation efficiency (fsed) of 2, 3, 4 or 5;
-        metallicity is fixed to solar, equilibrium chemistry is assumed, and there are no clouds associated with this model (alternate designations: 'morley2012')
-        - *'morley14'*: model set from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
-        with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex);
-        metallicity is fixed to solar, equilibrium chemistry is assumed, sedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: 'morley2014')
-        - *'saumon12'*: model set from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
-        with effective temperatures of 400 to 1500 K (steps of 50 K); and surface gravities of 3.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex);
-        metallicity is fixed to solar, equilibrium chemistry is assumed, and no clouds are associated with these models (alternate designations: 'saumon','saumon2012')
-        - *'drift'*: model set from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
-        with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex);
-        cloud opacity is fixed in this model, equilibrium chemistry is assumed (alternate designations: 'witte','witte2011','helling')
-    
-    :Model Parameters: The following parameters may be set:
-
-        - *teff*: effective temperature of the model in K (e.g. teff = 1000)
-        - *logg*: log_10 of the surface gravity of the model in cm/s^2 units (e.g. logg = 5.0)
-        - *z*: log_10 of metallicity of the model relative to solar metallicity (e.g. z = -0.5)
-        - *fsed*: sedimentation efficiency of the model (e.g. fsed = 'f2')
-        - *cld*: cloud shape function of the model (e.g. cld = 'f50')
-        - *kzz*: vertical eddy diffusion coefficient of the model (e.g. kzz = 2)
-        - *slit*: slit weight of the model in arcseconds (e.g. slit = 0.3)
-        - *sed*: if set to True, returns a broad-band spectrum spanning 0.3-30 micron (applies only for BTSettl2008 models with Teff < 2000 K)
-
-
-    :param local: read in parameter file locally if True
-    :type local: optional, default = True
-    :param online: read in parameter file online if True
-    :type online: optional, default = False
-    :param folder: string of the folder name containing the model set
-    :type folder: optional, default = ''
-    :param filename: string of the filename of the desired model
-    :type filename: optional
-    :param force: force the filename to be exactly as specified
-    :type filename: optional, default = False
-    :param url: string of the url to the SPLAT website
-    :type url: optional, default = 'http://pono.ucsd.edu/~adam/splat/'
-
-    :Example:
-       >>> import splat
-       >>> mdl = splat.loadModel(teff=1000,logg=5.0)
-       >>> mdl.info()
-            BTSettl2008 model with the following parmeters:
-            Teff = 1000 K
-            logg = 5.0 cm/s2
-            z = 0.0
-            fsed = nc
-            cld = nc
-            kzz = eq
-            Smoothed to slit width 0.5 arcseconds
-       >>> mdl = splat.loadModel(teff=2500,logg=5.0,model='burrows')
-            Input value for teff = 2500 out of range for model set burrows06
-            Warning: Creating an empty Spectrum object
-    '''
-
-
-# path to model and set local/online
-# by default assume models come from local splat directory
-    local = kwargs.get('local',True)
-    online = kwargs.get('online',not local and splat.checkOnline() != '')
-    local = not online
-    kwargs['local'] = local
-    kwargs['online'] = online
-    kwargs['folder'] = kwargs.get('folder','')
-    kwargs['ismodel'] = True
-    kwargs['force'] = kwargs.get('force',False)
-    url = kwargs.get('url',splat.SPLAT_URL)
-
-
-# a filename has been passed - assume this file is a local file
-# and check that the path is correct if its fully provided
-# otherwise assume path is inside model set folder
-    if (len(args) > 0):
-        kwargs['filename'] = args[0]
-        if not os.path.exists(kwargs['filename']):
-            kwargs['filename'] = kwargs['folder']+os.path.basename(kwargs['filename'])
-            if not os.path.exists(kwargs['filename']):
-                raise NameError('\nCould not find model file {} or {}'.format(kwargs['filename'],kwargs['folder']+os.path.basename(kwargs['filename'])))
-            else:
-                return splat.Spectrum(**kwargs)
-        else:
-            return splat.Spectrum(**kwargs)
-
-
-#    elif:
-#        loadInterpolatedModel(**kwargs)
-
-
-# set up the model set
-    kwargs['model'] = kwargs.get('model','BTSettl2008')
-    kwargs['model'] = kwargs.get('set',kwargs['model'])
-    if kwargs.get('sed',False):
-        kwargs['model'] = 'BTSettl2008'
-
-# set replacements
-    if kwargs['model'].lower() == 'btsettl2008' or kwargs['model'].lower() == 'btsettl' or kwargs['model'].lower() == 'btsettled' or kwargs['model'].lower() == 'allard' or kwargs['model'].lower() == 'allard12' or kwargs['model'].lower() == 'allard2012':
-        kwargs['model'] = 'BTSettl2008'
-    if kwargs['model'].lower() == 'burrows06' or kwargs['model'].lower() == 'burrows' or kwargs['model'].lower() == 'burrows2006':
-        kwargs['model'] = 'burrows06'
-    if kwargs['model'].lower() == 'morley12' or kwargs['model'].lower() == 'morley2012':
-        kwargs['model'] = 'morley12'
-    if kwargs['model'].lower() == 'morley14' or kwargs['model'].lower() == 'morley2014':
-        kwargs['model'] = 'morley14'
-    if kwargs['model'].lower() == 'saumon12' or kwargs['model'].lower() == 'saumon' or kwargs['model'].lower() == 'saumon2012':
-        kwargs['model'] = 'saumon12'
-    if kwargs['model'].lower() == 'drift' or kwargs['model'].lower() == 'witte' or kwargs['model'].lower() == 'witte2011' or kwargs['model'].lower() == 'witte11' or kwargs['model'].lower() == 'helling':
-        kwargs['model'] = 'drift'
-    kwargs['folder'] = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
-
-# preset defaults
-    for ms in MODEL_PARAMETER_NAMES:
-        kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
-
-# some special defaults
-    if kwargs['model'] == 'morley12':
-        if kwargs['fsed'] == 'nc':
-            kwargs['fsed'] = 'f2'
-    if kwargs['model'] == 'morley14':
-        if kwargs['fsed'] == 'nc':
-            kwargs['fsed'] = 'f5'
-        if kwargs['cld'] == 'nc':
-            kwargs['cld'] = 'f50'
-
-
-# check that folder/set is present either locally or online
-# if not present locally but present online, switch to this mode
-# if not present at either raise error
-    folder = splat.checkLocal(kwargs['folder'])
-    if folder=='':
-        folder = splat.checkOnline(kwargs['folder'])
-        if folder=='':
-            print('\nCould not find '+kwargs['folder']+' locally or on SPLAT website')
-            print('\nAvailable model set options are:')
-            for s in DEFINED_MODEL_SET:
-                print('\t{}'.format(s))
-            raise NameError()
-        else:
-            kwargs['folder'] = folder
-            kwargs['local'] = False
-            kwargs['online'] = True
-    else:
-        kwargs['folder'] = folder
-
-# generate model filename
-    kwargs['filename'] = kwargs['folder']+kwargs['model']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
-        format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],float(kwargs['slit']))
-    kwargs['name'] = kwargs['model']
-    if kwargs.get('sed',False):
-        kwargs['filename'] = kwargs['folder']+kwargs['model']+'_{:.0f}_{:.1f}_{:.1f}_nc_nc_eq_sed.txt'.\
-            format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001)
-        kwargs['name'] = kwargs['model']+' SED'
-
-# get model parameters
-#        parameters = loadModelParameters(**kwargs)
-#        kwargs['path'] = kwargs.get('path',parameters['path'])
-# check that given parameters are in range
-#        for ms in MODEL_PARAMETER_NAMES[0:3]:
-#            if (float(kwargs[ms]) < parameters[ms][0] or float(kwargs[ms]) > parameters[ms][1]):
-#                raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
-#        for ms in MODEL_PARAMETER_NAMES[3:6]:
-#            if (kwargs[ms] not in parameters[ms]):
-#                raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
-
-
-# check if file is present; if so, read it in, otherwise go to interpolated
-# locally:
-    if kwargs['local']:
-        file = splat.checkLocal(kwargs['filename'])
-        if file=='':
-            if kwargs['force']:
-                raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
-            else:
-                return loadInterpolatedModel(**kwargs)
-#                kwargs['local']=False
-#                kwargs['online']=True
-        else:
-            try:
-                return splat.Spectrum(**kwargs)
-            except:
-                raise NameError('\nProblem reading in '+kwargs['filename']+' locally\n\n')
-
-# online:
-    if kwargs['online']:
-        file = splat.checkOnline(kwargs['filename'])
-        if file=='':
-            if kwargs['force']:
-                raise NameError('\nCould not find '+kwargs['filename']+' online\n\n')
-            else:
-                return loadInterpolatedModel(**kwargs)
-        else:
-            try:
-                ftype = kwargs['filename'].split('.')[-1]
-                tmp = TMPFILENAME+'.'+ftype
-                open(os.path.basename(tmp), 'wb').write(requests.get(url+kwargs['filename']).content) 
-                kwargs['filename'] = os.path.basename(tmp)
-                sp = splat.Spectrum(**kwargs)
-                os.remove(os.path.basename(tmp))
-                return sp
-            except:
-                raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
-
-
 
 
 def loadModelParameters(**kwargs):
     '''
-    .. is cld cloud shape function? kzz the vertical eddy diffusion coefficient?
-    :Purpose: Load up model parameters and check model inputs. Parameters include 
-                effective temperature, surface gravity (expressed as logg), metallicity, 
-                and sedimentation efficiency (for cloudy models only).
-    :param parameterFile: name of file containing parameters for spectral models
-    :type parameterFile: optional, default = 'parameters.txt'
-    :param model: set of models to use; options include:
+    Purpose: 
+        Assitant routine for `loadModel()`_ that loads in the spectral model grid points.
 
-        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
-          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
-        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
-          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
-        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
-          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
-        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
-          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
-        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
-          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
-        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
-          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
+    .. _`loadModel()` : api.html#splat_model.loadModel
 
-    :type set: optional, default = 'BTSettl2008'
-    :param online: read in parameter file online if True
-    :type online: optional, default = False
+    Required Inputs:
+        :param: **model**: set of models to use; see options in `loadModel()`_ (default = 'BTSettl2008')
+
+    Optional Inputs:
+        :param **parameterFile**: name of file containing parameters for spectral models (default = 'parameters.txt')
+        :param: The parameters for `loadModel()`_ can also be used here.
+
+    Output:
+        A dictionary containing the grid points in the given model set
     '''
+
 # keyword parameters
     pfile = kwargs.get('parameterFile','parameters.txt')
 
@@ -640,7 +514,14 @@ def loadModelParameters(**kwargs):
     return parameters
 
 
-#### the following codes are in progress
+
+#######################################################
+#######################################################
+##################   MODEL FITTING  ###################
+#######################################################
+#######################################################
+
+
 
 def modelFitGrid(spec, **kwargs):
     '''
@@ -791,9 +672,6 @@ def modelFitMCMC(spec, **kwargs):
         938.962545205 5.43505121711 0.0  0.129294090544 47650.4267022
     '''
 
-# code style note:
-#   using the following equivalent terms: teff = temperature, logg = gravity, z = metallicity
-
 # MCMC keywords
     timestart = time.time()
     nsample = kwargs.get('nsamples', 1000)
@@ -803,10 +681,7 @@ def modelFitMCMC(spec, **kwargs):
     m_set = kwargs.get('model', m_set)
     m_set = kwargs.get('models', m_set)
     verbose = kwargs.get('verbose', False)
-# masking keywords
-#    mask_ranges = kwargs.get('mask_ranges',[])
-#    mask_telluric = kwargs.get('mask_telluric',False)
-#    mask_standard = kwargs.get('mask_standard',True)
+
 # plotting and reporting keywords
     showRadius = kwargs.get('radius', spec.fscale == 'Absolute')
     try:
@@ -820,11 +695,6 @@ def modelFitMCMC(spec, **kwargs):
 # evolutionary models    
     emodel = kwargs.get('evolutionary_model', 'baraffe')
     emodel = kwargs.get('emodel', emodel)
-#    plot = kwargs.get('plot', False)
-#    contour = kwargs.get('contour', False)
-#    landscape = kwargs.get('landscape', False)
-#    xstep = kwargs.get('xstep', 20)
-#    ystep = kwargs.get('ystep', 20)
 
 # set mask   
     mask = kwargs.get('mask',splat.generateMask(spec.wave,**kwargs))
@@ -985,83 +855,7 @@ def modelFitMCMC(spec, **kwargs):
     return s
 
 
-def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
-    '''
-    :Purpose: Calculate luminosity from photometry and stitching models.
 
-    THIS IS CURRENTLY BEING WRITTEN - DO NOT USE!
-
-    :param sp: Spectrum class object, which should contain wave, flux and 
-               noise array elements.
-    :param mdl: model spectrum loaded using ``loadModel``
-    :type mdl: default = False
-    :param absmags: a dictionary whose keys are one of the following filters: 'SDSS Z', 
-                    '2MASS J', '2MASS H', '2MASS KS', 'MKO J', 'MKO H', 'MKO K', 'SDSS R', 
-                    'SDSS I', 'WISE W1', 'WISE W2', 'WISE W3', 'WISE W4', 'IRAC CH1', 
-                    'IRAC CH2', 'IRAC CH3', 'IRAC CH4'
-    :type absmags: default = False
-    
-    '''
-
-    spec_filters = ['SDSS Z','2MASS J','2MASS H','2MASS KS','MKO J','MKO H','MKO K']
-    sed_filters = ['SDSS R','SDSS I','WISE W1','WISE W2','WISE W3','WISE W4','IRAC CH1','IRAC CH2','IRAC CH3','IRAC CH4']
-    
-    if ~isinstance(absmags,dict):
-        raise ValueError('\nAbsolute magnitudes should be a dictionary whose keys are one of the following filters:\n{}'.format(spec_filters+sed_filters))
-
-# read in a model if one is not provided based on classification and temperature
-    if mdl == False or 'SED' not in mdl.name:
-        spt,spt_unc = splat.classifyByIndex(sp)
-        teff,unc = splat.typeToTeff(spt)
-        mdl = splat.loadModel(teff=teff,logg=5.0,sed=True)
-
-# prep arrays
-    flux = []
-    flux_unc = []
-    flux_wave = []
-    
-# steps:
-# scale spectrum to absolute magnitude if necessary and integrate flux, varying noise and including variance in abs mag factor
-    spcopy = sp
-    if spcopy.fscale != 'Absolute':
-        scale = []
-        scale_unc = []
-        for k in absmags.keys():
-            if k.upper() in spec_filters:
-                m = splat.filterMag(spcopy,k)
-                scale.extend(10.**(0.4*(m-absmags[k][0])))
-# note: need to add in spectral flux uncertainty as well
-                scale_unc.extend(numpy.log(10.)*0.4*absmags[k][1]*scale[-1])
-        if len(scale) == 0:
-            raise ValueError('\nNo absolute magnitudes provided to scale spectrum; you specified:\n{}'.format(absmags.keys()))
-        scl,scl_e = splat.weightedMeanVar(scale,scale_unc,uncertainty=True)
-        spcopy.scale(numpy.mean(scl))
-        spcopy.fscale = 'Absolute'
-
-# integrate data
-# NEED TO INSERT UNCERTAINTY HERE
-    flux.extend(trapz(spcopy.flux,spcopy.wave))
-    flux_unc.extend(0.)
-    flux_wave.extend([numpy.nanmin(spcopy.wave),numpy.nanmax(spcopy.wave)])
-
-# scale segments of models scaled to WISE or IRAC bands if available, include variance in abs mag factor
-# PROBLEM: WHAT IF SPECTRAL PIECES OVERLAP?
-    for k in absmags.keys():
-        if k.upper() in sed_filters:
-            filterdat = splat.filterProperties(k.upper())
-            mdl.fluxCalibrate(k,absmags[k][0])
-            w = numpy.where(mdl.wave.value >= filterdat['lambda_min'] and mdl.wave.value <= filterdat['lambda_max'])
-            flux.extend(trapz(mdl.flux[w],mdl.wave[w]))
-            flux_unc.extend(2.5*numpy.log(10.)*absmags[k][1]*flux[-1])
-            flux_wave.extend([filterdat['lambda_min'],filterdat['lambda_max']])
-
-# match model between these scaled pieces and out to ends and integrate, include variance in abs mag factor(s)
-# report log luminosity in solar units and uncertainty
-# optional report the various pieces and percentages of whole ()
-#
-# absmags is a dictionary whose keys are filter names and whose elements are 2-element lists of value and uncertainty        
-
-    
 def reportModelFitResults(spec,t,*arg,**kwargs):
     '''
     :Purpose: Reports the result of model fitting parameters. 
@@ -1257,7 +1051,7 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
 
         print('\nMedian parameters:')
         for p in parameters:
-            sm, mn, sp = distributionStats(t[p],sigma=sigma,weights=weights)      # +/- 1 sigma
+            sm, mn, sp = splat.distributionStats(t[p],sigma=sigma,weights=weights)      # +/- 1 sigma
             name = p
             if p in descrip_assoc.keys():
                 name = descrip_assoc[p]
@@ -1320,35 +1114,13 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
         pass
             
 
-def distributionStats(x, q=[0.16,0.5,0.84], weights=None, sigma=None, **kwargs):
-    '''
-    :Purpose: Find key values along distributions based on quantile steps.
-              This code is derived almost entirely from triangle.py.
-    '''
 
-# clean data of nans
-    xd = x[~numpy.isnan(x)]
+#######################################################
+#######################################################
+###############   EMCEE MODEL FITTING  ################
+#######################################################
+#######################################################
 
-    if q is None and sigma is None:
-        sigma = 1.
-        
-    if sigma is not None:
-        q = [stats.norm.cdf(-sigma),0.5,stats.norm.cdf(sigma)]
-        
-    if weights is None:
-        return numpy.percentile(xd, [100. * qi for qi in q])
-    else:
-        wt = weights[~numpy.isnan(x)]
-        idx = numpy.argsort(xd)
-        xsorted = xd[idx]
-        cdf = numpy.add.accumulate(wt[idx])
-        cdf /= cdf[-1]
-        return numpy.interp(q, cdf, xsorted).tolist()
-
-
-# ------------------------------
-# EMCEE suite
-# ------------------------------
 
 
 def modelFitEMCEE(spec, **kwargs):
@@ -1422,7 +1194,7 @@ def modelFitEMCEE(spec, **kwargs):
     .. _generateMask api.html#splat.generateMask
     
     Note: modelfitEMCEE requires external packages: 
-        - ``emceee``: http://dan.iel.fm/emcee/current
+        - ``emcee``: http://dan.iel.fm/emcee/current
         -``corner``: http://corner.readthedocs.io/en/latest
 
     :Example:
@@ -1519,14 +1291,6 @@ def modelFitEMCEE(spec, **kwargs):
     parameter_names = MODEL_PARAMETER_NAMES[:len(parameters0)]
     parameter_titles = MODEL_PARAMETER_TITLES[:len(parameters0)]
     parameter_units = MODEL_PARAMETER_UNITS[:len(parameters0)]
-
-# add in radius as a calculated parameter - THIS IS NOT WORKING AND NEEDS TO BE SOLVED
-#    if showRadius:
-#        parameters0.append(0.1*RADIUS_SUN.value)
-#        parameter_names.append('radius')
-#        parameter_titles.append('R')
-#        parameter_units.append(u.cm)
-
     nparameters = len(parameters0)
     pscale = [prior_scale[p] for p in parameter_names]
     initial_parameters = [parameters0+pscale*numpy.random.randn(len(parameters0)) for i in range(nwalkers)]
@@ -1878,7 +1642,214 @@ def modelFitEMCEE_summary(sampler,spec,file,**kwargs):
 
 
 
-# TESTING ROUTINES
+#######################################################
+#######################################################
+#############   ROUNTINES IN DEVELOPMENT  #############  
+#######################################################
+#######################################################
+
+def loadInterpolatedModel_NEW(*args,**kwargs):
+# path to model
+#    kwargs['path'] = kwargs.get('path',SPLAT_PATH+SPECTRAL_MODEL_FOLDER)
+#    if not os.path.exists(kwargs['path']):
+#        kwargs['remote'] = True
+#        kwargs['path'] = SPLAT_URL+SPECTRAL_MODEL_FOLDER        
+#    kwargs['model'] = kwargs.get('model','BTSettl2008')
+#    kwargs['model'] = True
+#    for ms in MODEL_PARAMETER_NAMES:
+#        kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
+
+# first get model parameters
+    pfile = 'parameters_new.txt'
+#    parameters = loadModelParameters(**kwargs)
+
+# insert a switch to go between local and online here
+
+    print('Running new version')
+# read in parameters of available models
+    folder = splat.checkLocal(splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/')
+    if folder=='':
+        raise NameError('\n\nCould not locate spectral model folder {} locally\n'.format(SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'))
+    pfile = splat.checkLocal(folder+pfile)
+    if pfile=='':
+        raise NameError('\n\nCould not locate parameter list in folder {} locally\n'.format(folder))
+    parameters = ascii.read(pfile)
+#    numpy.genfromtxt(folder+pfile, comments='#', unpack=False, \
+#        missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
+
+ 
+# check that given parameters are in range
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
+        if (float(kwargs[ms]) < min(parameters[ms]) or float(kwargs[ms]) > max(parameters[ms])):
+            raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+    for ms in MODEL_PARAMETER_NAMES[3:7]:
+        if (kwargs[ms] not in parameters[ms]):
+            raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
+
+# now identify grid points around input parameters
+# first set up a mask for digital parameters
+    mask = numpy.ones(len(parameters[MODEL_PARAMETER_NAMES[0]]))
+    for ms in MODEL_PARAMETER_NAMES[3:7]:
+        m = [1 if a == kwargs[ms] else 0 for a in parameters[ms]]
+        mask = mask*m
+    
+# identify grid points around input parameters
+# 3x3 grid for teff, logg, z
+# note interpolation and model ranges are separate
+    dist = numpy.zeros(len(parameters[MODEL_PARAMETER_NAMES[0]]))
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
+# first get step size
+        ps = list(set(parameters[ms]))
+        ps.sort()
+        pps = numpy.abs(ps-ps[int(0.5*len(ps))])
+        pps.sort()
+        step = pps[1]
+        dist = dist + ((kwargs[ms]-parameters[ms])/step)**2
+
+# apply digital constraints
+    ddist = dist/mask    
+
+# find "closest" models
+    mvals = {}
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
+        mvals[ms] = [x for (y,x) in sorted(zip(ddist,parameters[ms]))]
+
+
+# this is a guess as to how many models we need to get unique parameter values
+    nmodels = 12
+    mx,my,mz = numpy.meshgrid(mvals[MODEL_PARAMETER_NAMES[0]][0:nmodels],mvals[MODEL_PARAMETER_NAMES[1]][0:nmodels],mvals[MODEL_PARAMETER_NAMES[2]][0:nmodels])
+    mkwargs = kwargs.copy()
+
+    for i,w in enumerate(numpy.zeros(nmodels)):
+        for ms in MODEL_PARAMETER_NAMES[0:3]:
+            mkwargs[ms] = mvals[ms][i]
+        mdl = loadModel(**mkwargs)
+        if i == 0:
+            mdls = numpy.log10(mdl.flux.value)
+        else:
+            mdls = numpy.column_stack((mdls,numpy.log10(mdl.flux.value)))
+
+    print(mdls[0,:])
+    print(float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
+            float(kwargs[MODEL_PARAMETER_NAMES[2]]))
+    print(mx.flatten(),my.flatten(),mz.flatten())
+    for i in numpy.arange(nmodels):
+        print(mvals['teff'][i],mvals['logg'][i],mvals['z'][i])
+#
+#
+#            
+## THIS NEXT PART IS BROKEN!
+#
+#
+#
+    mflx = numpy.zeros(len(mdl.wave))
+    for i,w in enumerate(mflx):
+#        print(i, (mdls[i],))
+#        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),val.flatten(),\
+#            (float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])),'linear'))
+
+        m = mdls[i,:]
+        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),m.flatten(),\
+            (float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
+            float(kwargs[MODEL_PARAMETER_NAMES[2]])),'linear'))
+    
+    return splat.Spectrum(wave=mdl.wave,flux=mflx*mdl.funit,**kwargs)
+
+
+def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
+    '''
+    :Purpose: Calculate luminosity from photometry and stitching models.
+
+    THIS IS CURRENTLY BEING WRITTEN - DO NOT USE!
+
+    :param sp: Spectrum class object, which should contain wave, flux and 
+               noise array elements.
+    :param mdl: model spectrum loaded using ``loadModel``
+    :type mdl: default = False
+    :param absmags: a dictionary whose keys are one of the following filters: 'SDSS Z', 
+                    '2MASS J', '2MASS H', '2MASS KS', 'MKO J', 'MKO H', 'MKO K', 'SDSS R', 
+                    'SDSS I', 'WISE W1', 'WISE W2', 'WISE W3', 'WISE W4', 'IRAC CH1', 
+                    'IRAC CH2', 'IRAC CH3', 'IRAC CH4'
+    :type absmags: default = False
+    
+    '''
+
+    spec_filters = ['SDSS Z','2MASS J','2MASS H','2MASS KS','MKO J','MKO H','MKO K']
+    sed_filters = ['SDSS R','SDSS I','WISE W1','WISE W2','WISE W3','WISE W4','IRAC CH1','IRAC CH2','IRAC CH3','IRAC CH4']
+    
+    if ~isinstance(absmags,dict):
+        raise ValueError('\nAbsolute magnitudes should be a dictionary whose keys are one of the following filters:\n{}'.format(spec_filters+sed_filters))
+
+# read in a model if one is not provided based on classification and temperature
+    if mdl == False or 'SED' not in mdl.name:
+        spt,spt_unc = splat.classifyByIndex(sp)
+        teff,unc = splat.typeToTeff(spt)
+        mdl = splat.loadModel(teff=teff,logg=5.0,sed=True)
+
+# prep arrays
+    flux = []
+    flux_unc = []
+    flux_wave = []
+    
+# steps:
+# scale spectrum to absolute magnitude if necessary and integrate flux, varying noise and including variance in abs mag factor
+    spcopy = sp
+    if spcopy.fscale != 'Absolute':
+        scale = []
+        scale_unc = []
+        for k in absmags.keys():
+            if k.upper() in spec_filters:
+                m = splat.filterMag(spcopy,k)
+                scale.extend(10.**(0.4*(m-absmags[k][0])))
+# note: need to add in spectral flux uncertainty as well
+                scale_unc.extend(numpy.log(10.)*0.4*absmags[k][1]*scale[-1])
+        if len(scale) == 0:
+            raise ValueError('\nNo absolute magnitudes provided to scale spectrum; you specified:\n{}'.format(absmags.keys()))
+        scl,scl_e = splat.weightedMeanVar(scale,scale_unc,uncertainty=True)
+        spcopy.scale(numpy.mean(scl))
+        spcopy.fscale = 'Absolute'
+
+# integrate data
+# NEED TO INSERT UNCERTAINTY HERE
+    flux.extend(trapz(spcopy.flux,spcopy.wave))
+    flux_unc.extend(0.)
+    flux_wave.extend([numpy.nanmin(spcopy.wave),numpy.nanmax(spcopy.wave)])
+
+# scale segments of models scaled to WISE or IRAC bands if available, include variance in abs mag factor
+# PROBLEM: WHAT IF SPECTRAL PIECES OVERLAP?
+    for k in absmags.keys():
+        if k.upper() in sed_filters:
+            filterdat = splat.filterProperties(k.upper())
+            mdl.fluxCalibrate(k,absmags[k][0])
+            w = numpy.where(mdl.wave.value >= filterdat['lambda_min'] and mdl.wave.value <= filterdat['lambda_max'])
+            flux.extend(trapz(mdl.flux[w],mdl.wave[w]))
+            flux_unc.extend(2.5*numpy.log(10.)*absmags[k][1]*flux[-1])
+            flux_wave.extend([filterdat['lambda_min'],filterdat['lambda_max']])
+
+# match model between these scaled pieces and out to ends and integrate, include variance in abs mag factor(s)
+# report log luminosity in solar units and uncertainty
+# optional report the various pieces and percentages of whole ()
+#
+# absmags is a dictionary whose keys are filter names and whose elements are 2-element lists of value and uncertainty        
+
+    
+
+
+#######################################################
+#######################################################
+#################   TESTING ROUTINES  #################  
+#######################################################
+#######################################################
+
+def test_loadmodel(model='burrows',teff=1000,logg=5.0,**kwargs):
+    mdl = loadModel(model=model,teff=teff,logg=logg,**kwargs)
+    if len(mdl.wave) > 0:
+        mdl.info()
+        mdl.scale(1.e-24)
+        print(mdl.fluxMax())
+#        mdl.plot()
+    return True
+
 def test_modelfitEMCEE(folder):
 #    tbl = splat.searchLibrary(spt=['M7','T8'])
 #    sp = splat.Spectrum(numpy.random.choice(tbl['DATA_KEY']))
@@ -1901,5 +1872,6 @@ def test_modelfitMCMC(folder):
 
 if __name__ == '__main__':
     basefolder = '/Users/adam/projects/splat/code/testing/'
-    test_modelfitEMCEE(basefolder)
+#    test_modelfitEMCEE(basefolder)
+    test_loadmodel(model='morley12',teff=540,logg=4.7)
 

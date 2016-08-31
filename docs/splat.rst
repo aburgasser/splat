@@ -18,7 +18,9 @@ standard classification and spectral analysis routines, and helper functions.
 The SPLAT Spectrum object
 -------------------------
 
-Spectal data are manipulated as a Spectrum object, which contains the relevant data (wavelength,
+.. _`Spectrum class` : api.html#spectrum
+
+Spectal data are manipulated as a `Spectrum class`_ object, which contains the relevant data (wavelength,
 flux, uncertainty) and additional information on the source and/or observation.  A Spectrum object is 
 the output of the various database access routines:
 
@@ -39,7 +41,7 @@ You can also access a file based on its unique spectum key
 
 >>> sp = splat.Spectrum(10002)
 
-There are many aspects of the Spectrum object that can be referenced or set, all of which are 
+There are many aspects of the Spectrum class that can be referenced or set, all of which are 
 described in the `API entry`_. Some primary examples:
 
 .. _`API entry` : api.html#spectrum
@@ -65,22 +67,26 @@ Built-in Commands
 
 * Information on the Spectrum object
 
-The ``info()`` command produces a summary of the Spectrum object's primary information:
+.. _`info()` : api.html#splat.Spectrum.info
+.. _`showHistory()` : api.html#splat.Spectrum.showHistory
+.. _`reset()` : api.html#splat.Spectrum.reset
+
+The `info()`_ command produces a summary of the Spectrum object's primary information:
 
 >>> sp.info()
 
-The ``showHistory()`` command provides a summary of actions taken to maniupate a Spectrum object:
+The `showHistory()`_ command provides a summary of actions taken to maniupate a Spectrum object:
 
 >>> sp.showHistory()
 
-If you make changes to your Spectrum object, you can in many cases return it to its original state using the ``reset()`` function
+If you make changes to your Spectrum object, you can in many cases return it to its original state using the `reset()`_ function
 
 >>> sp.reset()
 
 
-* To display the spectrum, use the Spectrum object's plot function, which makes use of the many options available in the plotSpectrum_ routine
+* To display the spectrum, use the Spectrum object's plot function, which makes use of the many options available in the `plotSpectrum`_ routine
 
-.. _plotSpectrum : splat_plot.html
+.. _`plotSpectrum` : splat_plot.html
 
 >>> sp.plot()
 >>> sp.plot(label='Awesome source', telluric=True)
@@ -92,7 +98,10 @@ You can save this display by adding a filename:
 
 * Saving a spectrum
 
-A spectrum contained in a Spectrum object can be output to a file using the built-in export() or save() commands; both fits and tab-delimited ascii outputs are supported:
+A spectrum contained in a Spectrum object can be output to a file using the built-in `export()`_ or `save()`_ commands; both fits and tab-delimited ascii outputs are supported:
+
+.. _`export()` : api.html#splat.Spectrum.export
+.. _`save()` : api.html#splat.Spectrum.save
 
 >>> sp.save('myspectrum.fits')
 
@@ -102,36 +111,105 @@ Spectral Analysis
 
 SPLAT has several routines to do basic spectral analysis and combining of spectra.
 
-* Scaling a spectrum
+Scaling a spectrum
+^^^^^^^^^^^^^^^^^^
 
 Spectra can be scaled by an arbitrary factor:
 
->>> sp.scale(1.e9)
+	>>> sp.scale(1.e9)
 
-Or simply normalized:
+or simply normalized:
 
->>> sp.normalize()
+	>>> sp.normalize()
 
 
-* Spectral math
+Spectral math
+^^^^^^^^^^^^^
 
 Spectrum objects can be manipulated through normal arithmetic operations, which function on a wavelength-by-wavelength scale and properly propogate uncertainties
 
->>> sp3 = sp1+sp2
->>> sp3 = sp1-sp2
->>> sp3 = sp1*sp2
->>> sp3 = sp1/sp2
+	>>> sp3 = sp1+sp2
+	>>> sp3 = sp1-sp2
+	>>> sp3 = sp1*sp2
+	>>> sp3 = sp1/sp2
+
+Comparing spectra
+^^^^^^^^^^^^^^^^^
+.. _`compareSpectra()` : api.html#splat.compareSpectra
+.. _`generateMask()` : api.html#splat.generateMask
+
+Spectra can be formally compared to each other using the `compareSpectra()`_ routine, which take two spectra and returns a comparison statistic and the optimal scale factor for the second spectrum:
+
+	>>> import splat
+	>>> sp7 = splat.getSpectrum(shortname='0727+1710')[0]
+	Retrieving 1 file
+	>>> sp8 = splat.getSpectrum(shortname='0415-0935')[0]
+	Retrieving 1 file
+	>>> chi,scale = splat.compareSpectra(sp7,sp8)
+	(20919.310008422835 0.766057330307)
+	>>> sp8.scale(scale)
+	>>> splat.plotSpectrum(sp7,sp8,colors=['k','r'],legend=['0727+1710','0415-0935'])
+
+
+.. image:: _images/comparespectra_ex1.png
+	:width: 400
+	:align: center
+
+
+You can select different statistics usign the ``statistic`` keyword:
+
+    - **chisqr**: chi squared value (requires spectra with noise values)
+    - **stddev**: standard deviation
+    - **stddev_norm**: normalized standard deviation
+    - **absdev**: absolute deviation
+
+You can also tailor the wavelength ranges over which the spectra are compared by using one of the keywords:
+	- ``fit_ranges`` = a nested set of 2-element arrays specifying which areas to fit
+	- ``mask_ranges`` = a nested set of 2-element arrays specifying which areas to avoid
+	- ``mask`` = an array of 0s (good) and 1s (bad) specifying the regions to fit; this can be generated using the `generateMask()`_ mask routine
+	- ``mask_telluric`` set to True masks the regions of strong telluric absorption
+	- ``mask_standard`` set to True masks the telluric regions and wavelengths < 0.8 micron or > 2.35 micron
+
+You can also weight the individual spectral pixels by passing an array to the ``weight`` keyword.
+
+`compareSpectra()`_ has its own plotting output which can be triggered by setting ``plot`` to True. This will display the two spectra properly scaled and the difference spectra
+
+	>>> splat.compareSpectra(sp7,sp8,plot=True,mask_telluric=True)
+	(20670.083806484316 0.766085949716)
+
+.. image:: _images/comparespectra_ex2.png
+	:width: 400
+	:align: center
+
+
+Reddening a spectrum
+^^^^^^^^^^^^^^^^^^^^
+
+.. _`redden()` : api.html#splat.redden
+
+You can redden a spectrum following the `Cardelli, Clayton, and Mathis (1989) <http://adsabs.harvard.edu/abs/1989ApJ...345..245C>`_ reddening function using the `redden()`_ routine:
+
+>>> import splat
+>>> sp = splat.Spectrum(10001)                   # read in a source
+>>> spr = splat.redden(sp,av=5.,rv=3.2)          # redden to equivalent of AV=5
+>>> splat.plotSpectrum(sp,spr,colors=['k','r'])
+
+.. image:: _images/reddening.png
+	:width: 400
+	:align: center
+
+Here ``av`` is the visual reddening and ``rv`` the extinction coefficient (A_V = R_V * E(B-V) ), which is by default = 3.1, but can be modified (as in example above).
 
 
 Spectrophotometry
 -----------------
 
-.. _``filterInfo()`` : api.html#splat.filterInfo
-.. _``filterProperties()`` : api.html#splat.filterProperties
-.. _``filterMag()`` : api.html#splat.filterMag
-.. _``fluxCalibrate()`` : api.html#splat.Spectrum.fluxCalibrate
+.. _`filterInfo()` : api.html#splat.filterInfo
+.. _`filterProperties()` : api.html#splat.filterProperties
+.. _`filterMag()` : api.html#splat.filterMag
+.. _`fluxCalibrate()` : api.html#splat.Spectrum.fluxCalibrate
 
-SPLAT allows spectrophotometry of spectra using common filters in the red optical and near-infrared. The filter transmission files are stored in the SPLAT reference library, and are accessed by name.  A list of current filters can be made by through the ``filterInfo()``_ routine: 
+SPLAT allows spectrophotometry of spectra using common filters in the red optical and near-infrared. The filter transmission files are stored in the SPLAT reference library, and are accessed by name.  A list of current filters can be made by through the `filterInfo()`_ routine: 
 
 >>> splat.filterInfo()
   2MASS H: 2MASS H-band
@@ -143,7 +221,7 @@ SPLAT allows spectrophotometry of spectra using common filters in the red optica
   ...
 
 
-You can access specific information about a given filter profile with the ``filterProperties()``_ routine
+You can access specific information about a given filter profile with the `filterProperties()`_ routine
 	
 >>> result = splat.filterProperties('2MASS J')
 	Filter 2MASS J: 2MASS J-band
@@ -152,7 +230,7 @@ You can access specific information about a given filter profile with the ``filt
 	FWHM = 0.280 micron
 	Wavelength range = 1.075 to 1.416 micron
 
-The ``filterMag()``_ routine determines the photometric magnitude of a source based on its spectrum, by convolving fluxes with a defined filter profile:
+The `filterMag()`_ routine determines the photometric magnitude of a source based on its spectrum, by convolving fluxes with a defined filter profile:
 
 >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
 >>> sp.fluxCalibrate('2MASS J',14.5)
@@ -184,7 +262,7 @@ or define a simple notch filter with the two end wavelengthts:
 	(14.301864415761377, 0.031774478113182188)
 
 
-Finally, to flux calibrate a spectrum to a given magnitude, use the Spectrum object's built in ``fluxCalibrate()``_ method:
+Finally, to flux calibrate a spectrum to a given magnitude, use the Spectrum object's built in `fluxCalibrate()`_ method:
 
 >>> sp.fluxCalibrate('2MASS J',14.0)
 
@@ -209,9 +287,9 @@ SPLAT contains the spectral index/spectral type classification relations from th
 	- `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_
 	- `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_.
 
-These can be accessed through the ``classifyByIndices``_ routine, which returns the average subtype and uncertainty:
+These can be accessed through the `classifyByIndices()`_ routine, which returns the average subtype and uncertainty:
 
-.. _``classifyByIndices`` : api.html#splat.classifyByIndices
+.. _`classifyByIndices()` : api.html#splat.classifyByIndices
 
 >>> sp = splat.getSpectrum(shortname='0559-1404')[0]
 >>> splat.classifyByIndex(sp, string=True, set='burgasser', round=True)
@@ -236,20 +314,20 @@ Using the ``allmeasures`` parameter provides the index values and individual ind
 
 SPLAT contains spectral standards for dwarf classes M0 through T9, drawn from `Burgasser et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...637.1067B>`_, `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_ and `Cushing et al. (2011) <http://adsabs.harvard.edu/abs/2011ApJ...743...50C>`_. There are also M and L subdwarf and M extreme subdwarf standards.  These may be used to infer spectral classifications by "closest match", using all or part of the near-infrared spectrum.
 
-The routine for this is ``classifyByStandard``_, which by default simply matches to the best-fitting standard:
+The routine for this is `classifyByStandard()`_, which by default simply matches to the best-fitting standard:
 
-.. _``classifyByStandard`` : api.html#splat.classifyByStandard
+.. _`classifyByStandard()` : api.html#splat.classifyByStandard
 
 >>> sp = splat.getSpectrum(shortname='0805+4812')[0]
 >>> splat.classifyByStandard(sp)
 	('T0.0', 0.5)
 
-You can also return an uncertainty-weighted mean classifiction using average=True:
+You can also return an uncertainty-weighted mean classifiction by setting ``average`` = True:
 
 >>> splat.classifyByStandard(sp,average=True)
     ('L7.0::', 2.1064575737396338)
 
-and fit to specific regions using either the ``fit_ranges`` parameter or setting ``method='kirkpatrick'`` to conform with the `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_ method of near-infrared spectral classification:
+and fit to specific regions using either the ``fit_ranges`` parameter or setting ``method`` = 'kirkpatrick' to conform with the `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_ method of near-infrared spectral classification:
 
 >>> splat.classifyByStandard(sp,method='kirkpatrick')
     ('L7.0', 0.5)
@@ -260,21 +338,27 @@ Subdwarf and extreme subdwarf standards can be accessed by setting the ``sd`` or
     ('L7.0', 0.5)
 
 
-.. image:: _images/classifyByStandard_example1.png
+.. image:: _images/classifyByStandard_example.png
 	:width: 400
 	:align: center
 
 
-Note that the first time you run classifyByStandard, the standards must be initially read in to the dictionaries ``splat.SPEX_STDS``, ``splat.SPEX_SD_STDS`` and ``splat.SPEX_ESD_ STDS``. This can be prompted using the ``initiateStandards()`` routine:
+Note that the first time you run `classifyByStandard()`_, the standards must be initially read in to the dictionaries ``splat.SPEX_STDS``, ``splat.SPEX_SD_STDS`` and ``splat.SPEX_ESD_ STDS``. This can be prompted using the `initiateStandards()`_ routine:
+
+.. _`initiateStandards()` : api.html#splat.initiateStandards
 
 >>> splat.initiateStandards()
 
-One the standards are loaded, subsequent calls to ``classifyByStandard`` are much faster.
+One the standards are loaded, subsequent calls to `classifyByStandard()`_ are much faster.
 
 
 * Classifying by Templates
 
-You can also classify sources by comparing to individual template spectra in the library. The ``classifyByTemplate``_ routine behaves similarly to ``classifyByStandard``_, but has the option of returning a dictionary of the ``nbest`` best matches sorted by whatever statistic is desired (set with the ``statistic`` parameter; see ``compareSpectra``_).  Because each template must be read in, it is strongly recommended that users downselect the templates using keywords associated with ``searchLibrary``_:
+You can also classify sources by comparing to individual template spectra in the library. The `classifyByTemplate()`_ routine behaves similarly to `classifyByStandard`_, but has the option of returning a dictionary of the ``nbest`` best matches sorted by whatever statistic is desired (set with the ``statistic`` parameter; see `compareSpectra()`_).  Because each template must be read in, it is strongly recommended that users downselect the templates using keywords associated with `searchLibrary()`_:
+
+.. _`classifyByTemplate()` : api.html#splat.classifyByTemplate
+.. _`compareSpectra()` : api.html#splat.compareSpectra
+.. _`searchLibrary()` : api.html#splat_db.searchLibrary
 
 >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
 >>> result = splat.classifyByTemplate(sp,spt=[24,26],nbest=5)
@@ -328,13 +412,12 @@ These sets can be combined:
 	Best match = 2MASS J10224821+5825453 with spectral type L1beta
 	Mean spectral type = L0.5+/-0.86022832423
 
-.. _``classifyByTemplate`` : api.html#splat.classifyByTemplate
 
 * Gravity Classification
 
-.. _``classifyGravity`` : api.html#splat.classifyGravity
+.. _`classifyGravity()` : api.html#splat.classifyGravity
 
-The ``classifyGravity``_ routine uses the index-based method of `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ to determine gravity scores from VO, FeH, K I and H-band continuum indices. 
+The `classifyGravity()`_ routine uses the index-based method of `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ to determine gravity scores from VO, FeH, K I and H-band continuum indices. 
 
 >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
 >>> splat.classifyGravity(sp)
@@ -356,7 +439,7 @@ Finally, the routine will return a dictionary of all index scores by setting the
         H-cont: 0.859+/-0.032 => 0.0
         KI-J: 1.114+/-0.038 => 1.0
         Gravity Class = FLD-G
->>> result
+>>> print(result)
     {'FeH-z': 1.0,
      'H-cont': 0.0,
      'KI-J': 1.0,
@@ -367,8 +450,109 @@ Finally, the routine will return a dictionary of all index scores by setting the
 
 
 
-Potentially Useful Program Constants
-------------------------------------
+
+
+Empirical Relations
+-------------------
+
+There are a number of empirical relations contained in the SPLAT code to help convert between common parameters. Examples include:
+
+.. _`typeToColor()` : api.html#splat.typeToColor
+.. _`typeToTeff()` : api.html#splat.typeToTeff
+.. _`typeToMag()` : api.html#splat.typeToMag
+.. _`estimateDistance()` : api.html#splat.estimateDistance
+
+* `typeToColor()`_
+	Takes a spectral type and optionally a ``color`` (string) and returns the typical color of the source, using one of the following empirical relationships (set by ``ref`` keyword):
+
+        - `Skryzpek et al. (2015) <http://adsabs.harvard.edu/abs/2015A%26A...574A..78S>`_ : Allowed spectral type range is M5 to T8, and colors include 'i-z', 'z-Y', 'Y-J', 'J-H', 'H-K', 'K-W1', 'W1-W2' and all intermediate colors (``ref`` = 'skryzpek')
+
+    Example:
+
+    >>> import splat
+    >>> print splat.typeToColor('L3', 'J-K')
+        (1.46, nan)
+    >>> print splat.typeToMag('M5', 'i-z', ref = 'skrzypek', unc=0.5)
+        (0.91, 0.57797809947624645)
+    >>> print splat.typeToMag('M0', 'i-z', ref = 'skrzypek')
+        Spectral type M0.0 is outside the range for reference set Skrzypek et al. (2015)
+        (nan, nan)
+
+
+* `typeToMag()`_
+	Takes a spectral type and a filter, and returns absolute magnitude, using one of the following empirical relationships (set by ``ref`` keyword):
+
+        - `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_ : Allowed spectral type range is L0 to T8, and allowed filters are MKO K (``ref`` = 'burgasser')
+        - `Faherty et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...752...56F>`_ : Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K. (``ref`` = 'faherty')
+        - `Dupuy & Liu (2012) <http://adsabs.harvard.edu/abs/2012ApJS..201...19D>`_ : Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS K. (``ref`` = 'dupuy')
+        - `Filippazzo et al. (2015). <http://adsabs.harvard.edu/abs/2015ApJ...810..158F>`_ : Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J and WISE W2. (``ref`` = 'filippazzo')       
+
+    Example:
+
+    >>> import splat
+    >>> print splat.typeToMag('L3', '2MASS J')
+        (12.730064813273996, 0.4)
+    >>> print splat.typeToMag(21, 'MKO K', ref = 'burgasser')
+        (10.705292820099999, 0.26)
+    >>> print splat.typeToMag(24, '2MASS J', ref = 'faherty')
+        Invalid filter given for Abs Mag/SpT relation from Faherty et al. (2012)
+        (nan, nan)
+    >>> print splat.typeToMag('M0', '2MASS H', ref = 'dupuy')
+        Spectral Type is out of range for Abs Mag/SpT relation from Dupuy & Liu (2012) Abs Mag/SpT relation
+        (nan, nan)
+
+
+
+* `typeToTeff()`_
+	Returns an effective temperature (Teff) and its uncertainty for a given spectral type, using one of the following empirical relationships (set by ``ref`` keyword):
+
+        - `Golimowski et al. (2004) <http://adsabs.harvard.edu/abs/2004AJ....127.3516G>`_ : Allowed spectral type range is M6 to T8  (``ref`` = 'golimowski')
+        - `Looper et al. (2008) <http://adsabs.harvard.edu/abs/2008ApJ...685.1183L>`_ : Allowed spectral type range is L0 to T8  (``ref`` = 'looper')
+        - `Stephens et al. (2009) <http://adsabs.harvard.edu/abs/2009ApJ...702..154S>`_ : Allowed spectral type range is M6 to T8 and uses alternate coefficients for L3 to T8.  (``ref`` = 'stephens')
+        - `Marocco et al. (2013) <http://adsabs.harvard.edu/abs/2013AJ....146..161M>`_ : Allowed spectral type range is M7 to T8  (``ref`` = 'marocco')
+        - `Filippazzo et al. (2015). <http://adsabs.harvard.edu/abs/2015ApJ...810..158F>`_ : Allowed spectral type range is M6 to T9 (``ref`` = 'filippazzo')
+
+    Example:
+
+    >>> import splat
+    >>> print splat.typeToTeff(20)
+        (2233.4796740905499, 100.00007874571999)
+    >>> print splat.typeToTeff(20, unc = 0.3, ref = 'golimowski')
+        (2305.7500497902788, 127.62548366132124)
+
+
+* `estimateDistance()`_
+	Takes the apparent magnitude in a given ``filter`` and either takes or determines the absolute magnitude from empirical relations, then uses the absolute magnitude/distance relation to estimate the distance to the object in parsecs. Returns estimated distance and uncertainty in parsecs. If given only a spectrum object, this routine will measure the apparent magnitude, classify the spectrum, estimate the absolute magnitude, and estimate the distance; any additional inputs such as ``mag`` (for apparent magnitude), ``spt`` (for spectral type), ``absmag`` (for absolute magnitude) and their uncertainties will reduce dependence on the Spectrum object. With all three parameters, this routine operates without a Spectrum object.
+
+    Example:
+    >>> import splat
+    >>> sp = splat.getSpectrum(shortname='1555+0954')[0]
+    Retrieving 2 files
+    >>> splat.estimateDistance(sp)
+        Please specify the filter used to determine the apparent magnitude
+        (nan, nan)
+    >>> splat.estimateDistance(sp, filter='2MASS J')
+    	(212.20546914411625, 50.593458481040173)
+    >>> sp.fluxCalibrate('2MASS J',12.83)
+    >>> splat.estimateDistance(sp, filter='2MASS J')
+    	(6.8967647325911665, 1.7439740983732679)
+    >>> splat.estimateDistance(sp, filter='2MASS J', mag=12.83)
+    	(6.4528658994336521, 1.6853855848066823)
+    >>> splat.estimateDistance(sp, filter='2MASS J', mag=12.83, mag_e=0.03)
+    	(6.1292809243737336, 1.4986946706101478)
+    >>> splat.estimateDistance(sp, filter='2MASS J', mag=12.83, mag_e=0.03, spt='L5')
+    	(6.9954039276140554, 1.1679437846129084)
+    >>> splat.estimateDistance(filter='2MASS J', mag=12.83, mag_e=0.03, spt='L5', absmag=13.56, absmag_e = 0.2)
+    	(7.1788501442275461, 0.74878521889450711)
+
+
+Other Utilities
+---------------
+
+TBD
+
+Useful Program Constants
+------------------------
 
 ``splat.DB_SOURCES``
 	An Astropy Table object containing the Source Database
@@ -378,7 +562,7 @@ Potentially Useful Program Constants
 	
 ``splat.SPEX_STDS``
 	A dictionary containing Spectrum objects of the M0-T9 dwarf standards; this dictionary is 
-	populated through calls to ``splat.getStandard``. A standard Spectrum object can be accessed
+	populated through calls to `splat.getStandard()`_ . A standard Spectrum object can be accessed
 	by using the spectral type as the referring key:
 
 >>> sp = splat.getStandard('M0')[0]		# both are Spectrum objects of Gliese 270
@@ -396,15 +580,7 @@ Potentially Useful Program Constants
 	Same as ``splat.SPEX_STDS`` for extreme subdwarf standards
 
 ``splat.FILTERS``
-	A dictionary containing information on all of the filters used in SPLAT photometry. The command:
-
-
-
-
-Additional Programs
-----------------------
-
-
+	A dictionary containing information on all of the filters used in SPLAT photometry. 
 
 
 

@@ -90,7 +90,8 @@
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Model Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
             
@@ -1431,6 +1432,20 @@ angles and Dec in degrees</td>
 </dd></dl>
 
 <dl class="function">
+<dt id="splat.distributionStats">
+<code class="descclassname">splat.</code><code class="descname">distributionStats</code><span class="sig-paren">(</span><em>x, q=[0.16, 0.5, 0.84], weights=None, sigma=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.distributionStats" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Find key values along distributions based on quantile steps.
+This code is derived almost entirely from triangle.py.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="splat.estimateDistance">
 <code class="descclassname">splat.</code><code class="descname">estimateDistance</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.estimateDistance" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -2009,12 +2024,12 @@ Colors include i-z, z-Y, Y-J, J-H, H-K, K-W1, W1-W2, and combinations therein.</
 </tr>
 <tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToColor</span><span class="p">(</span><span class="s1">&#39;L3&#39;</span><span class="p">,</span> <span class="s1">&#39;J-K&#39;</span><span class="p">)</span>
-<span class="go">    XXXX</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M5&#39;</span><span class="p">,</span> <span class="s1">&#39;i-K&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">,</span> <span class="n">unc</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="go">    (XXXX, XXXX)</span>
+<span class="go">    (1.46, nan)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M5&#39;</span><span class="p">,</span> <span class="s1">&#39;i-z&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">,</span> <span class="n">unc</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">    (0.91, 0.57797809947624645)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">,</span> <span class="s1">&#39;i-z&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">)</span>
-<span class="go">    Spectral Type is out of range for Color/SpT trends from Skryzpek et al. (2015)</span>
-<span class="go">    nan</span>
+<span class="go">    Spectral type M0.0 is outside the range for reference set Skrzypek et al. (2015)</span>
+<span class="go">    (nan, nan)</span>
 </pre></div>
 </div>
 </td>
