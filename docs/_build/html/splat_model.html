@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SPLAT Spectral Modeling &mdash; SpeX Prism Library Analysis Toolkit 0.5 documentation</title>
+  <title>SPLAT Spectral Modeling &mdash; SpeX Prism Library Analysis Toolkit 0.5.dev documentation</title>
   
 
   
@@ -32,8 +32,8 @@
   
 
   
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5 documentation" href="index.html"/>
-        <link rel="next" title="Brown Dwarf Evolutionary Models" href="bdevopar.html"/>
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5.dev documentation" href="index.html"/>
+        <link rel="next" title="Brown Dwarf Evolutionary Model Package" href="splat_evolve.html"/>
         <link rel="prev" title="SPLAT Plotting Routines" href="splat_plot.html"/> 
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.5
+                0.5.dev
               </div>
             
           
@@ -92,9 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">SPLAT Spectral Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Model Package</a></li>
 </ul>
 
             
@@ -366,6 +364,141 @@ from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A
 </dd></dl>
 
 <dl class="function">
+<dt id="splat_model.modelFitEMCEE">
+<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE</code><span class="sig-paren">(</span><em>spec</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Uses the <code class="docutils literal"><span class="pre">emcee</span></code> package by Dan Foreman-Mackey et al. to perform
+Goodman &amp; Weare&#8217;s Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler
+to fit a spectrum to a set of atmosphere models.
+Returns the best estimate of the effective temperature, surface
+gravity, and (if selected) metallicity.  Includes an estimate of the time required to run, prompts
+user if they want to proceed, and shows progress with iterative saving of outcomes</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>spec</strong> &#8211; Spectrum class object, which should contain wave, flux and noise array elements.</li>
+<li><strong>nwalkers</strong> (<em>optional, default = 20</em>) &#8211; number of MCMC walkers, should have at least 20</li>
+<li><strong>nsamples</strong> (<em>optional, default = 500</em>) &#8211; number of MCMC samples, for model fitting about 500 seems OK</li>
+<li><strong>burn_fraction</strong> (<em>optional, default = 0.5</em>) &#8211; the fraction of the initial steps to be discarded. (e.g., if
+<code class="docutils literal"><span class="pre">burn_fraction</span> <span class="pre">=</span> <span class="pre">0.2</span></code>, the first 20% of the samples are discarded.)</li>
+<li><strong>initial_guess</strong> (<em>optional, default = array of random numbers within allowed ranges</em>) &#8211; array including initial guess of the model parameters.
+Can also set individual guesses of spectral parameters by using
+<strong>initial_temperature</strong>, <strong>initial_teff</strong>, or <strong>t0</strong>;
+<strong>initial_gravity</strong>, <strong>initial_logg</strong> or <strong>g0</strong>;
+and <strong>initial_metallicity</strong>, <strong>initial_z</strong> or <strong>z0</strong>.</li>
+<li><strong>limits</strong> (<em>optional, default = depends on model set</em>) &#8211; list of 2-element arrays indicating ranges of the model parameters to limit the parameter space.
+Can also set individual ranges of spectral parameters by using
+<strong>temperature_range</strong>, <strong>teff_range</strong> or <strong>t_range</strong>;
+<strong>gravity_range</strong>, <strong>logg_range</strong> or <strong>g_range</strong>;
+and <strong>metallicity_range</strong> or <strong>z_range</strong>.</li>
+<li><strong>prior_scatter</strong> (<em>optional, default = [25,0.1,0.1]</em>) &#8211; array giving the widths of the normal distributions from which to draw prior parameter values</li>
+<li><strong>model</strong> (<em>optional, default = 'BTSettl2008'</em>) &#8211; <p>set of models to use (<code class="docutils literal"><span class="pre">set</span></code> and <code class="docutils literal"><span class="pre">model_set</span></code> do the same); options include:</p>
+<ul>
+<li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
+<li><em>&#8216;burrows06&#8217;</em>: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5,
+and sedimentation efficiency of either 0 or 100 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...640.1063B">Burrows et al. (2006)</a></li>
+<li><em>&#8216;morley12&#8217;</em>: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0
+and sedimentation efficiency of 2 to 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...756..172M">Morley et al. (2012)</a></li>
+<li><em>&#8216;morley14&#8217;</em>: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0
+and sedimentation efficiency of 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...787...78M">Morley et al. (2014)</a></li>
+<li><em>&#8216;saumon12&#8217;</em>: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...750...74S">Saumon et al. (2012)</a></li>
+<li><em>&#8216;drift&#8217;</em>: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0
+from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
+</ul>
+</li>
+<li><strong>radius</strong> (<em>optional, default = False</em>) &#8211; set to True to calculate and returns radius of object [NOT CURRENT IMPLEMENTED]</li>
+<li><strong>save</strong> (<em>optional, default = True</em>) &#8211; save interim results to a .dat file based on output filename</li>
+<li><strong>output</strong> (<em>optional, default = None</em>) &#8211; base filename for output (<code class="docutils literal"><span class="pre">filename</span></code> and <code class="docutils literal"><span class="pre">outfile</span></code> do the same);
+outputs will include (each can be set individually with associated keywords):
+- <code class="docutils literal"><span class="pre">filename_iterative.dat</span></code>: interative saved data
+- <code class="docutils literal"><span class="pre">filename_summary.txt</span></code>: summary of results
+- <code class="docutils literal"><span class="pre">filename_corner.eps</span></code>: corner plot of parameters
+- <code class="docutils literal"><span class="pre">filename_comparison.eps</span></code>: plot spectrum compared to best fit model</li>
+<li><strong>plot_format</strong> &#8211; file type for diagnostic plots</li>
+<li><strong>noprompt</strong> (<em>optional, default = False</em>) &#8211; don&#8217;t prompt user to continue of emcee run will be &gt; 10 minutes</li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>In addition, the parameters for <a href="#id43"><span class="problematic" id="id44">compareSpectra_</span></a>, <a href="#id45"><span class="problematic" id="id46">generateMask_</span></a>, <a href="#id47"><span class="problematic" id="id48">plotSpectrum_</span></a>; see SPLAT API for details.</p>
+<dl class="docutils">
+<dt>Note: modelfitEMCEE requires external packages:</dt>
+<dd><ul class="first simple">
+<li><code class="docutils literal"><span class="pre">emceee</span></code>: <a class="reference external" href="http://dan.iel.fm/emcee/current">http://dan.iel.fm/emcee/current</a></li>
+</ul>
+<p class="last">-<code class="docutils literal"><span class="pre">corner</span></code>: <a class="reference external" href="http://corner.readthedocs.io/en/latest">http://corner.readthedocs.io/en/latest</a></p>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span><span class="n">spt_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">teff</span><span class="p">,</span><span class="n">teff_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="n">spt</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">modelFitEMCEE</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">t0</span><span class="o">=</span><span class="n">teff</span><span class="p">,</span><span class="n">g0</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span><span class="n">fit_metallicity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>    <span class="o">&gt;&gt;&gt;</span>    <span class="n">nwalkers</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;/Users/adam/test_modelfitEMCEE&#39;</span><span class="p">)</span>
+<span class="go">    Estimated time to compute = 9228 seconds = 153.8 minutes = 2.56 hours = 0.11 days</span>
+<span class="go">    Do you want to continue? [Y/n]:</span>
+<span class="go">    Progress: [**************************************************]</span>
+</pre></div>
+</div>
+<p>Results are saved in test_modelfitEMCEE_interative.dat, <a href="#id20"><span class="problematic" id="id21">*</span></a>_chains.pdf, <a href="#id22"><span class="problematic" id="id23">*</span></a>_comparison.pdf, <a href="#id24"><span class="problematic" id="id25">*</span></a>_corner.pdf, and <a href="#id26"><span class="problematic" id="id27">*</span></a>_summary.txt</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.modelFitEMCEE_bestparameters">
+<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_bestparameters</code><span class="sig-paren">(</span><em>values</em>, <em>lnp</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_bestparameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return three sets of parameters: by quantiles, the weighted mean, and the best values</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.modelFitEMCEE_lnprior_limits">
+<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_lnprior_limits</code><span class="sig-paren">(</span><em>theta</em>, <em>limits</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_lnprior_limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>compute the log of the probability assuming a uniform distribution
+with hard limits; if outside limits, probability returns -infinity</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.modelFitEMCEE_lnprior_normal">
+<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_lnprior_normal</code><span class="sig-paren">(</span><em>theta</em>, <em>meansds</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_lnprior_normal" title="Permalink to this definition">¶</a></dt>
+<dd><p>compute the log of the probability assuming a normal distribution
+there probably needs to be better error checking here</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.modelFitEMCEE_plotbestcomparison">
+<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_plotbestcomparison</code><span class="sig-paren">(</span><em>spec</em>, <em>mparam</em>, <em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_plotbestcomparison" title="Permalink to this definition">¶</a></dt>
+<dd><p>for now just plotting best model
+would like to do draws from posterior instead</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.modelFitEMCEE_plotcomparison">
+<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_plotcomparison</code><span class="sig-paren">(</span><em>samples</em>, <em>spec</em>, <em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_plotcomparison" title="Permalink to this definition">¶</a></dt>
+<dd><p>for now just plotting best model
+would like to do draws from posterior instead</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.modelFitEMCEE_summary">
+<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_summary</code><span class="sig-paren">(</span><em>sampler</em>, <em>spec</em>, <em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>for now just plotting best model
+would like to do draws from posterior instead</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="splat_model.modelFitGrid">
 <code class="descclassname">splat_model.</code><code class="descname">modelFitGrid</code><span class="sig-paren">(</span><em>spec</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitGrid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Model fitting code to grid of models</p>
@@ -609,7 +742,7 @@ deviations away from the mean. Only effective if <code class="docutils literal">
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="bdevopar.html" class="btn btn-neutral float-right" title="Brown Dwarf Evolutionary Models" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="splat_evolve.html" class="btn btn-neutral float-right" title="Brown Dwarf Evolutionary Model Package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="splat_plot.html" class="btn btn-neutral" title="SPLAT Plotting Routines" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -621,7 +754,7 @@ deviations away from the mean. Only effective if <code class="docutils literal">
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, Adam Burgasser.
+        &copy; Copyright 2016, Adam Burgasser.
 
     </p>
   </div>
@@ -643,7 +776,7 @@ deviations away from the mean. Only effective if <code class="docutils literal">
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5',
+            VERSION:'0.5.dev',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

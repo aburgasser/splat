@@ -15,7 +15,7 @@ import os
 import re
 import requests
 import splat
-#from splat import SPLAT_PATH, SPLAT_URL
+#from splat import SPLAT_PATH, SPLAT_URL, DB_SOURCES, DB_SPECTRA
 import sys
 #from scipy import stats
 import numpy
@@ -31,8 +31,6 @@ from shutil import copyfile
 
 DB_FOLDER = '/db/'
 DB_ORIGINAL_FILE = 'db_spexprism.txt'
-DB_SOURCES_FILE = 'source_data.txt'
-DB_SPECTRA_FILE = 'spectral_data.txt'
 DB_PHOTOMETRY_FILE = 'photometry_data.txt'
 BIBFILE = 'biblibrary.bib'
 TMPFILENAME = 'splattmpfile'
@@ -40,8 +38,9 @@ TMPFILENAME = 'splattmpfile'
 #SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 #DATA_FOLDER = '/reference/Spectra/'
 
-#DB_SOURCES = fetchDatabase(splat.DB_SOURCES_FILE)
-#DB_SPECTRA = fetchDatabase(splat.DB_SPECTRA_FILE)
+#DB_SOURCES = fetchDatabase(DB_SOURCES_FILE)
+#print(DB_SOURCES)
+#DB_SPECTRA = fetchDatabase(DB_SPECTRA_FILE)
 
 # change the command prompt
 sys.ps1 = 'splat db> '
@@ -648,7 +647,7 @@ def keySource(keys, **kwargs):
 
 #    sdb = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
 #    sdb = fetchDatabase(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB)
-    sdb = splat.DB_SOURCES
+    sdb = copy.deepcopy(splat.DB_SOURCES)
     sdb['SELECT'] = [x in keys for x in sdb['SOURCE_KEY']]
 
     if sum(sdb['SELECT']) == 0.:
@@ -685,7 +684,7 @@ def keySpectrum(keys, **kwargs):
 
 #    sdb = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
 #    sdb = fetchDatabase(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB)
-    sdb = splat.DB_SPECTRA
+    sdb = copy.deepcopy(splat.DB_SPECTRA)
     sdb['SELECT'] = [x in keys for x in sdb['DATA_KEY']]
 
     if sum(sdb['SELECT']) == 0.:
@@ -694,7 +693,7 @@ def keySpectrum(keys, **kwargs):
     else:
 #        s2db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
 #        s2db = fetchDatabase(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB)
-        s2db = splat.DB_SOURCES
+        s2db = copy.deepcopy(splat.DB_SOURCES)
         db = join(sdb[:][numpy.where(sdb['SELECT']==1)],s2db,keys='SOURCE_KEY')
         return db
 
@@ -773,7 +772,7 @@ def searchLibrary(*args, **kwargs):
 # read in source database and add in shortnames and skycoords
 #    source_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t', fill_values='-99.', format='tab')
 #    source_db = fetchDatabase(SOURCES_DB)
-    source_db = splat.DB_SOURCES
+    source_db = copy.deepcopy(splat.DB_SOURCES)
     if 'SHORTNAME' not in source_db.keys():
         source_db['SHORTNAME'] = [splat.designationToShortName(x) for x in source_db['DESIGNATION']]
 
@@ -1039,7 +1038,7 @@ def searchLibrary(*args, **kwargs):
 # read in spectral database
 #    spectral_db = ascii.read(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
 #    spectral_db = fetchDatabase(splat.SPLAT_PATH+DB_FOLDER+SPECTRA_DB)
-    spectral_db = splat.DB_SPECTRA
+    spectral_db = copy.deepcopy(splat.DB_SPECTRA)
 # having to force dtype here so SELECT remains an integer
     spectral_db['SELECT'] = Table.Column(numpy.zeros(len(spectral_db['DATA_KEY'])),dtype=int)
     count = 0.
@@ -1523,7 +1522,7 @@ def importSpectra(*args,**kwargs):
             t_spec['SOURCE_KEY'][i] = t_src['SOURCE_KEY'][i]
 
 # grab library spectra and see if any were taken on the same date (possible redundancy)
-            matchlib = splat.searchLibrary(idkey=t_src['SOURCE_KEY'][i],date=t_spec['OBSERVATION_DATE'][i])
+            matchlib = searchLibrary(idkey=t_src['SOURCE_KEY'][i],date=t_spec['OBSERVATION_DATE'][i])
 # previous observation on this date found - retain in case this is a better spectrum
             if len(matchlib) > 0.:
                 mkey = matchlib['DATA_KEY'][0]

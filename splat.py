@@ -57,6 +57,8 @@ from scipy.interpolate import interp1d
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 DATA_FOLDER = '/reference/Spectra/'
 SPLAT_EMAIL = 'aburgasser@gmail.com'
+DB_SOURCES_FILE = 'source_data.txt'
+DB_SPECTRA_FILE = 'spectral_data.txt'
 
 # suppress warnings - probably not an entirely safe approach!
 numpy.seterr(all='ignore')
@@ -84,6 +86,7 @@ if SPLAT_PATH == './':
 from splat_db import *
 from splat_model import *
 from splat_plot import *
+from splat_evolve import *
 from splat_euclid import *
 #import splat_db
 

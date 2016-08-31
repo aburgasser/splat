@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; SpeX Prism Library Analysis Toolkit 0.5 documentation</title>
+  <title>Index &mdash; SpeX Prism Library Analysis Toolkit 0.5.dev documentation</title>
   
 
   
@@ -33,7 +33,7 @@
   
 
   
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5 documentation" href="index.html"/> 
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5.dev documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5
+                0.5.dev
               </div>
             
           
@@ -91,8 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
@@ -349,6 +348,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="splat_alt.html#splat.generateMask">generateMask() (in module splat)</a>
+  </dt>
+
+      
   <dt><a href="api.html#splat_db.getBibTex">getBibTex() (in module splat_db)</a>
   </dt>
 
@@ -356,12 +359,12 @@
   <dt><a href="api.html#splat_model.getModel">getModel() (in module splat_model)</a>, <a href="splat_model.html#splat_model.getModel">[1]</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api.html#splat_db.getPhotometry">getPhotometry() (in module splat_db)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api.html#splat.getSpectrum">getSpectrum() (in module splat)</a>, <a href="splat_alt.html#splat.getSpectrum">[1]</a>
   </dt>
@@ -413,15 +416,19 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="splat_model.html#splat_model.loadInterpolatedModel">loadInterpolatedModel() (in module splat_model)</a>
+  <dt><a href="api.html#splat_evolve.loadEvolModel">loadEvolModel() (in module splat_evolve)</a>
   </dt>
 
       
-  <dt><a href="api.html#splat_model.loadModel">loadModel() (in module splat_model)</a>, <a href="splat_model.html#splat_model.loadModel">[1]</a>
+  <dt><a href="splat_model.html#splat_model.loadInterpolatedModel">loadInterpolatedModel() (in module splat_model)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#splat_model.loadModel">loadModel() (in module splat_model)</a>, <a href="splat_model.html#splat_model.loadModel">[1]</a>
+  </dt>
+
       
   <dt><a href="splat_model.html#splat_model.loadModelParameters">loadModelParameters() (in module splat_model)</a>
   </dt>
@@ -448,10 +455,38 @@
   <dt><a href="api.html#splat.measureIndexSet">measureIndexSet() (in module splat)</a>, <a href="splat_alt.html#splat.measureIndexSet">[1]</a>
   </dt>
 
+      
+  <dt><a href="api.html#splat.metallicity">metallicity() (in module splat)</a>, <a href="splat_alt.html#splat.metallicity">[1]</a>
+  </dt>
+
+      
+  <dt><a href="splat_model.html#splat_model.modelFitEMCEE">modelFitEMCEE() (in module splat_model)</a>
+  </dt>
+
+      
+  <dt><a href="splat_model.html#splat_model.modelFitEMCEE_bestparameters">modelFitEMCEE_bestparameters() (in module splat_model)</a>
+  </dt>
+
+      
+  <dt><a href="splat_model.html#splat_model.modelFitEMCEE_lnprior_limits">modelFitEMCEE_lnprior_limits() (in module splat_model)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#splat.metallicity">metallicity() (in module splat)</a>, <a href="splat_alt.html#splat.metallicity">[1]</a>
+  <dt><a href="splat_model.html#splat_model.modelFitEMCEE_lnprior_normal">modelFitEMCEE_lnprior_normal() (in module splat_model)</a>
+  </dt>
+
+      
+  <dt><a href="splat_model.html#splat_model.modelFitEMCEE_plotbestcomparison">modelFitEMCEE_plotbestcomparison() (in module splat_model)</a>
+  </dt>
+
+      
+  <dt><a href="splat_model.html#splat_model.modelFitEMCEE_plotcomparison">modelFitEMCEE_plotcomparison() (in module splat_model)</a>
+  </dt>
+
+      
+  <dt><a href="splat_model.html#splat_model.modelFitEMCEE_summary">modelFitEMCEE_summary() (in module splat_model)</a>
   </dt>
 
       
@@ -462,6 +497,26 @@
   <dt><a href="splat_model.html#splat_model.modelFitMCMC">modelFitMCMC() (in module splat_model)</a>
   </dt>
 
+      
+  <dt><a href="bdevopar.html#bdevopar.modelParameters">modelParameters() (in module bdevopar)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#splat_evolve.modelParameters">(in module splat_evolve)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="bdevopar.html#bdevopar.modelParametersSingle">modelParametersSingle() (in module bdevopar)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#splat_evolve.modelParametersSingle">(in module splat_evolve)</a>
+  </dt>
+
+      </dl></dd>
   </dl></td>
 </tr></table>
 
@@ -479,14 +534,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="bdevopar.html#bdevopar.Parameters">Parameters (class in bdevopar)</a>
-  </dt>
-
-      
-  <dt><a href="bdevopar.html#bdevopar.Params">Params (class in bdevopar)</a>
-  </dt>
-
-      
   <dt><a href="api.html#splat.Spectrum.plot">plot() (splat.Spectrum method)</a>, <a href="splat_alt.html#splat.Spectrum.plot">[1]</a>
   </dt>
 
@@ -498,12 +545,22 @@
   <dt><a href="api.html#splat_plot.plotIndices">plotIndices() (in module splat_plot)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="bdevopar.html#bdevopar.plotModelParameters">plotModelParameters() (in module bdevopar)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#splat_evolve.plotModelParameters">(in module splat_evolve)</a>
+  </dt>
+
+      </dl></dd>
       
   <dt><a href="api.html#splat_plot.plotSED">plotSED() (in module splat_plot)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api.html#splat_plot.plotSequence">plotSequence() (in module splat_plot)</a>
   </dt>
@@ -533,7 +590,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="bdevopar.html#bdevopar.ReadModel">ReadModel (class in bdevopar)</a>
+  <dt><a href="bdevopar.html#bdevopar.readModel">readModel() (in module bdevopar)</a>
   </dt>
 
       
@@ -676,7 +733,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, Adam Burgasser.
+        &copy; Copyright 2016, Adam Burgasser.
 
     </p>
   </div>
@@ -698,7 +755,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5',
+            VERSION:'0.5.dev',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

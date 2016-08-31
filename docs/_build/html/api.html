@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API &mdash; SpeX Prism Library Analysis Toolkit 0.5 documentation</title>
+  <title>API &mdash; SpeX Prism Library Analysis Toolkit 0.5.dev documentation</title>
   
 
   
@@ -32,8 +32,8 @@
   
 
   
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5 documentation" href="index.html"/>
-        <link rel="prev" title="Known Bugs" href="bugs.html"/> 
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5.dev documentation" href="index.html"/>
+        <link rel="prev" title="Brown Dwarf Evolutionary Models" href="splat_evolve.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5
+                0.5.dev
               </div>
             
           
@@ -91,8 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#splat-classes">SPLAT Classes</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#spectrum">Spectrum</a></li>
@@ -106,12 +105,18 @@
 <li class="toctree-l3"><a class="reference internal" href="#source-analysis">Source Analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#conversion-routines">Conversion Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#plotting-routines">Plotting Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#modeling-routines">Modeling Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#evolutionary-model-routines">Evolutionary Model Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#euclid-analysis-routines">EUCLID Analysis Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#other-calculation-routines">Other Calculation Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bibtex-routines">BibTeX Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#i-o-routines">I/O Routines</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#modeling-routines">Modeling Routines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#spectral-modeling-routines">Spectral Modeling Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#evolutionary-model-routines">Evolutionary Model Routines</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#specialty-packages">Specialty Packages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#euclid-analysis-routines">EUCLID Analysis Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bibtex-routines">BibTeX Routines</a></li>
 </ul>
 </li>
 </ul>
@@ -181,7 +186,7 @@
 <li><strong>wlabel</strong> (<em>optional, default = 'Wavelength'</em>) &#8211; label of wavelength</li>
 <li><strong>wunit</strong> (optional, default = <code class="docutils literal"><span class="pre">u.micron</span></code>) &#8211; unit in which wavelength is measured</li>
 <li><strong>wunit_label</strong> (optional, default = <cite>mu m</cite>) &#8211; label of the unit of wavelength</li>
-<li><strong>flabel</strong> (optional, default = <a href="#id27"><span class="problematic" id="id28">F_</span></a>lambda`) &#8211; label of flux density</li>
+<li><strong>flabel</strong> (optional, default = <a href="#id29"><span class="problematic" id="id30">F_</span></a>lambda`) &#8211; label of flux density</li>
 <li><strong>fscale</strong> (<em>optional, default = ''</em>) &#8211; string describing how flux density is scaled</li>
 <li><strong>funit</strong> (optional, default = <code class="docutils literal"><span class="pre">u.erg/(u.cm**2</span> <span class="pre">*</span> <span class="pre">u.s</span> <span class="pre">*</span> <span class="pre">u.micron)</span></code>) &#8211; unit in which flux density is measured</li>
 <li><strong>funit_label</strong> (<em>optional, default = erg cm^-2 s^-1 micron^-1`</em>) &#8211; label of the unit of flux density</li>
@@ -610,7 +615,7 @@
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>method</strong> (<em>optional, default = Hanning</em>) &#8211; the type of smoothing window to use. See <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html">http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html</a> for more details.</li>
-<li><strong>resolution</strong> (<em>optional, default = None</em>) &#8211; Constant resolution to smooth toe(see <a href="#id29"><span class="problematic" id="id30">smoothResolution_</span></a>)</li>
+<li><strong>resolution</strong> (<em>optional, default = None</em>) &#8211; Constant resolution to smooth toe(see <a href="#id31"><span class="problematic" id="id32">smoothResolution_</span></a>)</li>
 <li><strong>slitPixelWidth</strong> (<em>optional, default = None</em>) &#8211; Number of pixels to smooth in pixel space (see <a class="reference external" href="api.html#splat.Spectrum.smoothToSlitPixelWidth">smoothToSlitPixelWidth</a>)</li>
 <li><strong>slitWidth</strong> (<em>optional, default = None</em>) &#8211; Number of pixels to smooth in angular space (see <a class="reference external" href="api.html#splat.Spectrum.smoothToPixelWidth">smoothToPixelWidth</a>)</li>
 </ul>
@@ -851,7 +856,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets a spectrum from the SPLAT library using various selection criteria. Calls <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. See <a href="#id31"><span class="problematic" id="id32">splat.searchLibrary_</span></a> for full list of search parameters.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets a spectrum from the SPLAT library using various selection criteria. Calls <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. See <a href="#id33"><span class="problematic" id="id34">splat.searchLibrary_</span></a> for full list of search parameters.</td>
 </tr>
 </tbody>
 </table>
@@ -2172,11 +2177,17 @@ Spectrum objects, either sequentially, in list, or in list of lists</p>
 <li>[[Spec1, Spec2], [Spec3, Spec4], ..]: plot multiple sets of spectra (multiplot forced to be True)</li>
 </ul>
 </div></blockquote>
-<p>:Parameters
-title = &#8216;&#8217;</p>
-<blockquote>
-<div>string giving plot title</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 <dl class="docutils">
+<dt>title = &#8216;&#8217;</dt>
+<dd>string giving plot title</dd>
 <dt>xrange = [0.85,2.42]:</dt>
 <dd>plot range for wavelength axis</dd>
 <dt>yrange = [-0.02,1.2]*fluxMax:</dt>
@@ -2406,8 +2417,140 @@ This is an example of using multiplot and multipage</p>
 </dd></dl>
 
 </div>
+<div class="section" id="other-calculation-routines">
+<h3>Other Calculation Routines<a class="headerlink" href="#other-calculation-routines" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat.test">
+<code class="descclassname">splat.</code><code class="descname">test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.test" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Tests the SPLAT Code</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Checks the following:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ul class="first last simple">
+<li>If you are online and can see the SPLAT website</li>
+<li>If you have access to unpublished spectra</li>
+<li>If you can search for and load a spectrum</li>
+<li>If <code class="docutils literal"><span class="pre">searchLibrary</span></code> functions properly</li>
+<li>If index measurement routines functions properly</li>
+<li>If classification routines function properly</li>
+<li>If <code class="docutils literal"><span class="pre">typeToTeff</span></code> functions properly</li>
+<li>If flux calibration and normalization function properly</li>
+<li>If <code class="docutils literal"><span class="pre">loadModel</span></code> functions properly</li>
+<li>If <code class="docutils literal"><span class="pre">compareSpectra</span></code> functions properly</li>
+<li>If <code class="docutils literal"><span class="pre">plotSpectrum</span></code> functions properly</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.distributionStats">
+<code class="descclassname">splat_model.</code><code class="descname">distributionStats</code><span class="sig-paren">(</span><em>x, q=[0.16, 0.5, 0.84], weights=None, sigma=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.distributionStats" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Find key values along distributions based on quantile steps.
+This code is derived almost entirely from triangle.py.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="i-o-routines">
+<h3>I/O Routines<a class="headerlink" href="#i-o-routines" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat_db.checkOnline">
+<code class="descclassname">splat_db.</code><code class="descname">checkOnline</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.checkOnline" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if SPLAT&#8217;s URL is accessible from your machine&#8211;
+that is, checks if you and the host are online. Alternately
+checks if a given filename is present locally or online</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">()</span>
+<span class="go">True  # SPLAT&#39;s URL was detected.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">()</span>
+<span class="go">False # SPLAT&#39;s URL was not detected.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">(</span><span class="s1">&#39;SpectralModels/BTSettl08/parameters.txt&#39;</span><span class="p">)</span>
+<span class="go">&#39;&#39; # Could not find this online file.</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_db.checkAccess">
+<code class="descclassname">splat_db.</code><code class="descname">checkAccess</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.checkAccess" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if user has access to unpublished spectra in SPLAT library.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkAccess</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first last">Must have the file .splat_access in your home directory with the correct passcode to use.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_db.checkFile">
+<code class="descclassname">splat_db.</code><code class="descname">checkFile</code><span class="sig-paren">(</span><em>filename</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.checkFile" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if a spectrum file exists in the SPLAT&#8217;s library.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> &#8211; A string containing the spectrum&#8217;s filename.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spectrum1</span> <span class="o">=</span> <span class="s1">&#39;spex_prism_1315+2334_110404.fits&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkFile</span><span class="p">(</span><span class="n">spectrum1</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spectrum2</span> <span class="o">=</span> <span class="s1">&#39;fake_name.fits&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkFile</span><span class="p">(</span><span class="n">spectrum2</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
 <div class="section" id="modeling-routines">
-<h3>Modeling Routines<a class="headerlink" href="#modeling-routines" title="Permalink to this headline">¶</a></h3>
+<h2>Modeling Routines<a class="headerlink" href="#modeling-routines" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="spectral-modeling-routines">
+<h3>Spectral Modeling Routines<a class="headerlink" href="#spectral-modeling-routines" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="splat_model.getModel">
 <code class="descclassname">splat_model.</code><code class="descname">getModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.getModel" title="Permalink to this definition">¶</a></dt>
@@ -2502,7 +2645,276 @@ cloud opacity is fixed in this model, equilibrium chemistry is assumed (alternat
 </div>
 <div class="section" id="evolutionary-model-routines">
 <h3>Evolutionary Model Routines<a class="headerlink" href="#evolutionary-model-routines" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat_evolve.loadEvolModel">
+<code class="descclassname">splat_evolve.</code><code class="descname">loadEvolModel</code><span class="sig-paren">(</span><em>*model</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_evolve.loadEvolModel" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Reads in the evolutionary model parameters for the models listed below, which are used to interpolate parameters in <a class="reference external" href="api.html#splat_evolve.modelParameters">modelParameters()</a>.</td>
+</tr>
+</tbody>
+</table>
+<p>Available models are:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><strong>burrows</strong> : Models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2001RvMP...73..719B">Burrows et al. (2001)</a> for 1 Myr &lt; age &lt; 10 Gyr, 0.005 Msol &lt; mass &lt; 0.2 Msol, and solar metallicity</p>
+</li>
+<li><p class="first"><strong>baraffe</strong> : Models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2003A&amp;A...402..701B">Baraffe et al. (2003)</a> for 1 Myr &lt; age &lt; 10 Gyr, 0.005 Msol &lt; mass &lt; 0.1 Msol, and solar metallicity (COND dust prescription)</p>
+</li>
+<li><p class="first"><strong>saumon</strong> : Models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2008ApJ...689.1327S">Saumon et al. (2003)</a> for 3 Myr &lt; age &lt; 10 Gyr, 0.002 Msol &lt; mass &lt; 0.085 Msol, although mass and age ranges vary as the maximum temperature for the models is 2500 K. For these models there are additional options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>metallicity</strong> = <cite>solar</cite>, <cite>+0.3</cite>, or <cite>-0.3</cite></li>
+<li><strong>cloud</strong> =  <cite>cloud-free</cite>, <cite>hybrid</cite>, <cite>f2</cite> (sub- and super-solar metallicities are only cloud-free)</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<p>Parameter units (in astropy convention) are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><cite>masses</cite>: Solar masses</li>
+<li><cite>ages</cite>: Gyr</li>
+<li><cite>temperature</cite>: K</li>
+<li><cite>gravity</cite>: log10 of cm/s/s</li>
+<li><cite>luminosity</cite>: log10 of Solar luminosities</li>
+<li><cite>radius</cite>: Solar radii</li>
+</ul>
+</div></blockquote>
+<p>Models are contained in SPLAT&#8217;s reference/EvolutionaryModels folder.</p>
+<p>Required Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">model: string of the name of the evolutionary model set to be used; can be <cite>baraffe</cite> (default), <cite>burrows</cite>, or <cite>saumon</cite></td>
+</tr>
+</tbody>
+</table>
+<p>Optional Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body"><p class="first">metallicity: for Saumon models, this is the metallicity assumed, and can be a string or integer.  Allowed values are 0 (or <cite>solar</cite> = default), -0.3 (or <cite>subsolar</cite>) or 0.3 (or <cite>supersolar</cite>)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body"><p class="first">cloud: for Saumon models, this is the desired cloud prescription, and is a string:</p>
+<ul class="last simple">
+<li>no clouds: <cite>cloud</cite> = <cite>nocloud</cite>, <cite>cloud-free</cite> or <cite>nc</cite> (default)</li>
+<li>hybrid cloud prescription: <cite>cloud</cite> = <cite>hybrid</cite></li>
+<li>f2 cloud prescription: <cite>cloud</cite> = <cite>f2</cite></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Output:</p>
+<p>Dictionary containing keywords mass, age, temperature, luminosity, gravity, and radius, each linked to the evolutionary parameters retrieved.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">loadEvolModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">,</span><span class="n">metallicity</span><span class="o">=-</span><span class="mf">0.3</span><span class="p">,</span><span class="n">cloud</span><span class="o">=</span><span class="s1">&#39;nc&#39;</span><span class="p">)</span>
+<span class="go">You are using saumon&#39;s models.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">12</span><span class="p">]))</span>
+<span class="go">age: 0.15</span>
+<span class="go">mass: [ 0.002  0.003  0.004  0.005  0.006  0.007  0.008  0.009  0.01   0.011</span>
+<span class="go">  0.012  0.013  0.014  0.015  0.016  0.017  0.018  0.019  0.02   0.022</span>
+<span class="go">  0.024  0.026  0.028  0.03   0.033  0.035  0.038  0.04   0.043  0.045</span>
+<span class="go">  0.048  0.05   0.053]</span>
+<span class="go">temperature: [  353.   418.   471.   523.   585.   642.   695.   748.   806.   893.</span>
+<span class="go">  1146.  1228.  1114.  1113.  1148.  1183.  1227.  1270.  1316.  1402.</span>
+<span class="go">  1489.  1572.  1654.  1739.  1853.  1930.  2030.  2096.  2187.  2240.</span>
+<span class="go">  2316.  2362.  2426.]</span>
+<span class="go">gravity: [ 3.576  3.746  3.871  3.972  4.056  4.128  4.191  4.246  4.296  4.335</span>
+<span class="go">  4.337  4.368  4.437  4.479  4.512  4.543  4.571  4.597  4.621  4.665</span>
+<span class="go">  4.704  4.74   4.772  4.8    4.839  4.861  4.892  4.909  4.931  4.947</span>
+<span class="go">  4.966  4.978  4.996]</span>
+<span class="go">luminosity: [-6.691 -6.393 -6.185 -6.006 -5.815 -5.658 -5.527 -5.404 -5.277 -5.098</span>
+<span class="go"> -4.628 -4.505 -4.709 -4.724 -4.675 -4.627 -4.568 -4.51  -4.45  -4.342</span>
+<span class="go"> -4.24  -4.146 -4.058 -3.969 -3.856 -3.781 -3.69  -3.628 -3.546 -3.5   -3.432</span>
+<span class="go"> -3.393 -3.34 ]</span>
+<span class="go">radius: [ 0.1206  0.1214  0.1214  0.1209  0.1202  0.1195  0.1189  0.1182  0.1178</span>
+<span class="go">  0.1181  0.123   0.1235  0.1184  0.1167  0.1161  0.1154  0.1151  0.1148</span>
+<span class="go">  0.1146  0.1142  0.1139  0.1139  0.1138  0.1141  0.1144  0.115   0.1155</span>
+<span class="go">  0.1163  0.1174  0.118   0.1193  0.12    0.121 ]</span>
+</pre></div>
 </div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_evolve.modelParameters">
+<code class="descclassname">splat_evolve.</code><code class="descname">modelParameters</code><span class="sig-paren">(</span><em>*model</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_evolve.modelParameters" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Retrieves the evolutionary model parameters given two of the following parameters: mass, age, temperature, luminosity, gravity, or radius. The inputs can be individual values or arrays.  Using the input parameters, the associated evolutionary model parameters are computed through log-linear interpolation of the original model grid. Parameters that fall outside the grid return nan.</td>
+</tr>
+</tbody>
+</table>
+<p>Required Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">model: Either a string of the name of the evolutionary model set, which can be one of <cite>baraffe</cite> (default), <cite>burrows</cite>, or <cite>saumon</cite>; or a dictionary output from <a class="reference external" href="api.html#splat_evolve.loadEvolModel">loadEvolModel()</a> containing model parameters.</td>
+</tr>
+</tbody>
+</table>
+<p>and two (2) of the following:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">mass: input value of list of values for mass (can also be <cite>masses</cite> or <cite>m</cite>)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">age: input value of list of values for age (can also be <cite>ages</cite>, <cite>time</cite> or <cite>a</cite>)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">temperature: input value of list of values for temperature (can also be <cite>temperatures</cite>, <cite>teff</cite>, <cite>temp</cite> or <cite>t</cite>)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">gravity: input value of list of values for gravity (can also be <cite>gravities</cite>, <cite>grav</cite>, <cite>logg</cite> or <cite>g</cite>)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">luminosity: input value of list of values for luminosity (can also be <cite>luminosities</cite>, <cite>lum</cite>, <cite>lbol</cite> or <cite>l</cite>)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">radius: input value of list of values for radius (can also be <cite>radii</cite>, <cite>rad</cite> and <cite>r</cite>)</td>
+</tr>
+</tbody>
+</table>
+<p>Optional Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">Parameters for <a class="reference external" href="api.html#splat_evolve.loadEvolModel">loadEvolModel()</a> may also be used.</td>
+</tr>
+</tbody>
+</table>
+<p>Output:</p>
+<p>Dictionary containing keywords mass, age, temperature, luminosity, gravity, and radius, each linked to the evolutionary parameters retrieved.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span><span class="o">,</span> <span class="nn">numpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">masses</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ages</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span><span class="n">mass</span><span class="o">=</span><span class="n">masses</span><span class="p">,</span><span class="n">age</span><span class="o">=</span><span class="n">ages</span><span class="p">)</span>
+<span class="go">You are using baraffe&#39;s models.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">temperature</span><span class="p">)</span>
+<span class="go">[ 2502.90132332  2818.85920306  1002.64227134  1330.37273021  1192.86976417</span>
+<span class="go">  500.45609068  2604.99966013  1017.03307609  1774.18267474  1675.12181635</span>
+<span class="go">  2682.9697321   2512.45223777   346.41152614  2066.19972036   843.28528456</span>
+<span class="go">  2264.93051445  2767.85660557   348.84214986   922.87030167  2669.27152307] K</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_evolve.modelParametersSingle">
+<code class="descclassname">splat_evolve.</code><code class="descname">modelParametersSingle</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_evolve.modelParametersSingle" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Driver function for <a class="reference external" href="api.html#splat_evolve.modelParameters">modelParameters</a>, performs actual interpolation of evolutionary models. See SPLAT API for <a class="reference external" href="api.html#splat_evolve.modelParameters">modelParameters</a> for details.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_evolve.plotModelParameters">
+<code class="descclassname">splat_evolve.</code><code class="descname">plotModelParameters</code><span class="sig-paren">(</span><em>parameters</em>, <em>xparam</em>, <em>yparam</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_evolve.plotModelParameters" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Plots pairs of physical star parameters and optionally compares to evolutionary models.</td>
+</tr>
+</tbody>
+</table>
+<p>Required Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">parameters: dictionary or nested set of two arrays containing parameters to be plotted. For dictionary, keywords should include the <cite>xparameter</cite> and <cite>yparameter</cite> strings to be plotted. Values associated with keywords can be single numbers or arrays</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">xparameter: string corresponding to the key in the <cite>parameters</cite> dictionary to be plot as the x (independent) variable.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">yparameter: string corresponding to the key in the <cite>parameters</cite> dictionary to be plot as the y (dependent) variable.</td>
+</tr>
+</tbody>
+</table>
+<p>Optional Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">showmodel: set to True to overplot evolutionary model tracks from <cite>model</cite> (default = True)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">model: either a string of the name of the evolutionary model set, one of  <cite>baraffe</cite> (default), <cite>burrows</cite>, or <cite>saumon</cite>; or a dictionary output from <a class="reference external" href="api.html#splat_evolve.loadEvolModel">loadEvolModel()</a> containing model parameters.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">tracks: string indicating what model tracks to show; can either be <cite>mass</cite> (default) or <cite>age</cite></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">file: name of file to output plot (<cite>output</cite> can also be used)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">show: set to True to show the plot onscreen (default = True)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">figsize: a two-element array defining the figure size (default = [8,6])</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">color: color of data symbols (default = &#8216;blue&#8217;)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">marker: matplotlib marker type for data symbols (default = &#8216;o&#8217;)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">xlabel: string overriding the x-axis label (default = parameter name and unit)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">ylabel: string overriding the y-axis label (default = parameter name and unit)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">title: string specifying plot title (no title by default)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">tight: set to True to tighten plot to focus on the data points (default = True)</td>
+</tr>
+</tbody>
+</table>
+<p>Output:</p>
+<p>A matplotlib plot object. Optinally, can also show plot on screen or output plot to a file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span><span class="o">,</span> <span class="nn">numpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">age_samp</span> <span class="o">=</span> <span class="mf">10.</span><span class="o">**</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mf">1.</span><span class="p">),</span><span class="mf">0.3</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mass_samp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span><span class="n">age</span><span class="o">=</span><span class="n">age_samp</span><span class="p">,</span><span class="n">mass</span><span class="o">=</span><span class="n">mass_samp</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotModelParameters</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;age&#39;</span><span class="p">,</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span><span class="n">showmodels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span><span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">[plot of temperature vs age for 50 data points with baraffe models overplotted]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="specialty-packages">
+<h2>Specialty Packages<a class="headerlink" href="#specialty-packages" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="euclid-analysis-routines">
 <h3>EUCLID Analysis Routines<a class="headerlink" href="#euclid-analysis-routines" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
@@ -2578,53 +2990,6 @@ new Spectrum object so as not to corrupt the original data.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="other-calculation-routines">
-<h3>Other Calculation Routines<a class="headerlink" href="#other-calculation-routines" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="splat.test">
-<code class="descclassname">splat.</code><code class="descname">test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.test" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Tests the SPLAT Code</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Checks the following:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ul class="first last simple">
-<li>If you are online and can see the SPLAT website</li>
-<li>If you have access to unpublished spectra</li>
-<li>If you can search for and load a spectrum</li>
-<li>If <code class="docutils literal"><span class="pre">searchLibrary</span></code> functions properly</li>
-<li>If index measurement routines functions properly</li>
-<li>If classification routines function properly</li>
-<li>If <code class="docutils literal"><span class="pre">typeToTeff</span></code> functions properly</li>
-<li>If flux calibration and normalization function properly</li>
-<li>If <code class="docutils literal"><span class="pre">loadModel</span></code> functions properly</li>
-<li>If <code class="docutils literal"><span class="pre">compareSpectra</span></code> functions properly</li>
-<li>If <code class="docutils literal"><span class="pre">plotSpectrum</span></code> functions properly</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_model.distributionStats">
-<code class="descclassname">splat_model.</code><code class="descname">distributionStats</code><span class="sig-paren">(</span><em>x, q=[0.16, 0.5, 0.84], weights=None, sigma=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.distributionStats" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Find key values along distributions based on quantile steps.
-This code is derived almost entirely from triangle.py.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
 <div class="section" id="bibtex-routines">
 <h3>BibTeX Routines<a class="headerlink" href="#bibtex-routines" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
@@ -2683,88 +3048,6 @@ This code is derived almost entirely from triangle.py.</td>
 </table>
 </dd></dl>
 
-</div>
-<div class="section" id="i-o-routines">
-<h3>I/O Routines<a class="headerlink" href="#i-o-routines" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="splat_db.checkOnline">
-<code class="descclassname">splat_db.</code><code class="descname">checkOnline</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.checkOnline" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if SPLAT&#8217;s URL is accessible from your machine&#8211;
-that is, checks if you and the host are online. Alternately
-checks if a given filename is present locally or online</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">()</span>
-<span class="go">True  # SPLAT&#39;s URL was detected.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">()</span>
-<span class="go">False # SPLAT&#39;s URL was not detected.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkOnline</span><span class="p">(</span><span class="s1">&#39;SpectralModels/BTSettl08/parameters.txt&#39;</span><span class="p">)</span>
-<span class="go">&#39;&#39; # Could not find this online file.</span>
-</pre></div>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_db.checkAccess">
-<code class="descclassname">splat_db.</code><code class="descname">checkAccess</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.checkAccess" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if user has access to unpublished spectra in SPLAT library.</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkAccess</span><span class="p">()</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first last">Must have the file .splat_access in your home directory with the correct passcode to use.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_db.checkFile">
-<code class="descclassname">splat_db.</code><code class="descname">checkFile</code><span class="sig-paren">(</span><em>filename</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.checkFile" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if a spectrum file exists in the SPLAT&#8217;s library.</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> &#8211; A string containing the spectrum&#8217;s filename.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spectrum1</span> <span class="o">=</span> <span class="s1">&#39;spex_prism_1315+2334_110404.fits&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkFile</span><span class="p">(</span><span class="n">spectrum1</span><span class="p">)</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spectrum2</span> <span class="o">=</span> <span class="s1">&#39;fake_name.fits&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">checkFile</span><span class="p">(</span><span class="n">spectrum2</span><span class="p">)</span>
-<span class="go">False</span>
-</pre></div>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <p><em>Search</em></p>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
@@ -2783,7 +3066,7 @@ checks if a given filename is present locally or online</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="bugs.html" class="btn btn-neutral" title="Known Bugs" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="splat_evolve.html" class="btn btn-neutral" title="Brown Dwarf Evolutionary Models" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -2792,7 +3075,7 @@ checks if a given filename is present locally or online</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, Adam Burgasser.
+        &copy; Copyright 2016, Adam Burgasser.
 
     </p>
   </div>
@@ -2814,7 +3097,7 @@ checks if a given filename is present locally or online</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5',
+            VERSION:'0.5.dev',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
