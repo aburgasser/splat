@@ -79,11 +79,11 @@ Plotting Routines
 .. autofunction:: splat_plot.plotIndices
 
 
-Other Calculation Routines
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Utility Routines
+^^^^^^^^^^^^^^^^
 .. autofunction:: splat.test
 .. autofunction:: splat.weightMeanVar
-.. autofunction:: splat_model.distributionStats
+.. autofunction:: splat.distributionStats
 
 
 I/O Routines
@@ -99,10 +99,24 @@ Modeling Routines
 
 Spectral Modeling Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: splat_model.getModel
 .. autofunction:: splat_model.loadModel
-.. autofunction:: splat_model.fitGrid
-.. autofunction:: splat_model.fitMCMC
+.. autofunction:: splat_model.getModel
+.. autofunction:: splat_model.loadInterpolatedModel
+.. autofunction:: splat_model.loadModelParameters
+.. autofunction:: splat_model.modelFitGrid
+.. autofunction:: splat_model.modelFitMCMC
+.. autofunction:: splat_model.modelFitEMCEE
+.. autofunction:: splat_model.modelFitEMCEE_lnlikelihood
+.. autofunction:: splat_model.modelFitEMCEE_lnprior_limits
+.. autofunction:: splat_model.modelFitEMCEE_lnprior_normal
+.. autofunction:: splat_model.modelFitEMCEE_lnprob
+.. autofunction:: splat_model.modelFitEMCEE_bestparameters
+.. autofunction:: splat_model.modelFitEMCEE_plotchains
+.. autofunction:: splat_model.modelFitEMCEE_plotcomparison
+.. autofunction:: splat_model.modelFitEMCEE_plotbestcomparison
+.. autofunction:: splat_model.modelFitEMCEE_plotcorner
+.. autofunction:: splat_model.modelFitEMCEE_summary
+.. autofunction:: splat_model.reportModelFitResults
 
 
 Evolutionary Model Routines

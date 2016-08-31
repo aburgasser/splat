@@ -2707,6 +2707,31 @@ def designationToShortName(value):
 #        return name, date
 #
 
+def distributionStats(x, q=[0.16,0.5,0.84], weights=None, sigma=None, **kwargs):
+    '''
+    :Purpose: Find key values along distributions based on quantile steps.
+              This code is derived almost entirely from triangle.py.
+    '''
+
+# clean data of nans
+    xd = x[~numpy.isnan(x)]
+
+    if q is None and sigma is None:
+        sigma = 1.
+        
+    if sigma is not None:
+        q = [stats.norm.cdf(-sigma),0.5,stats.norm.cdf(sigma)]
+        
+    if weights is None:
+        return numpy.percentile(xd, [100. * qi for qi in q])
+    else:
+        wt = weights[~numpy.isnan(x)]
+        idx = numpy.argsort(xd)
+        xsorted = xd[idx]
+        cdf = numpy.add.accumulate(wt[idx])
+        cdf /= cdf[-1]
+        return numpy.interp(q, cdf, xsorted).tolist()
+
 
 def filterMag(sp,filter,*args,**kwargs):
     '''
@@ -4052,7 +4077,7 @@ def redden(sp, **kwargs):
     if kwargs.get('normalize',False):
         absfrac = absfrac/numpy.median(absfrac)
 
-    print(tau0, min(tau), max(tau), max(absfrac), min(absfrac))
+#    print(tau0, min(tau), max(tau), max(absfrac), min(absfrac))
     spabs = splat.Spectrum(wave=w,flux=absfrac)
     return sp*spabs
 
@@ -4081,12 +4106,12 @@ def typeToColor(spt,color, **kwargs):
     :Example:
         >>> import splat
         >>> print splat.typeToColor('L3', 'J-K')
-            XXXX
-        >>> print splat.typeToMag('M5', 'i-K', ref = 'skrzypek', unc=0.5)
-            (XXXX, XXXX)
+            (1.46, nan)
+        >>> print splat.typeToMag('M5', 'i-z', ref = 'skrzypek', unc=0.5)
+            (0.91, 0.57797809947624645)
         >>> print splat.typeToMag('M0', 'i-z', ref = 'skrzypek')
-            Spectral Type is out of range for Color/SpT trends from Skryzpek et al. (2015)
-            nan
+            Spectral type M0.0 is outside the range for reference set Skrzypek et al. (2015)
+            (nan, nan)
     """
 
 #Keywords

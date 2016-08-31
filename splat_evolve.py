@@ -199,9 +199,9 @@ def loadEvolModel(*model,**kwargs):
 
 def modelParametersSingle(*args, **kwargs):
     '''
-    :Purpose: Driver function for modelParameters_, performs actual interpolation of evolutionary models. See SPLAT API for `modelParameters`_ for details.
+    :Purpose: Driver function for modelParameters_, performs actual interpolation of evolutionary models. See SPLAT API for `modelParameters()`_ for details.
 
-    .. _`modelParameters` : api.html#splat_evolve.modelParameters
+    .. _`modelParameters()` : api.html#splat_evolve.modelParameters
 
     '''
 
@@ -546,13 +546,13 @@ def modelParameters(*model,**kwargs):
 
 def plotModelParameters(parameters,xparam,yparam,**kwargs):
     '''
-    :Purpose: Plots pairs of physical star parameters and optionally compares to evolutionary models. 
+    :Purpose: Plots pairs of physical star parameters and optionally compares to evolutionary model tracks. 
 
     Required Inputs:
 
     :param: parameters: dictionary or nested set of two arrays containing parameters to be plotted. For dictionary, keywords should include the `xparameter` and `yparameter` strings to be plotted. Values associated with keywords can be single numbers or arrays
-    :param: xparameter: string corresponding to the key in the `parameters` dictionary to be plot as the x (independent) variable. 
-    :param: yparameter: string corresponding to the key in the `parameters` dictionary to be plot as the y (dependent) variable. 
+    :param: xparam: string corresponding to the key in the `parameters` dictionary to be plot as the x (independent) variable. 
+    :param: yparam: string corresponding to the key in the `parameters` dictionary to be plot as the y (dependent) variable. 
 
 
     Optional Inputs:
@@ -577,7 +577,7 @@ def plotModelParameters(parameters,xparam,yparam,**kwargs):
 
     Output: 
 
-    A matplotlib plot object. Optinally, can also show plot on screen or output plot to a file.
+    A matplotlib plot object. Optionally, can also show plot on screen or output plot to a file.
 
     :Example:
     >>> import splat, numpy
