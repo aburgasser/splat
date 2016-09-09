@@ -9,12 +9,14 @@ SPLAT Spectral Modeling
 .. toctree
    :maxdepth: 3
 
-.. _`SPLAT Spectrum objects` : api.html#spectrum
+.. _`SPLAT Spectrum class` : api.html#spectrum
 .. _`loadModel()` : api.html#splat_model.loadModel
 .. _`loadInterpolatedModel()` : api.html#splat_model.loadInterpolatedModel
 .. _`getModel()` : api.html#splat_model.getModel
+.. _`fluxCalibrate()` : api.html#splat.fluxCalibrate
 .. _`compareSpectra()` : api.html#splat.compareSpectra
 .. _`typeToTeff()` : api.html#splat.typeToTeff
+.. _`checkModelName()` : api.html#splat_model.checkModelName
 .. _`modelFitGrid()` : api.html#splat_model.modelFitGrid
 .. _`modelFitMCMC()` : api.html#splat_model.modelFitMCMC
 .. _`modelFitEMCEE()` : api.html#splat_model.modelFitEMCEE
@@ -45,6 +47,12 @@ In addition, one can set:
 	- **slit**: slit weight of the model in arcseconds; by default this is 0.5
 	- **sed**: if set to True, returns a broad-band spectrum spanning 0.3-30 micron (only for BTSettl2008 models with Teff < 2000 K)
 
+If you aren't sure what the name of the model is, you can always check it with `checkModelName()`_
+
+    >>> import splat
+    >>> splat.checkModelName('burrows')
+        burrows06
+
 
 Reading in models
 -----------------
@@ -68,9 +76,9 @@ Models are read in using the `getModel()`_  or `loadModel()`_ routines:
 	:width: 400
 	:align: center
 
-The output is an instance of the `SPLAT Spectrum class`_ , and thus inherits all of the aspects and functions of that class, with wavelength in microns, surface fluxes in F_lambda units of erg/cm^2/s/micron, and an noise array that is all ``nan`` values.
+The output is an instance of the `SPLAT Spectrum class`_ , and thus inherits all of the aspects and functions of that class, with wavelength in microns, surface fluxes in F\_lambda units of erg/cm\^2/s/micron, and an noise array that is all ``nan`` values.
 
-For parameters that are between model grid points, the function `loadInterpolatedModel()_` is called, which performs log linear interpolation on nearest neighbor models.
+For parameters that are between model grid points, the function `loadInterpolatedModel()\_ is called, which performs log linear interpolation on nearest neighbor models.
 
 Models can be compared to spectra using the `compareSpectra()`_ function:
 
@@ -79,7 +87,7 @@ Models can be compared to spectra using the `compareSpectra()`_ function:
     Retrieving 1 file
     >>> mdl = splat.getModel(teff=1150,logg=4.8)
     >>> chi,scale = splat.compareSpectra(sp,mdl,plot=True,legend=['0559-1404','T=1150, logg=4.8','Difference'])
-	>>> print(chi,scale)
+    >>> print(chi,scale)
     289659.7135897903 8.17592929309e-24
 
 .. image:: _images/compare_model_spectrum_example.png
@@ -92,7 +100,7 @@ Note that the latter number provides the scale factor to multiple the model spec
 	>>> mdl.fluxMax()
 	1.1468954e-15 erg / (cm2 micron s)
 
-If the data spectrum is absolutely flux calibrated (using the `Spectrum.fluxCalibrate()`_ routine with ``absolute`` = True), then the radius can be computed from this scale factors as (scale * 10 parsec)**0.5.
+If the data spectrum is absolutely flux calibrated (using the `fluxCalibrate()`_ routine with ``absolute`` = True), then the radius can be computed from this scale factors as (scale \* 10 parsec)\*\*0.5.
 
 
 Fitting models
@@ -103,7 +111,40 @@ There are three routines currently available for finding the optimal model to ma
 `modelFitGrid()`_
 ^^^^^^^^^^^^^^^^^
 
-This routine compares a spectrum to the full or subset of a model grid, comparing only at the grid points (i.e., no model interpolation). This routine is currently in development.
+This routine compares a spectrum to the full or subset of a model grid, comparing only to the grid points (i.e., no model interpolation). You can constrain the grid points by setting the ``teff_range``, ``logg_range`` or ``z_range`` with a two-element array specifying minimum and maximum values. The default comparison statistic is chi-square, but you can choose any of the statistics defined in `compareSpectra()`_ ; mask and/or weight vectors can all set. 
+
+All models on the grid are compared to the spectrum and the best fit model parameters are returned as dictionary. The code also computes the fit-statistic-weighted mean and uncertainty values of temperature, surface gravity and metallicity (and radius, see below), which can be returned by setting ``return_mean_parameters`` = True.  You can also return all the parameter fits (``return_all_parameters`` = True) or the properly scaled best-fit model spectrum (``return_model`` = True).  Plots to the best-fit and mean-parameter models are output to files prefixed by the ``output`` keyword.
+
+If the spectrum is absolutley flux calibrated with the `fluxCalibrate()`_ routine, `modelFitGrid()`_ will also compute and return the radius corresponding to the scale factor for the model.
+
+ 
+Example:
+
+    >>> import splat
+    >>> sp = splat.Spectrum(shortname='1507-1627')[0]
+    >>> sp.fluxCalibrate('2MASS J',12.32,absolute=True)
+    >>> p = splat.modelFitGrid(sp,teff_range=[1200,2500],model='Saumon',file='fit1507')
+        Best Parameters to fit to BT-Settl (2008) models:
+            $T_{eff}$=1800.0 K
+            $log\ g$=5.0 dex(cm / s2)
+            $[M/H]$=-0.0 dex
+            $f_{sed}$=nc 
+            $cld$=nc 
+            $log\ \kappa_{zz}$=eq dex(cm2 / s)
+            R=0.143324498969 solRad
+            chi=4500.24997585
+        Mean Parameters:
+            $T_{eff}$: 1800.0+/-0.0 K
+            $log\ g$: 5.0+/-0.0 dex(cm / s2)
+            Radius: 0.143324498969+/-0.0 solRad
+            $[M/H]$: 0.0+/-0.0 dex
+
+
+.. image:: _images/test_modelfitgrid_best_comparison.png
+    :width: 400
+    :align: center
+
+
 
 `modelFitMCMC()`_
 ^^^^^^^^^^^^^^^^^
@@ -111,7 +152,7 @@ A home brewed Markov Chain Monte Carlo routine that identifies the best-fit para
 
 `modelFitEMCEE()`_
 ^^^^^^^^^^^^^^^^^^
-This routine use the `emcee <http://dan.iel.fm/emcee/current/>`_ package by Dan Foreman-Mackey et al. to perform Goodman & Weare's `Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler <http://msp.org/camcos/2010/5-1/p04.xhtml>`_ to fit a spectrum to a set of atmosphere models. The routine is initialized with a first best guess for model parameters (e.g., from `modelFitGrid()`_ or `typeToTeff()`_), an optional fitting range, a prior (normal) initial about the best guess, and an input model set. It then proceeds to generate a series of walkers (set by ``nwalkers``) that perform ``nsamples`` steps, of which an initial ``burn_fraction`` will be discarded.  The resulting chains are used to produce a posterior distribution for the fit parameters.  If the input spectrum is absolutely flux calibrated, then the corresponding radii are also calculated.  Like `modelFitMCMC()`_ , this routine currently only fits temperature, surface gravity and metallicity
+This routine use the `emcee`_ package by Dan Foreman-Mackey et al. to perform Goodman & Weare's `Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler <http://msp.org/camcos/2010/5-1/p04.xhtml>`_ to fit a spectrum to a set of atmosphere models. The routine is initialized with a first best guess for model parameters (e.g., from `modelFitGrid()`_ or `typeToTeff()`_), an optional fitting range, a prior (normal) initial about the best guess, and an input model set. It then proceeds to generate a series of walkers (set by ``nwalkers``) that perform ``nsamples`` steps, of which an initial ``burn_fraction`` will be discarded.  The resulting chains are used to produce a posterior distribution for the fit parameters.  If the input spectrum is absolutely flux calibrated, then the corresponding radii are also calculated.  Like `modelFitMCMC()`_ , this routine currently only fits temperature, surface gravity and metallicity
 
 The best fit parameters, parameter distributions, and visualization of the fit is provided in a series of output files which are updated iteratively through the computation
 

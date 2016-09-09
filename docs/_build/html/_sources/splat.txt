@@ -176,7 +176,7 @@ You can also weight the individual spectral pixels by passing an array to the ``
 
 	>>> splat.compareSpectra(sp7,sp8,plot=True,mask_telluric=True)
 	(20670.083806484316 0.766085949716)
-	
+
 .. image:: _images/comparespectra_ex2.png
 	:width: 400
 	:align: center
@@ -198,7 +198,7 @@ You can redden a spectrum following the `Cardelli, Clayton, and Mathis (1989) <h
 	:width: 400
 	:align: center
 
-Here ``av`` is the visual reddening and ``rv`` the extinction coefficient (A_V = R_V * E(B-V) ), which is by defailt 3.1 but can be modified.
+Here ``av`` is the visual reddening and ``rv`` the extinction coefficient (A_V = R_V * E(B-V) ), which is by default = 3.1, but can be modified (as in example above).
 
 
 Spectrophotometry

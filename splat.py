@@ -505,7 +505,11 @@ class Spectrum(object):
             self.kzz = kwargs.get('kzz',numpy.nan)
             self.slit = kwargs.get('slit',numpy.nan)
             self.modelset = kwargs.get('model','')
-            self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.z)
+            try:
+                self.name = DEFINED_MODEL_NAMES[self.modelset]
+            except:
+                self.name = self.modelset
+            self.shortname = self.name+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.z)
             self.fscale = 'Surface'
 
 # populate header            
@@ -723,14 +727,14 @@ class Spectrum(object):
             Spectrum successfully loaded
         '''
         if (self.ismodel):
-            print('\n{} model with the following parmeters:'.format(self.modelset))
-            print('Teff = {} K'.format(self.teff))
-            print('logg = {} cm/s2'.format(self.logg))
-            print('z = {}'.format(self.z))
+            print('\n{} with the following parmeters:'.format(self.name))
+            print('Teff = {} {}'.format(self.teff,MODEL_PARAMETER_UNITS['teff']))
+            print('logg = {} {}'.format(self.logg,MODEL_PARAMETER_UNITS['logg']))
+            print('z = {} {}'.format(self.z,MODEL_PARAMETER_UNITS['z']))
             print('fsed = {}'.format(self.fsed))
             print('cld = {}'.format(self.cld))
             print('kzz = {}'.format(self.kzz))
-            print('Smoothed to slit width {} arcseconds\n'.format(self.slit))
+            print('Smoothed to slit width {} {}\n'.format(self.slit,MODEL_PARAMETER_UNITS['slit']))
         else:
 #            print('\nSpectrum of {0} observed on {1}'''.format(self.name, self.date))
             text = ['Spectrum of','Observed on','Observed by','at an airmass of','Full source designation is', 'Median S/N =','SPLAT source key is','SPLAT spectrum key is']
@@ -1096,7 +1100,7 @@ class Spectrum(object):
 
         :param method: the type of smoothing window to use. See http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html for more details.
         :type method: optional, default = Hanning
-        :param resolution: Constant resolution to smooth toe(see smoothResolution_)
+        :param resolution: Constant resolution to smooth toe(see smoothToResolution_)
         :type resolution: optional, default = None
         :param slitPixelWidth: Number of pixels to smooth in pixel space (see smoothToSlitPixelWidth_)
         :type slitPixelWidth: optional, default = None
@@ -2363,9 +2367,9 @@ def classifyGravity(sp, *args, **kwargs):
 
 # determine median score, or mean if even
     if (len(numpy.where(numpy.isnan(medgrav) == False))%2 == 0):
-        gravscore['score'] = scipy.stats.nanmean(medgrav)
+        gravscore['score'] = numpy.nanmean(medgrav)
     else:
-        gravscore['score'] = scipy.stats.nanmedian(medgrav)
+        gravscore['score'] = numpy.nanmedian(medgrav)
 
     if gravscore['score'] <= 0.5:
        gravscore['gravity_class'] = 'FLD-G'
@@ -3012,7 +3016,7 @@ def generateMask(wave,**kwargs):
 
 def getSpectrum(*args, **kwargs):
     '''
-    :Purpose: Gets a spectrum from the SPLAT library using various selection criteria. Calls searchLibrary_ to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. See splat.searchLibrary_ for full list of search parameters.
+    :Purpose: Gets a spectrum from the SPLAT library using various selection criteria. Calls searchLibrary_ to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. 
 
     .. _searchLibrary : api.html#splat_db.searchLibrary
 
@@ -4018,11 +4022,11 @@ def readSpectrum(*args,**kwargs):
 # fix to catch badly formatted files where noise column is S/N
 #    print(flux, numpy.median(flux))
     if (catchSN):
-          w = numpy.where(flux > stats.nanmedian(flux))
-          if (stats.nanmedian(flux[w]/noise[w]) < 1.):
+          w = numpy.where(flux > numpy.nanmedian(flux))
+          if (numpy.nanmedian(flux[w]/noise[w]) < 1.):
               noise = flux/noise
               w = numpy.where(numpy.isnan(noise))
-              noise[w] = stats.nanmedian(noise)
+              noise[w] = numpy.nanmedian(noise)
 
 # clean up
 #    if url != '' and not local:
