@@ -29,6 +29,10 @@ from astroquery.vizier import Vizier
 #from PyQt4 import QtGui, QtCore
 from shutil import copyfile
 
+# Python 2->3 fix for input
+try: input=raw_input
+except NameError: pass
+
 DB_FOLDER = '/db/'
 DB_ORIGINAL_FILE = 'db_spexprism.txt'
 DB_PHOTOMETRY_FILE = 'photometry_data.txt'
@@ -1235,22 +1239,22 @@ def querySimbad(t_src,**kwargs):
                 t_src['OBJECT_TYPE'][i] = 'GIANT'
             if 'VI' in t_sim['SP_TYPE'][0] or 'sd' in t_sim['SP_TYPE'][0]:
                 t_src['METALLICITY_CLASS'][i] = '{}sd'.format(t_sim['SP_TYPE'][0].split('sd',1)[0])
-            t_src['PARALLAX'][i] = t_sim['PLX_VALUE'][0]
-            t_src['PARALLAX_E'][i] = t_sim['PLX_ERROR'][0]
-            t_src['PARALLEX_REF'][i] = t_sim['PLX_BIBCODE'][0]
-            t_src['MU_RA'][i] = t_sim['PMRA'][0]
-            t_src['MU_DEC'][i] = t_sim['PMDEC'][0]
+            t_src['PARALLAX'][i] = str(t_sim['PLX_VALUE'][0]).replace('--','')
+            t_src['PARALLAX_E'][i] = str(t_sim['PLX_ERROR'][0]).replace('--','')
+            t_src['PARALLEX_REF'][i] = str(t_sim['PLX_BIBCODE'][0]).replace('--','')
+            t_src['MU_RA'][i] = str(t_sim['PMRA'][0]).replace('--','')
+            t_src['MU_DEC'][i] = str(t_sim['PMDEC'][0]).replace('--','')
 #                try:            # this is in case MU is not present
-            t_src['MU'][i] = (t_sim['PMRA'][0]**2+t_sim['PMDEC'][0]**2)**0.5
-            t_src['MU_E'][i] = t_sim['PM_ERR_MAJA'][0]
+            t_src['MU'][i] = (float('{}0'.format(t_src['MU_RA'][i]))**2+float('{}0'.format(t_src['MU_DEC'][i]))**2)**0.5
+            t_src['MU_E'][i] = str(t_sim['PM_ERR_MAJA'][0]).replace('--','')
 #                except:
 #                    pass
             t_src['MU_REF'][i] = t_sim['PM_BIBCODE'][0]
-            t_src['RV'][i] = t_sim['RVZ_RADVEL'][0]
-            t_src['RV_E'][i] = t_sim['RVZ_ERROR'][0]
+            t_src['RV'][i] = str(t_sim['RVZ_RADVEL'][0]).replace('--','')
+            t_src['RV_E'][i] = str(t_sim['RVZ_ERROR'][0]).replace('--','')
             t_src['RV_REF'][i] = t_sim['RVZ_BIBCODE'][0]
-            t_src['VSINI'][i] = t_sim['ROT_Vsini'][0]
-            t_src['VSINI_E'][i] = t_sim['ROT_err'][0]
+            t_src['VSINI'][i] = str(t_sim['ROT_Vsini'][0]).replace('--','')
+            t_src['VSINI_E'][i] = str(t_sim['ROT_err'][0]).replace('--','')
             t_src['VSINI_REF'][i] = t_sim['ROT_bibcode'][0]
             t_src['J_2MASS'][i] = t_sim['FLUX_J'][0]
             t_src['J_2MASS_E'][i] = t_sim['FLUX_ERROR_J'][0]
@@ -1458,20 +1462,23 @@ def importSpectra(*args,**kwargs):
     t_spec['COMPARISON_TEXT'] = ['{} standard'.format(spt) for spt in t_spec['SPEX_TYPE']]
 
 # determine coordinates as best as possible
-    for sp in t_spec['SPECTRUM']:
+    for i,sp in enumerate(t_spec['SPECTRUM']):
+        if i == 0:
+            for k in list(sp.header.keys()):
+                print(k,sp.header[k])
         if 'TCS_RA' in sp.header.keys() and 'TCS_DEC' in sp.header.keys():
             sp.header['RA'] = sp.header['TCS_RA']
             sp.header['DEC'] = sp.header['TCS_DEC']
             sp.header['RA'] = sp.header['RA'].replace('+','')
-        print(len(t_src['DESIGNATION'][i]),sp.header['RA'],sp.header['DEC'])
-        if t_src['DESIGNATION'][i] == '' and sp_header['RA'] != '' and sp_header['DEC'] != '':
+        if t_src['DESIGNATION'][i].strip() == '' and sp.header['RA'] != '' and sp.header['DEC'] != '':
             t_src['DESIGNATION'][i] = 'J{}+{}'.format(sp.header['RA'].replace('+',''),sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('++','+').replace('J+','J').replace(' ','')
-            print(t_src['DESIGNATION'][i])
-        if t_src['RA'][i] == '' and t_src['DESIGNATION'][i] != '':
+            print('DETERMINED DESIGNATION {} FROM RA/DEC'.format(t_src['DESIGNATION'][i]))
+        if t_src['RA'][i].strip() == '' and t_src['DESIGNATION'][i].strip() != '':
             coord = splat.properCoordinates(t_src['DESIGNATION'][i])
             t_src['RA'][i] = coord.ra.value
             t_src['DEC'][i] = coord.dec.value
-    print(t_src['DESIGNATION'])
+            print('DETERMINED RA/DEC FROM DESIGNATION {}'.format(t_src['DESIGNATION'][i]))
+    print(t_src['DESIGNATION'],t_src['RA'],t_src['DEC'])
 # populate source data table from spreadsheet
     if spreadsheet != '':
         if 'DESIGNATION' in t_input_keys:
@@ -1518,7 +1525,7 @@ def importSpectra(*args,**kwargs):
         if t_src['SIMBAD_NAME'][i] != '' and t_src['SIMBAD_NAME'][i] in splat.DB_SOURCES['SIMBAD_NAME']:
             for c in t_src.keys():
                 if t_src[c][i] == '':
-                    t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_src['MAIN_ID'][i])][0]
+                    t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_src['SIMBAD_NAME'][i])][0]
             t_spec['SOURCE_KEY'][i] = t_src['SOURCE_KEY'][i]
 
 # grab library spectra and see if any were taken on the same date (possible redundancy)
@@ -1660,20 +1667,20 @@ def importSpectra(*args,**kwargs):
                 t_src['DISTANCE_PHOT_E'][i] = dist[1]
                 t_src['DISTANCE'][i] = dist[0]
                 t_src['DISTANCE_E'][i] = dist[1]
-        if float('{}0'.format(t_src['PARALLAX'][i])) != 0.0:
+        if float('{}0'.format(t_src['PARALLAX'][i].replace('--',''))) != 0.0:
             t_src['DISTANCE'][i] = 1000./float(t_src['PARALLAX'][i])
             t_src['DISTANCE_E'][i] = float(t_src['DISTANCE'][i])*float(t_src['PARALLAX_E'][i])/float(t_src['PARALLAX'][i])
 # compute vtan
-        if float('{}0'.format(t_src['MU'][i])) != 0.0 and float('{}0'.format(t_src['DISTANCE'][i])) != 0.0:
+        if float('{}0'.format(t_src['MU'][i].replace('--',''))) != 0.0 and float('{}0'.format(t_src['DISTANCE'][i])) != 0.0:
             t_src['VTAN'][i] = 4.74*float(t_src['DISTANCE'][i])*float(t_src['MU'][i])/1000.
 # compute J-K excess and color extremity
         if spt != '' and float('{}0'.format(t_src['J_2MASS'][i])) != 0.0 and float('{}0'.format(t_src['KS_2MASS'][i])) != 0.0:
-            t_src['JK_EXCESS'][i] = float(t_src['J_2MASS'][i])-float(t_src['KS_2MASS'][i])-splat.typeToColor(spt,'J-K')
-            if t_src['JK_EXCESS'][i] == numpy.nan:
+            t_src['JK_EXCESS'][i] = float(t_src['J_2MASS'][i])-float(t_src['KS_2MASS'][i])-splat.typeToColor(spt,'J-K')[0]
+            if t_src['JK_EXCESS'][i] == numpy.nan or t_src['JK_EXCESS'][i] == '':
                 t_src['JK_EXCESS'][i] = ''
-            elif t_src['JK_EXCESS'][i] > 0.3:
+            elif float(t_src['JK_EXCESS'][i]) > 0.3:
                 t_src['COLOR_EXTREMITY'][i] == 'RED'
-            elif t_src['JK_EXCESS'][i] < -0.3:
+            elif float(t_src['JK_EXCESS'][i]) < -0.3:
                 t_src['COLOR_EXTREMITY'][i] == 'BLUE'
 
 # clear up zeros
@@ -1686,18 +1693,18 @@ def importSpectra(*args,**kwargs):
         if float('{}0'.format(t_src['KS_2MASS'][i])) == 0.0:
             t_src['KS_2MASS'][i] = ''
             t_src['KS_2MASS_E'][i] = ''
-        if float('{}0'.format(t_src['PARALLAX'][i])) == 0.0:
+        if float('{}0'.format(t_src['PARALLAX'][i].replace('--',''))) == 0.0:
             t_src['PARALLAX'][i] = ''
             t_src['PARALLAX_E'][i] = ''
-        if float('{}0'.format(t_src['MU'][i])) == 0.0:
+        if float('{}0'.format(t_src['MU'][i].replace('--',''))) == 0.0:
             t_src['MU'][i] = ''
             t_src['MU_E'][i] = ''
             t_src['MU_RA'][i] = ''
             t_src['MU_DEC'][i] = ''
-        if float('{}0'.format(t_src['RV'][i])) == 0.0:
+        if float('{}0'.format(t_src['RV'][i].replace('--',''))) == 0.0:
             t_src['RV'][i] = ''
             t_src['RV_E'][i] = ''
-        if float('{}0'.format(t_src['VSINI'][i])) == 0.0:
+        if float('{}0'.format(t_src['VSINI'][i].replace('--',''))) == 0.0:
             t_src['VSINI'][i] = ''
             t_src['VSINI_E'][i] = ''
         if float('{}0'.format(t_src['SIMBAD_SEP'][i])) == 0.0:
@@ -1741,7 +1748,7 @@ def importSpectra(*args,**kwargs):
 #    app.exec_()
 
     print('\nSpectral plots and update speadsheets now available in {}'.format(review_folder))
-    response = raw_input('Please review and edit, and press any key when you are finished...\n')
+    response = input('Please review and edit, and press any key when you are finished...\n')
 
 
 # NEXT STEP - MOVE FILES TO APPROPRIATE PLACES, UPDATE MAIN DATABASES
@@ -1813,60 +1820,65 @@ def importSpectra(*args,**kwargs):
     return
 
 
+###############################################################################
+###################### TESTING FUNCTIONS #####################################
+###############################################################################
+
+def test_baseline():
+    basefolder = '/Users/adam/projects/splat/exercises/ex9/'
+    sp = splat.getSpectrum(shortname='1047+2124')[0]        # T6.5 radio emitter
+    spt,spt_e = splat.classifyByStandard(sp,spt=['T2','T8'])
+    teff,teff_e = splat.typeToTeff(spt)
+    sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
+    table = splat.modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
+
+
+def test_ingest(folder='/Users/adam/projects/splat/adddata/simp/prism/'):
+    importSpectra(data_folder=folder) #,spreadsheet=data_folder+'upload.csv')
+
+def test_combine():
+# source db
+    data_folder = '/Users/adam/projects/splat/adddata/daniella/spex_prism_160218/'
+    review_folder = '/Users/adam/projects/splat/adddata/review/'
+    t_src = fetchDatabase(review_folder+'source_update.csv',csv=True)
+# convert all t_src columns to the same format in DB_SOURCES
+    for col in t_src.colnames:
+        tmp = t_src[col].astype(splat.DB_SOURCES[col].dtype)
+        t_src.replace_column(col,tmp)
+    t_merge = vstack([splat.DB_SOURCES,t_src])
+    t_merge.sort('SOURCE_KEY')
+    t_merge.write(review_folder+splat.DB_SOURCES_FILE,format='ascii.tab')
+
+# spectrum db
+    t_spec = fetchDatabase(review_folder+'spectrum_update.csv',csv=True)
+# move files
+# WARNING - ASSUMING THESE ARE FITS; NEED A FIX IF THEY ARE NOT
+# COULD JUST READ IN TO SPECTRUM OBJECT AND OUTPUT AS FITS FILE
+    for i,file in enumerate(t_spec['DATA_FILE']):
+        t_spec['DATA_FILE'][i] = '{}_{}.fits'.format(t_spec['DATA_KEY'][i],t_spec['SOURCE_KEY'][i])
+        if t_spec['PUBLISHED'][i] == 'Y':
+            copyfile(data_folder+file,'{}/published/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
+            print('Moved {} to {}/published/'.format(t_spec['DATA_FILE'][i],review_folder))
+        else:
+            copyfile(data_folder+file,'{}/unpublished/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
+            print('Moved {} to {}/unpublished/'.format(t_spec['DATA_FILE'][i],review_folder))
+# convert all t_src columns to the same format in DB_SOURCES
+    for col in t_spec.colnames:
+        tmp = t_spec[col].astype(splat.DB_SPECTRA[col].dtype)
+        t_spec.replace_column(col,tmp)
+    t_merge = vstack([splat.DB_SPECTRA,t_spec])
+    t_merge.sort('DATA_KEY')
+    t_merge.write(review_folder+splat.DB_SPECTRA_FILE,format='ascii.tab')
+    print('\nDatabases updated; be sure to move these from {} to {}{}'.format(review_folder,splat.SPLAT_PATH,splat.DB_FOLDER))
+    print('and to move spectral files from {}/published and {}/unpublished/\n'.format(review_folder,review_folder))
+
+
 
 
 # main testing of program
 if __name__ == '__main__':
 
-    def test_baseline():
-        basefolder = '/Users/adam/projects/splat/exercises/ex9/'
-        sp = splat.getSpectrum(shortname='1047+2124')[0]        # T6.5 radio emitter
-        spt,spt_e = splat.classifyByStandard(sp,spt=['T2','T8'])
-        teff,teff_e = splat.typeToTeff(spt)
-        sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
-        table = splat.modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
 
-
-    def test_ingest():
-        data_folder = '/Users/adam/projects/splat/adddata/simp/prism/'
-        importSpectra(data_folder=data_folder) #,spreadsheet=data_folder+'upload.csv')
-
-    def test_combine():
-# source db
-        data_folder = '/Users/adam/projects/splat/adddata/daniella/spex_prism_160218/'
-        review_folder = '/Users/adam/projects/splat/adddata/review/'
-        t_src = fetchDatabase(review_folder+'source_update.csv',csv=True)
-# convert all t_src columns to the same format in DB_SOURCES
-        for col in t_src.colnames:
-            tmp = t_src[col].astype(splat.DB_SOURCES[col].dtype)
-            t_src.replace_column(col,tmp)
-        t_merge = vstack([splat.DB_SOURCES,t_src])
-        t_merge.sort('SOURCE_KEY')
-        t_merge.write(review_folder+splat.DB_SOURCES_FILE,format='ascii.tab')
-
-# spectrum db
-        t_spec = fetchDatabase(review_folder+'spectrum_update.csv',csv=True)
-# move files
-# WARNING - ASSUMING THESE ARE FITS; NEED A FIX IF THEY ARE NOT
-# COULD JUST READ IN TO SPECTRUM OBJECT AND OUTPUT AS FITS FILE
-        for i,file in enumerate(t_spec['DATA_FILE']):
-            t_spec['DATA_FILE'][i] = '{}_{}.fits'.format(t_spec['DATA_KEY'][i],t_spec['SOURCE_KEY'][i])
-            if t_spec['PUBLISHED'][i] == 'Y':
-                copyfile(data_folder+file,'{}/published/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
-                print('Moved {} to {}/published/'.format(t_spec['DATA_FILE'][i],review_folder))
-            else:
-                copyfile(data_folder+file,'{}/unpublished/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
-                print('Moved {} to {}/unpublished/'.format(t_spec['DATA_FILE'][i],review_folder))
-# convert all t_src columns to the same format in DB_SOURCES
-        for col in t_spec.colnames:
-            tmp = t_spec[col].astype(splat.DB_SPECTRA[col].dtype)
-            t_spec.replace_column(col,tmp)
-        t_merge = vstack([splat.DB_SPECTRA,t_spec])
-        t_merge.sort('DATA_KEY')
-        t_merge.write(review_folder+splat.DB_SPECTRA_FILE,format='ascii.tab')
-        print('\nDatabases updated; be sure to move these from {} to {}{}'.format(review_folder,splat.SPLAT_PATH,splat.DB_FOLDER))
-        print('and to move spectral files from {}/published and {}/unpublished/\n'.format(review_folder,review_folder))
-
-    test_ingest()
+    test_ingest('/Users/adam/projects/splat/adddata/tobeadded/daniella/SpeX_150225/')
 
 

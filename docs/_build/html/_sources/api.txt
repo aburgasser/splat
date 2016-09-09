@@ -24,6 +24,12 @@ Data Access
 .. autofunction:: splat_db.keySpectrum
 
 
+Spectral Comparison
+^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: splat.compareSpectra
+.. autofunction:: splat.generateMask
+
+
 Spectral Classification
 ^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat.classifyByIndex
@@ -43,7 +49,6 @@ Spectrophotometry
 
 Other Spectral Analyses
 ^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: splat.compareSpectra
 .. autofunction:: splat.measureIndex
 .. autofunction:: splat.measureIndexSet
 .. autofunction:: splat.measureEW
@@ -82,7 +87,7 @@ Plotting Routines
 Utility Routines
 ^^^^^^^^^^^^^^^^
 .. autofunction:: splat.test
-.. autofunction:: splat.weightMeanVar
+.. autofunction:: splat.weightedMeanVar
 .. autofunction:: splat.distributionStats
 
 
@@ -91,7 +96,7 @@ I/O Routines
 .. autofunction:: splat_db.checkOnline
 .. autofunction:: splat_db.checkAccess
 .. autofunction:: splat_db.checkFile
-.. autofunction:: splat_db.checkLocalFile
+.. autofunction:: splat_db.checkLocal
 
 
 Modeling Routines
@@ -99,11 +104,13 @@ Modeling Routines
 
 Spectral Modeling Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: splat_model.checkModelName
 .. autofunction:: splat_model.loadModel
 .. autofunction:: splat_model.getModel
 .. autofunction:: splat_model.loadInterpolatedModel
 .. autofunction:: splat_model.loadModelParameters
 .. autofunction:: splat_model.modelFitGrid
+.. autofunction:: splat_model.modelFitPlotComparison
 .. autofunction:: splat_model.modelFitMCMC
 .. autofunction:: splat_model.modelFitEMCEE
 .. autofunction:: splat_model.modelFitEMCEE_lnlikelihood
@@ -140,7 +147,6 @@ EUCLID Analysis Routines
 
 BibTeX Routines
 ^^^^^^^^^^^^^^^
-
 .. autofunction:: splat_db.getBibTex
 
 

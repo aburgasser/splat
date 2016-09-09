@@ -330,6 +330,8 @@ def plotSpectrum(*args, **kwargs):
     filename = kwargs.get('filename','')            # output filename
     filename = kwargs.get('file',filename)
     filename = kwargs.get('output',filename)
+    if filename == False:
+        filename = ''
     title = kwargs.get('title','')
     fontscale = kwargs.get('fontscale',1)
     legendfontscale = kwargs.get('legendfontscale',0.8*fontscale)

@@ -99,6 +99,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#splat-routines">SPLAT Routines</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#data-access">Data Access</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spectral-comparison">Spectral Comparison</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#spectral-classification">Spectral Classification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#spectrophotometry">Spectrophotometry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#other-spectral-analyses">Other Spectral Analyses</a></li>
@@ -186,7 +187,7 @@
 <li><strong>wlabel</strong> (<em>optional, default = 'Wavelength'</em>) &#8211; label of wavelength</li>
 <li><strong>wunit</strong> (optional, default = <code class="docutils literal"><span class="pre">u.micron</span></code>) &#8211; unit in which wavelength is measured</li>
 <li><strong>wunit_label</strong> (optional, default = <cite>mu m</cite>) &#8211; label of the unit of wavelength</li>
-<li><strong>flabel</strong> (optional, default = <a href="#id63"><span class="problematic" id="id64">F_</span></a>lambda`) &#8211; label of flux density</li>
+<li><strong>flabel</strong> (optional, default = <a href="#id59"><span class="problematic" id="id60">F_</span></a>lambda`) &#8211; label of flux density</li>
 <li><strong>fscale</strong> (<em>optional, default = ''</em>) &#8211; string describing how flux density is scaled</li>
 <li><strong>funit</strong> (optional, default = <code class="docutils literal"><span class="pre">u.erg/(u.cm**2</span> <span class="pre">*</span> <span class="pre">u.s</span> <span class="pre">*</span> <span class="pre">u.micron)</span></code>) &#8211; unit in which flux density is measured</li>
 <li><strong>funit_label</strong> (<em>optional, default = erg cm^-2 s^-1 micron^-1`</em>) &#8211; label of the unit of flux density</li>
@@ -476,7 +477,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">calls the <a href="#id65"><span class="problematic" id="id66">plotSpectrum_</span></a> function, by default showing the noise spectrum and zeropoints. See the <a href="#id67"><span class="problematic" id="id68">plotSpectrum_</span></a> API listing for details.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">calls the <a href="#id61"><span class="problematic" id="id62">plotSpectrum_</span></a> function, by default showing the noise spectrum and zeropoints. See the <a href="#id63"><span class="problematic" id="id64">plotSpectrum_</span></a> API listing for details.</td>
 </tr>
 </tbody>
 </table>
@@ -615,7 +616,7 @@
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>method</strong> (<em>optional, default = Hanning</em>) &#8211; the type of smoothing window to use. See <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html">http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html</a> for more details.</li>
-<li><strong>resolution</strong> (<em>optional, default = None</em>) &#8211; Constant resolution to smooth toe(see <a href="#id69"><span class="problematic" id="id70">smoothResolution_</span></a>)</li>
+<li><strong>resolution</strong> (<em>optional, default = None</em>) &#8211; Constant resolution to smooth toe(see <a class="reference external" href="api.html#splat.Spectrum.smoothToResolution">smoothToResolution</a>)</li>
 <li><strong>slitPixelWidth</strong> (<em>optional, default = None</em>) &#8211; Number of pixels to smooth in pixel space (see <a class="reference external" href="api.html#splat.Spectrum.smoothToSlitPixelWidth">smoothToSlitPixelWidth</a>)</li>
 <li><strong>slitWidth</strong> (<em>optional, default = None</em>) &#8211; Number of pixels to smooth in angular space (see <a class="reference external" href="api.html#splat.Spectrum.smoothToPixelWidth">smoothToPixelWidth</a>)</li>
 </ul>
@@ -856,7 +857,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets a spectrum from the SPLAT library using various selection criteria. Calls <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. See <a href="#id71"><span class="problematic" id="id72">splat.searchLibrary_</span></a> for full list of search parameters.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Gets a spectrum from the SPLAT library using various selection criteria. Calls <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array.</td>
 </tr>
 </tbody>
 </table>
@@ -1125,6 +1126,83 @@
 </dd></dl>
 
 </div>
+<div class="section" id="spectral-comparison">
+<h3>Spectral Comparison<a class="headerlink" href="#spectral-comparison" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat.compareSpectra">
+<code class="descclassname">splat.</code><code class="descname">compareSpectra</code><span class="sig-paren">(</span><em>sp1</em>, <em>sp2</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.compareSpectra" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Compare two spectra against each other using a pre-selected statistic. Returns the value of the desired statistic as well as the optimal scale factor. Minimum possible value for statistic is 1.e-9.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sp1</strong> (<em>required</em>) &#8211; First spectrum class object, which sets the wavelength scale</li>
+<li><strong>sp2</strong> (<em>required</em>) &#8211; Second spectrum class object, interpolated onto the wavelength scale of sp1</li>
+<li><strong>statistic</strong> (<em>optional, default = 'chisqr'</em>) &#8211; <p>string defining which statistic to use in comparison; available options are:</p>
+<ul>
+<li><em>&#8216;chisqr&#8217;</em>: compare by computing chi squared value (requires spectra with noise values)</li>
+<li><em>&#8216;stddev&#8217;</em>: compare by computing standard deviation</li>
+<li><em>&#8216;stddev_norm&#8217;</em>: compare by computing normalized standard deviation</li>
+<li><em>&#8216;absdev&#8217;</em>: compare by computing absolute deviation</li>
+</ul>
+</li>
+<li><strong>fit_ranges</strong> (<em>optional, default = [0.65,2.45]</em>) &#8211; 2-element array or nested array of 2-element arrays specifying the wavelength ranges to be used for the fit, assumed to be measured in microns. This is effectively the opposite of mask_ranges.</li>
+<li><strong>weights</strong> (<em>optional, default = [1, ..., 1] for len(sp1.wave)</em>) &#8211; Array specifying the weights for individual wavelengths; must be an array with length equal to the wavelength scale of <code class="docutils literal"><span class="pre">sp1</span></code>; need not be normalized</li>
+<li><strong>mask_ranges</strong> (<em>optional, default = None</em>) &#8211; Multi-vector array setting wavelength boundaries for masking data, assumed to be in microns</li>
+<li><strong>mask</strong> (<em>optional, default = [0, ..., 0] for len(sp1.wave)</em>) &#8211; Array specifiying which wavelengths to mask; must be an array with length equal to the wavelength scale of <code class="docutils literal"><span class="pre">sp1</span></code> with only 0 (OK) or 1 (mask).</li>
+<li><strong>mask_telluric</strong> (<em>optional, default = False</em>) &#8211; Set to True to mask pre-defined telluric absorption regions</li>
+<li><strong>mask_standard</strong> (<em>optional, default = False</em>) &#8211; Like <code class="docutils literal"><span class="pre">mask_telluric</span></code>, with a slightly tighter cut of 0.80-2.35 micron</li>
+<li><strong>novar2</strong> (<em>optional, default = True</em>) &#8211; Set to True to compute statistic without considering variance of <code class="docutils literal"><span class="pre">sp2</span></code></li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to plot <code class="docutils literal"><span class="pre">sp1</span></code> with scaled <code class="docutils literal"><span class="pre">sp2</span></code> and difference spectrum overlaid</li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; Set to True to report things as you&#8217;re going along</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s1">&#39;2346-3153&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">    Retrieving 1 file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s1">&#39;1421+1827&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">    Retrieving 1 file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;chisqr&#39;</span><span class="p">)</span>
+<span class="go">    (&lt;Quantity 19927.74527822856&gt;, 0.94360732593223595)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;stddev&#39;</span><span class="p">)</span>
+<span class="go">    (&lt;Quantity 3.0237604611215705 erg2 / (cm4 micron2 s2)&gt;, 0.98180983971456637)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;absdev&#39;</span><span class="p">)</span>
+<span class="go">    (&lt;Quantity 32.99816249949072 erg / (cm2 micron s)&gt;, 0.98155779612333172)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;chisqr&#39;</span><span class="p">,</span> <span class="n">novar2</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">    (&lt;Quantity 17071.690727945213&gt;, 0.94029474635786015)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat.generateMask">
+<code class="descclassname">splat.</code><code class="descname">generateMask</code><span class="sig-paren">(</span><em>wave</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.generateMask" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Generates a mask array based on wavelength vector and optional inputs on what to mask.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body">A mask array, where 0 = OK and 1 = ignore</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 <div class="section" id="spectral-classification">
 <h3>Spectral Classification<a class="headerlink" href="#spectral-classification" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
@@ -1221,7 +1299,7 @@ noise array elements.</li>
 <li><strong>best</strong> (<em>optional, default = True</em>) &#8211; Set to True to return the best fit standard type</li>
 <li><strong>average</strong> (<em>optional, default = False</em>) &#8211; Set to True to return an chi-square weighted type only</li>
 <li><strong>compareto</strong> (<em>optional, default = None</em>) &#8211; Set to the single standard (string or number) you want to compare to</li>
-<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to generate a plot comparing best fit template to source; can also set keywords associated with <a href="#id73"><span class="problematic" id="id74">plotSpectrum_</span></a> routine</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to generate a plot comparing best fit template to source; can also set keywords associated with <a href="#id65"><span class="problematic" id="id66">plotSpectrum_</span></a> routine</li>
 <li><strong>string</strong> (<em>optional, default = True</em>) &#8211; return spectral type as a string</li>
 <li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; Set to True to give extra feedback</li>
 </ul>
@@ -1229,7 +1307,7 @@ noise array elements.</li>
 </tr>
 </tbody>
 </table>
-<p>Users can also set keyword parameters defined in <a href="#id75"><span class="problematic" id="id76">plotSpectrum_</span></a> and <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra</a> routine.</p>
+<p>Users can also set keyword parameters defined in <a href="#id67"><span class="problematic" id="id68">plotSpectrum_</span></a> and <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra</a> routine.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1321,7 +1399,7 @@ noise array elements.</li>
 <li><strong>nbest</strong> (<em>optional, default = 1</em>) &#8211; Set to the number of best fitting spectra to return</li>
 <li><strong>maxtemplates</strong> (<em>optional, default = 100</em>) &#8211; Set to the maximum number of templates that should be fit</li>
 <li><strong>force</strong> (<em>optional, default = False</em>) &#8211; By default, classifyByTemplate won&#8217;t proceed if you have more than 100 templates; set this parameter to True to ignore that constraint</li>
-<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to generate a plot comparing best fit template to source; can also set keywords associated with <a href="#id77"><span class="problematic" id="id78">plotSpectrum_</span></a> routine</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to generate a plot comparing best fit template to source; can also set keywords associated with <a href="#id69"><span class="problematic" id="id70">plotSpectrum_</span></a> routine</li>
 <li><strong>string</strong> (<em>optional, default = True</em>) &#8211; return spectral type as a string</li>
 <li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
 </ul>
@@ -1329,7 +1407,7 @@ noise array elements.</li>
 </tr>
 </tbody>
 </table>
-<p>Users can also set keyword parameters defined in <a href="#id79"><span class="problematic" id="id80">plotSpectrum_</span></a> and <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> routines</p>
+<p>Users can also set keyword parameters defined in <a href="#id71"><span class="problematic" id="id72">plotSpectrum_</span></a> and <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> routines</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1586,63 +1664,6 @@ noise array elements.</li>
 </div>
 <div class="section" id="other-spectral-analyses">
 <h3>Other Spectral Analyses<a class="headerlink" href="#other-spectral-analyses" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="splat.compareSpectra">
-<code class="descclassname">splat.</code><code class="descname">compareSpectra</code><span class="sig-paren">(</span><em>sp1</em>, <em>sp2</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.compareSpectra" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Compare two spectra against each other using a pre-selected statistic. Returns the value of the desired statistic as well as the optimal scale factor. Minimum possible value for statistic is 1.e-9.</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sp1</strong> (<em>required</em>) &#8211; First spectrum class object, which sets the wavelength scale</li>
-<li><strong>sp2</strong> (<em>required</em>) &#8211; Second spectrum class object, interpolated onto the wavelength scale of sp1</li>
-<li><strong>statistic</strong> (<em>optional, default = 'chisqr'</em>) &#8211; <p>string defining which statistic to use in comparison; available options are:</p>
-<ul>
-<li><em>&#8216;chisqr&#8217;</em>: compare by computing chi squared value (requires spectra with noise values)</li>
-<li><em>&#8216;stddev&#8217;</em>: compare by computing standard deviation</li>
-<li><em>&#8216;stddev_norm&#8217;</em>: compare by computing normalized standard deviation</li>
-<li><em>&#8216;absdev&#8217;</em>: compare by computing absolute deviation</li>
-</ul>
-</li>
-<li><strong>fit_ranges</strong> (<em>optional, default = [0.65,2.45]</em>) &#8211; 2-element array or nested array of 2-element arrays specifying the wavelength ranges to be used for the fit, assumed to be measured in microns. This is effectively the opposite of mask_ranges.</li>
-<li><strong>weights</strong> (<em>optional, default = [1, ..., 1] for len(sp1.wave)</em>) &#8211; Array specifying the weights for individual wavelengths; must be an array with length equal to the wavelength scale of <code class="docutils literal"><span class="pre">sp1</span></code>; need not be normalized</li>
-<li><strong>mask_ranges</strong> (<em>optional, default = None</em>) &#8211; Multi-vector array setting wavelength boundaries for masking data, assumed to be in microns</li>
-<li><strong>mask</strong> (<em>optional, default = [0, ..., 0] for len(sp1.wave)</em>) &#8211; Array specifiying which wavelengths to mask; must be an array with length equal to the wavelength scale of <code class="docutils literal"><span class="pre">sp1</span></code> with only 0 (OK) or 1 (mask).</li>
-<li><strong>mask_telluric</strong> (<em>optional, default = False</em>) &#8211; Set to True to mask pre-defined telluric absorption regions</li>
-<li><strong>mask_standard</strong> (<em>optional, default = False</em>) &#8211; Like <code class="docutils literal"><span class="pre">mask_telluric</span></code>, with a slightly tighter cut of 0.80-2.35 micron</li>
-<li><strong>novar2</strong> (<em>optional, default = True</em>) &#8211; Set to True to compute statistic without considering variance of <code class="docutils literal"><span class="pre">sp2</span></code></li>
-<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to plot <code class="docutils literal"><span class="pre">sp1</span></code> with scaled <code class="docutils literal"><span class="pre">sp2</span></code> and difference spectrum overlaid</li>
-<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; Set to True to report things as you&#8217;re going along</li>
-</ul>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s1">&#39;2346-3153&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">    Retrieving 1 file</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span> <span class="o">=</span> <span class="s1">&#39;1421+1827&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">    Retrieving 1 file</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;chisqr&#39;</span><span class="p">)</span>
-<span class="go">    (&lt;Quantity 19927.74527822856&gt;, 0.94360732593223595)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;stddev&#39;</span><span class="p">)</span>
-<span class="go">    (&lt;Quantity 3.0237604611215705 erg2 / (cm4 micron2 s2)&gt;, 0.98180983971456637)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;absdev&#39;</span><span class="p">)</span>
-<span class="go">    (&lt;Quantity 32.99816249949072 erg / (cm2 micron s)&gt;, 0.98155779612333172)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;chisqr&#39;</span><span class="p">,</span> <span class="n">novar2</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="go">    (&lt;Quantity 17071.690727945213&gt;, 0.94029474635786015)</span>
-</pre></div>
-</div>
-</dd></dl>
-
 <dl class="function">
 <dt id="splat.measureIndex">
 <code class="descclassname">splat.</code><code class="descname">measureIndex</code><span class="sig-paren">(</span><em>sp</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.measureIndex" title="Permalink to this definition">¶</a></dt>
@@ -2450,6 +2471,53 @@ This is an example of using multiplot and multipage</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="splat.weightedMeanVar">
+<code class="descclassname">splat.</code><code class="descname">weightedMeanVar</code><span class="sig-paren">(</span><em>vals</em>, <em>winp</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.weightedMeanVar" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Computes weighted mean of an array of values through various methods. Returns weighted mean and weighted uncertainty.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vals</strong> &#8211; array of values</li>
+<li><strong>winp</strong> &#8211; array of weights associated with <code class="docutils literal"><span class="pre">vals</span></code></li>
+<li><strong>method</strong> (<em>optional, default = ''</em>) &#8211; <p>input type of weights. Default is where <code class="docutils literal"><span class="pre">winp</span></code> is the actual weights of <code class="docutils literal"><span class="pre">vals</span></code>. Options include:</p>
+<ul>
+<li><em>uncertainty</em>: uncertainty weighting, where <code class="docutils literal"><span class="pre">winp</span></code> is the uncertainties of <code class="docutils literal"><span class="pre">vals</span></code></li>
+<li><em>ftest</em>: ftest weighting, where <code class="docutils literal"><span class="pre">winp</span></code> is the chi squared values of <code class="docutils literal"><span class="pre">vals</span></code></li>
+</ul>
+</li>
+<li><strong>weight_minimum</strong> (<em>optional, default = 0.</em>) &#8211; minimum possible weight value</li>
+<li><strong>dof</strong> (<em>optional, default = len(vals) - 1</em>) &#8211; effective degrees of freedom</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When using <code class="docutils literal"><span class="pre">ftest</span></code> method, extra <code class="docutils literal"><span class="pre">dof</span></code> value is required</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">weightedMeanVar</span><span class="p">([</span><span class="mf">3.52</span><span class="p">,</span> <span class="mf">5.88</span><span class="p">,</span> <span class="mf">9.03</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.23</span><span class="p">,</span> <span class="mf">0.19</span><span class="p">])</span>
+<span class="go">    (5.0057009345794379, 4.3809422657000594)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">weightedMeanVar</span><span class="p">([</span><span class="mf">3.52</span><span class="p">,</span> <span class="mf">5.88</span><span class="p">,</span> <span class="mf">9.03</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.24</span><span class="p">,</span> <span class="mf">2.09</span><span class="p">,</span> <span class="mf">2.29</span><span class="p">],</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;uncertainty&#39;</span><span class="p">)</span>
+<span class="go">    (5.0069199363443841, 4.3914329968409946)</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="splat.distributionStats">
 <code class="descclassname">splat.</code><code class="descname">distributionStats</code><span class="sig-paren">(</span><em>x, q=[0.16, 0.5, 0.84], weights=None, sigma=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.distributionStats" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -2545,12 +2613,73 @@ checks if a given filename is present locally or online</p>
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="splat_db.checkLocal">
+<code class="descclassname">splat_db.</code><code class="descname">checkLocal</code><span class="sig-paren">(</span><em>inputfile</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.checkLocal" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Checks if a file is present locally or within the SPLAT
+code directory</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkLocal</span><span class="p">(</span><span class="s1">&#39;splat.py&#39;</span><span class="p">)</span>
+<span class="go">True  # found the code</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkLocal</span><span class="p">(</span><span class="s1">&#39;parameters.txt&#39;</span><span class="p">)</span>
+<span class="go">False  # can&#39;t find this file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">checkLocal</span><span class="p">(</span><span class="s1">&#39;SpectralModels/BTSettl08/parameters.txt&#39;</span><span class="p">)</span>
+<span class="go">True  # found it</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="modeling-routines">
 <h2>Modeling Routines<a class="headerlink" href="#modeling-routines" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="spectral-modeling-routines">
 <h3>Spectral Modeling Routines<a class="headerlink" href="#spectral-modeling-routines" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat_model.checkModelName">
+<code class="descclassname">splat_model.</code><code class="descname">checkModelName</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.checkModelName" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Purpose:</dt>
+<dd>Checks that an input model name is one of the available spectral models, including a check of alternate names</dd>
+<dt>Required Inputs:</dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">model: A string containing the spectral model to be checked. This should be one of the models listed in <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a></td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+<dl class="docutils">
+<dt>Optional Inputs:</dt>
+<dd>None</dd>
+<dt>Output:</dt>
+<dd>A string containing SPLAT&#8217;s default name for a given model set, or False if that model set is not present</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">splat</span><span class="o">.</span><span class="n">checkModelName</span><span class="p">(</span><span class="s1">&#39;burrows&#39;</span><span class="p">))</span>
+<span class="go">    burrows06</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">splat</span><span class="o">.</span><span class="n">checkModelName</span><span class="p">(</span><span class="s1">&#39;allard&#39;</span><span class="p">))</span>
+<span class="go">    BTSettl2008</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">splat</span><span class="o">.</span><span class="n">checkModelName</span><span class="p">(</span><span class="s1">&#39;somethingelse&#39;</span><span class="p">))</span>
+<span class="go">    False</span>
+</pre></div>
+</div>
+</dd></dl>
+
 <dl class="function">
 <dt id="splat_model.loadModel">
 <code class="descclassname">splat_model.</code><code class="descname">loadModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModel" title="Permalink to this definition">¶</a></dt>
@@ -2694,10 +2823,10 @@ checks if a given filename is present locally or online</p>
 
 <dl class="function">
 <dt id="splat_model.loadModelParameters">
-<code class="descclassname">splat_model.</code><code class="descname">loadModelParameters</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModelParameters" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">splat_model.</code><code class="descname">loadModelParameters</code><span class="sig-paren">(</span><em>model</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModelParameters" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Purpose:</dt>
-<dd>Assitant routine for <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a> that loads in the spectral model grid points.</dd>
+<dd>Assistant routine for <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a> that loads in the spectral model grid points.</dd>
 </dl>
 <dl class="docutils">
 <dt>Required Inputs:</dt>
@@ -2705,7 +2834,7 @@ checks if a given filename is present locally or online</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body"><strong>model</strong>: set of models to use; see options in <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a> (default = &#8216;BTSettl2008&#8217;)</td>
+<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">model: set of models to use; see options in <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a> (default = &#8216;BTSettl2008&#8217;)</td>
 </tr>
 </tbody>
 </table>
@@ -2715,23 +2844,136 @@ checks if a given filename is present locally or online</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name" colspan="2">param <strong>parameterFile</strong>:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">name of file containing parameters for spectral models (default = &#8216;parameters.txt&#8217;)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">param:</th><td class="field-body">The parameters for <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a> can also be used here.</td>
+<tr class="field-odd field"><th class="field-name">param old:</th><td class="field-body">Old format for returning model parameters based parameter.txt file; now obsolete (default = False)</td>
 </tr>
 </tbody>
 </table>
 </dd>
+</dl>
+<p>The parameters for <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a> can also be used here.</p>
+<dl class="docutils">
 <dt>Output:</dt>
-<dd>A dictionary containing the grid points in the given model set</dd>
+<dd>A dictionary containing the individual parameter values for the grid points in the given model set (not all of these grid points will be filled); this dictionary includs a list of dictionaries containing the individual parameter sets.</dd>
 </dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="splat_model.modelFitGrid">
 <code class="descclassname">splat_model.</code><code class="descname">modelFitGrid</code><span class="sig-paren">(</span><em>spec</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitGrid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Model fitting code to grid of models</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Fits a spectrum to a grid of atmosphere models, reports the best-fit and weighted average parameters, and returns either a dictionary with the best-fit model parameters or the model itself scaled to the optimal scaling factor.</td>
+</tr>
+</tbody>
+</table>
+<p>If spectrum is absolutely flux calibrated with the <a class="reference external" href="api.html#splat.Spectrum.fluxCalibrate">fluxcalibrate()</a> method, the routine will also calculate the equivalent radii of the source.</p>
+<p>Required inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>spec</strong> &#8211; a Spectrum class object, which should contain wave, flux and noise array elements.</td>
+</tr>
+</tbody>
+</table>
+<p>Optional inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> &#8211; set of models to use (<code class="docutils literal"><span class="pre">set</span></code> and <code class="docutils literal"><span class="pre">model\_set</span></code> may also be used), from the available models given by <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a>.</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stat</strong> &#8211; the statistic to use for comparing models to spectrum; can be any one of the statistics allowed in <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra()</a> routine (default = <cite>chisqr</cite>)</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>weights</strong> &#8211; an array of the same length as the spectrum flux array, specifying the weight for each pixel (default: equal weighting)</li>
+<li><strong>mask</strong> &#8211; an array of the same length as the spectrum flux array, specifying which data to include in comparison statistic as coded by 0 = good data, 1 = bad (masked). The routine <a class="reference external" href="api.html#splat.generateMask">generateMask()</a> is called to create a mask, so parameters from that routine may be specified (default: no masking)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>compute_radius</strong> &#8211; if set to True, force the computation of the radius based on the model scaling factor. This is automatically set to True if the input spectrum is absolutely flux calibrated (default = False)</li>
+<li><strong>teff_range</strong> &#8211; set to the range of temperatures over which model fitting will be done (<code class="docutils literal"><span class="pre">temperature\_range</span></code> and <code class="docutils literal"><span class="pre">t\_range</span></code> may also be used; default = full range of model temperatures)</li>
+<li><strong>logg_range</strong> &#8211; set to the range of surface gravities over which model fitting will be done (<code class="docutils literal"><span class="pre">gravity\_range</span></code> and <code class="docutils literal"><span class="pre">g\_range</span></code> may also be used; default = full range of model temperatures)</li>
+<li><strong>z_range</strong> &#8211; set to the range of metallicities over which model fitting will be done (<code class="docutils literal"><span class="pre">metallicity\_range</span></code> may also be used; default = full range of model temperatures)</li>
+<li><strong>return_model</strong> &#8211; set to True to return a Spectrum class of the best-fit model instead of a dictionary of parameters (default = False)</li>
+<li><strong>return_mean_parameters</strong> &#8211; set to True a dictionary of mean parameters (default = False)</li>
+<li><strong>return_all_parameters</strong> &#8211; set to True to return all of the parameter sets and fitting values (default = False)</li>
+<li><strong>output</strong> &#8211; a string containing the base filename for outputs associated with this fitting routine (<code class="docutils literal"><span class="pre">file</span></code> and <code class="docutils literal"><span class="pre">filename</span></code> may also be used; default = &#8216;fit&#8217;)</li>
+<li><strong>noPlot</strong> &#8211; set to True to suppress plotting outputs (default = False)</li>
+<li><strong>plot_format</strong> &#8211; specifes the file format for output plots (default = <cite>pdf</cite>)</li>
+<li><strong>file_best_comparison</strong> &#8211; filename to use for plotting spectrum vs. best-fit model (default = &#8216;OUTPUT_best_comparison.PLOT_FORMAT&#8217;)</li>
+<li><strong>file_mean_comparison</strong> &#8211; filename to use for plotting spectrum vs. mean parameter model (default = &#8216;OUTPUT_mean_comparison.PLOT_FORMAT&#8217;)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>In addition, the parameters for <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra()</a> , <a class="reference external" href="api.html#splat.generateMask">generateMask()</a> and <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum()</a> may be used; see SPLAT API for details.</p>
+<p>Output:</p>
+<p>Default output is a dictionary containing the best-fit model parameters: model name, teff, logg, z, fsed, kzz, cloud and slit, as well as the scaling factor for the model and comparison statistic.
+If the input spectrum is absolutely flux calibrated, radius is also returned.  Alternate outputs include:</p>
+<blockquote>
+<div><ul class="simple">
+<li>a dictionary of the statistic-weighted mean parameters (<code class="docutils literal"><span class="pre">return_mean_parameters</span></code> = True)</li>
+<li>a list of dictionaries containing all parameters and fit statistics (<code class="docutils literal"><span class="pre">return_all_parameters</span></code> = True)</li>
+<li>a Spectrum class of the best-fit model scaled to the best-fit scaling (<code class="docutils literal"><span class="pre">return_model</span></code> = True)</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">12.32</span><span class="p">,</span><span class="n">absolute</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitGrid</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">teff_range</span><span class="o">=</span><span class="p">[</span><span class="mi">1200</span><span class="p">,</span><span class="mi">2500</span><span class="p">],</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;Saumon&#39;</span><span class="p">,</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;fit1507&#39;</span><span class="p">)</span>
+<span class="go">    Best Parameters to fit to BT-Settl (2008) models:</span>
+<span class="go">        $T_{eff}$=1800.0 K</span>
+<span class="go">        $log\ g$=5.0 dex(cm / s2)</span>
+<span class="go">        $[M/H]$=-0.0 dex</span>
+<span class="go">        $f_{sed}$=nc</span>
+<span class="go">        $cld$=nc</span>
+<span class="go">        $log\ \kappa_{zz}$=eq dex(cm2 / s)</span>
+<span class="go">        R=0.143324498969 solRad</span>
+<span class="go">        chi=4500.24997585</span>
+<span class="go">    Mean Parameters:</span>
+<span class="go">        $T_{eff}$: 1800.0+/-0.0 K</span>
+<span class="go">        $log\ g$: 5.0+/-0.0 dex(cm / s2)</span>
+<span class="go">        Radius: 0.143324498969+/-0.0 solRad</span>
+<span class="go">        $[M/H]$: 0.0+/-0.0 dex</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_model.modelFitPlotComparison">
+<code class="descclassname">splat_model.</code><code class="descname">modelFitPlotComparison</code><span class="sig-paren">(</span><em>spec</em>, <em>model</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitPlotComparison" title="Permalink to this definition">¶</a></dt>
+<dd><p>Routine to compare spectrum to a model or models</p>
 </dd></dl>
 
 <dl class="function">
@@ -2930,7 +3172,7 @@ outputs will include (each can be set individually with associated keywords):
 </tr>
 </tbody>
 </table>
-<p>In addition, the parameters for <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra</a>, <a href="#id81"><span class="problematic" id="id82">generateMask_</span></a>, <a href="#id83"><span class="problematic" id="id84">plotSpectrum_</span></a>; see SPLAT API for details.</p>
+<p>In addition, the parameters for <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra</a>, <a href="#id73"><span class="problematic" id="id74">generateMask_</span></a>, <a href="#id75"><span class="problematic" id="id76">plotSpectrum_</span></a>; see SPLAT API for details.</p>
 <dl class="docutils">
 <dt>Note: modelfitEMCEE requires external packages:</dt>
 <dd><ul class="first simple">
@@ -2957,7 +3199,7 @@ outputs will include (each can be set individually with associated keywords):
 <span class="go">    Progress: [**************************************************]</span>
 </pre></div>
 </div>
-<p>Results are saved in test_modelfitEMCEE_interative.dat, <a href="#id43"><span class="problematic" id="id44">*</span></a>_chains.pdf, <a href="#id45"><span class="problematic" id="id46">*</span></a>_comparison.pdf, <a href="#id47"><span class="problematic" id="id48">*</span></a>_corner.pdf, and <a href="#id49"><span class="problematic" id="id50">*</span></a>_summary.txt</p>
+<p>Results are saved in test_modelfitEMCEE_interative.dat, <a href="#id47"><span class="problematic" id="id48">*</span></a>_chains.pdf, <a href="#id49"><span class="problematic" id="id50">*</span></a>_comparison.pdf, <a href="#id51"><span class="problematic" id="id52">*</span></a>_corner.pdf, and <a href="#id53"><span class="problematic" id="id54">*</span></a>_summary.txt</p>
 </dd></dl>
 
 <dl class="function">
@@ -3012,7 +3254,8 @@ would like to do draws from posterior instead</p>
 <dl class="function">
 <dt id="splat_model.modelFitEMCEE_plotcorner">
 <code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_plotcorner</code><span class="sig-paren">(</span><em>samples</em>, <em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_plotcorner" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>corner plot for modelFitEMCEE</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="splat_model.modelFitEMCEE_summary">
@@ -3028,62 +3271,81 @@ would like to do draws from posterior instead</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Reports the result of model fitting parameters.
-Produces triangle plot, best fit model, statistics of parameters
-and saves raw data if <code class="docutils literal"><span class="pre">iterative</span> <span class="pre">=</span> <span class="pre">True</span></code>.</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Reports the result of model fitting parameters. Produces triangle plot, best fit model, statistics of parameters and saves raw data if <code class="docutils literal"><span class="pre">iterative</span> <span class="pre">=</span> <span class="pre">True</span></code>.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>spec</strong> &#8211; Spectrum class object, which should contain wave, flux and
-noise array elements.</li>
-<li><strong>t</strong> &#8211; Must be an astropy Table with columns containing parameters fit, and one column for chi-square values (&#8216;chisqr&#8217;).</li>
-<li><strong>evol</strong> (<em>optional, default = True</em>) &#8211; computes the mass, age, temperature, radius, surface gravity, and luminosity
-by using various evolutionary model sets. See below for the possible set
-options and the Brown Dwarf Evolutionary Models page for more details.</li>
-<li><strong>emodel</strong> (<em>optional, default = 'Baraffe'</em>) &#8211; <p>set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for
-more details. Options include:</p>
-<ul>
-<li><em>&#8216;baraffe&#8217;</em>: Evolutionary models from <a class="reference external" href="http://arxiv.org/abs/astro-ph/0302293">Baraffe et al. (2003)</a>.</li>
-<li><em>&#8216;burrows&#8217;</em>: Evolutionary models from <a class="reference external" href="http://adsabs.harvard.edu/abs/1997ApJ...491..856B">Burrows et al. (1997)</a>.</li>
-<li><em>&#8216;saumon&#8217;</em>: Evolutionary models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2008ApJ...689.1327S">Saumon &amp; Marley (2008)</a>.</li>
-</ul>
-</li>
-<li><strong>stats</strong> (<em>optional, default = True</em>) &#8211; if True, prints several statistical values, including number of steps,
-best fit parameters, lowest chi2 value, median parameters and key values
-along the distribution.</li>
-<li><strong>triangle</strong> (<em>optional, default = True</em>) &#8211; creates a triangle plot, plotting the parameters against each other,
-demonstrating areas of high and low chi squared values. Useful for
-demonstrating correlations between parameters.</li>
-<li><strong>bestfit</strong> (<em>optional, default = True</em>) &#8211; if True and a best fit model is present in the desired model set, then
-plots model against spectrum and saves figure.</li>
-<li><strong>summary</strong> (<em>optional, default = True</em>) &#8211; not yet implemented</li>
-<li><strong>weight</strong> (<em>optional, default = True</em>) &#8211; if True, sets weights for computing key values along the distribution</li>
-<li><strong>filebase</strong> (<em>optional, default = 'modelfit_results'</em>) &#8211; filename or filename base for output</li>
-<li><strong>stat</strong> (<em>optional, default = 'chisqr'</em>) &#8211; name of the statistics column used in astropy Table <code class="docutils literal"><span class="pre">t</span></code>.</li>
-<li><strong>model_set</strong> (<em>optional, default = ''</em>) &#8211; <p>desired model set of <code class="docutils literal"><span class="pre">bestfit</span></code>; options include:</p>
-<ul>
-<li><em>&#8216;BTSettl2008&#8217;</em>: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5
-from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A">Allard et al. (2012)</a></li>
-<li><em>&#8216;burrows06&#8217;</em>: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5,
-and sedimentation efficiency of either 0 or 100 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...640.1063B">Burrows et al. (2006)</a></li>
-<li><em>&#8216;morley12&#8217;</em>: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0
-and sedimentation efficiency of 2 to 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...756..172M">Morley et al. (2012)</a></li>
-<li><em>&#8216;morley14&#8217;</em>: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0
-and sedimentation efficiency of 5 from <a class="reference external" href="http://adsabs.harvard.edu/abs/2014ApJ...787...78M">Morley et al. (2014)</a></li>
-<li><em>&#8216;saumon12&#8217;</em>: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0
-from <a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...750...74S">Saumon et al. (2012)</a></li>
-<li><em>&#8216;drift&#8217;</em>: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0
-from <a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...529A..44W">Witte et al. (2011)</a></li>
-</ul>
-</li>
-<li><strong>mset</strong> (<em>optional, default = ''</em>) &#8211; same as <code class="docutils literal"><span class="pre">model_set</span></code></li>
-<li><strong>mask_ranges</strong> (<em>optional, default = []</em>) &#8211; mask any flux value of <code class="docutils literal"><span class="pre">spec</span></code> by specifying the wavelength range. Must be in microns.</li>
-<li><strong>sigma</strong> (<em>optional, default = 1.</em>) &#8211; when printing statistical results, prints the value at <code class="docutils literal"><span class="pre">sigma</span></code> standard
-deviations away from the mean. Only effective if <code class="docutils literal"><span class="pre">stats</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
-<li><strong>iterative</strong> (<em>optional, default = False</em>) &#8211; if True, prints quantitative results and does not plot anything</li>
-</ul>
-</td>
+</tbody>
+</table>
+<p>Required Inputs:</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param spec:</th><td class="field-body">Spectrum class object, which should contain wave, flux and noise array elements.</td>
 </tr>
+<tr class="field-even field"><th class="field-name">param t:</th><td class="field-body">Must be an astropy Table with columns containing parameters fit, and one column for chi-square values (&#8216;chisqr&#8217;).</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<dl class="docutils">
+<dt>Optional Inputs:</dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param evol:</th><td class="field-body">computes the mass, age, temperature, radius, surface gravity, and luminosity by using various evolutionary model sets. See below for the possible set options and the Brown Dwarf Evolutionary Models page for more details (default = True)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param emodel:</th><td class="field-body">set of evolutionary models to use; see <a class="reference external" href="api.html#splat_evolve.loadEvolModel">loadEvolModelParameters()</a> (default = &#8216;Baraffe&#8217;)</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param weight:</th><td class="field-body">set to True to use fitting statistic as a weighting to compute best fit statistics (default = True)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param stat:</th><td class="field-body">name of the statistics column in input table <code class="docutils literal"><span class="pre">t</span></code> (default = &#8216;chisqr&#8217;)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param stats:</th><td class="field-body">if True, prints several statistical values, including number of steps, best fit parameters, lowest chi2 value, median parameters and key values along the distribution (default = True)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param triangle:</th><td class="field-body">creates a triangle plot, plotting the parameters against each other, demonstrating areas of high and low chi squared values. Useful for demonstrating correlations between parameters (default = True)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param bestfit:</th><td class="field-body">set to True to plot best-fit model compared to spectrum (default=True)</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">param model_set:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">desired model set of <code class="docutils literal"><span class="pre">bestfit</span></code>; see <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a> for allowed options (can also use &#8216;mset&#8217;; default = blank)</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param filebase:</th><td class="field-body">a string that is the base filename for output (default = &#8216;modelfit_results&#8217;)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param sigma:</th><td class="field-body">when printing statistical results (<code class="docutils literal"><span class="pre">stats</span></code> = True), print the value at <code class="docutils literal"><span class="pre">sigma</span></code> standard deviations away from the mean (default = 1)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param iterative:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">if True, prints quantitative results but does not plot anything (default = False)</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<dl class="docutils">
+<dt>Output:</dt>
+<dd>No formal output, but results are plotted to various files</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
@@ -3096,7 +3358,6 @@ deviations away from the mean. Only effective if <code class="docutils literal">
 <span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">mask_standard</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="n">teff</span><span class="p">,</span> <span class="mf">5.3</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">zstep</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">savestep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">reportModelFitResults</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">evol</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">triangle</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 <span class="go">    Number of steps = 169</span>
-
 <span class="go">    Best Fit parameters:</span>
 <span class="go">    Lowest chi2 value = 29567.2136599 for 169.0 degrees of freedom</span>
 <span class="go">    Effective Temperature = 918.641 (K)</span>
@@ -3301,7 +3562,7 @@ deviations away from the mean. Only effective if <code class="docutils literal">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Driver function for <a href="#id85"><span class="problematic" id="id86">modelParameters_</span></a>, performs actual interpolation of evolutionary models. See SPLAT API for <a class="reference external" href="api.html#splat_evolve.modelParameters">modelParameters()</a> for details.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Driver function for <a href="#id77"><span class="problematic" id="id78">modelParameters_</span></a>, performs actual interpolation of evolutionary models. See SPLAT API for <a class="reference external" href="api.html#splat_evolve.modelParameters">modelParameters()</a> for details.</td>
 </tr>
 </tbody>
 </table>
