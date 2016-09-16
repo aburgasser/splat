@@ -44,19 +44,19 @@
 2016AJ....151...46A
 2016ApJ...817..112S
 2016Natur.533..221G
-arXiv:1605.07927 (Faherty et al. 2016)
+2016ApJS..224...36K
+2016ApJS..225...10F
 #
 #Spectral data in hand but needs to be entered
 #
 #Needed from
-2016ApJ...822L...1S
-2016ApJ...821..120A
-2016arXiv160308040K
-2015ApJ...814..118B
-2015AJ....150..182K
-2015ApJ...810..158F?
-2015ApJS..219...33G - partial
-2014ApJ...781....4L
+#2016ApJ...822L...1S
+#2016ApJ...821..120A
+#2016arXiv160308040K
+#2015ApJ...814..118B
+#2015AJ....150..182K
+#2015ApJ...810..158F
+#2014ApJ...781....4L
 #
 #Data needs to be set to published
-CruzIP
+#CruzIP

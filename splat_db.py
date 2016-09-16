@@ -1356,12 +1356,12 @@ def importSpectra(*args,**kwargs):
                 t_input = fetchDatabase(data_folder+spreadsheet)        
             except:
                 raise NameError('\nCould not find spreadsheet {} in local or data directories\n'.format(spreadsheet))
-        t_input_keys = [str.upper(k) for k in t_input.keys()]   # normalize capitalization
-        if 'FILENAME' in t_input.keys():
+        tkeys = list(t_input.keys())
+        if 'FILENAME' in tkeys:
             files = t_input['FILENAME']
-        elif 'FILE' in t_input.keys():
+        elif 'FILE' in tkeys:
             files = t_input['FILE']
-        elif 'FILES' in t_input.keys():
+        elif 'FILES' in tkeys:
             files = t_input['FILES']
         else:
             raise NameError('\nSpreadsheet {} does not have a column named filename; aborting\n'.format(spreadsheet))
@@ -1432,20 +1432,22 @@ def importSpectra(*args,**kwargs):
             t_spec['REDUCTION_SPEXTOOL_VERSION'][i] = 'v{}'.format(v.split('v')[-1])
 # populate spectral data table from spreadsheet 
     if spreadsheet != '':
-#        if 'FILENAME' in t_input_keys:
+#        if 'FILENAME' in tkeys:
 #            t_spec['DATA_FILE'] = t_input['FILENAME']
-        if 'DATE' in t_input_keys:
+        if 'DATE' in tkeys:
             t_spec['OBSERVATION_DATE'] = [splat.properDate(str(a),output='YYYYMMDD') for a in t_input['DATE']]
-            t_spec['JULIAN_DATE'] = [Time(splat.properDate(a,output='YYYY-MM-DD')).mjd for a in t_spec['OBSERVATION_DATE']]
-        if 'RESOLUTION' in t_input_keys:
+#            for a in t_input['DATE']:
+#                print(a,splat.properDate(str(a)),Time(splat.properDate(str(a),output='YYYY-MM-DD')),Time(splat.properDate(str(a),output='YYYY-MM-DD')).mjd)
+            t_spec['JULIAN_DATE'] = [Time(splat.properDate(str(a),output='YYYY-MM-DD')).mjd for a in t_input['DATE']]
+        if 'RESOLUTION' in tkeys:
             t_spec['RESOLUTION'] = [r for r in t_input['RESOLUTION']]
-        if 'SLIT' in t_input_keys:
+        if 'SLIT' in tkeys:
             t_spec['RESOLUTION'] = [150.*0.5/float(s) for s in t_input['SLIT']]
-        if 'AIRMASS' in t_input_keys:
+        if 'AIRMASS' in tkeys:
             t_spec['AIRMASS'] = t_input['AIRMASS']
-        if 'OBSERVER' in t_input_keys:
+        if 'OBSERVER' in tkeys:
             t_spec['OBSERVER'] = t_input['OBSERVER']
-        if 'DATA_REFERENCE' in t_input_keys:
+        if 'DATA_REFERENCE' in tkeys:
             t_spec['DATA_REFERENCE'] = t_input['DATA_REFERENCE']
             for i,ref in enumerate(t_spec['DATA_REFERENCE']):
                 if ref != '':
@@ -1481,23 +1483,23 @@ def importSpectra(*args,**kwargs):
     print(t_src['DESIGNATION'],t_src['RA'],t_src['DEC'])
 # populate source data table from spreadsheet
     if spreadsheet != '':
-        if 'DESIGNATION' in t_input_keys:
+        if 'DESIGNATION' in tkeys:
             t_src['DESIGNATION'] = t_input['DESIGNATION']
             t_src['NAME'] = t_src['DESIGNATION']
 #            coord = [splat.properCoordinates(s) for s in t_src['DESIGNATION']]
 #            t_src['RA'] = [c.ra.value for c in coord]
 #            t_src['DEC'] = [c.dec.value for c in coord]
-        if 'NAME' in t_input_keys:
+        if 'NAME' in tkeys:
             t_src['NAME'] = t_input['NAME']
-        if 'RA' in t_input_keys and 'DEC' in t_input_keys:
+        if 'RA' in tkeys and 'DEC' in tkeys:
             if splat.isNumber(t_input['RA'][0]):
                 t_src['RA'] = t_input['RA']
                 t_src['DEC'] = t_input['DEC']
-        if 'TYPE' in t_input_keys:
+        if 'TYPE' in tkeys:
             t_src['LIT_TYPE'] = t_input['TYPE']
-        if 'OPT_TYPE' in t_input_keys:
+        if 'OPT_TYPE' in tkeys:
             t_src['OPT_TYPE'] = t_input['OPT_TYPE']
-        if 'NIR_TYPE' in t_input_keys:
+        if 'NIR_TYPE' in tkeys:
             t_src['NIR_TYPE'] = t_input['NIR_TYPE']
     t_src['SHORTNAME'] = [splat.designationToShortName(d) for d in t_src['DESIGNATION']]
 #    for c in splat.DB_SOURCES.keys():
@@ -1637,7 +1639,7 @@ def importSpectra(*args,**kwargs):
             print('\nCould not perform Vizier search, you are not online')
     else:
         for i,jmag in enumerate(t_src['J_2MASS']):
-            if float('{}0'.format(jmag)) == 0.0:
+            if float('{}0'.format(jmag.replace('--',''))) == 0.0:
                 t_vizier = splat.getPhotometry(splat.properCoordinates(t_src['DESIGNATION'][i]),radius=30.*u.arcsec,catalog='2MASS')
 
     # multiple sources; choose the closest
@@ -1833,8 +1835,8 @@ def test_baseline():
     table = splat.modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
 
 
-def test_ingest(folder='/Users/adam/projects/splat/adddata/simp/prism/'):
-    importSpectra(data_folder=folder) #,spreadsheet=data_folder+'upload.csv')
+def test_ingest(folder='./',**kwargs):
+    importSpectra(data_folder=folder,**kwargs)
 
 def test_combine():
 # source db
@@ -1878,7 +1880,7 @@ def test_combine():
 # main testing of program
 if __name__ == '__main__':
 
-
-    test_ingest('/Users/adam/projects/splat/adddata/tobeadded/daniella/SpeX_150225/')
+    dfolder = '/Users/adam/projects/splat/adddata/tobeadded/gagne/'
+    test_ingest(dfolder,spreadsheet=dfolder+'input.csv')
 
 
