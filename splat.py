@@ -724,7 +724,7 @@ class Spectrum(object):
             SPLAT spectrum key is 10857
             Data published in Kirkpatrick, J. D. et al. (2010, ApJS, 190, 100-146)
             History:
-            Spectrum successfully loaded
+                Spectrum successfully loaded
         '''
         if (self.ismodel):
             print('\n{} with the following parmeters:'.format(self.name))
@@ -787,9 +787,9 @@ class Spectrum(object):
             ...
         '''
 
-        '''
-        :Purpose: export spectrum object to a file, either fits or ascii depending on file extension
-        '''
+#
+# NOTE: EXPORT CURRENTLY DOES NOT RETURN A PROPER HEADER
+#
         filename = self.simplefilename
         if len(args) > 0:
             filename = args[0]
@@ -832,16 +832,18 @@ class Spectrum(object):
 
     def save(self,*args,**kwargs):
         '''
-        :Purpose: Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  Spectrum.export_ and Spectrum.save function in the same manner.
+        :Purpose: Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  
 
-        .. _Spectrum.export : api.html#splat.Spectrum.export
+        `Spectrum.export()`_ and `Spectrum.save` function in the same manner.
+
+        .. _`Spectrum.export()` : api.html#splat.Spectrum.export
         '''
         self.export(*args,**kwargs)
 
 
     def flamToFnu(self):
         '''
-        :Purpose: Converts flux density from F_lambda to F_nu, the latter in Jy. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in F_nu units.
+        :Purpose: Converts flux density from F\_lambda to F\_nu, the latter in Jy. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in F\_nu units.
         
         :Example:
            >>> import splat
@@ -860,7 +862,7 @@ class Spectrum(object):
 
     def fnuToFlam(self):
         '''
-        :Purpose: Converts flux density from F_nu to F_lambda, the latter in erg/s/cm2/Hz. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in F_lambda units.
+        :Purpose: Converts flux density from F\_nu to F\_lambda, the latter in erg/s/cm\^2/Hz. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in F\_lambda units.
         
         :Example:
            >>> import splat
@@ -884,16 +886,18 @@ class Spectrum(object):
 
     def fluxCalibrate(self,filter,mag,**kwargs):
         '''
-        :Purpose: Flux calibrates a spectrum given a filter and a magnitude. The filter must be one of those listed in splat.FILTERS.keys(). It is possible to specifically set the magnitude to be absolute (by default it is apparent).  This function changes the Spectrum object's flux, noise and variance arrays.
+        :Purpose: Flux calibrates a spectrum given a filter and a magnitude. The filter must be one of those listed in `splat.FILTERS.keys()`. It is possible to specifically set the magnitude to be absolute (by default it is apparent).  This function changes the Spectrum object's flux, noise and variance arrays.
         
-        :param filter: name of filter
-        :type filter: string, default = None
-        :param mag: magnitude to scale too 
-        :type mag: float, default = None
-        :param absolute: given magnitude is an absolute magnitude  
-        :type absolute: Boolean, optional, default = False
-        :param apparent: given magnitude is an apparent magnitude  
-        :type apparent: Boolean, optional, default = False
+        Required Inputs:
+
+        :param filter: string specifiying the name of the filter
+        :param mag: number specifying the magnitude to scale to 
+
+        Optional Inputs:
+        ^^^^^^^^^^^^^^^^
+
+        :param absolute: set to True to specify that the given magnitude is an absolute magnitude, which sets the ``fscale`` keyword in the Spectrum object to 'Absolute' (default = False)
+        :param apparent: set to True to specify that the given magnitude is an apparent magnitude, which sets the ``fscale`` flag in the Spectrum object to 'Apparent' (default = False)
 
         :Example:
            >>> import splat
@@ -905,7 +909,6 @@ class Spectrum(object):
 
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',not absolute)
-#        self.normalize(silent=True)
         apmag,apmag_e = filterMag(self,filter,**kwargs)
 # NOTE: NEED TO INCORPORATE UNCERTAINTY INTO SPECTRAL UNCERTAINTY
         if (~numpy.isnan(apmag)):
