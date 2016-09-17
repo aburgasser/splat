@@ -1465,22 +1465,22 @@ def importSpectra(*args,**kwargs):
 
 # determine coordinates as best as possible
     for i,sp in enumerate(t_spec['SPECTRUM']):
-        if i == 0:
-            for k in list(sp.header.keys()):
-                print(k,sp.header[k])
+#        if i == 0:
+#            for k in list(sp.header.keys()):
+#                print(k,sp.header[k])
         if 'TCS_RA' in sp.header.keys() and 'TCS_DEC' in sp.header.keys():
             sp.header['RA'] = sp.header['TCS_RA']
             sp.header['DEC'] = sp.header['TCS_DEC']
             sp.header['RA'] = sp.header['RA'].replace('+','')
         if t_src['DESIGNATION'][i].strip() == '' and sp.header['RA'] != '' and sp.header['DEC'] != '':
             t_src['DESIGNATION'][i] = 'J{}+{}'.format(sp.header['RA'].replace('+',''),sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('++','+').replace('J+','J').replace(' ','')
-            print('DETERMINED DESIGNATION {} FROM RA/DEC'.format(t_src['DESIGNATION'][i]))
+#            print('DETERMINED DESIGNATION {} FROM RA/DEC'.format(t_src['DESIGNATION'][i]))
         if t_src['RA'][i].strip() == '' and t_src['DESIGNATION'][i].strip() != '':
             coord = splat.properCoordinates(t_src['DESIGNATION'][i])
             t_src['RA'][i] = coord.ra.value
             t_src['DEC'][i] = coord.dec.value
-            print('DETERMINED RA/DEC FROM DESIGNATION {}'.format(t_src['DESIGNATION'][i]))
-    print(t_src['DESIGNATION'],t_src['RA'],t_src['DEC'])
+#            print('DETERMINED RA/DEC FROM DESIGNATION {}'.format(t_src['DESIGNATION'][i]))
+#    print(t_src['DESIGNATION'],t_src['RA'],t_src['DEC'])
 # populate source data table from spreadsheet
     if spreadsheet != '':
         if 'DESIGNATION' in tkeys:
@@ -1652,12 +1652,12 @@ def importSpectra(*args,**kwargs):
                         print('\n{}'.format(t_src['DESIGNATION'][i]))
                         print(t_vizier)
                     t_src['DESIGNATION'][i] = 'J{}'.format(t_vizier['_2MASS'][0])
-                    t_src['J_2MASS'][i] = t_vizier['Jmag'][0]
-                    t_src['J_2MASS_E'][i] = t_vizier['e_Jmag'][0]
-                    t_src['H_2MASS'][i] = t_vizier['Hmag'][0]
-                    t_src['H_2MASS_E'][i] = t_vizier['e_Hmag'][0]
-                    t_src['KS_2MASS'][i] = t_vizier['Kmag'][0]
-                    t_src['KS_2MASS_E'][i] = t_vizier['e_Kmag'][0]
+                    t_src['J_2MASS'][i] = str(t_vizier['Jmag'][0]).replace('--','')
+                    t_src['J_2MASS_E'][i] = str(t_vizier['e_Jmag'][0]).replace('--','')
+                    t_src['H_2MASS'][i] = str(t_vizier['Hmag'][0]).replace('--','')
+                    t_src['H_2MASS_E'][i] = str(t_vizier['e_Hmag'][0]).replace('--','')
+                    t_src['KS_2MASS'][i] = str(t_vizier['Kmag'][0]).replace('--','')
+                    t_src['KS_2MASS_E'][i] = str(t_vizier['e_Kmag'][0]).replace('--','')
 
 # add in distance if spectral type and magnitude are known
     for i,spt in enumerate(t_src['LIT_TYPE']):
@@ -1675,24 +1675,15 @@ def importSpectra(*args,**kwargs):
 # compute vtan
         if float('{}0'.format(t_src['MU'][i].replace('--',''))) != 0.0 and float('{}0'.format(t_src['DISTANCE'][i])) != 0.0:
             t_src['VTAN'][i] = 4.74*float(t_src['DISTANCE'][i])*float(t_src['MU'][i])/1000.
-# compute J-K excess and color extremity
-        if spt != '' and float('{}0'.format(t_src['J_2MASS'][i])) != 0.0 and float('{}0'.format(t_src['KS_2MASS'][i])) != 0.0:
-            t_src['JK_EXCESS'][i] = float(t_src['J_2MASS'][i])-float(t_src['KS_2MASS'][i])-splat.typeToColor(spt,'J-K')[0]
-            if t_src['JK_EXCESS'][i] == numpy.nan or t_src['JK_EXCESS'][i] == '':
-                t_src['JK_EXCESS'][i] = ''
-            elif float(t_src['JK_EXCESS'][i]) > 0.3:
-                t_src['COLOR_EXTREMITY'][i] == 'RED'
-            elif float(t_src['JK_EXCESS'][i]) < -0.3:
-                t_src['COLOR_EXTREMITY'][i] == 'BLUE'
 
 # clear up zeros
-        if float('{}0'.format(t_src['J_2MASS'][i])) == 0.0:
+        if float('{}0'.format(t_src['J_2MASS'][i]).replace('--','')) == 0.0:
             t_src['J_2MASS'][i] = ''
             t_src['J_2MASS_E'][i] = ''
-        if float('{}0'.format(t_src['H_2MASS'][i])) == 0.0:
+        if float('{}0'.format(t_src['H_2MASS'][i]).replace('--','')) == 0.0:
             t_src['H_2MASS'][i] = ''
             t_src['H_2MASS_E'][i] = ''
-        if float('{}0'.format(t_src['KS_2MASS'][i])) == 0.0:
+        if float('{}0'.format(t_src['KS_2MASS'][i]).replace('--','')) == 0.0:
             t_src['KS_2MASS'][i] = ''
             t_src['KS_2MASS_E'][i] = ''
         if float('{}0'.format(t_src['PARALLAX'][i].replace('--',''))) == 0.0:
@@ -1713,6 +1704,17 @@ def importSpectra(*args,**kwargs):
             t_src['SIMBAD_SEP'][i] = ''
         if t_src['GRAVITY_CLASS_NIR'][i] == '':
             t_src['GRAVITY_CLASS_NIR_REF'][i] = ''
+
+# compute J-K excess and color extremity
+        if spt != '' and float('{}0'.format(t_src['J_2MASS'][i])) != 0.0 and float('{}0'.format(t_src['KS_2MASS'][i])) != 0.0:
+            t_src['JK_EXCESS'][i] = float('{}0'.format(t_src['J_2MASS'][i]))-float('{}0'.format(t_src['KS_2MASS'][i]))-splat.typeToColor(spt,'J-K')[0]
+            if t_src['JK_EXCESS'][i] == numpy.nan or t_src['JK_EXCESS'][i] == '':
+                t_src['JK_EXCESS'][i] = ''
+            elif float(t_src['JK_EXCESS'][i]) > 0.3:
+                t_src['COLOR_EXTREMITY'][i] == 'RED'
+            elif float(t_src['JK_EXCESS'][i]) < -0.3:
+                t_src['COLOR_EXTREMITY'][i] == 'BLUE'
+
 
 # generate check plots
     legend = []
@@ -1880,7 +1882,7 @@ def test_combine():
 # main testing of program
 if __name__ == '__main__':
 
-    dfolder = '/Users/adam/projects/splat/adddata/tobeadded/gagne/'
+    dfolder = '/Users/adam/projects/splat/adddata/tobeadded/simp/prism/'
     test_ingest(dfolder,spreadsheet=dfolder+'input.csv')
 
 
