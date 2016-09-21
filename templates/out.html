@@ -1,21 +1,15 @@
 <!doctype html>
-<title>Spectrum Plot</title>
-<link href="http://cdn.pydata.org/bokeh/release/bokeh-0.12.1.css" rel="stylesheet">
-<link href="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.1.css" rel="stylesheet">
-<script src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.1.js"></script>
-<script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.1.js"></script>
-<link rel= "stylesheet" type = "text/css" href = "static/display.css"
-
-
-
-
-
-
 
 <!-- START OF HEADER -->
 
 <head>
 <title>SpeX Prism Spectral Libraries</title>
+
+<link href="http://cdn.pydata.org/bokeh/release/bokeh-0.12.1.css" rel="stylesheet">
+<link href="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.1.css" rel="stylesheet">
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.1.js"></script>
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.1.js"></script>
+<link rel= "stylesheet" type = "text/css" href = "static/display.css">
 
 <link rel="shortcut icon" href="http://www.browndwarfs.org/graphics/logo2.ico">
 <link rel="stylesheet" type="text/css" href="http://www.browndwarfs.org/spexprism/styles/mainstyle.css">
@@ -47,7 +41,7 @@
 <h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/index.html">Home</a></h3>
 <h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/about.html">Using the Libraries</a></h3>
 <h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/library.html">The Libraries</a></h3>
-<h3><a href="c.html">Interactive Spectrum</a></h3>
+<h3><a href="input.html">SPLAT Web Interface</a></h3>
 <h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/publications.html">Publications</a></h3>
 <h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/links.html">Links</a></h3>
 <h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/contact.html">Contact</a></h3>
@@ -59,21 +53,12 @@
 
 <!-- END OF HEADER -->
 
-<h2>Interactive Spectrum
-<hr width=200 align=left></h2>
-
-<p>
-Here, you can create an interactive spectrum from a spectrum file that you upload below. 
-
-
-<p>
+<h2>Interactive Spectrum Viewer</h2>
+<p>Some description</p>
 
 <input class="toggle-box" id="identifier-1" type="checkbox" >
-<label for="identifier-1">Click here to read more about HTML!</label>
-<div>HTML - is a language for web page markup.</div>
 
 <div class=page>
-	<h1>Spectrum Plot</h1>
 	<center>
 		{{ div.plot|safe }}
 		{{content}}
@@ -85,10 +70,11 @@ Here, you can create an interactive spectrum from a spectrum file that you uploa
 <div style = "white-space: pre-wrap;"> {{content}} </div>
 
 <p>
-This site utilizes the <a href="https://www.google.com/url?q=http://pono.ucsd.edu/~adam/browndwarfs/splat/&sa=D&ust=1470083639367000&usg=AFQjCNFPEXUTlHHl8zZDHoL8gh43Uh_SLg">SPLAT code</a>, specifically the spectrum function along with the star classification function.<br>
-The interactivity of the spectrum comes from <a href="http://bokeh.pydata.org/en/latest/">Bokeh</a>, a Python interactive visualization library. Bokeh provides elegant, concise construction of novel graphics with high-performance interactivity over very large or streaming datasets in a quick and easy way.
-
+This site utilizes the <a href="http://pono.ucsd.edu/~adam/browndwarfs/splat">SPLAT code</a>
+</p>
 <p>
+The SPLAT Web Interface used Flask and <a href="http://bokeh.pydata.org/en/latest/">Bokeh</a>
+</p>
 
 
 <!-- BEGIN FOOTER -->
@@ -100,20 +86,6 @@ The interactivity of the spectrum comes from <a href="http://bokeh.pydata.org/en
 <br><br><br>
 
 <a href="http://www.browndwarfs.org/spexprism/">The SpeX Prism Libraries</a><br> http://www.browndwarfs.org/spexprism/<br><br>
-
-This site has been visited
-<!-- Start of StatCounter Code -->
-<script type="text/javascript">
-var sc_project=3306879; 
-var sc_invisible=0; 
-var sc_partition=36; 
-var sc_security="cb1a8df0"; 
-var sc_text=3; 
-</script>
-
-<script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script><noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c37.statcounter.com/3306879/0/cb1a8df0/0/" alt="click analytics" /></a></div></noscript>
-<!-- End of StatCounter Code -->
-times since 4 January 2008 - <a href="http://my.statcounter.com/project/standard/stats.php?project_id=3306879&guest=1">View Stats</a>
 
 
 </body>

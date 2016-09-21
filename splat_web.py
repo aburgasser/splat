@@ -26,25 +26,59 @@ def load_spectra():
 	if request.method == 'GET':
 		return render_template('input.html', error='')
 	else:
-		if request.form['submit'] == 'Load Spectra':
+#		for k in list(request.form.keys()):
+#			print(k,request.form[k])
+
+# search by file "upload"	
+		if request.form['submit'] == 'Load File':
 			try:
 				path = request.form['path']
-				sp = splat.Spectrum(path)
+				sp = splat.Spectrum(file=str(path))
+				sp = [sp]
 			except:
-				return render_template('input.html',  error = "Could not load spectra")
+				return render_template('input.html',  error = "\n\nProblem with file upload button")
 		
-
-		elif request.form['submit'] == 'Load Spectra ':
+# search by file path specification	
+		if request.form['submit'] == 'Load File ':
 			try:
-				name = request.form['name']
-				sp = splat.getSpectrum(shortname = name)
-
+				path = request.form['path']
+				sp = splat.Spectrum(file=str(path))
+				sp = [sp]
 			except:
-				return render_template('input.html',  error = "Could not load spectra")
+				return render_template('input.html',  error = "\n\nProblem with file path specification")
+		
+# search by spectrum key	
+		if request.form['submit'] == 'Load by ID':
+			try:
+				sp = splat.Spectrum(int(str(request.form['key'])))
+				sp = [sp]
+			except:
+				return render_template('input.html',  error = "\n\nProblem with key specification")
+		
+# search by date observed	
+		if request.form['submit'] == 'Load by Date':
+			try:
+				sp = splat.getSpectrum(date = str(request.form['date']))
+			except:
+				return render_template('input.html',  error = "\n\nProblem with key specification")
+		
+# search by shortname	
+		elif request.form['submit'] == 'Load by Shortname':
+			try:
+				sp = splat.getSpectrum(shortname = str(request.form['shortname']))
+			except:
+				return render_template('input.html',  error = "\n\nProblem with specifying file by shortname")
+	
+# search by name	
+		elif request.form['submit'] == 'Load by Name':
+			try:
+				sp = splat.getSpectrum(name = str(request.form['name']))
+			except:
+				return render_template('input.html',  error = "\n\nProblem with specifying file by name")
 	
 			
-
-		elif request.form['submit'] == 'Load Spectra  ':
+# search by options
+		elif request.form['submit'] == 'Load by Options':
 			sp1 = request.form['sp1']
 			sp2 = request.form['sp2']
 			mag1 = request.form['mag1']
@@ -74,43 +108,43 @@ def load_spectra():
 
 			try:
 				sp = splat.getSpectrum(**kwargs)
-				if len(sp) == 0:
-					return render_template('input.html', error = "Could not load spectra")
 			except:
-				return render_template('input.html', error = "Could not load spectra")
+				return render_template('input.html', error = "\n\nProblem with option search")
 			
-		
+# lucky pull	
 		elif request.form['submit'] == 'Get Lucky!':
 			sp = splat.getSpectrum(lucky=True)
 
 		if len(sp) == 0:
-			return render_template('input.html', error = "Could not load spectra")
+			return render_template('input.html', error = "\n\nNo spectra matched search constratins")
 
 		try:
 			tab = []
 
-			for i in range(len(sp)):
-				spectral_type = splat.classifyByStandard(sp[i])[0]
-				mpl_fig = splat.plotSpectrum(sp[i], web=True, uncertainty = True, mdwarf=True)[0]
+			for s in sp:
+				spectral_type = splat.classifyByStandard(s)[0]
+				mpl_fig = splat.plotSpectrum(s, web=True, uncertainty = True, mdwarf=True)[0]
 				bokehfig = mpl.to_bokeh(fig=mpl_fig)
-				bokehfig.set(x_range=Range1d(.8,2.4))
-				sys.stdout = open("out1.txt", "w") 
-				sp[i].info()
-				sys.stdout = sys.__stdout__
-				with open("out1.txt", "r") as f:
-					content = f.read() 
-				p = Paragraph(text=content, width=200, height=100)
+				bokehfig.set(x_range=Range1d(.8,2.4),y_range=Range1d(0,s.fluxMax().value*1.2))
+#				sys.stdout = open("out1.txt", "w") 
+#				sys.stdout = sys.__stdout__
+#				with open("out1.txt", "r") as f:
+#					content = f.read() 
+				content = s.info(printout=False)
+#				print(content)
+				p = Paragraph(text=content)
 				widget = VBox(bokehfig, p)
-				tab.append(Panel(child=widget, title=str(spectral_type)+ " Star"))
+				tab.append(Panel(child=widget, title=str(s.name)))
+#				tab.append(Panel(child=widget, title=str(spectral_type)+ " Star"))
 				
-			tabs = Tabs(tabs= tab)
-			script, div_dict = components({"plot" : tabs})
+			plottabs = Tabs(tabs= tab)
+			script, div_dict = components({"plot" : plottabs})
 		except:
-				return render_template('input.html', error = "Error Plotting Spectra")
+				return render_template('input.html', error = "\n\nProblem Plotting Spectra")
 		
 		return render_template('out.html', star_type = spectral_type, script=script,  div=div_dict)	
 
 if __name__ == '__main__':
 	port = int(os.environ.get('PORT', 5000))
 	app.run(host='0.0.0.0', port=port, debug=False)
-		
+

@@ -13,3 +13,8 @@
 .toggle-box:checked + label + div {
   display: block;
 }
+
+#pinfo {
+	background-color: #eeeeee;
+	text-align: left;
+}
