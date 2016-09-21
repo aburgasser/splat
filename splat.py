@@ -353,6 +353,7 @@ class Spectrum(object):
 # some presets
         sdb = False
         self.ismodel = kwargs.get('ismodel',False)
+        self.instrument = kwargs.get('instrument','SpeX prism')
         self.wlabel = kwargs.get('wlabel',r'Wavelength')
         self.wunit = kwargs.get('wunit',u.micron)
         self.wunit_label = kwargs.get('wunit_label',r'$\mu$m')
@@ -481,9 +482,9 @@ class Spectrum(object):
 # populate information on source and spectrum from database
         if sdb != False:
             for k in sdb.keys():
-                setattr(self,k.lower(),sdb[k][0])
+                setattr(self,k.lower(),str(sdb[k][0]))
             self.shortname = designationToShortName(self.designation)
-            self.date = self.observation_date
+            self.date = str(self.observation_date)
 # convert some data into numbers
             kconv = ['ra','dec','julian_date','median_snr','resolution','airmass',\
             'jmag','jmag_error','hmag','hmag_error','kmag','kmag_error','source_key']
@@ -493,6 +494,9 @@ class Spectrum(object):
                 except:
                     setattr(self,k,numpy.nan)
 #                print(getattr(self,k))
+# published? assume not
+        if not hasattr(self,'published'):
+            self.published = kwargs.get('published','N')
         
 
 # information on model
@@ -705,7 +709,7 @@ class Spectrum(object):
         w = numpy.where(self.flux.value > numpy.median(self.flux.value))
         return numpy.nanmedian(self.flux.value[w]/self.noise.value[w])
 
-    def info(self):
+    def info(self,**kwargs):
         '''
         :Purpose: Returns a summary of properties for the Spectrum object
         
@@ -727,35 +731,44 @@ class Spectrum(object):
                 Spectrum successfully loaded
         '''
         if (self.ismodel):
-            print('\n{} with the following parmeters:'.format(self.name))
-            print('Teff = {} {}'.format(self.teff,MODEL_PARAMETER_UNITS['teff']))
-            print('logg = {} {}'.format(self.logg,MODEL_PARAMETER_UNITS['logg']))
-            print('z = {} {}'.format(self.z,MODEL_PARAMETER_UNITS['z']))
-            print('fsed = {}'.format(self.fsed))
-            print('cld = {}'.format(self.cld))
-            print('kzz = {}'.format(self.kzz))
-            print('Smoothed to slit width {} {}\n'.format(self.slit,MODEL_PARAMETER_UNITS['slit']))
-        else:
-#            print('\nSpectrum of {0} observed on {1}'''.format(self.name, self.date))
-            text = ['Spectrum of','Observed on','Observed by','at an airmass of','Full source designation is', 'Median S/N =','SPLAT source key is','SPLAT spectrum key is']
-            ref = ['name','date','observer','airmass','designation','median_snr','source_key','data_key']
-            for i,k in enumerate(ref):
-                try:
-                    if getattr(self,k) != '':
-                        print('{} {}'.format(text[i],getattr(self,k)))
-                except:
-                    pass
-            if self.published == 'Y':
-                bib = getBibTex(self.data_reference)
-                print('Data published in {}'.format(shortRef(bib)))
+            f = '\n{} with the following parmeters:'.format(self.name)
+            f+='\nTeff = {} {}'.format(self.teff,MODEL_PARAMETER_UNITS['teff'])
+            f+='\nlogg = {} {}'.format(self.logg,MODEL_PARAMETER_UNITS['logg'])
+            f+='\nz = {} {}'.format(self.z,MODEL_PARAMETER_UNITS['z'])
+            f+='\nfsed = {}'.format(self.fsed)
+            f+='\ncld = {}'.format(self.cld)
+            f+='\nkzz = {}'.format(self.kzz)
+            f+='\nSmoothed to slit width {} {}'.format(self.slit,MODEL_PARAMETER_UNITS['slit'])
+            f+='\nIf you use this model, please cite {}'.format(shortRef(DEFINED_MODEL_BIBCODES[self.modelset]))
+            f+='\nbibcode = {}\n'.format(DEFINED_MODEL_BIBCODES['self.modelset'])
+            if kwargs.get('printout',True):
+                print(f)
+                return
             else:
-                print('Unpublished data')
-                pass
-            print('\nHistory:')
+                return f
+        else:
+            f = '\n{} spectrum of {}'.format(self.instrument,self.name)
+            if hasattr(self,'observer') and hasattr(self,'date'): f+='\nObserved by {} on {}'.format(self.observer,properDate(self.date,output='YYYY MMM DD'))
+            if hasattr(self,'airmass'): f+='\nAirmass = {}'.format(self.airmass)
+            if hasattr(self,'designation'): f+='\nSource designation = {}'.format(self.designation)
+            if hasattr(self,'median_snr'): f+='\nMedian S/N = {}'.format(self.median_snr)
+            if hasattr(self,'spex_type'): f+='\nSpeX Classification = {}'.format(self.spex_type)
+            if hasattr(self,'lit_type'): f+='\nLiterature Classification = {} from {}'.format(self.lit_type,shortRef(self.lit_type_ref))
+            if hasattr(self,'source_key') and hasattr(self,'data_key'): f+='\nSpectrum key = {}, Source key = {}\n'.format(int(self.data_key),int(self.source_key))
+            if self.published == 'Y':
+                f+='\nIf you use these data, please cite:'
+                f+='\n\t{}'.format(shortRef(self.data_reference))
+                f+='\n\tbibcode: {}'.format(self.data_reference)
+            else:
+                f+='\nUNPUBLISHED DATA'
+            f+='\nHistory:'
             for h in self.history:
-                print('\t{}'.format(h))
-#        print('\nPlot spectrum using .plot()')
-        return
+                f+='\n\t{}'.format(h)
+            if kwargs.get('printout',True):
+                print(f)
+                return
+            else:
+                return f
 
     def export(self,*args,**kwargs):
         '''
@@ -1374,68 +1387,8 @@ def caldateToDate(d):
        >>> print date
        20050612
     '''
-    return d[:4]+str((months.index(d[5:8])+1)/100.)[2:4]+d[-2:]
+    return properDate(d,output-'YYYY MMM DD')
 
-
-def checkAccess(**kwargs):
-    '''
-    :Purpose: Checks if user has access to unpublished spectra in SPLAT library.
-    :Example:
-       >>> import splat
-       >>> print splat.checkAccess()
-       True
-    :Note: Must have the file .splat_access in your home directory with the correct passcode to use.
-    '''
-    access_file = '.splat_access'
-    result = False
-
-    try:
-        home = os.path.expanduser("~")
-        if home == None:
-            home = './'
-#        print(home)
-#        print(SPLAT_URL+access_file)
-        bcode = requests.get(SPLAT_URL+access_file).content
-#        print(bcode)
-        lcode = base64.b64encode(open(home+'/'+access_file,'r').read().encode())
-#        print(lcode)
-        if (bcode in lcode):        # changed to partial because of EOL variations
-            result = True
-    except:
-        result = False
-
-    if (kwargs.get('report','') != ''):
-        if result == True:
-            print('You have full access to all SPLAT data')
-        else:
-            print('You have access only to published data')
-    return result
-
-
-def checkFile(filename,**kwargs):
-    '''
-    :Purpose: Checks if a spectrum file exists in the SPLAT's library.
-    :param filename: A string containing the spectrum's filename.
-    :Example:
-       >>> import splat
-       >>> spectrum1 = 'spex_prism_1315+2334_110404.fits'
-       >>> print splat.checkFile(spectrum1)
-       True
-       >>> spectrum2 = 'fake_name.fits'
-       >>> print splat.checkFile(spectrum2)
-       False
-    '''
-    url = kwargs.get('url',SPLAT_URL)+DATA_FOLDER
-    return requests.get(url+filename).status_code == requests.codes.ok
-#    flag = checkOnline()
-#    if (flag):
-#        try:
-#            r = requests.get(url+filename)
-#            open(os.path.basename(filename), 'wb').write(r.content)
-#            open(os.path.basename(filename), 'wb').write(urllib2.urlopen(url+filename).read())
-#        except:
-#            flag = False
-#    return flag
 
 
 def checkKeys(input,parameters,**kwargs):
@@ -1457,59 +1410,6 @@ def checkKeys(input,parameters,**kwargs):
             raise ValueError('Valid keywords are {}\n'.format(parameters))
         else:
             print('Valid keywords are {}\n'.format(parameters))
-
-
-def checkLocal(inputfile):
-    '''
-    :Purpose: Checks if a file is present locally or within the SPLAT
-                code directory
-    :Example:
-       >>> import splat
-       >>> splat.checkLocal('splat.py')
-       True  # found the code
-       >>> splat.checkLocal('parameters.txt')
-       False  # can't find this file
-       >>> splat.checkLocal('SpectralModels/BTSettl08/parameters.txt')
-       True  # found it
-    '''
-    if not os.path.exists(inputfile):
-        if not os.path.exists(SPLAT_PATH+inputfile):
-            return ''
-        else:
-            return SPLAT_PATH+inputfile
-    else:
-        return inputfile
-
-
-def checkOnline(*args):
-    '''
-    :Purpose: Checks if SPLAT's URL is accessible from your machine--
-                that is, checks if you and the host are online. Alternately
-                checks if a given filename is present locally or online
-    :Example:
-       >>> import splat
-       >>> splat.checkOnline()
-       True  # SPLAT's URL was detected.
-       >>> splat.checkOnline()
-       False # SPLAT's URL was not detected.
-       >>> splat.checkOnline('SpectralModels/BTSettl08/parameters.txt')
-       '' # Could not find this online file.
-    '''
-    try:
-        if (len(args) != 0):
-            if 'http://' in args[0]:
-                if requests.get(args[0]).status_code == requests.codes.ok:
-                	return args[0]
-                return ''
-            else:
-                if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
-                    return SPLAT_URL+args[0]
-                return ''
-        else:
-        	return requests.get(SPLAT_URL).status_code == requests.codes.ok
-    except:
-        return ''
-
 
 
 
@@ -2598,7 +2498,7 @@ def coordinateToDesignation(c):
         cc.dec.to_string(unit=u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
 
 
-def dateToCaldate(date):
+def dateToCaldate(d):
     '''
     :Purpose: Converts numeric date to calendar date
 
@@ -3866,8 +3766,28 @@ def properDate(d,**kwargs):
                 mref = str(i+1)
         if len(mref) == 1:
             mref = '0'+mref
+        dp = tmp[2]+' '+mref+' '+tmp[0]
+    elif dformat == 'DD-MMM-YYYY':
+        tmp = d.split(' ')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        for i,c in enumerate(splat.months):
+            if c.lower() == tmp[1].lower():
+                mref = str(i+1)
+        if len(mref) == 1:
+            mref = '0'+mref
         dp = tmp[2]+'-'+mref+'-'+tmp[0]
     elif dformat == 'YYYY MMM DD':
+        tmp = d.split(' ')
+        if len(tmp[2]) == 1:
+            tmp[2] = '0'+tmp[2]
+        for i,c in enumerate(splat.months):
+            if c.lower() == tmp[1].lower():
+                mref = str(i+1)
+        if len(mref) == 1:
+            mref = '0'+mref
+        dp = tmp[0]+' '+mref+' '+tmp[2]
+    elif dformat == 'YYYY-MMM-DD':
         tmp = d.split(' ')
         if len(tmp[2]) == 1:
             tmp[2] = '0'+tmp[2]
@@ -3903,9 +3823,15 @@ def properDate(d,**kwargs):
     elif oformat == 'DD MMM YYYY':
         tmp = dp.split('-')
         df = tmp[2]+' '+splat.months[int(tmp[1])-1]+' '+tmp[0]
+    elif oformat == 'DD-MMM-YYYY':
+        tmp = dp.split('-')
+        df = tmp[2]+'-'+splat.months[int(tmp[1])-1]+'-'+tmp[0]
     elif oformat == 'YYYY MMM DD':
         tmp = dp.split('-')
         df = tmp[0]+' '+splat.months[int(tmp[1])-1]+' '+tmp[2]
+    elif oformat == 'YYYY-MMM-DD':
+        tmp = dp.split('-')
+        df = tmp[0]+'-'+splat.months[int(tmp[1])-1]+'-'+tmp[2]
     else:
         df = dp
 
@@ -4705,6 +4631,11 @@ def test():
 
 
 
+def test_info(key=10001):
+    s = splat.getSpectrum(lucky=True)[0]
+    s.info()
+    return
+
 def test_pubdata():
     s = splat.searchLibrary(published=True)
     print('Checking {} spectra'.format(len(s)))
@@ -4719,5 +4650,6 @@ def test_pubdata():
 # run test program if calling from command line
 if __name__ == '__main__':
 
-    test_gooddata()
+#    test_gooddata()
 #    splat.test()
+    test_info()

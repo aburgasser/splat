@@ -7,6 +7,7 @@ from __future__ import print_function, division
 """
 
 import astropy
+import base64
 import copy
 #from datetime import datetime
 import csv
@@ -129,26 +130,27 @@ def bibTexParser(bib_tex,**kwargs):
         bib_dict[line[0]] = line[1]
 
 # Journal massaging
-    if bib_dict['journal'] == '\\apj':
-        bib_dict['journal'] = 'ApJ'
-    elif bib_dict['journal'] == '\\apjs':
-        bib_dict['journal'] = 'ApJS'
-    elif bib_dict['journal'] == '\\aj':
-        bib_dict['journal'] = 'AJ'
-    elif bib_dict['journal'] == '\\araa':
-        bib_dict['journal'] = 'AR&A'
-    elif bib_dict['journal'] == '\\aap':
-        bib_dict['journal'] = 'A&A'
-    elif bib_dict['journal'] == '\\mnras':
-        bib_dict['journal'] = 'MNRAS'
-    elif bib_dict['journal'] == '\\pasp':
-        bib_dict['journal'] = 'PASP'
-    elif bib_dict['journal'] == '\\pnas':
-        bib_dict['journal'] = 'PNAS'
-    else:
-        pass
-
-
+    if 'journal' in list(bib_dict.keys()):
+        if bib_dict['journal'] == '\\apj':
+            bib_dict['journal'] = 'ApJ'
+        elif bib_dict['journal'] == '\\apjs':
+            bib_dict['journal'] = 'ApJS'
+        elif bib_dict['journal'] == '\\aj':
+            bib_dict['journal'] = 'AJ'
+        elif bib_dict['journal'] == '\\araa':
+            bib_dict['journal'] = 'AR&A'
+        elif bib_dict['journal'] == '\\aap':
+            bib_dict['journal'] = 'A&A'
+        elif bib_dict['journal'] == '\\mnras':
+            bib_dict['journal'] = 'MNRAS'
+        elif bib_dict['journal'] == '\\pasp':
+            bib_dict['journal'] = 'PASP'
+        elif bib_dict['journal'] == '\\pnas':
+            bib_dict['journal'] = 'PNAS'
+        else:
+            pass
+    else: 
+        bib_dict['journal'] = 'UNKNOWN'
         
     return bib_dict
 
@@ -291,6 +293,7 @@ def getBibTex(bibcode,**kwargs):
             #print re.search('@[A-Z]+{' + bib_code, bib_file)        
             in_lib = re.search('@[a-z]+{' + bibcode, text)
             if in_lib == None:  
+                if kwargs.get('force',False): return False
                 print('Bibcode {} not in bibtex library {}; checking online'.format(bibcode,biblibrary))
                 bib_tex = getBibTexOnline(bibcode)
             else:
@@ -324,7 +327,7 @@ def getBibTexOnline(bibcode):
         - A string block of the basic bibtex information
 
     '''
-    if (checkOnline() == False):
+    if not checkOnline():
         return False
 
     url_begin = "http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode="
@@ -384,11 +387,11 @@ def checkAccess(**kwargs):
     result = False
 
     try:
-        home = os.environ.get('HOME')
+        home = os.path.expanduser("~")
         if home == None:
             home = './'
         bcode = requests.get(splat.SPLAT_URL+access_file).content
-        lcode = base64.b64encode(open(home+'/'+access_file,'r').read())
+        lcode = base64.b64encode(open(home+'/'+access_file,'r').read().encode())
         if (bcode in lcode):        # changed to partial because of EOL variations
             result = True
     except:
@@ -424,6 +427,7 @@ def checkLocal(inputfile):
         return inputfile
 
 
+
 def checkOnline(*args):
     '''
     :Purpose: Checks if SPLAT's URL is accessible from your machine--
@@ -437,6 +441,35 @@ def checkOnline(*args):
        False # SPLAT's URL was not detected.
        >>> splat.checkOnline('SpectralModels/BTSettl08/parameters.txt')
        '' # Could not find this online file.
+    '''
+    try:
+        if (len(args) != 0):
+            if 'http://' in args[0]:
+                if requests.get(args[0]).status_code == requests.codes.ok:
+                    return args[0]
+                return False
+            else:
+                if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
+                    return SPLAT_URL+args[0]
+                return False
+        else:
+            return requests.get(SPLAT_URL).status_code == requests.codes.ok
+    except:
+        return False
+
+
+
+def checkOnlineFile(*args):
+    '''
+    :Purpose: Checks if SPLAT's URL is accessible from your machine--
+                that is, checks if you and the host are online. Alternately
+                checks if a given filename is present locally or online
+    :Example:
+       >>> import splat
+       >>> splat.checkOnlineFile('SpectralModels/BTSettl08/parameters.txt')
+       '' # Could not find this online file.
+       >>> splat.checkOnlineFile()
+       '' # SPLAT's URL was not detected; you are not online.
     '''
     if (len(args) != 0):
         if 'http://' in args[0]:
@@ -487,7 +520,7 @@ def fetchDatabase(*args, **kwargs):
 # if not present at either raise error
     folder = checkLocal(kwargs['folder'])
     if folder=='':
-        folder = checkOnline(kwargs['folder'])
+        folder = checkOnlineFile(kwargs['folder'])
         if folder=='':
             raise NameError('\nCould not find '+kwargs['folder']+' locally or on SPLAT website\n\n')
         else:
@@ -517,9 +550,9 @@ def fetchDatabase(*args, **kwargs):
 # online:
     if kwargs['online']:
 #        print('Reading online')
-        infile = checkOnline(kwargs['filename'])
+        infile = checkOnlineFile(kwargs['filename'])
         if infile=='':
-            infile = checkOnline(kwargs['folder']+'/'+kwargs['filename'])
+            infile = checkOnlineFile(kwargs['folder']+'/'+kwargs['filename'])
         if infile=='':
             raise NameError('\nCould not find '+kwargs['filename']+' on the SPLAT website\n\n')
         try:
@@ -569,7 +602,7 @@ def getPhotometry(coordinate,**kwargs):
     '''
 
 # check if online
-    if splat.checkOnline() == '':
+    if splat.checkOnline():
         print('\nYou are currently not online; cannot do a Vizier query')
         return Table()
 
@@ -1634,7 +1667,7 @@ def importSpectra(*args,**kwargs):
     if verbose:
         print('\n2MASS photometry from Vizier')
 
-    if splat.checkOnline() == '':
+    if splat.checkOnline():
         if verbose:
             print('\nCould not perform Vizier search, you are not online')
     else:
@@ -1877,12 +1910,29 @@ def test_combine():
     print('and to move spectral files from {}/published and {}/unpublished/\n'.format(review_folder,review_folder))
 
 
-
+def test_missingbibs():
+    bibs=[]
+    dbsk = ['DISCOVERY_REFERENCE','OPT_TYPE_REF','NIR_TYPE_REF','LIT_TYPE_REF','GRAVITY_CLASS_OPTICAL_REF','GRAVITY_CLASS_NIR_REF','CLUSTER_REF','BINARY_REF','SBINARY_REF','COMPANION_REF','SIMBAD_SPT_REF','PARALLEX_REF','MU_REF','RV_REF','VSINI_REF']
+    for k in dbsk:
+        for b in splat.DB_SOURCES[k]:
+            if b not in bibs and b != '':
+                if getBibTex(b,force=True) == False:
+                    bibs.append(b)
+    dbsk = ['DATA_REFERENCE']
+    for k in dbsk:
+        for b in splat.DB_SPECTRA[k]:
+            if b not in bibs and b != '':
+                if getBibTex(b,force=True) == False:
+                    bibs.append(b)
+    if len(bibs) > 0:
+        print('\nRetrieve the following from http://adsabs.harvard.edu/bib_abs.html and put into {}\n'.format(DB_FOLDER+BIBFILE))
+        bibs.sort()
+        for b in bibs: print(b)
+    return
 
 # main testing of program
 if __name__ == '__main__':
-
-    dfolder = '/Users/adam/projects/splat/adddata/tobeadded/simp/prism/'
-    test_ingest(dfolder,spreadsheet=dfolder+'input.csv')
-
+#    dfolder = '/Users/adam/projects/splat/adddata/tobeadded/simp/prism/'
+#    test_ingest(dfolder,spreadsheet=dfolder+'input.csv')
+    test_missingbibs()
 
