@@ -17,12 +17,14 @@ import sys
 
 # Related third party imports.
 from astropy import units as u
+from astropy.cosmology import Planck15, z_at_value
 from astropy.io import ascii
 import pandas
 from math import isnan
 import matplotlib.pyplot as plt
 import numpy
 from scipy.interpolate import interp1d 
+import scipy.integrate as integrate 
 from splat import SPLAT_PATH, SPLAT_URL
 EVOLUTIONARY_MODEL_FOLDER = '/reference/EvolutionaryModels/'
 EMODELS = ['baraffe','burrows','saumon']
@@ -774,6 +776,280 @@ def plotModelParameters(parameters,xparam,yparam,**kwargs):
     return plt
 
 
+
+def generateAges(num,**kwargs):
+    '''
+    :Purpose: Generates a distribution of ages based on the defined input distribution. 
+
+    Required Inputs:
+
+    :param: num: number of ages to generate
+
+    Optional Inputs:
+
+    :param: age_range: range of ages to draw from (default = [0.1,10.]); can also specify `minage` and `maxage`
+    :param: distribution: either a string set to one of the following to define the type of age distribution (or reverse star formation rate) desired:
+        * `uniform`: uniform distribution (default) 
+        * `exponential`: exponential age distribution, P(t) ~ e\^(beta x t). You can specify the parameters `beta` or `tau` = 1/beta, or set ``distribution`` to `aumer` or `miller`
+        * `double_exponential`: double exponential age distribution, P(t) ~ Ae\^(lambda x t) + e\^(beta x t). You can specify the parameters `beta`, `lambda` and `a` or set ``distribution`` to `aumer_double` (default parameters)
+        * `cosmic` or `rujopakarn`: cosmic age distribution with P(t) ~ (1+z(t))\^alpha, where z is the redshift, which is converted to time using the Planck 2015 cosmology. You can specify the parameter `alpha` or set ``distribution`` to `rujopakarn` (default parameters)
+        * `peaked`: age distribution that peaks at some early time, written in the form P(t) ~ (t-t0)/(t\^2+t1\^2)\^2. You can specify the parameters `t0` and `t1` or set ``distribution`` to `aumer_peaked` or `just_peaked`
+        * `aumer` or `aumer_exponential`: exponential age distribution with parameters from Aumer & Binney (2009): beta = 0.117
+        * `aumer_double`: double exponential age distribution with parameters from Aumer & Binney (2009): beta = 0.348, lambda = 2.0, a = 1.e-8
+        * `aumer_peaked`: peaked age distribution with parameters from Aumer & Binney (2009): t0 = XXX, t1 = XXX
+        * `just` or `just_exponential: exponential age distribution with parameters from Just & Jahriess (2010): beta = 0.125
+        * `just_peaked_a`: peaked age distribution with parameters from Just & Jahriess (2010) Model A: t0 = 5.6, t1 = 8.2
+        * `just_peaked` or `just_peaked_b`: peaked age distribution with parameters from Just & Jahriess (2010) Model B: t0 = 1.13, t1 = 7.8
+        * `miller`: exponential age distribution with parameters from Miller & Scalo (1979): beta = max age / 2
+        * `rujopakarn`: cosmic age distribution with parameters from Rujopakarn et al. (2010): beta = max age / 2
+        * `input`: user specified age distribution or star formation history; ``input`` must be set to a 2 x N array specifying age and distribution
+    :param: distribution can also be set to a 2 x N array specifying an age distribution or star formation history; the first vector should be the ages for the function and the second vector the distribution function
+    :param: parameters: dictionary containing the parameters for the age distribution/star formation model being used; options include:
+        * `alpha`: power law factor for cosmic age distribution
+        * `beta`: power factor in exponential age distribution; positive beta implies a star formation rate that decreases with time
+        * `lambda`: second power factor in double exponential age distribution; positive lambda implies a star formation rate that decreases with time
+        * `a`: relative scale factor for second exponential in double exponential age distribution
+        * `tau`: 1/beta scale factor in exponential age distribution
+        * `t0` and `t1`: parameters for peaked age distribution
+    :param: sfh: set to True if distribution is a star formation history rather than an age distribution (default = False)
+
+    Output: 
+
+    An array of ages drawn from the desired distribution in units of Gyr
+
+    :Example:
+    >>> import splat
+    >>> import matplotlib.pyplot as plt
+    >>> ages = splat.generateAges(10000,distribution='aumer',age_range=[0.3,8.0])
+    >>> plt.hist(ages)
+    [histogram of ages in range 0.3-8.0 Gyr]    
+    '''
+
+# initial parameters
+    distribution = kwargs.get('distribution','uniform')
+    mn = kwargs.get('minage',0.1)
+    mx = kwargs.get('maxage',10.)
+    sfh = kwargs.get('sfh',False)
+    age_range = kwargs.get('age_range',[mn,mx])
+# protective offset
+    if age_range[0] == age_range[1]:
+        age_range[1]+=0.0001
+# set default parameters
+    if kwargs.get('parameters',False) == False:
+        parameters = {}
+    else:
+        parameters = kwargs['parameters']
+    if 'beta' not in list(parameters.keys()):
+        parameters['beta'] = 1.0
+    if 'tau' not in list(parameters.keys()):
+        parameters['tau'] = 1./parameters['beta']
+    if 'alpha' not in list(parameters.keys()):
+        parameters['alpha'] = 3.5
+    if 'lambda' not in list(parameters.keys()):
+        parameters['lambda'] = 2.0
+    if 'a' not in list(parameters.keys()):
+        parameters['a'] = 1.e-8
+    if 't0' not in list(parameters.keys()):
+        parameters['t0'] = 1.13
+    if 't1' not in list(parameters.keys()):
+        parameters['t1'] = 7.8
+
+# 
+# exponential
+    if distribution.lower() == 'exponential' or distribution.lower() == 'aumer' or distribution.lower() == 'miller':
+        print('using exponential distribution')
+        if distribution.lower() == 'aumer':
+            parameters['beta'] = 0.117
+        if distribution.lower() == 'miller':
+            parameters['beta'] = 0.5*numpy.max(age_range)
+        if distribution.lower() == 'just':
+            parameters['beta'] = 0.125
+
+# use CDF sampling
+        if parameters['beta'] != 0.:
+            x = numpy.linspace(numpy.min(age_range),numpy.max(age_range),num=10000)
+            y = numpy.exp(parameters['beta']*x)
+            y -= numpy.min(y)
+            y /= numpy.max(y)
+            f = interp1d(y,x)
+            ages = f(numpy.random.uniform(size=num))
+        else:
+            ages = numpy.random.uniform(numpy.min(age_range), numpy.max(age_range), size=num)
+
+# double exponential
+    elif distribution.lower() == 'double_exponential' or distribution.lower() == 'aumer_double':
+        print('using double exponential distribution')
+        if distribution.lower() == 'aumer_double':
+            parameters['beta'] = 0.348
+            parameters['lambda'] = 2.0
+            parameters['a'] = 1.e-8
+
+# use CDF sampling
+        x = numpy.linspace(numpy.min(age_range),numpy.max(age_range),num=10000)
+        y = parameters['a']*numpy.exp(parameters['lambda']*x) + numpy.exp(parameters['beta']*x)
+        y -= numpy.min(y)
+        y /= numpy.max(y)
+        f = interp1d(y,x)
+        ages = f(numpy.random.uniform(size=num))
+
+# peaked distribution
+    elif distribution.lower() == 'peaked' or distribution.lower() == 'just_peaked' or distribution.lower() == 'just_peaked_a' or distribution.lower() == 'just_peaked_b' or distribution.lower() == 'aumer_peaked':
+        print('using peaked distribution')
+# Aumer & Binney 2009
+        if distribution.lower() == 'aumer_peaked':
+            parameters['t0'] = 0.
+            parameters['t1'] = 7.23
+# Just & Jahriess 2010 Model A
+        if distribution.lower() == 'just_peaked_a':
+            parameters['t0'] = 5.6
+            parameters['t1'] = 8.2
+            sfh = True
+# Just & Jahriess 2010 Model B (default)
+        if distribution.lower() == 'just_peaked' or distribution.lower() == 'just_peaked_b':
+            parameters['t0'] = 1.13
+            parameters['t1'] = 7.8
+            sfh = True
+
+# generate CDF by integration and then do CDF sampling
+# note that function is slightly different for the two forms
+        x = numpy.linspace(numpy.min(age_range),numpy.max(age_range),num=10000)
+        if 'just' in distribution:
+            y = (x+parameters['t0'])/((x**2+parameters['t1']**2)**2)
+#            print(2./3.*(t0**2+0.75*t1**2)**0.5 - 2./3.*t0)
+        else:
+            y = (14.-x+parameters['t0'])/(((14.-x)**2+parameters['t1']**2)**2)
+#            print(14.-2./3.*(t0**2+0.75*t1**2)**0.5 - 2./3.*t0)
+        yc = numpy.cumsum(y)
+        yc -= numpy.min(yc)
+        yc /= numpy.max(yc)
+        f = interp1d(yc,x)
+        ages = f(numpy.random.uniform(size=num))
+
+# cosmic star formation rate
+    elif distribution.lower() == 'cosmic' or distribution.lower() == 'rujopakarn': 
+        print('using cosmic SFH distribution')
+        if distribution.lower() == 'rujopakarn': 
+            parameters['alpha'] = 3.5
+
+        cosmo = Planck15    # in case we want to change later
+        zrng = [z_at_value(cosmo.lookback_time,numpy.min(age_range)*u.Gyr),z_at_value(cosmo.lookback_time,numpy.max(age_range)*u.Gyr)]
+# use CDF sampling
+        x = numpy.linspace(numpy.min(zrng),numpy.max(zrng),num=10000)
+        y = (x+1.)**parameters['alpha']
+        y -= numpy.min(y)
+        y /= numpy.max(y)
+        f = interp1d(y,x)
+        z = f(numpy.random.uniform(size=num))
+        ages = cosmo.lookback_time(z)
+
+# uniform distribution (default)
+    else:
+        print('using uniform distribution')
+        ages = numpy.random.uniform(numpy.min(age_range), numpy.max(age_range), size=num)
+
+    if sfh:
+        print('reversing ages (SFH)')
+        ages = numpy.max(ages)-ages
+
+    return ages
+
+
+
+def generateMasses(num,**kwargs):
+    '''
+    :Purpose: Generates a distribution of masses based on the defined input distribution. 
+
+    Required Inputs:
+
+    :param: num: number of masses to generate
+
+    Optional Inputs:
+
+    :param: mass_range: range of masses to draw from (default = [0.01,0.1]); can also specify ``minmass`` and ``maxmass``
+    :param: distribution: can be a string set to one of the following to define the type of mass distribution to sample:
+        * `uniform`: uniform distribution (default) 
+        * `powerlaw` or `power-law`: single power-law distribution, P(M) ~ M\^-alpha. You must specify the parameter `alpha` or set ``distribution`` to TBD
+        * `broken-powerlaw' or `broken-power-law: a broken power-law distribution; segments are specified by the parameters `alpha` (N array of numbers) for the slopes and `ranges` (N array of 2-element arrays) for the ranges over which these slopes occur; if the `scales` parameter is also included, the power-law segments are scaled by these factors; otherwise, the segments are forced to be continuous. You can also set ``distribution`` to `kroupa`
+        * 'lognormal` or `log-normal`: log normal distribution, P(M) ~ exp(-0.5*(M-M0)\^2/sigmaM^2). You must specify the parameters `M0` and `sigmaM` or set ``distribution`` to `chabrier` (default parameters)
+        * `kroupa`: broken power-law distribution with parameters from Kroupa et al. (XXXX): XXXX
+        * `chabrier`: lognormal distribution with parameters from Chabrier et al. (XXX): XXXXX
+    :param: distribution can also be set to a 2 x N array specifying the mass distribution; the first vector should be the masses for the distribution function and the second vector the distribution function itself
+    :param: parameters: dictionary containing the parameters for the age distribution/star formation model being used; options include:
+        * `alpha`: exponent for power-law distribution, or array of numbers giving power-law factors for broken power-law distribution
+        * `range`: array of 2-element arrays specifying the masses (in units of solar masses) over which the broken-law slopes are defined
+        * `scales`: array of numbers specifying relative scaling between the segments in the broken-law distribution
+        * `M0` and `sigmaM: parameters for lognormal distribution in units of solar masses
+
+    Output: 
+
+    An array of masses drawn from the desired distribution in units of solar masses
+
+    :Example:
+    >>> import splat
+    >>> import matplotlib.pyplot as plt
+    >>> masses = splat.generateMasses(10000,distribution='power-law',parameters={'alpha': 0.5},mass_range=[0.01,0.08])
+    }
+    >>> plt.hist(masses)
+    [histogram of masses in range 0.01-0.08 solar masses]    
+    '''
+    pass
+
+    
+
+def generatePopulation(**kwargs):
+
+    parameters = {}
+
+# draw ages - DONE
+    age_kwargs = kwargs.get('age_parameters',{})
+    parameters['age'] = generateAges(num,**age_kwargs)
+
+# draw masses
+    mass_kwargs = kwargs.get('mass_parameters',{})
+#    parameters['mass'] = generateMasses(num,**age_kwargs)
+
+# extract evolutionary model parameters
+# NEED TO DEAL WITH OUT OF RANGE VALUES
+    model_kwargs = kwargs.get('model_parameters',{})
+    mp = modelParameters(mass=parameters['mass'],age=parameters['age'],**age_kwargs)
+    parameters['gravity'] = mp['gravity']
+    parameters['luminosity'] = mp['luminosity']
+    parameters['radius'] = mp['radius']
+    parameters['temperature'] = mp['temperature']
+
+# determine spectral types from teff
+# NOTE: NEED TO ALLOW FOR DIFFERENT RELATIONSHIPS AND AUTOMATICALLY DITCH NAN REGIONS
+# ALSO DEAL WITH BAD VALUES
+# COULD ALSO DO THIS WITH LUMINOSITIES
+    sp = numpy.linspace(16,38,100)
+    tf = numpy.array([splat.typeToTeff(spi)[0] for spi in sp])
+    f = interp1d(sp,tf)
+    parameters['spt'] = f(parameters['temperature'])
+
+# add binary companions if desired
+
+# assign binary orbital properties if desired
+
+# assign sky positions if desired
+
+# assign distances based on density profile if desired
+
+# assign absolute, systemic and apparent magnitudes if desired
+
+# assign age-dependent kinematics if desired
+
+# assign proper and radial motions if desired
+
+# assign apparent binary properties - current projected separation, astrometric offset, primary & secondary RV offsets - if desired
+
+# assign metallicities (?) if desired
+
+# visualize output?
+
+    return parameters
+
+
+
 ###############################################################################
 ###################### TESTING FUNCTIONS #####################################
 ###############################################################################
@@ -881,12 +1157,21 @@ def test_evolve_accuracy_plotting(xparam,yparam,modelname='baraffe',metallicity=
     age_samp = 10.**numpy.random.normal(numpy.log10(1.),0.3,50)
     mass_samp = numpy.random.uniform(0.001,0.1,50)
     p = modelParameters(model,age=age_samp,mass=mass_samp)
-    plt = plotModelParameters(p,xparam,yparam,model=model,**kwargs)
+    plot = plotModelParameters(p,xparam,yparam,model=model,**kwargs)
     return True
+
+def test_ages(num,**kwargs):
+    ages = generateAges(num,**kwargs)
+    plt.hist(ages)
+    plt.ylabel('Number')
+    plt.xlabel('Age')
+    plt.show()
+    return True
+
 
 if __name__ == '__main__':
 #    test_readmodel()
 #    test_evolve_basic()
 #    test_evolve_accuracy(modelname='saumon',parameter='luminosity')
-    test_evolve_accuracy_plotting('age','temperature',modelname='baraffe',file='/Users/adam/projects/splat/code/testing/test_evolve_plotting.eps')
-
+#    test_evolve_accuracy_plotting('age','temperature',modelname='baraffe',file='/Users/adam/projects/splat/code/testing/test_evolve_plotting.eps')
+    test_ages(100000,distribution='exponential',minage=0.1,maxage=12.,parameters={'beta': -0.5})
