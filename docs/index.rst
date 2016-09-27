@@ -33,9 +33,9 @@ which is updated on a regular basis.
 SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by 
 sending bug reports to aburgasser@ucsd.edu or start an issue on the github site.
 
-You may also obtain splat using pip_:
+You may also obtain splat using `pip`_:
 
-.._pip: https://pip.pypa.io/en/stable/
+.. _`pip`: https://pip.pypa.io/en/stable/
 
 >>> pip install splat
 
@@ -52,19 +52,19 @@ included in the github/pip install, so you don't need to be online to run most p
 
 Here are some examples:
 
-* The best way to read in a spectrum is to use getSpectrum_:
+* The best way to read in a spectrum is to use `getSpectrum()`_:
 
-.. _getSpectrum: api.html#splat.getSpectrum
+.. _`getSpectrum()`: api.html#splat.getSpectrum
 
 >>> import splat
 >>> splist = splat.getSpectrum(shortname='0415-0935')
 >>> splist = splat.getSpectrum(young=True)
 >>> splist = splat.getSpectrum(spt=['M7','L5'],jmag=[14.,99.])
 
-In each case, splist is a list of Spectrum_ objects, which is the container of various 
+In each case, splist is a list of `Spectrum`_ objects, which is the container of various 
 aspects of the spectrum and it source properties. For example, selecting the first spectrum,
 
-.. _Spectrum: splat.html?highlight=spectrum#the-splat-spectrum-object
+.. _`Spectrum`: splat.html?highlight=spectrum#the-splat-spectrum-object
 
 >>> sp = splist[0]
 
@@ -79,17 +79,17 @@ Note that this file must conform to the following standard: the first column is
 wavelength in microns, second column flux in f_lambda units, third column (optional) is 
 flux uncertainty in f_lambda units.
 
-* To flux calibrate the spectrum, use the object's built in fluxCalibrate_ method:
+* To flux calibrate the spectrum, use the object's built in `fluxCalibrate()`_ method:
 
-.. _fluxCalibrate: api.html#splat.Spectrum.fluxCalibrate
+.. _`fluxCalibrate()`: api.html#splat.Spectrum.fluxCalibrate
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> sp.fluxCalibrate('2MASS J',14.0)
 
-* To display the spectrum, use the Spectrum object's plot_ function or plotSpectrum_ :
+* To display the spectrum, use the Spectrum object's `plot()`_ function or `plotSpectrum()`_ :
 
-.. _plot: api.html#splat.Spectrum.plot
-.. _plotSpectrum: api.html#splat_plot.plotSpectrum
+.. _`plot()`: api.html#splat.Spectrum.plot
+.. _`plotSpectrum()`: api.html#splat_plot.plotSpectrum
 
 >>> sp.plot()
 >>> splat.plotSpectrum(sp)
@@ -113,10 +113,10 @@ subpackage for more details.
 
 SPLAT can analyze and compare an arbitrary number of spectra.
 
-* To measure spectral indices, use measureIndex_ or measureIndexSet_:
+* To measure spectral indices, use `measureIndex()`_ or `measureIndexSet()`_:
 
-.. _measureIndex: api.html#splat.measureIndex
-.. _measureIndexSet: api.html#splat.measureIndexSet
+.. _`measureIndex()`: api.html#splat.measureIndex
+.. _`measureIndexSet()`: api.html#splat.measureIndexSet
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> value, error = splat.measureIndex(sp,[1.14,1.165],[1.21,1.235],method='integrate')
@@ -127,17 +127,17 @@ of the index:
 
 >>> print indices['sH2O-J']		# returns value, error
 
-* You can also determine the gravity classification of a source via `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ using classifyGravity_:
+* You can also determine the gravity classification of a source via `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ using `classifyGravity()`_:
 
-.. _classifyGravity: api.html#splat.classifyGravity
+.. _`classifyGravity()`: api.html#splat.classifyGravity
 
 >>> sp = splat.getSpectrum(young=True, lucky=True)[0]
 >>> print splat.classifyGravity(sp)   # returned 'VL-G'
 
 
-* To classify a spectrum, use the various classifyByXXX_ methods:
+* To classify a spectrum, use the various `classifyByXXX`_ methods:
 
-.. _classifyByXXX: api.html#spectral-classification
+.. _`classifyByXXX`: api.html#spectral-classification
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> spt,unc = splat.classifyByIndex(sp,set='burgasser')
@@ -147,9 +147,9 @@ of the index:
 The last line returns a dictionary containing the best 5 template matches to the Spectrum ``sp``.
 
 
-* To compare a spectrum to another spectrum or a model, use compareSpectra_ :
+* To compare a spectrum to another spectrum or a model, use `compareSpectra()`_ :
 
-.. _compareSpectra: api.html#splat.compareSpectra
+.. _`compareSpectra()`: api.html#splat.compareSpectra
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> mdl = splat.loadModel(teff=700,logg=5.0)			# loads a BTSettl08 model by default
@@ -158,9 +158,9 @@ The last line returns a dictionary containing the best 5 template matches to the
 >>> splat.plotSpectrum(sp,mdl,colors=['black','red'],legend=[sp.name,mdl.name])
 
 
-# There is also a basic Markov Chain Monte Carlo code to compare models to spectra called modelFitMCMC_:
+# There is also a basic Markov Chain Monte Carlo code to compare models to spectra called `modelFitMCMC()`_:
 
-.. _modelFitMCMC: api.html#splat_model.modelFitMCMC
+.. _`modelFitMCMC()`: api.html#splat_model.modelFitMCMC
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> sp.fluxCalibrate('2MASS J',14.49,absolute=True)
@@ -174,7 +174,7 @@ Acknowledgements
 ----------------
 
 SPLAT is an experimental, collaborative project of research students in `Adam Burgasser's
-UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at teaching students how to do research by building their own analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Alex Mendez, Gretel Mercado, Elizabeth Moreno, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen and Russell van Linge.
+UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at teaching students how to do research by building their own analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Alex Mendez, Gretel Mercado, Elizabeth Moreno Hilario, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen and Russell van Linge.
 
 This project is supported by the National Aeronautics and Space Administration under Grant No. NNX15AI75G.
 
@@ -186,12 +186,10 @@ This project is supported by the National Aeronautics and Space Administration u
    installation
    quickstart
    splat
-   splat_db
    splat_plot
    splat_model
    splat_evolve
    api
-   :ref:`genindex`
    
 *Search*
 

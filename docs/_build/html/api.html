@@ -98,12 +98,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#splat-routines">SPLAT Routines</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#data-access">Data Access</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#database-access">Database Access</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#spectral-comparison">Spectral Comparison</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#spectral-classification">Spectral Classification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#spectrophotometry">Spectrophotometry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#other-spectral-analyses">Other Spectral Analyses</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#source-analysis">Source Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#empirical-relationships">Empirical Relationships</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#conversion-routines">Conversion Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#plotting-routines">Plotting Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#utility-routines">Utility Routines</a></li>
@@ -118,6 +118,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#specialty-packages">Specialty Packages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#euclid-analysis-routines">EUCLID Analysis Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bibtex-routines">BibTeX Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#astroquery-based-data-access">Astroquery-based Data Access</a></li>
 </ul>
 </li>
 </ul>
@@ -179,29 +180,35 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Description:</th><td class="field-body"><p class="first">Primary class for containing spectral and source data for SpeX Prism Library.</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Description:</th><td class="field-body">Primary class for containing spectral and source data for SpeX Prism Library.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>ismodel</strong> (<em>optional, default = False</em>) &#8211; </li>
-<li><strong>wlabel</strong> (<em>optional, default = 'Wavelength'</em>) &#8211; label of wavelength</li>
-<li><strong>wunit</strong> (optional, default = <code class="docutils literal"><span class="pre">u.micron</span></code>) &#8211; unit in which wavelength is measured</li>
-<li><strong>wunit_label</strong> (optional, default = <cite>mu m</cite>) &#8211; label of the unit of wavelength</li>
-<li><strong>flabel</strong> (optional, default = <a href="#id59"><span class="problematic" id="id60">F_</span></a>lambda`) &#8211; label of flux density</li>
-<li><strong>fscale</strong> (<em>optional, default = ''</em>) &#8211; string describing how flux density is scaled</li>
-<li><strong>funit</strong> (optional, default = <code class="docutils literal"><span class="pre">u.erg/(u.cm**2</span> <span class="pre">*</span> <span class="pre">u.s</span> <span class="pre">*</span> <span class="pre">u.micron)</span></code>) &#8211; unit in which flux density is measured</li>
-<li><strong>funit_label</strong> (<em>optional, default = erg cm^-2 s^-1 micron^-1`</em>) &#8211; label of the unit of flux density</li>
-<li><strong>resolution</strong> (<em>optional, default = 150</em>) &#8211; </li>
-<li><strong>slitpixelwidth</strong> (<em>optional, default = 3.33</em>) &#8211; Width of the slit measured in subpixel values.</li>
-<li><strong>slitwidth</strong> (optional, default = <code class="docutils literal"><span class="pre">slitpixelwidth</span></code> * 0.15) &#8211; Actual width of the slit, measured in arc seconds. Default value is the <code class="docutils literal"><span class="pre">slitpixelwidth</span></code> multiplied by the spectrograph pixel scale of 0.15 arcseconds.</li>
-<li><strong>header</strong> (<em>optional, default = Table()</em>) &#8211; header info of the spectrum</li>
-<li><strong>filename</strong> (<em>optional, default = ''</em>) &#8211; a string containing the spectrum&#8217;s filename.</li>
-<li><strong>file</strong> (<em>optional, default = ''</em>) &#8211; same as filename</li>
-<li><strong>idkey</strong> (<em>optional, default = False</em>) &#8211; spectrum key of the desired spectrum</li>
+</tbody>
+</table>
+<p>Optional Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ismodel</strong> &#8211; Set to True to specify spectrum as a model (default = False)</li>
+<li><strong>wlabel</strong> &#8211; label of wavelength (default = &#8216;Wavelength&#8217;)</li>
+<li><strong>wunit</strong> &#8211; unit in which wavelength is measured (default = u.micron)</li>
+<li><strong>wunit_label</strong> &#8211; label of the unit of wavelength (default = &#8216;micron&#8217;)</li>
+<li><strong>flabel</strong> &#8211; label of flux density (default = &#8216;F_lambda&#8217;)</li>
+<li><strong>fscale</strong> &#8211; string describing how flux density is scaled (default = &#8216;&#8217;)</li>
+<li><strong>funit</strong> &#8211; unit in which flux density is measured (default = u.erg/(u.cm**2 * u.s * u.micron)</li>
+<li><strong>funit_label</strong> &#8211; label of the unit of flux density (default = &#8216;erg cm^-2 s^-1 micron^-1&#8217;)</li>
+<li><strong>resolution</strong> &#8211; Resolution of spectrum (default = 150)</li>
+<li><strong>slitpixelwidth</strong> &#8211; Width of the slit measured in subpixel values (default = 3.33)</li>
+<li><strong>slitwidth</strong> &#8211; Actual width of the slit, measured in arcseconds. Default value is the <code class="docutils literal"><span class="pre">slitpixelwidth</span></code> multiplied an assumed (for SpeX) spectrograph pixel scale of 0.15 arcseconds</li>
+<li><strong>header</strong> &#8211; header info of the spectrum (default = Table())</li>
+<li><strong>filename</strong> &#8211; a string containing the spectrum&#8217;s filename (default = &#8216;&#8217;)</li>
+<li><strong>file</strong> &#8211; same as filename (default = &#8216;&#8217;)</li>
+<li><strong>idkey</strong> &#8211; spectrum key of the desired spectrum (default = False)</li>
 </ul>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;myspectrum.fits&#39;</span><span class="p">)</span>      <span class="c1"># read in a file</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="s1">&#39;myspectrum.fits&#39;</span><span class="p">)</span>               <span class="c1"># same</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="mi">10002</span><span class="p">)</span>                           <span class="c1"># read in spectrum with idkey = 10002</span>
@@ -325,17 +332,42 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Flux calibrates a spectrum given a filter and a magnitude. The filter must be one of those listed in splat.FILTERS.keys(). It is possible to specifically set the magnitude to be absolute (by default it is apparent).  This function changes the Spectrum object&#8217;s flux, noise and variance arrays.</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Flux calibrates a spectrum given a filter and a magnitude. The filter must be one of those listed in <cite>splat.FILTERS.keys()</cite>. It is possible to specifically set the magnitude to be absolute (by default it is apparent).  This function changes the Spectrum object&#8217;s flux, noise and variance arrays.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>filter</strong> (<em>string, default = None</em>) &#8211; name of filter</li>
-<li><strong>mag</strong> (<em>float, default = None</em>) &#8211; magnitude to scale too</li>
-<li><strong>absolute</strong> (<em>Boolean, optional, default = False</em>) &#8211; given magnitude is an absolute magnitude</li>
-<li><strong>apparent</strong> (<em>Boolean, optional, default = False</em>) &#8211; given magnitude is an apparent magnitude</li>
+</tbody>
+</table>
+<p>Required Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filter</strong> &#8211; string specifiying the name of the filter</li>
+<li><strong>mag</strong> &#8211; number specifying the magnitude to scale to</li>
 </ul>
 </td>
 </tr>
+</tbody>
+</table>
+<p>Optional Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>absolute</strong> &#8211; set to True to specify that the given magnitude is an absolute magnitude, which sets the <code class="docutils literal"><span class="pre">fscale</span></code> keyword in the Spectrum object to &#8216;Absolute&#8217; (default = False)</li>
+<li><strong>apparent</strong> &#8211; set to True to specify that the given magnitude is an apparent magnitude, which sets the <code class="docutils literal"><span class="pre">fscale</span></code> flag in the Spectrum object to &#8216;Apparent&#8217; (default = False)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Outputs:</p>
+<p>None, Spectrum object is changed to a flux calibrated spectrum</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">15.0</span><span class="p">)</span>
@@ -385,7 +417,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Converts flux density from F_nu to F_lambda, the latter in erg/s/cm2/Hz. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in F_lambda units.</p>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Converts flux density from F_nu to F_lambda, the latter in erg/s/cm^2/Hz. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in F_lambda units.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
@@ -406,7 +438,7 @@
 
 <dl class="method">
 <dt id="splat.Spectrum.info">
-<code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.info" title="Permalink to this definition">¶</a></dt>
+<code class="descname">info</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.Spectrum.info" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -429,7 +461,7 @@
 <span class="go"> SPLAT spectrum key is 10857</span>
 <span class="go"> Data published in Kirkpatrick, J. D. et al. (2010, ApJS, 190, 100-146)</span>
 <span class="go"> History:</span>
-<span class="go"> Spectrum successfully loaded</span>
+<span class="go">     Spectrum successfully loaded</span>
 </pre></div>
 </div>
 </td>
@@ -477,7 +509,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">calls the <a href="#id61"><span class="problematic" id="id62">plotSpectrum_</span></a> function, by default showing the noise spectrum and zeropoints. See the <a href="#id63"><span class="problematic" id="id64">plotSpectrum_</span></a> API listing for details.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">calls the <a href="#id86"><span class="problematic" id="id87">plotSpectrum_</span></a> function, by default showing the noise spectrum and zeropoints. See the <a href="#id88"><span class="problematic" id="id89">plotSpectrum_</span></a> API listing for details.</td>
 </tr>
 </tbody>
 </table>
@@ -534,10 +566,11 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  <a class="reference external" href="api.html#splat.Spectrum.export">Spectrum.export</a> and Spectrum.save function in the same manner.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.</td>
 </tr>
 </tbody>
 </table>
+<p><a class="reference external" href="api.html#splat.Spectrum.export">Spectrum.export()</a> and <cite>Spectrum.save</cite> function in the same manner.</p>
 </dd></dl>
 
 <dl class="method">
@@ -848,8 +881,8 @@
 </div>
 <div class="section" id="splat-routines">
 <h2>SPLAT Routines<a class="headerlink" href="#splat-routines" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="data-access">
-<h3>Data Access<a class="headerlink" href="#data-access" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="database-access">
+<h3>Database Access<a class="headerlink" href="#database-access" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="splat.getSpectrum">
 <code class="descclassname">splat.</code><code class="descname">getSpectrum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.getSpectrum" title="Permalink to this definition">¶</a></dt>
@@ -914,75 +947,67 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="splat_db.getPhotometry">
-<code class="descclassname">splat_db.</code><code class="descname">getPhotometry</code><span class="sig-paren">(</span><em>coordinate</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.getPhotometry" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Purpose</dt>
-<dd>Downloads photometry for a source using astroquery (?)</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
+<dt id="splat_db.keySource">
+<code class="descclassname">splat_db.</code><code class="descname">keySource</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.keySource" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first"><strong>Currently not functional</strong></p>
-</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a source key and returns a table with the source information</td>
 </tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Required parameters:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; source key or a list of source keys</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
+<span class="go">    SOURCE_KEY           NAME              DESIGNATION    ... NOTE SELECT</span>
+<span class="go">    ---------- ------------------------ ----------------- ... ---- ------</span>
+<span class="go">         10001 SDSS J000013.54+255418.6 J00001354+2554180 ...        True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">([</span><span class="mi">10105</span><span class="p">,</span> <span class="mi">10623</span><span class="p">])</span>
+<span class="go">    SOURCE_KEY          NAME             DESIGNATION    ... NOTE SELECT</span>
+<span class="go">    ---------- ---------------------- ----------------- ... ---- ------</span>
+<span class="go">         10105 2MASSI J0103320+193536 J01033203+1935361 ...        True</span>
+<span class="go">         10623 SDSS J09002368+2539343 J09002368+2539343 ...        True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
+<span class="go">    No sources found with source key 1000001</span>
+<span class="go">    False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_db.keySpectrum">
+<code class="descclassname">splat_db.</code><code class="descname">keySpectrum</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.keySpectrum" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name" colspan="2">param coordinate:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">astropy Coordinate object with coordinates (RA, Dec) of source to be searched</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a spectrum key and returns a table with the spectrum and source information</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; spectrum key or a list of source keys</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Optional parameters:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">param radius:</th><td class="field-body">radius in arcseconds for matching</td>
-</tr>
-<tr class="field-even field"><th class="field-name">type float:</th><td class="field-body">optional, default = 5.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">param validate:</th><td class="field-body">Ask for validation from user for matched photometry</td>
-</tr>
-<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = False</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">param 2MASS:</th><td class="field-body">Download 2MASS photometry</td>
-</tr>
-<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = True</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">param SDSS:</th><td class="field-body">Download 2MASS photometry</td>
-</tr>
-<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = True</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">param UKIDSS:</th><td class="field-body">Download 2MASS photometry</td>
-</tr>
-<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = True</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">param WISE:</th><td class="field-body">Download 2MASS photometry</td>
-</tr>
-<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = True</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">param DENIS:</th><td class="field-body">Download 2MASS photometry</td>
-</tr>
-<tr class="field-even field"><th class="field-name">type logical:</th><td class="field-body">optional, default = True</td>
-</tr>
-</tbody>
-</table>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><ul class="first last simple">
-<li>A table? filename? if new photometry</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
+<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
+<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
+<span class="go">       10001      10443 10001_10443.fits ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">([</span><span class="mi">10123</span><span class="p">,</span> <span class="mi">11298</span><span class="p">])</span>
+<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
+<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
+<span class="go">       11298      10118 11298_10118.fits ...</span>
+<span class="go">       10123      10145 10123_10145.fits ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
+<span class="go">    No spectra found with spectrum key 1000001</span>
+<span class="go">    False</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -1045,83 +1070,6 @@
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Note that this is currently only and AND search - need to figure out how to a full SQL style search</p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_db.fetchDatabase">
-<code class="descclassname">splat_db.</code><code class="descname">fetchDatabase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.fetchDatabase" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Get the SpeX Database from either online repository or local drive</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_db.keySource">
-<code class="descclassname">splat_db.</code><code class="descname">keySource</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.keySource" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a source key and returns a table with the source information</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; source key or a list of source keys</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
-<span class="go">    SOURCE_KEY           NAME              DESIGNATION    ... NOTE SELECT</span>
-<span class="go">    ---------- ------------------------ ----------------- ... ---- ------</span>
-<span class="go">         10001 SDSS J000013.54+255418.6 J00001354+2554180 ...        True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">([</span><span class="mi">10105</span><span class="p">,</span> <span class="mi">10623</span><span class="p">])</span>
-<span class="go">    SOURCE_KEY          NAME             DESIGNATION    ... NOTE SELECT</span>
-<span class="go">    ---------- ---------------------- ----------------- ... ---- ------</span>
-<span class="go">         10105 2MASSI J0103320+193536 J01033203+1935361 ...        True</span>
-<span class="go">         10623 SDSS J09002368+2539343 J09002368+2539343 ...        True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySource</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
-<span class="go">    No sources found with source key 1000001</span>
-<span class="go">    False</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_db.keySpectrum">
-<code class="descclassname">splat_db.</code><code class="descname">keySpectrum</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.keySpectrum" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Takes a spectrum key and returns a table with the spectrum and source information</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keys</strong> &#8211; spectrum key or a list of source keys</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>
-<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
-<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
-<span class="go">       10001      10443 10001_10443.fits ...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">([</span><span class="mi">10123</span><span class="p">,</span> <span class="mi">11298</span><span class="p">])</span>
-<span class="go">    DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2</span>
-<span class="go">    -------- ---------- ---------------- ... --------- -------------- ------</span>
-<span class="go">       11298      10118 11298_10118.fits ...</span>
-<span class="go">       10123      10145 10123_10145.fits ...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">keySpectrum</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
-<span class="go">    No spectra found with spectrum key 1000001</span>
-<span class="go">    False</span>
-</pre></div>
 </div>
 </dd></dl>
 
@@ -1212,37 +1160,44 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Determine the spectral type and uncertainty for a spectrum
-based on indices. Makes use of published index-SpT relations
-from <a class="reference external" href="http://adsabs.harvard.edu/abs/2001AJ....121.1710R">Reid et al. (2001)</a>;
-<a class="reference external" href="http://adsabs.harvard.edu/abs/2001ApJ...552L.147T">Testi et al. (2001)</a>;
-<a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...657..511A">Allers et al. (2007)</a>;
-and <a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...659..655B">Burgasser (2007)</a>. Returns 2-element tuple
-containing spectral type (numeric or string) and
-uncertainty.</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and
-noise array elements.</li>
-<li><strong>set</strong> (<em>optional, default = 'burgasser'</em>) &#8211; <p>named set of indices to measure and compute spectral type</p>
+</tbody>
+</table>
+<p>Determine the spectral type and uncertainty for a spectrum based on indices. Makes use of published index-SpT relations from <a class="reference external" href="http://adsabs.harvard.edu/abs/2001AJ....121.1710R">Reid et al. (2001)</a>; <a class="reference external" href="http://adsabs.harvard.edu/abs/2001ApJ...552L.147T">Testi et al. (2001)</a>; <a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...657..511A">Allers et al. (2007)</a>; and <a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...659..655B">Burgasser (2007)</a>. Returns 2-element tuple containing spectral type (numeric or string) and uncertainty.</p>
+<p>Required Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sp</strong> &#8211; Spectrum class object, which should contain wave, flux and noise array elements.</td>
+</tr>
+</tbody>
+</table>
+<p>Optional Inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>set</strong> &#8211; <p>named set of indices to measure and compute spectral type</p>
 <ul>
+<li><em>&#8216;burgasser&#8217;</em>: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from <a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...659..655B">Burgasser (2007)</a> (default)</li>
 <li><em>&#8216;allers&#8217;</em>: H2O from <a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...657..511A">Allers et al. (2007)</a></li>
-<li><em>&#8216;burgasser&#8217;</em>: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from <a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...659..655B">Burgasser (2007)</a></li>
 <li><em>&#8216;reid&#8217;</em>:H2O-A and H2O-B from <a class="reference external" href="http://adsabs.harvard.edu/abs/2001AJ....121.1710R">Reid et al. (2001)</a></li>
 <li><em>&#8216;testi&#8217;</em>: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from <a class="reference external" href="http://adsabs.harvard.edu/abs/2001ApJ...552L.147T">Testi et al. (2001)</a></li>
 </ul>
 </li>
-<li><strong>string</strong> (<em>optional, default = False</em>) &#8211; return spectral type as a string (uses typeToNum)</li>
-<li><strong>round</strong> (<em>optional, default = False</em>) &#8211; rounds off to nearest 0.5 subtypes</li>
-<li><strong>allmeasures</strong> (<em>optional, default = False</em>) &#8211; Set to True to return all of the index values and individual subtypes</li>
-<li><strong>remeasure</strong> (<em>optional, default = True</em>) &#8211; force remeasurement of indices</li>
-<li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of Monte Carlo samples for error computation</li>
-<li><strong>nloop</strong> (<em>optional, default = 5</em>) &#8211; number of testing loops to see if spectral type is within a certain range</li>
+<li><strong>string</strong> &#8211; return spectral type as a string using typeToNum (default = False)</li>
+<li><strong>round</strong> &#8211; rounds off to nearest 0.5 subtypes (default = False)</li>
+<li><strong>allmeasures</strong> &#8211; Set to True to return all of the index values and individual subtypes  (default = False)</li>
+<li><strong>remeasure</strong> &#8211; force remeasurement of indices (default = True)</li>
+<li><strong>nsamples</strong> &#8211; number of Monte Carlo samples for error computation (default = 100)</li>
+<li><strong>nloop</strong> &#8211; number of testing loops to see if spectral type is within a certain range (default = 5)</li>
 </ul>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -1251,12 +1206,6 @@ noise array elements.</li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="s1">&#39;burgasser&#39;</span><span class="p">,</span> <span class="nb">round</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">    (&#39;T4.5&#39;, 0.2562934083414341)</span>
 </pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<ul class="last simple">
-<li>Need to allow output of individual spectral types from individual indices</li>
-</ul>
 </div>
 </dd></dl>
 
@@ -1299,7 +1248,7 @@ noise array elements.</li>
 <li><strong>best</strong> (<em>optional, default = True</em>) &#8211; Set to True to return the best fit standard type</li>
 <li><strong>average</strong> (<em>optional, default = False</em>) &#8211; Set to True to return an chi-square weighted type only</li>
 <li><strong>compareto</strong> (<em>optional, default = None</em>) &#8211; Set to the single standard (string or number) you want to compare to</li>
-<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to generate a plot comparing best fit template to source; can also set keywords associated with <a href="#id65"><span class="problematic" id="id66">plotSpectrum_</span></a> routine</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to generate a plot comparing best fit template to source; can also set keywords associated with <a href="#id90"><span class="problematic" id="id91">plotSpectrum_</span></a> routine</li>
 <li><strong>string</strong> (<em>optional, default = True</em>) &#8211; return spectral type as a string</li>
 <li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; Set to True to give extra feedback</li>
 </ul>
@@ -1307,7 +1256,7 @@ noise array elements.</li>
 </tr>
 </tbody>
 </table>
-<p>Users can also set keyword parameters defined in <a href="#id67"><span class="problematic" id="id68">plotSpectrum_</span></a> and <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra</a> routine.</p>
+<p>Users can also set keyword parameters defined in <a href="#id92"><span class="problematic" id="id93">plotSpectrum_</span></a> and <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra</a> routine.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1399,7 +1348,7 @@ noise array elements.</li>
 <li><strong>nbest</strong> (<em>optional, default = 1</em>) &#8211; Set to the number of best fitting spectra to return</li>
 <li><strong>maxtemplates</strong> (<em>optional, default = 100</em>) &#8211; Set to the maximum number of templates that should be fit</li>
 <li><strong>force</strong> (<em>optional, default = False</em>) &#8211; By default, classifyByTemplate won&#8217;t proceed if you have more than 100 templates; set this parameter to True to ignore that constraint</li>
-<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to generate a plot comparing best fit template to source; can also set keywords associated with <a href="#id69"><span class="problematic" id="id70">plotSpectrum_</span></a> routine</li>
+<li><strong>plot</strong> (<em>optional, default = False</em>) &#8211; Set to True to generate a plot comparing best fit template to source; can also set keywords associated with <a href="#id94"><span class="problematic" id="id95">plotSpectrum_</span></a> routine</li>
 <li><strong>string</strong> (<em>optional, default = True</em>) &#8211; return spectral type as a string</li>
 <li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; give lots of feedback</li>
 </ul>
@@ -1407,7 +1356,7 @@ noise array elements.</li>
 </tr>
 </tbody>
 </table>
-<p>Users can also set keyword parameters defined in <a href="#id71"><span class="problematic" id="id72">plotSpectrum_</span></a> and <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> routines</p>
+<p>Users can also set keyword parameters defined in <a href="#id96"><span class="problematic" id="id97">plotSpectrum_</span></a> and <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary</a> routines</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1576,47 +1525,6 @@ noise array elements. Must be between M6.0 and L7.0.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat.filterProperties">
-<code class="descclassname">splat.</code><code class="descname">filterProperties</code><span class="sig-paren">(</span><em>filter</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterProperties" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Returns a dictionary containing key parameters for a particular filter.</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>filter</strong> (<em>required</em>) &#8211; name of filter, must be one of the specifed filters given by splat.FILTERS.keys()</li>
-<li><strong>verbose</strong> (<em>optional, default = True</em>) &#8211; print out information about filter to screen</li>
-</ul>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">filterProperties</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
-<span class="go">Filter 2MASS J: 2MASS J-band</span>
-<span class="go">Zeropoint = 1594.0 Jy</span>
-<span class="go">Pivot point: = 1.252 micron</span>
-<span class="go">FWHM = 0.323 micron</span>
-<span class="go">Wavelength range = 1.066 to 1.442 micron</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">filterProperties</span><span class="p">(</span><span class="s1">&#39;2MASS X&#39;</span><span class="p">)</span>
-<span class="go">Filter 2MASS X not among the available filters:</span>
-<span class="go">  2MASS H: 2MASS H-band</span>
-<span class="go">  2MASS J: 2MASS J-band</span>
-<span class="go">  2MASS KS: 2MASS Ks-band</span>
-<span class="go">  BESSEL I: Bessel I-band</span>
-<span class="go">  FOURSTAR H: FOURSTAR H-band</span>
-<span class="go">  FOURSTAR H LONG: FOURSTAR H long</span>
-<span class="go">  FOURSTAR H SHORT: FOURSTAR H short</span>
-<span class="go">  ...</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
 <dt id="splat.filterMag">
 <code class="descclassname">splat.</code><code class="descname">filterMag</code><span class="sig-paren">(</span><em>sp</em>, <em>filter</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterMag" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -1657,6 +1565,47 @@ noise array elements.</li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)</span>
 <span class="go">    (14.345894376898123, 0.027596454828421831)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat.filterProperties">
+<code class="descclassname">splat.</code><code class="descname">filterProperties</code><span class="sig-paren">(</span><em>filter</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.filterProperties" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Returns a dictionary containing key parameters for a particular filter.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filter</strong> (<em>required</em>) &#8211; name of filter, must be one of the specifed filters given by splat.FILTERS.keys()</li>
+<li><strong>verbose</strong> (<em>optional, default = True</em>) &#8211; print out information about filter to screen</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">filterProperties</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
+<span class="go">Filter 2MASS J: 2MASS J-band</span>
+<span class="go">Zeropoint = 1594.0 Jy</span>
+<span class="go">Pivot point: = 1.252 micron</span>
+<span class="go">FWHM = 0.323 micron</span>
+<span class="go">Wavelength range = 1.066 to 1.442 micron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">filterProperties</span><span class="p">(</span><span class="s1">&#39;2MASS X&#39;</span><span class="p">)</span>
+<span class="go">Filter 2MASS X not among the available filters:</span>
+<span class="go">  2MASS H: 2MASS H-band</span>
+<span class="go">  2MASS J: 2MASS J-band</span>
+<span class="go">  2MASS KS: 2MASS Ks-band</span>
+<span class="go">  BESSEL I: Bessel I-band</span>
+<span class="go">  FOURSTAR H: FOURSTAR H-band</span>
+<span class="go">  FOURSTAR H LONG: FOURSTAR H long</span>
+<span class="go">  FOURSTAR H SHORT: FOURSTAR H short</span>
+<span class="go">  ...</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1777,8 +1726,50 @@ uses Na I 2.206/2.209 Ca I 2.26 micron lines.</li>
 </dd></dl>
 
 </div>
-<div class="section" id="source-analysis">
-<h3>Source Analysis<a class="headerlink" href="#source-analysis" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="empirical-relationships">
+<h3>Empirical Relationships<a class="headerlink" href="#empirical-relationships" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat.typeToColor">
+<code class="descclassname">splat.</code><code class="descname">typeToColor</code><span class="sig-paren">(</span><em>spt</em>, <em>color</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.typeToColor" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body"><p class="first">Takes a spectral type and optionally a color (string) and returns the typical color of the source.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>spt</strong> &#8211; string or integer of the spectral type</li>
+<li><strong>color</strong> (<em>optional, default = 'J-K'</em>) &#8211; string indicating color; e.g., color=&#8217;i-z&#8217; (note that case does not matter)</li>
+<li><strong>ref</strong> (<em>optional, default = 'dupuy'</em>) &#8211; <p>Abs Mag/SpT relation used to compute the absolute magnitude. Options are:</p>
+<ul>
+<li><em>skrzypek</em> (default): Color trends from <a class="reference external" href="http://adsabs.harvard.edu/abs/2015A%26A...574A..78S">Skryzpek et al. (2015)</a>.
+Spectral type range is M5 to T8
+Colors include i-z, z-Y, Y-J, J-H, H-K, K-W1, W1-W2, and combinations therein.</li>
+</ul>
+</li>
+<li><strong>nsamples</strong> (<em>optional, default = 100</em>) &#8211; number of Monte Carlo samples for error computation</li>
+<li><strong>unc</strong> (<em>optional, default = 0.</em>) &#8211; uncertainty of <code class="docutils literal"><span class="pre">spt</span></code>; if included, returns a tuple with color and uncertainty</li>
+<li><strong>verbose</strong> (<em>optional, default = False</em>) &#8211; Give feedback while in operation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToColor</span><span class="p">(</span><span class="s1">&#39;L3&#39;</span><span class="p">,</span> <span class="s1">&#39;J-K&#39;</span><span class="p">)</span>
+<span class="go">    (1.46, nan)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToColor</span><span class="p">(</span><span class="s1">&#39;M5&#39;</span><span class="p">,</span> <span class="s1">&#39;i-z&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">,</span> <span class="n">unc</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">    (0.91, 0.57797809947624645)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToColor</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">,</span> <span class="s1">&#39;i-z&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">)</span>
+<span class="go">    Spectral type M0.0 is outside the range for reference set Skrzypek et al. (2015)</span>
+<span class="go">    (nan, nan)</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="function">
 <dt id="splat.typeToMag">
 <code class="descclassname">splat.</code><code class="descname">typeToMag</code><span class="sig-paren">(</span><em>spt</em>, <em>filt</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.typeToMag" title="Permalink to this definition">¶</a></dt>
@@ -1962,7 +1953,7 @@ calendar format &#8216;2005 Jun 12&#8217;</p>
 
 <dl class="function">
 <dt id="splat.dateToCaldate">
-<code class="descclassname">splat.</code><code class="descname">dateToCaldate</code><span class="sig-paren">(</span><em>date</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.dateToCaldate" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">splat.</code><code class="descname">dateToCaldate</code><span class="sig-paren">(</span><em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.dateToCaldate" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2073,7 +2064,7 @@ angles and Dec in degrees</td>
 
 <dl class="function">
 <dt id="splat.typeToNum">
-<code class="descclassname">splat.</code><code class="descname">typeToNum</code><span class="sig-paren">(</span><em>input</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.typeToNum" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">splat.</code><code class="descname">typeToNum</code><span class="sig-paren">(</span><em>inp</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat.typeToNum" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2883,7 +2874,7 @@ code directory</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> &#8211; set of models to use (<code class="docutils literal"><span class="pre">set</span></code> and <code class="docutils literal"><span class="pre">model\_set</span></code> may also be used), from the available models given by <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> &#8211; set of models to use (<code class="docutils literal"><span class="pre">set</span></code> and <code class="docutils literal"><span class="pre">model_set</span></code> may also be used), from the available models given by <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -2913,17 +2904,17 @@ code directory</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>compute_radius</strong> &#8211; if set to True, force the computation of the radius based on the model scaling factor. This is automatically set to True if the input spectrum is absolutely flux calibrated (default = False)</li>
-<li><strong>teff_range</strong> &#8211; set to the range of temperatures over which model fitting will be done (<code class="docutils literal"><span class="pre">temperature\_range</span></code> and <code class="docutils literal"><span class="pre">t\_range</span></code> may also be used; default = full range of model temperatures)</li>
-<li><strong>logg_range</strong> &#8211; set to the range of surface gravities over which model fitting will be done (<code class="docutils literal"><span class="pre">gravity\_range</span></code> and <code class="docutils literal"><span class="pre">g\_range</span></code> may also be used; default = full range of model temperatures)</li>
-<li><strong>z_range</strong> &#8211; set to the range of metallicities over which model fitting will be done (<code class="docutils literal"><span class="pre">metallicity\_range</span></code> may also be used; default = full range of model temperatures)</li>
+<li><strong>teff_range</strong> &#8211; set to the range of temperatures over which model fitting will be done (<code class="docutils literal"><span class="pre">temperature_range</span></code> and <code class="docutils literal"><span class="pre">t_range</span></code> may also be used; default = full range of model temperatures)</li>
+<li><strong>logg_range</strong> &#8211; set to the range of surface gravities over which model fitting will be done (<code class="docutils literal"><span class="pre">gravity_range</span></code> and <code class="docutils literal"><span class="pre">g_range</span></code> may also be used; default = full range of model temperatures)</li>
+<li><strong>z_range</strong> &#8211; set to the range of metallicities over which model fitting will be done (<code class="docutils literal"><span class="pre">metallicity_range</span></code> may also be used; default = full range of model temperatures)</li>
 <li><strong>return_model</strong> &#8211; set to True to return a Spectrum class of the best-fit model instead of a dictionary of parameters (default = False)</li>
 <li><strong>return_mean_parameters</strong> &#8211; set to True a dictionary of mean parameters (default = False)</li>
 <li><strong>return_all_parameters</strong> &#8211; set to True to return all of the parameter sets and fitting values (default = False)</li>
 <li><strong>output</strong> &#8211; a string containing the base filename for outputs associated with this fitting routine (<code class="docutils literal"><span class="pre">file</span></code> and <code class="docutils literal"><span class="pre">filename</span></code> may also be used; default = &#8216;fit&#8217;)</li>
 <li><strong>noPlot</strong> &#8211; set to True to suppress plotting outputs (default = False)</li>
 <li><strong>plot_format</strong> &#8211; specifes the file format for output plots (default = <cite>pdf</cite>)</li>
-<li><strong>file_best_comparison</strong> &#8211; filename to use for plotting spectrum vs. best-fit model (default = &#8216;OUTPUT_best_comparison.PLOT_FORMAT&#8217;)</li>
-<li><strong>file_mean_comparison</strong> &#8211; filename to use for plotting spectrum vs. mean parameter model (default = &#8216;OUTPUT_mean_comparison.PLOT_FORMAT&#8217;)</li>
+<li><strong>file_best_comparison</strong> &#8211; filename to use for plotting spectrum vs. best-fit model (default = &#8216;<code class="docutils literal"><span class="pre">OUTPUT</span></code>_best_comparison.``PLOT_FORMAT``&#8217;)</li>
+<li><strong>file_mean_comparison</strong> &#8211; filename to use for plotting spectrum vs. mean parameter model (default = &#8216;<code class="docutils literal"><span class="pre">OUTPUT</span></code>_mean_comparison.``PLOT_FORMAT``&#8217;)</li>
 </ul>
 </td>
 </tr>
@@ -3172,7 +3163,7 @@ outputs will include (each can be set individually with associated keywords):
 </tr>
 </tbody>
 </table>
-<p>In addition, the parameters for <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra</a>, <a href="#id73"><span class="problematic" id="id74">generateMask_</span></a>, <a href="#id75"><span class="problematic" id="id76">plotSpectrum_</span></a>; see SPLAT API for details.</p>
+<p>In addition, the parameters for <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra</a>, <a href="#id98"><span class="problematic" id="id99">generateMask_</span></a>, <a href="#id100"><span class="problematic" id="id101">plotSpectrum_</span></a>; see SPLAT API for details.</p>
 <dl class="docutils">
 <dt>Note: modelfitEMCEE requires external packages:</dt>
 <dd><ul class="first simple">
@@ -3562,7 +3553,7 @@ would like to do draws from posterior instead</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Driver function for <a href="#id77"><span class="problematic" id="id78">modelParameters_</span></a>, performs actual interpolation of evolutionary models. See SPLAT API for <a class="reference external" href="api.html#splat_evolve.modelParameters">modelParameters()</a> for details.</td>
+<tr class="field-odd field"><th class="field-name">Purpose:</th><td class="field-body">Driver function for <a href="#id102"><span class="problematic" id="id103">modelParameters_</span></a>, performs actual interpolation of evolutionary models. See SPLAT API for <a class="reference external" href="api.html#splat_evolve.modelParameters">modelParameters()</a> for details.</td>
 </tr>
 </tbody>
 </table>
@@ -3778,6 +3769,144 @@ new Spectrum object so as not to corrupt the original data.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+</div>
+<div class="section" id="astroquery-based-data-access">
+<h3>Astroquery-based Data Access<a class="headerlink" href="#astroquery-based-data-access" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="splat_db.getPhotometry">
+<code class="descclassname">splat_db.</code><code class="descname">getPhotometry</code><span class="sig-paren">(</span><em>coordinate</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.getPhotometry" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Purpose</dt>
+<dd>Downloads photometry for a source by coordinate using astroquery</dd>
+<dt>Required Inputs:</dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">coordinate: Either an astropy SkyCoord or a variable that can be converted into a SkyCoord using <a class="reference external" href="api.html#splat.properCoordinates">splat.properCoordinates()</a></td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+<dl class="docutils">
+<dt>Optional Inputs:</dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param radius:</th><td class="field-body">Search radius, nominally in arcseconds although this can be changed by passing an astropy.unit quantity (default = 30 arcseconds)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param catalog:</th><td class="field-body">Catalog to query, which can be set to the Vizier catalog identifier code or to one of the following preset catalogs:
+* &#8216;2MASS&#8217; (or set <a href="#id59"><span class="problematic" id="id60">``</span></a>2MASS``=True): the 2MASS All-Sky Catalog of Point Sources (<a class="reference external" href="http://adsabs.harvard.edu/abs/2003yCat.2246....0C">Cutri et al. 2003</a>), Vizier id II/246
+* &#8216;SDSS&#8217; (or set <a href="#id61"><span class="problematic" id="id62">``</span></a>SDSS``=True): the The SDSS Photometric Catalog, Release 9 (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJS..203...21A">Adelman-McCarthy et al. 2012</a>), Vizier id V/139
+* &#8216;WISE&#8217; (or set <a href="#id63"><span class="problematic" id="id64">``</span></a>WISE``=True): the WISE All-Sky Data Release (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012yCat.2311....0C">Cutri et al. 2012</a>), Vizier id II/311
+* &#8216;ALLWISE&#8217; (or set <a href="#id65"><span class="problematic" id="id66">``</span></a>ALLWISE``=True): the AllWISE Data Release (<a class="reference external" href="http://adsabs.harvard.edu/abs/2014yCat.2328....0C">Cutri et al. 2014</a>), Vizier id II/328
+* &#8216;VISTA&#8217; (or set <a href="#id67"><span class="problematic" id="id68">``</span></a>VISTA``=True): the VIKING catalogue data release 1 (<a class="reference external" href="http://adsabs.harvard.edu/abs/2013Msngr.154...32E">Edge et al. 2013</a>), Vizier id II/329
+* &#8216;CFHTLAS&#8217; (or set <a href="#id69"><span class="problematic" id="id70">``</span></a>CFHTLAS``=True): the CFHTLS Survey (T0007 release) by (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012yCat.2317....0H">Hudelot et al. 2012</a>), Vizier id II/317
+* &#8216;DENIS&#8217; (or set <a href="#id71"><span class="problematic" id="id72">``</span></a>DENIS``=True): the DENIS DR3 (DENIS Consortium 2005), Vizier id B/denis/denis
+* &#8216;UKIDSS&#8217; (or set <a href="#id73"><span class="problematic" id="id74">``</span></a>UKIDSS``=True): the UKIDSS-DR8 LAS, GCS and DXS Surveys (<a class="reference external" href="http://adsabs.harvard.edu/abs/2007MNRAS.379.1599L">Lawrence et al. 2012</a>), Vizier id II/314
+* &#8216;LEHPM&#8217; (or set <a href="#id75"><span class="problematic" id="id76">``</span></a>LEHPM``=True): the Liverpool-Edinburgh High Proper Motion Catalogue (<a class="reference external" href="http://adsabs.harvard.edu/abs/2004A&amp;A...421..763P">Pokorny et al. 2004</a>), Vizier id J/A+A/421/763
+* &#8216;SIPS&#8217; (or set <a href="#id77"><span class="problematic" id="id78">``</span></a>SIPS``=True): the Southern Infrared Proper Motion Survey (<a class="reference external" href="http://adsabs.harvard.edu/abs/2005A&amp;A...435..363D">Deacon et al 2005</a>), Vizier id J/A+A/435/363
+* &#8216;UCAC4&#8217; (or set <a href="#id79"><span class="problematic" id="id80">``</span></a>UCAC4``=True): the UCAC4 Catalogue (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012yCat.1322....0Z">Zacharias et al. 2012</a>), Vizier id I/322A
+* &#8216;USNOB&#8217; (or set <a href="#id81"><span class="problematic" id="id82">``</span></a>USNO``=True): the USNO-B1.0 Catalog (<a class="reference external" href="http://adsabs.harvard.edu/abs/2003AJ....125..984M">Monet et al. 2003</a>), Vizier id I/284
+* &#8216;LSPM&#8217; (or set <a href="#id83"><span class="problematic" id="id84">``</span></a>LSPM``=True): the LSPM-North Catalog (<a class="reference external" href="http://adsabs.harvard.edu/abs/2005AJ....129.1483L">Lepine et al. 2005</a>), Vizier id I/298</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">sort: String specifying the parameter to sort the returned SIMBAD table by; by default this is the offset from the input coordinate (default = &#8216;sep&#8217;)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param:</th><td class="field-body">nearest: Set to True to return on the single nearest source to coordinate (default = False)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">verbose: Give feedback (default = False)</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Output:</dt>
+<dd>An astropy Table instance that contains data from the Vizier query, or a blank Table if no sources are found</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy</span> <span class="k">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">properCoordinates</span><span class="p">(</span><span class="s1">&#39;J053625-064302&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">querySimbad</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">catalog</span><span class="o">=</span><span class="s1">&#39;SDSS&#39;</span><span class="p">,</span><span class="n">radius</span><span class="o">=</span><span class="mf">15.</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">arcsec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+<span class="go">  _r    _RAJ2000   _DEJ2000  mode q_mode  cl ... r_E_ g_J_ r_F_ i_N_  sep</span>
+<span class="go"> arcs     deg        deg                     ... mag  mag  mag  mag   arcs</span>
+<span class="go">------ ---------- ---------- ---- ------ --- ... ---- ---- ---- ---- ------</span>
+<span class="go"> 7.860  84.105967  -6.715966    1          3 ...   --   --   --   --  7.860</span>
+<span class="go">14.088  84.108113  -6.717206    1          6 ...   --   --   --   -- 14.088</span>
+<span class="go">14.283  84.102528  -6.720843    1      +   6 ...   --   --   --   -- 14.283</span>
+<span class="go">16.784  84.099524  -6.717878    1          3 ...   --   --   --   -- 16.784</span>
+<span class="go">22.309  84.097988  -6.718049    1      +   6 ...   --   --   --   -- 22.309</span>
+<span class="go">23.843  84.100079  -6.711999    1      +   6 ...   --   --   --   -- 23.843</span>
+<span class="go">27.022  84.107504  -6.723965    1      +   3 ...   --   --   --   -- 27.022</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="splat_db.querySimbad">
+<code class="descclassname">splat_db.</code><code class="descname">querySimbad</code><span class="sig-paren">(</span><em>variable</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_db.querySimbad" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Purpose</dt>
+<dd>Queries Simbad using astroquery to grab information about a source</dd>
+<dt>Required Inputs:</dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">variable: Either an astropy SkyCoord object containing position of a source, a variable that can be converted into a SkyCoord using <a class="reference external" href="api.html#splat.properCoordinates">splat.properCoordinates()</a>, or a string name for a source.</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+<dl class="docutils">
+<dt>Optional Inputs:</dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">radius: Search radius, nominally in arcseconds although can be set by assigning and astropy.unit value (default = 30 arcseconds)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param:</th><td class="field-body">sort: String specifying the parameter to sort the returned SIMBAD table by; by default this is the offset from the input coordinate (default = &#8216;sep&#8217;)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">reject_type: Set to string or list of strings to filter out object types not desired. Useful for crowded fields (default = None)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param:</th><td class="field-body">nearest: Set to True to return on the single nearest source to coordinate (default = False)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">iscoordinate: Specifies that input is a coordinate of some kind (default = False)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param:</th><td class="field-body">isname: Specifies that input is a name of some kind (default = False)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">clean: Set to True to clean the SIMBAD output and reassign to a predefined set of parameters (default = True)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param:</th><td class="field-body">verbose: Give lots of feedback (default = False)</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Output:</dt>
+<dd>An astropy Table instance that contains data from the SIMBAD search, or a blank Table if no sources found</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy</span> <span class="k">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">properCoordinates</span><span class="p">(</span><span class="s1">&#39;J053625-064302&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">querySimbad</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">radius</span><span class="o">=</span><span class="mf">15.</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">arcsec</span><span class="p">,</span><span class="n">reject_type</span><span class="o">=</span><span class="s1">&#39;**&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="go">          NAME          OBJECT_TYPE     OFFSET    ... K_2MASS K_2MASS_E</span>
+<span class="go">----------------------- ----------- ------------- ... ------- ---------</span>
+<span class="go">           BD-06  1253B        Star  4.8443894429 ...</span>
+<span class="go">            [SST2010] 3        Star 5.74624887682 ...   18.36       0.1</span>
+<span class="go">            BD-06  1253         Ae* 7.74205447776 ...   5.947     0.024</span>
+<span class="go">           BD-06  1253A          ** 7.75783861347 ...</span>
+<span class="go">2MASS J05362590-0643020     brownD* 13.4818185612 ...  12.772     0.026</span>
+<span class="go">2MASS J05362577-0642541        Star  13.983717577 ...</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <p><em>Search</em></p>
