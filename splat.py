@@ -310,36 +310,23 @@ class Spectrum(object):
     '''
     :Description: Primary class for containing spectral and source data for SpeX Prism Library.
 
-    :param ismodel:
-    :type ismodel: optional, default = False
-    :param wlabel: label of wavelength
-    :type wlabel: optional, default = 'Wavelength'
-    :param wunit: unit in which wavelength is measured
-    :type wunit: optional, default = ``u.micron``
-    :param wunit_label: label of the unit of wavelength
-    :type wunit_label: optional, default = `\mu m`
-    :param flabel: label of flux density
-    :type flabel: optional, default = F_\lambda`
-    :param fscale: string describing how flux density is scaled
-    :type fscale: optional, default = ''
-    :param funit: unit in which flux density is measured
-    :type funit: optional, default = ``u.erg/(u.cm**2 * u.s * u.micron)``
-    :param funit_label: label of the unit of flux density
-    :type funit_label: optional, default = erg cm^-2 s^-1 micron^-1`
-    :param resolution:
-    :type resolution: optional, default = 150
-    :param slitpixelwidth: Width of the slit measured in subpixel values.
-    :type slitpixelwidth: optional, default = 3.33
-    :param slitwidth: Actual width of the slit, measured in arc seconds. Default value is the ``slitpixelwidth`` multiplied by the spectrograph pixel scale of 0.15 arcseconds.
-    :type slitwidth: optional, default = ``slitpixelwidth`` * 0.15
-    :param header: header info of the spectrum
-    :type header: optional, default = Table()
-    :param filename: a string containing the spectrum's filename.
-    :type filename: optional, default = ''
-    :param file: same as filename
-    :type file: optional, default = ''
-    :param idkey: spectrum key of the desired spectrum
-    :type idkey: optional, default = False
+    Optional Inputs:
+
+    :param ismodel: Set to True to specify spectrum as a model (default = False)
+    :param wlabel: label of wavelength (default = 'Wavelength')
+    :param wunit: unit in which wavelength is measured (default = u.micron)
+    :param wunit_label: label of the unit of wavelength (default = 'micron')
+    :param flabel: label of flux density (default = 'F\_lambda')
+    :param fscale: string describing how flux density is scaled (default = '')
+    :param funit: unit in which flux density is measured (default = u.erg/(u.cm**2 * u.s * u.micron)
+    :param funit_label: label of the unit of flux density (default = 'erg cm\^-2 s\^-1 micron\^-1')
+    :param resolution: Resolution of spectrum (default = 150)
+    :param slitpixelwidth: Width of the slit measured in subpixel values (default = 3.33)
+    :param slitwidth: Actual width of the slit, measured in arcseconds. Default value is the ``slitpixelwidth`` multiplied an assumed (for SpeX) spectrograph pixel scale of 0.15 arcseconds 
+    :param header: header info of the spectrum (default = Table())
+    :param filename: a string containing the spectrum's filename (default = '')
+    :param file: same as filename (default = '')
+    :param idkey: spectrum key of the desired spectrum (default = False)
 
     :Example:
        >>> import splat
@@ -907,10 +894,13 @@ class Spectrum(object):
         :param mag: number specifying the magnitude to scale to 
 
         Optional Inputs:
-        ^^^^^^^^^^^^^^^^
 
         :param absolute: set to True to specify that the given magnitude is an absolute magnitude, which sets the ``fscale`` keyword in the Spectrum object to 'Absolute' (default = False)
         :param apparent: set to True to specify that the given magnitude is an apparent magnitude, which sets the ``fscale`` flag in the Spectrum object to 'Apparent' (default = False)
+
+        Outputs:
+
+        None, Spectrum object is changed to a flux calibrated spectrum
 
         :Example:
            >>> import splat
@@ -1415,38 +1405,29 @@ def checkKeys(input,parameters,**kwargs):
 
 def classifyByIndex(sp, *args, **kwargs):
     '''
-    :Purpose: Determine the spectral type and uncertainty for a spectrum
-                based on indices. Makes use of published index-SpT relations
-                from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_;
-                `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_;
-                `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_;
-                and `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_. Returns 2-element tuple
-                containing spectral type (numeric or string) and
-                uncertainty.
+    :Purpose: 
 
-    :param sp: Spectrum class object, which should contain wave, flux and
-               noise array elements.
+    Determine the spectral type and uncertainty for a spectrum based on indices. Makes use of published index-SpT relations from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_; `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_; `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_; and `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_. Returns 2-element tuple containing spectral type (numeric or string) and uncertainty.
+
+    Required Inputs:
+
+    :param sp: Spectrum class object, which should contain wave, flux and noise array elements.
+
+    Optional Inputs:
 
     :param set: named set of indices to measure and compute spectral type
 
+        - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_ (default)
         - *'allers'*: H2O from `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_
-        - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_
         - *'reid'*:H2O-A and H2O-B from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_
         - *'testi'*: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_
 
-    :type set: optional, default = 'burgasser'
-    :param string: return spectral type as a string (uses typeToNum)
-    :type string: optional, default = False
-    :param round: rounds off to nearest 0.5 subtypes
-    :type round: optional, default = False
-    :param allmeasures: Set to True to return all of the index values and individual subtypes
-    :type allmeasures: optional, default = False
-    :param remeasure: force remeasurement of indices
-    :type remeasure: optional, default = True
-    :param nsamples: number of Monte Carlo samples for error computation
-    :type nsamples: optional, default = 100
-    :param nloop: number of testing loops to see if spectral type is within a certain range
-    :type nloop: optional, default = 5
+    :param string: return spectral type as a string using typeToNum (default = False)
+    :param round: rounds off to nearest 0.5 subtypes (default = False)
+    :param allmeasures: Set to True to return all of the index values and individual subtypes  (default = False)
+    :param remeasure: force remeasurement of indices (default = True)
+    :param nsamples: number of Monte Carlo samples for error computation (default = 100)
+    :param nloop: number of testing loops to see if spectral type is within a certain range (default = 5)
 
     :Example:
     >>> import splat
@@ -1454,8 +1435,6 @@ def classifyByIndex(sp, *args, **kwargs):
     >>> splat.classifyByIndex(spc, string=True, set='burgasser', round=True)
         ('T4.5', 0.2562934083414341)
 
-    .. note::
-        * Need to allow output of individual spectral types from individual indices
     '''
 
     str_flag = kwargs.get('string', True)
@@ -2548,13 +2527,13 @@ def designationToCoordinate(value, **kwargs):
     if (len(spl[0]) > 6):
         ra+=15.*float(spl[0][6:8])/360000.
     dec = float(spl[1][0:2])
-    if (len(spl[0]) > 2):
+    if (len(spl[1]) > 2):
         dec+=float(spl[1][2:4])/60.
-    if (len(spl[0]) > 4):
+    if (len(spl[1]) > 4):
         dec+=float(spl[1][4:6])/3600.
     if (len(spl[1]) > 6):
         dec+=float(spl[1][6:8])/360000.
-    dec = dec*fact
+    dec*=fact
     if icrsflag:
         return SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
     else:
@@ -4040,9 +4019,9 @@ def typeToColor(spt,color, **kwargs):
         >>> import splat
         >>> print splat.typeToColor('L3', 'J-K')
             (1.46, nan)
-        >>> print splat.typeToMag('M5', 'i-z', ref = 'skrzypek', unc=0.5)
+        >>> print splat.typeToColor('M5', 'i-z', ref = 'skrzypek', unc=0.5)
             (0.91, 0.57797809947624645)
-        >>> print splat.typeToMag('M0', 'i-z', ref = 'skrzypek')
+        >>> print splat.typeToColor('M0', 'i-z', ref = 'skrzypek')
             Spectral type M0.0 is outside the range for reference set Skrzypek et al. (2015)
             (nan, nan)
     """
@@ -4243,7 +4222,7 @@ def typeToMag(spt, filt, **kwargs):
         return numpy.nan, numpy.nan
 
 
-def typeToNum(input, **kwargs):
+def typeToNum(inp, **kwargs):
     '''
     :Purpose: Converts between string and numeric spectral types, and vise versa.
     :param input: Spectral type to convert. Can convert a number or a string from 0 (K0) and 49.0 (Y9).
@@ -4290,11 +4269,12 @@ def typeToNum(input, **kwargs):
     colorclass = kwargs.get('colorclass','')
     peculiar = kwargs.get('peculiar',False)
     spletter = 'KMLTY'
+    verbose = kwargs.get('verbose',False)
 
 # number -> spectral type
-    if (isNumber(input)):
-        spind = int(abs(input/10.))
-        spdec = numpy.around(input,1)-spind*10.
+    if (isNumber(inp)):
+        spind = int(abs(inp/10.))
+        spdec = numpy.around(inp,1)-spind*10.
         pstr = ''
         if (unc > 1.):
             error = ':'
@@ -4305,55 +4285,60 @@ def typeToNum(input, **kwargs):
         if (0 <= spind < len(spletter)):
             output = colorclass+subclass+spletter[spind]+'{:3.1f}'.format(spdec)+ageclass+lumclass+pstr+error
         else:
-            print('Spectral type number must be between 0 ({}0) and {} ({}9)'.format(spletter[0],len(spletter)*10.-1.,spletter[-1]))
+            if verbose: print('Spectral type number must be between 0 ({}0) and {} ({}9)'.format(spletter[0],len(spletter)*10.-1.,spletter[-1]))
             output = numpy.nan
 
 # spectral type -> number
-    elif isinstance(input,str):
+    elif isinstance(inp,str):
         if (sys.version_info.major == 2):
-            input = string.split(input,sep='+')[0]    # remove +/- sides
-            input = string.split(input,sep='-')[0]    # remove +/- sides
-            input = string.split(input,sep='/')[0]    # remove / in spectral types
+            inp = string.split(inp,sep='+')[0]    # remove +/- sides
+            inp = string.split(inp,sep='-')[0]    # remove +/- sides
+            inp = string.split(inp,sep='/')[0]    # remove / in spectral types
         else:
-            input = input.split('+')[0]    # remove +/- sides
-            input = input.split('-')[0]    # remove +/- sides
-            input = input.split('/')[0]    # remove / in spectral types
+            inp = inp.split('+')[0]    # remove +/- sides
+            inp = inp.split('-')[0]    # remove +/- sides
+            inp = inp.split('/')[0]    # remove / in spectral types
+        inp = inp.replace('...','').replace(' ','')
 
-        sptype = re.findall('[{}]'.format(spletter),input)
+        sptype = re.findall('[{}]'.format(spletter),inp)
         if (len(sptype) == 1):
             output = spletter.find(sptype[0])*10.
-            spind = input.find(sptype[0])+1
-            if (spind < len(input)):
-                if (input.find('.') < 0):
-                    if (isNumber(input[spind])):
-                        output = output+float(input[spind])
+            spind = inp.find(sptype[0])+1
+            if (spind < len(inp)):
+                if (inp.find('.') < 0):
+                    if (isNumber(inp[spind])):
+                        output = output+float(inp[spind])
                 else:
-                    output = output+float(input[spind:spind+3])
-                    spind = spind+3
-            ytype = re.findall('[abcd]',input.split('p')[-1])
+                    try:
+                        output = output+float(inp[spind:spind+3])
+                        spind = spind+3
+                    except:
+                        if verbose: print('\nProblem converting input type {} to a numeric type'.format(inp))
+                        return numpy.nan
+            ytype = re.findall('[abcd]',inp.split('p')[-1])
             if (len(ytype) == 1):
                 ageclass = ytype[0]
-            if (input.find('p') != -1):
+            if (inp.find('p') != -1):
                  peculiar = True
-            if (input.find('sd') != -1):
+            if (inp.find('sd') != -1):
                  subclass = 'sd'
-            if (input.find('esd') != -1):
+            if (inp.find('esd') != -1):
                  subclass = 'esd'
-            if (input.find('usd') != -1):
+            if (inp.find('usd') != -1):
                  subclass = 'usd'
-            if (input.count('I') > 0):
-                 lumclass = ''.join(re.findall('I',input))
-            if (input.count(':') > 0):
-                 error = ''.join(re.findall(':',input))
-            if (input[0] == 'b' or input[0] == 'r'):
-                 colorclass = input[0]
+            if (inp.count('I') > 0):
+                 lumclass = ''.join(re.findall('I',inp))
+            if (inp.count(':') > 0):
+                 error = ''.join(re.findall(':',inp))
+            if (inp[0] == 'b' or inp[0] == 'r'):
+                 colorclass = inp[0]
         if (len(sptype) != 1):
-#            print('Only spectral classes {} are handled with this routine'.format(spletter))
-            output = numpy.nan
+            if verbose: print('\nOnly spectral classes {} are handled by typeToNum'.format(spletter))
+            return numpy.nan
 # none of the above - return the input
     else:
-        print('\nWarning: could not recognize format of spectral type {}\n'.format(input))
-        output = input
+        if verbose: print('\nWarning: could not recognize format of spectral type {}\n'.format(inp))
+        output = inp
     return output
 
 

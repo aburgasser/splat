@@ -13,19 +13,17 @@ Spectrum
 SPLAT Routines
 --------------
 
-Data Access
-^^^^^^^^^^^
+Database Access
+^^^^^^^^^^^^^^^
 .. autofunction:: splat.getSpectrum
 .. autofunction:: splat.getStandard
-.. autofunction:: splat_db.getPhotometry
-.. autofunction:: splat_db.searchLibrary
-.. autofunction:: splat_db.fetchDatabase
 .. autofunction:: splat_db.keySource
 .. autofunction:: splat_db.keySpectrum
+.. autofunction:: splat_db.searchLibrary
 
 
 Spectral Comparison
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat.compareSpectra
 .. autofunction:: splat.generateMask
 
@@ -43,8 +41,8 @@ Spectral Classification
 Spectrophotometry
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: splat.filterInfo
-.. autofunction:: splat.filterProperties
 .. autofunction:: splat.filterMag
+.. autofunction:: splat.filterProperties
 
 
 Other Spectral Analyses
@@ -55,8 +53,9 @@ Other Spectral Analyses
 .. autofunction:: splat.measureEWSet
 
 
-Source Analysis
-^^^^^^^^^^^^^^^
+Empirical Relationships
+^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: splat.typeToColor
 .. autofunction:: splat.typeToMag
 .. autofunction:: splat.typeToTeff
 .. autofunction:: splat.estimateDistance
@@ -64,7 +63,6 @@ Source Analysis
 
 Conversion Routines
 ^^^^^^^^^^^^^^^^^^^
-   
 .. autofunction:: splat.caldateToDate
 .. autofunction:: splat.dateToCaldate
 .. autofunction:: splat.coordinateToDesignation
@@ -137,12 +135,10 @@ Evolutionary Model Routines
 Specialty Packages
 ------------------
 
-
 EUCLID Analysis Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat_euclid.spexToEuclid
 .. autofunction:: splat_euclid.addEuclidNoise
-
 
 
 BibTeX Routines
@@ -150,8 +146,10 @@ BibTeX Routines
 .. autofunction:: splat_db.getBibTex
 
 
-
-
+Astroquery-based Data Access
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: splat_db.getPhotometry
+.. autofunction:: splat_db.querySimbad
 
 
 
