@@ -103,7 +103,6 @@ def checkModelName(model):
     Purpose: 
         Checks that an input model name is one of the available spectral models, including a check of alternate names
 
-
     Required Inputs:
         :param: model: A string containing the spectral model to be checked. This should be one of the models listed in `loadModel()`_
 
