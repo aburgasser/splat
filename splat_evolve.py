@@ -1173,5 +1173,5 @@ if __name__ == '__main__':
 #    test_readmodel()
 #    test_evolve_basic()
 #    test_evolve_accuracy(modelname='saumon',parameter='luminosity')
-#    test_evolve_accuracy_plotting('age','temperature',modelname='baraffe',file='/Users/adam/projects/splat/code/testing/test_evolve_plotting.eps')
-    test_ages(100000,distribution='exponential',minage=0.1,maxage=12.,parameters={'beta': -0.5})
+    test_evolve_accuracy_plotting('age','temperature',modelname='baraffe',file='/Users/adam/projects/splat/code/testing/test_evolve_plotting.eps')
+#    test_ages(100000,distribution='exponential',minage=0.1,maxage=12.,parameters={'beta': -0.5})
