@@ -24,7 +24,8 @@ from math import isnan
 import matplotlib.pyplot as plt
 import numpy
 from scipy.interpolate import interp1d 
-import scipy.integrate as integrate 
+import scipy.integrate as integrate
+import scipy.stats as stats
 from splat import SPLAT_PATH, SPLAT_URL
 EVOLUTIONARY_MODEL_FOLDER = '/reference/EvolutionaryModels/'
 EMODELS = ['baraffe','burrows','saumon']
@@ -787,7 +788,7 @@ def generateAges(num,**kwargs):
 
     Optional Inputs:
 
-    :param: age_range: range of ages to draw from (default = [0.1,10.]); can also specify `minage` and `maxage`
+    :param: age_range: range of ages to draw from (default = [0.1,10.]); can also specify `range`, `minage` or `min`, and `maxage` or `max`
     :param: distribution: either a string set to one of the following to define the type of age distribution (or reverse star formation rate) desired:
         * `uniform`: uniform distribution (default) 
         * `exponential`: exponential age distribution, P(t) ~ e\^(beta x t). You can specify the parameters `beta` or `tau` = 1/beta, or set ``distribution`` to `aumer` or `miller`
@@ -812,6 +813,7 @@ def generateAges(num,**kwargs):
         * `tau`: 1/beta scale factor in exponential age distribution
         * `t0` and `t1`: parameters for peaked age distribution
     :param: sfh: set to True if distribution is a star formation history rather than an age distribution (default = False)
+    :param: verbose: Give feedback (default = False)
 
     Output: 
 
@@ -827,10 +829,16 @@ def generateAges(num,**kwargs):
 
 # initial parameters
     distribution = kwargs.get('distribution','uniform')
+    allowed_distributions = ['uniform','flat','exponential','double-exponential','peaked','cosmic','aumer','aumer-double','aumer-peaked','just-peaked','just-peaked-a','just-peaked-b','miller','rujopakarn']
     mn = kwargs.get('minage',0.1)
+    mn = kwargs.get('min',mn)
     mx = kwargs.get('maxage',10.)
+    mx = kwargs.get('max',mx)
     sfh = kwargs.get('sfh',False)
     age_range = kwargs.get('age_range',[mn,mx])
+    age_range = kwargs.get('range',age_range)
+    verbose = kwargs.get('verbose',False)
+
 # protective offset
     if age_range[0] == age_range[1]:
         age_range[1]+=0.0001
@@ -857,7 +865,7 @@ def generateAges(num,**kwargs):
 # 
 # exponential
     if distribution.lower() == 'exponential' or distribution.lower() == 'aumer' or distribution.lower() == 'miller':
-        print('using exponential distribution')
+        if verbose: print('using exponential distribution')
         if distribution.lower() == 'aumer':
             parameters['beta'] = 0.117
         if distribution.lower() == 'miller':
@@ -878,7 +886,7 @@ def generateAges(num,**kwargs):
 
 # double exponential
     elif distribution.lower() == 'double_exponential' or distribution.lower() == 'aumer_double':
-        print('using double exponential distribution')
+        if verbose: print('using double exponential distribution')
         if distribution.lower() == 'aumer_double':
             parameters['beta'] = 0.348
             parameters['lambda'] = 2.0
@@ -894,7 +902,7 @@ def generateAges(num,**kwargs):
 
 # peaked distribution
     elif distribution.lower() == 'peaked' or distribution.lower() == 'just_peaked' or distribution.lower() == 'just_peaked_a' or distribution.lower() == 'just_peaked_b' or distribution.lower() == 'aumer_peaked':
-        print('using peaked distribution')
+        if verbose: print('using peaked distribution')
 # Aumer & Binney 2009
         if distribution.lower() == 'aumer_peaked':
             parameters['t0'] = 0.
@@ -927,7 +935,7 @@ def generateAges(num,**kwargs):
 
 # cosmic star formation rate
     elif distribution.lower() == 'cosmic' or distribution.lower() == 'rujopakarn': 
-        print('using cosmic SFH distribution')
+        if verbose: print('using cosmic SFH distribution')
         if distribution.lower() == 'rujopakarn': 
             parameters['alpha'] = 3.5
 
@@ -943,12 +951,12 @@ def generateAges(num,**kwargs):
         ages = cosmo.lookback_time(z)
 
 # uniform distribution (default)
-    else:
-        print('using uniform distribution')
+    elif distribution.lower() == 'uniform' or distribution.lower() == 'flat': 
+        if verbose: print('using uniform distribution')
         ages = numpy.random.uniform(numpy.min(age_range), numpy.max(age_range), size=num)
 
     if sfh:
-        print('reversing ages (SFH)')
+        if verbose: print('reversing ages (SFH)')
         ages = numpy.max(ages)-ages
 
     return ages
@@ -965,7 +973,7 @@ def generateMasses(num,**kwargs):
 
     Optional Inputs:
 
-    :param: mass_range: range of masses to draw from (default = [0.01,0.1]); can also specify ``minmass`` and ``maxmass``
+    :param: mass_range: range of masses to draw from (default = [0.01,0.1]); can also specify ``range``, ``minmass`` or ``min``, and ``maxmass`` or ``max``
     :param: distribution: can be a string set to one of the following to define the type of mass distribution to sample:
         * `uniform`: uniform distribution (default) 
         * `powerlaw` or `power-law`: single power-law distribution, P(M) ~ M\^-alpha. You must specify the parameter `alpha` or set ``distribution`` to TBD
@@ -979,6 +987,7 @@ def generateMasses(num,**kwargs):
         * `range`: array of 2-element arrays specifying the masses (in units of solar masses) over which the broken-law slopes are defined
         * `scales`: array of numbers specifying relative scaling between the segments in the broken-law distribution
         * `M0` and `sigmaM: parameters for lognormal distribution in units of solar masses
+    :param: verbose: Give feedback (default = False)
 
     Output: 
 
@@ -992,7 +1001,136 @@ def generateMasses(num,**kwargs):
     >>> plt.hist(masses)
     [histogram of masses in range 0.01-0.08 solar masses]    
     '''
-    pass
+
+# initial parameters
+    distribution = kwargs.get('distribution','powerlaw')
+    allowed_distributions = ['uniform','flat','powerlaw','power-law','broken-powerlaw','broken-power-law','lognormal','log-normal','kroupa','chabrier','salpeter']
+    mn = kwargs.get('minmass',0.1)
+    mn = kwargs.get('min',mn)
+    mx = kwargs.get('maxmass',1.)
+    mx = kwargs.get('max',mx)
+    mass_range = kwargs.get('mass_range',[mn,mx])
+    mass_range = kwargs.get('range',mass_range)
+    verbose = kwargs.get('verbose',False)
+
+# protective offset
+    if mass_range[0] == mass_range[1]:
+        mass_range[1]+=0.0001
+
+# set default parameters
+    if kwargs.get('parameters',False) == False:
+        parameters = {}
+    else:
+        parameters = kwargs['parameters']
+    if 'alpha' not in list(parameters.keys()):
+        parameters['alpha'] = kwargs.get('alpha',0.5)
+    if 'alpha-broken' not in list(parameters.keys()):
+        parameters['alpha-broken'] = kwargs.get('alpha-broken',[0.3,1.3,2.3])
+    if 'mass-broken' not in list(parameters.keys()):
+        parameters['mass-broken'] = kwargs.get('mass-broken',[0.08,0.5])
+    if 'log-mu' not in list(parameters.keys()):
+        parameters['log-mu'] = kwargs.get('log-mu',0.2)
+    if 'log-sigma' not in list(parameters.keys()):
+        parameters['log-sigma'] = kwargs.get('log-sigma',0.55)
+
+# power-law - sample from CDF
+    if distribution.lower() == 'power-law' or distribution.lower() == 'powerlaw' or distribution.lower() == 'salpeter':
+        if distribution.lower() == 'salpeter': parameters['alpha']
+        x = numpy.linspace(numpy.min(mass_range),numpy.max(mass_range),num=10000)
+        if parameters['alpha'] == 1.:
+            y = numpy.log(x)
+        else:
+            y = parameters['alpha']*x**(-1.*(parameters['alpha'])+1.)
+#        print(x,y)
+        y -= numpy.min(y)
+        y /= numpy.max(y)
+        f = interp1d(y,x)
+#        plt.plot(x,y)
+        masses = f(numpy.random.uniform(size=num))
+
+# lognormal
+    elif distribution.lower() == 'lognormal' or distribution.lower() == 'log-normal':
+        masses = numpy.random.lognormal(parameters['log-mu'], parameters['log-sigma'], num)
+
+
+# broken power law
+    elif distribution.lower() == 'kroupa' or distribution.lower() == 'broken-power-law' or distribution.lower() == 'broken-powerlaw':
+        if distribution.lower() == 'kroupa':
+            parameters['alpha-broken'] = [0.3,1.3,2.3]
+            parameters['mass-broken'] = [0.08,0.5]
+        if len(parameters['alpha-broken'])-1 != len(parameters['mass-broken']):
+            raise ValueError('\nBroken Power Law should have one more alpha parameter than mass break parameter; your values are alpha = {} and masses = {}'.format(parameters['alpha-broken'],parameters['mass-broken']))
+        yfull = []
+        xfull = []
+        mlow = numpy.min(mass_range)
+        for i,mb in enumerate(parameters['mass-broken']):
+            if mlow < mb and mlow < numpy.max(mass_range):
+#                print(mb,mlow,numpy.min([mb,numpy.max(mass_range)]))
+                x = numpy.linspace(mlow,numpy.min([mb,numpy.max(mass_range)]),num=10000)
+                y = x**(-1.*parameters['alpha-broken'][i])
+                y -= y[0]
+                if len(yfull) > 0: y += yfull[-1]
+                yfull.extend(y)
+                xfull.extend(x)
+                mlow = mb
+        if mlow < numpy.max(mass_range):
+#            print(mlow,numpy.max(mass_range))
+            x = numpy.linspace(mlow,numpy.max(mass_range),num=10000)
+            y = x**(-1.*parameters['alpha-broken'][-1]+1.)
+            y -= y[0]
+            if len(yfull) > 0: y += yfull[-1]
+            yfull.extend(y)
+            xfull.extend(x)
+#        plt.loglog(xfull,[a+10 for a in yfull])
+#        plt.ylim([7,10])
+#        plt.show()
+        yfull -= numpy.min(yfull)
+        yc = numpy.cumsum(yfull)
+        yc -= numpy.min(yc)
+        yc /= numpy.max(yc)
+#        plt.plot(xfull,yc)
+#        plt.ylim([7,10])
+#        plt.show()
+        f = interp1d(yc,xfull)
+        masses = f(numpy.random.uniform(size=num))
+
+# Chabrier (2005) distribution
+    elif distribution.lower() == 'chabrier':
+# lognormal below 1 solar mass
+        yfull = []
+        xfull = []
+        if numpy.min(mass_range) < 1.0:
+            xfull = numpy.linspace(numpy.min(mass_range),1.0,num=10000)
+            yfull = stats.lognorm.cdf(xfull-0.2,0.55)
+# salpeter above this
+        if numpy.max(mass_range) > 1.0:
+            x = numpy.linspace(1.0,numpy.max(mass_range),num=10000)
+            y = x**(-1.35)
+            y -= y[0]
+            if len(yfull) > 0:
+                y += yfull[-1]
+                yfull.extend(y)
+                xfull.extend(x)
+            else:
+                yfull = y
+                xfull = x
+        yfull -= numpy.min(yfull)
+        yc = numpy.cumsum(yfull)
+        yc -= numpy.min(yc)
+        yc /= numpy.max(yc)
+        f = interp1d(yc,xfull)
+        masses = f(numpy.random.uniform(size=num))
+
+# uniform distribution (default)
+    elif distribution.lower() == 'uniform' or distribution.lower() == 'flat':
+        masses = numpy.random.uniform(numpy.min(mass_range), numpy.max(mass_range), size=num)
+
+# wrong distribution
+    else:
+        raise NameError('\n{} distribution is not recognized; please choose from {}'.format(distribution,allowed_distributions))
+
+    return masses
+
 
     
 
@@ -1168,10 +1306,53 @@ def test_ages(num,**kwargs):
     plt.show()
     return True
 
+def test_masses1():
+    num = 100000
+    mflat1 = generateMasses(num,distribution='uniform')
+    mflat2 = generateMasses(num,distribution='flat')
+    mflat3 = generateMasses(num,distribution='power-law',alpha=0.)
+    plt.hist(mflat1,color='yellow',alpha=0.7)
+    plt.hist(mflat2,color='blue',alpha=0.7)
+    plt.hist(mflat3,color='red',alpha=0.7)
+    plt.show()
+    return True
+
+def test_masses2():
+    num = 100000
+    mflat1 = generateMasses(num,distribution='power-law',alpha=-2)
+    mflat2 = generateMasses(num,distribution='power-law',alpha=-1)
+    mflat3 = generateMasses(num,distribution='power-law',alpha=1.)
+    mflat4 = generateMasses(num,distribution='power-law',alpha=2.)
+    x = numpy.linspace(0.1,1.,1000)
+    n,b,p = plt.hist(mflat1,color='yellow',alpha=0.9)
+    plt.plot(x,n[-1]*x**2.,color='yellow')
+    n,b,p = plt.hist(mflat2,color='blue',alpha=0.9)
+    plt.plot(x,n[-1]*x,color='blue')
+    n,b,p = plt.hist(mflat3,color='red',alpha=0.9)
+    plt.plot(x,n[-1]*x**(-1.),color='red')
+    n,b,p = plt.hist(mflat4,color='green',alpha=0.9)
+    plt.plot(x,n[-1]*x**(-2.),color='green')
+    plt.ylim([0,num/3.])
+    plt.show()
+    return True
+
+def test_masses3():
+    num = 100000
+    mf1 = generateMasses(num,distribution='broken-power-law')
+    mf2 = generateMasses(num,distribution='chabrier')
+    mf3 = generateMasses(num,distribution='lognormal')
+    x = numpy.linspace(0.1,1.,1000)
+    n,b,p = plt.hist(mf1,color='green',alpha=0.9)
+    n,b,p = plt.hist(mf2,color='blue',alpha=0.9)
+    n,b,p = plt.hist(mf3,color='red',alpha=0.9)
+    plt.show()
+    return True
+
 
 if __name__ == '__main__':
 #    test_readmodel()
 #    test_evolve_basic()
 #    test_evolve_accuracy(modelname='saumon',parameter='luminosity')
-    test_evolve_accuracy_plotting('age','temperature',modelname='baraffe',file='/Users/adam/projects/splat/code/testing/test_evolve_plotting.eps')
+#    test_evolve_accuracy_plotting('age','temperature',modelname='baraffe',file='/Users/adam/projects/splat/code/testing/test_evolve_plotting.eps')
 #    test_ages(100000,distribution='exponential',minage=0.1,maxage=12.,parameters={'beta': -0.5})
+    test_masses3()

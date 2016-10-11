@@ -442,20 +442,17 @@ def checkOnline(*args):
        >>> splat.checkOnline('SpectralModels/BTSettl08/parameters.txt')
        '' # Could not find this online file.
     '''
-    try:
-        if (len(args) != 0):
-            if 'http://' in args[0]:
-                if requests.get(args[0]).status_code == requests.codes.ok:
-                    return args[0]
-                return False
-            else:
-                if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
-                    return SPLAT_URL+args[0]
-                return False
+    if (len(args) != 0):
+        if 'http://' in args[0]:
+            if requests.get(args[0]).status_code == requests.codes.ok:
+                return args[0]
+            return False
         else:
-            return requests.get(SPLAT_URL).status_code == requests.codes.ok
-    except:
-        return False
+            if requests.get(splat.SPLAT_URL+args[0]).status_code == requests.codes.ok:
+                return splat.SPLAT_URL+args[0]
+            return False
+    else:
+        return requests.get(splat.SPLAT_URL).status_code == requests.codes.ok
 
 
 
@@ -594,6 +591,7 @@ def getPhotometry(coordinate,**kwargs):
             * 'UCAC4' (or set ``UCAC4``=True): the UCAC4 Catalogue (`Zacharias et al. 2012 <http://adsabs.harvard.edu/abs/2012yCat.1322....0Z>`_), Vizier id I/322A
             * 'USNOB' (or set ``USNO``=True): the USNO-B1.0 Catalog (`Monet et al. 2003 <http://adsabs.harvard.edu/abs/2003AJ....125..984M>`_), Vizier id I/284
             * 'LSPM' (or set ``LSPM``=True): the LSPM-North Catalog (`Lepine et al. 2005 <http://adsabs.harvard.edu/abs/2005AJ....129.1483L>`_), Vizier id I/298
+            * 'GAIA' (or set ``GAIA``=True): the GAIA DR1 Catalog (`Gaia Collaboration et al. 2016 <http://adsabs.harvard.edu/abs/2016yCat.1337....0G>`_), Vizier id I/337
         :param: sort: String specifying the parameter to sort the returned SIMBAD table by; by default this is the offset from the input coordinate (default = 'sep')
         :param: nearest: Set to True to return on the single nearest source to coordinate (default = False)
         :param: verbose: Give feedback (default = False)
@@ -622,7 +620,7 @@ def getPhotometry(coordinate,**kwargs):
     '''
 
 # check if online
-    if splat.checkOnline():
+    if not checkOnline():
         print('\nYou are currently not online; cannot do a Vizier query')
         return Table()
 
@@ -660,6 +658,8 @@ def getPhotometry(coordinate,**kwargs):
         catalog = u'I/284'
     if kwargs.get('LSPM',False) or kwargs.get('lspm',False) or kwargs.get('LSPM-NORTH',False) or kwargs.get('lspm-north',False) or kwargs.get('LSPM-N',False) or kwargs.get('lspm-n',False) or catalog == 'LSPM' or catalog == 'lspm':
         catalog = u'I/298'
+    if kwargs.get('GAIA',False) or kwargs.get('gaia',False) or kwargs.get('GAIA-DR1',False):
+        catalog = u'I/337'
 
 # convert coordinate if necessary
     if not isinstance(coordinate,SkyCoord):
@@ -1263,7 +1263,7 @@ def querySimbad(variable,**kwargs):
     '''
 
 # check that online
-    if splat.checkOnline():
+    if not checkOnline():
         print('\nYou are currently not online; cannot do a SIMBAD query')
         return Table()
 
@@ -1438,7 +1438,7 @@ def querySimbad2(t_src,**kwargs):
     if 'SIMBAD_SEP' not in t_src.keys():
         t_src['SIMBAD_SEP'] = Column(numpy.zeros(len(t_src)),dtype='float')
 # must be online
-    if not splat.checkOnline():
+    if not checkOnline():
         print('\nYou are currently not online so cannot query Simbad\n')
         return t_src
 
@@ -1520,11 +1520,30 @@ def querySimbad2(t_src,**kwargs):
             t_src['VSINI_E'][i] = str(t_sim['ROT_err'][0]).replace('--','')
             t_src['VSINI_REF'][i] = t_sim['ROT_bibcode'][0]
             t_src['J_2MASS'][i] = t_sim['FLUX_J'][0]
-            t_src['J_2MASS_E'][i] = t_sim['FLUX_ERROR_J'][0]
-            t_src['H_2MASS'][i] = t_sim['FLUX_H'][0]
-            t_src['H_2MASS_E'][i] = t_sim['FLUX_ERROR_H'][0]
-            t_src['KS_2MASS'][i] = t_sim['FLUX_K'][0]
-            t_src['KS_2MASS_E'][i] = t_sim['FLUX_ERROR_K'][0]
+            if isinstance(t_sim['FLUX_J'][0],str):
+                t_src['J_2MASS'][i] = t_sim['FLUX_J'][0].replace('--','')
+            else:
+                t_src['J_2MASS'][i] = t_sim['FLUX_J'][0]
+            if isinstance(t_sim['FLUX_ERROR_J'][0],str):
+                t_src['J_2MASS_E'][i] = t_sim['FLUX_ERROR_J'][0].replace('--','')
+            else:
+                t_src['J_2MASS_E'][i] = t_sim['FLUX_ERROR_J'][0]
+            if isinstance(t_sim['FLUX_H'][0],str):
+                t_src['H_2MASS'][i] = t_sim['FLUX_H'][0].replace('--','')
+            else:
+                t_src['H_2MASS'][i] = t_sim['FLUX_H'][0]
+            if isinstance(t_sim['FLUX_ERROR_H'][0],str):
+                t_src['H_2MASS_E'][i] = t_sim['FLUX_ERROR_H'][0].replace('--','')
+            else:
+                t_src['H_2MASS_E'][i] = t_sim['FLUX_ERROR_H'][0]
+            if isinstance(t_sim['FLUX_K'][0],str):
+                t_src['KS_2MASS'][i] = t_sim['FLUX_K'][0].replace('--','')
+            else:
+                t_src['KS_2MASS'][i] = t_sim['FLUX_K'][0]
+            if isinstance(t_sim['FLUX_ERROR_K'][0],str):
+                t_src['KS_2MASS_E'][i] = t_sim['FLUX_ERROR_K'][0].replace('--','')
+            else:
+                t_src['KS_2MASS_E'][i] = t_sim['FLUX_ERROR_K'][0]
 
     return
 
@@ -1563,7 +1582,7 @@ def importSpectra(*args,**kwargs):
 # check user access
     if splat.checkAccess() == False:
         print('\nSpectra may only be imported into library by designated manager or while online; please email {}'.format(splat.SPLAT_EMAIL))
-#        return
+        return
 
 # check online
 #    if splat.checkOnline() == False:
@@ -1573,7 +1592,7 @@ def importSpectra(*args,**kwargs):
     simbad_radius = kwargs.get('simbad_radius',30.*u.arcsec)
 
 # set up optional inputs
-    data_folder = kwargs.get('data_folder','')
+    data_folder = kwargs.get('data_folder','./')
     data_folder = kwargs.get('dfolder',data_folder)
     data_folder = kwargs.get('folder',data_folder)
     if data_folder[-1] != '/':
@@ -1897,7 +1916,7 @@ def importSpectra(*args,**kwargs):
     if verbose:
         print('\n2MASS photometry from Vizier')
 
-    if splat.checkOnline():
+    if not checkOnline():
         if verbose:
             print('\nCould not perform Vizier search, you are not online')
     else:
@@ -1926,16 +1945,17 @@ def importSpectra(*args,**kwargs):
     for i,spt in enumerate(t_src['LIT_TYPE']):
         if spt != '' and float('{}0'.format(t_src['J_2MASS'][i])) != 0.0:
 #            print(spt,t_src['J_2MASS'][i],t_src['J_2MASS_E'][i])
-            dist = splat.estimateDistance(spt=spt,filter='2MASS J',mag=float(t_src['J_2MASS'][i]),mag_e=float(t_src['J_2MASS_E'][i]))
+            dist = splat.estimateDistance(spt=spt,filter='2MASS J',mag=float(t_src['J_2MASS'][i]))
             if not numpy.isnan(dist[0]):
                 t_src['DISTANCE_PHOT'][i] = dist[0]
                 t_src['DISTANCE_PHOT_E'][i] = dist[1]
                 t_src['DISTANCE'][i] = dist[0]
                 t_src['DISTANCE_E'][i] = dist[1]
-        if float('{}0'.format(t_src['PARALLAX'][i].replace('--',''))) != 0.0:
+        if float('{}0'.format(t_src['PARALLAX'][i].replace('--',''))) != 0.0 and float('{}0'.format(t_src['PARALLAX_E'][i].replace('--',''))) != 0.0 :
             t_src['DISTANCE'][i] = 1000./float(t_src['PARALLAX'][i])
             t_src['DISTANCE_E'][i] = float(t_src['DISTANCE'][i])*float(t_src['PARALLAX_E'][i])/float(t_src['PARALLAX'][i])
 # compute vtan
+        print(t_src['MU'][i],t_src['DISTANCE'][i])
         if float('{}0'.format(t_src['MU'][i].replace('--',''))) != 0.0 and float('{}0'.format(t_src['DISTANCE'][i])) != 0.0:
             t_src['VTAN'][i] = 4.74*float(t_src['DISTANCE'][i])*float(t_src['MU'][i])/1000.
 

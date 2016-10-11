@@ -218,9 +218,9 @@ FILTERS = { \
     'NIRC2_KP': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band', 'zeropoint': 689.3}, \
     'NIRC2_KS': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band', 'zeropoint': 676.2}, \
     'NIRC2_KCONT': {'file': 'nirc2-kcont.txt', 'description': 'NIRC2 K continuum-band', 'zeropoint': 605.9}, \
-    'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'WIRC Fe II', 'zeropoint': 1019.7}, \
-    'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'WIRC Fe II', 'zeropoint': 248.0}, \
-    'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'WIRC Fe II', 'zeropoint': 165.8}, \
+    'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'NIRC2 Fe II', 'zeropoint': 1019.7}, \
+    'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'NIRC2 LP', 'zeropoint': 248.0}, \
+    'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'NIRC2 M', 'zeropoint': 165.8}, \
     'PANSTARRS_I': {'file': 'panstarrs-i.txt', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6}, \
     'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2584.6}, \
     'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2584.6}, \

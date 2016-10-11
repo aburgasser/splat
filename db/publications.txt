@@ -53,6 +53,7 @@
 #Spectral data in hand but needs to be entered
 #
 #Needed from
+#2015AJ....150..182K
 #2016ApJ...822L...1S
 #2016ApJ...821..120A
 #2015ApJ...814..118B
