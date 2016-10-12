@@ -1,0 +1,95 @@
+<!doctype html>
+
+<!-- START OF HEADER -->
+
+<head>
+<title>SpeX Prism Spectral Libraries</title>
+
+<link href="http://cdn.pydata.org/bokeh/release/bokeh-0.12.1.css" rel="stylesheet">
+<link href="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.1.css" rel="stylesheet">
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.1.js"></script>
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.1.js"></script>
+<link rel= "stylesheet" type = "text/css" href = "static/display.css">
+
+<link rel="shortcut icon" href="http://www.browndwarfs.org/graphics/logo2.ico">
+<link rel="stylesheet" type="text/css" href="http://www.browndwarfs.org/spexprism/styles/mainstyle.css">
+
+<meta name="keywords" content="low mass stars, brown dwarfs, M dwarfs, L dwarfs, T dwarfs, astronomy, astrophysics, SpeX, near-infrared, spectroscopy">
+</head>
+
+<body>
+<a name="top"></a>
+
+
+<table cellpadding=5>
+<tr>
+<td valign=middle align=center>
+<a href="http://www.browndwarfs.org/" border=0>
+<img src="http://www.browndwarfs.org/graphics/logo.jpg" height=100 width=103 border=0 vspace=3 hspace=10 align=middle><br>
+<img src="http://www.browndwarfs.org/graphics/titlesm.jpg" width=180 height=25 border=0 vspace=3 hspace=10 align=middle>
+</a>
+
+<td valign=middle>
+<h1>The SpeX Prism Spectral Libraries</h1>
+</tr>
+</table>
+
+<table cellpadding=15>
+<tr>
+<td align=right valign=top width=100>
+<br>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/index.html">Home</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/about.html">Using the Libraries</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/library.html">The Libraries</a></h3>
+<h3><a href="input.html">SPLAT Web Interface</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/publications.html">Publications</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/links.html">Links</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/contact.html">Contact</a></h3>
+
+</td>
+
+<td width=600 valign=top>
+<br>
+
+<!-- END OF HEADER -->
+
+<h2>Interactive Spectrum Viewer</h2>
+<p>Some description</p>
+
+<input class="toggle-box" id="identifier-1" type="checkbox" >
+
+<div class=page>
+	<center>
+		{{ div.plot|safe }}
+		{{content}}
+	</center>
+
+</div>
+
+{{ script|safe }}
+<div style = "white-space: pre-wrap;"> {{content}} </div>
+
+<p>
+This site utilizes the <a href="http://pono.ucsd.edu/~adam/browndwarfs/splat">SPLAT code</a>
+</p>
+<p>
+The SPLAT Web Interface used Flask and <a href="http://bokeh.pydata.org/en/latest/">Bokeh</a>
+</p>
+
+
+<!-- BEGIN FOOTER -->
+
+</td>
+</tr>
+</table>
+
+<br><br><br>
+
+<a href="http://www.browndwarfs.org/spexprism/">The SpeX Prism Libraries</a><br> http://www.browndwarfs.org/spexprism/<br><br>
+
+
+</body>
+
+<!-- END FOOTER -->
+
+</html>
