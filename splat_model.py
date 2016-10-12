@@ -1982,8 +1982,8 @@ def modelFitEMCEE_summary(sampler,spec,file,**kwargs):
 
     f = open(file,'w')
     f.write('EMCEE fitting analysis of spectrum of {} using the models of {}'.format(spec.name,kwargs['model']))
-    f.write('\nFitting performed on {}'.format(time.strftime("%Y %h %d %I:%M:%S"))
-    f.write('\n\nMCMC paramters:')
+    f.write('\nFitting performed on {}'.format(time.strftime("%Y %h %d %I:%M:%S")))
+    f.write('\n\nMCMC paramaters:')
     f.write('\n\tNumber of walkers = {}'.format(nwalkers))
     f.write('\n\tNumber of samples = {}'.format(nsamples))
     f.write('\n\tNumber of fit parameters = {}'.format(nparameters))
