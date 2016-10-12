@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quickstart &mdash; SpeX Prism Library Analysis Toolkit 0.5 documentation</title>
+  <title>Quickstart &mdash; SpeX Prism Library Analysis Toolkit 0.5.dev documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5 documentation" href="index.html"/>
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.5.dev documentation" href="index.html"/>
         <link rel="next" title="Main SPLAT module" href="splat.html"/>
         <link rel="prev" title="Installation and Dependencies" href="installation.html"/> 
 
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.5
+                0.5.dev
               </div>
             
           
@@ -88,13 +88,11 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Dependencies</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bdevopar.html">Brown Dwarf Evolutionary Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bugs.html">Known Bugs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Model Package</a></li>
 </ul>
 
             
@@ -117,7 +115,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -148,21 +146,21 @@ unless you are using proprietary data (these are not distributed with the packag
 <ul class="simple">
 <li>The best way to read in a spectrum is to use getSpectrum:</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">young</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">young</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;M7&#39;</span><span class="p">,</span><span class="s1">&#39;L5&#39;</span><span class="p">],</span><span class="n">jmag</span><span class="o">=</span><span class="p">[</span><span class="mf">14.</span><span class="p">,</span><span class="mf">99.</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>In each case, splist is a list of Spectrum objects, which is the container of various
 aspects of the spectrum and it source properties. For example, selecting the first spectrum,</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
 </div>
 <p><code class="docutils literal"><span class="pre">sp.wave</span></code> gives the wavelengths of this spectrum, <code class="docutils literal"><span class="pre">sp.flux</span></code> the flux values, and <code class="docutils literal"><span class="pre">sp.noise</span></code> the
 flux uncertainty.</p>
 <p>You can also read in your own spectrum by passing a filename</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;PATH_TO/myspectrum.fits&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;PATH_TO/myspectrum.fits&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that this file must conform to the standard of the SPL data: the first column is
@@ -171,24 +169,24 @@ flux uncertainty.</p>
 <ul class="simple">
 <li>To flux calibrate the spectrum, use the object&#8217;s built in <code class="docutils literal"><span class="pre">fluxCalibrate()</span></code> method:</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.0</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li>To display the spectrum, use the Spectrum object&#8217;s plot function or plotSpectrum</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>which will pop up a window displaying flux vs. wavelength.
 You can save this display by adding a filename:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="nb">file</span><span class="o">=</span><span class="s1">&#39;spectrum.png&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;spectrum.png&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You can also compare multiple spectra:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp1</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1217-0311&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span><span class="n">sp2</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="s1">&#39;red&#39;</span><span class="p">])</span>
 </pre></div>
@@ -201,25 +199,25 @@ subpackage for more details.</p>
 <ul class="simple">
 <li>To measure spectral indices, use measureIndex or measureIndexSet:</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">value</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">measureIndex</span><span class="p">(</span><span class="n">sp</span><span class="p">,[</span><span class="mf">1.14</span><span class="p">,</span><span class="mf">1.165</span><span class="p">],[</span><span class="mf">1.21</span><span class="p">,</span><span class="mf">1.235</span><span class="p">],</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;integrate&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">indices</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">measureIndexSet</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="nb">set</span><span class="o">=</span><span class="s1">&#39;testi&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The last line returns a dictionary, whose value,error pair can be accessed by the name
 of the index:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">indices</span><span class="p">[</span><span class="s1">&#39;sH2O-J&#39;</span><span class="p">]</span>             <span class="c1"># returns value, error</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">indices</span><span class="p">[</span><span class="s1">&#39;sH2O-J&#39;</span><span class="p">]</span>             <span class="c1"># returns value, error</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li>You can also determine the gravity classification of a source via Allers &amp; Liu (2013):</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">young</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">young</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This returns:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Gravity</span> <span class="n">Classification</span><span class="p">:</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gravity</span> <span class="n">Classification</span><span class="p">:</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="n">SpT</span> <span class="o">=</span> <span class="n">L1</span><span class="o">.</span><span class="mi">0</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="n">VO</span><span class="o">-</span><span class="n">z</span><span class="p">:</span> <span class="mf">1.193</span><span class="o">+/-</span><span class="mf">0.018</span> <span class="o">=&gt;</span> <span class="mf">1.0</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="n">FeH</span><span class="o">-</span><span class="n">z</span><span class="p">:</span> <span class="mf">1.096</span><span class="o">+/-</span><span class="mf">0.026</span> <span class="o">=&gt;</span> <span class="mf">2.0</span>
@@ -231,7 +229,7 @@ of the index:</p>
 <ul class="simple">
 <li>To classify a spectrum, use the classifyByXXX methods:</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span><span class="n">unc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="nb">set</span><span class="o">=</span><span class="s1">&#39;burgasser&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span><span class="n">unc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;T5&#39;</span><span class="p">,</span><span class="s1">&#39;T9&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bestMatches</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;T6&#39;</span><span class="p">,</span><span class="s1">&#39;T9&#39;</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
@@ -242,7 +240,7 @@ Note that this can take a long time to run!</p>
 <ul class="simple">
 <li>To compare a spectrum to another spectrum or a model, use compareSpectra:</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mdl</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">loadModel</span><span class="p">(</span><span class="n">teff</span><span class="o">=</span><span class="mi">700</span><span class="p">,</span><span class="n">logg</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>                    <span class="c1"># BTSettl08 model by default</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">chi</span><span class="p">,</span><span class="n">scale</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">mdl</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mdl</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
@@ -263,8 +261,8 @@ Note that this can take a long time to run!</p>
 <ul class="simple">
 <li>There is also a basic Markov Chain Monte Carlo code to compare models to spectra (Note: still in development)</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.49</span><span class="p">,</span><span class="n">absolute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.49</span><span class="p">,</span><span class="n">absolute</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelFitMCMC</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">initial_guess</span><span class="o">=</span><span class="p">[</span><span class="mi">800</span><span class="p">,</span><span class="mf">5.0</span><span class="p">,</span><span class="mf">0.</span><span class="p">],</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span><span class="n">step_sizes</span><span class="o">=</span><span class="p">[</span><span class="mf">50.</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -273,9 +271,9 @@ in the following pages. If there are other capabilities
 you need, please suggest them, or note it in the &#8220;Issues&#8221; link on our github site</p>
 <p><em>Search</em></p>
 <ul class="simple">
-<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
 </div>
 
@@ -298,7 +296,7 @@ you need, please suggest them, or note it in the &#8220;Issues&#8221; link on ou
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, Adam Burgasser.
+        &copy; Copyright 2016, Adam Burgasser.
 
     </p>
   </div>
@@ -320,7 +318,7 @@ you need, please suggest them, or note it in the &#8220;Issues&#8221; link on ou
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5',
+            VERSION:'0.5.dev',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

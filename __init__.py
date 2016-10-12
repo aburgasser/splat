@@ -8,7 +8,5 @@ TMPFILENAME = 'splattmpfile'
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 DATA_FOLDER = '/reference/Spectra/'
 
-
-from splat import *
-
-
+#from splat import *
+#from splat_plot import *

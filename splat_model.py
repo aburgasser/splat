@@ -8,27 +8,75 @@ from __future__ import print_function, division
 import astropy
 import bdevopar
 import copy
-from datetime import datetime
+import glob
+#from datetime import datetime
+import numpy
 import os
+#import pwd
 import requests
+import splat
 import sys
+import time
 from matplotlib import cm
+import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.integrate import trapz        # for numerical integration
-from scipy.interpolate import griddata
-import numpy
+from scipy.interpolate import griddata, interp1d
+import scipy.optimize as op
 from astropy.io import ascii            # for reading in spreadsheet
 from astropy.table import Table
-import splat
+import astropy.units as u
 import triangle
 
 SPECTRAL_MODEL_FOLDER = '/reference/SpectralModels/'
 MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']
 MODEL_PARAMETERS = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
+MODEL_PARAMETER_TITLES = {\
+    'teff': '$T_{eff}$',\
+    'logg': '$log\ g$',\
+    'z': '$[M/H]$',\
+    'fsed': '$f_{sed}$',\
+    'cld': '$cld$',\
+    'kzz': '$log\ \kappa_{zz}$',\
+    'slit': '$slit$'}
+#MODEL_PARAMETER_UNITS = [u.K,u.cm/u.s/u.s,u.m/u.m,u.m/u.m,u.m/u.m,u.m/u.m,u.arcsec]
+MODEL_PARAMETER_UNITS = {\
+    'teff': u.K, \
+    'logg': u.dex(u.cm/u.s/u.s), \
+    'z': u.dex(), \
+    'fsed': u.m/u.m, \
+    'cld': u.m/u.m, \
+    'kzz': u.m/u.m, \
+#    'kzz': u.dex(u.cm*u.cm/u.s), \
+    'slit': u.arcsec}
 DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
-DEFINED_MODEL_NAME = ['BT-Settled (2008)','Burrows (2006)','Morley (2012)','Morley (2014)','Saumon (2012)','Drift (2008)']
+DEFINED_MODEL_NAMES = {
+    'BTSettl2008': 'BT-Settl (2008)',\
+    'burrows06': 'Burrows et al. (2006)',\
+    'morley12': 'Morley et al. (2012)',\
+    'morley14': 'Morley et al. (2014)',\
+    'saumon12': 'Saumon et al. (2012)',\
+    'drift': 'Witte et al. (2011)'}
+DEFINED_MODEL_SETS = {\
+    'BTSettl2008': ['allard','allard12','allard2012','btsettl','btsettled'], \
+    'burrows06': ['burrows','burrows2006'], \
+    'morley12': ['morley','morley2012'], \
+    'morley14': ['morley2014'], \
+    'saumon12': ['saumon','saumon2012'], \
+    'drift': ['witte','witte11','witte2011','helling']}
+DEFINED_MODEL_BIBCODES = {\
+    'BTSettl2008': '2012RSPTA.370.2765A', \
+    'burrows06': '2006ApJ...640.1063B',\
+    'morley12': '2012ApJ...756..172M',\
+    'morley14': '2014ApJ...787...78M',\
+    'saumon12': '2012ApJ...750...74S',\
+    'drift': '2011A&A...529A..44W'}
+
 TMPFILENAME = 'splattmpfile'
-TEN_PARSEC = 443344480.     # ten parsecs in solar radii
+
+# physical parameters
+RADIUS_SUN = 6.963e10*u.cm                          # radius of sun in cm
+TEN_PARSEC = (10.*u.pc).to(u.cm)/RADIUS_SUN          # ten parsecs in solar radii
 
 # change the command prompt
 sys.ps1 = 'splat model> '
@@ -43,323 +91,116 @@ sys.ps1 = 'splat model> '
 #        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
 
 
-def getModel(*args, **kwargs):
-    '''
-    Redundant routine with loadModel
-    '''
-    return loadModel(*args, **kwargs)
+#######################################################
+#######################################################
+##################   MODEL LOADING  ###################
+#######################################################
+#######################################################
 
-
-
-def loadInterpolatedModel_NEW(*args,**kwargs):
-# path to model
-#    kwargs['path'] = kwargs.get('path',SPLAT_PATH+SPECTRAL_MODEL_FOLDER)
-#    if not os.path.exists(kwargs['path']):
-#        kwargs['remote'] = True
-#        kwargs['path'] = SPLAT_URL+SPECTRAL_MODEL_FOLDER        
-#    kwargs['set'] = kwargs.get('set','BTSettl2008')
-#    kwargs['model'] = True
-#    for ms in MODEL_PARAMETER_NAMES:
-#        kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
-
-# first get model parameters
-    pfile = 'parameters_new.txt'
-#    parameters = loadModelParameters(**kwargs)
-
-# insert a switch to go between local and online here
-
-    print('Running new version')
-# read in parameters of available models
-    folder = splat.checkLocal(splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/')
-    if folder=='':
-        raise NameError('\n\nCould not locate spectral model folder {} locally\n'.format(SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'))
-    pfile = splat.checkLocal(folder+pfile)
-    if pfile=='':
-        raise NameError('\n\nCould not locate parameter list in folder {} locally\n'.format(folder))
-    parameters = ascii.read(pfile)
-#    numpy.genfromtxt(folder+pfile, comments='#', unpack=False, \
-#        missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
-
- 
-# check that given parameters are in range
-    for ms in MODEL_PARAMETER_NAMES[0:3]:
-        if (float(kwargs[ms]) < min(parameters[ms]) or float(kwargs[ms]) > max(parameters[ms])):
-            raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
-    for ms in MODEL_PARAMETER_NAMES[3:7]:
-        if (kwargs[ms] not in parameters[ms]):
-            raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
-
-# now identify grid points around input parameters
-# first set up a mask for digital parameters
-    mask = numpy.ones(len(parameters[MODEL_PARAMETER_NAMES[0]]))
-    for ms in MODEL_PARAMETER_NAMES[3:7]:
-        m = [1 if a == kwargs[ms] else 0 for a in parameters[ms]]
-        mask = mask*m
-    
-# identify grid points around input parameters
-# 3x3 grid for teff, logg, z
-# note interpolation and model ranges are separate
-    dist = numpy.zeros(len(parameters[MODEL_PARAMETER_NAMES[0]]))
-    for ms in MODEL_PARAMETER_NAMES[0:3]:
-# first get step size
-        ps = list(set(parameters[ms]))
-        ps.sort()
-        pps = numpy.abs(ps-ps[int(0.5*len(ps))])
-        pps.sort()
-        step = pps[1]
-        dist = dist + ((kwargs[ms]-parameters[ms])/step)**2
-
-# apply digital constraints
-    ddist = dist/mask    
-
-# find "closest" models
-    mvals = {}
-    for ms in MODEL_PARAMETER_NAMES[0:3]:
-        mvals[ms] = [x for (y,x) in sorted(zip(ddist,parameters[ms]))]
-
-
-# this is a guess as to how many models we need to get unique parameter values
-    nmodels = 12
-    mx,my,mz = numpy.meshgrid(mvals[MODEL_PARAMETER_NAMES[0]][0:nmodels],mvals[MODEL_PARAMETER_NAMES[1]][0:nmodels],mvals[MODEL_PARAMETER_NAMES[2]][0:nmodels])
-    mkwargs = kwargs.copy()
-
-    for i,w in enumerate(numpy.zeros(nmodels)):
-        for ms in MODEL_PARAMETER_NAMES[0:3]:
-            mkwargs[ms] = mvals[ms][i]
-        mdl = loadModel(**mkwargs)
-        if i == 0:
-            mdls = numpy.log10(mdl.flux.value)
-        else:
-            mdls = numpy.column_stack((mdls,numpy.log10(mdl.flux.value)))
-
-    print(mdls[0,:])
-    print(float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
-            float(kwargs[MODEL_PARAMETER_NAMES[2]]))
-    print(mx.flatten(),my.flatten(),mz.flatten())
-    for i in range(nmodels):
-        print(mvals['teff'][i],mvals['logg'][i],mvals['z'][i])
-#
-#
-#            
-## THIS NEXT PART IS BROKEN!
-#
-#
-#
-    mflx = numpy.zeros(len(mdl.wave))
-    for i,w in enumerate(mflx):
-#        print(i, (mdls[i],))
-#        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),val.flatten(),\
-#            (float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])),'linear'))
-
-        m = mdls[i,:]
-        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),m.flatten(),\
-            (float(kwargs[MODEL_PARAMETER_NAMES[0]]),float(kwargs[MODEL_PARAMETER_NAMES[1]]),\
-            float(kwargs[MODEL_PARAMETER_NAMES[2]])),'linear'))
-    
-    return splat.Spectrum(wave=mdl.wave,flux=mflx*mdl.funit,**kwargs)
-
-
-
-
-def loadInterpolatedModel(*args,**kwargs):
-    '''
-    .. not sure what force does
-    :Purpose: Loads interpolated model spectrum based on parameters
-    :param set: set of models to use; options include:
-
-        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
-          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
-        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
-          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
-        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
-          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
-        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
-          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
-        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
-          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
-        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
-          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
-          
-    :type set: optional, default = 'BTSettl2008'
-    :param local: read in parameter file locally if True
-    :type local: optional, default = True
-    :param url: string of the url to the SPLAT website
-    :type url: optional, default = 'http://pono.ucsd.edu/~adam/splat/'
-
-    :Model Parameters: Below are parameters that define the model:
-
-        - *teff*: effective temperature of the model
-        - *logg*: surface gravity of the model
-        - *z*: metallicity of the model
-        - *fsed*: sedimentation efficiency of the model
-        - *cld*: cloud shape function of the model
-        - *kzz*: vertical eddy diffusion coefficient of the model
-        - *slit*: slit weight of the model
+def checkModelName(model):
     '''
 
-# attempt to generalize models to extra dimensions
-    mkwargs = kwargs.copy()
-    mkwargs['force'] = True
-    mkwargs['url'] = kwargs.get('url',splat.SPLAT_URL+'/Models/')
-    mkwargs['set'] = kwargs.get('set','BTSettl2008')
-    mkwargs['model'] = True
-    mkwargs['local'] = kwargs.get('local',False)
-    for ms in MODEL_PARAMETER_NAMES:
-        mkwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
+    Purpose: 
+        Checks that an input model name is one of the available spectral models, including a check of alternate names
 
-# first get model parameters
-    parameters = loadModelParameters(**kwargs)
-    
-# check that given parameters are in range
-    for ms in MODEL_PARAMETER_NAMES[0:3]:
-        if (float(mkwargs[ms]) < parameters[ms][0] or float(mkwargs[ms]) > parameters[ms][1]):
-            raise NameError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,mkwargs[ms],mkwargs['set']))
-    for ms in MODEL_PARAMETER_NAMES[3:6]:
-        if (mkwargs[ms] not in parameters[ms]):
-            raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,mkwargs[ms],mkwargs['set']))
+    Required Inputs:
+        :param: model: A string containing the spectral model to be checked. This should be one of the models listed in `loadModel()`_
 
-# identify grid points around input parameters
-# 3x3 grid for teff, logg, z
-# note interpolation and model ranges are separate
-    mrng = []
-    rng = []
-    for ms in MODEL_PARAMETER_NAMES[0:3]:
-        s = float(mkwargs[ms]) - float(mkwargs[ms])%float(parameters[ms][2])
-        r = [max(float(parameters[ms][0]),s),min(s+float(parameters[ms][2]),float(parameters[ms][1]))]
-        m = copy.deepcopy(r)
-#        print(s, r, s-float(kwargs[ms]))
-        if abs(s-float(mkwargs[ms])) < (1.e-3)*float(parameters[ms][2]):
-            if float(kwargs[ms])%float(parameters[ms][2])-0.5*float(parameters[ms][2]) < 0.:
-                m[1]=m[0]
-                r[1] = r[0]+1.e-3*float(parameters[ms][2])
-            else:
-                m[0] = m[1]
-                r[0] = r[1]-(1.-1.e-3)*float(parameters[ms][2])
-#        print(s, r, m, s-float(kwargs[ms]))
-        rng.append(r)
-        mrng.append(m)
-#        print(s, r, m)
-    mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
-    mkwargs0 = mkwargs.copy()
+    .. _`loadModel()` : api.html#splat_model.loadModel
+        
+    Optional Inputs:
+        None
 
-# read in models
-# note the complex path is to minimize model reads
-    mkwargs['teff'] = mrng[0][0]
-    mkwargs['logg'] = mrng[1][0]
-    mkwargs['z'] = mrng[2][0]
-    md111 = loadModel(**mkwargs)
+    Output:
+        A string containing SPLAT's default name for a given model set, or False if that model set is not present
 
-    mkwargs['z'] = mrng[2][1]
-    if (mrng[2][1] != mrng[2][0]):
-        md112 = loadModel(**mkwargs)
-    else:
-        md112 = md111
+    Example:
 
-    mkwargs['logg'] = mrng[1][1]
-    mkwargs['z'] = mrng[2][0]
-    if (mrng[1][1] != mrng[1][0]):
-        md121 = loadModel(**mkwargs)
-    else:
-        md121 = md111
+    >>> import splat
+    >>> print(splat.checkModelName('burrows'))
+        burrows06
+    >>> print(splat.checkModelName('allard'))
+        BTSettl2008
+    >>> print(splat.checkModelName('somethingelse'))
+        False
+    '''
+    output = False
+    if not isinstance(model,str):
+        return output
+    for k in list(DEFINED_MODEL_SETS.keys()):
+        if model.lower()==k.lower() or model.lower() in DEFINED_MODEL_SETS[k]:
+            output = k
+    return output
 
-    mkwargs['z'] = mrng[2][1]
-    if (mrng[2][1] != mrng[2][0]):
-        md122 = loadModel(**mkwargs)
-    else:
-        md122 = md121
-
-    mkwargs['teff'] = mrng[0][1]
-    mkwargs['logg'] = mrng[1][0]
-    mkwargs['z'] = mrng[2][0]
-    if (mrng[0][1] != mrng[0][0]):
-        md211 = loadModel(**mkwargs)
-    else:
-        md211 = md111
-
-    mkwargs['z'] = mrng[2][1]
-    if (mrng[2][1] != mrng[2][0]):
-        md212 = loadModel(**mkwargs)
-    else:
-        md212 = md112
-
-    mkwargs['logg'] = mrng[1][1]
-    mkwargs['z'] = mrng[2][0]
-    if (mrng[1][1] != mrng[1][0]):
-        md221 = loadModel(**mkwargs)
-    else:
-        md221 = md211
-
-    mkwargs['z'] = mrng[2][1]
-    if (mrng[2][1] != mrng[2][0]):
-        md222 = loadModel(**mkwargs)
-    else:
-        md222 = md221
-
-    mflx = numpy.zeros(len(md111.wave))
-    val = numpy.zeros([2,2,2])
-    for i,w in enumerate(md111.wave):
-        val = numpy.array([ \
-            [[numpy.log10(md111.flux.value[i]),numpy.log10(md112.flux.value[i])], \
-            [numpy.log10(md121.flux.value[i]),numpy.log10(md122.flux.value[i])]], \
-            [[numpy.log10(md211.flux.value[i]),numpy.log10(md212.flux.value[i])], \
-            [numpy.log10(md221.flux.value[i]),numpy.log10(md222.flux.value[i])]]])
-        mflx[i] = 10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),val.flatten(),\
-            (float(mkwargs0['teff']),float(mkwargs0['logg']),float(mkwargs0['z'])),'linear'))
-    
-    return splat.Spectrum(wave=md111.wave,flux=mflx*md111.funit,**kwargs)
 
 
 def loadModel(*args, **kwargs):
     '''
-    .. not sure what force does
-    :Purpose: Load up a model spectrum based on parameters
-    :param set: set of models to use; options include:
+    .. Note: this needs some clean up    
 
-        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
-          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
-        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
-          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
-        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
-          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
-        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
-          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
-        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
-          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
-        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
-          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
-    
-    :type set: optional, default = 'BTSettl2008'
-    :param local: read in parameter file locally if True
-    :type local: optional, default = True
-    :param online: read in parameter file online if True
-    :type online: optional, default = False
-    :param folder: string of the folder name containing the model set
-    :type folder: optional, default = ''
-    :param filename: string of the filename of the desired model
-    :type filename: optional
-    :param url: string of the url to the SPLAT website
-    :type url: optional, default = 'http://pono.ucsd.edu/~adam/splat/'
+    Purpose: 
+        Loads up a model spectrum based on a set of input parameters. The models may be any one of the following listed below. For parameters between the model grid points, loadModel calls the function `loadInterpolatedModel()`_.
 
-    :Model Parameters: Below are parameters that define the model:
+    .. _`loadInterpolatedModel()` : api.html#splat_model.loadInterpolatedModel
 
-        - *teff*: effective temperature of the model
-        - *logg*: surface gravity of the model
-        - *z*: metallicity of the model
-        - *fsed*: sedimentation efficiency of the model
-        - *cld*: cloud shape function of the model
-        - *kzz*: vertical eddy diffusion coefficient of the model
-        - *slit*: slit weight of the model
+    Required Inputs:
+        :param: **model**: The model set to use; may be one of the following:
+
+            - *BTSettl2008*: (default) model set from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  with effective temperatures of 400 to 2900 K (steps of 100 K); surface gravities of 3.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity of -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.3, and 0.5 for temperatures greater than 2000 K only; cloud opacity is fixed in this model, and equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `btsettled`, `btsettl`, `allard`, `allard12`)
+            - *burrows06*: model set from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_ with effective temperatures of 700 to 2000 K (steps of 50 K); surface gravities of 4.5 to 5.5 in units of cm/s^2 (steps of 0.1 dex); metallicity of -0.5, 0.0 and 0.5; and either no clouds or grain size 100 microns (fsed = 'nc' or 'f100'). equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `burrows`, `burrows2006`)
+            - *morley12*: model set from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_ with effective temperatures of 400 to 1300 K (steps of 50 K); surface gravities of 4.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and sedimentation efficiency (fsed) of 2, 3, 4 or 5; metallicity is fixed to solar, equilibrium chemistry is assumed, and there are no clouds associated with this model (alternate designations: `morley2012`)
+            - *morley14*: model set from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, sedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: `morley2014`)
+            - *saumon12*: model set from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_ with effective temperatures of 400 to 1500 K (steps of 50 K); and surface gravities of 3.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, and no clouds are associated with these models (alternate designations: `saumon`, `saumon2012`)
+            - *drift*: model set from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_ with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex); cloud opacity is fixed in this model, equilibrium chemistry is assumed (alternate designations: `witte`, `witte2011`, `helling`)
+        
+    Optional Inputs:
+        :param: **teff**: effective temperature of the model in K (e.g. `teff` = 1000)
+        :param: **logg**: log10 of the surface gravity of the model in cm/s^2 units (e.g. `logg` = 5.0)
+        :param: **z**: log10 of metallicity of the model relative to solar metallicity (e.g. `z` = -0.5)
+        :param: **fsed**: sedimentation efficiency of the model (e.g. `fsed` = 'f2')
+        :param: **cld**: cloud shape function of the model (e.g. `cld` = 'f50')
+        :param: **kzz**: vertical eddy diffusion coefficient of the model (e.g. `kzz` = 2)
+        :param: **slit**: slit weight of the model in arcseconds (e.g. `slit` = 0.3)
+        :param: **sed**: if set to True, returns a broad-band spectrum spanning 0.3-30 micron (applies only for BTSettl2008 models with Teff < 2000 K)
+
+        :param: **local**: set to True to force program to read in local models (default = True)
+        :param: **online**: set to True to force program to read in models from SPLAT webpage (default = False)
+        :param: **folder**: string of the folder name containing the model set (default = '')
+        :param: **filename**: string of the filename of the desired model; should be a space-delimited file containing columns for wavelength (units of microns) and surface flux (F_lambda units of erg/cm^2/s/micron) (default = '')
+        :param: **force**: force the filename to be exactly as specified
+        :param: **url**: string of the url to the SPLAT website (default = 'http://www.browndwarfs.org/splat/')
+
+    Output:
+        A SPLAT Spectrum object of the interpolated model with wavelength in microns and surface fluxes in F_lambda units of erg/cm^2/s/micron.
+
+    Example:
+
+    >>> import splat
+    >>> mdl = splat.loadModel(teff=1000,logg=5.0)
+    >>> mdl.info()
+        BTSettl2008 model with the following parmeters:
+        Teff = 1000 K
+        logg = 5.0 cm/s2
+        z = 0.0
+        fsed = nc
+        cld = nc
+        kzz = eq
+        Smoothed to slit width 0.5 arcseconds
+    >>> mdl = splat.loadModel(teff=2500,logg=5.0,model='burrows')
+        Input value for teff = 2500 out of range for model set burrows06
+        Warning: Creating an empty Spectrum object
     '''
 
+
 # path to model and set local/online
-# by default assume models come from local splat directory
+# by default assume models come from local SPLAT directory
     local = kwargs.get('local',True)
     online = kwargs.get('online',not local and splat.checkOnline() != '')
     local = not online
     kwargs['local'] = local
     kwargs['online'] = online
     kwargs['folder'] = kwargs.get('folder','')
-    kwargs['model'] = True
+    kwargs['ismodel'] = True
     kwargs['force'] = kwargs.get('force',False)
     url = kwargs.get('url',splat.SPLAT_URL)
 
@@ -378,26 +219,48 @@ def loadModel(*args, **kwargs):
         else:
             return splat.Spectrum(**kwargs)
 
+
+#    elif:
+#        loadInterpolatedModel(**kwargs)
+
+
 # set up the model set
-    kwargs['set'] = kwargs.get('set','BTSettl2008')
+    kwargs['model'] = kwargs.get('model','BTSettl2008')
+    kwargs['model'] = kwargs.get('set',kwargs['model'])
     if kwargs.get('sed',False):
-        kwargs['set'] = 'BTSettl2008'
-    kwargs['folder'] = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'
-        
+        kwargs['model'] = 'BTSettl2008'
+
+
+# set replacements
+    kwargs['model'] = checkModelName(kwargs['model'])
+
+#    if kwargs['model'].lower() == 'btsettl2008' or kwargs['model'].lower() == 'btsettl' or kwargs['model'].lower() == 'btsettled' or kwargs['model'].lower() == 'allard' or kwargs['model'].lower() == 'allard12' or kwargs['model'].lower() == 'allard2012':
+#        kwargs['model'] = 'BTSettl2008'
+#    if kwargs['model'].lower() == 'burrows06' or kwargs['model'].lower() == 'burrows' or kwargs['model'].lower() == 'burrows2006':
+#        kwargs['model'] = 'burrows06'
+#    if kwargs['model'].lower() == 'morley12' or kwargs['model'].lower() == 'morley2012':
+#        kwargs['model'] = 'morley12'
+#    if kwargs['model'].lower() == 'morley14' or kwargs['model'].lower() == 'morley2014':
+#        kwargs['model'] = 'morley14'
+#    if kwargs['model'].lower() == 'saumon12' or kwargs['model'].lower() == 'saumon' or kwargs['model'].lower() == 'saumon2012':
+#        kwargs['model'] = 'saumon12'
+#    if kwargs['model'].lower() == 'drift' or kwargs['model'].lower() == 'witte' or kwargs['model'].lower() == 'witte2011' or kwargs['model'].lower() == 'witte11' or kwargs['model'].lower() == 'helling':
+#        kwargs['model'] = 'drift'
+    kwargs['folder'] = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
+
 # preset defaults
     for ms in MODEL_PARAMETER_NAMES:
         kwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
 
 # some special defaults
-    if kwargs['set'] == 'morley12':
+    if kwargs['model'] == 'morley12':
         if kwargs['fsed'] == 'nc':
-            kwargs['fsed'] = 'f2'
-    if kwargs['set'] == 'morley14':
+            kwargs['fsed'] = 'f3'
+    if kwargs['model'] == 'morley14':
         if kwargs['fsed'] == 'nc':
             kwargs['fsed'] = 'f5'
         if kwargs['cld'] == 'nc':
             kwargs['cld'] = 'f50'
-
 
 
 # check that folder/set is present either locally or online
@@ -419,14 +282,19 @@ def loadModel(*args, **kwargs):
     else:
         kwargs['folder'] = folder
 
+# convert model parameters to unitless numbers
+    for ms in MODEL_PARAMETER_NAMES:
+        if isinstance(kwargs[ms],u.quantity.Quantity):
+            kwargs[ms] = kwargs[ms].value
+
 # generate model filename
-    kwargs['filename'] = kwargs['folder']+kwargs['set']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
+    kwargs['filename'] = kwargs['folder']+kwargs['model']+'_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{:.1f}.txt'.\
         format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],float(kwargs['slit']))
-    kwargs['name'] = set
+    kwargs['name'] = kwargs['model']
     if kwargs.get('sed',False):
-        kwargs['filename'] = kwargs['folder']+kwargs['set']+'_{:.0f}_{:.1f}_{:.1f}_nc_nc_eq_sed.txt'.\
+        kwargs['filename'] = kwargs['folder']+kwargs['model']+'_{:.0f}_{:.1f}_{:.1f}_nc_nc_eq_sed.txt'.\
             format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001)
-        kwargs['name'] = set+' SED'
+        kwargs['name'] = kwargs['model']+' SED'
 
 # get model parameters
 #        parameters = loadModelParameters(**kwargs)
@@ -440,9 +308,10 @@ def loadModel(*args, **kwargs):
 #                raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
 
 
+
 # check if file is present; if so, read it in, otherwise go to interpolated
 # locally:
-    if kwargs['local']:
+    if kwargs.get('local',True) == True:
         file = splat.checkLocal(kwargs['filename'])
         if file=='':
             if kwargs['force']:
@@ -462,7 +331,7 @@ def loadModel(*args, **kwargs):
         file = splat.checkOnline(kwargs['filename'])
         if file=='':
             if kwargs['force']:
-                raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
+                raise NameError('\nCould not find '+kwargs['filename']+' online\n\n')
             else:
                 return loadInterpolatedModel(**kwargs)
         else:
@@ -478,90 +347,594 @@ def loadModel(*args, **kwargs):
                 raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
 
 
-
-
-def loadModelParameters(**kwargs):
+def getModel(*args, **kwargs):
     '''
-    .. is cld cloud shape function? kzz the vertical eddy diffusion coefficient?
-    :Purpose: Load up model parameters and check model inputs. Parameters include 
-                effective temperature, surface gravity (expressed as logg), metallicity, 
-                and sedimentation efficiency (for cloudy models only).
-    :param parameterFile: name of file containing parameters for spectral models
-    :type parameterFile: optional, default = 'parameters.txt'
-    :param set: set of models to use; options include:
+    Purpose: 
+        Redundant routine with `loadModel()`_ to match syntax of `getSpectrum()`_
 
-        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
-          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
-        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
-          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
-        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
-          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
-        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
-          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
-        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
-          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
-        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
-          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
+    .. _`loadModel()` : api.html#splat_model.loadModel
+    .. _`getSpectrum()` : api.html#splat.getSpectrum
 
-    :type set: optional, default = 'BTSettl2008'
-    :param online: read in parameter file online if True
-    :type online: optional, default = False
     '''
-# keyword parameters
-    pfile = kwargs.get('parameterFile','parameters.txt')
+    return loadModel(*args, **kwargs)
 
-# legitimate model set?
-    if kwargs.get('set',False) not in DEFINED_MODEL_SET:
-        raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(set,DEFINED_MODEL_SET))
+
+
+def loadInterpolatedModel(*args,**kwargs):
+    '''
+    Purpose: 
+        Generates as spectral model with is interpolated between model parameter grid points. This routine is called by `loadModel()`_, or it can be called on its own.
+
+    .. _`loadModel()` : api.html#splat_model.loadModel
+
+    Required Inputs:
+        :param model: set of models to use; see options in `loadModel()`_
+
+    Optional Inputs:
+        :param: The parameters for `loadModel()`_ can also be used here.
+
+    Output:
+        A SPLAT Spectrum object of the interpolated model with wavelength in microns and surfae fluxes in F_lambda units of erg/cm^2/s/micron.
+
+    Example:
+
+    >>> import splat
+    >>> mdl = splat.loadModel(teff=1000,logg=5.0)
+    >>> mdl.info()
+        morley12 model with the following parmeters:
+        Teff = 540 K
+        logg = 4.7 cm/s2
+        z = 0.0
+        fsed = f3
+        cld = nc
+        kzz = eq
+        Smoothed to slit width 0.5 arcseconds
+    '''
+# attempt to generalize models to extra dimensions
+    mkwargs = kwargs.copy()
+    mkwargs['force'] = True
+    mkwargs['ismodel'] = True
+    mkwargs['url'] = kwargs.get('url',splat.SPLAT_URL+'/Models/')
+    mkwargs['model'] = kwargs.get('model','BTSettl2008')
+    mkwargs['model'] = kwargs.get('set',mkwargs['model'])
+    mkwargs['local'] = kwargs.get('local',False)
+    for ms in MODEL_PARAMETER_NAMES:
+        mkwargs[ms] = kwargs.get(ms,MODEL_PARAMETERS[ms])
+
+    if mkwargs.get('sed',False):
+        mkwargs['model'] = 'BTSettl2008'
+
+# set replacements
+    if mkwargs['model'].lower() == 'btsettl2008' or mkwargs['model'].lower() == 'btsettl' or mkwargs['model'].lower() == 'btsettled' or mkwargs['model'].lower() == 'allard' or mkwargs['model'].lower() == 'allard12' or mkwargs['model'].lower() == 'allard2012':
+        mkwargs['model'] = 'BTSettl2008'
+    if mkwargs['model'].lower() == 'burrows06' or mkwargs['model'].lower() == 'burrows' or mkwargs['model'].lower() == 'burrows2006':
+        mkwargs['model'] = 'burrows06'
+    if mkwargs['model'].lower() == 'morley12' or mkwargs['model'].lower() == 'morley2012':
+        mkwargs['model'] = 'morley12'
+    if mkwargs['model'].lower() == 'morley14' or mkwargs['model'].lower() == 'morley2014':
+        mkwargs['model'] = 'morley14'
+    if mkwargs['model'].lower() == 'saumon12' or mkwargs['model'].lower() == 'saumon' or mkwargs['model'].lower() == 'saumon2012':
+        mkwargs['model'] = 'saumon12'
+    if mkwargs['model'].lower() == 'drift' or mkwargs['model'].lower() == 'witte' or mkwargs['model'].lower() == 'witte2011' or mkwargs['model'].lower() == 'witte11' or mkwargs['model'].lower() == 'helling':
+        mkwargs['model'] = 'drift'
+    mkwargs['folder'] = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
+
+# some special defaults
+    if mkwargs['model'] == 'morley12':
+        if mkwargs['fsed'] == 'nc':
+            mkwargs['fsed'] = 'f2'
+    if mkwargs['model'] == 'morley14':
+        if mkwargs['fsed'] == 'nc':
+            mkwargs['fsed'] = 'f5'
+        if mkwargs['cld'] == 'nc':
+            mkwargs['cld'] = 'f50'
+
+# first get model parameters
+    tmp = copy.deepcopy(mkwargs)
+    del tmp['model']
+    parameters = loadModelParameters(mkwargs['model'],**tmp)
     
+# check that given parameters are in range
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
+        if (float(mkwargs[ms]) < numpy.min(parameters[ms]) or float(mkwargs[ms]) > numpy.max(parameters[ms])):
+            raise ValueError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,mkwargs[ms],mkwargs['model']))
+#            return splat.Spectrum()
+    for ms in MODEL_PARAMETER_NAMES[3:6]:
+        if (mkwargs[ms] not in parameters[ms]):
+            raise ValueError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,mkwargs[ms],mkwargs['model']))
+#            return splat.Spectrum()
+
+# identify grid points around input parameters
+# 3x3 grid for teff, logg, z
+
+    tvals = numpy.array([float(p['teff']) for p in parameters['parameter_sets']])
+    tdiff = numpy.array([numpy.log10(float(mkwargs['teff']))-numpy.log10(v) for v in tvals])
+    gvals = numpy.array([float(p['logg']) for p in parameters['parameter_sets']])
+    gdiff = numpy.array([float(mkwargs['logg'])-v for v in gvals])
+    zvals = numpy.array([float(p['z']) for p in parameters['parameter_sets']])
+    zdiff = numpy.array([float(mkwargs['z'])-v for v in zvals])
+    dist = tdiff**2+gdiff**2+zdiff**2
+
+# get closest models in 8 quadrant points
+    mparams = []
+    psets = numpy.array(parameters['parameter_sets'])
+    for i in numpy.arange(0,2):
+        dt = dist[numpy.where(tdiff*((-1)**i)>=0)]
+        pt = psets[numpy.where(tdiff*((-1)**i)>=0)]
+        gt = gdiff[numpy.where(tdiff*((-1)**i)>=0)]
+        zt = zdiff[numpy.where(tdiff*((-1)**i)>=0)]
+        for j in numpy.arange(0,2):
+            dg = dt[numpy.where(gt*((-1)**j)>=0)]
+            pg = pt[numpy.where(gt*((-1)**j)>=0)]
+            zg = zt[numpy.where(gt*((-1)**j)>=0)]
+            for k in numpy.arange(0,2):
+                dz = dg[numpy.where(zg*((-1)**k)>=0)]
+                pz = pg[numpy.where(zg*((-1)**k)>=0)]
+                pcorner = pz[numpy.argmin(dz)]
+                mparams.append(pz[numpy.argmin(dz)])
+
+# generate meshgrid with slight offset and temperature on log scale
+    rng = []
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
+        vals = [float(m[ms]) for m in mparams]
+        r = [numpy.min(vals),numpy.max(vals)]
+        if numpy.absolute(r[0]-r[1]) < 1.e-3*numpy.absolute(parameters[ms][1]-parameters[ms][0]):
+            r[1] = r[0]+1.e-3*numpy.absolute(parameters[ms][1]-parameters[ms][0])
+        if ms == 'teff':
+            r = numpy.log10(r)
+        rng.append(r)
+    mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
+
+# read in only unique models
+    mpsmall = numpy.unique(numpy.array(mparams))
+    bmodels = []
+    for m in mpsmall:
+        bmodels.append(loadModel(**m))
+
+# then back fill all models
+    bmodels = numpy.array(bmodels)
+    models = []
+    for i,m in enumerate(mparams):
+        models.append(bmodels[numpy.where(mpsmall==m)][0])
+
+# final interpolation
+    mflx = []
+    for i,w in enumerate(models[0].wave):
+        val = numpy.array([numpy.log10(m.flux.value[i]) for m in models])
+        mflx.append(10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),\
+            val,(numpy.log10(float(mkwargs['teff'])),float(mkwargs['logg']),float(mkwargs['z'])),'linear')))
+
+    return splat.Spectrum(wave=models[0].wave,flux=mflx*models[0].funit,**mkwargs)
+
+
+
+
+def loadModelParameters(model,**kwargs):
+    '''
+    Purpose: 
+        Assistant routine for `loadModel()`_ that loads in the spectral model grid points.
+
+    .. _`loadModel()` : api.html#splat_model.loadModel
+
+    Required Inputs:
+        :param: model: set of models to use; see options in `loadModel()`_ (default = 'BTSettl2008')
+
+    Optional Inputs:
+        :param old: Old format for returning model parameters based parameter.txt file; now obsolete (default = False)
+    
+    The parameters for `loadModel()`_ can also be used here.
+
+    Output:
+        A dictionary containing the individual parameter values for the grid points in the given model set (not all of these grid points will be filled); this dictionary includs a list of dictionaries containing the individual parameter sets.
+    '''
+
+# model set
+    mset = checkModelName(model)
+    if mset == False:
+        raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(mset,DEFINED_MODEL_SET))
+
+    parameters = {'model': mset, 'parameter_sets': []}
+    for ms in MODEL_PARAMETER_NAMES:
+        parameters[ms] = []
+
+# establish parameters from list of filenames
+    if kwargs.get('old',False) == False:
+        mfiles = glob.glob(splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+mset+'*.txt')
+        if len(mfiles) == 0:
+            raise ValueError('\nCould not find any model files locally; try running without the "new" keyword')
+        for mf in mfiles:
+            sp = mf.replace('.txt','').split('_')[1:]
+            p = {'model': mset}
+            for i,ms in enumerate(MODEL_PARAMETER_NAMES):   # teff, logg, z
+                if sp[i] not in parameters[ms]:
+                    parameters[ms].append(sp[i])
+                p[ms] = sp[i]                
+            parameters['parameter_sets'].append(p)
+        for ms in MODEL_PARAMETER_NAMES[0:3]:
+            parameters[ms] = [float(x) for x in parameters[ms]]
+        for ms in MODEL_PARAMETER_NAMES:
+            parameters[ms].sort()
+            parameters[ms] = numpy.array(parameters[ms])
+        return parameters
+
+#
+#
+# THE REST OF THIS ROUTINE IS NOW OBSOLETE AND IS IN PLACE ONLY FOR BACKWARDS COMPATABILITY
+#
+#
 
 # read in parameter file - local and not local
-    if kwargs.get('online',False):
+    else:
+        pfile = 'parameters.txt'
         try:
-            open(os.path.basename(TMPFILENAME), 'wb').write(requests.get(splat.SPLAT_URL+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+pfile).content)
+            open(os.path.basename(TMPFILENAME), 'wb').write(requests.get(splat.SPLAT_URL+SPECTRAL_MODEL_FOLDER+mset+'/'+pfile).content)
             p = ascii.read(os.path.basename(TMPFILENAME))
             os.remove(os.path.basename(TMPFILENAME))
         except:
-            print('\n\nCannot access online models for model set {}\n'.format(set))
+            print('\n\nCannot access online models for model set {}\n'.format(mset))
 #            local = True
-    else:            
         if (os.path.exists(pfile) == False):
-            pfile = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['set']+'/'+os.path.basename(pfile)
+            pfile = splat.SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+os.path.basename(pfile)
             if (os.path.exists(pfile) == False):
                 raise NameError('\nCould not find parameter file {}'.format(pfile))
         p = ascii.read(pfile)
 
 # populate output parameter structure
-    parameters = {'set': kwargs.get('set'), 'url': splat.SPLAT_URL}
-    for ms in MODEL_PARAMETER_NAMES[0:3]:
-        if ms in p.colnames:
-            parameters[ms] = [float(x) for x in p[ms]]
-        else:
-            raise ValueError('\n\nModel set {} does not have defined parameter range for {}'.format(set,ms))
-    for ms in MODEL_PARAMETER_NAMES[3:6]:
-        if ms in p.colnames:
-            parameters[ms] = str(p[ms][0]).split(",")
-        else:
-            raise ValueError('\n\nModel set {} does not have defined parameter list for {}'.format(set,ms))
-
-    return parameters
+        for ms in MODEL_PARAMETER_NAMES[0:3]:
+            if ms in p.colnames:
+                parameters[ms] = [float(x) for x in p[ms]]
+            else:
+                raise ValueError('\n\nModel set {} does not have defined parameter range for {}'.format(mset,ms))
+        for ms in MODEL_PARAMETER_NAMES[3:6]:
+            if ms in p.colnames:
+                parameters[ms] = str(p[ms][0]).split(",")
+            else:
+                raise ValueError('\n\nModel set {} does not have defined parameter list for {}'.format(mset,ms))
+        return parameters
 
 
 
+#######################################################
+#######################################################
+##################   MODEL FITTING  ###################
+#######################################################
+#######################################################
 
-#### the following codes are in progress
+
+
+def modelFitPlotComparison(spec,model,**kwargs):
+    '''
+    Routine to compare spectrum to a model or models
+    '''
+
+# set up model spectrum or spectra
+    if isinstance(model,list) == False:
+        model = [model]
+    scale = kwargs.get('scale',[1.0]*len(model))
+    if isinstance(scale,list) == False:
+        scale = [scale]
+    stat = kwargs.get('stat',[False]*len(model))
+    if isinstance(stat,list) == False:
+        stat = [stat]
+    if kwargs.get('compare',False) == True:
+        scale = []
+        stat = []
+        for i,m in enumerate(model):
+            st,sc = splat.compareSpectra(spec,m,stat='chisqr',**kwargs)      # note: assumed to be chi-square
+            scale.append(sc)
+            stat.append(st)
+    for i,m in enumerate(model):
+        m.scale(scale[i])
+
+# plotting
+    olegend = kwargs.get('name',spec.name)
+
+# plot one model on top of one spectrum in one plot
+    if kwargs.get('overplot',True) == True and len(model) == 1:
+        sps = [spec,model[0]]
+#        model[0].info()
+        colors = ['k','b']
+        mlegend = r'{} '.format(DEFINED_MODEL_NAMES[getattr(model[0],'modelset')])
+        mlegend+='{:s}={:.0f} '.format(MODEL_PARAMETER_TITLES['teff'],getattr(model[0],'teff'))
+        mlegend+='{:s}={:.2f} '.format(MODEL_PARAMETER_TITLES['logg'],getattr(model[0],'logg'))
+        mlegend+='{:s}={:.1f} '.format(MODEL_PARAMETER_TITLES['z'],getattr(model[0],'z'))
+        legend = [olegend,mlegend]
+        if kwargs.get('showdifference',True) == True: 
+            sps.append(spec-model[0])
+            colors.append('grey')
+            legend.append(r'Difference ($\chi^2$ = {:.0f})'.format(stat[i]))
+        sps = tuple(sps)
+        return splat.plotSpectrum(*sps,colors=kwargs.get('colors',colors),file=kwargs.get('file',False),\
+            uncertainty=kwargs.get('uncertainty',True),telluric=kwargs.get('telluric',True),legend=legend)
+
+# plot several models on top of spectrum in one plot
+    elif kwargs.get('overplot',True) == True and len(model) > 1:
+        sps = [spec]
+        colors = ['k']
+        legend = [olegend]
+        for i,m in enumerate(model):
+            sps.append(m)
+            colors.append('grey')
+            mlegend = r'{:s}={:.0f} '.format(MODEL_PARAMETER_TITLES['teff'],getattr(m,'teff'))
+            mlegend+='{:s}={:.2f} '.format(MODEL_PARAMETER_TITLES['logg'],getattr(m,'logg'))
+            mlegend+='{:s}={:.1f} '.format(MODEL_PARAMETER_TITLES['z'],getattr(m,'z'))
+            legend.append(mlegend)
+        sps = tuple(sps)
+        return splat.plotSpectrum(*sps,colors=kwargs.get('colors',colors),file=kwargs.get('file',False),\
+            uncertainty=kwargs.get('uncertainty',True),telluric=kwargs.get('telluric',True),legend=legend)
+
+# plot individual panels of spectra - there must be a filename given
+    else: 
+        if kwargs.get('file',False) == False:
+            kwargs['file'] = 'modelFitComparison.pdf'
+        plotlist = []
+        legends = []
+        colors = []
+        for i,m in enumerate(model): 
+            sps = [spec,m]
+            c = ['k','b']
+            mlegend = r'{}\n'.format(DEFINED_MODEL_NAMES[getattr(m,'modelset')])
+            mlegend+='{:s}={:.0f} '.format(MODEL_PARAMETER_TITLES['teff'],getattr(m,'teff'))
+            mlegend+='{:s}={:.2f} '.format(MODEL_PARAMETER_TITLES['logg'],getattr(m,'logg'))
+            mlegend+='{:s}={:.1f} '.format(MODEL_PARAMETER_TITLES['z'],getattr(m,'z'))
+            leg = [olegend,mlegend]
+            if kwargs.get('showdifference',True): 
+                plotlist.append(spec-m)
+                c.append('grey')
+                leg.append(r'Difference ($\chi^2$ = {:.0f})'.format(stat[i]))
+            plotlist.append(sps)
+            colors.append(kwargs.get('colors',c))
+            legends.append(leg)
+
+        return splat.plotSpectrum(plotlist,multiplot=True,multipage=True,legends=legends,colors=colors,\
+            file=kwargs.get('file',False),uncertainty=kwargs.get('uncertainty',True),telluric=kwargs.get('telluric',True))
+
+
+
 
 def modelFitGrid(spec, **kwargs):
     '''
-    Model fitting code to grid of models
+    :Purpose: Fits a spectrum to a grid of atmosphere models, reports the best-fit and weighted average parameters, and returns either a dictionary with the best-fit model parameters or the model itself scaled to the optimal scaling factor.
+
+    If spectrum is absolutely flux calibrated with the `fluxcalibrate()`_ method, the routine will also calculate the equivalent radii of the source.
+
+    .. _`fluxcalibrate()` : api.html#splat.Spectrum.fluxCalibrate
+
+    Required inputs:
+
+    :param spec: a Spectrum class object, which should contain wave, flux and noise array elements.
+
+    Optional inputs:
+
+    :param model: set of models to use (``set`` and ``model_set`` may also be used), from the available models given by `loadModel()`_.
+
+    .. _`loadModel()` : api.html#splat_model.loadModel
+
+    :param stat: the statistic to use for comparing models to spectrum; can be any one of the statistics allowed in `compareSpectra()`_ routine (default = `chisqr`)
+
+    .. _`compareSpectra()` : api.html#splat.compareSpectra
+
+    :param weights: an array of the same length as the spectrum flux array, specifying the weight for each pixel (default: equal weighting)
+    :param mask: an array of the same length as the spectrum flux array, specifying which data to include in comparison statistic as coded by 0 = good data, 1 = bad (masked). The routine `generateMask()`_ is called to create a mask, so parameters from that routine may be specified (default: no masking)
+
+    .. _`generateMask()` : api.html#splat.generateMask
+
+    :param compute\_radius: if set to True, force the computation of the radius based on the model scaling factor. This is automatically set to True if the input spectrum is absolutely flux calibrated (default = False)
+
+    :param teff\_range: set to the range of temperatures over which model fitting will be done (``temperature_range`` and ``t_range`` may also be used; default = full range of model temperatures)
+    :param logg\_range: set to the range of surface gravities over which model fitting will be done (``gravity_range`` and ``g_range`` may also be used; default = full range of model temperatures)
+    :param z\_range: set to the range of metallicities over which model fitting will be done (``metallicity_range`` may also be used; default = full range of model temperatures)
+
+    :param return\_model: set to True to return a Spectrum class of the best-fit model instead of a dictionary of parameters (default = False)
+    :param return\_mean\_parameters: set to True a dictionary of mean parameters (default = False)
+    :param return\_all\_parameters: set to True to return all of the parameter sets and fitting values (default = False)
+
+    :param output: a string containing the base filename for outputs associated with this fitting routine (``file`` and ``filename`` may also be used; default = 'fit')
+    :param noPlot: set to True to suppress plotting outputs (default = False)
+    :param plot\_format: specifes the file format for output plots (default = `pdf`)
+    :param file\_best\_comparison: filename to use for plotting spectrum vs. best-fit model (default = '``OUTPUT``\_best\_comparison.``PLOT_FORMAT``')
+    :param file\_mean\_comparison: filename to use for plotting spectrum vs. mean parameter model (default = '``OUTPUT``\_mean\_comparison.``PLOT_FORMAT``')
+
+    In addition, the parameters for `compareSpectra()`_ , `generateMask()`_ and `plotSpectrum()`_ may be used; see SPLAT API for details.
+
+    .. _`plotSpectrum()`: api.html#splat_plot.plotSpectrum
+
+    Output:
+    
+    Default output is a dictionary containing the best-fit model parameters: model name, teff, logg, z, fsed, kzz, cloud and slit, as well as the scaling factor for the model and comparison statistic.  
+    If the input spectrum is absolutely flux calibrated, radius is also returned.  Alternate outputs include:
+
+        *  a dictionary of the statistic-weighted mean parameters (``return_mean_parameters`` = True)
+        *  a list of dictionaries containing all parameters and fit statistics (``return_all_parameters`` = True)
+        *  a Spectrum class of the best-fit model scaled to the best-fit scaling (``return_model`` = True)
+
+    :Example:
+    >>> import splat
+    >>> sp = splat.Spectrum(shortname='1507-1627')[0]
+    >>> sp.fluxCalibrate('2MASS J',12.32,absolute=True)
+    >>> p = splat.modelFitGrid(sp,teff_range=[1200,2500],model='Saumon',file='fit1507')
+        Best Parameters to fit to BT-Settl (2008) models:
+            $T_{eff}$=1800.0 K
+            $log\ g$=5.0 dex(cm / s2)
+            $[M/H]$=-0.0 dex
+            $f_{sed}$=nc 
+            $cld$=nc 
+            $log\ \kappa_{zz}$=eq dex(cm2 / s)
+            R=0.143324498969 solRad
+            chi=4500.24997585
+        Mean Parameters:
+            $T_{eff}$: 1800.0+/-0.0 K
+            $log\ g$: 5.0+/-0.0 dex(cm / s2)
+            Radius: 0.143324498969+/-0.0 solRad
+            $[M/H]$: 0.0+/-0.0 dex
     '''
-    print('This function is not yet implemented')
-    pass
+
+# model parameters
+    model_set = kwargs.get('model', 'BTSettl2008')
+    model_set = kwargs.get('set', model_set)
+    model_set = kwargs.get('model_set', model_set)
+    model_set = checkModelName(model_set)
+    if model_set == False:
+        raise ValueError('\n{} is not in the SPLAT model suite; try {}'.format(kwargs['set'],' '.join(list(DEFINED_MODEL_NAMES.keys()))))
+
+# fitting parameters
+    stat = kwargs.get('stat','chisqr')
+    mask = kwargs.get('mask',splat.generateMask(spec.wave,**kwargs))
+    weights = kwargs.get('weights',numpy.ones(len(spec.wave)))
+
+# plotting and reporting keywords
+    compute_radius = kwargs.get('compute_radius', spec.fscale == 'Absolute')
+    filebase = kwargs.get('output', 'fit')
+    filebase = kwargs.get('filename',filebase)
+    filebase = kwargs.get('file',filebase)
+    plot_format = kwargs.get('plot_format','pdf')
+    file_best_comparison = kwargs.get('file_best_comparison',os.path.splitext(filebase)[0]+'_best_comparison.'+plot_format)
+    file_mean_comparison = kwargs.get('file_mean_comparison',os.path.splitext(filebase)[0]+'_mean_comparison.'+plot_format)
+
+#    file_iterative = kwargs.get('file_iterative',os.path.splitext(filebase)[0]+'_iterative.dat')
+#    file_chains = kwargs.get('file_chains',os.path.splitext(filebase)[0]+'_chains.'+plot_format)
+#    file_corner = kwargs.get('file_corner',os.path.splitext(filebase)[0]+'_corner.'+plot_format)
+#    file_summary = kwargs.get('file_summary',os.path.splitext(filebase)[0]+'_summary.txt')
+#    if kwargs.get('save',True):
+#        f = open(file_iterative,'w')
+#        f.close()
+
+# read in available model grid points
+    gridparam = splat.loadModelParameters(model_set) # Range parameters can fall in
+#    tvals = numpy.arange(mlimits['teff'][0],mlimits['teff'][1]+mlimits['teff'][-1],mlimits['teff'][-1])
+#    gvals = numpy.arange(mlimits['logg'][0],mlimits['logg'][1]+mlimits['logg'][-1],mlimits['logg'][-1])
+#    zvals = numpy.arange(mlimits['z'][0],mlimits['z'][1]+mlimits['z'][-1],mlimits['z'][-1])
+
+# set points based on input ranges
+    rng = kwargs.get('teff_range',[numpy.min(gridparam['teff']),numpy.max(gridparam['teff'])])
+    rng = kwargs.get('temperature_range',rng)
+    rng = kwargs.get('t_range',rng)
+    if numpy.max(rng) < numpy.min(gridparam['teff']) or numpy.min(rng) > numpy.max(gridparam['teff']):
+        print('\nWarning: input temperature range {}-{} is outside limits of models {}-{}; defaulting to model range'.format(numpy.min(rng),numpy.max(rng),numpy.min(gridparam['teff']),numpy.max(gridparam['teff'])))
+    if numpy.max(rng) < numpy.max(gridparam['teff']) or numpy.min(rng) > numpy.min(gridparam['teff']):
+        gridparam['teff'] = gridparam['teff'][numpy.where(numpy.logical_and(gridparam['teff'] > numpy.min(rng),gridparam['teff']<numpy.max(rng)))]
+
+    rng = kwargs.get('logg_range',[numpy.min(gridparam['logg']),numpy.max(gridparam['logg'])])
+    rng = kwargs.get('gravity_range',rng)
+    rng = kwargs.get('g_range',rng)
+    if numpy.max(rng) < numpy.min(gridparam['logg']) or numpy.min(rng) > numpy.max(gridparam['logg']):
+        print('\nWarning: input gravity range {}-{} is outside limits of models {}-{}; defaulting to model range'.format(numpy.min(rng),numpy.max(rng),numpy.min(gridparam['logg']),numpy.max(gridparam['logg'])))
+    if numpy.max(rng) < numpy.max(gridparam['logg']) or numpy.min(rng) > numpy.min(gridparam['logg']):
+        gridparam['logg'] = gridparam['logg'][numpy.where(numpy.logical_and(gridparam['logg'] > numpy.min(rng),gridparam['logg']<numpy.max(rng)))]
+
+    rng = kwargs.get('z_range',[numpy.min(gridparam['z']),numpy.max(gridparam['z'])])
+    rng = kwargs.get('metallicity_range',rng)
+    if kwargs.get('nometallicity',False) == True: rng = [0,0]
+    if numpy.max(rng) < numpy.min(gridparam['z']) or numpy.min(rng) > numpy.max(gridparam['z']):
+        print('\nWarning: input metallicity range {}-{} is outside limits of models {}-{}; defaulting to model range'.format(numpy.min(rng),numpy.max(rng),numpy.min(gridparam['z']),numpy.max(gridparam['z'])))
+    if numpy.max(rng) < numpy.max(gridparam['z']) or numpy.min(rng) > numpy.min(gridparam['z']):
+        gridparam['z'] = gridparam['z'][numpy.where(numpy.logical_and(gridparam['z'] > numpy.min(rng),gridparam['z']<numpy.max(rng)))]
+
+
+#    fit_parameters = {\
+#        'teff': tvals,'logg': gvals, 'z': zvals}
+#    for i,m in enumerate(MODEL_PARAMETER_NAMES[3:-1]):
+#        fit_parameters[m] = kwargs.get(m,mlimits[m])
+#        if isinstance(fit_parameters[m],list) == False:
+#            fit_parameters[m] = [fit_parameters[m]]
+
+
+# start a fitting loop
+    parameters = []
+    stats = []
+    mparam = {'set': model_set}
+    for t in gridparam['teff']:
+        mparam['teff'] = t
+        for g in gridparam['logg']:
+            mparam['logg'] = g
+            for z in gridparam['z']:
+                mparam['z'] = z
+                for f in gridparam['fsed']:
+                    mparam['fsed'] = f
+                    for k in gridparam['kzz']:
+                        mparam['kzz'] = k
+                        for c in gridparam['cld']:
+                            mparam['cld'] = c
+                            try:
+                                model = splat.loadModel(**mparam)
+                                chi,scl = splat.compareSpectra(spec, model, mask=mask, weights=weights, stat=stat)
+                                mparam['stat'] = chi
+                                mparam['scale'] = scl
+                                mparam['radius'] = (scl*(TEN_PARSEC)**2)**0.5*u.Rsun
+                                parameters.append(copy.deepcopy(mparam))
+                                stats.append(chi)
+#                                print('{}: T={},g={},z={}'.format(len(stats)-1,mparam['teff'],mparam['logg'],mparam['z']))
+                            except:
+#                                print('\nNo model for {}'.format(mparam))
+                                pass
+
+# report best parameters
+    parameters = [p for (c,p) in sorted(zip(stats,parameters))]
+    stats.sort()
+#    print('\n\n')
+#    for i,s in enumerate(stats):
+#        line = '{}: chi={}'.format(i,s)
+#        for ms in MODEL_PARAMETER_NAMES[:-1]:
+#            line+='{} = {} {}'.format(MODEL_PARAMETER_TITLES[ms],parameters[i][ms],MODEL_PARAMETER_UNITS[ms])
+#        if compute_radius == True:
+#            line+='Radius = {} {}'.format(parameters[i]['radius'].value,parameters[i]['radius'].unit)
+#        print(line)
+    bparam = copy.deepcopy(parameters[0])
+    bmodel = splat.loadModel(**bparam)
+    bmodel.scale(parameters[0]['scale'])
+
+    print('\nBest Parameters to fit to {} models:'.format(DEFINED_MODEL_NAMES[model_set]))
+    for ms in MODEL_PARAMETER_NAMES[:-1]:
+        print('\t{} = {} {}'.format(MODEL_PARAMETER_TITLES[ms],parameters[0][ms],MODEL_PARAMETER_UNITS[ms]))
+    if compute_radius == True:
+        print('\tRadius = {} {}'.format(parameters[0]['radius'].value,parameters[0]['radius'].unit))
+    print('\tchi={}'.format(stats[0]))
+
+    if kwargs.get('noPlot',False) != True:
+        modelFitPlotComparison(spec,bmodel,stat=stats[0],file=file_best_comparison)
+
+# weighted means/uncertainties
+    fitweights = numpy.exp(-0.5*(numpy.array(stats)-numpy.min(stats)))
+    fparam = copy.deepcopy(parameters[0])
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
+        vals = [(p[ms]*(u.m/u.m)).value for p in parameters]
+        fparam[ms],fparam[ms+'_unc'] = splat.weightedMeanVar(vals,fitweights)
+        fparam[ms]*=MODEL_PARAMETER_UNITS[ms]
+        fparam[ms+'_unc']*=MODEL_PARAMETER_UNITS[ms]
+    if compute_radius == True:
+        vals = [(p['radius']*(u.m/u.m)).value for p in parameters]
+        fparam['radius'],fparam['radius_unc'] = splat.weightedMeanVar(vals,fitweights)
+        fparam['radius']*=u.Rsun
+        fparam['radius_unc']*=u.Rsun
+
+    print('\nStatistic-weighted Mean Parameters:')
+    for k in list(fparam.keys()):
+        if k in MODEL_PARAMETER_NAMES[0:3]:
+            print('\t{}: {}+/-{} {}'.format(MODEL_PARAMETER_TITLES[k],fparam[k].value,fparam[k+'_unc'].value,fparam[k].unit))
+        if k == 'radius':
+            print('\tRadius: {}+/-{} {}'.format(fparam[k].value,fparam[k+'_unc'].value,fparam[k].unit))
+
+    if kwargs.get('noPlot',False) != True:
+        mmodel = splat.loadModel(**fparam)
+        chi,scl = splat.compareSpectra(spec, mmodel, mask=mask, weights=weights, stat=stat)
+        mmodel.scale(scl)
+        modelFitPlotComparison(spec,mmodel,stat=stats[0],file=file_mean_comparison)
+
+# return parameters; otherwise return 
+    if kwargs.get('return_model',False) == True:
+        return bmodel
+    elif kwargs.get('return_mean_parameters',False) == True:
+        return fparam
+    elif kwargs.get('return_all_parameters',False) == True:
+        return parameters
+    else:
+        return bparam
+
+
 
 
 def modelFitMCMC(spec, **kwargs):
     '''
-    .. still need to add description of emodel
     :Purpose: Uses Markov chain Monte Carlo method to compare an object with models from a 
                 given set. Returns the best estimate of the effective temperature, surface 
                 gravity, and metallicity. Can also determine the radius of the object by 
@@ -699,11 +1072,8 @@ def modelFitMCMC(spec, **kwargs):
         938.962545205 5.43505121711 0.0  0.129294090544 47650.4267022
     '''
 
-# code style note:
-#   using the following equivalent terms: teff = temperature, logg = gravity, z = metallicity
-
 # MCMC keywords
-    timestart = datetime.now()
+    timestart = time.time()
     nsample = kwargs.get('nsamples', 1000)
     burn = kwargs.get('initial_cut', 0.1)  # what fraction of the initial steps are to be discarded
     burn = kwargs.get('burn', burn)  # what fraction of the initial steps are to be discarded
@@ -711,11 +1081,7 @@ def modelFitMCMC(spec, **kwargs):
     m_set = kwargs.get('model', m_set)
     m_set = kwargs.get('models', m_set)
     verbose = kwargs.get('verbose', False)
-# masking keywords
-    mask_ranges = kwargs.get('mask_ranges',[])
-    mask_telluric = kwargs.get('mask_telluric',False)
-    mask_standard = kwargs.get('mask_standard',True)
-    mask = kwargs.get('mask',numpy.zeros(len(spec.wave)))
+
 # plotting and reporting keywords
     showRadius = kwargs.get('radius', spec.fscale == 'Absolute')
     try:
@@ -729,31 +1095,9 @@ def modelFitMCMC(spec, **kwargs):
 # evolutionary models    
     emodel = kwargs.get('evolutionary_model', 'baraffe')
     emodel = kwargs.get('emodel', emodel)
-#    plot = kwargs.get('plot', False)
-#    contour = kwargs.get('contour', False)
-#    landscape = kwargs.get('landscape', False)
-#    xstep = kwargs.get('xstep', 20)
-#    ystep = kwargs.get('ystep', 20)
 
 # set mask   
-    if (mask_standard == True):
-        mask_telluric = True
-   
-    if mask_telluric == True:
-        mask_ranges.append([0.,0.65])        # meant to clear out short wavelengths
-        mask_ranges.append([1.35,1.42])
-        mask_ranges.append([1.8,1.92])
-        mask_ranges.append([2.45,99.]) 
-        
-    if mask_standard == True:
-        mask_ranges.append([0.,0.8])        # standard short cut
-        mask_ranges.append([2.35,99.])      # standard long cut
-        
-    for ranges in mask_ranges:
-        mask[numpy.where(((spec.wave.value >= ranges[0]) & (spec.wave.value <= ranges[1])))] = 1
-    kwargs['mask_ranges'] = mask_ranges
-    kwargs['mask_telluric'] = mask_telluric
-    kwargs['mask_standard'] = mask_standard
+    mask = kwargs.get('mask',splat.generateMask(spec.wave,**kwargs))
     
 # set the degrees of freedom    
     try:
@@ -765,8 +1109,11 @@ def modelFitMCMC(spec, **kwargs):
 # TBD - LOAD IN ENTIRE MODEL SET
 
 # set ranges for models - input or set by model itself
-    rang = splat.loadModelParameters(set = m_set) # Range parameters can fall in
-    ranges = kwargs.get('ranges', [rang['teff'][0:2], rang['logg'][0:2], rang['z'][0:2]])
+    modelgrid = splat.loadModelParameters(m_set) # Range parameters can fall in
+    ranges = kwargs.get('ranges', \
+        [[numpy.min(modelgrid['teff']),numpy.max(modelgrid['teff'])],\
+        [numpy.min(modelgrid['logg']),numpy.max(modelgrid['logg'])],\
+        [numpy.min(modelgrid['z']),numpy.max(modelgrid['z'])]])
     teff_range = kwargs.get('teff_range',ranges[0])
     teff_range = kwargs.get('temperature_range',teff_range)
     logg_range = kwargs.get('logg_range',ranges[1])
@@ -850,8 +1197,8 @@ def modelFitMCMC(spec, **kwargs):
     chisqrs = [chisqr0]    
     params = [param0]
     radii = [TEN_PARSEC*numpy.sqrt(alpha0)]
-    for i in range(nsample):
-        for j in range(len(param0)):
+    for i in numpy.arange(nsample):
+        for j in numpy.arange(len(param0)):
             if param_step[j] > 0.:          # efficient consideration - if statement or just run a model?
                 param1 = copy.deepcopy(param0)
                 param1[j] = numpy.random.normal(param1[j],param_step[j])
@@ -907,152 +1254,44 @@ def modelFitMCMC(spec, **kwargs):
     
     reportModelFitResults(spec,s,iterative=False,model_set=m_set,**kwargs)
     if verbose:
-        print('\nTotal time elapsed = {}'.format(datetime.now()-timestart))
+        print('\nTotal time elapsed = {}'.format(time.time()-timestart))
     return s
 
 
-def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
-    '''
-    :Purpose: Calculate luminosity from photometry and stitching models.
 
-    THIS IS CURRENTLY BEING WRITTEN - DO NOT USE!
-
-    :param sp: Spectrum class object, which should contain wave, flux and 
-               noise array elements.
-    :param mdl: model spectrum loaded using ``loadModel``
-    :type mdl: default = False
-    :param absmags: a dictionary whose keys are one of the following filters: 'SDSS Z', 
-                    '2MASS J', '2MASS H', '2MASS KS', 'MKO J', 'MKO H', 'MKO K', 'SDSS R', 
-                    'SDSS I', 'WISE W1', 'WISE W2', 'WISE W3', 'WISE W4', 'IRAC CH1', 
-                    'IRAC CH2', 'IRAC CH3', 'IRAC CH4'
-    :type absmags: default = False
-    
-    '''
-
-    spec_filters = ['SDSS Z','2MASS J','2MASS H','2MASS KS','MKO J','MKO H','MKO K']
-    sed_filters = ['SDSS R','SDSS I','WISE W1','WISE W2','WISE W3','WISE W4','IRAC CH1','IRAC CH2','IRAC CH3','IRAC CH4']
-    
-    if ~isinstance(absmags,dict):
-        raise ValueError('\nAbsolute magnitudes should be a dictionary whose keys are one of the following filters:\n{}'.format(spec_filters+sed_filters))
-
-# read in a model if one is not provided based on classification and temperature
-    if mdl == False or 'SED' not in mdl.name:
-        spt,spt_unc = splat.classifyByIndex(sp)
-        teff,unc = splat.typeToTeff(spt)
-        mdl = splat.loadModel(teff=teff,logg=5.0,sed=True)
-
-# prep arrays
-    flux = []
-    flux_unc = []
-    flux_wave = []
-    
-# steps:
-# scale spectrum to absolute magnitude if necessary and integrate flux, varying noise and including variance in abs mag factor
-    spcopy = sp
-    if spcopy.fscale != 'Absolute':
-        scale = []
-        scale_unc = []
-        for k in absmags.keys():
-            if k.upper() in spec_filters:
-                m = splat.filterMag(spcopy,k)
-                scale.extend(10.**(0.4*(m-absmags[k][0])))
-# note: need to add in spectral flux uncertainty as well
-                scale_unc.extend(numpy.log(10.)*0.4*absmags[k][1]*scale[-1])
-        if len(scale) == 0:
-            raise ValueError('\nNo absolute magnitudes provided to scale spectrum; you specified:\n{}'.format(absmags.keys()))
-        scl,scl_e = splat.weightedMeanVar(scale,scale_unc,uncertainty=True)
-        spcopy.scale(numpy.mean(scl))
-        spcopy.fscale = 'Absolute'
-
-# integrate data
-# NEED TO INSERT UNCERTAINTY HERE
-    flux.extend(trapz(spcopy.flux,spcopy.wave))
-    flux_unc.extend(0.)
-    flux_wave.extend([numpy.nanmin(spcopy.wave),numpy.nanmax(spcopy.wave)])
-
-# scale segments of models scaled to WISE or IRAC bands if available, include variance in abs mag factor
-# PROBLEM: WHAT IF SPECTRAL PIECES OVERLAP?
-    for k in absmags.keys():
-        if k.upper() in sed_filters:
-            filterdat = splat.filterProperties(k.upper())
-            mdl.fluxCalibrate(k,absmags[k][0])
-            w = numpy.where(mdl.wave.value >= filterdat['lambda_min'] and mdl.wave.value <= filterdat['lambda_max'])
-            flux.extend(trapz(mdl.flux[w],mdl.wave[w]))
-            flux_unc.extend(2.5*numpy.log(10.)*absmags[k][1]*flux[-1])
-            flux_wave.extend([filterdat['lambda_min'],filterdat['lambda_max']])
-
-# match model between these scaled pieces and out to ends and integrate, include variance in abs mag factor(s)
-# report log luminosity in solar units and uncertainty
-# optional report the various pieces and percentages of whole ()
-#
-# absmags is a dictionary whose keys are filter names and whose elements are 2-element lists of value and uncertainty        
-
-    
 def reportModelFitResults(spec,t,*arg,**kwargs):
     '''
-    :Purpose: Reports the result of model fitting parameters. 
-              Produces triangle plot, best fit model, statistics of parameters
-              and saves raw data if ``iterative = True``.
-    :param spec: Spectrum class object, which should contain wave, flux and 
-                 noise array elements.
-    :param t: Must be an astropy Table with columns containing parameters fit, and one column for chi-square values ('chisqr').
-    :param evol: computes the mass, age, temperature, radius, surface gravity, and luminosity 
-                 by using various evolutionary model sets. See below for the possible set 
-                 options and the Brown Dwarf Evolutionary Models page for more details.
-    :type evol: optional, default = True
-    :param emodel: set of evolutionary models to use. See Brown Dwarf Evolutionary Models page for 
-        more details. Options include:
-    
-        - *'baraffe'*: Evolutionary models from `Baraffe et al. (2003) <http://arxiv.org/abs/astro-ph/0302293>`_.
-        - *'burrows'*: Evolutionary models from `Burrows et al. (1997) <http://adsabs.harvard.edu/abs/1997ApJ...491..856B>`_.
-        - *'saumon'*: Evolutionary models from `Saumon & Marley (2008) <http://adsabs.harvard.edu/abs/2008ApJ...689.1327S>`_.
-        
-    :type emodel: optional, default = 'Baraffe'
-    :param stats: if True, prints several statistical values, including number of steps, 
-                  best fit parameters, lowest chi2 value, median parameters and key values 
-                  along the distribution.
-    :type stats: optional, default = True
-    :param triangle: creates a triangle plot, plotting the parameters against each other, 
-                     demonstrating areas of high and low chi squared values. Useful for 
-                     demonstrating correlations between parameters.
-    :type triangle: optional, default = True
-    :param bestfit: if True and a best fit model is present in the desired model set, then 
-                    plots model against spectrum and saves figure.
-    :type bestfit: optional, default = True
-    :param summary: not yet implemented
-    :type summary: optional, default = True
-    :param weight: if True, sets weights for computing key values along the distribution
-    :type weight: optional, default = True
-    :param filebase: filename or filename base for output
-    :type filebase: optional, default = 'modelfit_results'
-    :param stat: name of the statistics column used in astropy Table ``t``.
-    :type stat: optional, default = 'chisqr'
-    :param model_set: desired model set of ``bestfit``; options include:
+    :Purpose: 
+        Reports the result of model fitting parameters. Produces triangle plot, best fit model, statistics of parameters and saves raw data if ``iterative = True``.
 
-        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
-          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
-        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
-          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
-        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
-          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
-        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
-          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
-        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
-          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
-        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
-          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
-          
-    :type model_set: optional, default = ''
-    :param mset: same as ``model_set``
-    :type mset: optional, default = ''
-    :param mask_ranges: mask any flux value of ``spec`` by specifying the wavelength range. Must be in microns.
-    :type mask_ranges: optional, default = []
-    :param sigma: when printing statistical results, prints the value at ``sigma`` standard 
-                  deviations away from the mean. Only effective if ``stats = True``.
-    :type sigma: optional, default = 1.
-    :param iterative: if True, prints quantitative results and does not plot anything
-    :type iterative: optional, default = False
+    Required Inputs:
+
+        :param spec: Spectrum class object, which should contain wave, flux and noise array elements.
+        :param t: Must be an astropy Table with columns containing parameters fit, and one column for chi-square values ('chisqr').
     
+    Optional Inputs:
+        :param evol: computes the mass, age, temperature, radius, surface gravity, and luminosity by using various evolutionary model sets. See below for the possible set options and the Brown Dwarf Evolutionary Models page for more details (default = True)
+        :param emodel: set of evolutionary models to use; see `loadEvolModelParameters()`_ (default = 'Baraffe')
+
+    .. _`loadEvolModelParameters()` : api.html#splat_evolve.loadEvolModel
+
+        :param weight: set to True to use fitting statistic as a weighting to compute best fit statistics (default = True)
+        :param stat: name of the statistics column in input table ``t`` (default = 'chisqr')
+        :param stats: if True, prints several statistical values, including number of steps, best fit parameters, lowest chi2 value, median parameters and key values along the distribution (default = True)
+        :param triangle: creates a triangle plot, plotting the parameters against each other, demonstrating areas of high and low chi squared values. Useful for demonstrating correlations between parameters (default = True)
+        :param bestfit: set to True to plot best-fit model compared to spectrum (default=True)
+        :param model_set: desired model set of ``bestfit``; see `loadModel()`_ for allowed options (can also use 'mset'; default = blank)
+
+    .. _`loadModel()` : api.html#splat_model.loadModel
+
+        :param filebase: a string that is the base filename for output (default = 'modelfit_results')
+    
+        :param sigma: when printing statistical results (``stats`` = True), print the value at ``sigma`` standard deviations away from the mean (default = 1)
+        :param iterative: if True, prints quantitative results but does not plot anything (default = False)
+
+    Output:
+        No formal output, but results are plotted to various files
+
     :Example:
     >>> import splat
     >>> sp = splat.getSpectrum(shortname='1047+2124')[0]        # T6.5 radio emitter
@@ -1062,7 +1301,6 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
     >>> table = splat.modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100, savestep=0, verbose=False)
     >>> splat.reportModelFitResults(sp, table, evol = True, stats = True, sigma = 2, triangle = False)
         Number of steps = 169
-        <BLANKLINE>
         Best Fit parameters:
         Lowest chi2 value = 29567.2136599 for 169.0 degrees of freedom
         Effective Temperature = 918.641 (K)
@@ -1183,7 +1421,7 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
 
         print('\nMedian parameters:')
         for p in parameters:
-            sm, mn, sp = distributionStats(t[p],sigma=sigma,weights=weights)      # +/- 1 sigma
+            sm, mn, sp = splat.distributionStats(t[p],sigma=sigma,weights=weights)      # +/- 1 sigma
             name = p
             if p in descrip_assoc.keys():
                 name = descrip_assoc[p]
@@ -1244,40 +1482,690 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
 # plain language summary
     if summaryFlag:
         pass
+
+    return
             
 
-def distributionStats(x, q=[0.16,0.5,0.84], weights=None, sigma=None, **kwargs):
+
+#######################################################
+#######################################################
+###############   EMCEE MODEL FITTING  ################
+#######################################################
+#######################################################
+
+
+
+def modelFitEMCEE(spec, **kwargs):
     '''
-    :Purpose: Find key values along distributions based on quantile steps.
-              This code is derived almost entirely from triangle.py.
+    :Purpose: Uses the ``emcee`` package by Dan Foreman-Mackey et al. to perform 
+        Goodman & Weare's Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler
+        to fit a spectrum to a set of atmosphere models. 
+        Returns the best estimate of the effective temperature, surface 
+        gravity, and (if selected) metallicity.  Includes an estimate of the time required to run, prompts
+        user if they want to proceed, and shows progress with iterative saving of outcomes
+    :param spec: Spectrum class object, which should contain wave, flux and noise array elements.
+    :param nwalkers: number of MCMC walkers, should have at least 20
+    :type nwalkers: optional, default = 20
+    :param nsamples: number of MCMC samples, for model fitting about 500 seems OK
+    :type nsamples: optional, default = 500
+    :param burn_fraction: the fraction of the initial steps to be discarded. (e.g., if 
+                ``burn_fraction = 0.2``, the first 20% of the samples are discarded.)
+    :type burn_fraction: optional, default = 0.5
+    :param initial_guess: array including initial guess of the model parameters.
+            Can also set individual guesses of spectral parameters by using 
+            **initial_temperature**, **initial_teff**, or **t0**;
+            **initial_gravity**, **initial_logg** or **g0**; 
+            and **initial_metallicity**, **initial_z** or **z0**.
+    :type initial_guess: optional, default = array of random numbers within allowed ranges
+    :param limits: list of 2-element arrays indicating ranges of the model parameters to limit the parameter space.
+            Can also set individual ranges of spectral parameters by using 
+            **temperature_range**, **teff_range** or **t_range**;
+            **gravity_range**, **logg_range** or **g_range**;
+            and **metallicity_range** or **z_range**.
+    :type limits: optional, default = depends on model set
+    :param prior_scatter: array giving the widths of the normal distributions from which to draw prior parameter values
+    :type prior_scatter: optional, default = [25,0.1,0.1]
+    :param model: set of models to use (``set`` and ``model_set`` do the same); options include:
+
+        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
+          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
+        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
+          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
+        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
+          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
+        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
+          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
+        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
+          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
+        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
+          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
+    
+    :type model: optional, default = 'BTSettl2008'
+    :param radius: set to True to calculate and returns radius of object [NOT CURRENT IMPLEMENTED]
+    :type radius: optional, default = False
+    :param save: save interim results to a .dat file based on output filename
+    :type save: optional, default = True
+    :param output: base filename for output (``filename`` and ``outfile`` do the same); 
+        outputs will include (each can be set individually with associated keywords):
+        - ``filename_iterative.dat``: interative saved data
+        - ``filename_summary.txt``: summary of results
+        - ``filename_corner.eps``: corner plot of parameters
+        - ``filename_comparison.eps``: plot spectrum compared to best fit model
+    :type output: optional, default = None
+    :param plot_format: file type for diagnostic plots
+    :type plot: optional, default = 'pdf'
+    :param noprompt: don't prompt user to continue of emcee run will be > 10 minutes
+    :type noprompt: optional, default = False
+    :param verbose: give lots of feedback
+    :type verbose: optional, default = False
+
+    In addition, the parameters for compareSpectra_, generateMask_, plotSpectrum_; see SPLAT API for details.
+
+    .. _plotSpectrum: api.html#splat_plot.plotSpectrum
+    .. _plotSpectrum: api.html#splat.compareSpectra
+    .. _generateMask api.html#splat.generateMask
+    
+    Note: modelfitEMCEE requires external packages: 
+        - ``emcee``: http://dan.iel.fm/emcee/current
+        -``corner``: http://corner.readthedocs.io/en/latest
+
+    :Example:
+    >>> import splat
+    >>> sp = splat.Spectrum(shortname='1507-1627')[0]
+    >>> spt,spt_e = splat.classifyByStandard(sp)
+    >>> teff,teff_e = splat.typeToTeff(spt)
+    >>> result = modelFitEMCEE(sp,t0=teff,g0=5.0,fit_metallicity=False,\
+    >>>    nwalkers=50,nsamples=500,output='/Users/adam/test_modelfitEMCEE')
+        Estimated time to compute = 9228 seconds = 153.8 minutes = 2.56 hours = 0.11 days
+        Do you want to continue? [Y/n]: 
+        Progress: [**************************************************]
+    
+    Results are saved in test_modelfitEMCEE_interative.dat, *_chains.pdf, *_comparison.pdf, *_corner.pdf, and *_summary.txt
     '''
 
-# clean data of nans
-    xd = x[~numpy.isnan(x)]
+# check that emcee package is installed
+    try:
+        import emcee
+    except:
+        raise NameError('\nYou must install emcee to run this program; see http://dan.iel.fm/emcee/current/')
 
-    if q is None and sigma is None:
-        sigma = 1.
+    start_time = time.time()
+
+# keywords
+    nwalkers = kwargs.get('nwalkers', 10)
+    nsamples = kwargs.get('nsamples', 1000)
+    burn_fraction = kwargs.get('burn_fraction', 0.5)  # what fraction of the initial steps are to be discarded
+    prior_scale = {'teff': 25, 'logg': 0.1, 'z': 0.1, 'radius': 0.001*RADIUS_SUN.value}
+    prior_scale['teff'] = kwargs.get('t_scale',prior_scale['teff'])
+    prior_scale['logg'] = kwargs.get('g_scale',prior_scale['logg'])
+    prior_scale['z'] = kwargs.get('z_scale',prior_scale['z'])
+    verbose = kwargs.get('verbose', False)
+    feedback_width = 50
+# plotting and reporting keywords
+    showRadius = kwargs.get('radius', spec.fscale == 'Absolute')
+    filebase = kwargs.get('output', 'fit_')
+    filebase = kwargs.get('filename',filebase)
+    filebase = kwargs.get('outfile',filebase)
+    plot_format = kwargs.get('plot_format','pdf')
+
+# model parameters
+    model_set = kwargs.get('set', 'BTSettl2008')
+    model_set = kwargs.get('model', model_set)
+    model_set = kwargs.get('model_set', model_set)
+
+# prep outputs
+    file_iterative = kwargs.get('file_iterative',os.path.splitext(filebase)[0]+'_iterative.dat')
+    file_chains = kwargs.get('file_chains',os.path.splitext(filebase)[0]+'_chains.'+plot_format)
+    file_corner = kwargs.get('file_corner',os.path.splitext(filebase)[0]+'_corner.'+plot_format)
+    file_comparison = kwargs.get('file_comparison',os.path.splitext(filebase)[0]+'_comparison.'+plot_format)
+    file_bestcomparison = kwargs.get('file_bestcomparison',os.path.splitext(filebase)[0]+'_bestcomparison.'+plot_format)
+    file_summary = kwargs.get('file_summary',os.path.splitext(filebase)[0]+'_summary.txt')
+    if kwargs.get('save',True):
+        f = open(file_iterative,'w')
+        f.close()
+
+# set limits for models - input or set by model itself
+    modelgrid = splat.loadModelParameters(model_set) # Range parameters can fall in
+    ranges = kwargs.get('ranges', \
+        [[numpy.min(modelgrid['teff']),numpy.max(modelgrid['teff'])],\
+        [numpy.min(modelgrid['logg']),numpy.max(modelgrid['logg'])],\
+        [numpy.min(modelgrid['z']),numpy.max(modelgrid['z'])]])
+    teff_range = kwargs.get('teff_range',ranges[0])
+    teff_range = kwargs.get('temperature_range',teff_range)
+    logg_range = kwargs.get('logg_range',ranges[1])
+    logg_range = kwargs.get('gravity_range',logg_range)
+    z_range = kwargs.get('z_range',ranges[2])
+    z_range = kwargs.get('metallicity_range',z_range)
+    limits = kwargs.get('limits', [teff_range,logg_range,z_range])
+
+# create a mask
+    mask = kwargs.get('mask',splat.generateMask(spec.wave,**kwargs))
+
+# set initial parameters
+    parameters0 = kwargs.get('initial_guess',[\
+        numpy.random.uniform(teff_range[0],teff_range[1]),\
+        numpy.random.uniform(logg_range[0],logg_range[1]),\
+        0.0])
+    if len(parameters0) < 3:
+        parameters0.append(0.0)
         
-    if sigma is not None:
-        q = [stats.norm.cdf(-sigma),0.5,stats.norm.cdf(sigma)]
-        
-    if weights is None:
-        return numpy.percentile(xd, [100. * qi for qi in q])
+    parameters0[0] = kwargs.get('initial_temperature',parameters0[0])
+    parameters0[0] = kwargs.get('initial_teff',parameters0[0])
+    parameters0[0] = kwargs.get('t0',parameters0[0])
+    parameters0[1] = kwargs.get('initial_gravity',parameters0[1])
+    parameters0[1] = kwargs.get('initial_logg',parameters0[1])
+    parameters0[1] = kwargs.get('g0',parameters0[1])
+    parameters0[2] = kwargs.get('initial_metallicity',parameters0[2])
+    parameters0[2] = kwargs.get('initial_z',parameters0[2])
+    parameters0[2] = kwargs.get('z0',parameters0[2])
+
+    if not kwargs.get('fit_metallicity',False):
+        parameters0 = parameters0[0:2]
+
+    parameter_names = MODEL_PARAMETER_NAMES[:len(parameters0)]
+    parameter_titles = [MODEL_PARAMETER_TITLES[p] for p in parameter_names]
+    parameter_units = [MODEL_PARAMETER_UNITS[p] for p in parameter_names]
+    nparameters = len(parameters0)
+    pscale = [prior_scale[p] for p in parameter_names]
+    initial_parameters = [parameters0+pscale*numpy.random.randn(len(parameters0)) for i in range(nwalkers)]
+
+# check the time it should take to run model, and that user has models
+    testtimestart = time.time()
+    try:
+        mdl = splat.getModel(teff=2125,logg=5.1,z=-0.2,set='BTSettl2008')
+    except:
+        raise ValueError('\nProblem reading in a test model; make sure you have the full SPLAT model set installed')
+    testtimeend = time.time()
+    time_estimate = (testtimeend-testtimestart)*nwalkers*nsamples*1.2
+    print('Estimated time to compute = {:.0f} seconds = {:.1f} minutes = {:.2f} hours'.\
+        format(time_estimate,time_estimate/60.,time_estimate/3600.))
+    if time_estimate > 600. and not kwargs.get('noprompt',False):
+        resp = input('Do you want to continue? [Y/n]: ')
+        if resp.lower()[0] == 'n':
+            print('\nAborting')
+            return
+
+# run EMCEE with iterative saving and updates
+    model_params = {'model': model_set, 'limits': limits, 'mask': mask}
+    sampler = emcee.EnsembleSampler(nwalkers, nparameters, modelFitEMCEE_lnprob, args=(spec.wave.value,spec.flux.value,spec.noise.value,model_params))
+    sys.stdout.write("\n")
+    for i, result in enumerate(sampler.sample(initial_parameters, iterations=nsamples)):
+        if i > 0:
+            ch = sampler.chain[:,:i,:]
+            radii = ((sampler.blobs[:i]*(kwargs.get('distance',10.)*u.pc.to(u.cm)/RADIUS_SUN)**2)**0.5).value.reshape(-1)
+            cr = ch.reshape((-1, nparameters))
+            mcr = numpy.append(cr.transpose(),[radii],axis=0).transpose()
+            lnp = sampler.lnprobability[:,:i].reshape(-1)
+            print(lnp)
+            if kwargs.get('use_weights',False) != False:
+                parameter_weights = numpy.exp(lnp-numpy.max(lnp))
+            else:
+                parameter_weights = numpy.ones(len(lnp))
+            bparam,mparam,qparam = modelFitEMCEE_bestparameters(mcr,lnp,parameter_weights=parameter_weights)
+            print(bparam)
+    #        lnp = result[1]
+    #        scales = result[-1]
+    #        radii = ((scales*(kwargs.get('distance',10.)*u.pc.to(u.cm)/RADIUS_SUN)**2)**0.5).value.reshape(-1)
+            n = int((feedback_width+1) * float(i) / nsamples)
+            resp = '\rProgress: [{0}{1}]'.format('*' * n, ' ' * (feedback_width - n))
+            for kkk in range(nparameters-1):
+                resp+=' {:s}={:.2f}'.format(MODEL_PARAMETER_NAMES[kkk],bparam[kkk])
+            resp+='R={:.2f} lnP={:e}'.format(bparam[-1],lnp[-1])
+            print(resp)
+    # save iteratively
+            position = result[0]
+            print(position)
+            if kwargs.get('save',True) and i > 0:
+                modelFitEMCEE_plotchains(ch,file_chains)
+                modelFitEMCEE_plotcomparison(cr,spec,file_comparison,model=model_set,draws=5,parameter_weights=parameter_weights)
+                modelFitEMCEE_plotbestcomparison(spec,bparam[:-1],file_bestcomparison,model=model_set)
+                modelFitEMCEE_plotcorner(mcr,file_corner,parameter_weights=parameter_weights,**kwargs)
+                f = open(file_iterative, 'a')
+                for k in range(position.shape[0]):
+                    f.write('{0:4d} {1:s} {2:e}\n'.format(k, ' '.join([str(mmm) for mmm in position[k]]),lnp[k]))
+                f.close()
+    sys.stdout.write("\n")
+
+# burn out the initial section
+    orig_samples = sampler.chain.reshape((-1, nparameters))
+    orig_lnp = sampler.lnprobability.reshape(-1)
+    orig_radii = ((numpy.array(sampler.blobs).reshape(-1)*(kwargs.get('distance',10.)*u.pc.to(u.cm)/RADIUS_SUN)**2)**0.5).value.reshape(-1)
+    samples = sampler.chain[:, (burn_fraction*nsamples):, :].reshape((-1, nparameters))
+    lnp = orig_lnp[(burn_fraction*nsamples*nwalkers):]
+    radii = orig_radii[(burn_fraction*nsamples*nwalkers):]
+    merged_samples = numpy.append(samples.transpose(),[radii],axis=0).transpose()
+
+    print(orig_radii.shape,orig_samples.shape,orig_lnp.shape)
+    print(radii.shape,samples.shape,lnp.shape,sampler.chain.shape)
+
+# determine parameters
+    if kwargs.get('use_weights',False) != False:
+        parameter_weights = numpy.exp(lnp-numpy.max(lnp))
     else:
-        wt = weights[~numpy.isnan(x)]
-        idx = numpy.argsort(xd)
-        xsorted = xd[idx]
-        cdf = numpy.add.accumulate(wt[idx])
-        cdf /= cdf[-1]
-        return numpy.interp(q, cdf, xsorted).tolist()
+        parameter_weights = numpy.ones(len(lnp))
+
+    bparam,mparam,qparam = modelFitEMCEE_bestparameters(merged_samples,lnp,parameter_weights=parameter_weights)
+    print(bparam)
+
+
+# reporting
+    modelFitEMCEE_plotchains(sampler.chain,file_chains)
+    modelFitEMCEE_plotcomparison(samples,spec,file_comparison,model=model_set,draws=20,parameter_weights=parameter_weights,**kwargs)
+    modelFitEMCEE_plotbestcomparison(spec,bparam[:-1],file_bestcomparison,model=model_set,**kwargs)
+    modelFitEMCEE_plotcorner(merged_samples,file_corner,parameter_weights=parameter_weights,**kwargs)
+
+    end_time = time.time()
+    total_time = (end_time-start_time)
+    if kwargs.get('verbose',False):
+        print('Total run time = {:.0f} seconds or {:.2f} hours'.format(total_time,total_time/3600.))
+
+    skwargs = {'burn_fraction': burn_fraction, 'filebase': filebase, 'total_time': total_time, 'mask': mask, 'model': model_set}
+    modelFitEMCEE_summary(sampler,spec,file_summary,**skwargs)
+    return sampler
 
 
 
-if __name__ == '__main__':
-    basefolder = '/Users/adam/projects/splat/exercises/ex9/'
+def modelFitEMCEE_bestparameters(values,lnp,**kwargs):
+    '''
+    Return three sets of parameters: by quantiles, the weighted mean, and the best values
+    '''
+    parameter_weights = kwargs.get('parameter_weights',numpy.ones(values.shape[-1]))
+    quantiles = kwargs.get('quantiles',[16,50,84])
+
+    quant_parameters = []
+    best_parameters = []
+    mean_parameters = []
+    for i in range(values.shape[-1]):
+        q = numpy.percentile(values[:,i],quantiles)
+        quant_parameters.append([q[1],q[2]-q[1],q[1]-q[0]])
+        mean_parameters.append(numpy.sum(parameter_weights*values[:,i])/numpy.sum(parameter_weights))
+        best_parameters.append(values[numpy.where(lnp == numpy.max(lnp)),i].reshape(-1)[0])
+    return best_parameters,mean_parameters,quant_parameters
+
+
+def modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params):
+    mparam = copy.deepcopy(model_params)
+    for i in range(len(theta)):
+        mparam[MODEL_PARAMETER_NAMES[i]] = theta[i]
+    mdl = splat.getModel(**mparam)
+    if len(mdl.wave) == 0:
+        resp = '\nProblem reading in model '
+        for k,v in enumerate(theta):
+            resp+='{} = {}, '.format(MODEL_PARAMETER_NAMES[k],v)
+        print(resp)
+        return -1.e30,0.
+#    chi,scl = splat.compareSpectra(sp,mdl,**model_params)
+    chi,scl = splat.compareSpectra(splat.Spectrum(wave=x,flux=y,noise=yerr),mdl,**model_params)
+    lnp = -0.5*chi
+    if model_params.get('noise_scaling',False):
+        f = interp1d(mdl.wave.value,mdl.flux.value*scl,bounds_error=False,fill_value=0.)
+        inv_sigma2 = 1./(yerr**2+f(x)**2*numpy.exp(theta[-1]))
+        lnp = -0.5*numpy.nansum((1.-mparam['mask'])*((y-f(x))**2*inv_sigma2-numpy.log(inv_sigma2)))
+#            inv_sigma2 = 1./yerr**2
+#            lnp = -0.5*numpy.nansum((y-f(x))**2*inv_sigma2)
+    return lnp,scl
+#    except:
+#        resp = '\nProblem comparing model '
+#        for k,v in enumerate(theta):
+#            resp+='{} = {}, '.format(MODEL_PARAMETER_NAMES[k],v)
+#        print(resp+' to data')
+#    return -numpy.inf
+
+
+def modelFitEMCEE_lnprior_limits(theta,limits):
+    '''
+    compute the log of the probability assuming a uniform distribution
+    with hard limits; if outside limits, probability returns -infinity
+    '''
+    for i,t in enumerate(theta):
+        try:
+            if t < numpy.min(limits[i]) or t > numpy.max(limits[i]):
+                return -1.e30
+        except:
+            pass
+    return 0.0
+
+
+def modelFitEMCEE_lnprior_normal(theta,meansds):
+    '''
+    compute the log of the probability assuming a normal distribution
+    there probably needs to be better error checking here
+    '''
+    lnp = 0.0
+    for i,t in enumerate(theta):
+        try:
+            lnp-=0.5*(((t-meansds[i][0])/meansds[i][1])**2-numpy.log(meansds[i][1]))
+        except:
+            pass
+    return lnp
+
+def modelFitEMCEE_lnprob(theta,x,y,yerr,model_params):
+#    lnp = 0.
+#    if kwargs.get('normal_priors',None) != None and kwargs.get('priors_meansds',None) != None:
+#        lnp+=modelFitEMCEE_lnprior_normal(theta,kwargs.get('priors_meansds'),**kwargs)
+#    if kwargs.get('limits',None) != None:
+    lnp0 = modelFitEMCEE_lnprior_limits(theta,model_params['limits'])
+    if not numpy.isfinite(lnp0):
+        return -1.e30
+    lnp,scale = modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params)
+    return lnp0+lnp, scale
+
+
+def modelFitEMCEE_plotchains(chains,file,**kwargs):
+    plt.figure(1,figsize=kwargs.get('figsize',[8,4*chains.shape[-1]]))
+    for i in range(chains.shape[-1]):
+        plt.subplot(int('{}1{}'.format(chains.shape[-1],i+1)))
+        xr = [0,chains.shape[1]-1]
+        yr = [numpy.min(chains[:,:,i]),numpy.max(chains[:,:,i])]
+        yr[0] -= 0.05*(numpy.max(chains[:,:,i])-numpy.min(chains[:,:,i]))
+        yr[1] += 0.05*(numpy.max(chains[:,:,i])-numpy.min(chains[:,:,i]))
+#        print(yr)
+        for j in range(chains.shape[0]):
+            plt.plot(numpy.arange(chains.shape[1]),chains[j,:,i],'k-',alpha=0.4)
+        if kwargs.get('burn_fraction',0) > 0:
+            plt.plot([chains.shape[1]*kwargs.get('burn_fraction')]*2,yr,'k:')
+            mn = numpy.mean(chains[:,chains.shape[1]*kwargs.get('burn_fraction'):,i])
+        else:
+            mn = numpy.mean(chains[:,:,i])
+        plt.axis(xr+yr)
+        plt.plot(xr,[mn]*2,'r-')
+        plt.xlabel('Steps')
+        plt.ylabel(r''+MODEL_PARAMETER_TITLES[MODEL_PARAMETER_NAMES[i]]+' ('+MODEL_PARAMETER_UNITS[MODEL_PARAMETER_NAMES[i]].to_string()+')')
+    try:
+        plt.savefig(file)
+    except:
+        print('\nProblem saving chains plot to {}'.format(file))
+    return plt
+
+
+def modelFitEMCEE_plotcomparison(samples,spec,file,**kwargs):
+    '''
+    for now just plotting best model
+    would like to do draws from posterior instead
+    '''
+# extract best fit values
+    draws = kwargs.get('draws',1)
+    pargs = (spec,)
+    legend = [spec.name]
+    colors = ['k']
+    alpha = [0]
+    tbl = Table()
+    tbl['parameter_weights'] = kwargs.get('parameter_weights',numpy.ones(samples.shape[0]))
+    tbl['parameter_weights'] = numpy.max(tbl['parameter_weights'])-tbl['parameter_weights']
+    for i in range(samples.shape[-1]):
+        tbl[MODEL_PARAMETER_NAMES[i]] = samples[:,i]
+    tbl.sort('parameter_weights')
+    tblu = astropy.table.unique(tbl,keys=MODEL_PARAMETER_NAMES[:samples.shape[-1]])
+    draws = numpy.min([draws,len(tblu)])
+    for k in range(draws):
+        mkwargs = copy.deepcopy(kwargs)
+        mlegend = r''
+        for i in range(samples.shape[-1]):
+            mkwargs[MODEL_PARAMETER_NAMES[i]] = tblu[MODEL_PARAMETER_NAMES[i]][k]
+            mlegend+='{:s}={:.2f} '.format(MODEL_PARAMETER_TITLES[MODEL_PARAMETER_NAMES[i]],mkwargs[MODEL_PARAMETER_NAMES[i]])
+        mdl = splat.getModel(**mkwargs)
+#    print(mdl.teff,mdl.logg)
+        stat,scl = splat.compareSpectra(spec,mdl,**kwargs)
+        mdl.scale(scl)
+        pargs = pargs + (mdl,)
+        legend.append(mlegend)
+        colors.append('grey')
+        alpha.append(tblu['parameter_weights'][k])
+    print(*pargs)
+    return splat.plotSpectrum(*pargs,colors=colors,alpha=alpha,\
+        uncertainty=True,telluric=True,file=file,legend=legend)
+
+
+def modelFitEMCEE_plotbestcomparison(spec,mparam,file,**kwargs):
+    '''
+    for now just plotting best model
+    would like to do draws from posterior instead
+    '''
+
+# extract best fit values
+    mkwargs = copy.deepcopy(kwargs)
+    mlegend = r''
+    print(mparam)
+    for i,m in enumerate(mparam):
+        mkwargs[MODEL_PARAMETER_NAMES[i]] = m
+        mlegend+='{:s}={:.2f} '.format(MODEL_PARAMETER_TITLES[MODEL_PARAMETER_NAMES[i]],float(m))
+    print(mkwargs)
+    mdl = splat.getModel(**mkwargs)
+#    print(mdl.teff,mdl.logg)
+    stat,scl = splat.compareSpectra(spec,mdl,**kwargs)
+    mdl.scale(scl)
+    return splat.plotSpectrum(spec,mdl,spec-mdl,colors=['k','b','grey'],uncertainty=True,telluric=True,file=file,\
+        legend=[spec.name,mlegend,r'difference ($\chi^2$ = {:.0f})'.format(stat)])
+
+
+
+def modelFitEMCEE_plotcorner(samples,file,**kwargs):
+    '''
+    corner plot for modelFitEMCEE
+    '''
+    try:
+        import corner
+    except:
+        print('\nYou must install corner to display corner plot; see https://github.com/dfm/corner.py')
+        return None
+
+    if len(kwargs.get('truths',[])) == 0:
+        truths = [numpy.inf for i in range(samples.shape[-1])]
+
+    labels = [r''+MODEL_PARAMETER_TITLES[MODEL_PARAMETER_NAMES[i]]+' ('+MODEL_PARAMETER_UNITS[MODEL_PARAMETER_NAMES[i]].to_string()+')' for i in range(samples.shape[-1]-1)]
+    labels.append(r'Radius (R$_{\odot}$)')
+    weights = kwargs.get('parameter_weights',numpy.ones(samples.shape[0]))
+
+    fig = corner.corner(samples, quantiles=[0.16, 0.5, 0.84], truths=truths, \
+            labels=labels, show_titles=True, weights=weights,\
+            title_kwargs={"fontsize": kwargs.get('fontsize',12)})
+
+    try:
+        fig.savefig(file)
+    except:
+        print('\nProblem saving corner plot to {}'.format(file))
+    return fig
+
+
+def modelFitEMCEE_summary(sampler,spec,file,**kwargs):
+    '''
+    for now just plotting best model
+    would like to do draws from posterior instead
+    '''
+
+# extract best fit values
+    base_samples = sampler.chain
+    nwalkers = base_samples.shape[0]
+    nsamples = base_samples.shape[1]
+    nparameters = base_samples.shape[2]
+    samples = base_samples[:, (kwargs['burn_fraction']*nsamples):, :].reshape((-1, nparameters))
+
+    f = open(file,'w')
+    f.write('EMCEE fitting analysis of spectrum of {} using the models of {}'.format(spec.name,kwargs['model']))
+    f.write('\nFitting performed on {}'.format(time.strftime("%Y %h %d %I:%M:%S")))
+    f.write('\n\nMCMC paramaters:')
+    f.write('\n\tNumber of walkers = {}'.format(nwalkers))
+    f.write('\n\tNumber of samples = {}'.format(nsamples))
+    f.write('\n\tNumber of fit parameters = {}'.format(nparameters))
+    f.write('\n\tBurn-in fraction = {}'.format(kwargs['burn_fraction']))
+
+    f.write('\n\nBest fit parameters')
+    for i in range(nparameters):
+        fit = numpy.percentile(samples[:,i], [16, 50, 84])
+        f.write('\n\t{} = {}+{}-{} {}'.format(MODEL_PARAMETER_TITLES[MODEL_PARAMETER_NAMES[i]],fit[1],fit[2]-fit[1],fit[1]-fit[0],MODEL_PARAMETER_UNITS[MODEL_PARAMETER_NAMES[i]].to_string()))
+
+    mkwargs = copy.deepcopy(kwargs)
+    for i in range(samples.shape[-1]):
+        mkwargs[MODEL_PARAMETER_NAMES[i]] = numpy.median(samples[:,i])
+    mdl = splat.getModel(**mkwargs)
+    stat,scl = splat.compareSpectra(spec,mdl,**kwargs)
+
+# copmute DOF
+    try:
+        dof = spec.dof
+    except:
+        dof = len(spec.wave)
+    if len(kwargs.get('mask',[])) > 0:
+        dof = dof*(numpy.sum(1.-kwargs['mask']))/len(kwargs['mask'])
+    dof = dof-nparameters-1
+
+    f.write('\n\nResidual chi^2 = {:.0f} for {:.0f} degrees of freedom'.format(stat,dof))
+    f.write('\nProbability that model matches data = {:.4f}'.format(stats.chi2.sf(stat,dof)))
+    f.write('\nSource/model scale factor = {:.2f} implying a radius of {:.3f} solar radii at 10 pc\n'.format(scl,scl**0.5*TEN_PARSEC))
+
+    f.write('\n\nFitting completed in {:.1f} seconds = {:.2f} hours'.format(kwargs['total_time'],kwargs['total_time']/3600.))
+    f.write('\nResults may be found in the files {}*'.format(kwargs['filebase']))
+    f.close()
+    return 
+
+
+
+
+#######################################################
+#######################################################
+#############   ROUNTINES IN DEVELOPMENT  #############  
+#######################################################
+#######################################################
+
+
+
+def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
+    '''
+    :Purpose: Calculate luminosity from photometry and stitching models.
+
+    THIS IS CURRENTLY BEING WRITTEN - DO NOT USE!
+
+    :param sp: Spectrum class object, which should contain wave, flux and 
+               noise array elements.
+    :param mdl: model spectrum loaded using ``loadModel``
+    :type mdl: default = False
+    :param absmags: a dictionary whose keys are one of the following filters: 'SDSS Z', 
+                    '2MASS J', '2MASS H', '2MASS KS', 'MKO J', 'MKO H', 'MKO K', 'SDSS R', 
+                    'SDSS I', 'WISE W1', 'WISE W2', 'WISE W3', 'WISE W4', 'IRAC CH1', 
+                    'IRAC CH2', 'IRAC CH3', 'IRAC CH4'
+    :type absmags: default = False
+    
+    '''
+
+    spec_filters = ['SDSS Z','2MASS J','2MASS H','2MASS KS','MKO J','MKO H','MKO K']
+    sed_filters = ['SDSS R','SDSS I','WISE W1','WISE W2','WISE W3','WISE W4','IRAC CH1','IRAC CH2','IRAC CH3','IRAC CH4']
+    
+    if ~isinstance(absmags,dict):
+        raise ValueError('\nAbsolute magnitudes should be a dictionary whose keys are one of the following filters:\n{}'.format(spec_filters+sed_filters))
+
+# read in a model if one is not provided based on classification and temperature
+    if mdl == False or 'SED' not in mdl.name:
+        spt,spt_unc = splat.classifyByIndex(sp)
+        teff,unc = splat.typeToTeff(spt)
+        mdl = splat.loadModel(teff=teff,logg=5.0,sed=True)
+
+# prep arrays
+    flux = []
+    flux_unc = []
+    flux_wave = []
+    
+# steps:
+# scale spectrum to absolute magnitude if necessary and integrate flux, varying noise and including variance in abs mag factor
+    spcopy = sp
+    if spcopy.fscale != 'Absolute':
+        scale = []
+        scale_unc = []
+        for k in absmags.keys():
+            if k.upper() in spec_filters:
+                m = splat.filterMag(spcopy,k)
+                scale.extend(10.**(0.4*(m-absmags[k][0])))
+# note: need to add in spectral flux uncertainty as well
+                scale_unc.extend(numpy.log(10.)*0.4*absmags[k][1]*scale[-1])
+        if len(scale) == 0:
+            raise ValueError('\nNo absolute magnitudes provided to scale spectrum; you specified:\n{}'.format(absmags.keys()))
+        scl,scl_e = splat.weightedMeanVar(scale,scale_unc,uncertainty=True)
+        spcopy.scale(numpy.mean(scl))
+        spcopy.fscale = 'Absolute'
+
+# integrate data
+# NEED TO INSERT UNCERTAINTY HERE
+    flux.extend(trapz(spcopy.flux,spcopy.wave))
+    flux_unc.extend(0.)
+    flux_wave.extend([numpy.nanmin(spcopy.wave),numpy.nanmax(spcopy.wave)])
+
+# scale segments of models scaled to WISE or IRAC bands if available, include variance in abs mag factor
+# PROBLEM: WHAT IF SPECTRAL PIECES OVERLAP?
+    for k in absmags.keys():
+        if k.upper() in sed_filters:
+            filterdat = splat.filterProperties(k.upper())
+            mdl.fluxCalibrate(k,absmags[k][0])
+            w = numpy.where(mdl.wave.value >= filterdat['lambda_min'] and mdl.wave.value <= filterdat['lambda_max'])
+            flux.extend(trapz(mdl.flux[w],mdl.wave[w]))
+            flux_unc.extend(2.5*numpy.log(10.)*absmags[k][1]*flux[-1])
+            flux_wave.extend([filterdat['lambda_min'],filterdat['lambda_max']])
+
+# match model between these scaled pieces and out to ends and integrate, include variance in abs mag factor(s)
+# report log luminosity in solar units and uncertainty
+# optional report the various pieces and percentages of whole ()
+#
+# absmags is a dictionary whose keys are filter names and whose elements are 2-element lists of value and uncertainty        
+
+    
+
+
+#######################################################
+#######################################################
+#################   TESTING ROUTINES  #################  
+#######################################################
+#######################################################
+
+def test_loadmodel(model='burrows',teff=1000,logg=5.0,**kwargs):
+    mdl = loadModel(model=model,teff=teff,logg=logg,**kwargs)
+    if len(mdl.wave) > 0:
+        mdl.info()
+        mdl.scale(1.e-24)
+        print(mdl.fluxMax())
+#        mdl.plot()
+    return True
+
+def test_loadinterpolatedmodel(model='burrows',teff=1025,logg=4.75,**kwargs):
+    mdl = loadInterpolatedModel(model=model,teff=teff,logg=logg,**kwargs)
+    if len(mdl.wave) > 0:
+        mdl.info()
+        mdl.scale(1.e-24)
+        print(mdl.fluxMax())
+#        mdl.plot()
+    return True
+
+def test_modelfitgrid(shname='1507-1627',model='BTSettl2008',teff_range=[1000,2200],logg_range=[4.5,5.5],**kwargs):
+#    tbl = splat.searchLibrary(spt=['M7','T8'])
+#    sp = splat.Spectrum(numpy.random.choice(tbl['DATA_KEY']))
+    sp = splat.getSpectrum(shortname=shname)[0]
+    sp.fluxCalibrate('2MASS J',12.32,absolute=True)
+    bp = splat.modelFitGrid(sp,teff_range=teff_range,logg_range=logg_range,model=model,file=kwargs.get('folder','')+'test_modelfitgrid.pdf',**kwargs)
+    print(bp)
+
+    return
+
+def test_modelfitEMCEE(folder):
+#    tbl = splat.searchLibrary(spt=['M7','T8'])
+#    sp = splat.Spectrum(numpy.random.choice(tbl['DATA_KEY']))
+    folder='/Users/adam/projects/splat/code/testing/'
+    sp = splat.getSpectrum(shortname='1507-1627')[0]
+    sp.fluxCalibrate('2MASS J',12.32,absolute=True)
+    spt,spt_e = splat.classifyByStandard(sp,method='kirkpatrick')
+    teff,teff_e = splat.typeToTeff('L5')
+    print('\nPerforming emcee model fit of {} with SpT = {} and initial Teff = {}\n'.format(sp.name,spt,teff))
+# this takes about 1 hour
+    return modelFitEMCEE(sp,t0=teff,g0=5.0,z0=0.,noprompt=True,use_weights=True,fit_metallicity=False,nwalkers=10,nsamples=100,output=folder+'test_modelfitEMCEE',verbose=True)
+
+def test_modelfitMCMC(folder):
     sp = splat.getSpectrum(shortname='1047+2124')[0]        # T6.5 radio emitter
     spt,spt_e = splat.classifyByStandard(sp,spt=['T2','T8'])
     teff,teff_e = splat.typeToTeff(spt)
     sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
-    table = modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
+    return modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
+
+
+if __name__ == '__main__':
+    basefolder = '/Users/adam/projects/splat/code/testing/'
+#    test_modelfitEMCEE(basefolder)
+#    test_loadmodel(model='morley12',teff=540,logg=4.7)
+    test_loadinterpolatedmodel()
+#    test_modelfitgrid(folder=basefolder)
 

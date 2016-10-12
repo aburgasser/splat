@@ -5,21 +5,26 @@ from __future__ import print_function, division
 # based on routines developed by:
 #    Christian Aganze
 #    Daniella Bardalez Gagliuffi
+#    Jessica Birky
 #    Adam Burgasser
 #    Caleb Choban
+#    Andrew Davis
 #    Ivanna Escala
 #    Aishwarya Iyer
 #    Yuhui Jin
 #    Michael Lopez
 #    Alex Mendez
 #    Gretel Mercado
+#    Elizabeth Moreno
 #    Jonathan Parra
 #    Maitrayee Sahi
 #    Adrian Suarez
 #    Melisa Tallis
 #    Chris Theissen
 #    Tomoki Tamiya
+#    Russell van Linge
 
+__version__ = '0.5.dev'
 import sys
 if sys.version_info.major != 2 and sys.version_info.major != 3:
     raise NameError('\nSPLAT only works on Python 2.7 and 3.X\n')
@@ -52,6 +57,8 @@ from scipy.interpolate import interp1d
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 DATA_FOLDER = '/reference/Spectra/'
 SPLAT_EMAIL = 'aburgasser@gmail.com'
+DB_SOURCES_FILE = 'source_data.txt'
+DB_SPECTRA_FILE = 'spectral_data.txt'
 
 # suppress warnings - probably not an entirely safe approach!
 numpy.seterr(all='ignore')
@@ -79,6 +86,7 @@ if SPLAT_PATH == './':
 from splat_db import *
 from splat_model import *
 from splat_plot import *
+from splat_evolve import *
 from splat_euclid import *
 #import splat_db
 
@@ -210,9 +218,9 @@ FILTERS = { \
     'NIRC2_KP': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band', 'zeropoint': 689.3}, \
     'NIRC2_KS': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band', 'zeropoint': 676.2}, \
     'NIRC2_KCONT': {'file': 'nirc2-kcont.txt', 'description': 'NIRC2 K continuum-band', 'zeropoint': 605.9}, \
-    'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'WIRC Fe II', 'zeropoint': 1019.7}, \
-    'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'WIRC Fe II', 'zeropoint': 248.0}, \
-    'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'WIRC Fe II', 'zeropoint': 165.8}, \
+    'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'NIRC2 Fe II', 'zeropoint': 1019.7}, \
+    'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'NIRC2 LP', 'zeropoint': 248.0}, \
+    'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'NIRC2 M', 'zeropoint': 165.8}, \
     'PANSTARRS_I': {'file': 'panstarrs-i.txt', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6}, \
     'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2584.6}, \
     'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2584.6}, \
@@ -302,36 +310,23 @@ class Spectrum(object):
     '''
     :Description: Primary class for containing spectral and source data for SpeX Prism Library.
 
-    :param model:
-    :type model: optional, default = False
-    :param wlabel: label of wavelength
-    :type wlabel: optional, default = 'Wavelength'
-    :param wunit: unit in which wavelength is measured
-    :type wunit: optional, default = ``u.micron``
-    :param wunit_label: label of the unit of wavelength
-    :type wunit_label: optional, default = :math:`\\mu m`
-    :param flabel: label of flux density
-    :type flabel: optional, default = :math:`F_\\lambda`
-    :param fscale: string describing how flux density is scaled
-    :type fscale: optional, default = ''
-    :param funit: unit in which flux density is measured
-    :type funit: optional, default = ``u.erg/(u.cm**2 * u.s * u.micron)``
-    :param funit_label: label of the unit of flux density
-    :type funit_label: optional, default = :math:`erg\;cm^{-2} s^{-1} \\mu m^{-1}`
-    :param resolution:
-    :type resolution: optional, default = 150
-    :param slitpixelwidth: Width of the slit measured in subpixel values.
-    :type slitpixelwidth: optional, default = 3.33
-    :param slitwidth: Actual width of the slit, measured in arc seconds. Default value is the ``slitpixelwidth`` multiplied by the spectrograph pixel scale of 0.15 arcseconds.
-    :type slitwidth: optional, default = ``slitpixelwidth`` * 0.15
-    :param header: header info of the spectrum
-    :type header: optional, default = Table()
-    :param filename: a string containing the spectrum's filename.
-    :type filename: optional, default = ''
-    :param file: same as filename
-    :type file: optional, default = ''
-    :param idkey: spectrum key of the desired spectrum
-    :type idkey: optional, default = False
+    Optional Inputs:
+
+    :param ismodel: Set to True to specify spectrum as a model (default = False)
+    :param wlabel: label of wavelength (default = 'Wavelength')
+    :param wunit: unit in which wavelength is measured (default = u.micron)
+    :param wunit_label: label of the unit of wavelength (default = 'micron')
+    :param flabel: label of flux density (default = 'F\_lambda')
+    :param fscale: string describing how flux density is scaled (default = '')
+    :param funit: unit in which flux density is measured (default = u.erg/(u.cm**2 * u.s * u.micron)
+    :param funit_label: label of the unit of flux density (default = 'erg cm\^-2 s\^-1 micron\^-1')
+    :param resolution: Resolution of spectrum (default = 150)
+    :param slitpixelwidth: Width of the slit measured in subpixel values (default = 3.33)
+    :param slitwidth: Actual width of the slit, measured in arcseconds. Default value is the ``slitpixelwidth`` multiplied an assumed (for SpeX) spectrograph pixel scale of 0.15 arcseconds 
+    :param header: header info of the spectrum (default = Table())
+    :param filename: a string containing the spectrum's filename (default = '')
+    :param file: same as filename (default = '')
+    :param idkey: spectrum key of the desired spectrum (default = False)
 
     :Example:
        >>> import splat
@@ -344,7 +339,8 @@ class Spectrum(object):
     def __init__(self, *args, **kwargs):
 # some presets
         sdb = False
-        self.model = kwargs.get('model',False)
+        self.ismodel = kwargs.get('ismodel',False)
+        self.instrument = kwargs.get('instrument','SpeX prism')
         self.wlabel = kwargs.get('wlabel',r'Wavelength')
         self.wunit = kwargs.get('wunit',u.micron)
         self.wunit_label = kwargs.get('wunit_label',r'$\mu$m')
@@ -384,7 +380,7 @@ class Spectrum(object):
                     self.filename = sdb['DATA_FILE'][0]
             except:
                 print('Warning: problem reading in spectral database, a known problem for Python 3.X')
-        elif self.model == False and self.filename != '':
+        elif self.ismodel == False and self.filename != '':
             kwargs['filename']=self.filename
             kwargs['silent']=True
             try:
@@ -468,14 +464,14 @@ class Spectrum(object):
 #            self.resolution_original = copy.deepcopy(self.resolution)
 #            self.slitpixelwidth_original = copy.deepcopy(self.slitpixelwidth)
         else:
-            print ('Warning: not information provided, creating an empty Spectrum object')
+            print ('Warning: Creating an empty Spectrum object')
 
 # populate information on source and spectrum from database
         if sdb != False:
             for k in sdb.keys():
-                setattr(self,k.lower(),sdb[k][0])
+                setattr(self,k.lower(),str(sdb[k][0]))
             self.shortname = designationToShortName(self.designation)
-            self.date = self.observation_date
+            self.date = str(self.observation_date)
 # convert some data into numbers
             kconv = ['ra','dec','julian_date','median_snr','resolution','airmass',\
             'jmag','jmag_error','hmag','hmag_error','kmag','kmag_error','source_key']
@@ -485,10 +481,13 @@ class Spectrum(object):
                 except:
                     setattr(self,k,numpy.nan)
 #                print(getattr(self,k))
+# published? assume not
+        if not hasattr(self,'published'):
+            self.published = kwargs.get('published','N')
         
 
 # information on model
-        if self.model == True:
+        if self.ismodel == True:
             self.teff = kwargs.get('teff',numpy.nan)
             self.logg = kwargs.get('logg',numpy.nan)
             self.z = kwargs.get('z',numpy.nan)
@@ -496,8 +495,12 @@ class Spectrum(object):
             self.cld = kwargs.get('cld',numpy.nan)
             self.kzz = kwargs.get('kzz',numpy.nan)
             self.slit = kwargs.get('slit',numpy.nan)
-            self.modelset = kwargs.get('set','')
-            self.name = self.modelset+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.z)
+            self.modelset = kwargs.get('model','')
+            try:
+                self.name = DEFINED_MODEL_NAMES[self.modelset]
+            except:
+                self.name = self.modelset
+            self.shortname = self.name+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.z)
             self.fscale = 'Surface'
 
 # populate header            
@@ -693,7 +696,7 @@ class Spectrum(object):
         w = numpy.where(self.flux.value > numpy.median(self.flux.value))
         return numpy.nanmedian(self.flux.value[w]/self.noise.value[w])
 
-    def info(self):
+    def info(self,**kwargs):
         '''
         :Purpose: Returns a summary of properties for the Spectrum object
         
@@ -712,38 +715,47 @@ class Spectrum(object):
             SPLAT spectrum key is 10857
             Data published in Kirkpatrick, J. D. et al. (2010, ApJS, 190, 100-146)
             History:
-            Spectrum successfully loaded
+                Spectrum successfully loaded
         '''
-        if (self.model):
-            print('\n{} model with the following parmeters:'.format(self.modelset))
-            print('Teff = {} K'.format(self.teff))
-            print('logg = {} cm/s2'.format(self.logg))
-            print('z = {}'.format(self.z))
-            print('fsed = {}'.format(self.fsed))
-            print('cld = {}'.format(self.cld))
-            print('kzz = {}'.format(self.kzz))
-            print('Smoothed to slit width {} arcseconds\n'.format(self.slit))
-        else:
-#            print('\nSpectrum of {0} observed on {1}'''.format(self.name, self.date))
-            text = ['Spectrum of','Observed on','Observed by','at an airmass of','Full source designation is', 'Median S/N =','SPLAT source key is','SPLAT spectrum key is']
-            ref = ['name','date','observer','airmass','designation','median_snr','source_key','data_key']
-            for i,k in enumerate(ref):
-                try:
-                    if getattr(self,k) != '':
-                        print('{} {}'.format(text[i],getattr(self,k)))
-                except:
-                    pass
-            if self.published == 'Y':
-                bib = getBibTex(self.data_reference)
-                print('Data published in {}'.format(shortRef(bib)))
+        if (self.ismodel):
+            f = '\n{} with the following parmeters:'.format(self.name)
+            f+='\nTeff = {} {}'.format(self.teff,MODEL_PARAMETER_UNITS['teff'])
+            f+='\nlogg = {} {}'.format(self.logg,MODEL_PARAMETER_UNITS['logg'])
+            f+='\nz = {} {}'.format(self.z,MODEL_PARAMETER_UNITS['z'])
+            f+='\nfsed = {}'.format(self.fsed)
+            f+='\ncld = {}'.format(self.cld)
+            f+='\nkzz = {}'.format(self.kzz)
+            f+='\nSmoothed to slit width {} {}'.format(self.slit,MODEL_PARAMETER_UNITS['slit'])
+            f+='\nIf you use this model, please cite {}'.format(shortRef(DEFINED_MODEL_BIBCODES[self.modelset]))
+            f+='\nbibcode = {}\n'.format(DEFINED_MODEL_BIBCODES['self.modelset'])
+            if kwargs.get('printout',True):
+                print(f)
+                return
             else:
-                print('Unpublished data')
-                pass
-            print('\nHistory:')
+                return f
+        else:
+            f = '\n{} spectrum of {}'.format(self.instrument,self.name)
+            if hasattr(self,'observer') and hasattr(self,'date'): f+='\nObserved by {} on {}'.format(self.observer,properDate(self.date,output='YYYY MMM DD'))
+            if hasattr(self,'airmass'): f+='\nAirmass = {}'.format(self.airmass)
+            if hasattr(self,'designation'): f+='\nSource designation = {}'.format(self.designation)
+            if hasattr(self,'median_snr'): f+='\nMedian S/N = {}'.format(self.median_snr)
+            if hasattr(self,'spex_type'): f+='\nSpeX Classification = {}'.format(self.spex_type)
+            if hasattr(self,'lit_type'): f+='\nLiterature Classification = {} from {}'.format(self.lit_type,shortRef(self.lit_type_ref))
+            if hasattr(self,'source_key') and hasattr(self,'data_key'): f+='\nSpectrum key = {}, Source key = {}\n'.format(int(self.data_key),int(self.source_key))
+            if self.published == 'Y':
+                f+='\nIf you use these data, please cite:'
+                f+='\n\t{}'.format(shortRef(self.data_reference))
+                f+='\n\tbibcode: {}'.format(self.data_reference)
+            else:
+                f+='\nUNPUBLISHED DATA'
+            f+='\nHistory:'
             for h in self.history:
-                print('\t{}'.format(h))
-#        print('\nPlot spectrum using .plot()')
-        return
+                f+='\n\t{}'.format(h)
+            if kwargs.get('printout',True):
+                print(f)
+                return
+            else:
+                return f
 
     def export(self,*args,**kwargs):
         '''
@@ -775,9 +787,9 @@ class Spectrum(object):
             ...
         '''
 
-        '''
-        :Purpose: export spectrum object to a file, either fits or ascii depending on file extension
-        '''
+#
+# NOTE: EXPORT CURRENTLY DOES NOT RETURN A PROPER HEADER
+#
         filename = self.simplefilename
         if len(args) > 0:
             filename = args[0]
@@ -786,7 +798,7 @@ class Spectrum(object):
 
 # determine which type of file
         ftype = filename.split('.')[-1]
-
+#        print(filename,ftype)
 # fits file
         if (ftype == 'fit' or ftype == 'fits'):
             try:
@@ -820,16 +832,18 @@ class Spectrum(object):
 
     def save(self,*args,**kwargs):
         '''
-        :Purpose: Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  Spectrum.export_ and Spectrum.save function in the same manner.
+        :Purpose: Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  If no filename is explicitly given, the Spectrum.filename attribute is used. If the filename does not include the full path, the file is saved in the current directory.  
 
-        .. _Spectrum.export : api.html#splat.Spectrum.export
+        `Spectrum.export()`_ and `Spectrum.save` function in the same manner.
+
+        .. _`Spectrum.export()` : api.html#splat.Spectrum.export
         '''
         self.export(*args,**kwargs)
 
 
     def flamToFnu(self):
         '''
-        :Purpose: Converts flux density from :math:`F_\\lambda` to :math:`F_\\nu`, the latter in Jy. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in :math:`F_\\nu` units.
+        :Purpose: Converts flux density from F\_lambda to F\_nu, the latter in Jy. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in F\_nu units.
         
         :Example:
            >>> import splat
@@ -848,7 +862,7 @@ class Spectrum(object):
 
     def fnuToFlam(self):
         '''
-        :Purpose: Converts flux density from :math:`F_\\nu` to :math:`F_\\lambda`, the latter in erg/s/cm2/Hz. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in :math:`F_\\lambda` units.
+        :Purpose: Converts flux density from F\_nu to F\_lambda, the latter in erg/s/cm\^2/Hz. This routine changes the underlying Spectrum object. There is no change if the spectrum is already in F\_lambda units.
         
         :Example:
            >>> import splat
@@ -872,16 +886,21 @@ class Spectrum(object):
 
     def fluxCalibrate(self,filter,mag,**kwargs):
         '''
-        :Purpose: Flux calibrates a spectrum given a filter and a magnitude. The filter must be one of those listed in splat.FILTERS.keys(). It is possible to specifically set the magnitude to be absolute (by default it is apparent).  This function changes the Spectrum object's flux, noise and variance arrays.
+        :Purpose: Flux calibrates a spectrum given a filter and a magnitude. The filter must be one of those listed in `splat.FILTERS.keys()`. It is possible to specifically set the magnitude to be absolute (by default it is apparent).  This function changes the Spectrum object's flux, noise and variance arrays.
         
-        :param filter: name of filter
-        :type filter: string, default = None
-        :param mag: magnitude to scale too 
-        :type mag: float, default = None
-        :param absolute: given magnitude is an absolute magnitude  
-        :type absolute: Boolean, optional, default = False
-        :param apparent: given magnitude is an apparent magnitude  
-        :type apparent: Boolean, optional, default = False
+        Required Inputs:
+
+        :param filter: string specifiying the name of the filter
+        :param mag: number specifying the magnitude to scale to 
+
+        Optional Inputs:
+
+        :param absolute: set to True to specify that the given magnitude is an absolute magnitude, which sets the ``fscale`` keyword in the Spectrum object to 'Absolute' (default = False)
+        :param apparent: set to True to specify that the given magnitude is an apparent magnitude, which sets the ``fscale`` flag in the Spectrum object to 'Apparent' (default = False)
+
+        Outputs:
+
+        None, Spectrum object is changed to a flux calibrated spectrum
 
         :Example:
            >>> import splat
@@ -891,12 +910,8 @@ class Spectrum(object):
             (15.002545668628173, 0.017635234089677564)
         '''
 
-        '''
-        :Purpose: Calibrates spectrum to input magnitude
-        '''
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',not absolute)
-#        self.normalize(silent=True)
         apmag,apmag_e = filterMag(self,filter,**kwargs)
 # NOTE: NEED TO INCORPORATE UNCERTAINTY INTO SPECTRAL UNCERTAINTY
         if (~numpy.isnan(apmag)):
@@ -939,7 +954,7 @@ class Spectrum(object):
                 pass
         
         return numpy.nanmax(self.flux.value[numpy.where(\
-                numpy.logical_and(self.wave > nanmin(self.wave)+0.1*(nanmax(self.wave)-nanmin(self.wave)),self.wave < nanmax(self.wave)-0.1*(nanmax(self.wave)-nanmin(self.wave))))])*self.funit
+                numpy.logical_and(self.wave > numpy.nanmin(self.wave)+0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave)),self.wave < numpy.nanmax(self.wave)-0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave))))])*self.funit
 
 
     def normalize(self,**kwargs):
@@ -1091,7 +1106,7 @@ class Spectrum(object):
 
         :param method: the type of smoothing window to use. See http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html for more details.
         :type method: optional, default = Hanning
-        :param resolution: Constant resolution to smooth toe(see smoothResolution_)
+        :param resolution: Constant resolution to smooth toe(see smoothToResolution_)
         :type resolution: optional, default = None
         :param slitPixelWidth: Number of pixels to smooth in pixel space (see smoothToSlitPixelWidth_)
         :type slitPixelWidth: optional, default = None
@@ -1193,6 +1208,8 @@ class Spectrum(object):
             self.resolution = resolution
             self.slitwidth = self.slitpixelwidth*spex_pixel_scale
             self.history.append('Smoothed to a constant resolution of {}'.format(self.resolution))
+        else:
+            print('\nTarget resolution {} less than current resolution {}; no change made'.format(resolution,self.resolution))
         return
 
     def smoothToSlitPixelWidth(self,width,**kwargs):
@@ -1360,158 +1377,57 @@ def caldateToDate(d):
        >>> print date
        20050612
     '''
-    return d[:4]+str((months.index(d[5:8])+1)/100.)[2:4]+d[-2:]
+    return properDate(d,output-'YYYY MMM DD')
 
 
-def checkFile(filename,**kwargs):
+
+def checkKeys(input,parameters,**kwargs):
     '''
-    :Purpose: Checks if a spectrum file exists in the SPLAT's library.
-    :param filename: A string containing the spectrum's filename.
-    :Example:
-       >>> import splat
-       >>> spectrum1 = 'spex_prism_1315+2334_110404.fits'
-       >>> print splat.checkFile(spectrum1)
-       True
-       >>> spectrum2 = 'fake_name.fits'
-       >>> print splat.checkFile(spectrum2)
-       False
+    :Purpose: Checks the input kwargs keys against the expected parameters of a function to make sure the right parameters are passed.
+
+    :param input: input dictionary to a function (i.e., kwargs).
+    :param parameters: allowed parameters for the function
+    :param forcekey: (optional, default = False) if True, raises a Value Error if an incorrect parameter is passed
     '''
-    url = kwargs.get('url',SPLAT_URL)+DATA_FOLDER
-    return requests.get(url+filename).status_code == requests.codes.ok
-#    flag = checkOnline()
-#    if (flag):
-#        try:
-#            r = requests.get(url+filename)
-#            open(os.path.basename(filename), 'wb').write(r.content)
-#            open(os.path.basename(filename), 'wb').write(urllib2.urlopen(url+filename).read())
-#        except:
-#            flag = False
-#    return flag
-
-
-def checkAccess(**kwargs):
-    '''
-    :Purpose: Checks if user has access to unpublished spectra in SPLAT library.
-    :Example:
-       >>> import splat
-       >>> print splat.checkAccess()
-       True
-    :Note: Must have the file .splat_access in your home directory with the correct passcode to use.
-    '''
-    access_file = '.splat_access'
-    result = False
-
-    try:
-        home = os.path.expanduser("~")
-        if home == None:
-            home = './'
-#        print(home)
-#        print(SPLAT_URL+access_file)
-        bcode = requests.get(SPLAT_URL+access_file).content
-#        print(bcode)
-        lcode = base64.b64encode(open(home+'/'+access_file,'r').read().encode())
-#        print(lcode)
-        if (bcode in lcode):        # changed to partial because of EOL variations
-            result = True
-    except:
-        result = False
-
-    if (kwargs.get('report','') != ''):
-        if result == True:
-            print('You have full access to all SPLAT data')
+    kflag = False
+    forcekey = kwargs.get('forcekey',False)
+    for k in input.keys():
+        if k not in parameters:
+            print('\nParameter Warning!\nUnknown input keyword {}'.format(k))
+            kflag = True
+    if kflag:
+        if forcekey:
+            raise ValueError('Valid keywords are {}\n'.format(parameters))
         else:
-            print('You have access only to published data')
-    return result
-
-
-def checkLocal(inputfile):
-    '''
-    :Purpose: Checks if a file is present locally or within the SPLAT
-                code directory
-    :Example:
-       >>> import splat
-       >>> splat.checkLocal('splat.py')
-       True  # found the code
-       >>> splat.checkLocal('parameters.txt')
-       False  # can't find this file
-       >>> splat.checkLocal('SpectralModels/BTSettl08/parameters.txt')
-       True  # found it
-    '''
-    if not os.path.exists(inputfile):
-        if not os.path.exists(SPLAT_PATH+inputfile):
-            return ''
-        else:
-            return SPLAT_PATH+inputfile
-    else:
-        return inputfile
-
-
-def checkOnline(*args):
-    '''
-    :Purpose: Checks if SPLAT's URL is accessible from your machine--
-                that is, checks if you and the host are online. Alternately
-                checks if a given filename is present locally or online
-    :Example:
-       >>> import splat
-       >>> splat.checkOnline()
-       True  # SPLAT's URL was detected.
-       >>> splat.checkOnline()
-       False # SPLAT's URL was not detected.
-       >>> splat.checkOnline('SpectralModels/BTSettl08/parameters.txt')
-       '' # Could not find this online file.
-    '''
-    try:
-        if (len(args) != 0):
-            if 'http://' in args[0]:
-                if requests.get(args[0]).status_code == requests.codes.ok:
-                	return args[0]
-                return ''
-            else:
-                if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
-                    return SPLAT_URL+args[0]
-                return ''
-        else:
-        	return requests.get(SPLAT_URL).status_code == requests.codes.ok
-    except:
-        return ''
-
+            print('Valid keywords are {}\n'.format(parameters))
 
 
 
 def classifyByIndex(sp, *args, **kwargs):
     '''
-    :Purpose: Determine the spectral type and uncertainty for a spectrum
-                based on indices. Makes use of published index-SpT relations
-                from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_;
-                `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_;
-                `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_;
-                and `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_. Returns 2-element tuple
-                containing spectral type (numeric or string) and
-                uncertainty.
+    :Purpose: 
 
-    :param sp: Spectrum class object, which should contain wave, flux and
-               noise array elements.
+    Determine the spectral type and uncertainty for a spectrum based on indices. Makes use of published index-SpT relations from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_; `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_; `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_; and `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_. Returns 2-element tuple containing spectral type (numeric or string) and uncertainty.
+
+    Required Inputs:
+
+    :param sp: Spectrum class object, which should contain wave, flux and noise array elements.
+
+    Optional Inputs:
 
     :param set: named set of indices to measure and compute spectral type
 
+        - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_ (default)
         - *'allers'*: H2O from `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_
-        - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_
         - *'reid'*:H2O-A and H2O-B from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_
         - *'testi'*: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_
 
-    :type set: optional, default = 'burgasser'
-    :param string: return spectral type as a string (uses typeToNum)
-    :type string: optional, default = False
-    :param round: rounds off to nearest 0.5 subtypes
-    :type round: optional, default = False
-    :param allmeasures: Set to True to return all of the index values and individual subtypes
-    :type allmeasures: optional, default = False
-    :param remeasure: force remeasurement of indices
-    :type remeasure: optional, default = True
-    :param nsamples: number of Monte Carlo samples for error computation
-    :type nsamples: optional, default = 100
-    :param nloop: number of testing loops to see if spectral type is within a certain range
-    :type nloop: optional, default = 5
+    :param string: return spectral type as a string using typeToNum (default = False)
+    :param round: rounds off to nearest 0.5 subtypes (default = False)
+    :param allmeasures: Set to True to return all of the index values and individual subtypes  (default = False)
+    :param remeasure: force remeasurement of indices (default = True)
+    :param nsamples: number of Monte Carlo samples for error computation (default = 100)
+    :param nloop: number of testing loops to see if spectral type is within a certain range (default = 5)
 
     :Example:
     >>> import splat
@@ -1519,8 +1435,6 @@ def classifyByIndex(sp, *args, **kwargs):
     >>> splat.classifyByIndex(spc, string=True, set='burgasser', round=True)
         ('T4.5', 0.2562934083414341)
 
-    .. note::
-        * Need to allow output of individual spectral types from individual indices
     '''
 
     str_flag = kwargs.get('string', True)
@@ -2335,9 +2249,9 @@ def classifyGravity(sp, *args, **kwargs):
 
 # determine median score, or mean if even
     if (len(numpy.where(numpy.isnan(medgrav) == False))%2 == 0):
-        gravscore['score'] = scipy.stats.nanmean(medgrav)
+        gravscore['score'] = numpy.nanmean(medgrav)
     else:
-        gravscore['score'] = scipy.stats.nanmedian(medgrav)
+        gravscore['score'] = numpy.nanmedian(medgrav)
 
     if gravscore['score'] <= 0.5:
        gravscore['gravity_class'] = 'FLD-G'
@@ -2419,16 +2333,15 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         (<Quantity 17071.690727945213>, 0.94029474635786015)
     '''
     weights = kwargs.get('weights',numpy.zeros(len(sp1.wave))) # these will be set to 1 later
-    mask = kwargs.get('mask',numpy.zeros(len(sp1.wave)))    # mask = 1 -> ignore
     fit_ranges = kwargs.get('fit_ranges',[spex_wave_range.value])
     fit_ranges = kwargs.get('fit_range',fit_ranges)
     fit_ranges = kwargs.get('fitrange',fit_ranges)
     fit_ranges = kwargs.get('fitrng',fit_ranges)
     fit_ranges = kwargs.get('comprange',fit_ranges)
     fit_ranges = kwargs.get('comprng',fit_ranges)
-    mask_ranges = kwargs.get('mask_ranges',[])
-    mask_standard = kwargs.get('mask_standard',False)
-    mask_telluric = kwargs.get('mask_telluric',mask_standard)
+#    mask_ranges = kwargs.get('mask_ranges',[])
+#    mask_standard = kwargs.get('mask_standard',False)
+#    mask_telluric = kwargs.get('mask_telluric',mask_standard)
     var_flag = kwargs.get('novar2',True)
     stat = kwargs.get('statistic','chisqr')
     minreturn = 1.e-60
@@ -2440,8 +2353,6 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 #        fit_ranges = [fit_ranges]
 #    print(fit_ranges)
 
-    if (mask_standard):
-        mask_telluric == True
 
 # create interpolation function for second spectrum
     f = interp1d(sp2.wave,sp2.flux,bounds_error=False,fill_value=0.)
@@ -2455,36 +2366,19 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
  #   vtot = sp1.variance
 
 # Mask certain wavelengths
-# telluric absorption
-    if (mask_telluric):
-        mask_ranges.append([0.,0.65])        # meant to clear out short wavelengths
-        mask_ranges.append([1.35,1.42])
-        mask_ranges.append([1.8,1.92])
-        mask_ranges.append([2.45,99.])        # meant to clear out long wavelengths
-
-    if (mask_standard):
-        mask_ranges.append([0.,0.8])        # standard short cut
-        mask_ranges.append([2.35,99.])        # standard long cut
-
-    if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
-        mask_ranges*=u.micron
-
-    for ranges in mask_ranges:
-        mask[numpy.where(numpy.logical_and(sp1.wave >= ranges[0],sp1.wave <= ranges[1]))]= 1
+    mask = splat.generateMask(sp1.wave,**kwargs)
+# mask flux < 0
+    mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
 
 # set the weights
     for ranges in fit_ranges:
 #        print(ranges)
         weights[numpy.where(numpy.logical_and(sp1.wave >= ranges[0],sp1.wave <= ranges[1]))] = 1
 
-# mask flux < 0
-    mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
-
 # combine weights and mask together to one array
     weights = weights*(1.-mask)
 
 # comparison statistics
-
 # switch to standard deviation if no uncertainty
     if numpy.isnan(numpy.nanmax(vtot)):
         stat = 'stddev'
@@ -2583,7 +2477,7 @@ def coordinateToDesignation(c):
         cc.dec.to_string(unit=u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
 
 
-def dateToCaldate(date):
+def dateToCaldate(d):
     '''
     :Purpose: Converts numeric date to calendar date
 
@@ -2633,13 +2527,13 @@ def designationToCoordinate(value, **kwargs):
     if (len(spl[0]) > 6):
         ra+=15.*float(spl[0][6:8])/360000.
     dec = float(spl[1][0:2])
-    if (len(spl[0]) > 2):
+    if (len(spl[1]) > 2):
         dec+=float(spl[1][2:4])/60.
-    if (len(spl[0]) > 4):
+    if (len(spl[1]) > 4):
         dec+=float(spl[1][4:6])/3600.
     if (len(spl[1]) > 6):
         dec+=float(spl[1][6:8])/360000.
-    dec = dec*fact
+    dec*=fact
     if icrsflag:
         return SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
     else:
@@ -2698,6 +2592,31 @@ def designationToShortName(value):
 #
 #        return name, date
 #
+
+def distributionStats(x, q=[0.16,0.5,0.84], weights=None, sigma=None, **kwargs):
+    '''
+    :Purpose: Find key values along distributions based on quantile steps.
+              This code is derived almost entirely from triangle.py.
+    '''
+
+# clean data of nans
+    xd = x[~numpy.isnan(x)]
+
+    if q is None and sigma is None:
+        sigma = 1.
+        
+    if sigma is not None:
+        q = [stats.norm.cdf(-sigma),0.5,stats.norm.cdf(sigma)]
+        
+    if weights is None:
+        return numpy.percentile(xd, [100. * qi for qi in q])
+    else:
+        wt = weights[~numpy.isnan(x)]
+        idx = numpy.argsort(xd)
+        xsorted = xd[idx]
+        cdf = numpy.add.accumulate(wt[idx])
+        cdf /= cdf[-1]
+        return numpy.interp(q, cdf, xsorted).tolist()
 
 
 def filterMag(sp,filter,*args,**kwargs):
@@ -2940,10 +2859,46 @@ def filterProperties(filter,**kwargs):
             print('Wavelength range = {:.3f} to {:.3f} micron\n'.format(report['lambda_min'],report['lambda_max']))
         return report
 
+def generateMask(wave,**kwargs):
+    '''
+    :Purpose: Generates a mask array based on wavelength vector and optional inputs on what to mask.
+
+    :Output: A mask array, where 0 = OK and 1 = ignore
+
+    :Example:
+    '''
+
+# generate initial mask structure
+    mask = numpy.zeros(len(wave))
+    mask_ranges = kwargs.get('mask_ranges',[])
+
+# mask telluric bands
+    if kwargs.get('mask_telluric',False):
+        mask_ranges.append([0.,0.65])        # meant to clear out short wavelengths
+        mask_ranges.append([1.35,1.42])
+        mask_ranges.append([1.8,1.92])
+        mask_ranges.append([2.45,99.])        # meant to clear out long wavelengths
+
+# a standardized masking
+    if kwargs.get('mask_standard',False):
+        mask_ranges.append([0.,0.8])        # standard short cut
+        mask_ranges.append([1.35,1.42])
+        mask_ranges.append([1.8,1.92])
+        mask_ranges.append([2.35,99.])        # standard long cut
+
+# make sure mask_ranges array has same units as wave array
+    if ~isinstance(wave[0],astropy.units.quantity.Quantity):
+        mask_ranges*=wave.unit
+
+# generate mask
+    for ranges in mask_ranges:
+        mask[numpy.where(numpy.logical_and(wave >= ranges[0],wave <= ranges[1]))]= 1
+    return mask
+
 
 def getSpectrum(*args, **kwargs):
     '''
-    :Purpose: Gets a spectrum from the SPLAT library using various selection criteria. Calls searchLibrary_ to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. See splat.searchLibrary_ for full list of search parameters.
+    :Purpose: Gets a spectrum from the SPLAT library using various selection criteria. Calls searchLibrary_ to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. 
 
     .. _searchLibrary : api.html#splat_db.searchLibrary
 
@@ -2980,7 +2935,7 @@ def getSpectrum(*args, **kwargs):
         else:
             if (kwargs.get('lucky',False) == True):
                 print('\nRetrieving 1 lucky file\n')
-                ind = random.choice(range(len(files)))
+                ind = random.choice(numpy.arange(len(files)))
                 result.append(Spectrum(files[ind],header=search[ind]))
             else:
                 print('\nRetrieving {} files\n'.format(len(files)))
@@ -3069,14 +3024,17 @@ def initiateStandards(**kwargs):
         if len(splat.SPEX_SD_STDS) == 0:
             for t in splat.SPEX_SD_STDFILES.keys():
                 splat.SPEX_SD_STDS[t] = Spectrum(file=splat.SPEX_SD_STDFILES[t])
+                splat.SPEX_SD_STDS[t].normalize()
     elif kwargs.get('esd',False):
         if len(splat.SPEX_ESD_STDS) == 0:
             for t in splat.SPEX_ESD_STDFILES.keys():
                 splat.SPEX_ESD_STDS[t] = Spectrum(file=splat.SPEX_ESD_STDFILES[t])
+                splat.SPEX_ESD_STDS[t].normalize()
     else:
         if len(splat.SPEX_STDS) == 0:
             for t in splat.SPEX_STDFILES.keys():
                 splat.SPEX_STDS[t] = Spectrum(file=splat.SPEX_STDFILES[t])
+                splat.SPEX_STDS[t].normalize()
 
     return
 
@@ -3268,16 +3226,14 @@ def measureEW(sp, *args, **kwargs):
     fCont = f(wave_cont)
     nCont = n(wave_cont)
 
-    if noiseFlag == True:
-#linear fit to continuum
-        pCont = numpy.poly1d(numpy.polyfit(wave_cont,fCont,1))
-        fContFit = pCont(wLine)
-        ew = trapz((numpy.ones(len(fLine))-(fLine/fContFit)), wLine)*1e4
-        return ew*u.angstrom, numpy.nan
+# first compute value
+    pCont = numpy.poly1d(numpy.polyfit(wave_cont,fCont,1))
+    fContFit = pCont(wLine)
+    ew = trapz((numpy.ones(len(fLine))-(fLine/fContFit)), wLine)*1e4
 #monte carlo
-    else:
-        ew=[]
-        for i in range(nsamples):
+    if noiseFlag == False:
+        ews=[]
+        for i in numpy.arange(nsamples):
 #generate simulated fluxes
 #            fContVar = fCont+numpy.random.normal(0.,1.)*nCont
 #            fLineVar = fLine+numpy.random.normal(0.,1.)*nLine
@@ -3287,7 +3243,7 @@ def measureEW(sp, *args, **kwargs):
 #linear fit to continuum
             pCont = numpy.poly1d(numpy.polyfit(wave_cont,fContVar,1))
             fContFit = pCont(wLine)
-            ew.append(trapz((numpy.ones(len(fLineVar))-(fLineVar/fContFit)), wLine)*1e4)
+            ews.append(trapz((numpy.ones(len(fLineVar))-(fLineVar/fContFit)), wLine)*1e4)
 
 # some error checking
 #            plt.plot(wLine,fContFit,color='r')
@@ -3296,7 +3252,9 @@ def measureEW(sp, *args, **kwargs):
 
 # following line is more correct but having problem with output
 #       return numpy.nanmean(ew)*u.angstrom, numpy.nanstd(ew)*u.angstrom
-        return numpy.nanmean(ew), numpy.nanstd(ew)
+        return ew*u.angstrom, numpy.nanstd(ew)*u.angstrom
+    else:
+        return ew*u.angstrom, numpy.nan
 
 
 def measureEWSet(sp,*args,**kwargs):
@@ -3352,7 +3310,7 @@ def measureIndex(sp,*args,**kwargs):
 # keyword parameters
     method = kwargs.get('method','ratio')
     sample = kwargs.get('sample','integrate')
-    nsamples = kwargs.get('nsamples',100)
+    nsamples = kwargs.get('nsamples',1000)
     noiseFlag = kwargs.get('nonoise',False)
 
 # create interpolation functions
@@ -3376,7 +3334,8 @@ def measureIndex(sp,*args,**kwargs):
         return numpy.nan, numpy.nan
 
 # define the sample vectors
-    values = numpy.zeros((len(args),nsamples))
+    value = numpy.zeros(len(args))
+    value_sim = numpy.zeros((len(args),nsamples))
 
 # loop over all sampling regions
     for i,waveRng in enumerate(args):
@@ -3384,6 +3343,20 @@ def measureIndex(sp,*args,**kwargs):
             (numpy.nanmax(waveRng)-numpy.nanmin(waveRng))+numpy.nanmin(waveRng)
         yNum = f(xNum)
         yNum_e = s(xNum)
+
+# first compute the actual value
+        if (sample == 'integrate'):
+            value[i] = trapz(yNum,xNum)
+        elif (sample == 'average'):
+            value[i] = numpy.nanmean(yNum)
+        elif (sample == 'median'):
+            value[i] = numpy.median(yNum)
+        elif (sample == 'maximum'):
+            value[i] = numpy.nanmax(yNum)
+        elif (sample == 'minimum'):
+            value[i] = numpy.nanmin(yNum)
+        else:
+            value[i] = numpy.nanmean(yNum)
 
 # now do MonteCarlo measurement of value and uncertainty
         for j in numpy.arange(0,nsamples):
@@ -3400,40 +3373,49 @@ def measureIndex(sp,*args,**kwargs):
 
 # choose function for measuring indices
             if (sample == 'integrate'):
-                values[i,j] = trapz(yVar,xNum)
+                value_sim[i,j] = trapz(yVar,xNum)
             elif (sample == 'average'):
-                values[i,j] = numpy.nanmean(yVar)
+                value_sim[i,j] = numpy.nanmean(yVar)
             elif (sample == 'median'):
-                values[i,j] = numpy.median(yVar)
+                value_sim[i,j] = numpy.median(yVar)
             elif (sample == 'maximum'):
-                values[i,j] = numpy.nanmax(yVar)
+                value_sim[i,j] = numpy.nanmax(yVar)
             elif (sample == 'minimum'):
-                values[i,j] = numpy.nanmin(yVar)
+                value_sim[i,j] = numpy.nanmin(yVar)
             else:
-                values[i,j] = numpy.nanmean(yVar)
+                value_sim[i,j] = numpy.nanmean(yVar)
 
 # compute index based on defined method
 # default is a simple ratio
     if (method == 'ratio'):
-        vals = values[0,:]/values[1,:]
+        val = value[0]/value[1]
+        vals = value_sim[0,:]/value_sim[1,:]
     elif (method == 'line'):
-        vals = 0.5*(values[0,:]+values[1,:])/values[2,:]
+        val = 0.5*(value[0]+value[1])/value[2]
+        vals = 0.5*(value_sim[0,:]+value_sim[1,:])/value_sim[2,:]
     elif (method == 'inverse_line'):
-        vals = 2.*values[0,:]/(values[1,:]+values[2,:])
+        val = 2.*value[0]/(value[1]+value[2])
+        vals = 2.*value_sim[0,:]/(value_sim[1,:]+value_sim[2,:])
     elif (method == 'change'):
-        vals = 2.*(values[0,:]-values[1,:])/(values[0,:]+values[1,:])
+        val = 2.*(value[0]-value[1])/(value[0]+value[1])
+        vals = 2.*(value_sim[0,:]-value_sim[1,:])/(value_sim[0,:]+value_sim[1,:])
     elif (method == 'allers'):
-        vals = (((numpy.mean(args[0])-numpy.mean(args[1]))/(numpy.mean(args[2])-numpy.mean(args[1])))*values[2,:] \
-            + ((numpy.mean(args[2])-numpy.mean(args[0]))/(numpy.mean(args[2])-numpy.mean(args[1])))*values[1,:]) \
-            /values[0,:]
+        val = (((numpy.mean(args[0])-numpy.mean(args[1]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value[2] \
+            + ((numpy.mean(args[2])-numpy.mean(args[0]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value[1]) \
+            /value[0]
+        vals = (((numpy.mean(args[0])-numpy.mean(args[1]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value_sim[2,:] \
+            + ((numpy.mean(args[2])-numpy.mean(args[0]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value_sim[1,:]) \
+            /value_sim[0,:]
     else:
-        vals = values[0,:]/values[1,:]
+        val = value[0]/value[1]
+        vals = value_sim[0,:]/value_sim[1,:]
+
 
 # output mean, standard deviation
     if (noiseFlag):
-        return numpy.nanmean(vals), numpy.nan
+        return val, numpy.nan
     else:
-        return numpy.nanmean(vals), numpy.nanstd(vals)
+        return val, numpy.nanstd(vals)
 
 
 # wrapper function for measuring specific sets of indices
@@ -3598,7 +3580,7 @@ def metallicity(sp,**kwargs):
     >>> print splat.metallicity(sp)
         (-0.50726104530066363, 0.24844773591243882)
     '''
-    nsamples = kwargs.get('nsamples',100)
+    nsamples = kwargs.get('nsamples',1000)
 
     coeff_feh = [-1.039,0.092,0.119]
     coeff_feh_e = [0.17,0.023,0.033]
@@ -3618,12 +3600,14 @@ def metallicity(sp,**kwargs):
     if cai is False:
         cai, cai_e = ew['Ca I 2.26']
 
+    mh = coeff_mh[0]+(nai/h2ok2)*coeff_mh[1]+(cai/h2ok2)*coeff_mh[2]
 
-    mh = numpy.ones(nsamples)*coeff_mh[0]+\
+# simulate uncertainties
+    mhsim = numpy.ones(nsamples)*coeff_mh[0]+\
         (numpy.random.normal(nai,nai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[1]+\
         (numpy.random.normal(cai,cai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[2]
 
-    return numpy.nanmean(mh), numpy.sqrt(numpy.nanstd(mh)**2+mh_unc**2)
+    return mh, numpy.sqrt(numpy.nanstd(mhsim)**2+mh_unc**2)
 
 
 def properCoordinates(c):
@@ -3653,6 +3637,185 @@ def properCoordinates(c):
             return SkyCoord(c,'icrs', unit=(u.hourangle, u.deg))
     else:
         raise ValueError('\nCould not parse input format\n\n')
+
+
+def properDate(d,**kwargs):
+    '''
+    :Purpose: Converts various date formats into a standardized date of YYYY-MM-DD
+
+    :param d: Date to be converted.
+    :param format: Optional input format of the following form:
+        * 'YYYY-MM-DD': e.g., 2011-04-03 (this is default output)
+        * 'YYYYMMDD': e.g., 20110403
+        * 'YYMMDD': e.g., 20110403
+        * 'MM/DD/YY': e.g., 03/04/11
+        * 'MM/DD/YYYY': e.g., 03/04/2011
+        * 'YYYY/MM/DD': e.g., 2011/03/04
+        * 'DD/MM/YYYY': e.g., 04/03/2011
+        * 'DD MMM YYYY': e.g., 04 Mar 2011
+        * 'YYYY MMM DD': e.g., 2011 Mar 04
+    :type format: Optional, string
+    :param output: Format of the output based on the prior list
+    :type output: Optional, string
+
+    :Example:
+    >>> import splat
+    >>> splat.properDate('20030502')
+        '2003-05-02'
+    >>> splat.properDate('2003/05/02')
+        '02-2003-05'
+    >>> splat.properDate('2003/05/02',format='YYYY/MM/DD')
+        '2003-05-02'
+    >>> splat.properDate('2003/05/02',format='YYYY/MM/DD',output='YYYY MMM DD')
+        '2003 May 02'
+    '''
+
+    dformat = kwargs.get('format','')
+    oformat = kwargs.get('output','YYYY-MM-DD')
+# some defaults
+    if '/' in d and dformat == '':       # default American style
+        if len(d) <= 8:
+            dformat = 'MM/DD/YY'
+        else:
+            dformat = 'MM/DD/YYYY'
+    elif True in [c.lower() in d.lower() for c in splat.months] and dformat == '':
+        if not splat.isNumber(d.replace(' ','')[4]):
+            dformat = 'YYYY MMM DD'
+        else:
+            dformat = 'DD MMM YYYY'
+    elif splat.isNumber(d) and dformat == '':
+        if len(d) <= 6:
+            dformat = 'YYMMDD'
+        else:
+            dformat = 'YYYYMMDD'
+    else:
+        pass
+
+# no idea
+    if dformat == '':
+        print('\nCould not determine format of input date; please provide a format string\n')
+        return d
+
+# case statement for conversion to YYYY-MM-DD
+    if dformat == 'YYYYMMDD':
+        dp = d[:4]+'-'+d[4:6]+'-'+d[-2:]
+    elif dformat == 'YYMMDD':
+        dp = '20'+d[:2]+'-'+d[2:4]+'-'+d[-2:]
+    elif dformat == 'MM/DD/YYYY':
+        tmp = d.split('/')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        if len(tmp[1]) == 1:
+            tmp[1] = '0'+tmp[1]
+        dp = tmp[2]+'-'+tmp[0]+'-'+tmp[1]
+    elif dformat == 'MM/DD/YY':
+        tmp = d.split('/')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        if len(tmp[1]) == 1:
+            tmp[1] = '0'+tmp[1]
+        dp = '20'+tmp[2]+'-'+tmp[0]+'-'+tmp[1]
+    elif dformat == 'YYYY/MM/DD':
+        tmp = d.split('/')
+        if len(tmp[2]) == 1:
+            tmp[2] = '0'+tmp[2]
+        if len(tmp[1]) == 1:
+            tmp[1] = '0'+tmp[1]
+        dp = tmp[0]+'-'+tmp[1]+'-'+tmp[2]
+    elif dformat == 'DD/MM/YYYY':
+        tmp = d.split('/')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        if len(tmp[1]) == 1:
+            tmp[1] = '0'+tmp[1]
+        dp = tmp[2]+'-'+tmp[1]+'-'+tmp[0]
+    elif dformat == 'DD/MM/YY':
+        tmp = d.split('/')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        if len(tmp[1]) == 1:
+            tmp[1] = '0'+tmp[1]
+        dp = '20'+tmp[2]+'-'+tmp[1]+'-'+tmp[0]
+    elif dformat == 'DD MMM YYYY':
+        tmp = d.split(' ')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        for i,c in enumerate(splat.months):
+            if c.lower() == tmp[1].lower():
+                mref = str(i+1)
+        if len(mref) == 1:
+            mref = '0'+mref
+        dp = tmp[2]+' '+mref+' '+tmp[0]
+    elif dformat == 'DD-MMM-YYYY':
+        tmp = d.split(' ')
+        if len(tmp[0]) == 1:
+            tmp[0] = '0'+tmp[0]
+        for i,c in enumerate(splat.months):
+            if c.lower() == tmp[1].lower():
+                mref = str(i+1)
+        if len(mref) == 1:
+            mref = '0'+mref
+        dp = tmp[2]+'-'+mref+'-'+tmp[0]
+    elif dformat == 'YYYY MMM DD':
+        tmp = d.split(' ')
+        if len(tmp[2]) == 1:
+            tmp[2] = '0'+tmp[2]
+        for i,c in enumerate(splat.months):
+            if c.lower() == tmp[1].lower():
+                mref = str(i+1)
+        if len(mref) == 1:
+            mref = '0'+mref
+        dp = tmp[0]+' '+mref+' '+tmp[2]
+    elif dformat == 'YYYY-MMM-DD':
+        tmp = d.split(' ')
+        if len(tmp[2]) == 1:
+            tmp[2] = '0'+tmp[2]
+        for i,c in enumerate(splat.months):
+            if c.lower() == tmp[1].lower():
+                mref = str(i+1)
+        if len(mref) == 1:
+            mref = '0'+mref
+        dp = tmp[0]+'-'+mref+'-'+tmp[2]
+    else:
+        dp = d
+
+# case statement for conversion from YYYY-MM-DD to desired output format
+    if oformat == 'YYYYMMDD':
+        df = dp.replace('-','')
+    elif oformat == 'YYMMDD':
+        df = dp.replace('-','')[2:]
+    elif oformat == 'MM/DD/YYYY':
+        tmp = dp.split('-')
+        df = tmp[1]+'/'+tmp[2]+'/'+tmp[0]
+    elif oformat == 'MM/DD/YY':
+        tmp = dp.split('-')
+        df = tmp[1]+'/'+tmp[2]+'/'+tmp[0][2:]
+    elif oformat == 'YYYY/MM/DD':
+        tmp = dp.split('-')
+        df = tmp[0]+'/'+tmp[1]+'/'+tmp[2]
+    elif oformat == 'DD/MM/YYYY':
+        tmp = dp.split('-')
+        df = tmp[2]+'/'+tmp[1]+'/'+tmp[0]
+    elif oformat == 'DD/MM/YY':
+        tmp = dp.split('-')
+        df = tmp[2]+'/'+tmp[1]+'/'+tmp[0][2:]
+    elif oformat == 'DD MMM YYYY':
+        tmp = dp.split('-')
+        df = tmp[2]+' '+splat.months[int(tmp[1])-1]+' '+tmp[0]
+    elif oformat == 'DD-MMM-YYYY':
+        tmp = dp.split('-')
+        df = tmp[2]+'-'+splat.months[int(tmp[1])-1]+'-'+tmp[0]
+    elif oformat == 'YYYY MMM DD':
+        tmp = dp.split('-')
+        df = tmp[0]+' '+splat.months[int(tmp[1])-1]+' '+tmp[2]
+    elif oformat == 'YYYY-MMM-DD':
+        tmp = dp.split('-')
+        df = tmp[0]+'-'+splat.months[int(tmp[1])-1]+'-'+tmp[2]
+    else:
+        df = dp
+
+    return df
+
 
 
 def readSpectrum(*args,**kwargs):
@@ -3767,11 +3930,11 @@ def readSpectrum(*args,**kwargs):
 # fix to catch badly formatted files where noise column is S/N
 #    print(flux, numpy.median(flux))
     if (catchSN):
-          w = numpy.where(flux > stats.nanmedian(flux))
-          if (stats.nanmedian(flux[w]/noise[w]) < 1.):
+          w = numpy.where(flux > numpy.nanmedian(flux))
+          if (numpy.nanmedian(flux[w]/noise[w]) < 1.):
               noise = flux/noise
               w = numpy.where(numpy.isnan(noise))
-              noise[w] = stats.nanmedian(noise)
+              noise[w] = numpy.nanmedian(noise)
 
 # clean up
 #    if url != '' and not local:
@@ -3826,106 +3989,10 @@ def redden(sp, **kwargs):
     if kwargs.get('normalize',False):
         absfrac = absfrac/numpy.median(absfrac)
 
-    print(tau0, min(tau), max(tau), max(absfrac), min(absfrac))
+#    print(tau0, min(tau), max(tau), max(absfrac), min(absfrac))
     spabs = splat.Spectrum(wave=w,flux=absfrac)
     return sp*spabs
 
-
-
-
-def test():
-    '''
-    :Purpose: Tests the SPLAT Code
-    :Checks the following:
-
-        - If you are online and can see the SPLAT website
-        - If you have access to unpublished spectra
-        - If you can search for and load a spectrum
-        - If ``searchLibrary`` functions properly
-        - If index measurement routines functions properly
-        - If classification routines function properly
-        - If ``typeToTeff`` functions properly
-        - If flux calibration and normalization function properly
-        - If ``loadModel`` functions properly
-        - If ``compareSpectra`` functions properly
-        - If ``plotSpectrum`` functions properly
-    '''
-
-    test_src = 'Random'
-
-    sys.stderr.write('\n\n>>>>>>>>>>>> TESTING SPLAT CODE <<<<<<<<<<<<\n')
-# check you are online
-    if checkOnline():
-        sys.stderr.write('\n...you are online and can see SPLAT website\n')
-    else:
-        sys.stderr.write('\n...you are NOT online or cannot see SPLAT website\n')
-
-# check your access
-    if checkAccess():
-        sys.stderr.write('\n...you currently HAVE access to unpublished spectra\n')
-    else:
-        sys.stderr.write('\n...you currently DO NOT HAVE access to unpublished spectra\n')
-
-# check you can search for and load a spectrum
-#    sp = getSpectrum(shortname=test_src)[0]
-    sp = getSpectrum(spt=['L5','T5'],lucky=True)[0]
-    sp.info()
-    sys.stderr.write('\n...getSpectrum successful\n')
-
-# check searchLibrary
-    list = searchLibrary(young=True,output='DATA_FILE')
-    sys.stderr.write('\n{} young spectra in the SPL  ...searchLibrary successful\n'.format(len(list)))
-
-# check index measurement
-    ind = measureIndexSet(sp,set='burgasser')
-    sys.stderr.write('\nSpectral indices for '+test_src+':\n')
-    for k in ind.keys():
-        print('\t{:s}: {:4.3f}+/-{:4.3f}'.format(k, ind[k][0], ind[k][1]))
-    sys.stderr.write('...index measurement successful\n')
-
-# check classification
-    spt, spt_e = classifyByIndex(sp,set='burgasser')
-    sys.stderr.write('\n...index classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
-
-    spt, spt_e = classifyByStandard(sp,method='kirkpatrick')
-    sys.stderr.write('\n...standard classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
-
-    grav = classifyGravity(sp)
-    sys.stderr.write('\n...gravity class of '+test_src+' = {}; successful\n'.format(grav))
-
-# check SpT -> Teff
-    teff, teff_e = typeToTeff(spt,unc=spt_e)
-    sys.stderr.write('\n...Teff of '+test_src+' = {:.1f}+/-{:.1f} K; successful\n'.format(teff,teff_e))
-
-# check flux calibration
-    sp.normalize()
-    sp.fluxCalibrate('2MASS J',15.0,apparent=True)
-    mag,mag_e = filterMag(sp,'MKO J')
-    sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f}+/-{:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag,mag_e))
-
-# check models
-#   mdl = loadModel(teff=1000,logg=5.0,set='BTSettl2008')
-    logg = 5.2
-    if grav == 'VL-G':
-        logg = 4.2
-    elif grav == 'INT-G':
-        logg = 4.6
-    mdl = loadModel(teff=teff,logg=logg,set='BTSettl2008')
-    sys.stderr.write('\n...interpolated model generation successful\n')
-
-# check normalization
-    sys.stderr.write('\n...normalization successful\n')
-
-# check compareSpectrum
-    chi, scale = compareSpectra(sp,mdl,mask_standard=True,stat='chisqr')
-    sys.stderr.write('\nScaling model: chi^2 = {}, scale = {}'.format(chi,scale))
-    sys.stderr.write('\n...compareSpectra successful\n'.format(chi,scale))
-
-# check plotSpectrum
-    mdl.scale(scale)
-    plotSpectrum(sp,mdl,colors=['k','r'],title='If this appears everything is OK: close window')
-    sys.stderr.write('\n...plotSpectrum successful\n')
-    sys.stderr.write('\n>>>>>>>>>>>> SPLAT TEST SUCCESSFUL; HAVE FUN! <<<<<<<<<<<<\n\n')
 
 
 def typeToColor(spt,color, **kwargs):
@@ -3951,12 +4018,12 @@ def typeToColor(spt,color, **kwargs):
     :Example:
         >>> import splat
         >>> print splat.typeToColor('L3', 'J-K')
-            XXXX
-        >>> print splat.typeToMag('M5', 'i-K', ref = 'skrzypek', unc=0.5)
-            (XXXX, XXXX)
-        >>> print splat.typeToMag('M0', 'i-z', ref = 'skrzypek')
-            Spectral Type is out of range for Color/SpT trends from Skryzpek et al. (2015)
-            nan
+            (1.46, nan)
+        >>> print splat.typeToColor('M5', 'i-z', ref = 'skrzypek', unc=0.5)
+            (0.91, 0.57797809947624645)
+        >>> print splat.typeToColor('M0', 'i-z', ref = 'skrzypek')
+            Spectral type M0.0 is outside the range for reference set Skrzypek et al. (2015)
+            (nan, nan)
     """
 
 #Keywords
@@ -3986,7 +4053,7 @@ def typeToColor(spt,color, **kwargs):
 
     else:
         sys.stderr.write('\n Do not have color set {}\n\n'.format(ref))
-        return numpy.nan
+        return numpy.nan, numpy.nan
     tmpval = copy.deepcopy(values)
 
     if kwargs.get('verbose',False):
@@ -4011,16 +4078,16 @@ def typeToColor(spt,color, **kwargs):
             f = interp1d(numpy.arange(rng[0],rng[1]+1),values[color.lower()],bounds_error=False,fill_value=0.)
             if (unc > 0.):
                 vals = [f(x) for x in numpy.random.normal(spt, unc, nsamples)]
-                return numpy.nanmean(vals), numpy.nanstd(vals)
+                return float(f(spt)), numpy.nanstd(vals)
             else:
-                return float(f(spt))
+                return float(f(spt)), numpy.nan
         else:
             sys.stderr.write('\n Color {} is not in reference set for {}\n\n'.format(color,reference))
-            return numpy.nan
+            return numpy.nan, numpy.nan
 
     else:
         sys.stderr.write('\n Spectral type {} is outside the range for reference set {}\n\n'.format(splat.typeToNum(spt),reference))
-        return numpy.nan
+        return numpy.nan, numpy.nan
 
 
 
@@ -4155,7 +4222,7 @@ def typeToMag(spt, filt, **kwargs):
         return numpy.nan, numpy.nan
 
 
-def typeToNum(input, **kwargs):
+def typeToNum(inp, **kwargs):
     '''
     :Purpose: Converts between string and numeric spectral types, and vise versa.
     :param input: Spectral type to convert. Can convert a number or a string from 0 (K0) and 49.0 (Y9).
@@ -4202,11 +4269,12 @@ def typeToNum(input, **kwargs):
     colorclass = kwargs.get('colorclass','')
     peculiar = kwargs.get('peculiar',False)
     spletter = 'KMLTY'
+    verbose = kwargs.get('verbose',False)
 
 # number -> spectral type
-    if (isNumber(input)):
-        spind = int(abs(input/10.))
-        spdec = numpy.around(input,1)-spind*10.
+    if (isNumber(inp)):
+        spind = int(abs(inp/10.))
+        spdec = numpy.around(inp,1)-spind*10.
         pstr = ''
         if (unc > 1.):
             error = ':'
@@ -4217,55 +4285,60 @@ def typeToNum(input, **kwargs):
         if (0 <= spind < len(spletter)):
             output = colorclass+subclass+spletter[spind]+'{:3.1f}'.format(spdec)+ageclass+lumclass+pstr+error
         else:
-            print('Spectral type number must be between 0 ({}0) and {} ({}9)'.format(spletter[0],len(spletter)*10.-1.,spletter[-1]))
+            if verbose: print('Spectral type number must be between 0 ({}0) and {} ({}9)'.format(spletter[0],len(spletter)*10.-1.,spletter[-1]))
             output = numpy.nan
 
 # spectral type -> number
-    elif isinstance(input,str):
+    elif isinstance(inp,str):
         if (sys.version_info.major == 2):
-            input = string.split(input,sep='+')[0]    # remove +/- sides
-            input = string.split(input,sep='-')[0]    # remove +/- sides
-            input = string.split(input,sep='/')[0]    # remove / in spectral types
+            inp = string.split(inp,sep='+')[0]    # remove +/- sides
+            inp = string.split(inp,sep='-')[0]    # remove +/- sides
+            inp = string.split(inp,sep='/')[0]    # remove / in spectral types
         else:
-            input = input.split('+')[0]    # remove +/- sides
-            input = input.split('-')[0]    # remove +/- sides
-            input = input.split('/')[0]    # remove / in spectral types
+            inp = inp.split('+')[0]    # remove +/- sides
+            inp = inp.split('-')[0]    # remove +/- sides
+            inp = inp.split('/')[0]    # remove / in spectral types
+        inp = inp.replace('...','').replace(' ','')
 
-        sptype = re.findall('[{}]'.format(spletter),input)
+        sptype = re.findall('[{}]'.format(spletter),inp)
         if (len(sptype) == 1):
             output = spletter.find(sptype[0])*10.
-            spind = input.find(sptype[0])+1
-            if (spind < len(input)):
-                if (input.find('.') < 0):
-                    if (isNumber(input[spind])):
-                        output = output+float(input[spind])
+            spind = inp.find(sptype[0])+1
+            if (spind < len(inp)):
+                if (inp.find('.') < 0):
+                    if (isNumber(inp[spind])):
+                        output = output+float(inp[spind])
                 else:
-                    output = output+float(input[spind:spind+3])
-                    spind = spind+3
-            ytype = re.findall('[abcd]',input.split('p')[-1])
+                    try:
+                        output = output+float(inp[spind:spind+3])
+                        spind = spind+3
+                    except:
+                        if verbose: print('\nProblem converting input type {} to a numeric type'.format(inp))
+                        return numpy.nan
+            ytype = re.findall('[abcd]',inp.split('p')[-1])
             if (len(ytype) == 1):
                 ageclass = ytype[0]
-            if (input.find('p') != -1):
+            if (inp.find('p') != -1):
                  peculiar = True
-            if (input.find('sd') != -1):
+            if (inp.find('sd') != -1):
                  subclass = 'sd'
-            if (input.find('esd') != -1):
+            if (inp.find('esd') != -1):
                  subclass = 'esd'
-            if (input.find('usd') != -1):
+            if (inp.find('usd') != -1):
                  subclass = 'usd'
-            if (input.count('I') > 0):
-                 lumclass = ''.join(re.findall('I',input))
-            if (input.count(':') > 0):
-                 error = ''.join(re.findall(':',input))
-            if (input[0] == 'b' or input[0] == 'r'):
-                 colorclass = input[0]
+            if (inp.count('I') > 0):
+                 lumclass = ''.join(re.findall('I',inp))
+            if (inp.count(':') > 0):
+                 error = ''.join(re.findall(':',inp))
+            if (inp[0] == 'b' or inp[0] == 'r'):
+                 colorclass = inp[0]
         if (len(sptype) != 1):
-#            print('Only spectral classes {} are handled with this routine'.format(spletter))
-            output = numpy.nan
+            if verbose: print('\nOnly spectral classes {} are handled by typeToNum'.format(spletter))
+            return numpy.nan
 # none of the above - return the input
     else:
-        print('\nWarning: could not recognize format of spectral type {}\n'.format(input))
-        output = input
+        if verbose: print('\nWarning: could not recognize format of spectral type {}\n'.format(inp))
+        output = inp
     return output
 
 
@@ -4443,6 +4516,125 @@ def weightedMeanVar(vals, winp, *args, **kwargs):
     return mn,numpy.sqrt(var)
 
 
+#####################
+# TESTING FUNCTIONS #
+#####################
+
+def test():
+    '''
+    :Purpose: Tests the SPLAT Code
+    :Checks the following:
+
+        - If you are online and can see the SPLAT website
+        - If you have access to unpublished spectra
+        - If you can search for and load a spectrum
+        - If ``searchLibrary`` functions properly
+        - If index measurement routines functions properly
+        - If classification routines function properly
+        - If ``typeToTeff`` functions properly
+        - If flux calibration and normalization function properly
+        - If ``loadModel`` functions properly
+        - If ``compareSpectra`` functions properly
+        - If ``plotSpectrum`` functions properly
+    '''
+
+    test_src = 'Random'
+
+    sys.stderr.write('\n\n>>>>>>>>>>>> TESTING SPLAT CODE <<<<<<<<<<<<\n')
+# check you are online
+    if checkOnline():
+        sys.stderr.write('\n...you are online and can see SPLAT website\n')
+    else:
+        sys.stderr.write('\n...you are NOT online or cannot see SPLAT website\n')
+
+# check your access
+    if checkAccess():
+        sys.stderr.write('\n...you currently HAVE access to unpublished spectra\n')
+    else:
+        sys.stderr.write('\n...you currently DO NOT HAVE access to unpublished spectra\n')
+
+# check you can search for and load a spectrum
+#    sp = getSpectrum(shortname=test_src)[0]
+    sp = getSpectrum(spt=['L5','T5'],lucky=True)[0]
+    sp.info()
+    sys.stderr.write('\n...getSpectrum successful\n')
+
+# check searchLibrary
+    list = searchLibrary(young=True,output='DATA_FILE')
+    sys.stderr.write('\n{} young spectra in the SPL  ...searchLibrary successful\n'.format(len(list)))
+
+# check index measurement
+    ind = measureIndexSet(sp,set='burgasser')
+    sys.stderr.write('\nSpectral indices for '+test_src+':\n')
+    for k in ind.keys():
+        print('\t{:s}: {:4.3f}+/-{:4.3f}'.format(k, ind[k][0], ind[k][1]))
+    sys.stderr.write('...index measurement successful\n')
+
+# check classification
+    spt, spt_e = classifyByIndex(sp,set='burgasser')
+    sys.stderr.write('\n...index classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
+
+    spt, spt_e = classifyByStandard(sp,method='kirkpatrick')
+    sys.stderr.write('\n...standard classification of '+test_src+' = {:s}+/-{:2.1f}; successful\n'.format(spt,spt_e))
+
+    grav = classifyGravity(sp)
+    sys.stderr.write('\n...gravity class of '+test_src+' = {}; successful\n'.format(grav))
+
+# check SpT -> Teff
+    teff, teff_e = typeToTeff(spt,unc=spt_e)
+    sys.stderr.write('\n...Teff of '+test_src+' = {:.1f}+/-{:.1f} K; successful\n'.format(teff,teff_e))
+
+# check flux calibration
+    sp.normalize()
+    sp.fluxCalibrate('2MASS J',15.0,apparent=True)
+    mag,mag_e = filterMag(sp,'MKO J')
+    sys.stderr.write('\n...apparent magnitude MKO J = {:3.2f}+/-{:3.2f} from 2MASS J = 15.0; filter calibration successful\n'.format(mag,mag_e))
+
+# check models
+#   mdl = loadModel(teff=1000,logg=5.0,set='BTSettl2008')
+    logg = 5.2
+    if grav == 'VL-G':
+        logg = 4.2
+    elif grav == 'INT-G':
+        logg = 4.6
+    mdl = loadModel(teff=teff,logg=logg,set='BTSettl2008')
+    sys.stderr.write('\n...interpolated model generation successful\n')
+
+# check normalization
+    sys.stderr.write('\n...normalization successful\n')
+
+# check compareSpectrum
+    chi, scale = compareSpectra(sp,mdl,mask_standard=True,stat='chisqr')
+    sys.stderr.write('\nScaling model: chi^2 = {}, scale = {}'.format(chi,scale))
+    sys.stderr.write('\n...compareSpectra successful\n'.format(chi,scale))
+
+# check plotSpectrum
+    mdl.scale(scale)
+    plotSpectrum(sp,mdl,colors=['k','r'],title='If this appears everything is OK: close window')
+    sys.stderr.write('\n...plotSpectrum successful\n')
+    sys.stderr.write('\n>>>>>>>>>>>> SPLAT TEST SUCCESSFUL; HAVE FUN! <<<<<<<<<<<<\n\n')
+
+
+
+def test_info(key=10001):
+    s = splat.getSpectrum(lucky=True)[0]
+    s.info()
+    return
+
+def test_pubdata():
+    s = splat.searchLibrary(published=True)
+    print('Checking {} spectra'.format(len(s)))
+    for f in s['DATA_FILE']:
+        try:
+            hdulist = fits.open(splat.SPLAT_PATH+splat.DATA_FOLDER+f)
+        except:
+            print('Fits read failed on file {}'.format(f))
+    return
+
+
 # run test program if calling from command line
 if __name__ == '__main__':
-    splat.test()
+
+#    test_gooddata()
+#    splat.test()
+    test_info()
