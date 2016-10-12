@@ -1,0 +1,2 @@
+import splat
+splat.test()
