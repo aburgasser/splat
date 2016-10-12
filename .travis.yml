@@ -19,5 +19,10 @@ install:
 # command to run tests
 script: python tests/test_splat.py
 
+#only test master branch
+branches:
+  only:
+  - master
+
 #notifications:
 #  email: false
