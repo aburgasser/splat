@@ -11,7 +11,7 @@ os:
 install: 
   #- pip install astroquery
   - pip install astropy
-  - pip install spicy
+  - pip install scipy
   - pip install base64
   - pip install copy
   - pip install re
