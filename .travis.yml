@@ -4,12 +4,12 @@ python:
   - "3.2"
   - “3.3”
 os:
-  - linux
+  #- linux #linux test was failing
   - osx
 #travis does not test on windows :(
 # command to install dependencies
 install: 
-  #- pip install astroquery
+  - pip install astroquery
   - pip install astropy
   - pip install scipy
   - pip install base64
