@@ -12,7 +12,7 @@ import glob
 #from datetime import datetime
 import numpy
 import os
-import pwd
+#import pwd
 import requests
 import splat
 import sys
@@ -1982,7 +1982,7 @@ def modelFitEMCEE_summary(sampler,spec,file,**kwargs):
 
     f = open(file,'w')
     f.write('EMCEE fitting analysis of spectrum of {} using the models of {}'.format(spec.name,kwargs['model']))
-    f.write('\nFitting performed on {} by {}'.format(time.strftime("%Y %h %d %I:%M:%S"),pwd.getpwuid(os.getuid())[0]))
+    f.write('\nFitting performed on {}'.format(time.strftime("%Y %h %d %I:%M:%S"))
     f.write('\n\nMCMC paramters:')
     f.write('\n\tNumber of walkers = {}'.format(nwalkers))
     f.write('\n\tNumber of samples = {}'.format(nsamples))
