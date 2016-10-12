@@ -9,7 +9,7 @@ os:
 #travis does not test on windows :(
 # command to install dependencies
 install: 
-  - pip install astroquery
+  #- pip install astroquery
   - pip install astropy
   - pip install spicy
   - pip install base64
