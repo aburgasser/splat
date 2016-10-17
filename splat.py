@@ -945,16 +945,21 @@ class Spectrum(object):
         '''
         if kwargs.get('maskTelluric',True):            
             try:
-                return numpy.nanmax(self.flux.value[numpy.where(\
-                numpy.logical_or(\
+                fl = self.flux[numpy.where(numpy.logical_or(\
                     numpy.logical_and(self.wave > 0.9*u.micron,self.wave < 1.35*u.micron),
                     numpy.logical_and(self.wave > 1.42*u.micron,self.wave < 1.8*u.micron),
-                    numpy.logical_and(self.wave > 1.92*u.micron,self.wave < 2.3*u.micron)))])*self.funit
+                    numpy.logical_and(self.wave > 1.92*u.micron,self.wave < 2.3*u.micron)))]
+                if isinstance(fl[0],u.quantity.Quantity):
+                    fl = [f.value for f in fl]
+                return numpy.nanmax(fl)*self.funit
             except:
                 pass
         
-        return numpy.nanmax(self.flux.value[numpy.where(\
-                numpy.logical_and(self.wave > numpy.nanmin(self.wave)+0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave)),self.wave < numpy.nanmax(self.wave)-0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave))))])*self.funit
+        fl = self.flux[numpy.where(\
+                numpy.logical_and(self.wave > numpy.nanmin(self.wave)+0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave)),self.wave < numpy.nanmax(self.wave)-0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave))))]
+        if isinstance(fl[0],u.quantity.Quantity):
+            fl = [f.value for f in fl]
+        return numpy.nanmax(fl)*self.funit
 
 
     def normalize(self,**kwargs):
