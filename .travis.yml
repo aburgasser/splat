@@ -5,7 +5,9 @@ python:
   - “3.3”
 os:
   #- linux #linux test was failing
-  - osx
+  - os
+  env: CONFIG=Release TOOLCHAIN=default
+
 #travis does not test on windows :(
 # command to install dependencies
 install: 
@@ -17,7 +19,7 @@ install:
   - pip install re
    
 # command to run tests
-script: python tests/test_splat.py
+script: python tests/tests_splat/test_splat.py
 
 #only test master branch
 branches:

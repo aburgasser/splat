@@ -97,7 +97,7 @@ sys.ps1 = 'splat model> '
 #######################################################
 #######################################################
 
-def checkModelName(model):
+def _checkModelName(model):
     '''
 
     Purpose: 
@@ -117,11 +117,11 @@ def checkModelName(model):
     Example:
 
     >>> import splat
-    >>> print(splat.checkModelName('burrows'))
+    >>> print(splat._checkModelName('burrows'))
         burrows06
-    >>> print(splat.checkModelName('allard'))
+    >>> print(splat._checkModelName('allard'))
         BTSettl2008
-    >>> print(splat.checkModelName('somethingelse'))
+    >>> print(splat._checkModelName('somethingelse'))
         False
     '''
     output = False
@@ -232,7 +232,7 @@ def loadModel(*args, **kwargs):
 
 
 # set replacements
-    kwargs['model'] = checkModelName(kwargs['model'])
+    kwargs['model'] = _checkModelName(kwargs['model'])
 
 #    if kwargs['model'].lower() == 'btsettl2008' or kwargs['model'].lower() == 'btsettl' or kwargs['model'].lower() == 'btsettled' or kwargs['model'].lower() == 'allard' or kwargs['model'].lower() == 'allard12' or kwargs['model'].lower() == 'allard2012':
 #        kwargs['model'] = 'BTSettl2008'
@@ -359,6 +359,27 @@ def getModel(*args, **kwargs):
     return loadModel(*args, **kwargs)
 
 
+def _checkModelParametersInRange(mparam):
+# list of model parameters provided
+    mp = list(mparam.keys())
+    if 'model' not in mp:
+        mparam['model'] = 'BTSettl2008'
+    parameters = _loadModelParameters(**mparam)
+    flag = True
+
+# check that given parameters are in model ranges
+    for ms in MODEL_PARAMETER_NAMES[0:3]:
+        if ms in mp:
+            if (float(mparam[ms]) < numpy.min(parameters[ms]) or float(mparam[ms]) > numpy.max(parameters[ms])):
+                print('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,mparam[ms],mparam['model']))
+                flag = False
+    for ms in MODEL_PARAMETER_NAMES[3:6]:
+        if ms in mp:
+            if (mparam[ms] not in parameters[ms]):
+                print('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,mparam[ms],mparam['model']))
+                flag = False
+    return flag
+
 
 def loadInterpolatedModel(*args,**kwargs):
     '''
@@ -430,9 +451,9 @@ def loadInterpolatedModel(*args,**kwargs):
             mkwargs['cld'] = 'f50'
 
 # first get model parameters
-    tmp = copy.deepcopy(mkwargs)
-    del tmp['model']
-    parameters = loadModelParameters(mkwargs['model'],**tmp)
+    parameters = _loadModelParameters(**mkwargs)
+    if _checkModelParametersInRange(mkwargs) == False:
+        raise ValueError('\n\nModel parameter values out of range for model set {}\n'.format(mkwargs['model']))
     
 # check that given parameters are in range
     for ms in MODEL_PARAMETER_NAMES[0:3]:
@@ -457,6 +478,7 @@ def loadInterpolatedModel(*args,**kwargs):
 
 # get closest models in 8 quadrant points
     mparams = []
+    mparam_names = []
     psets = numpy.array(parameters['parameter_sets'])
     for i in numpy.arange(0,2):
         dt = dist[numpy.where(tdiff*((-1)**i)>=0)]
@@ -472,6 +494,9 @@ def loadInterpolatedModel(*args,**kwargs):
                 pz = pg[numpy.where(zg*((-1)**k)>=0)]
                 pcorner = pz[numpy.argmin(dz)]
                 mparams.append(pz[numpy.argmin(dz)])
+                mstr = ''
+                for ms in MODEL_PARAMETER_NAMES: mstr+=str(mparams[-1][ms])
+                mparam_names.append(mstr)
 
 # generate meshgrid with slight offset and temperature on log scale
     rng = []
@@ -486,16 +511,23 @@ def loadInterpolatedModel(*args,**kwargs):
     mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
 
 # read in only unique models
-    mpsmall = numpy.unique(numpy.array(mparams))
+    mpsmall = [dict(y) for y in set(tuple(x.items()) for x in mparams)]
+#    mpsmall = numpy.unique(numpy.array(mparams))
     bmodels = []
+    bmodel_names = []
     for m in mpsmall:
         bmodels.append(loadModel(**m))
+        mstr = ''
+        for ms in MODEL_PARAMETER_NAMES: mstr+=str(m[ms])
+        bmodel_names.append(mstr)
 
 # then back fill all models
     bmodels = numpy.array(bmodels)
+    bmodel_names = numpy.array(bmodel_names)
     models = []
-    for i,m in enumerate(mparams):
-        models.append(bmodels[numpy.where(mpsmall==m)][0])
+    for i,m in enumerate(mparam_names):
+        models.append(bmodels[numpy.where(bmodel_names==m)][0])
+
 
 # final interpolation
     mflx = []
@@ -509,7 +541,7 @@ def loadInterpolatedModel(*args,**kwargs):
 
 
 
-def loadModelParameters(model,**kwargs):
+def _loadModelParameters(*args,**kwargs):
     '''
     Purpose: 
         Assistant routine for `loadModel()`_ that loads in the spectral model grid points.
@@ -529,8 +561,13 @@ def loadModelParameters(model,**kwargs):
     '''
 
 # model set
-    mset = checkModelName(model)
-    if mset == False:
+    if len(args) == 0:
+        if kwargs.get('model',False) == False:
+            raise ValueError('\n\nYou must give a model name as either a variable or as keyword `model`')
+        mset = kwargs['model']
+    else: mset = args[0]
+
+    if _checkModelName(mset) == False:
         raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(mset,DEFINED_MODEL_SET))
 
     parameters = {'model': mset, 'parameter_sets': []}
@@ -602,7 +639,7 @@ def loadModelParameters(model,**kwargs):
 
 
 
-def modelFitPlotComparison(spec,model,**kwargs):
+def _modelFitPlotComparison(spec,model,**kwargs):
     '''
     Routine to compare spectrum to a model or models
     '''
@@ -773,7 +810,7 @@ def modelFitGrid(spec, **kwargs):
     model_set = kwargs.get('model', 'BTSettl2008')
     model_set = kwargs.get('set', model_set)
     model_set = kwargs.get('model_set', model_set)
-    model_set = checkModelName(model_set)
+    model_set = _checkModelName(model_set)
     if model_set == False:
         raise ValueError('\n{} is not in the SPLAT model suite; try {}'.format(kwargs['set'],' '.join(list(DEFINED_MODEL_NAMES.keys()))))
 
@@ -800,7 +837,7 @@ def modelFitGrid(spec, **kwargs):
 #        f.close()
 
 # read in available model grid points
-    gridparam = splat.loadModelParameters(model_set) # Range parameters can fall in
+    gridparam = _loadModelParameters(model_set) # Range parameters can fall in
 #    tvals = numpy.arange(mlimits['teff'][0],mlimits['teff'][1]+mlimits['teff'][-1],mlimits['teff'][-1])
 #    gvals = numpy.arange(mlimits['logg'][0],mlimits['logg'][1]+mlimits['logg'][-1],mlimits['logg'][-1])
 #    zvals = numpy.arange(mlimits['z'][0],mlimits['z'][1]+mlimits['z'][-1],mlimits['z'][-1])
@@ -891,7 +928,7 @@ def modelFitGrid(spec, **kwargs):
     print('\tchi={}'.format(stats[0]))
 
     if kwargs.get('noPlot',False) != True:
-        modelFitPlotComparison(spec,bmodel,stat=stats[0],file=file_best_comparison)
+        _modelFitPlotComparison(spec,bmodel,stat=stats[0],file=file_best_comparison)
 
 # weighted means/uncertainties
     fitweights = numpy.exp(-0.5*(numpy.array(stats)-numpy.min(stats)))
@@ -918,7 +955,7 @@ def modelFitGrid(spec, **kwargs):
         mmodel = splat.loadModel(**fparam)
         chi,scl = splat.compareSpectra(spec, mmodel, mask=mask, weights=weights, stat=stat)
         mmodel.scale(scl)
-        modelFitPlotComparison(spec,mmodel,stat=stats[0],file=file_mean_comparison)
+        _modelFitPlotComparison(spec,mmodel,stat=stats[0],file=file_mean_comparison)
 
 # return parameters; otherwise return 
     if kwargs.get('return_model',False) == True:
@@ -1109,7 +1146,7 @@ def modelFitMCMC(spec, **kwargs):
 # TBD - LOAD IN ENTIRE MODEL SET
 
 # set ranges for models - input or set by model itself
-    modelgrid = splat.loadModelParameters(m_set) # Range parameters can fall in
+    modelgrid = _loadModelParameters(m_set) # Range parameters can fall in
     ranges = kwargs.get('ranges', \
         [[numpy.min(modelgrid['teff']),numpy.max(modelgrid['teff'])],\
         [numpy.min(modelgrid['logg']),numpy.max(modelgrid['logg'])],\
@@ -1478,6 +1515,7 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
         print(labels, fmt)
         fig = triangle.corner(zip(*y[::-1]), labels=list(reversed(labels)), show_titles=True, quantiles=[0.16,0.5,0.84],cmap=cm.Oranges,title_fmt=list(reversed(fmt)),plot_contours=True)
         fig.savefig(filebase+'parameters.eps')
+        fig.clf()
            
 # plain language summary
     if summaryFlag:
@@ -1601,6 +1639,7 @@ def modelFitEMCEE(spec, **kwargs):
     prior_scale['z'] = kwargs.get('z_scale',prior_scale['z'])
     verbose = kwargs.get('verbose', False)
     feedback_width = 50
+
 # plotting and reporting keywords
     showRadius = kwargs.get('radius', spec.fscale == 'Absolute')
     filebase = kwargs.get('output', 'fit_')
@@ -1625,7 +1664,7 @@ def modelFitEMCEE(spec, **kwargs):
         f.close()
 
 # set limits for models - input or set by model itself
-    modelgrid = splat.loadModelParameters(model_set) # Range parameters can fall in
+    modelgrid = _loadModelParameters(model_set) # Range parameters can fall in
     ranges = kwargs.get('ranges', \
         [[numpy.min(modelgrid['teff']),numpy.max(modelgrid['teff'])],\
         [numpy.min(modelgrid['logg']),numpy.max(modelgrid['logg'])],\
@@ -1672,14 +1711,14 @@ def modelFitEMCEE(spec, **kwargs):
 # check the time it should take to run model, and that user has models
     testtimestart = time.time()
     try:
-        mdl = splat.getModel(teff=2125,logg=5.1,z=-0.2,set='BTSettl2008')
+        mdl = splat.loadModel(teff=2125,logg=5.1,z=-0.2,set='BTSettl2008')
     except:
         raise ValueError('\nProblem reading in a test model; make sure you have the full SPLAT model set installed')
     testtimeend = time.time()
     time_estimate = (testtimeend-testtimestart)*nwalkers*nsamples*1.2
     print('Estimated time to compute = {:.0f} seconds = {:.1f} minutes = {:.2f} hours'.\
         format(time_estimate,time_estimate/60.,time_estimate/3600.))
-    if time_estimate > 600. and not kwargs.get('noprompt',False):
+    if time_estimate > 1200. and not kwargs.get('noprompt',False):
         resp = input('Do you want to continue? [Y/n]: ')
         if resp.lower()[0] == 'n':
             print('\nAborting')
@@ -1687,7 +1726,7 @@ def modelFitEMCEE(spec, **kwargs):
 
 # run EMCEE with iterative saving and updates
     model_params = {'model': model_set, 'limits': limits, 'mask': mask}
-    sampler = emcee.EnsembleSampler(nwalkers, nparameters, modelFitEMCEE_lnprob, args=(spec.wave.value,spec.flux.value,spec.noise.value,model_params))
+    sampler = emcee.EnsembleSampler(nwalkers, nparameters, _modelFitEMCEE_lnprob, args=(spec.wave.value,spec.flux.value,spec.noise.value,model_params))
     sys.stdout.write("\n")
     for i, result in enumerate(sampler.sample(initial_parameters, iterations=nsamples)):
         if i > 0:
@@ -1696,30 +1735,30 @@ def modelFitEMCEE(spec, **kwargs):
             cr = ch.reshape((-1, nparameters))
             mcr = numpy.append(cr.transpose(),[radii],axis=0).transpose()
             lnp = sampler.lnprobability[:,:i].reshape(-1)
-            print(lnp)
+            if verbose: print(lnp)
             if kwargs.get('use_weights',False) != False:
                 parameter_weights = numpy.exp(lnp-numpy.max(lnp))
             else:
                 parameter_weights = numpy.ones(len(lnp))
-            bparam,mparam,qparam = modelFitEMCEE_bestparameters(mcr,lnp,parameter_weights=parameter_weights)
-            print(bparam)
+            bparam,mparam,qparam = _modelFitEMCEE_bestparameters(mcr,lnp,parameter_weights=parameter_weights)
+            if verbose: print(bparam)
     #        lnp = result[1]
     #        scales = result[-1]
     #        radii = ((scales*(kwargs.get('distance',10.)*u.pc.to(u.cm)/RADIUS_SUN)**2)**0.5).value.reshape(-1)
             n = int((feedback_width+1) * float(i) / nsamples)
-            resp = '\rProgress: [{0}{1}]'.format('*' * n, ' ' * (feedback_width - n))
-            for kkk in range(nparameters-1):
+            resp = '\rProgress: [{0}{1}] '.format('*' * n, ' ' * (feedback_width - n))
+            for kkk in range(nparameters):
                 resp+=' {:s}={:.2f}'.format(MODEL_PARAMETER_NAMES[kkk],bparam[kkk])
-            resp+='R={:.2f} lnP={:e}'.format(bparam[-1],lnp[-1])
+            resp+=' R={:.2f} lnP={:e}'.format(bparam[-1],lnp[-1])
             print(resp)
     # save iteratively
             position = result[0]
-            print(position)
-            if kwargs.get('save',True) and i > 0:
-                modelFitEMCEE_plotchains(ch,file_chains)
-                modelFitEMCEE_plotcomparison(cr,spec,file_comparison,model=model_set,draws=5,parameter_weights=parameter_weights)
-                modelFitEMCEE_plotbestcomparison(spec,bparam[:-1],file_bestcomparison,model=model_set)
-                modelFitEMCEE_plotcorner(mcr,file_corner,parameter_weights=parameter_weights,**kwargs)
+            if verbose: print(position)
+            if kwargs.get('save',True) and i > 5:
+                _modelFitEMCEE_plotchains(ch,file_chains)
+                _modelFitEMCEE_plotcomparison(cr,spec,file_comparison,model=model_set,draws=5,parameter_weights=parameter_weights)
+                _modelFitEMCEE_plotbestcomparison(spec,bparam[:-1],file_bestcomparison,model=model_set)
+#                _modelFitEMCEE_plotcorner(mcr,file_corner,parameter_weights=parameter_weights,**kwargs)
                 f = open(file_iterative, 'a')
                 for k in range(position.shape[0]):
                     f.write('{0:4d} {1:s} {2:e}\n'.format(k, ' '.join([str(mmm) for mmm in position[k]]),lnp[k]))
@@ -1735,8 +1774,8 @@ def modelFitEMCEE(spec, **kwargs):
     radii = orig_radii[(burn_fraction*nsamples*nwalkers):]
     merged_samples = numpy.append(samples.transpose(),[radii],axis=0).transpose()
 
-    print(orig_radii.shape,orig_samples.shape,orig_lnp.shape)
-    print(radii.shape,samples.shape,lnp.shape,sampler.chain.shape)
+    if verbose: print(orig_radii.shape,orig_samples.shape,orig_lnp.shape)
+    if verbose: print(radii.shape,samples.shape,lnp.shape,sampler.chain.shape)
 
 # determine parameters
     if kwargs.get('use_weights',False) != False:
@@ -1744,28 +1783,27 @@ def modelFitEMCEE(spec, **kwargs):
     else:
         parameter_weights = numpy.ones(len(lnp))
 
-    bparam,mparam,qparam = modelFitEMCEE_bestparameters(merged_samples,lnp,parameter_weights=parameter_weights)
-    print(bparam)
+    bparam,mparam,qparam = _modelFitEMCEE_bestparameters(merged_samples,lnp,parameter_weights=parameter_weights)
+    if verbose: print(bparam)
 
 
 # reporting
-    modelFitEMCEE_plotchains(sampler.chain,file_chains)
-    modelFitEMCEE_plotcomparison(samples,spec,file_comparison,model=model_set,draws=20,parameter_weights=parameter_weights,**kwargs)
-    modelFitEMCEE_plotbestcomparison(spec,bparam[:-1],file_bestcomparison,model=model_set,**kwargs)
-    modelFitEMCEE_plotcorner(merged_samples,file_corner,parameter_weights=parameter_weights,**kwargs)
+    _modelFitEMCEE_plotchains(sampler.chain,file_chains)
+    _modelFitEMCEE_plotcomparison(samples,spec,file_comparison,model=model_set,draws=20,parameter_weights=parameter_weights,**kwargs)
+    _modelFitEMCEE_plotbestcomparison(spec,bparam[:-1],file_bestcomparison,model=model_set,**kwargs)
+    _modelFitEMCEE_plotcorner(merged_samples,file_corner,parameter_weights=parameter_weights,**kwargs)
 
     end_time = time.time()
     total_time = (end_time-start_time)
-    if kwargs.get('verbose',False):
-        print('Total run time = {:.0f} seconds or {:.2f} hours'.format(total_time,total_time/3600.))
+    if verbose: print('Total run time = {:.0f} seconds or {:.2f} hours'.format(total_time,total_time/3600.))
 
     skwargs = {'burn_fraction': burn_fraction, 'filebase': filebase, 'total_time': total_time, 'mask': mask, 'model': model_set}
-    modelFitEMCEE_summary(sampler,spec,file_summary,**skwargs)
+    _modelFitEMCEE_summary(sampler,spec,file_summary,**skwargs)
     return sampler
 
 
 
-def modelFitEMCEE_bestparameters(values,lnp,**kwargs):
+def _modelFitEMCEE_bestparameters(values,lnp,**kwargs):
     '''
     Return three sets of parameters: by quantiles, the weighted mean, and the best values
     '''
@@ -1783,12 +1821,13 @@ def modelFitEMCEE_bestparameters(values,lnp,**kwargs):
     return best_parameters,mean_parameters,quant_parameters
 
 
-def modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params):
+def _modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params):
     mparam = copy.deepcopy(model_params)
     for i in range(len(theta)):
         mparam[MODEL_PARAMETER_NAMES[i]] = theta[i]
-    mdl = splat.getModel(**mparam)
-    if len(mdl.wave) == 0:
+    try:
+        mdl = splat.loadModel(**mparam)
+    except:
         resp = '\nProblem reading in model '
         for k,v in enumerate(theta):
             resp+='{} = {}, '.format(MODEL_PARAMETER_NAMES[k],v)
@@ -1812,7 +1851,7 @@ def modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params):
 #    return -numpy.inf
 
 
-def modelFitEMCEE_lnprior_limits(theta,limits):
+def _modelFitEMCEE_lnprior_limits(theta,limits):
     '''
     compute the log of the probability assuming a uniform distribution
     with hard limits; if outside limits, probability returns -infinity
@@ -1826,7 +1865,7 @@ def modelFitEMCEE_lnprior_limits(theta,limits):
     return 0.0
 
 
-def modelFitEMCEE_lnprior_normal(theta,meansds):
+def _modelFitEMCEE_lnprior_normal(theta,meansds):
     '''
     compute the log of the probability assuming a normal distribution
     there probably needs to be better error checking here
@@ -1839,19 +1878,19 @@ def modelFitEMCEE_lnprior_normal(theta,meansds):
             pass
     return lnp
 
-def modelFitEMCEE_lnprob(theta,x,y,yerr,model_params):
+def _modelFitEMCEE_lnprob(theta,x,y,yerr,model_params):
 #    lnp = 0.
 #    if kwargs.get('normal_priors',None) != None and kwargs.get('priors_meansds',None) != None:
 #        lnp+=modelFitEMCEE_lnprior_normal(theta,kwargs.get('priors_meansds'),**kwargs)
 #    if kwargs.get('limits',None) != None:
-    lnp0 = modelFitEMCEE_lnprior_limits(theta,model_params['limits'])
+    lnp0 = _modelFitEMCEE_lnprior_limits(theta,model_params['limits'])
     if not numpy.isfinite(lnp0):
         return -1.e30
-    lnp,scale = modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params)
+    lnp,scale = _modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params)
     return lnp0+lnp, scale
 
 
-def modelFitEMCEE_plotchains(chains,file,**kwargs):
+def _modelFitEMCEE_plotchains(chains,file,**kwargs):
     plt.figure(1,figsize=kwargs.get('figsize',[8,4*chains.shape[-1]]))
     for i in range(chains.shape[-1]):
         plt.subplot(int('{}1{}'.format(chains.shape[-1],i+1)))
@@ -1873,12 +1912,13 @@ def modelFitEMCEE_plotchains(chains,file,**kwargs):
         plt.ylabel(r''+MODEL_PARAMETER_TITLES[MODEL_PARAMETER_NAMES[i]]+' ('+MODEL_PARAMETER_UNITS[MODEL_PARAMETER_NAMES[i]].to_string()+')')
     try:
         plt.savefig(file)
+        plt.clf()
     except:
         print('\nProblem saving chains plot to {}'.format(file))
     return plt
 
 
-def modelFitEMCEE_plotcomparison(samples,spec,file,**kwargs):
+def _modelFitEMCEE_plotcomparison(samples,spec,file,**kwargs):
     '''
     for now just plotting best model
     would like to do draws from posterior instead
@@ -1903,7 +1943,7 @@ def modelFitEMCEE_plotcomparison(samples,spec,file,**kwargs):
         for i in range(samples.shape[-1]):
             mkwargs[MODEL_PARAMETER_NAMES[i]] = tblu[MODEL_PARAMETER_NAMES[i]][k]
             mlegend+='{:s}={:.2f} '.format(MODEL_PARAMETER_TITLES[MODEL_PARAMETER_NAMES[i]],mkwargs[MODEL_PARAMETER_NAMES[i]])
-        mdl = splat.getModel(**mkwargs)
+        mdl = splat.loadModel(**mkwargs)
 #    print(mdl.teff,mdl.logg)
         stat,scl = splat.compareSpectra(spec,mdl,**kwargs)
         mdl.scale(scl)
@@ -1911,12 +1951,12 @@ def modelFitEMCEE_plotcomparison(samples,spec,file,**kwargs):
         legend.append(mlegend)
         colors.append('grey')
         alpha.append(tblu['parameter_weights'][k])
-    print(*pargs)
+#    print(*pargs)
     return splat.plotSpectrum(*pargs,colors=colors,alpha=alpha,\
         uncertainty=True,telluric=True,file=file,legend=legend)
 
 
-def modelFitEMCEE_plotbestcomparison(spec,mparam,file,**kwargs):
+def _modelFitEMCEE_plotbestcomparison(spec,mparam,file,**kwargs):
     '''
     for now just plotting best model
     would like to do draws from posterior instead
@@ -1925,12 +1965,12 @@ def modelFitEMCEE_plotbestcomparison(spec,mparam,file,**kwargs):
 # extract best fit values
     mkwargs = copy.deepcopy(kwargs)
     mlegend = r''
-    print(mparam)
+#    print(mparam)
     for i,m in enumerate(mparam):
         mkwargs[MODEL_PARAMETER_NAMES[i]] = m
         mlegend+='{:s}={:.2f} '.format(MODEL_PARAMETER_TITLES[MODEL_PARAMETER_NAMES[i]],float(m))
-    print(mkwargs)
-    mdl = splat.getModel(**mkwargs)
+#    print(mkwargs)
+    mdl = splat.loadModel(**mkwargs)
 #    print(mdl.teff,mdl.logg)
     stat,scl = splat.compareSpectra(spec,mdl,**kwargs)
     mdl.scale(scl)
@@ -1939,7 +1979,7 @@ def modelFitEMCEE_plotbestcomparison(spec,mparam,file,**kwargs):
 
 
 
-def modelFitEMCEE_plotcorner(samples,file,**kwargs):
+def _modelFitEMCEE_plotcorner(samples,file,**kwargs):
     '''
     corner plot for modelFitEMCEE
     '''
@@ -1962,12 +2002,13 @@ def modelFitEMCEE_plotcorner(samples,file,**kwargs):
 
     try:
         fig.savefig(file)
+        fig.clf()
     except:
         print('\nProblem saving corner plot to {}'.format(file))
     return fig
 
 
-def modelFitEMCEE_summary(sampler,spec,file,**kwargs):
+def _modelFitEMCEE_summary(sampler,spec,file,**kwargs):
     '''
     for now just plotting best model
     would like to do draws from posterior instead
@@ -1997,7 +2038,7 @@ def modelFitEMCEE_summary(sampler,spec,file,**kwargs):
     mkwargs = copy.deepcopy(kwargs)
     for i in range(samples.shape[-1]):
         mkwargs[MODEL_PARAMETER_NAMES[i]] = numpy.median(samples[:,i])
-    mdl = splat.getModel(**mkwargs)
+    mdl = splat.loadModel(**mkwargs)
     stat,scl = splat.compareSpectra(spec,mdl,**kwargs)
 
 # copmute DOF
