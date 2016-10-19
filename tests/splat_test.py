@@ -1,2 +1,0 @@
-import splat
-splat.test()
