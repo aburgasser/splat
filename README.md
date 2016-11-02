@@ -1,4 +1,6 @@
 
+[![Foo] (https://travis-ci.org/caganze/splat.svg?branch=master)](https://travis-ci.org/caganze/splat)
+
 # SPLAT: The SpeX Prism Library Analysis Toolkit
 
 ## Preamble
