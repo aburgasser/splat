@@ -564,6 +564,8 @@ def fetchDatabase(*args, **kwargs):
     return data
 
 
+def queryVizier(coordinate,**kwargs):
+    return getPhotometry(coordinate,**kwargs)
 
 def getPhotometry(coordinate,**kwargs):
     '''

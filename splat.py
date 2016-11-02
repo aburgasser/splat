@@ -504,15 +504,17 @@ class Spectrum(object):
             self.fscale = 'Surface'
 
 # populate header            
-        kconv = ['designation','name','shortname','ra','dec','slitwidth','source_key','data_key','observer',\
-            'data_reference','discovery_reference','program_pi','program_number','airmass','reduction_spextool_version',\
-            'reduction_person','reduction_date','observation_date','julian_date','median_snr','resolution','airmass']
-        for k in kconv:
-            try:
-                self.header[k] = getattr(self,k)
-            except:
-                if k.upper() not in self.header.keys():
-                    self.header[k] = ''
+        kconv = {'designation': 'DESIG','name': 'NAME','shortname': 'SNAME','ra': 'RA_DEC','dec': 'DEC_DEC','slitwidth': 'SLTW_ARC','source_key': 'SRC_KEY','data_key': 'DATA_KEY','observer': 'OBSERVER', 'data_reference': 'BIB_DATA','program_pi': 'PI','program_number': 'PROGRAM','airmass': 'AIRMASS','reduction_spextool_version': 'VERSION','reduction_person': 'RED_PERS','reduction_date': 'RED_DATE','observation_date': 'OBSDATE','julian_date': 'JDATE','median_snr': 'SNR','resolution': 'RES', 'instrument': 'INSTRUME','wunit': 'XUNITS','funit': 'YUNITS', 'wlabel': 'XTITLE', 'flabel': 'YTITLE', 'opt_type': 'SPT_OPT', 'lit_type': 'SPT_LIT', 'nir_type': 'SPT_NIR', 'spex_type': 'SPT_SPEX', 'gravity_class_nir': 'GRAV_NIR', 'gravity_class_opt': 'GRAV_OPT', 'metallicity_class': 'ZCLASS', 'luminosity_class': 'LUMCLASS', 'color_extremity': 'COLOREX','mu': 'MU','mu_e': 'E_MU', 'mu_ra': 'MU_RA', 'mu_dec': 'MU_DEC', 'parallax': 'PARALLAX', 'parallax_e': 'E_PARALL', 'vtan': 'VTAN','vtan_e': 'E_VTAN','rv': 'RV','rv_e': 'E_RV', 'vsini': 'VSINI', 'vsini_e': 'E_VSINI','distance': 'DISTANCE', 'distance_e': 'E_DISTAN','j_2mass': 'J_2MASS', 'h_2mass': 'H_2MASS', 'ks_2mass': 'K_2MASS', 'j_2mass_e': 'E_J_2MAS', 'h_2mass_e': 'E_H_2MAS', 'ks_2mass_e': 'E_K_2MAS', 'object_type': 'OBJ_TYPE', 'binary': 'BINARY','sbinary': 'SPBINARY', 'companion_name': 'COMPNAME', 'cluster': 'CLUSTER' }
+        for k in list(kconv.keys()):
+            if kconv[k].upper() not in list(self.header.keys()):
+                try:
+                    self.header[kconv[k]] = getattr(self,k)
+                except:
+                    self.header[kconv[k]] = ''
+        if 'DATE_OBS' not in list(self.header.keys()):
+            self.header['DATE_OBS'] = '{}-{}-{}'.format(self.observation_date[:4],self.observation_date[4:6],self.observation_date[6:])
+        if 'TIME_OBS' not in list(self.header.keys()):
+            self.header['TIME_OBS'] = self.observation_time.replace(' ',':')
 
         self.history = ['Spectrum successfully loaded']
 # create a copy to store as the original
@@ -540,7 +542,7 @@ class Spectrum(object):
         '''
         :Purpose: A simple representation of an object is to just give it a name
         '''
-        return 'Spectrum of {}'.format(self.name)
+        return '{} spectrum of {}'.format(self.instrument,self.name)
 
     def __add__(self,other):
         '''
@@ -802,11 +804,12 @@ class Spectrum(object):
 # fits file
         if (ftype == 'fit' or ftype == 'fits'):
             try:
-                data = numpy.vstack((self.wave.value,self.flux.value,self.noise.value)).T
+                data = numpy.vstack((self.wave.value,self.flux.value,self.noise.value))
                 hdu = fits.PrimaryHDU(data)
-                for k in self.header.keys():
-                    hdu.header[k] = self.header[k]
-                hdu.writeto(filename,clobber=True)
+                for k in list(self.header.keys()):
+                    if k != 'HISTORY' and k != 'COMMENT' and k.replace('#','') != '':
+                        hdu.header[k] = self.header[k]
+                hdu.writeto(filename,clobber=kwargs.get('clobber',True))
             except:
                 raise NameError('Problem saving spectrum object to file {}'.format(filename))
 
@@ -2731,7 +2734,7 @@ def filterMag(sp,filter,*args,**kwargs):
         n = interp1d(sp.wave[wgood].value,sp.noise[wgood].value,bounds_error=False,fill_value=0)
 # catch for models
     else:
-        print(f+': no good points')
+        print('{}: no good points'.format(filter))
         d = interp1d(sp.wave.value,sp.flux.value,bounds_error=False,fill_value=0.)
         n = interp1d(sp.wave.value,sp.flux.value*1.e-9,bounds_error=False,fill_value=0.)
 
