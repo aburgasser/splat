@@ -21,9 +21,9 @@ install:
     - pip install astroquery
     - pip install astropy
     - pip install scipy
-    - pip install base64
-    - pip install copy
-    - pip install re
+    #- pip install base64
+    #- pip install copy
+    #- pip install re
     - ./.travis/install.sh
 script: python tests/tests_splat/test_splat.py
 #before_install:
