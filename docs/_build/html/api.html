@@ -2199,7 +2199,7 @@ Spectrum objects, either sequentially, in list, or in list of lists</p>
 </table>
 <dl class="docutils">
 <dt>title = &#8216;&#8217;</dt>
-<dd>string giving plot title</dd>
+<dd>string giving plot title  - NOTE: THIS IS NOT WORKING</dd>
 <dt>xrange = [0.85,2.42]:</dt>
 <dd>plot range for wavelength axis</dd>
 <dt>yrange = [-0.02,1.2]*fluxMax:</dt>
@@ -2637,41 +2637,6 @@ code directory</p>
 <div class="section" id="spectral-modeling-routines">
 <h3>Spectral Modeling Routines<a class="headerlink" href="#spectral-modeling-routines" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
-<dt id="splat_model.checkModelName">
-<code class="descclassname">splat_model.</code><code class="descname">checkModelName</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.checkModelName" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Purpose:</dt>
-<dd>Checks that an input model name is one of the available spectral models, including a check of alternate names</dd>
-<dt>Required Inputs:</dt>
-<dd><table class="first last docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">model: A string containing the spectral model to be checked. This should be one of the models listed in <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a></td>
-</tr>
-</tbody>
-</table>
-</dd>
-</dl>
-<dl class="docutils">
-<dt>Optional Inputs:</dt>
-<dd>None</dd>
-<dt>Output:</dt>
-<dd>A string containing SPLAT&#8217;s default name for a given model set, or False if that model set is not present</dd>
-</dl>
-<p>Example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">splat</span><span class="o">.</span><span class="n">checkModelName</span><span class="p">(</span><span class="s1">&#39;burrows&#39;</span><span class="p">))</span>
-<span class="go">    burrows06</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">splat</span><span class="o">.</span><span class="n">checkModelName</span><span class="p">(</span><span class="s1">&#39;allard&#39;</span><span class="p">))</span>
-<span class="go">    BTSettl2008</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">splat</span><span class="o">.</span><span class="n">checkModelName</span><span class="p">(</span><span class="s1">&#39;somethingelse&#39;</span><span class="p">))</span>
-<span class="go">    False</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
 <dt id="splat_model.loadModel">
 <code class="descclassname">splat_model.</code><code class="descname">loadModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModel" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
@@ -2813,42 +2778,6 @@ code directory</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="splat_model.loadModelParameters">
-<code class="descclassname">splat_model.</code><code class="descname">loadModelParameters</code><span class="sig-paren">(</span><em>model</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.loadModelParameters" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Purpose:</dt>
-<dd>Assistant routine for <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a> that loads in the spectral model grid points.</dd>
-</dl>
-<dl class="docutils">
-<dt>Required Inputs:</dt>
-<dd><table class="first last docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">model: set of models to use; see options in <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a> (default = &#8216;BTSettl2008&#8217;)</td>
-</tr>
-</tbody>
-</table>
-</dd>
-<dt>Optional Inputs:</dt>
-<dd><table class="first last docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">param old:</th><td class="field-body">Old format for returning model parameters based parameter.txt file; now obsolete (default = False)</td>
-</tr>
-</tbody>
-</table>
-</dd>
-</dl>
-<p>The parameters for <a class="reference external" href="api.html#splat_model.loadModel">loadModel()</a> can also be used here.</p>
-<dl class="docutils">
-<dt>Output:</dt>
-<dd>A dictionary containing the individual parameter values for the grid points in the given model set (not all of these grid points will be filled); this dictionary includs a list of dictionaries containing the individual parameter sets.</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
 <dt id="splat_model.modelFitGrid">
 <code class="descclassname">splat_model.</code><code class="descname">modelFitGrid</code><span class="sig-paren">(</span><em>spec</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitGrid" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -2959,12 +2888,6 @@ If the input spectrum is absolutely flux calibrated, radius is also returned.  A
 <span class="go">        $[M/H]$: 0.0+/-0.0 dex</span>
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitPlotComparison">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitPlotComparison</code><span class="sig-paren">(</span><em>spec</em>, <em>model</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitPlotComparison" title="Permalink to this definition">¶</a></dt>
-<dd><p>Routine to compare spectrum to a model or models</p>
 </dd></dl>
 
 <dl class="function">
@@ -3190,69 +3113,7 @@ outputs will include (each can be set individually with associated keywords):
 <span class="go">    Progress: [**************************************************]</span>
 </pre></div>
 </div>
-<p>Results are saved in test_modelfitEMCEE_interative.dat, <a href="#id47"><span class="problematic" id="id48">*</span></a>_chains.pdf, <a href="#id49"><span class="problematic" id="id50">*</span></a>_comparison.pdf, <a href="#id51"><span class="problematic" id="id52">*</span></a>_corner.pdf, and <a href="#id53"><span class="problematic" id="id54">*</span></a>_summary.txt</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitEMCEE_lnlikelihood">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_lnlikelihood</code><span class="sig-paren">(</span><em>theta</em>, <em>x</em>, <em>y</em>, <em>yerr</em>, <em>model_params</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_lnlikelihood" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitEMCEE_lnprior_limits">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_lnprior_limits</code><span class="sig-paren">(</span><em>theta</em>, <em>limits</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_lnprior_limits" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute the log of the probability assuming a uniform distribution
-with hard limits; if outside limits, probability returns -infinity</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitEMCEE_lnprior_normal">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_lnprior_normal</code><span class="sig-paren">(</span><em>theta</em>, <em>meansds</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_lnprior_normal" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute the log of the probability assuming a normal distribution
-there probably needs to be better error checking here</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitEMCEE_lnprob">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_lnprob</code><span class="sig-paren">(</span><em>theta</em>, <em>x</em>, <em>y</em>, <em>yerr</em>, <em>model_params</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_lnprob" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitEMCEE_bestparameters">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_bestparameters</code><span class="sig-paren">(</span><em>values</em>, <em>lnp</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_bestparameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return three sets of parameters: by quantiles, the weighted mean, and the best values</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitEMCEE_plotchains">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_plotchains</code><span class="sig-paren">(</span><em>chains</em>, <em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_plotchains" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitEMCEE_plotcomparison">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_plotcomparison</code><span class="sig-paren">(</span><em>samples</em>, <em>spec</em>, <em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_plotcomparison" title="Permalink to this definition">¶</a></dt>
-<dd><p>for now just plotting best model
-would like to do draws from posterior instead</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitEMCEE_plotbestcomparison">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_plotbestcomparison</code><span class="sig-paren">(</span><em>spec</em>, <em>mparam</em>, <em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_plotbestcomparison" title="Permalink to this definition">¶</a></dt>
-<dd><p>for now just plotting best model
-would like to do draws from posterior instead</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitEMCEE_plotcorner">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_plotcorner</code><span class="sig-paren">(</span><em>samples</em>, <em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_plotcorner" title="Permalink to this definition">¶</a></dt>
-<dd><p>corner plot for modelFitEMCEE</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="splat_model.modelFitEMCEE_summary">
-<code class="descclassname">splat_model.</code><code class="descname">modelFitEMCEE_summary</code><span class="sig-paren">(</span><em>sampler</em>, <em>spec</em>, <em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#splat_model.modelFitEMCEE_summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>for now just plotting best model
-would like to do draws from posterior instead</p>
+<p>Results are saved in test_modelfitEMCEE_interative.dat, <a href="#id45"><span class="problematic" id="id46">*</span></a>_chains.pdf, <a href="#id47"><span class="problematic" id="id48">*</span></a>_comparison.pdf, <a href="#id49"><span class="problematic" id="id50">*</span></a>_corner.pdf, and <a href="#id51"><span class="problematic" id="id52">*</span></a>_summary.txt</p>
 </dd></dl>
 
 <dl class="function">
@@ -3800,19 +3661,20 @@ new Spectrum object so as not to corrupt the original data.</p>
 <tr class="field-odd field"><th class="field-name">param radius:</th><td class="field-body">Search radius, nominally in arcseconds although this can be changed by passing an astropy.unit quantity (default = 30 arcseconds)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">param catalog:</th><td class="field-body">Catalog to query, which can be set to the Vizier catalog identifier code or to one of the following preset catalogs:
-* &#8216;2MASS&#8217; (or set <a href="#id59"><span class="problematic" id="id60">``</span></a>2MASS``=True): the 2MASS All-Sky Catalog of Point Sources (<a class="reference external" href="http://adsabs.harvard.edu/abs/2003yCat.2246....0C">Cutri et al. 2003</a>), Vizier id II/246
-* &#8216;SDSS&#8217; (or set <a href="#id61"><span class="problematic" id="id62">``</span></a>SDSS``=True): the The SDSS Photometric Catalog, Release 9 (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJS..203...21A">Adelman-McCarthy et al. 2012</a>), Vizier id V/139
-* &#8216;WISE&#8217; (or set <a href="#id63"><span class="problematic" id="id64">``</span></a>WISE``=True): the WISE All-Sky Data Release (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012yCat.2311....0C">Cutri et al. 2012</a>), Vizier id II/311
-* &#8216;ALLWISE&#8217; (or set <a href="#id65"><span class="problematic" id="id66">``</span></a>ALLWISE``=True): the AllWISE Data Release (<a class="reference external" href="http://adsabs.harvard.edu/abs/2014yCat.2328....0C">Cutri et al. 2014</a>), Vizier id II/328
-* &#8216;VISTA&#8217; (or set <a href="#id67"><span class="problematic" id="id68">``</span></a>VISTA``=True): the VIKING catalogue data release 1 (<a class="reference external" href="http://adsabs.harvard.edu/abs/2013Msngr.154...32E">Edge et al. 2013</a>), Vizier id II/329
-* &#8216;CFHTLAS&#8217; (or set <a href="#id69"><span class="problematic" id="id70">``</span></a>CFHTLAS``=True): the CFHTLS Survey (T0007 release) by (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012yCat.2317....0H">Hudelot et al. 2012</a>), Vizier id II/317
-* &#8216;DENIS&#8217; (or set <a href="#id71"><span class="problematic" id="id72">``</span></a>DENIS``=True): the DENIS DR3 (DENIS Consortium 2005), Vizier id B/denis/denis
-* &#8216;UKIDSS&#8217; (or set <a href="#id73"><span class="problematic" id="id74">``</span></a>UKIDSS``=True): the UKIDSS-DR8 LAS, GCS and DXS Surveys (<a class="reference external" href="http://adsabs.harvard.edu/abs/2007MNRAS.379.1599L">Lawrence et al. 2012</a>), Vizier id II/314
-* &#8216;LEHPM&#8217; (or set <a href="#id75"><span class="problematic" id="id76">``</span></a>LEHPM``=True): the Liverpool-Edinburgh High Proper Motion Catalogue (<a class="reference external" href="http://adsabs.harvard.edu/abs/2004A&amp;A...421..763P">Pokorny et al. 2004</a>), Vizier id J/A+A/421/763
-* &#8216;SIPS&#8217; (or set <a href="#id77"><span class="problematic" id="id78">``</span></a>SIPS``=True): the Southern Infrared Proper Motion Survey (<a class="reference external" href="http://adsabs.harvard.edu/abs/2005A&amp;A...435..363D">Deacon et al 2005</a>), Vizier id J/A+A/435/363
-* &#8216;UCAC4&#8217; (or set <a href="#id79"><span class="problematic" id="id80">``</span></a>UCAC4``=True): the UCAC4 Catalogue (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012yCat.1322....0Z">Zacharias et al. 2012</a>), Vizier id I/322A
-* &#8216;USNOB&#8217; (or set <a href="#id81"><span class="problematic" id="id82">``</span></a>USNO``=True): the USNO-B1.0 Catalog (<a class="reference external" href="http://adsabs.harvard.edu/abs/2003AJ....125..984M">Monet et al. 2003</a>), Vizier id I/284
-* &#8216;LSPM&#8217; (or set <a href="#id83"><span class="problematic" id="id84">``</span></a>LSPM``=True): the LSPM-North Catalog (<a class="reference external" href="http://adsabs.harvard.edu/abs/2005AJ....129.1483L">Lepine et al. 2005</a>), Vizier id I/298</td>
+* &#8216;2MASS&#8217; (or set <a href="#id57"><span class="problematic" id="id58">``</span></a>2MASS``=True): the 2MASS All-Sky Catalog of Point Sources (<a class="reference external" href="http://adsabs.harvard.edu/abs/2003yCat.2246....0C">Cutri et al. 2003</a>), Vizier id II/246
+* &#8216;SDSS&#8217; (or set <a href="#id59"><span class="problematic" id="id60">``</span></a>SDSS``=True): the The SDSS Photometric Catalog, Release 9 (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJS..203...21A">Adelman-McCarthy et al. 2012</a>), Vizier id V/139
+* &#8216;WISE&#8217; (or set <a href="#id61"><span class="problematic" id="id62">``</span></a>WISE``=True): the WISE All-Sky Data Release (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012yCat.2311....0C">Cutri et al. 2012</a>), Vizier id II/311
+* &#8216;ALLWISE&#8217; (or set <a href="#id63"><span class="problematic" id="id64">``</span></a>ALLWISE``=True): the AllWISE Data Release (<a class="reference external" href="http://adsabs.harvard.edu/abs/2014yCat.2328....0C">Cutri et al. 2014</a>), Vizier id II/328
+* &#8216;VISTA&#8217; (or set <a href="#id65"><span class="problematic" id="id66">``</span></a>VISTA``=True): the VIKING catalogue data release 1 (<a class="reference external" href="http://adsabs.harvard.edu/abs/2013Msngr.154...32E">Edge et al. 2013</a>), Vizier id II/329
+* &#8216;CFHTLAS&#8217; (or set <a href="#id67"><span class="problematic" id="id68">``</span></a>CFHTLAS``=True): the CFHTLS Survey (T0007 release) by (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012yCat.2317....0H">Hudelot et al. 2012</a>), Vizier id II/317
+* &#8216;DENIS&#8217; (or set <a href="#id69"><span class="problematic" id="id70">``</span></a>DENIS``=True): the DENIS DR3 (DENIS Consortium 2005), Vizier id B/denis/denis
+* &#8216;UKIDSS&#8217; (or set <a href="#id71"><span class="problematic" id="id72">``</span></a>UKIDSS``=True): the UKIDSS-DR8 LAS, GCS and DXS Surveys (<a class="reference external" href="http://adsabs.harvard.edu/abs/2007MNRAS.379.1599L">Lawrence et al. 2012</a>), Vizier id II/314
+* &#8216;LEHPM&#8217; (or set <a href="#id73"><span class="problematic" id="id74">``</span></a>LEHPM``=True): the Liverpool-Edinburgh High Proper Motion Catalogue (<a class="reference external" href="http://adsabs.harvard.edu/abs/2004A&amp;A...421..763P">Pokorny et al. 2004</a>), Vizier id J/A+A/421/763
+* &#8216;SIPS&#8217; (or set <a href="#id75"><span class="problematic" id="id76">``</span></a>SIPS``=True): the Southern Infrared Proper Motion Survey (<a class="reference external" href="http://adsabs.harvard.edu/abs/2005A&amp;A...435..363D">Deacon et al 2005</a>), Vizier id J/A+A/435/363
+* &#8216;UCAC4&#8217; (or set <a href="#id77"><span class="problematic" id="id78">``</span></a>UCAC4``=True): the UCAC4 Catalogue (<a class="reference external" href="http://adsabs.harvard.edu/abs/2012yCat.1322....0Z">Zacharias et al. 2012</a>), Vizier id I/322A
+* &#8216;USNOB&#8217; (or set <a href="#id79"><span class="problematic" id="id80">``</span></a>USNO``=True): the USNO-B1.0 Catalog (<a class="reference external" href="http://adsabs.harvard.edu/abs/2003AJ....125..984M">Monet et al. 2003</a>), Vizier id I/284
+* &#8216;LSPM&#8217; (or set <a href="#id81"><span class="problematic" id="id82">``</span></a>LSPM``=True): the LSPM-North Catalog (<a class="reference external" href="http://adsabs.harvard.edu/abs/2005AJ....129.1483L">Lepine et al. 2005</a>), Vizier id I/298
+* &#8216;GAIA&#8217; (or set <a href="#id83"><span class="problematic" id="id84">``</span></a>GAIA``=True): the GAIA DR1 Catalog (<a class="reference external" href="http://adsabs.harvard.edu/abs/2016yCat.1337....0G">Gaia Collaboration et al. 2016</a>), Vizier id I/337</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">param:</th><td class="field-body">sort: String specifying the parameter to sort the returned SIMBAD table by; by default this is the offset from the input coordinate (default = &#8216;sep&#8217;)</td>
 </tr>

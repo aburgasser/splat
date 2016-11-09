@@ -236,8 +236,8 @@ FILTERS = { \
     'VISTA_KS': {'file': 'vista_ks.txt', 'description': 'VISTA Ks-band', 'zeropoint': 674.83}, \
     'WFC3_F127M': {'file': 'wfc3_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 2261.3}, \
     'WFC3_F139M': {'file': 'wfc3_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 2261.3}, \
-    'WFC3_F164N': {'file': 'wfc3_F164M.txt', 'description': 'WFC3 F164N', 'zeropoint': 2261.3}, \
-    'WFC3_F167N': {'file': 'wfc3_F160W.txt', 'description': 'WFC3 F160W', 'zeropoint': 2261.3}, \
+    'WFC3_F164N': {'file': 'wfc3_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 2261.3}, \
+    'WFC3_F167N': {'file': 'wfc3_F167N.txt', 'description': 'WFC3 F167N', 'zeropoint': 2261.3}, \
     'WFCAM_Z': {'file': 'wfcam-z.txt', 'description': 'UKIRT WFCAM Z', 'zeropoint': 2261.3}, \
     'WFCAM_Y': {'file': 'wfcam-y.txt', 'description': 'UKIRT WFCAM Y', 'zeropoint': 2040.9}, \
     'WFCAM_J': {'file': 'wfcam-j.txt', 'description': 'UKIRT WFCAM J', 'zeropoint': 1548.7}, \
@@ -504,17 +504,18 @@ class Spectrum(object):
             self.fscale = 'Surface'
 
 # populate header            
-        kconv = {'designation': 'DESIG','name': 'NAME','shortname': 'SNAME','ra': 'RA_DEC','dec': 'DEC_DEC','slitwidth': 'SLTW_ARC','source_key': 'SRC_KEY','data_key': 'DATA_KEY','observer': 'OBSERVER', 'data_reference': 'BIB_DATA','program_pi': 'PI','program_number': 'PROGRAM','airmass': 'AIRMASS','reduction_spextool_version': 'VERSION','reduction_person': 'RED_PERS','reduction_date': 'RED_DATE','observation_date': 'OBSDATE','julian_date': 'JDATE','median_snr': 'SNR','resolution': 'RES', 'instrument': 'INSTRUME','wunit': 'XUNITS','funit': 'YUNITS', 'wlabel': 'XTITLE', 'flabel': 'YTITLE', 'opt_type': 'SPT_OPT', 'lit_type': 'SPT_LIT', 'nir_type': 'SPT_NIR', 'spex_type': 'SPT_SPEX', 'gravity_class_nir': 'GRAV_NIR', 'gravity_class_opt': 'GRAV_OPT', 'metallicity_class': 'ZCLASS', 'luminosity_class': 'LUMCLASS', 'color_extremity': 'COLOREX','mu': 'MU','mu_e': 'E_MU', 'mu_ra': 'MU_RA', 'mu_dec': 'MU_DEC', 'parallax': 'PARALLAX', 'parallax_e': 'E_PARALL', 'vtan': 'VTAN','vtan_e': 'E_VTAN','rv': 'RV','rv_e': 'E_RV', 'vsini': 'VSINI', 'vsini_e': 'E_VSINI','distance': 'DISTANCE', 'distance_e': 'E_DISTAN','j_2mass': 'J_2MASS', 'h_2mass': 'H_2MASS', 'ks_2mass': 'K_2MASS', 'j_2mass_e': 'E_J_2MAS', 'h_2mass_e': 'E_H_2MAS', 'ks_2mass_e': 'E_K_2MAS', 'object_type': 'OBJ_TYPE', 'binary': 'BINARY','sbinary': 'SPBINARY', 'companion_name': 'COMPNAME', 'cluster': 'CLUSTER' }
-        for k in list(kconv.keys()):
-            if kconv[k].upper() not in list(self.header.keys()):
-                try:
-                    self.header[kconv[k]] = getattr(self,k)
-                except:
-                    self.header[kconv[k]] = ''
-        if 'DATE_OBS' not in list(self.header.keys()):
-            self.header['DATE_OBS'] = '{}-{}-{}'.format(self.observation_date[:4],self.observation_date[4:6],self.observation_date[6:])
-        if 'TIME_OBS' not in list(self.header.keys()):
-            self.header['TIME_OBS'] = self.observation_time.replace(' ',':')
+        else:
+            kconv = {'designation': 'DESIG','name': 'NAME','shortname': 'SNAME','ra': 'RA_DEC','dec': 'DEC_DEC','slitwidth': 'SLTW_ARC','source_key': 'SRC_KEY','data_key': 'DATA_KEY','observer': 'OBSERVER', 'data_reference': 'BIB_DATA','program_pi': 'PI','program_number': 'PROGRAM','airmass': 'AIRMASS','reduction_spextool_version': 'VERSION','reduction_person': 'RED_PERS','reduction_date': 'RED_DATE','observation_date': 'OBSDATE','julian_date': 'JDATE','median_snr': 'SNR','resolution': 'RES', 'instrument': 'INSTRUME','wunit': 'XUNITS','funit': 'YUNITS', 'wlabel': 'XTITLE', 'flabel': 'YTITLE', 'opt_type': 'SPT_OPT', 'lit_type': 'SPT_LIT', 'nir_type': 'SPT_NIR', 'spex_type': 'SPT_SPEX', 'gravity_class_nir': 'GRAV_NIR', 'gravity_class_opt': 'GRAV_OPT', 'metallicity_class': 'ZCLASS', 'luminosity_class': 'LUMCLASS', 'color_extremity': 'COLOREX','mu': 'MU','mu_e': 'E_MU', 'mu_ra': 'MU_RA', 'mu_dec': 'MU_DEC', 'parallax': 'PARALLAX', 'parallax_e': 'E_PARALL', 'vtan': 'VTAN','vtan_e': 'E_VTAN','rv': 'RV','rv_e': 'E_RV', 'vsini': 'VSINI', 'vsini_e': 'E_VSINI','distance': 'DISTANCE', 'distance_e': 'E_DISTAN','j_2mass': 'J_2MASS', 'h_2mass': 'H_2MASS', 'ks_2mass': 'K_2MASS', 'j_2mass_e': 'E_J_2MAS', 'h_2mass_e': 'E_H_2MAS', 'ks_2mass_e': 'E_K_2MAS', 'object_type': 'OBJ_TYPE', 'binary': 'BINARY','sbinary': 'SPBINARY', 'companion_name': 'COMPNAME', 'cluster': 'CLUSTER' }
+            for k in list(kconv.keys()):
+                if kconv[k].upper() not in list(self.header.keys()):
+                    try:
+                        self.header[kconv[k]] = getattr(self,k)
+                    except:
+                        self.header[kconv[k]] = ''
+            if 'DATE_OBS' not in list(self.header.keys()) and 'observation_date' in list(self.__dict__.keys()):
+                self.header['DATE_OBS'] = '{}-{}-{}'.format(self.observation_date[:4],self.observation_date[4:6],self.observation_date[6:])
+            if 'TIME_OBS' not in list(self.header.keys()) and 'observation_time' in list(self.__dict__.keys()):
+                self.header['TIME_OBS'] = self.observation_time.replace(' ',':')
 
         self.history = ['Spectrum successfully loaded']
 # create a copy to store as the original
@@ -2351,7 +2352,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 #    mask_standard = kwargs.get('mask_standard',False)
 #    mask_telluric = kwargs.get('mask_telluric',mask_standard)
     var_flag = kwargs.get('novar2',True)
-    stat = kwargs.get('statistic','chisqr')
+    statistic = kwargs.get('statistic','chisqr')
     minreturn = 1.e-60
 # THERE IS A MAJOR FLAW HERE
     if ~isinstance(fit_ranges[0],astropy.units.quantity.Quantity):
@@ -2389,15 +2390,15 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 # comparison statistics
 # switch to standard deviation if no uncertainty
     if numpy.isnan(numpy.nanmax(vtot)):
-        stat = 'stddev'
+        statistic = 'stddev'
         if kwargs.get('verbose',False):
-            print('No uncertainties provided; using the {} statistic by default'.format(stat))
+            print('No uncertainties provided; using the {} statistic by default'.format(statistic))
     else:
         if kwargs.get('verbose',False):
-            print('Comparing spectra using the {} statistic'.format(stat))
+            print('Comparing spectra using the {} statistic'.format(statistic))
 
 # chi^2
-    if (stat == 'chisqr' or stat == 'chisq' or stat == 'chi'):
+    if (statistic == 'chisqr' or statistic == 'chisq' or statistic == 'chi'):
 # compute scale factor
         scale = numpy.nansum(weights*sp1.flux.value*f(sp1.wave)/vtot)/ \
             numpy.nansum(weights*f(sp1.wave)*f(sp1.wave)/vtot)
@@ -2407,7 +2408,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         unit = sp1.funit/sp1.funit
 
 # normalized standard deviation
-    elif (stat == 'stddev_norm' or stat == 'stdev_norm'):
+    elif (statistic == 'stddev_norm' or statistic == 'stdev_norm'):
 # compute scale factor
         scale = numpy.nansum(weights*sp1.flux.value)/ \
             numpy.nansum(weights*f(sp1.wave))
@@ -2417,7 +2418,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         unit = sp1.funit/sp1.funit
 
 # standard deviation
-    elif (stat == 'stddev' or stat == 'stdev'):
+    elif (statistic == 'stddev' or statistic == 'stdev'):
 # compute scale factor
         scale = numpy.nansum(weights*sp1.flux.value*f(sp1.wave))/ \
             numpy.nansum(weights*f(sp1.wave)*f(sp1.wave))
@@ -2426,7 +2427,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
         unit = sp1.funit**2
 
 # absolute deviation
-    elif (stat == 'absdev'):
+    elif (statistic == 'absdev'):
 # compute scale factor
         scale = numpy.nansum(weights*sp1.flux.value)/ \
             numpy.nansum(weights*f(sp1.wave))
@@ -2436,7 +2437,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
 
 # error
     else:
-        print('Error: statistic {} for compareSpectra not available'.format(stat))
+        print('Error: statistic {} for compareSpectra not available'.format(statistic))
         return numpy.nan, numpy.nan
 
 # plot spectrum compared to best spectrum
@@ -3676,6 +3677,13 @@ def properDate(d,**kwargs):
         '2003-05-02'
     >>> splat.properDate('2003/05/02',format='YYYY/MM/DD',output='YYYY MMM DD')
         '2003 May 02'
+
+    Note that the default output format can be read into an astropy.time quantity
+    >>> import splat
+    >>> from astropy.time import Time
+    >>> t = Time(splat.properDate('20030502'))
+    >>> print(t)
+        2003-05-02 00:00:00.000
     '''
 
     dformat = kwargs.get('format','')
@@ -3753,7 +3761,7 @@ def properDate(d,**kwargs):
                 mref = str(i+1)
         if len(mref) == 1:
             mref = '0'+mref
-        dp = tmp[2]+' '+mref+' '+tmp[0]
+        dp = tmp[2]+'-'+mref+'-'+tmp[0]
     elif dformat == 'DD-MMM-YYYY':
         tmp = d.split(' ')
         if len(tmp[0]) == 1:
@@ -3773,7 +3781,7 @@ def properDate(d,**kwargs):
                 mref = str(i+1)
         if len(mref) == 1:
             mref = '0'+mref
-        dp = tmp[0]+' '+mref+' '+tmp[2]
+        dp = tmp[0]+'-'+mref+'-'+tmp[2]
     elif dformat == 'YYYY-MMM-DD':
         tmp = d.split(' ')
         if len(tmp[2]) == 1:
@@ -4136,6 +4144,7 @@ def typeToMag(spt, filt, **kwargs):
     """
 
 #Keywords
+    verbose = kwargs.get('verbose',False)
     nsamples = kwargs.get('nsamples', 100)
     ref = kwargs.get('ref', 'dupuy')
     unc = kwargs.get('unc', 0.)
@@ -4226,7 +4235,7 @@ def typeToMag(spt, filt, **kwargs):
             abs_mag = numpy.polyval(coeff, spt-sptoffset)
             return abs_mag, fitunc
     else:
-        sys.stderr.write('\nSpectral Type {} is out of range for {}\n'.format(splat.typeToNum(spt),reference))
+        if verbose: sys.stderr.write('\nSpectral Type {} is out of range for {}\n'.format(splat.typeToNum(spt),reference))
         return numpy.nan, numpy.nan
 
 
@@ -4388,6 +4397,7 @@ def typeToTeff(input, **kwargs):
             (2305.7500497902788, 127.62548366132124)
     '''
 # keywords
+    verbose = kwargs.get('verbose',False)
     nsamples = kwargs.get('nsamples',100)
     unc = kwargs.get('uncertainty',0.001)
     unc = kwargs.get('unc',unc)
@@ -4462,7 +4472,7 @@ def typeToTeff(input, **kwargs):
         teff_e = (numpy.nanstd(vals)**2+fitunc**2)**0.5
         return teff, teff_e
     else:
-        sys.stderr.write('\nSpectral Type is out of range for {:s} Teff/SpT relation\n'.format(reference))
+        if verbose: sys.stderr.write('\nSpectral Type is out of range for {:s} Teff/SpT relation\n'.format(reference))
         return numpy.nan, numpy.nan
 
 

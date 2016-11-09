@@ -27,6 +27,7 @@ from scipy.interpolate import interp1d
 import scipy.integrate as integrate
 import scipy.stats as stats
 from splat import SPLAT_PATH, SPLAT_URL
+
 EVOLUTIONARY_MODEL_FOLDER = '/reference/EvolutionaryModels/'
 EMODELS = ['baraffe','burrows','saumon']
 EPARAMETERS = ['mass','age','temperature','gravity','luminosity','radius']
@@ -1005,9 +1006,9 @@ def generateMasses(num,**kwargs):
 # initial parameters
     distribution = kwargs.get('distribution','powerlaw')
     allowed_distributions = ['uniform','flat','powerlaw','power-law','broken-powerlaw','broken-power-law','lognormal','log-normal','kroupa','chabrier','salpeter']
-    mn = kwargs.get('minmass',0.1)
+    mn = kwargs.get('minmass',0.01)
     mn = kwargs.get('min',mn)
-    mx = kwargs.get('maxmass',1.)
+    mx = kwargs.get('maxmass',0.1)
     mx = kwargs.get('max',mx)
     mass_range = kwargs.get('mass_range',[mn,mx])
     mass_range = kwargs.get('range',mass_range)
@@ -1035,12 +1036,13 @@ def generateMasses(num,**kwargs):
 
 # power-law - sample from CDF
     if distribution.lower() == 'power-law' or distribution.lower() == 'powerlaw' or distribution.lower() == 'salpeter':
-        if distribution.lower() == 'salpeter': parameters['alpha']
+        if distribution.lower() == 'salpeter': parameters['alpha'] = 2.35
         x = numpy.linspace(numpy.min(mass_range),numpy.max(mass_range),num=10000)
         if parameters['alpha'] == 1.:
             y = numpy.log(x)
+            print('alpha=1')
         else:
-            y = parameters['alpha']*x**(-1.*(parameters['alpha'])+1.)
+            y = x**(1.-parameters['alpha'])
 #        print(x,y)
         y -= numpy.min(y)
         y /= numpy.max(y)
@@ -1132,6 +1134,91 @@ def generateMasses(num,**kwargs):
     return masses
 
 
+def generateMassRatios(num,**kwargs):
+    '''
+    :Purpose: Generates a distribution of mass ratios (q = M2/M1) based on the defined input distribution. It is assumed that q <= 1
+
+    Required Inputs:
+
+    :param: num: number of masses to generate
+
+    Optional Inputs:
+
+.. _Allen (2007), ApJ 668, 492: http://adsabs.harvard.edu/abs/2007ApJ...668..492A
+.. _Burgasser et al (2006), ApJS 166, 585: http://adsabs.harvard.edu/abs/2006ApJS..166..585B
+
+    :param: q_range: range of masses to draw from (default = [0.1,1.0]); can also specify ``range``, ``minq`` or ``min``, and ``maxq`` or ``max``
+    :param: distribution: can be a string set to one of the following to define the type of mass distribution to sample:
+        * `uniform`: uniform distribution (default) 
+        * `powerlaw` or `power-law`: single power-law distribution, P(M) ~ M\^-alpha. You must specify the parameter `alpha` or set ``distribution`` to TBD
+        * `allen`: power-law distribution with gamma = 1.8 based on `Allen (2007), ApJ 668, 492`_
+        * `burgasser`: power-law distribution with gamma = 4.2 based on `Burgasser et al (2006), ApJS 166, 585`_
+    :param: parameters: dictionary containing the parameters for the age distribution/star formation model being used; options include:
+        * `gamma`: exponent for power-law distribution
+    :param: verbose: Give feedback (default = False)
+
+    Output: 
+
+    An array of mass ratios drawn from the desired distribution 
+
+    :Example:
+    >>> import splat
+    >>> import matplotlib.pyplot as plt
+    >>> q = splat.generateMassRatios(100,distribution='allen'),q_range=[0.2,1.0])
+    }
+    >>> plt.hist(q)
+    [histogram of mass ratios in the range 0.2-1.0 solar masses]    
+    '''
+
+# initial parameters
+    allowed_distributions = ['uniform','flat','powerlaw','power-law','allen']
+    distribution = kwargs.get('distribution','uniform')
+    mn = kwargs.get('minq',0.1)
+    mn = kwargs.get('min',mn)
+    mx = kwargs.get('maxq',1.)
+    mx = kwargs.get('max',mx)
+    q_range = kwargs.get('q_range',[mn,mx])
+    q_range = kwargs.get('range',q_range)
+    verbose = kwargs.get('verbose',False)
+
+# protective offset
+    if q_range[0] == q_range[1]:
+        q_range[0]-=0.0001
+
+# set default parameters
+    if kwargs.get('parameters',False) == False:
+        parameters = {}
+    else:
+        parameters = kwargs['parameters']
+    if 'gamma' not in list(parameters.keys()):
+        parameters['gamma'] = kwargs.get('gamma',1.8)
+
+# power-law - sample from CDF
+    if distribution.lower() == 'power-law' or distribution.lower() == 'powerlaw' or distribution.lower() == 'allen' or distribution.lower() == 'burgasser':
+        if distribution.lower() == 'allen' or kwargs.get('allen',False) == True: parameters['gamma'] = 1.8
+        if distribution.lower() == 'burgasser' or kwargs.get('burgasser',False) == True: parameters['gamma'] = 4.2
+        x = numpy.linspace(numpy.min(q_range),numpy.max(q_range),num=10000)
+        if parameters['gamma'] == 1.:
+            y = numpy.log(x)
+        else:
+            y = x**(1.-parameters['gamma'])
+#        print(x,y)
+        y -= numpy.min(y)
+        y /= numpy.max(y)
+        f = interp1d(y,x)
+#        plt.plot(x,y)
+        q = f(numpy.random.uniform(size=num))
+
+# uniform distribution (default)
+    elif distribution.lower() == 'uniform' or distribution.lower() == 'flat':
+        q = numpy.random.uniform(numpy.min(q_range), numpy.max(q_range), size=num)
+
+# wrong distribution
+    else:
+        raise NameError('\n{} distribution is not recognized; please choose from {}'.format(distribution,allowed_distributions))
+
+    return q
+
     
 
 def generatePopulation(**kwargs):
@@ -1142,29 +1229,44 @@ def generatePopulation(**kwargs):
     age_kwargs = kwargs.get('age_parameters',{})
     parameters['age'] = generateAges(num,**age_kwargs)
 
-# draw masses
+# draw masses - DONE
     mass_kwargs = kwargs.get('mass_parameters',{})
-#    parameters['mass'] = generateMasses(num,**age_kwargs)
+    parameters['mass'] = generateMasses(num,**mass_kwargs)
 
 # extract evolutionary model parameters
-# NEED TO DEAL WITH OUT OF RANGE VALUES
     model_kwargs = kwargs.get('model_parameters',{})
-    mp = modelParameters(mass=parameters['mass'],age=parameters['age'],**age_kwargs)
+    mp = modelParameters(mass=parameters['mass'],age=parameters['age'],**model_kwargs)
     parameters['gravity'] = mp['gravity']
     parameters['luminosity'] = mp['luminosity']
     parameters['radius'] = mp['radius']
     parameters['temperature'] = mp['temperature']
 
-# determine spectral types from teff
-# NOTE: NEED TO ALLOW FOR DIFFERENT RELATIONSHIPS AND AUTOMATICALLY DITCH NAN REGIONS
-# ALSO DEAL WITH BAD VALUES
+# determine spectral types from teff - DONE
 # COULD ALSO DO THIS WITH LUMINOSITIES
-    sp = numpy.linspace(16,38,100)
-    tf = numpy.array([splat.typeToTeff(spi)[0] for spi in sp])
-    f = interp1d(sp,tf)
-    parameters['spt'] = f(parameters['temperature'])
+    spt_kwargs = kwargs.get('spt_parameters',{})
+    sp0 = numpy.linspace(10,40,300)
+    tf0 = numpy.array([splat.typeToTeff(spi,**spt_kwargs)[0] for spi in sp0])
+    sp = sp0[~numpy.isnan(tf0)]
+    tf = tf0[~numpy.isnan(tf0)]
+    f_teff_spt = interp1d(tf,sp,bounds_error=False,fill_value=numpy.nan)
+    spt = [f_teff_sp(t.value) for t in mp['temperature']]
+    spt = numpy.array(spt)
+    parameters['spt'] = numpy.array(spt)
 
 # add binary companions if desired
+    if kwargs.get('binaries',False) == True:
+        binary_kwargs = kwargs.get('binary_parameters',{})
+        parameters['q'] = generateMassRatios(num,**binary_kwargs)
+        parameters['mass2'] = numpy.array(parameters['q'])*numpy.array(parameters['mass'])
+        mp = modelParameters(mass=parameters['mass2'],age=parameters['age'],**model_kwargs)
+        parameters['gravity2'] = mp['gravity']
+        parameters['luminosity2'] = mp['luminosity']
+        parameters['radius2'] = mp['radius']
+        parameters['temperature2'] = mp['temperature']
+        spt2 = [f_teff_spt(t.value) for t in mp['temperature2']]
+        spt2 = numpy.array(spt2)
+        parameters['spt2'] = numpy.array(spt2)
+
 
 # assign binary orbital properties if desired
 
