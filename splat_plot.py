@@ -207,7 +207,7 @@ def plotSpectrum(*args, **kwargs):
 
     :Parameters:
     title = ''
-        string giving plot title
+        string giving plot title  - NOTE: THIS IS NOT WORKING
     xrange = [0.85,2.42]:
         plot range for wavelength axis
     yrange = [-0.02,1.2]*fluxMax:
@@ -491,7 +491,6 @@ def plotSpectrum(*args, **kwargs):
     pg_n = 0        # page counter
     plt_n = 0       # plot per page counter
     lg_n = 0        # legend per plot counter
-    plt.close('all')
     for plts,sp in enumerate(splist):
 # set specific plot parameters
         if (sp[0].__class__.__name__ != 'Spectrum'):
@@ -709,7 +708,7 @@ def plotSpectrum(*args, **kwargs):
                 ax.text(numpy.mean(waveRng),bound[2]+3*yoff,r'$\oplus$',horizontalalignment='center',fontsize=fontsize)
 
 # place inset - RIGHT NOW ONLY SETTING LIMITS WITH FIRST SPECTRUM IN LIST
-        if inset == True or inset_xrange != False:
+        if inset == True and inset_xrange != False:
             ax_inset = fig[pg_n-1].add_axes(inset_position) #, axisbg='white')
             bound2 = inset_xrange
             b0 = numpy.argmax(sp[0].wave.value > bound2[0])
@@ -759,7 +758,7 @@ def plotSpectrum(*args, **kwargs):
 # update offset
                                 foff = [y+3*yoff if (w >= waveRng[0] and w <= waveRng[1]) else 0 for w in wvmax]
                                 flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
-                bound2[3] = numpy.max([bound2[3],numpy.max(flxmax)+3.*yoff])
+                bound2[3] = numpy.max([bound2[3],numpy.max(flxmax)+5.*yoff])
                 ax_inset.axis(bound2)
 
     

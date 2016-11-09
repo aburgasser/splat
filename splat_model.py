@@ -849,7 +849,7 @@ def modelFitGrid(spec, **kwargs):
     if numpy.max(rng) < numpy.min(gridparam['teff']) or numpy.min(rng) > numpy.max(gridparam['teff']):
         print('\nWarning: input temperature range {}-{} is outside limits of models {}-{}; defaulting to model range'.format(numpy.min(rng),numpy.max(rng),numpy.min(gridparam['teff']),numpy.max(gridparam['teff'])))
     if numpy.max(rng) < numpy.max(gridparam['teff']) or numpy.min(rng) > numpy.min(gridparam['teff']):
-        gridparam['teff'] = gridparam['teff'][numpy.where(numpy.logical_and(gridparam['teff'] > numpy.min(rng),gridparam['teff']<numpy.max(rng)))]
+        gridparam['teff'] = gridparam['teff'][numpy.where(numpy.logical_and(gridparam['teff'] >= numpy.min(rng),gridparam['teff'] <= numpy.max(rng)))]
 
     rng = kwargs.get('logg_range',[numpy.min(gridparam['logg']),numpy.max(gridparam['logg'])])
     rng = kwargs.get('gravity_range',rng)
@@ -857,7 +857,7 @@ def modelFitGrid(spec, **kwargs):
     if numpy.max(rng) < numpy.min(gridparam['logg']) or numpy.min(rng) > numpy.max(gridparam['logg']):
         print('\nWarning: input gravity range {}-{} is outside limits of models {}-{}; defaulting to model range'.format(numpy.min(rng),numpy.max(rng),numpy.min(gridparam['logg']),numpy.max(gridparam['logg'])))
     if numpy.max(rng) < numpy.max(gridparam['logg']) or numpy.min(rng) > numpy.min(gridparam['logg']):
-        gridparam['logg'] = gridparam['logg'][numpy.where(numpy.logical_and(gridparam['logg'] > numpy.min(rng),gridparam['logg']<numpy.max(rng)))]
+        gridparam['logg'] = gridparam['logg'][numpy.where(numpy.logical_and(gridparam['logg'] >= numpy.min(rng),gridparam['logg'] <= numpy.max(rng)))]
 
     rng = kwargs.get('z_range',[numpy.min(gridparam['z']),numpy.max(gridparam['z'])])
     rng = kwargs.get('metallicity_range',rng)
@@ -865,7 +865,7 @@ def modelFitGrid(spec, **kwargs):
     if numpy.max(rng) < numpy.min(gridparam['z']) or numpy.min(rng) > numpy.max(gridparam['z']):
         print('\nWarning: input metallicity range {}-{} is outside limits of models {}-{}; defaulting to model range'.format(numpy.min(rng),numpy.max(rng),numpy.min(gridparam['z']),numpy.max(gridparam['z'])))
     if numpy.max(rng) < numpy.max(gridparam['z']) or numpy.min(rng) > numpy.min(gridparam['z']):
-        gridparam['z'] = gridparam['z'][numpy.where(numpy.logical_and(gridparam['z'] > numpy.min(rng),gridparam['z']<numpy.max(rng)))]
+        gridparam['z'] = gridparam['z'][numpy.where(numpy.logical_and(gridparam['z'] >= numpy.min(rng),gridparam['z'] <= numpy.max(rng)))]
 
 
 #    fit_parameters = {\
@@ -900,9 +900,9 @@ def modelFitGrid(spec, **kwargs):
                                 mparam['radius'] = (scl*(TEN_PARSEC)**2)**0.5*u.Rsun
                                 parameters.append(copy.deepcopy(mparam))
                                 stats.append(chi)
-#                                print('{}: T={},g={},z={}'.format(len(stats)-1,mparam['teff'],mparam['logg'],mparam['z']))
+                                if kwargs.get('verbose',False): print('{}: T={},g={},z={}'.format(len(stats)-1,mparam['teff'],mparam['logg'],mparam['z']))
                             except:
-#                                print('\nNo model for {}'.format(mparam))
+                                if kwargs.get('verbose',False): print('\nNo model for {}'.format(mparam))
                                 pass
 
 # report best parameters
@@ -920,12 +920,13 @@ def modelFitGrid(spec, **kwargs):
     bmodel = splat.loadModel(**bparam)
     bmodel.scale(parameters[0]['scale'])
 
-    print('\nBest Parameters to fit to {} models:'.format(DEFINED_MODEL_NAMES[model_set]))
-    for ms in MODEL_PARAMETER_NAMES[:-1]:
-        print('\t{} = {} {}'.format(MODEL_PARAMETER_TITLES[ms],parameters[0][ms],MODEL_PARAMETER_UNITS[ms]))
-    if compute_radius == True:
-        print('\tRadius = {} {}'.format(parameters[0]['radius'].value,parameters[0]['radius'].unit))
-    print('\tchi={}'.format(stats[0]))
+    if kwargs.get('verbose',False): 
+        print('\nBest Parameters to fit to {} models:'.format(DEFINED_MODEL_NAMES[model_set]))
+        for ms in MODEL_PARAMETER_NAMES[:-1]:
+            print('\t{} = {} {}'.format(MODEL_PARAMETER_TITLES[ms],parameters[0][ms],MODEL_PARAMETER_UNITS[ms]))
+        if compute_radius == True:
+            print('\tRadius = {} {}'.format(parameters[0]['radius'].value,parameters[0]['radius'].unit))
+        print('\tchi={}'.format(stats[0]))
 
     if kwargs.get('noPlot',False) != True:
         _modelFitPlotComparison(spec,bmodel,stat=stats[0],file=file_best_comparison)
@@ -944,12 +945,13 @@ def modelFitGrid(spec, **kwargs):
         fparam['radius']*=u.Rsun
         fparam['radius_unc']*=u.Rsun
 
-    print('\nStatistic-weighted Mean Parameters:')
-    for k in list(fparam.keys()):
-        if k in MODEL_PARAMETER_NAMES[0:3]:
-            print('\t{}: {}+/-{} {}'.format(MODEL_PARAMETER_TITLES[k],fparam[k].value,fparam[k+'_unc'].value,fparam[k].unit))
-        if k == 'radius':
-            print('\tRadius: {}+/-{} {}'.format(fparam[k].value,fparam[k+'_unc'].value,fparam[k].unit))
+    if kwargs.get('verbose',False): 
+        print('\nStatistic-weighted Mean Parameters:')
+        for k in list(fparam.keys()):
+            if k in MODEL_PARAMETER_NAMES[0:3]:
+                print('\t{}: {}+/-{} {}'.format(MODEL_PARAMETER_TITLES[k],fparam[k].value,fparam[k+'_unc'].value,fparam[k].unit))
+#        if k == 'radius':
+#            print('\tRadius: {}+/-{} {}'.format(fparam[k].value,fparam[k+'_unc'].value,fparam[k].unit))
 
     if kwargs.get('noPlot',False) != True:
         mmodel = splat.loadModel(**fparam)
@@ -966,7 +968,6 @@ def modelFitGrid(spec, **kwargs):
         return parameters
     else:
         return bparam
-
 
 
 

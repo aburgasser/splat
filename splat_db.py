@@ -1414,7 +1414,7 @@ def querySimbad(variable,**kwargs):
 
 
 
-def querySimbad2(t_src,**kwargs):
+def _querySimbad2(t_src,**kwargs):
     '''
     Purpose
         Internal function that queries Simbad and populates data for source table.
@@ -1461,7 +1461,10 @@ def querySimbad2(t_src,**kwargs):
     for i,des in enumerate(t_src['DESIGNATION']):
         print(i,des)
         c = splat.designationToCoordinate(des)
-        t_sim = sb.query_region(c,radius=simbad_radius)
+        try:
+            t_sim = sb.query_region(c,radius=simbad_radius)
+        except:
+            t_sim = None
 # source found in query
         if isinstance(t_sim,Table):
 # many sources found
@@ -1594,7 +1597,7 @@ def importSpectra(*args,**kwargs):
 #        print('\nWarning! You are not currently online so you will not be able to retrieve SIMBAD and Vizier data\n')
 
 # set up optional inputs
-    simbad_radius = kwargs.get('simbad_radius',30.*u.arcsec)
+    simbad_radius = kwargs.get('simbad_radius',60.*u.arcsec)
     if isinstance(simbad_radius,u.quantity.Quantity) == False:
         simbad_radius*=u.arcsec
 
@@ -1816,7 +1819,7 @@ def importSpectra(*args,**kwargs):
     if kwargs.get('nosimbad',False) == False:
         if verbose:
             print('\nSIMBAD search')
-        querySimbad2(t_src,simbad_radius=simbad_radius)
+        _querySimbad2(t_src,simbad_radius=simbad_radius)
 
 
 # fill in missing 2MASS photometry with Vizier query
@@ -1934,7 +1937,7 @@ def importSpectra(*args,**kwargs):
             mkey = matchlib['DATA_KEY'][0]
             if verbose:
                 print('Previous spectrum found in library for data key {}'.format(mkey))
-            t_spec['COMPARISON_SPECTRUM'][i] = splat.Spectrum(mkey)
+            t_spec['COMPARISON_SPECTRUM'][i] = splat.Spectrum(int(mkey))
             t_spec['COMPARISON_TEXT'][i] = 'repeat spectrum: {}'.format(mkey)
             print(t_spec['COMPARISON_TEXT'][i])
 # no previous observation on this date - retain the spectrum with the highest S/N

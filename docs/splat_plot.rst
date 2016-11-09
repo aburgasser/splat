@@ -9,81 +9,228 @@ SPLAT Plotting Routines
 .. toctree
    :maxdepth: 3
 
-These are the primary plotting routines for SPLAT, which allow visualization of spectral data and comparison to other templates and models. Additional routines to visualize indices on the spectral data and index values themselves are currently under development
+The SPLAT plotting routines are designed to visualize spectral data and comparisons to other templates and models. Additional routines to visualize indices on the spectral data and the index values themselves are currently under development.
 
-plotSpectrum
-------------
+Basic plots
+-----------
 
-.. _``plotSpectrum()`` : api.html#splat_plot.plotSpectrum
+.. _`plot()`: api.html#splat.Spectrum.plot
+.. _`plotSpectrum()` : api.html#splat_plot.plotSpectrum
+.. _matplotlib: http://matplotlib.org/
+.. _API: api.html
+.. _pyplot: http://matplotlib.org/api/pyplot_summary.html
+.. _matplotlib.figure.Figure: http://matplotlib.org/api/figure_api.html#matplotlib.figure.Figure
 
-SPLAT allows spectrophotometry of spectra using common filters in the red optical and near-infrared. The filter transmission files are stored in the SPLAT reference library, and are accessed by name.  A list of current filters can be made by through the ``plotSpectrum()``_ routine: 
+The core plotting function is `plotSpectrum()`_, which allows flexible methods for displaying single or groups of spectra, and comparing spectra to each other. Nearly all of the functions described below are wrappers for `plotSpectrum()`_ with various options, described in more detail in the  API_. Plots are made using the pyplot_ package in matplotlib_.
+
+The simplest way to visualize a spectrum is to simply call `plotSpectrum()`_ with the Spectrum class object:
+
+  >>> import splat
+  >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0] 
+  >>> splat.plotspectrum(spc)
+
+  .. image:: _images/plot_basic_example1.png
+      :width: 400
+      :align: center
 
 
-The core plotting function is ``plotSpectrum()``_, which allows flexible methods for displaying single or groups of spectra, and comparing spectra to each other. This codes are built around the routines in matplotlib, and the API has the full list of options.
+You can also use the Spectrum class's built in `plot()`_ function:
 
-Simple plots
-^^^^^^^^^^^^
+  >>> spc.plot()
 
-Simple 
+  .. image:: _images/plot_basic_example2.png
+      :width: 400
+      :align: center
+
+Note that this adds a legend with the name of the source, the uncertainty spectrum (if present) and the zeropoint. These can be called explicitly within `plotSpectrum()`_ as well:
+
+  >>> splat.plotspectrum(spc,legend=spc.name,showNoise=True,showZero=True)
+
+There are many options for adding details to your spectrum plot, listed below. In addition, the output of a call to `plotSpectrum()`_ is a matplotlib.figure.Figure_ class
+
+  >>> plt = splat.plotspectrum(spc)
+  >>> plt
+    [<matplotlib.figure.Figure at 0x119e4f710>]
+
+so you can use other options from this class to further augment your plot.
+
+
+
+Feature labels and legends
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specific absorption features can be labeled on the plot by setting the ``features`` to a list of atoms and molecules. 
+
+  >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0] 
+  >>> splat.plotSpectrum(spc,features=['h2o','ch4','h2'])
+
+  .. image:: _images/plot_basic_features_example1.png
+      :width: 400
+      :align: center
+
+The features currently contained in the code include:
+
+  Lines:
+        * `H I` lines at 1.004, 1.093, 1.281, 1.944, and 2.166 micron
+        * `Na I`: lines at 0.819, 1.136, and 2.21 micron
+        * `K I`: lines at 0.767, 0.770, 1.169, 1.177, 1.244 and 1.252 micron
+        * `Ca I`: lines at 1.931, 1.946, 1.951, 1.978, 1.986, 1.987, 2.263, and 2.265 micron
+        * `Ca II`: lines at 0.986, 0.993, 1.184, and 1.195 micron
+        * `Mg I`: lines at 1.183, 1.209, 1.488, 1.503, 1.504, 1.575, 1.576, and 1.711 micron
+        * `Al I`: lines at 1.313, 1.315, 1.672 and 1.676 micron
+        * `Fe I`: lines at 1.143, 1.160, 1.161, 1.164, 1.169, 1.189, 1.198, 1.256, 1.288 and 1.501 micron
+  Molecules:
+        * `H2O`: bands at 0.92-0.95, 1.08-1.20, 1.33-1.55, and 1.72-2.14 micron
+        * `CO`: band at 2.29-2.39
+        * `TiO`: bands at 0.76-0.80 and 0.825-0.831 micron
+        * `VO`: band at 1.04-1.08 micron
+        * `FeH`: bands at 0.98-1.03, 1.19-1.25, and 1.57-1.64 micron
+        * `CH4`: bands at 1.10-1.24, 1.28-1.44, 1.60-1.76, and 2.20-2.35 micron
+        * `H2`: broad absorption over 1.5-2.4 micron
+        * `SB`: the spectral binary feature between 1.60-1.64 micron
+
+You can also set groups of features based on the type of object; options include ``mdwarf``, ``ldwarf`` and ``tdwarf``
+
+  >>> spc = splat.getSpectrum(spt = 'L5', lucky=True)[0] 
+  >>> splat.plotSpectrum(spc,ldwarf=True)
+
+  .. image:: _images/plot_basic_features_example2.png
+      :width: 400
+      :align: center
+
+To label and shade regions of telluric absorption, set ``telluric`` = True
+
+  >>> splat.plotSpectrum(spc,telluric=True)
+
+  .. image:: _images/plot_basic_features_example3.png
+      :width: 400
+      :align: center
+
+To add a legend, use the ``legend`` or ``label`` keyword:
+
+  >>> spc = splat.getSpectrum(lucky=True)[0]
+  >>> spt,spt_e = splat.classifyByStandard(spc)
+  >>> splat.plotSpectrum(spc,legend=['{} SpT = {}'.format(spc.shortname,spt)])
+
+  .. image:: _images/plot_basic_features_example4.png
+      :width: 400
+      :align: center
+
+You can vary the size and location of the legend using the ``legendfontscale`` and ``legendlocation`` keywords.
+
+
+Insets
+~~~~~~
+
+You can place an inset in your plot to zoom in on a particular feature using the ``inset`` keyword:
+
+  >>> spc = splat.getSpectrum(sbinary=True, lucky=True)[0]
+  >>> spc.normalize()
+  >>> splat.plotSpectrum(spc,inset=True)
+
+  .. image:: _images/plot_basic_inset_example1.png
+      :width: 400
+      :align: center
+
+You can get some control over the positioning and sampled range using ``inset_position`` (left edge, bottom edge, width, height) and ``inset_xrange``:
+
+  >>> splat.plotSpectrum(spc,inset=True,inset_xrange=[1.52,1.72],inset_position=[0.6,0.55,0.28,0.32])
+
+  .. image:: _images/plot_basic_inset_example2.png
+      :width: 400
+      :align: center
+
+
+Colors and line styles
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. _linestyles: http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D.set_linestyle
+.. _colors: http://matplotlib.org/api/colors_api.html
+.. _colormaps: http://matplotlib.org/api/pyplot_summary.html?highlight=colormaps#matplotlib.pyplot.colormaps
+
+`plotSpectrum()`_ uses the same commands as pyplot_ for setting colors_ (default black) and linestyles_ (default solid):
+
+
+  >>> spc = splat.getSpectrum(spt = 'M9', lucky=True)[0]
+  >>> splat.plotSpectrum(spc,color='red',linestyle=':')
+
+  .. image:: _images/plot_basic_color_example1.png
+      :width: 400
+      :align: center
+
+
+Manipulating the plot format
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can adjust the plot ranges using the ``xrange`` and ``yrange`` keywords
+
+  >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0] 
+  >>> spc.normalize()
+  >>> splat.plotSpectrum(spc,xrange=[1.0,1.6],yrange=[0,2])
+
+  .. image:: _images/plot_basic_manipulate_example1.png
+      :width: 400
+      :align: center
+
+Or change the labels of these axes using the ``xlabel`` and ``ylabel`` keywords
+
+  >>> splat.plotSpectrum(spc,xrange=[1.0,1.6],yrange=[0,2],xlabel='A Length Quantity',ylabel='A Flux Density Quantity')
+
+  .. image:: _images/plot_basic_manipulate_example3.png
+      :width: 400
+      :align: center
+
+
+You can also adjust the plot size using the ``figsize`` keyword
+
+  >>> splat.plotSpectrum(spc,figsize=(12,4))
+
+  .. image:: _images/plot_basic_manipulate_example2.png
+      :width: 600
+      :align: center
+
+
+Exporting the plot
+^^^^^^^^^^^^^^^^^^
+
+To export the plot to a file, simply set the ``file`` keyword:
+
+  >>> splat.plotSpectrum(spc,file='myplot.pdf')
+
+Note that matplotlib_ automatically figures out the file format based on the filename suffix.
 
 
 Plotting multiple spectra
-^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
-Spectra can be stacked on top of each other using the ``stack`` parameter, which is a numerical value that indicates the offset between 
+`plotSpectrum()`_ can also manage plotting multiple spectra, either on top of each other or stacked in the plot, or across multiple. There are also separate routines to handle common cases.
+
 
 Comparison plots
 ^^^^^^^^^^^^^^^^
 
+[EXAMPLE OF MULTIPLE SPECTRA]
 
-Legends, feature labels and other additions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Spectra can be stacked on top of each other using the ``stack`` parameter, which is a numerical value that indicates the offset between 
 
-Specific absorption features can be labeled on the plot setting the ``features`` to a list of atoms and molecules. The features currently contained in the code include:
-        * r'H$_2$O': bands at 0.92-0.95, 1.08-1.20, 1.33-1.55, and 1.72-2.14 micron
-        * r'CH$_4$': bands at 1.10-1.24, 1.28-1.44, 1.60-1.76, and 2.20-2.35 micron
-        * r'CO': band at 2.29-2.39
-        * r'TiO': bands at 0.76-0.80 and 0.825-0.831 micron
-        * r'VO': band at 1.04-1.08 micron
-        * r'FeH': bands at 0.98-1.03, 1.19-1.25, and 1.57-1.64 micron
-        * r'H$_2$': broad absorption over 1.5-2.4 micron
-        * r'H I': lines at 1.004, 1.093, 1.281, 1.944, and 2.166 micron
-        * r'Na I': lines at 0.819, 1.136, and 2.21 micron
-        'nai': {'label': r'Na I', 'type': 'line', 'wavelengths': [[0.8186,0.8195],[1.136,1.137],[2.206,2.209]]}, \
-        'na1': {'label': r'Na I', 'type': 'line', 'wavelengths': [[0.8186,0.8195],[1.136,1.137],[2.206,2.209]]}, \
-        'mg': {'label': r'Mg I', 'type': 'line', 'wavelengths': [[1.7113336,1.7113336],[1.5745017,1.5770150],[1.4881595,1.4881847,1.5029098,1.5044356],[1.1831422,1.2086969],]}, \
-        'mgi': {'label': r'Mg I', 'type': 'line', 'wavelengths': [[1.7113336,1.7113336],[1.5745017,1.5770150],[1.4881595,1.4881847,1.5029098,1.5044356],[1.1831422,1.2086969],]}, \
-        'mg1': {'label': r'Mg I', 'type': 'line', 'wavelengths': [[1.7113336,1.7113336],[1.5745017,1.5770150],[1.4881595,1.4881847,1.5029098,1.5044356],[1.1831422,1.2086969],]}, \
-        'ca': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
-        'cai': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
-        'ca1': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
-        'caii': {'label': r'Ca II', 'type': 'line', 'wavelengths': [[1.184224,1.195301],[0.985746,0.993409]]}, \
-        'ca2': {'label': r'Ca II', 'type': 'line', 'wavelengths': [[1.184224,1.195301],[0.985746,0.993409]]}, \
-        'al': {'label': r'Al I', 'type': 'line', 'wavelengths': [[1.672351,1.675511],[1.3127006,1.3154345]]}, \
-        'ali': {'label': r'Al I', 'type': 'line', 'wavelengths': [[1.672351,1.675511],[1.3127006,1.3154345]]}, \
-        'al1': {'label': r'Al I', 'type': 'line', 'wavelengths': [[1.672351,1.675511],[1.3127006,1.3154345]]}, \
-        'fe': {'label': r'Fe I', 'type': 'line', 'wavelengths': [[1.5081407,1.5494570],[1.25604314,1.28832892],[1.14254467,1.15967616,1.16107501,1.16414462,1.16931726,1.18860965,1.18873357,1.19763233]]}, \
-        'fei': {'label': r'Fe I', 'type': 'line', 'wavelengths': [[1.5081407,1.5494570],[1.25604314,1.28832892],[1.14254467,1.15967616,1.16107501,1.16414462,1.16931726,1.18860965,1.18873357,1.19763233]]}, \
-        'fe1': {'label': r'Fe I', 'type': 'line', 'wavelengths': [[1.5081407,1.5494570],[1.25604314,1.28832892],[1.14254467,1.15967616,1.16107501,1.16414462,1.16931726,1.18860965,1.18873357,1.19763233]]}, \
-        'k': {'label': r'K I', 'type': 'line', 'wavelengths': [[0.7699,0.7665],[1.169,1.177],[1.244,1.252]]}, \
-        'ki': {'label': r'K I', 'type': 'line', 'wavelengths': [[0.7699,0.7665],[1.169,1.177],[1.244,1.252]]}, \
-        'k1': {'label': r'K I', 'type': 'line', 'wavelengths': [[0.7699,0.7665],[1.169,1.177],[1.244,1.252]]}}
-        'sb': {'label': r'*', 'type': 'band', 'wavelengths': [[1.6,1.64]]}, \
+[PLOTBATCH]
 
-* ``telluric`` - labels the regions of strong telluric absorption
+[PLOTSEQUENCE]
 
-Legends are handled in the same manner 
+
+Multi-page plots
+^^^^^^^^^^^^^^^^
 
 
 Examples
------------
+--------
 
     **Example 1: A simple view of a random spectrum**
       This example shows various ways of displaying a random spectrum in the library
     
        >>> import splat
        >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0]	# select random spectrum
-       >>> spc.plot()                   				# this automatically generates a "quicklook" plot
+       >>> spc.`plot()`                   				# this automatically generates a "quicklook" plot
        >>> splat.plotSpectrum(spc)      				# does the same thing
        >>> splat.plotSpectrum(spc,uncertainty=True,tdwarf=True)     # show the spectrum uncertainty and T dwarf absorption features
     
@@ -139,11 +286,6 @@ Examples
       :width: 400
       :align: center
 
-
-Routines
----------- 
-
-.. autofunction:: splat.plotSpectrum
 
 
 * :ref:`genindex`
