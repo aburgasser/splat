@@ -1426,10 +1426,9 @@ def _querySimbad2(t_src,**kwargs):
         :param table: an astropy Table object, requires the presence of DESIGNATION column
 
     :Optional parameters:
-        :param simbad_radius = 30 arcseconds: circular radius to search for sources
-        :type simbad_radius: optional, must be an angular quantity
-        :param export = '': filename to which to export resulting table to; note that populated table is returned
-        :type export: optional, string 
+        :param simbad_radius = 30 arcseconds: circular radius to search for sources (note: must be an angular quantity)
+        :param export = '': filename to which to export resulting table to; if equal to a null string then no expoer is made. Note that a populated table is returned in either case
+        :param closest = False: return only the closest source to given coordinate
     '''    
 # parameters 
     simbad_radius = kwargs.get('simbad_radius',30.*u.arcsec)
@@ -1490,7 +1489,7 @@ def _querySimbad2(t_src,**kwargs):
             if not isinstance(t_sim['SP_TYPE'][0],str):
                 t_sim['SP_TYPE'][0] = t_sim['SP_TYPE'][0].decode()
             spt = t_sim['SP_TYPE'][0]
-            spt.replace(' ','')
+            spt.replace(' ','').replace('--','')
             t_src['SIMBAD_SPT'][i] = spt
             t_src['SIMBAD_SPT_REF'][i] = t_sim['SP_BIBCODE'][0]
             t_src['SIMBAD_SEP'][i] = t_sim['sep'][0]
@@ -1527,7 +1526,6 @@ def _querySimbad2(t_src,**kwargs):
             t_src['VSINI'][i] = str(t_sim['ROT_Vsini'][0]).replace('--','')
             t_src['VSINI_E'][i] = str(t_sim['ROT_err'][0]).replace('--','')
             t_src['VSINI_REF'][i] = t_sim['ROT_bibcode'][0]
-            t_src['J_2MASS'][i] = t_sim['FLUX_J'][0]
             if isinstance(t_sim['FLUX_J'][0],str):
                 t_src['J_2MASS'][i] = t_sim['FLUX_J'][0].replace('--','')
             else:
@@ -1854,7 +1852,7 @@ def importSpectra(*args,**kwargs):
 
     # add in distance if spectral type and magnitude are known
     for i,spt in enumerate(t_src['LIT_TYPE']):
-        if spt.replace(' ','') != '' and float('{}0'.format(t_src['J_2MASS'][i])) != 0.0:
+        if spt.replace(' ','') != '' and float('{}0'.format(str(t_src['J_2MASS'][i]).replace('--',''))) != 0.0:
     #            print(spt,t_src['J_2MASS'][i],t_src['J_2MASS_E'][i])
             dist = splat.estimateDistance(spt=spt,filter='2MASS J',mag=float(t_src['J_2MASS'][i]))
             if not numpy.isnan(dist[0]):
@@ -1862,51 +1860,53 @@ def importSpectra(*args,**kwargs):
                 t_src['DISTANCE_PHOT_E'][i] = dist[1]
                 t_src['DISTANCE'][i] = dist[0]
                 t_src['DISTANCE_E'][i] = dist[1]
-        if float('{}0'.format(t_src['PARALLAX'][i].replace('--',''))) != 0.0 and float('{}0'.format(t_src['PARALLAX_E'][i].replace('--',''))) != 0.0 :
+        if float('{}0'.format(str(t_src['PARALLAX'][i]).replace('--',''))) != 0.0 and float('{}0'.format(str(t_src['PARALLAX_E'][i]).replace('--',''))) != 0.0 :
             t_src['DISTANCE'][i] = 1000./float(t_src['PARALLAX'][i])
             t_src['DISTANCE_E'][i] = float(t_src['DISTANCE'][i])*float(t_src['PARALLAX_E'][i])/float(t_src['PARALLAX'][i])
     # compute vtan
-        if float('{}0'.format(t_src['MU'][i].replace('--',''))) != 0.0 and float('{}0'.format(t_src['DISTANCE'][i])) != 0.0:
+        if float('{}0'.format(str(t_src['MU'][i]).replace('--',''))) != 0.0 and float('{}0'.format(str(t_src['DISTANCE'][i]).replace('--',''))) != 0.0:
             t_src['VTAN'][i] = 4.74*float(t_src['DISTANCE'][i])*float(t_src['MU'][i])/1000.
 
     # clear up zeros
-        if float('{}0'.format(t_src['J_2MASS'][i]).replace('--','')) == 0.0:
+        if float('{}0'.format(str(t_src['J_2MASS'][i]).replace('--',''))) == 0.0:
             t_src['J_2MASS'][i] = ''
             t_src['J_2MASS_E'][i] = ''
-        if float('{}0'.format(t_src['H_2MASS'][i]).replace('--','')) == 0.0:
+        if float('{}0'.format(str(t_src['H_2MASS'][i]).replace('--',''))) == 0.0:
             t_src['H_2MASS'][i] = ''
             t_src['H_2MASS_E'][i] = ''
-        if float('{}0'.format(t_src['KS_2MASS'][i]).replace('--','')) == 0.0:
+        if float('{}0'.format(str(t_src['KS_2MASS'][i]).replace('--',''))) == 0.0:
             t_src['KS_2MASS'][i] = ''
             t_src['KS_2MASS_E'][i] = ''
-        if float('{}0'.format(t_src['PARALLAX'][i].replace('--',''))) == 0.0:
+        if float('{}0'.format(str(t_src['PARALLAX'][i]).replace('--',''))) == 0.0:
             t_src['PARALLAX'][i] = ''
             t_src['PARALLAX_E'][i] = ''
-        if float('{}0'.format(t_src['MU'][i].replace('--',''))) == 0.0:
+        if float('{}0'.format(str(t_src['MU'][i]).replace('--',''))) == 0.0:
             t_src['MU'][i] = ''
             t_src['MU_E'][i] = ''
             t_src['MU_RA'][i] = ''
             t_src['MU_DEC'][i] = ''
-        if float('{}0'.format(t_src['RV'][i].replace('--',''))) == 0.0:
+        if float('{}0'.format(str(t_src['RV'][i]).replace('--',''))) == 0.0:
             t_src['RV'][i] = ''
             t_src['RV_E'][i] = ''
-        if float('{}0'.format(t_src['VSINI'][i].replace('--',''))) == 0.0:
+        if float('{}0'.format(str(t_src['VSINI'][i]).replace('--',''))) == 0.0:
             t_src['VSINI'][i] = ''
             t_src['VSINI_E'][i] = ''
-        if float('{}0'.format(t_src['SIMBAD_SEP'][i])) == 0.0:
+        if float('{}0'.format(str(t_src['SIMBAD_SEP'][i]).replace('--',''))) == 0.0:
             t_src['SIMBAD_SEP'][i] = ''
         if t_src['GRAVITY_CLASS_NIR'][i] == '':
             t_src['GRAVITY_CLASS_NIR_REF'][i] = ''
 
     # compute J-K excess and color extremity
-        if spt.replace(' ','') != '' and float('{}0'.format(t_src['J_2MASS'][i])) != 0.0 and float('{}0'.format(t_src['KS_2MASS'][i])) != 0.0:
-            t_src['JK_EXCESS'][i] = float('{}0'.format(t_src['J_2MASS'][i]))-float('{}0'.format(t_src['KS_2MASS'][i]))-splat.typeToColor(spt,'J-K')[0]
-            if t_src['JK_EXCESS'][i] == numpy.nan or t_src['JK_EXCESS'][i] == '':
+        if spt.replace(' ','') != '' and float('{}0'.format(str(t_src['J_2MASS'][i]).replace('--',''))) != 0.0 and float('{}0'.format(str(t_src['KS_2MASS'][i]).replace('--',''))) != 0.0:
+            t_src['JK_EXCESS'][i] = float(t_src['J_2MASS'][i])-float(t_src['KS_2MASS'][i])-splat.typeToColor(spt,'J-K')[0]
+            if t_src['JK_EXCESS'][i] == numpy.nan or t_src['JK_EXCESS'][i] == '' or t_src['JK_EXCESS'][i] == 'nan':
                 t_src['JK_EXCESS'][i] = ''
             elif float(t_src['JK_EXCESS'][i]) > 0.3:
                 t_src['COLOR_EXTREMITY'][i] == 'RED'
             elif float(t_src['JK_EXCESS'][i]) < -0.3:
                 t_src['COLOR_EXTREMITY'][i] == 'BLUE'
+            else:
+                pass
 
 
 # check for previous entries
