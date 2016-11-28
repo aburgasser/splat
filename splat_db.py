@@ -133,18 +133,28 @@ def bibTexParser(bib_tex,**kwargs):
     if 'journal' in list(bib_dict.keys()):
         if bib_dict['journal'] == '\\apj':
             bib_dict['journal'] = 'ApJ'
+        elif bib_dict['journal'] == '\\apjl':
+            bib_dict['journal'] = 'ApJ Letters'
         elif bib_dict['journal'] == '\\apjs':
             bib_dict['journal'] = 'ApJS'
         elif bib_dict['journal'] == '\\aj':
             bib_dict['journal'] = 'AJ'
+        elif bib_dict['journal'] == '\\actaa':
+            bib_dict['journal'] = 'Acta Astronomica'
         elif bib_dict['journal'] == '\\araa':
             bib_dict['journal'] = 'AR&A'
         elif bib_dict['journal'] == '\\aap':
             bib_dict['journal'] = 'A&A'
+        elif bib_dict['journal'] == '\\icarus':
+            bib_dict['journal'] = 'Icarus'
         elif bib_dict['journal'] == '\\mnras':
             bib_dict['journal'] = 'MNRAS'
+        elif bib_dict['journal'] == '\\nat':
+            bib_dict['journal'] = 'Nature'
         elif bib_dict['journal'] == '\\pasp':
             bib_dict['journal'] = 'PASP'
+        elif bib_dict['journal'] == '\\solphys':
+            bib_dict['journal'] = 'Solar Physics'
         elif bib_dict['journal'] == '\\pnas':
             bib_dict['journal'] = 'PNAS'
         else:
@@ -223,7 +233,7 @@ def longRef(bib_dict,**kwargs):
         else:
             raise NameError('Input to shortRef is neither a bibcode nor a bibTex dictionary')
 
-    authors = bib_dict['Author'].split(' and ')
+    authors = bib_dict['author'].split(' and ')
     if len(authors) == 1:
         output = '{}'.format(authors[0].replace('~',' '))
     elif len(authors) == 2:
@@ -245,7 +255,55 @@ def longRef(bib_dict,**kwargs):
     if 'pages' not in bib_dict.keys():
         bib_dict['pages'] = ''
 
-    return output+'. {}. {}, {}, {} ({})'.format(bib_dict['title'],bib_dict['journal'],bib_dict['volume'],bib_dict['pages'],bib_dict['year'])
+    return output+' "{}". {}, {}, {} ({})'.format(bib_dict['title'],bib_dict['journal'],bib_dict['volume'],bib_dict['pages'],bib_dict['year'])
+
+
+def verylongRef(bib_dict,**kwargs):
+    '''
+    :Purpose:
+        Takes a bibtex dictionary and returns a long (in-line) version of the citation
+
+    :Required parameters:
+        :param bib_tex: Dictionary output from bibTexParser, else a bibcode that is fed into bibTexParser
+
+    :Optional parameters:
+        None
+
+    :Output:
+        A string of the format ``Burgasser, A. J., Cruz, K. L., Cushing, M., et al. SpeX Spectroscopy of Unresolved Very Low Mass Binaries. 
+        I. Identification of 17 Candidate Binaries Straddling the L Dwarf/T Dwarf Transition. ApJ 710, 1142 (2010)``
+
+    '''
+    if type(bib_dict) is not dict:
+        if type(bib_dict) is str:
+            bib_dict = getBibTex(bib_dict,**kwargs)
+        else:
+            raise NameError('Input to shortRef is neither a bibcode nor a bibTex dictionary')
+
+    authors = bib_dict['author'].split(' and ')
+    if len(authors) == 1:
+        output = '{}'.format(authors[0].replace('~',' '))
+    elif len(authors) == 2:
+        output = '{} & {}'.format(authors[0].replace('~',' '),authors[1].replace('~',' '))
+    else:
+        output=''
+        for a in authors[:-3]:
+            output+='{}, '.format(a.replace('~',' '))
+        output+='{} & {}'.format(authors[-2].replace('~',' '),authors[-1].replace('~',' '))
+
+# fill in missing data
+    if 'year' not in bib_dict.keys():
+        bib_dict['year'] = ''
+    if 'title' not in bib_dict.keys():
+        bib_dict['title'] = ''
+    if 'journal' not in bib_dict.keys():
+        bib_dict['journal'] = ''
+    if 'volume' not in bib_dict.keys():
+        bib_dict['volume'] = ''
+    if 'pages' not in bib_dict.keys():
+        bib_dict['pages'] = ''
+
+    return output+' "{}". {}, {}, {} ({})'.format(bib_dict['title'],bib_dict['journal'],bib_dict['volume'],bib_dict['pages'],bib_dict['year'])
 
 
 
@@ -908,7 +966,7 @@ def searchLibrary(*args, **kwargs):
 # search by reference list
     if kwargs.get('reference',False) != False:
         refer = kwargs['reference']
-        if isinstance(ref,str):
+        if isinstance(refer,str):
             refer = [refer]
         for r in refer:
             source_db['SELECT'][numpy.where(source_db['DISCOVERY_REFERENCE'] == r)] += 1
@@ -1176,6 +1234,14 @@ def searchLibrary(*args, **kwargs):
             snr = [float(snr),1.e9]
         spectral_db['SNRN'] = [float('0'+x) for x in spectral_db['MEDIAN_SNR']]
         spectral_db['SELECT'][numpy.where(numpy.logical_and(spectral_db['SNRN'] >= snr[0],spectral_db['SNRN'] <= snr[1]))] += 1
+        count+=1.
+# search by reference list
+    if kwargs.get('data_reference',False) != False:
+        drefer = kwargs['data_reference']
+        if isinstance(drefer,str):
+            drefer = [drefer]
+        for r in drefer:
+            spectral_db['SELECT'][numpy.where(spectral_db['DATA_REFERENCE'] == r)] += 1
         count+=1.
 
 # combine selection logically
