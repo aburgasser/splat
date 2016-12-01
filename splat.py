@@ -2833,7 +2833,7 @@ def filterProperties(filter,**kwargs):
     filt = filter.replace(' ','_')
     filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
     if not os.path.exists(filterFolder):
-        filterFolder = SPLAT_URL+FILTERFOLDER
+        filterFolder = SPLAT_URL+FILTER_FOLDER
 
     if (filt not in FILTERS.keys()):
         print('Filter '+filter+' not among the available filters:')
