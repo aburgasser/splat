@@ -6,9 +6,13 @@ from __future__ import print_function, division
 """
 
 
-# Related third party imports.
+# imports: internal
 import copy
 import glob
+import os
+import sys
+
+# imports: external
 import matplotlib.cm as cm
 import matplotlib.colors as colmap
 import matplotlib.patches as patches
@@ -18,12 +22,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 #from matplotlib.patches import Ellipse
 #from matplotlib.ticker import MaxNLocator
 import numpy
-import os
 from scipy.interpolate import interp1d 
 from scipy import ndimage
 import splat
-import sys
-#from __future__ import print_function, absolute_import, unicode_literals
 
 
 # change the command prompt

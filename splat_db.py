@@ -6,18 +6,20 @@ from __future__ import print_function, division
          These are the database functions for SPLAT 
 """
 
-import astropy
+# imports: internal
 import base64
 import copy
-#from datetime import datetime
 import csv
 import glob
 import os
 import re
 import requests
+import sys
+
+# imports: external
+import astropy
 import splat
 #from splat import SPLAT_PATH, SPLAT_URL, DB_SOURCES, DB_SPECTRA
-import sys
 #from scipy import stats
 import numpy
 from astropy.io import ascii, fits            # for reading in spreadsheet

@@ -4,19 +4,21 @@ from __future__ import print_function, division
 .. note::
          These are the spectral modeling functions for SPLAT 
 """
-
-import astropy
-import bdevopar
+# imports: internal
 import copy
 import glob
-#from datetime import datetime
-import numpy
 import os
-#import pwd
 import requests
-import splat
 import sys
 import time
+
+# imports: external
+import astropy
+#import bdevopar
+#from datetime import datetime
+import numpy
+#import pwd
+import splat
 from matplotlib import cm
 import matplotlib.pyplot as plt
 from scipy import stats
@@ -26,7 +28,7 @@ import scipy.optimize as op
 from astropy.io import ascii            # for reading in spreadsheet
 from astropy.table import Table
 import astropy.units as u
-import triangle
+import triangle             # will want to move this to corner
 
 SPECTRAL_MODEL_FOLDER = '/reference/SpectralModels/'
 MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']
@@ -1423,19 +1425,19 @@ def reportModelFitResults(spec,t,*arg,**kwargs):
  
 # get the evolutionary model parameters
 # turned off for now
-    evolFlag = False
-    if evolFlag:
-        if 'teff' not in t.colnames or 'logg' not in t.colnames:
-            print('\nCannot compare to best fit without teff and logg parameters')
-
-        else:
-            values=bdevopar.Parameters(emodel, teff=t['teff'], grav=t['logg'])
-            t['age'] = values['age']
-            t['lbol'] = values['luminosity']
-            t['mass'] = values['mass']
-            t['radius_evol'] = values['radius']
-            parameters = t.colnames
-            parameters.remove(statcolumn)
+#    evolFlag = False
+#    if evolFlag:
+#        if 'teff' not in t.colnames or 'logg' not in t.colnames:
+#            print('\nCannot compare to best fit without teff and logg parameters')
+#
+#        else:
+#            values=bdevopar.Parameters(emodel, teff=t['teff'], grav=t['logg'])
+#            t['age'] = values['age']
+#            t['lbol'] = values['luminosity']
+#            t['mass'] = values['mass']
+#            t['radius_evol'] = values['radius']
+#            parameters = t.colnames
+#            parameters.remove(statcolumn)
     
    
 # calculate statistics
@@ -1987,7 +1989,7 @@ def _modelFitEMCEE_plotcorner(samples,file,**kwargs):
     try:
         import corner
     except:
-        print('\nYou must install corner to display corner plot; see https://github.com/dfm/corner.py')
+        print('\nYou must install corner to display corner plot; see http://corner.readthedocs.io/en/latest/')
         return None
 
     if len(kwargs.get('truths',[])) == 0:

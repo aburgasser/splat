@@ -1,6 +1,17 @@
+# -*- coding: utf-8 -*-
+from __future__ import print_function, division
+
+"""
+.. note::
+         These are the web functions for SPLAT 
+"""
+
+# imports: internal
 import os
 import splat
 import sys
+
+# imports: external
 from bokeh import mpl
 from bokeh.models import HBox, VBox, Paragraph, Range1d
 from bokeh.models.widgets import Panel, Tabs

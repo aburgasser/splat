@@ -29,21 +29,22 @@ import sys
 if sys.version_info.major != 2 and sys.version_info.major != 3:
     raise NameError('\nSPLAT only works on Python 2.7 and 3.X\n')
 
-# imports
-import astropy
+# imports - internal
 import base64
 import copy
-import matplotlib.pyplot as plt
-import numpy
 import os
 import random
 import re
-import requests
-import scipy
 if sys.version_info.major == 2:     # switch for those using python 3
     import string
 import warnings
 
+# imports - external
+import astropy
+import matplotlib.pyplot as plt
+import numpy
+import requests
+import scipy
 from astropy.io import ascii, fits            # for reading in spreadsheet
 from astropy.table import Table, join            # for reading in table files
 from astropy.coordinates import SkyCoord      # coordinate conversion
@@ -163,6 +164,8 @@ FILTERS = { \
     '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band', 'zeropoint': 1594.0}, \
     '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band', 'zeropoint': 1024.0}, \
     '2MASS_KS': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7}, \
+    '2MASS_K': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7}, \
+    '2MASS_Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7}, \
     'BESSEL_I': {'file': 'bessel_i.txt', 'description': 'Bessel I-band', 'zeropoint': 2405.3}, \
     'HAWK_Y': {'file': 'hawk-y.txt', 'description': 'HAWK Y-band', 'zeropoint': 2092.9}, \
     'HAWK_J': {'file': 'hawk-j.txt', 'description': 'HAWK J-band', 'zeropoint': 1543.5}, \
@@ -181,6 +184,7 @@ FILTERS = { \
     'FOURSTAR_H': {'file': 'fourstar-h.txt', 'description': 'FOURSTAR H-band', 'zeropoint': 1054.9}, \
     'FOURSTAR_H_SHORT': {'file': 'fourstar-hshort.txt', 'description': 'FOURSTAR H short', 'zeropoint': 1119.1}, \
     'FOURSTAR_H_LONG': {'file': 'fourstar-hlong.txt', 'description': 'FOURSTAR H long', 'zeropoint': 980.7}, \
+    'FOURSTAR_K': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR Ks-band', 'zeropoint': 675.7}, \
     'FOURSTAR_KS': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR Ks-band', 'zeropoint': 675.7}, \
     'IRAC_CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9}, \
     'IRAC_CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7}, \

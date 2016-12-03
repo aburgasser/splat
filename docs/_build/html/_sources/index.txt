@@ -33,16 +33,11 @@ which is updated on a regular basis.
 SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by 
 sending bug reports to aburgasser@ucsd.edu or start an issue on the github site.
 
-You may also obtain splat using `pip`_:
+You may also try to install splat using `pip`_, but there have been some problems with this
 
 .. _`pip`: https://pip.pypa.io/en/stable/
 
->>> pip install splat
-
-Instructions on setting up and using SPLAT are maintained at http://www.browndwarfs.org/splat.
-
-Copy the file ``.splat_access`` into your home directory - this is your access key
-if you have priveleged access to unpublished data in the SPL.
+Once you've downloaded the code and data, you will need to copy the file ``.splat_access`` into your home directory (this is your access key) and add the SPLAT top-level directory to the environment variables ``SPLAT_PATH``, ``PYTHONPATH`` or your system ``PATH``.  More detailed instructions are on the `installation <installation.html>`_ page. 
 
 Using SPLAT
 -----------

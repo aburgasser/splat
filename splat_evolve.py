@@ -10,17 +10,16 @@ from __future__ import print_function, division
          the rest of the interpolated parameters. 
 """
 
-# Standard library imports.
+# imports: internal
 import copy
 import requests
 import sys
 
-# Related third party imports.
+# imports: external
 from astropy import units as u
 from astropy.cosmology import Planck15, z_at_value
 from astropy.io import ascii
 import pandas
-from math import isnan
 import matplotlib.pyplot as plt
 import numpy
 from scipy.interpolate import interp1d 
