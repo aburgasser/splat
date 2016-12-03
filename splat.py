@@ -2678,7 +2678,7 @@ def filterMag(sp,filter,*args,**kwargs):
 # keyword parameters
     filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
     if not os.path.exists(filterFolder):
-        filterFolder = SPLAT_URL+FILTERFOLDER
+        filterFolder = SPLAT_URL+FILTER_FOLDER
     vegaFile = kwargs.get('vegaFile','vega_kurucz.txt')
     info = kwargs.get('info',False)
     custom = kwargs.get('custom',False)

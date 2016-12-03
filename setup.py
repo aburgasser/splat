@@ -18,7 +18,7 @@ setup(
 
   # Project uses reStructuredText, so ensure that the docutils get
   # installed or upgraded on the target machine
-  install_requires = ['astropy','astroquery','matplotlib','numpy','pandas','scipy'],
+  install_requires = ['astropy','astroquery','bokeh','flask','matplotlib','numpy','pandas','requests','scipy'],
 
   package_data = {
       '': ['db/*.bib', 'db/*.txt','reference/EvolutionaryModels/Baraffe/*',\
