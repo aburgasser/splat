@@ -25,15 +25,15 @@ Documentation on setting up and using SPLAT are maintained at http://www.browndw
 
 There are two additional steps to complete to get full functionality:
 
-* Copy the file ``.splat_access`` into your home directory - this is your access key
+- Copy the file ``.splat_access`` into your home directory - this is your access key
 
-* Set up your environment variables to find the SPLAT code; this can be done in three ways (in the order of which the code looks for this directory):
+- Set up your environment variables to find the SPLAT code; this can be done in three ways (in the order of which the code looks for this directory):
 
-- Best: create an environment variable called SPLAT_PATH and set it to the root directory of the SPLAT code (in bsh environment, add the line ``export SPLAT_PATH=/Users/adam/projects/splat`` to your .bashrc or .bash_profile)
+	- Best: create an environment variable called SPLAT_PATH and set it to the root directory of the SPLAT code (in bsh environment, add the line ``export SPLAT_PATH=/Users/adam/projects/splat`` to your .bashrc or .bash_profile)
 
-- If you use the PYTHONPATH environment variable, add the root directory of the SPLAT code to it (in bsh environment add the line ``export PYTHONPATH=/Users/adam/projects/splat:${PYTHONPATH}`` to your .bashrc or .bash_profile)
+	- If you use the PYTHONPATH environment variable, add the root directory of the SPLAT code to it (in bsh environment add the line ``export PYTHONPATH=/Users/adam/projects/splat:${PYTHONPATH}`` to your .bashrc or .bash_profile)
 
-- add the root directory of the SPLAT code to your system PATH variable (in bsh environment add the line ``export PATH=/Users/adam/projects/splat:${PATH}`` to your .bashrc or .bash_profile)
+	- add the root directory of the SPLAT code to your system PATH variable (in bsh environment add the line ``export PATH=/Users/adam/projects/splat:${PATH}`` to your .bashrc or .bash_profile)
 
 ## Using SPLAT
 
