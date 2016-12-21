@@ -1,0 +1,12 @@
+# Include the license file
+include LICENSE.txt
+
+# Include documentation
+recursive-include docs/_build/html *
+
+# Include the data files
+recursive-include db *.bib *.txt
+#recursive-include reference/EvolutionaryModels *.txt
+#recursive-include reference/Filters *.txt
+#recursive-include reference/Spectra *.fits
+#recursive-include reference/SpectralModels *.txt

@@ -1,4 +1,2 @@
-db
-evolution
-models
-plot
+splat
+tests

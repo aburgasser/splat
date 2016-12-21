@@ -1,12 +1,9 @@
 astropy
 astroquery
 bokeh
-corner
-emcee
 flask
 matplotlib
 numpy
 pandas
 requests
 scipy
-triangle
