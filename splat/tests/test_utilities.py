@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-# this is the test function set for splat core functions
+# this is the test function set for splat utility functions
 
 # imports - internal
 import copy
-import glob
-import os
 # # imports - external
 import numpy
 from astropy import units as u            # standard units

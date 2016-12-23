@@ -35,7 +35,7 @@ except NameError: pass
 #Constants.DB_SPECTRA = fetchDatabase(Constants.DB_SPECTRA_FILE)
 
 # change the command prompt
-sys.ps1 = 'splat empirical> '
+#sys.ps1 = 'splat empirical> '
 
 
 
@@ -511,6 +511,57 @@ def typeToTeff(inp, **kwargs):
     else:
         if verbose: sys.stderr.write('\nSpectral Type is out of range for {:s} Teff/SpT relation\n'.format(reference))
         return numpy.nan, numpy.nan
+
+
+def redden(sp, **kwargs):
+    '''
+    Description:
+      Redden a spectrum based on an either Mie theory or a standard interstellar profile
+      using Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245)
+
+    **Usage**
+
+       >>> import splat
+       >>> sp = splat.Spectrum(10001)                   # read in a source
+       >>> spr = splat.redden(sp,av=5.,rv=3.2)          # redden to equivalent of AV=5
+
+    **Note**
+      This routine is still in beta form; only the CCM89 currently works
+
+    '''
+    w = sp.wave.value                           # assuming in microns!
+    av = kwargs.get('av',0.0)
+
+
+    if kwargs.get('mie',False):                 # NOT CURRENTLY FUNCTIONING
+        a = kwargs.get('a',10.)                 # grain size
+        n = kwargs.get('n',1.33)                # complex index of refraction
+        x = 2*numpy.pi*a/w
+        x0 = 2.*numpy.pi*a/0.55                 # for V-band
+        qabs = -4.*x*((n**2-1)/(n**2+2)).imag
+        qsca = (8./3.)*(x**4)*(((n**2-1)/(n**2+2))**2).real
+#        tau = numpy.pi*(a**2)*(qabs+qsca)
+        tau = 1.5*(qabs+qsca)/a    # for constant mass
+        qabs0 = -4.*x0*((n**2-1)/(n**2+2)).imag
+        qsca0 = (8./3.)*(x0**4)*(((n**2-1)/(n**2+2))**2).real
+#        tau0 = numpy.pi*(a**2)*(qabs0+qsca0)
+        tau0 = 1.5*(qabs0+qsca0)/a    # for constant mass
+        scale = (10.**(-0.4*av))
+        absfrac = scale*numpy.exp(numpy.max(tau)-tau)
+    else:
+        x = 1./w
+        a = 0.574*(x**1.61)
+        b = -0.527*(x**1.61)
+        rv = kwargs.get('rv',3.1)
+        absfrac = 10.**(-0.4*av*(a+b/rv))
+
+    if kwargs.get('normalize',False):
+        absfrac = absfrac/numpy.median(absfrac)
+
+#    print(tau0, min(tau), max(tau), max(absfrac), min(absfrac))
+    spabs = Spectrum(wave=w,flux=absfrac)
+    return sp*spabs
+
 
 
 def typeToLuminosity(spt, **kwargs):
