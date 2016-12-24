@@ -144,6 +144,8 @@ def loadEvolModel(*model,**kwargs):
         cloud = kwargs.get('cld',cloud)
         if cloud == False:
             cloud = 'nc'
+        if metallicity=='-0.3' or metallicity=='0.3':
+            C = 'nc'
         if isinstance(cloud,int) or isinstance(cloud,float):
             cloud = 'f{:1d}'.format(int(cloud))
         if cloud.lower() == 'hybrid':
@@ -151,8 +153,6 @@ def loadEvolModel(*model,**kwargs):
         elif cloud.lower() == 'f2':
             C = 'f2'
         elif cloud.lower() == 'nc' or cloud.lower() == 'nocloud' or cloud.lower() == 'noclouds' or cloud.lower() == 'cloud-free':
-            C = 'nc'
-        if metallicity=='-0.3' or metallicity=='0.3':
             C = 'nc'
         else:
             raise ValueError('\nCould not recognize cloud choice for Saumon model: must be cloud-free, hybrid or f2, not {}\n'.format(cloud))

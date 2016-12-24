@@ -1,1 +1,3 @@
-{}
+{
+  "splat/tests/test_evolve.py::test_modelParameters": true
+}

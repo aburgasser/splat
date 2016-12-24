@@ -32,7 +32,7 @@ from .utilities import *
 from . import plot as splot
 from . import photometry as spphot
 from . import empirical as spemp
-from .core import Spectrum, classifyByIndex, compareSpectra, generateMask
+from .core import Spectrum, classifyByIndex, compareSpectra, _generateMask
 
 # some constants
 MODELS_READIN = {}
@@ -805,7 +805,7 @@ def modelFitGrid(spec, **kwargs):
 
 # fitting parameters
     stat = kwargs.get('stat','chisqr')
-    mask = kwargs.get('mask',generateMask(spec.wave,**kwargs))
+    mask = kwargs.get('mask',_generateMask(spec.wave,**kwargs))
     weights = kwargs.get('weights',numpy.ones(len(spec.wave)))
 
 # plotting and reporting keywords
@@ -1124,7 +1124,7 @@ def modelFitMCMC(spec, **kwargs):
     emodel = kwargs.get('emodel', emodel)
 
 # set mask   
-    mask = kwargs.get('mask',generateMask(spec.wave,**kwargs))
+    mask = kwargs.get('mask',_generateMask(spec.wave,**kwargs))
     
 # set the degrees of freedom    
     try:
@@ -1668,7 +1668,7 @@ def modelFitEMCEE(spec, **kwargs):
     limits = kwargs.get('limits', [teff_range,logg_range,z_range])
 
 # create a mask
-    mask = kwargs.get('mask',generateMask(spec.wave,**kwargs))
+    mask = kwargs.get('mask',_generateMask(spec.wave,**kwargs))
 
 # set initial parameters
     parameters0 = kwargs.get('initial_guess',[\
@@ -2137,69 +2137,3 @@ def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
 # absmags is a dictionary whose keys are filter names and whose elements are 2-element lists of value and uncertainty        
 
     
-
-
-#######################################################
-#######################################################
-#################   TESTING ROUTINES  #################  
-#######################################################
-#######################################################
-
-def test_loadmodel(model='burrows',teff=1000,logg=5.0,**kwargs):
-    mdl = loadModel(model=model,teff=teff,logg=logg,**kwargs)
-    if len(mdl.wave) > 0:
-        mdl.info()
-        mdl.scale(1.e-24)
-        print(mdl.fluxMax())
-#        mdl.plot()
-    return True
-
-def test_loadinterpolatedmodel(model='burrows',teff=1025,logg=4.75,**kwargs):
-    mdl = loadInterpolatedModel(model=model,teff=teff,logg=logg,**kwargs)
-    if len(mdl.wave) > 0:
-        mdl.info()
-        mdl.scale(1.e-24)
-        print(mdl.fluxMax())
-#        mdl.plot()
-    return True
-
-def test_modelfitgrid(shname='1507-1627',model='BTSettl2008',teff_range=[1000,2200],logg_range=[4.5,5.5],**kwargs):
-#    tbl = splat.searchLibrary(spt=['M7','T8'])
-#    sp = splat.Spectrum(numpy.random.choice(tbl['DATA_KEY']))
-    from .splat import getSpectrum
-    sp = getSpectrum(shortname=shname)[0]
-    sp.fluxCalibrate('2MASS J',12.32,absolute=True)
-    bp = modelFitGrid(sp,teff_range=teff_range,logg_range=logg_range,model=model,file=kwargs.get('folder','')+'test_modelfitgrid.pdf',**kwargs)
-    print(bp)
-
-    return
-
-def test_modelfitEMCEE(folder):
-#    tbl = splat.searchLibrary(spt=['M7','T8'])
-#    sp = splat.Spectrum(numpy.random.choice(tbl['DATA_KEY']))
-    folder='/Users/adam/projects/splat/code/testing/'
-    from .splat import getSpectrum, classifyByStandard
-    sp = getSpectrum(shortname='1507-1627')[0]
-    sp.fluxCalibrate('2MASS J',12.32,absolute=True)
-    spt,spt_e = classifyByStandard(sp,method='kirkpatrick')
-    teff,teff_e = spemp.typeToTeff('L5')
-    print('\nPerforming emcee model fit of {} with SpT = {} and initial Teff = {}\n'.format(sp.name,spt,teff))
-# this takes about 1 hour
-    return modelFitEMCEE(sp,t0=teff,g0=5.0,z0=0.,noprompt=True,use_weights=True,fit_metallicity=False,nwalkers=10,nsamples=100,output=folder+'test_modelfitEMCEE',verbose=True)
-
-def test_modelfitMCMC(folder):
-    from .splat import getSpectrum, classifyByStandard
-    sp = getSpectrum(shortname='1047+2124')[0]        # T6.5 radio emitter
-    spt,spt_e = classifyByStandard(sp,spt=['T2','T8'])
-    teff,teff_e = spemp.typeToTeff(spt)
-    sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
-    return modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100,savestep=0,filebase=basefolder+'fit1047',verbose=True)
-
-
-if __name__ == '__main__':
-    basefolder = '/Users/adam/projects/splat/code/testing/'
-#    test_modelfitEMCEE(basefolder)
-#    test_loadmodel(model='morley12',teff=540,logg=4.7)
-    test_loadinterpolatedmodel()
-#    test_modelfitgrid(folder=basefolder)
-
