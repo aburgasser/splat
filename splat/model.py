@@ -184,7 +184,7 @@ def loadModel(*args, **kwargs):
 # path to model and set local/online
 # by default assume models come from local SPLAT directory
     local = kwargs.get('local',True)
-    online = kwargs.get('online',not local and checkOnline() != '')
+    online = kwargs.get('online',not local and not checkOnline())
     local = not online
     kwargs['local'] = local
     kwargs['online'] = online
@@ -481,6 +481,10 @@ def loadInterpolatedModel(*args,**kwargs):
             for k in numpy.arange(0,2):
                 dz = dg[numpy.where(zg*((-1)**k)>=0)]
                 pz = pg[numpy.where(zg*((-1)**k)>=0)]
+
+# if we can't get a quadrant point, quit out
+                if len(pz) == 0: raise ValueError('\n\nModel parameter values out of range for model set {}\n'.format(mkwargs['model']))
+
                 pcorner = pz[numpy.argmin(dz)]
                 mparams.append(pz[numpy.argmin(dz)])
                 mstr = ''
@@ -802,6 +806,8 @@ def modelFitGrid(spec, **kwargs):
     model_set = _checkModelName(model_set)
     if model_set == False:
         raise ValueError('\n{} is not in the SPLAT model suite; try {}'.format(kwargs['set'],' '.join(list(DEFINED_MODEL_NAMES.keys()))))
+    if kwargs.get('verbose',False) == True:
+        print('\nmodelFitGrid is using {} model set'.format(model_set))
 
 # fitting parameters
     stat = kwargs.get('stat','chisqr')
@@ -868,7 +874,7 @@ def modelFitGrid(spec, **kwargs):
 # start a fitting loop
     parameters = []
     stats = []
-    mparam = {'set': model_set}
+    mparam = {'set': model_set,'force': True}
     for t in gridparam['teff']:
         mparam['teff'] = t
         for g in gridparam['logg']:
@@ -886,13 +892,12 @@ def modelFitGrid(spec, **kwargs):
                                 chi,scl = compareSpectra(spec, model, mask=mask, weights=weights, stat=stat)
                                 mparam['stat'] = chi
                                 mparam['scale'] = scl
-                                mparam['radius'] = (scl*(TEN_PARSEC)**2)**0.5*u.Rsun
+                                mparam['radius'] = ((scl*(10.*u.pc)**2)**0.5).to(u.Rsun).value
                                 parameters.append(copy.deepcopy(mparam))
                                 stats.append(chi)
-                                if kwargs.get('verbose',False): print('{}: T={},g={},z={}'.format(len(stats)-1,mparam['teff'],mparam['logg'],mparam['z']))
+                                if kwargs.get('verbose',False): print('{}: T={},g={},z={},stat={},scale={},radius={}'.format(len(stats)-1,mparam['teff'],mparam['logg'],mparam['z'],numpy.round(mparam['stat']),mparam['scale'],mparam['radius']))
                             except:
                                 if kwargs.get('verbose',False): print('\nNo model for {}'.format(mparam))
-                                pass
 
 # report best parameters
     parameters = [p for (c,p) in sorted(zip(stats,parameters))]
@@ -1223,7 +1228,7 @@ def modelFitMCMC(spec, **kwargs):
     chisqr0,alpha0 = compareSpectra(spec, model, mask_ranges=mask_ranges)
     chisqrs = [chisqr0]    
     params = [param0]
-    radii = [TEN_PARSEC*numpy.sqrt(alpha0)]
+    radii = [(10.*u.pc*numpy.sqrt(alpha0)).to(u.Rsun)]
     for i in numpy.arange(nsample):
         for j in numpy.arange(len(param0)):
             if param_step[j] > 0.:          # efficient consideration - if statement or just run a model?
@@ -1244,7 +1249,7 @@ def modelFitMCMC(spec, **kwargs):
 # update list of parameters, chi^2 and radii
                     params.append(param0)
                     chisqrs.append(chisqr0)
-                    radii.append(TEN_PARSEC*numpy.sqrt(alpha0))
+                    radii.append((10.*u.pc*numpy.sqrt(alpha0)).to(u.Rsun))
                     
                 except:
                     if verbose:
@@ -2042,7 +2047,7 @@ def _modelFitEMCEE_summary(sampler,spec,file,**kwargs):
 
     f.write('\n\nResidual chi^2 = {:.0f} for {:.0f} degrees of freedom'.format(stat,dof))
     f.write('\nProbability that model matches data = {:.4f}'.format(stats.chi2.sf(stat,dof)))
-    f.write('\nSource/model scale factor = {:.2f} implying a radius of {:.3f} solar radii at 10 pc\n'.format(scl,scl**0.5*TEN_PARSEC))
+    f.write('\nSource/model scale factor = {:.2f} implying a radius of {:.3f} solar radii at 10 pc\n'.format(scl,(scl**0.5*10.*u.pc).to(u.Rsun).value))
 
     f.write('\n\nFitting completed in {:.1f} seconds = {:.2f} hours'.format(kwargs['total_time'],kwargs['total_time']/3600.))
     f.write('\nResults may be found in the files {}*'.format(kwargs['filebase']))
