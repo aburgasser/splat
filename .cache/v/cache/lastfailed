@@ -1,3 +1,5 @@
 {
-  "splat/tests/test_evolve.py::test_modelParameters": true
+  "splat/tests/test_empirical.py::test_typeToMag": true,
+  "splat/tests/test_evolve.py::test_modelParameters": true,
+  "splat/tests/test_initialize.py::test_filter_files": true
 }

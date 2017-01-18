@@ -5,7 +5,7 @@ include LICENSE.txt
 recursive-include docs/_build/html *
 
 # Include the data files
-recursive-include db *.bib *.txt
+recursive-include splat/db *.bib *.txt
 #recursive-include reference/EvolutionaryModels *.txt
 #recursive-include reference/Filters *.txt
 #recursive-include reference/Spectra *.fits

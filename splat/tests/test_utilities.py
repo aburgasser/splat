@@ -14,9 +14,9 @@ from astropy.io import fits
 from numpy.testing.utils import assert_allclose
 
 # splat functions and constants
-from ..initialize import *
-from ..utilities import *
-from .. import core as splat
+from splat.initialize import *
+from splat.utilities import *
+import splat
 #import splat as splat
 
 # things to test
@@ -36,12 +36,12 @@ def test_online_access():
 # checkOnlineFile
     assert splat.checkOnline()
     assert splat.checkOnlineFile()
-    assert len(splat.checkOnlineFile('Reference/SpectralModels/'))>0
-    assert len(splat.checkOnlineFile('Reference/Spectra/11221_10235.fits'))>0
-    assert len(splat.checkOnlineFile('Reference/Spectra/11220_10166.fits'))>0
-    assert len(splat.checkLocal('Reference/SpectralModels/'))>0
-    assert len(splat.checkLocal('Reference/Spectra/11221_10235.fits'))>0
-    assert len(splat.checkLocal('Reference/Spectra/11220_10166.fits'))==0
+    assert len(splat.checkOnlineFile('/Reference/SpectralModels/'))>0
+    assert len(splat.checkOnlineFile('/Reference/Spectra/11221_10235.fits'))>0
+    assert len(splat.checkOnlineFile('/Reference/Spectra/11220_10166.fits'))>0
+    assert len(splat.checkLocal('/Reference/SpectralModels/'))>0
+    assert len(splat.checkLocal('/Reference/Spectra/11221_10235.fits'))>0
+    assert len(splat.checkLocal('/Reference/Spectra/11220_10166.fits'))==0
     assert splat.checkFile('11221_10235.fits')
     assert splat.checkFile('11220_10166.fits')
     assert splat.checkAccess()

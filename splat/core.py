@@ -24,8 +24,6 @@ from __future__ import print_function
 #    Tomoki Tamiya
 #    Russell van Linge
 
-__version__ = '0.31'
-
 # imports - internal
 import copy
 import os
@@ -56,6 +54,8 @@ from .utilities import *
 from . import citations as spbib
 from .photometry import filterMag
 #from splat.database import searchLibrary, keySpectrum
+
+__version__ = VERSION
 
 # holding arrays
 SPECTRA_READIN = {}
@@ -129,7 +129,8 @@ class Spectrum(object):
         self.filename = kwargs.get('file','')
         self.filename = kwargs.get('filename',self.filename)
         self.idkey = kwargs.get('idkey',False)
-
+        self.history = []
+        
 # option 1: a filename is given
         if (len(args) > 0):
             if isinstance(args[0],str):
@@ -334,6 +335,9 @@ class Spectrum(object):
             self.kzz = kwargs.get('kzz',numpy.nan)
             self.slit = kwargs.get('slit',numpy.nan)
             self.modelset = kwargs.get('model','')
+# temporary fix of incorrect units in SED spectra            
+            if kwargs.get('sed',False):
+                self.scale(1.e4)
             try:
                 self.name = DEFINED_MODEL_NAMES[self.modelset]
             except:
@@ -355,7 +359,7 @@ class Spectrum(object):
             if 'TIME_OBS' not in list(self.header.keys()) and 'observation_time' in list(self.__dict__.keys()):
                 self.header['TIME_OBS'] = self.observation_time.replace(' ',':')
 
-        self.history = ['Spectrum successfully loaded']
+        self.history.append('Spectrum successfully loaded')
 # create a copy to store as the original
         self.original = copy.deepcopy(self)
         return
@@ -2066,10 +2070,10 @@ def readSpectrum(*args,**kwargs):
 
 # first pass: check if file is local
     if online == False:
-        file = checkLocal(kwargs['filename'])
-        if file=='':
-            file = checkLocal(kwargs['folder']+os.path.basename(kwargs['filename']))
-            if file=='':
+        file = kwargs['filename']
+        if not os.path.exists(file):
+            file = kwargs['folder']+os.path.basename(kwargs['filename'])
+            if not os.path.exists(file):
 #                print('Cannot find '+kwargs['filename']+' locally, trying online\n\n')
                 local = False
 
@@ -2346,7 +2350,7 @@ def classifyByIndex(sp, *args, **kwargs):
     for index in coeffs.keys():
         if indices[index][1] > 0.:
             vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))*sptfact
-            coeffs[index]['spt'] = numpy.nanmean(vals)+sptoffset
+            coeffs[index]['spt'] = numpy.polyval(coeffs[index]['coeff'],indices[index][0])+sptoffset
             coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
         else:
             coeffs[index]['spt'] = numpy.nan
@@ -2588,7 +2592,11 @@ def classifyByStandard(sp, *args, **kwargs):
         if kwargs.get('labels',False) == False:
             kwargs['labels'] = [sp.name,'{} Standard'.format(typeToNum(sorted_stdsptnum[0],subclass=subclass)),'Difference']
         from .plot import plotSpectrum
-        plotSpectrum(sp,spstd,sp-spstd,**kwargs)
+        if kwargs.get('difference',True):
+            kwargs['labels'].append('Difference')
+            pl = plotSpectrum(sp,spstd,sp-spstd,**kwargs)
+        else:
+            pl = plotSpectrum(sp,spstd,**kwargs)
 
     return output_spt, sptn_e
 

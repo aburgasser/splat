@@ -12,6 +12,7 @@ from astropy import units as u
 
 
 # things that are constants
+VERSION = '0.31'
 SPLAT_URL = 'http://pono.ucsd.edu/~adam/splat/'
 SPLAT_EMAIL = 'aburgasser@gmail.com'
 DATA_FOLDER = '/reference/Spectra/'
@@ -164,9 +165,17 @@ FILTERS = { \
     'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'NIRC2 Fe II', 'zeropoint': 1019.7}, \
     'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'NIRC2 LP', 'zeropoint': 248.0}, \
     'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'NIRC2 M', 'zeropoint': 165.8}, \
+    'PANSTARRS_G': {'file': 'panstarrs-g.txt', 'description': 'PANSTARRS g-band', 'zeropoint': 3909.11}, \
+    'PANSTARRS_R': {'file': 'panstarrs-r.txt', 'description': 'PANSTARRS r-band', 'zeropoint': 3151.44}, \
+    'PANSTARRS_W': {'file': 'panstarrs-w.txt', 'description': 'PANSTARRS w-band', 'zeropoint': 3024.76}, \
     'PANSTARRS_I': {'file': 'panstarrs-i.txt', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6}, \
-    'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2584.6}, \
-    'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2584.6}, \
+    'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2273.09}, \
+    'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2205.95}, \
+    'SDSS_U': {'file': 'sdss-u.txt', 'description': 'SDSS u-band', 'zeropoint': 1568.5}, \
+    'SDSS_G': {'file': 'sdss-g.txt', 'description': 'SDSS g-band', 'zeropoint': 3965.9}, \
+    'SDSS_R': {'file': 'sdss-r.txt', 'description': 'SDSS r-band', 'zeropoint': 3162.0}, \
+    'SDSS_I': {'file': 'sdss-i.txt', 'description': 'SDSS i-band', 'zeropoint': 2602.0}, \
+    'SDSS_Z': {'file': 'sdss-z.txt', 'description': 'SDSS z-band', 'zeropoint': 2244.7}, \
     'UKIDSS_Z': {'file': 'ukidss-z.txt', 'description': 'UKIDSS Z-band', 'zeropoint': 2261.4}, \
     'UKIDSS_Y': {'file': 'ukidss-y.txt', 'description': 'UKIDSS Y-band', 'zeropoint': 2057.2}, \
     'UKIDSS_J': {'file': 'ukidss-j.txt', 'description': 'UKIDSS J-band', 'zeropoint': 1556.8}, \
@@ -282,4 +291,59 @@ INDICES_SETS = {
     'testi': {'bibcode': '2001ApJ...552L.147T'},
     'tokunaga': {'bibcode': '1999AJ....117.1010T'},
 }    
+
+ABSMAG_SETS = {
+    'faherty2012': {'altname': ['faherty12'],'bibcode': '2012ApJ...752...56F', 'sptoffset': 10, 'filters': {
+        'MKO J': {'fitunc' : 0.30, 'range' : [20., 38.], 'coeff': [.000203252, -.0129143, .275734, -1.99967, 14.8948]}, 
+        'MKO H': {'fitunc' : 0.27, 'range' : [20., 38.], 'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, 
+        'MKO K': {'fitunc' : 0.28, 'range' : [20., 38.], 'coeff' : [.0000816516, -.00469032, .0940816, -.485519, 9.76100]}}},
+    'burgasser2007': {'altname': ['burgasser','burgasser07'], 'bibcode': '2007ApJ...659..655B', 'sptoffset': 20, 'filters': {
+        'MKO J': {'fitunc' : 0.30, 'range' : [20., 38.], 'coeff': [.000203252, -.0129143, .275734, -1.99967, 14.8948]}, 
+        'MKO H': {'fitunc' : 0.27, 'range' : [20., 38.], 'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, 
+        'MKO K': {'fitunc' : 0.26, 'range' : [20., 38.], 'coeff': [.0000001051, -.000006985, .0001807, -.002271, .01414, -.04024, .05129, .2322, 10.45]}}},
+    'dupuy2012': {'altname': ['dupuy','dupuy12'], 'bibcode': '2012ApJS..201...19D', 'sptoffset': 10, 'filters': {
+        'MKO J': {'fitunc' : 0.39, 'range' : [16., 39.], 'coeff' : [-.00000194920, .000227641, -.0103332, .232771, -2.74405, 16.3986, -28.3129]}, 
+        'MKO Y': {'fitunc': 0.40, 'range' : [16., 39.], 'coeff': [-.00000252638, .000285027, -.0126151, .279438, -3.26895, 19.5444, -35.1560]}, 
+        'MKO H': {'fitunc': 0.38, 'range' : [16., 39.], 'coeff': [-.00000224083, .000251601, -.0110960, .245209, -2.85705, 16.9138, -29.7306]}, 
+        'MKO K': {'fitunc': 0.40, 'range' : [16., 39.], 'coeff': [-.00000104935, .000125731, -.00584342, .135177, -1.63930, 10.1248, -15.2200]}, 
+        'MKO LP': {'fitunc': 0.28, 'range': [16., 39.], 'coeff': [0.00000, 0.00000, .0000546366, -.00293191, .0530581,  -.196584, 8.89928]}, 
+        '2MASS J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [-.000000784614, .000100820, -.00482973, .111715, -1.33053, 8.16362, -9.67994]}, 
+        '2MASS H': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [-.00000111499, .000129363, -.00580847, .129202, -1.50370, 9.00279, -11.7526]}, 
+        '2MASS KS': {'fitunc': 0.43, 'range':[16., 39.], 'coeff': [1.06693e-4, -6.42118e-3, 1.34163e-1, -8.67471e-1, 1.10114e1]}, 
+        'WISE W1': {'fitunc': 0.39, 'range':[16., 39.], 'coeff': [1.58040e-5, -3.33944e-4, -4.38105e-3, 3.55395e-1, 7.14765]}, 
+        'WISE W2': {'fitunc': 0.35, 'range':[16., 39.], 'coeff': [1.78555e-5, -8.81973e-4, 1.14325e-2, 1.92354e-1, 7.46564]}}},
+    'filippazzo2015': {'altname': ['filippazzo','filippazzo15'],'bibcode': '2015ApJ...810..158F', 'sptoffset': 10, 'filters': {
+        '2MASS J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [3.478e-5, -2.684e-3, 7.771e-2, -1.058e0, 7.157e0, -8.350e0]}, 
+        'WISE W2': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [8.190e-6, -6.938e-4, 2.283e-2, -3.655e-1, 3.032e0, -5.043e-1]}}},
+    'faherty2016': {'altname': ['faherty','faherty2016,faherty-field'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'filters': {
+        '2MASS J': {'fitunc' : 0.402, 'range' : [16., 39.], 'coeff': [3.478e-5,-2.684e-3,7.771e-2,-1.058e0,7.157e0,-8.350e0]},
+        '2MASS H': {'fitunc' : 0.389, 'range' : [16., 39.], 'coeff' : [2.841e-5,-2.217e-3,6.551e-2,-9.174e-1,6.406e0,-7.496e0]},
+        '2MASS KS': {'fitunc' : 0.537, 'range' : [16., 39.], 'coeff' : [2.540e-05,-1.997e-03,5.978e-02,-8.481e-01,5.970e+00,-6.704e+00]}}}
+}
+
+
+#    7.0 < SpT < 17.0    0.647   4.032e-03   -1.416e-01  2.097e+00   8.478e-01   cdots   cdots   cdots   
+#    7.0 < SpT < 17.0    0.660   -3.825e-03  1.370e-01   -9.279e-01  10.141e+00  cdots   cdots   cdots   
+#   7.0 < SpT < 17.0    0.634   2.642e-03   -1.049e-01  1.753e+00   1.207e+00   cdots   cdots   cdots   
+#   7.0 < SpT < 17.0    0.603   -3.909e-03  1.346e-01   -9.347e-01  9.728e+00   cdots   cdots   cdots   
+#   7.0 < SpT < 17.0    0.640   -1.585e-02  7.338e-01   4.537e+00   cdots   cdots   cdots   cdots   
+#   7.0 < SpT < 17.0    0.556   -4.006e-03  1.378e-01   -1.031e+00  9.916e+00   cdots   cdots   cdots   
+#   6.0 < SpT < 29.0    0.365   -1.664e-01  2.991e+00   -3.603e-01  2.258e-02   -6.897e-04  8.337e-06   cdots   
+#   7.0 < SpT < 17.0    0.648   -1.397e-02  5.955e-01   5.247e+00   cdots   cdots   cdots   cdots   
+#   7.0 < SpT < 17.0    0.551   -4.483e-03  1.505e-01   -1.208e+00  10.403e+00  cdots   cdots   cdots   
+#   6.0 < SpT < 29.0    0.398   -5.043e-01  3.032e+00   -3.655e-01  2.283e-02   -6.938e-04  8.190e-06   cdots   
+#   7.0 < SpT < 17.0    0.694   -1.507e-02  5.944e-01   5.061e+00   cdots   cdots   cdots   cdots   
+#   7.0 < SpT < 17.0    0.616   -6.821e-03  2.322e-01   -2.133e+00  13.322e+00  cdots   cdots   cdots   
+#   6.0 < SpT < 29.0    0.446   6.462e+00   3.365e-01   1.520e-02   -2.573e-03  9.477e-05   -1.024e-06  cdots   
+#   7.0 < SpT < 17.0    0.717   -1.003e-04  -1.670e-03  2.023e-01   7.529e+00   cdots   cdots   cdots   
+#   7.0 < SpT < 17.0    0.427   -5.684e-03  1.993e-01   -1.987e+00  13.972e+00  cdots   cdots   cdots   
+#   6.0 < SpT < 29.0    113.431 4.747e+03   -7.005e+02  1.155e+02   -1.191e+01  6.318e-01   -1.606e-02  1.546e-04   
+#   7.0 < SpT < 17.0    180.457 1.330e+00   -66.8637    1235.42 -10068.8    32766.4 cdots   cdots   
+#   7.0 < SpT < 28.0    197.737 2.795e+04   -9.183e+03  1.360e+03   -1.066e+02  4.578e+00   -1.016e-01  9.106e-04   
+#   7.0 < SpT < 17.0    172.215 7.383e+00   -344.522    4879.86 cdots   cdots   cdots   cdots   
+#   7.0 < SpT < 28.0    0.133   2.787e+00   -2.310e+00  3.727e-01   -3.207e-02  1.449e-03   -3.220e-05  2.736e-07   
+#   7.0 < SpT < 17.0    0.335   -6.514e-03  2.448e-01   -3.113e+00  9.492e+00   cdots   cdots   cdots   
+#   7.0 < SpT < 28.0    0.206   2.059e-01   9.585   -3.985  4.923e-01   -3.048e-02  9.134e-04   -1.056e-05  
+#   7.0 < SpT < 17.0    0.221   6.194e-03   -3.757e-01  2.728e-02   cdots   cdots   cdots   cdots   
+#   7.0 < SpT < 28.0        -3.46623e-01    3.40366e-02 -3.072e-03  
 

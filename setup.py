@@ -12,12 +12,12 @@
 
 from __future__ import unicode_literals
 from setuptools import setup, find_packages
-from splat.splat import __version__
+from splat.initialize import VERSION
 
 
 setup(
   name = "SPLAT",
-  version = __version__,
+  version = '0.32',
   packages = find_packages(),
 #  packages = find_packages(exclude=['docs','tests']),
 
