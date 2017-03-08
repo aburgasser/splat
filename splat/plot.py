@@ -22,9 +22,9 @@ from scipy.interpolate import interp1d
 from scipy import ndimage
 
 # imports: splat
-from .initialize import *
-from .utilities import *
-from .core import Spectrum, classifyByStandard
+from splat.initialize import *
+from splat.utilities import *
+import splat.core as splat
 
 
 
@@ -183,7 +183,7 @@ def plotSpectrum(*args, **kwargs):
     if filetype == '':
         filetype = 'pdf'
     comparison = kwargs.get('comparison',False)
-    if not isinstance(comparison,Spectrum):
+    if not isinstance(comparison,splat.Spectrum):
         comparison = False
     residual = kwargs.get('residual',False)
     inset = kwargs.get('inset',False)
@@ -261,7 +261,7 @@ def plotSpectrum(*args, **kwargs):
     else:
         splist = []
         for a in args:
-            if isinstance(a,Spectrum):      # a spectrum object
+            if isinstance(a,splat.Spectrum):      # a spectrum object
                 splist.append(a)
             elif isinstance(a,list):
                 splist.append(a)
@@ -277,10 +277,10 @@ def plotSpectrum(*args, **kwargs):
         multiplot = True
 
 # reformat array of spectra of multiplot is used (i.e., user forgot to set)
-    if multiplot == True and isinstance(splist[0],Spectrum):
+    if multiplot == True and isinstance(splist[0],splat.Spectrum):
         splist = [[s] for s in splist]
 
-    elif multiplot == False and isinstance(splist[0],Spectrum):
+    elif multiplot == False and isinstance(splist[0],splat.Spectrum):
         splist = [splist]
         
 # flatten array if multiplot is not set
@@ -327,8 +327,7 @@ def plotSpectrum(*args, **kwargs):
     lg_n = 0        # legend per plot counter
     for plts,sp in enumerate(splist):
 # set specific plot parameters
-#        print(sp[0],Spectrum,isinstance(sp[0],Spectrum))
-        if not isinstance(sp[0],Spectrum):
+        if not isinstance(sp[0],splat.Spectrum):
             raise ValueError('\nInput to plotSpectrum has wrong format:\n\n{}\n\n'.format(sp[0]))
         zeropoint = kwargs.get('zeropoint',[0. for x in numpy.arange(len(sp))])
 
@@ -516,7 +515,8 @@ def plotSpectrum(*args, **kwargs):
             ax.grid()            
 
 # axis labels 
-        fontsize = (13-numpy.min([(multilayout[0]*multilayout[1]-1),8])) * fontscale        # Added in fontscale
+        fontsize = (numpy.round(numpy.max([13./((multilayout[0]*multilayout[1])**0.33),5]))) * fontscale        # Added in fontscale
+#        print(fontsize)
         legendfontsize = (13-numpy.min([(multilayout[0]*multilayout[1]-1),8])) * legendfontscale        # Added in fontscale
         ax.set_xlabel(xlabel, fontsize = fontsize)
         ax.set_ylabel(ylabel, fontsize = fontsize)
@@ -678,12 +678,12 @@ def plotBatch(*args, **kwargs):
             inputlist = files
 # try reading in files into Spectrum object
         try:
-            splist = [Spectrum(file = f) for f in inputlist]
+            splist = [splat.Spectrum(file = f) for f in inputlist]
         except:
             raise ValueError('\nCould not read in list of files - make sure the full path is specified and the files are correctly formatted')
 
 # if filenames, read in each file to a spectrum object
-    elif isinstance(inputlist[0],Spectrum):
+    elif isinstance(inputlist[0],splat.Spectrum):
         splist = copy.deepcopy(inputlist)
     else:
         print('\nInput should be list of Spectra objects or filenames')
@@ -701,11 +701,11 @@ def plotBatch(*args, **kwargs):
                 comp.append(comp[-1])
         if isinstance(comp[0],str):
             try:
-                complist = [Spectrum(file = f) for f in comp]
+                complist = [splat.Spectrum(file = f) for f in comp]
                 compflag = True
             except:
                 print('\nCould not read in comparison files: ignoring comparisons')
-        if isinstance(comp[0],Spectrum):
+        if isinstance(comp[0],splat.Spectrum):
             complist = comp
             compflag = True
 
@@ -714,8 +714,8 @@ def plotBatch(*args, **kwargs):
         complist = []
         for sp in splist:
 #            from .splat import classifyByStandard
-            spt = classifyByStandard(sp,method='kirkpatrick')
-            complist.append(STDS_DWARF_SPEX[spt[0]])
+            spt = splat.classifyByStandard(sp,method='kirkpatrick')
+            complist.append(splat.STDS_DWARF_SPEX[spt[0]])
         compflag = True
         kwargs['normalize'] = kwargs.get('normalize',True)
 
@@ -760,12 +760,19 @@ def plotBatch(*args, **kwargs):
     else:
         legends = []
         for i,sp in enumerate(splist):
-            if compflag == True:
-                legends.extend(['{}'.format(os.path.basename(sp.filename)),'{}'.format(complist[i].name)])
+            l = []
+            if 'name' in list(sp.__dict__.keys()):
+                l.append(sp.name)
             else:
-                legends.extend(['{}'.format(os.path.basename(sp.filename))])
+                l.append(os.path.basename(sp.filename))
+            if compflag == True:
+                if 'name' in list(complist[i].__dict__.keys()):
+                    l.append(complist[i].name)
+                else:
+                    l.append(os.path.basename(complist[i].filename))
+            legends.extend(l)
 
-# generate pdf
+# generate plot
     plotSpectrum(plotlist,multiplot=True,multipage=True,legends=legends,colors=clist,**kwargs)
 
     return
@@ -839,17 +846,17 @@ def plotSequence(*args, **kwargs):
         if len(glob.glob(args[0])) == 0:
             raise ValueError('\nCannot find input file {} - make sure full path is included'.format(args[0]))
         try:
-            sp = Spectrum(file = args[0])
+            sp = splat.Spectrum(file = args[0])
         except:
             raise ValueError('\nCould not read in file {} - make sure the file is correctly formatted'.format(args[0]))
-    elif isinstance(args[0],Spectrum):
+    elif isinstance(args[0],splat.Spectrum):
         sp = copy.deepcopy(args[0])
     else:
         raise ValueError('\nInput should be a Spectrum object or filename')
     sp.normalize()
 
 # classify by comparison to standards
-    spt = kwargs.get('spt',classifyByStandard(sp,**kwargs)[0])
+    spt = kwargs.get('spt',splat.classifyByStandard(sp,**kwargs)[0])
     if not isinstance(spt,str):
         spt = typeToNum(spt)
 
@@ -880,18 +887,18 @@ if __name__ == '__main__':
         files = glob.glob(data_folder+'*.fits')
         plotBatch(files,classify=True,output=out_folder+'plotBatch_test1.pdf',telluric=True)
         plotBatch(data_folder+'*.fits',classify=True,output=out_folder+'plotBatch_test2.pdf',noise=True)
-        splist = [Spectrum(file=f) for f in files]
+        splist = [splat.Spectrum(file=f) for f in files]
         plotBatch(splist,classify=True,output=out_folder+'plotBatch_test3.pdf',features=['h2o','feh','co'],legend=[s.name for s in splist])
         return
 
     def test_plotSequence():
-        sp = Spectrum(10001)
+        sp = splat.Spectrum(10001)
         plotSequence(sp,output=out_folder+'plotSequence_test1.pdf')
         plotSequence(sp,type_range=3,output=out_folder+'plotSequence_test2.png')
         data_folder = '/Users/adam/projects/splat/adddata/done/daniella/'
         files = glob.glob(data_folder+'*.fits')
         plotSequence(files[0],telluric=True,stack=0.7,spt='M0',output=out_folder+'plotSequence_test3.eps')
-        sp = getSpectrum(shortname='0415-0935')[0]
+        sp = splat.getSpectrum(shortname='0415-0935')[0]
         plotSequence(sp,telluric=True,stack=0.3,output=out_folder+'plotSequence_test4.eps')
         plotSequence(sp,telluric=True,stack=0.3)
         return

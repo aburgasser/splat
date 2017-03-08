@@ -38,16 +38,16 @@ def test_folders_files():
     assert os.access(SPLAT_PATH+DB_FOLDER+BIBFILE,os.R_OK)
     if os.access(SPLAT_PATH+ACCESS_FILE,os.R_OK) != True:
     	print('Warning: {} is not found'.format(ACCESS_FILE))
+    return
 
 def test_filter_files():
 # getBibTex
 # getBibTexOnline
     for f in list(FILTERS.keys()):
     	assert os.access(SPLAT_PATH+FILTER_FOLDER+FILTERS[f]['file'],os.R_OK)
+    return
 
 def test_standards_present():
-# getBibTex
-# getBibTexOnline
     for s in list(STDS_DWARF_SPEX_KEYS.keys()):
     	sp = splat.Spectrum(STDS_DWARF_SPEX_KEYS[s])
     	assert type(sp) == splat.Spectrum
@@ -57,9 +57,12 @@ def test_standards_present():
     for s in list(STDS_ESD_SPEX_KEYS.keys()):
     	sp = splat.Spectrum(STDS_ESD_SPEX_KEYS[s])
     	assert type(sp) == splat.Spectrum
+    return
 
 
 def test_parse_bibtex():
+# getBibTex
+# getBibTexOnline
 # bibTexParser
     pass
 

@@ -16,10 +16,9 @@ from astropy.io import fits
 from numpy.testing.utils import assert_allclose
 
 # splat functions and constants
-from ..initialize import *
-from ..utilities import *
-from .. import core as splat
-#import splat as splat
+from splat.initialize import *
+from splat.utilities import *
+import splat
 
 
 #####################
