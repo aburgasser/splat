@@ -12,9 +12,12 @@ import re
 import requests
 
 # imports: external
+import numpy
 
 # splat functions and codes
-from .initialize import *
+from splat.initialize import *
+from splat.utilities import *
+import splat
 
 
 def bibTexParser(bib_tex,**kwargs):
@@ -102,6 +105,8 @@ def shortRef(bib_dict,**kwargs):
 
     '''
     if type(bib_dict) is not dict:
+        if type(bib_dict) is numpy.str:
+            bib_dict = str(bib_dict)
         if type(bib_dict) is str:
             bib_dict = getBibTex(bib_dict,**kwargs)
         else:
@@ -149,10 +154,12 @@ def longRef(bib_dict,**kwargs):
 
     '''
     if type(bib_dict) is not dict:
+        if type(bib_dict) is numpy.str:
+            bib_dict = str(bib_dict)
         if type(bib_dict) is str:
             bib_dict = getBibTex(bib_dict,**kwargs)
         else:
-            raise NameError('Input to shortRef is neither a bibcode nor a bibTex dictionary')
+            raise NameError('Input to longRef is neither a bibcode nor a bibTex dictionary')
 
     authors = bib_dict['author'].split(' and ')
     if len(authors) == 1:
@@ -196,10 +203,12 @@ def verylongRef(bib_dict,**kwargs):
 
     '''
     if type(bib_dict) is not dict:
+        if type(bib_dict) is numpy.str:
+            bib_dict = str(bib_dict)
         if type(bib_dict) is str:
             bib_dict = getBibTex(bib_dict,**kwargs)
         else:
-            raise NameError('Input to shortRef is neither a bibcode nor a bibTex dictionary')
+            raise NameError('Input to verylongRef is neither a bibcode nor a bibTex dictionary')
 
     authors = bib_dict['author'].split(' and ')
     if len(authors) == 1:
@@ -225,6 +234,38 @@ def verylongRef(bib_dict,**kwargs):
         bib_dict['pages'] = ''
 
     return output+' "{}". {}, {}, {} ({})'.format(bib_dict['title'],bib_dict['journal'],bib_dict['volume'],bib_dict['pages'],bib_dict['year'])
+
+
+def citeURL(bib_dict,**kwargs):
+    '''
+    :Purpose:
+        Generate the URL corresponding to a citation, based on the bibcode and NASA ADS syntax
+
+    :Required parameters:
+        :param bib_tex: Dictionary output from bibTexParser, else a bibcode that is fed into bibTexParser
+
+    :Optional parameters:
+        None
+
+    :Output:
+        A string of the format ``Burgasser, A. J., Cruz, K. L., Cushing, M., et al. SpeX Spectroscopy of Unresolved Very Low Mass Binaries. 
+        I. Identification of 17 Candidate Binaries Straddling the L Dwarf/T Dwarf Transition. ApJ 710, 1142 (2010)``
+
+    '''
+    if type(bib_dict) is not dict:
+        if type(bib_dict) is numpy.str:
+            bib_dict = str(bib_dict)
+        if type(bib_dict) is str:
+# assume this is a bibcode
+            return 'http://adsabs.harvard.edu/abs/{}'.format(bib_dict)
+        else:
+            raise NameError('Input to citeURL is neither a bibcode nor a bibTex dictionary')
+
+    else:
+        if 'bibcode' in list(bib_dict.keys()):
+            return 'http://adsabs.harvard.edu/abs/{}'.format(bib_dict['bibcode'])
+        else:
+            raise NameError('BibTex dictionary does not contain a bibcode')
 
 
 
@@ -260,7 +301,7 @@ def getBibTex(bibcode,**kwargs):
         biblibrary = kwargs.get('biblibrary', SPLAT_PATH+DB_FOLDER+BIBFILE)
 # check the file
         if not os.path.exists(biblibrary):
-            print('Could not find bibtex library {}'.format(biblibrary))
+            if kwargs.get('verbose',True) == True: print('Could not find bibtex library {}'.format(biblibrary))
             biblibrary = SPLAT_PATH+DB_FOLDER+BIBFILE
 
         if not os.path.exists(biblibrary):
@@ -273,7 +314,7 @@ def getBibTex(bibcode,**kwargs):
             in_lib = re.search('@[a-z]+{' + bibcode, text)
             if in_lib == None:  
                 if kwargs.get('force',False): return False
-                print('Bibcode {} not in bibtex library {}; checking online'.format(bibcode,biblibrary))
+                if kwargs.get('verbose',False) == True: print('Bibcode {} not in bibtex library {}; checking online'.format(bibcode,biblibrary))
                 bib_tex = getBibTexOnline(bibcode)
             else:
                 begin = text.find(re.search('@[a-z]+{' + bibcode, text).group(0))
@@ -315,6 +356,8 @@ def getBibTexOnline(bibcode):
     bib_tex = requests.get(url).content
     
     # Check if content is in html which means bad bib_code was given
+    if isinstance(bib_tex,bytes):
+        bib_tex = bib_tex.decode()
     if "<HTML>" in bib_tex:
         print('{} is not a valid online bib code.'.format(bibcode))
         return False       

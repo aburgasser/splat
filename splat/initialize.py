@@ -19,13 +19,16 @@ DATA_FOLDER = '/reference/Spectra/'
 FILTER_FOLDER = '/reference/Filters/'
 SPECTRAL_MODEL_FOLDER = '/reference/SpectralModels/'
 EVOLUTIONARY_MODEL_FOLDER = '/reference/EvolutionaryModels/'
+DOCS_FOLDER = '/docs/'
+DOCS_INDEX_HTML = '/docs/_build/html/index.html'
 DB_FOLDER = '/db/'
 DB_SOURCES_FILE = 'source_data.txt'
 DB_SPECTRA_FILE = 'spectral_data.txt'
 DB_PHOTOMETRY_FILE = 'photometry_data.txt'
-BIBFILE = 'biblibrary.bib'
+BIBFILE = 'splat_bibs.bib'
 TMPFILENAME = 'splattmpfile'
 ACCESS_FILE = '.splat_access'
+HOME_FOLDER = os.path.expanduser('~')
 
 MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
@@ -98,6 +101,11 @@ STDS_ESD_SPEX_KEYS = { \
     'esdM7.0': 10521, #'10521_10458.fits',\
     'esdM8.5': 10278} #'10278_10400.fits'}
 # EMPTY DICTIONARY
+
+# containters for spectra
+#STDS_DWARF_SPEX = {}
+#STDS_SD_SPEX = {}
+#STDS_ESD_SPEX = {}
 
 # filters
 FILTERS = { \
@@ -221,63 +229,87 @@ FILTERS = { \
 
 # some data formats (for future expansion)
 INSTRUMENTS = {
-	'SPEX': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12},
-	'SPEX_PRISM': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.8,2.4]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12},
-	'SPEX_SXD': {'instrument_name': 'SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12},
-	'USPEX': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5},
-	'USPEX_PRISM': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5},
-	'USPEX_SXD': {'instrument_name': 'Updated SpeX SXD', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.55]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5},
+#	'SPEX': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
+    'SED': {'instrument_name': 'SED', 'pixelscale': 0.*u.arcsec, 'waverange': [0.1,100.]*u.micron, 'slitwidth': 0.*u.arcsec, 'resolution': 100, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['SPECTRAL_ENERGY_DISTRIBUTION']},
+    'SPEX_PRISM': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SPEX']},
+    'SPEX_SXD': {'instrument_name': 'SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
+    'SPEX_LXD1.9': {'instrument_name': 'SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
+    'SPEX_LXD2.1': {'instrument_name': 'SpeX LXD 2.1 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
+    'SPEX_LXD2.3': {'instrument_name': 'SpeX LXD 2.3 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
+#	'USPEX': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
+	'USPEX_PRISM': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['USPEX']},
+    'USPEX_SXD': {'instrument_name': 'Updated SpeX SXD', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.55]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
+    'USPEX_LXD_SHORT': {'instrument_name': 'Updated SpeX LXD short', 'pixelscale': 0.10*u.arcsec, 'waverange': [1.67,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 8, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
+    'USPEX_LXD_LONG': {'instrument_name': 'Updated SpeX LXD long', 'pixelscale': 0.10*u.arcsec, 'waverange': [1.98,5.3]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
 }
 
 # spectral model information
-MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']
-MODEL_PARAMETERS = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
-MODEL_PARAMETER_TITLES = {\
-    'teff': '$T_{eff}$',\
-    'logg': '$log\ g$',\
-    'z': '$[M/H]$',\
-    'fsed': '$f_{sed}$',\
-    'cld': '$cld$',\
-    'kzz': '$log\ \kappa_{zz}$',\
-    'slit': '$slit$'}
+#MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']
+#MODEL_PARAMETERS = {'teff': 1000.0,'logg': 5.0,'z': 0.0,'fsed':'nc','cld':'nc','kzz':'eq','slit':0.5}
+#MODEL_PARAMETER_TITLES = {\
+#    'teff': '$T_{eff}$',\
+#    'logg': '$log\ g$',\
+#    'z': '$[M/H]$',\
+#    'fsed': '$f_{sed}$',\
+#    'cld': '$cld$',\
+#    'kzz': '$log\ \kappa_{zz}$',\
+#    'slit': '$slit$'}
 #MODEL_PARAMETER_UNITS = [u.K,u.cm/u.s/u.s,u.m/u.m,u.m/u.m,u.m/u.m,u.m/u.m,u.arcsec]
-MODEL_PARAMETER_UNITS = {\
-    'teff': u.K, \
-    'logg': u.dex(u.cm/u.s/u.s), \
-    'z': u.dex(), \
-    'fsed': u.m/u.m, \
-    'cld': u.m/u.m, \
-    'kzz': u.m/u.m, \
+#MODEL_PARAMETER_UNITS = {\
+#    'teff': u.K, \
+#    'logg': u.dex(u.cm/u.s/u.s), \
+#    'z': u.dex(), \
+#    'fsed': u.m/u.m, \
+#    'cld': u.m/u.m, \
+#    'kzz': u.m/u.m, \
 #    'kzz': u.dex(u.cm*u.cm/u.s), \
-    'slit': u.arcsec}
-DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
-DEFINED_MODEL_NAMES = {
-    'BTSettl2008': 'BT-Settl (2008)',\
-    'burrows06': 'Burrows et al. (2006)',\
-    'morley12': 'Morley et al. (2012)',\
-    'morley14': 'Morley et al. (2014)',\
-    'saumon12': 'Saumon et al. (2012)',\
-    'drift': 'Witte et al. (2011)'}
-DEFINED_MODEL_SETS = {\
-    'BTSettl2008': ['allard','allard12','allard2012','btsettl','btsettled'], \
-    'burrows06': ['burrows','burrows2006'], \
-    'morley12': ['morley','morley2012'], \
-    'morley14': ['morley2014'], \
-    'saumon12': ['saumon','saumon2012'], \
-    'drift': ['witte','witte11','witte2011','helling']}
-DEFINED_MODEL_BIBCODES = {\
-    'BTSettl2008': '2012RSPTA.370.2765A', \
-    'burrows06': '2006ApJ...640.1063B',\
-    'morley12': '2012ApJ...756..172M',\
-    'morley14': '2014ApJ...787...78M',\
-    'saumon12': '2012ApJ...750...74S',\
-    'drift': '2011A&A...529A..44W'}
+#    'slit': u.arcsec}
+#DEFINED_MODEL_SET = ['BTSettl2008','burrows06','morley12','morley14','saumon12','drift']
+#DEFINED_MODEL_NAMES = {
+#    'BTSettl2008': 'BT-Settl (2008)',\
+#    'burrows06': 'Burrows et al. (2006)',\
+#    'morley12': 'Morley et al. (2012)',\
+#    'morley14': 'Morley et al. (2014)',\
+#    'saumon12': 'Saumon et al. (2012)',\
+#    'drift': 'Witte et al. (2011)'}
+SPECTRAL_MODELS = {\
+    'btsettl08': {'name': 'BT-Settl (2008)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['allard','allard12','allard2012','btsettl','btsettled','btsettl08','btsettl2008','BTSettl2008'], 'rawfolder': HOME_FOLDER+'/models/allard/cifist2011/'}, \
+    'burrows06': {'name': 'Burrows et al. (2006)', 'bibcode': '2006ApJ...640.1063B', 'altnames': ['burrows','burrows2006'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows06/'}, \
+    'morley12': {'name': 'Morley et al. (2012)', 'bibcode': '2012ApJ...756..172M', 'altnames': ['morley','morley2012'], 'rawfolder': HOME_FOLDER+'/models/morley12/'}, \
+    'morley14': {'name': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altnames': ['morley2014'], 'rawfolder': HOME_FOLDER+'/models/morley14/'}, \
+    'saumon12': {'name': 'Saumon et al. (2012)', 'bibcode': '2012ApJ...750...74S', 'altnames': ['saumon','saumon2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Saumon12/'}, \
+    'drift': {'name': 'Witte et al. (2011)', 'bibcode': '2011A&A...529A..44W', 'altnames': ['witte','witte11','witte2011','helling'], 'rawfolder': HOME_FOLDER+'/models/drift/'}}
+SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','fsed','cld','kzz']
+SPECTRAL_MODEL_PARAMETERS = {\
+    'teff': {'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$'}, \
+    'logg': {'unit': u.dex(u.cm/u.s/u.s), 'default': 5.0, 'title': '$\log{g}$'}, \
+    'z': {'unit': u.dex(), 'default': 0., 'title': '$[M/H]$'}, \
+    'fsed': {'unit': u.m/u.m, 'default': 'nc', 'title': '$f_{sed}$'}, \
+    'cld': {'unit': u.m/u.m, 'default': 'nc', 'title': '$cld$'}, \
+    'kzz': {'unit': u.m/u.m, 'default': 'eq', 'title': '$log\ \kappa_{zz}$'}}
+#    'kzz': u.dex(u.cm*u.cm/u.s), \
+#    'slit': {'unit': u.arcsec, 'default': 0.5, 'title': 'slit'}}
+SPECTRAL_MODEL_FLUX_UNIT = u.erg/(u.s*u.micron*(u.cm**2))
+#DEFINED_MODEL_BIBCODES = {\
+#    'BTSettl2008': '', \
+#    'burrows06': '2006ApJ...640.1063B',\
+#    'morley12': '2012ApJ...756..172M',\
+#    'morley14': '2014ApJ...787...78M',\
+#    'saumon12': '2012ApJ...750...74S',\
+#    'drift': '2011A&A...529A..44W'}
 
 # evolutionary model information
-EMODELS = ['baraffe','burrows','saumon']
-EPARAMETERS = ['mass','age','temperature','gravity','luminosity','radius']
-EPARAMETER_UNITS = {'mass': u.solMass, 'age': u.Gyr, 'temperature': u.K, 'gravity': u.dex(u.cm / u.s**2),\
-    'luminosity': u.dex(u.solLum), 'radius': u.solRad}
+EVOLUTIONARY_MODELS = {\
+    'baraffe': {},\
+    'burrows': {},\
+    'saumon': {}}
+EVOLUTIONARY_MODEL_PARAMETERS = {\
+    'mass': {'unit': u.solMass, 'default': 0.05, 'title': '$M$'},\
+    'age': {'unit': u.Gyr, 'default': 5., 'title': '$\tau$'},\
+    'temperature': {'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$'},\
+    'gravity': {'unit': u.dex(u.cm / u.s**2), 'default': 5.0, 'title': '$\log{g}'},\
+    'luminosity': {'unit': u.dex(u.solLum), 'default': -5., 'title': '$\log{L_{bol}/L_{\odot}}$'},\
+    'radius': {'unit': u.solRad, 'default': 0.1, 'title': '$R_{\odot}$'}}
 
 INDICES_SETS = {
     'allers': {'bibcode': '2013ApJ...772...79A'},

@@ -17,10 +17,10 @@ import numpy
 from scipy.interpolate import interp1d
 
 # splat functions
-from .initialize import *
-from .utilities import *
-from .photometry import filterMag
-from .core import classifyByIndex
+from splat.initialize import *
+from splat.utilities import *
+from splat.photometry import filterMag
+from splat.core import classifyByIndex
 
 # Python 2->3 fix for input
 try: input=raw_input
@@ -217,10 +217,10 @@ def typeToColor(spt,color, **kwargs):
 
 #Faherty
     if ref.lower() in list(empirical_sets.keys()):
-        reference = empirical_sets[ref.lower()].reference
-        rng = empirical_sets[ref.lower()].rng
-        filters = empirical_sets[ref.lower()].filters
-        values = empirical_sets[ref.lower()].values
+        reference = empirical_sets[ref.lower()]['reference']
+        rng = empirical_sets[ref.lower()]['rng']
+        filters = empirical_sets[ref.lower()]['filters']
+        values = empirical_sets[ref.lower()]['values']
 
     else:
         sys.stderr.write('\nColor set from {} has not be intergrated into SPLAT\n\n'.format(ref))
@@ -233,18 +233,18 @@ def typeToColor(spt,color, **kwargs):
     if (rng[0] <= spt <= rng[1]):
 
 # fill in extra colors - a little inefficient right now  
-        if color.lower() not in values.keys():
-            for i in numpy.arange(len(tmpval.keys())):
-                for a in tmpval.keys():
-                    for b in tmpval.keys():
+        if color.lower() not in list(values.keys()):
+            for i in numpy.arange(len(list(tmpval.keys()))):
+                for a in list(tmpval.keys()):
+                    for b in list(tmpval.keys()):
                         f1 = a.split('-')
                         f2 = b.split('-')
                         if f1[-1] == f2[0]:
                             k = '{}-{}'.format(f1[0],f2[-1])
-                            if k not in values.keys():
+                            if k not in list(values.keys()):
                                 values[k] = [sum(x) for x in zip(tmpval[a], tmpval[b])]
 
-        if color.lower() in values.keys():
+        if color.lower() in list(values.keys()):
             f = interp1d(numpy.arange(rng[0],rng[1]+1),values[color.lower()],bounds_error=False,fill_value=0.)
             if (unc > 0.):
                 vals = [f(x) for x in numpy.random.normal(spt, unc, nsamples)]
@@ -459,7 +459,7 @@ def typeToTeff(inp, **kwargs):
         reference = 'Teff/SpT relation from Golimowski et al. (2004)'
         sptoffset = 10.
         coeff = [9.5373e-4,-9.8598e-2,4.0323,-8.3099e1,9.0951e2,-5.1287e3,1.4322e4]
-        range = [16.,38.]
+        sptrange = [16.,38.]
         fitunc = 124.
 
 # Looper et al. (2008, ApJ, 685, 1183)
@@ -467,7 +467,7 @@ def typeToTeff(inp, **kwargs):
         reference = 'Teff/SpT relation from Looper et al. (2008)'
         sptoffset = 20.
         coeff = [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92]
-        range = [20.,38.]
+        sptrange = [20.,38.]
         fitunc = 87.
 
 # Stephens et al. (2009, ApJ, 702, 1545); using OPT/IR relation for M6-T8
@@ -476,7 +476,7 @@ def typeToTeff(inp, **kwargs):
         reference = 'Teff/SpT relation from Stephens et al. (2009)'
         sptoffset = 10.
         coeff = [-0.0025492,0.17667,-4.4727,54.67,-467.26,4400.]
-        range = [16.,38.]
+        sptrange = [16.,38.]
         fitunc = 100.
         coeff_alt = [-0.011997,1.2315,-50.472,1031.9,-10560.,44898.]
         range_alt = [23.,38.]
@@ -486,25 +486,52 @@ def typeToTeff(inp, **kwargs):
         reference = 'Teff/SpT relation from Marocco et al. (2013)'
         sptoffset = 10.
         coeff = [7.4211e-5,-8.43736e-3,3.90319e-1,-9.46896,129.141,-975.953,3561.47,-1613.82]
-        range = [17.,38.]
+        sptrange = [17.,38.]
         fitunc = 140.
 
     elif ('filippazzo' in ref.lower()):
         reference = 'Teff/SpT relation from Filippazzo et al. (2015)'
         sptoffset = 10.
         coeff = [1.546e-4, -1.606e-2, 6.318e-1, -1.191e1, 1.155e2, -7.005e2, 4.747e3]
-        range = [16., 39.]
+        sptrange = [16., 39.]
         fitunc = 113.
+
+    elif ('faherty' in ref.lower()):
+        sptoffset = 10.
+        if kwargs.get('young',False) == True:
+            sptrange = [17., 27.]
+            reference = 'Teff/SpT young relation from Faherty et al. (2016)'
+            coeff = [1.330,-6.68637e1,1.23542e3,-1.00688e4,3.27664e4]
+            fitunc = 180.
+        elif kwargs.get('young2',False) == True:
+            sptrange = [17., 27.]
+            reference = 'Teff/SpT young2 relation from Faherty et al. (2016)'
+            coeff = [9.106e-4,-1.016e-1,4.578,-1.066e2,1.360e3,-9.183e3,2.795e4]
+            fitunc = 198.
+        elif kwargs.get('group',False) == True:
+            sptrange = [17., 27.]
+            reference = 'Teff/SpT group relation from Faherty et al. (2016)'
+            coeff = [7.383e0,-3.44522e2,4.87986e3]
+            fitunc = 172.
+        else:
+            sptrange = [17., 38.]
+            reference = 'Teff/SpT field relation from Faherty et al. (2016)'
+            coeff = [1.546e-4,-1.606e-2,6.318e-1,-1.191e1,1.155e2,-7.005e2,4.747e3]
+            fitunc = 113.
 
     else:
         sys.stderr.write('\nInvalid Teff/SpT relation given ({})\n'.format(ref))
         return numpy.nan, numpy.nan
 
-    if (range[0] <= spt <= range[1]):
-        vals = numpy.polyval(coeff,numpy.random.normal(spt-sptoffset,unc,nsamples))
+    if (sptrange[0] <= spt <= sptrange[1]):
+        teff = numpy.polyval(coeff,spt-sptoffset)
+        x = numpy.random.normal(spt-sptoffset,unc,nsamples)
+        x = x[numpy.where(numpy.logical_and(spt >= sptrange[0],spt <= sptrange[1]))]
+        vals = numpy.polyval(coeff,x)
         if ('stephens' in ref.lower()):
             if (range_alt[0] <= spt <= range_alt[1]):
-                vals = numpy.polyval(coeff_alt,numpy.random.normal(spt-sptoffset,unc,nsamples))
+                teff = numpy.polyval(coeff_alt,spt-sptoffset)
+                vals = numpy.polyval(coeff_alt,x)
         teff = numpy.nanmean(vals)
         teff_e = (numpy.nanstd(vals)**2+fitunc**2)**0.5
         return teff, teff_e

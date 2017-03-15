@@ -16,13 +16,16 @@ import string
 import sys
 
 # imports - external
-import numpy
-from astropy.coordinates import SkyCoord      # coordinate conversion
+from astropy.coordinates import Angle,SkyCoord      # coordinate conversion
 from astropy import units as u            # standard units
+import matplotlib.pyplot as plt
+import matplotlib.patheffects
+import numpy
 from scipy import stats
 
 # code constants
 from .initialize import *
+import splat
 
 # Python 2->3 fix for input
 try: input=raw_input
@@ -161,6 +164,77 @@ def checkOnlineFile(*args):
         return requests.get(SPLAT_URL).status_code == requests.codes.ok
 
 
+def checkInstrument(instrument):
+    '''
+
+    Purpose: 
+        Checks that an instrument name is one of the available instruments, including a check of alternate names
+
+    Required Inputs:
+        :param: instrument: A string containing the instrument name to be checked. This should be one of the instruments in the global parameter splat.initialize.INSTRUMENTS
+        
+    Optional Inputs:
+        None
+
+    Output:
+        A string containing SPLAT's default name for a given model set, or False if that model set is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat._checkModelName('burrows'))
+        burrows06
+    >>> print(splat._checkModelName('allard'))
+        BTSettl2008
+    >>> print(splat._checkModelName('somethingelse'))
+        False
+    '''
+    output = False
+    if not isinstance(instrument,str):
+        return output
+    for k in list(INSTRUMENTS.keys()):
+        if instrument.lower()==k.lower() or instrument.lower() in INSTRUMENTS[k]['altnames']:
+            output = k
+    return output
+
+
+def checkSpectralModelName(model):
+    '''
+
+    Purpose: 
+        Checks that an input model name is one of the available spectral models, including a check of alternate names
+
+    Required Inputs:
+        :param: model: A string containing the spectral model to be checked. This should be one of the models listed in `loadModel()`_
+
+    .. _`loadModel()` : api.html#splat_model.loadModel
+        
+    Optional Inputs:
+        None
+
+    Output:
+        A string containing SPLAT's default name for a given model set, or False if that model set is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat._checkModelName('burrows'))
+        burrows06
+    >>> print(splat._checkModelName('allard'))
+        BTSettl2008
+    >>> print(splat._checkModelName('somethingelse'))
+        False
+    '''
+    output = False
+    if not isinstance(model,str):
+        return output
+    for k in list(SPECTRAL_MODELS.keys()):
+        if model.lower()==k.lower() or model.lower() in SPECTRAL_MODELS[k]['altnames']:
+            output = k
+    return output
+
+
+
 #####################################################
 ##############   SIMPLE CONVERSIONS   ###############
 #####################################################
@@ -250,18 +324,18 @@ def properDate(din,**kwargs):
             dformat = 'MM/DD/YY'
         else:
             dformat = 'MM/DD/YYYY'
-    elif True in [c.lower() in d.lower() for c in MONTHS] and dformat == '':
+    if True in [c.lower() in d.lower() for c in MONTHS] and dformat == '':
         if isNumber(d.replace(' ','')[3]):
             dformat = 'YYYY MMM DD'
         else:
             dformat = 'DD MMM YYYY'
-    elif isNumber(d) and dformat == '':
-        if len(d) <= 6:
+    if 'T' in d and dformat == '':       # default American style
+        d = d.split('T')[0]
+    if isNumber(d) and dformat == '':
+        if len(str(d)) <= 6:
             dformat = 'YYMMDD'
         else:
             dformat = 'YYYYMMDD'            
-    else:
-        pass
 
 # no idea
     if dformat == '':
@@ -533,7 +607,7 @@ def designationToShortName(value):
 
 
 
-def properCoordinates(c):
+def properCoordinates(c,**kwargs):
     '''
     :Purpose: Converts various coordinate forms to the proper SkyCoord format. Convertible forms include lists and strings.
 
@@ -549,18 +623,30 @@ def properCoordinates(c):
         <SkyCoord (ICRS): ra=104.79 deg, dec=25.06 deg>
     '''
     if isinstance(c,SkyCoord):
-        return c
+        output = c
     elif isinstance(c,list):
-        return SkyCoord(c[0]*u.deg,c[1]*u.deg,frame='icrs')
+        output = SkyCoord(c[0]*u.deg,c[1]*u.deg,frame='icrs')
 # input is sexigessimal string
     elif isinstance(c,str):
         if c[0] == 'J':
-            return designationToCoordinate(c)
+            output = designationToCoordinate(c,**kwargs)
         else:
-            return SkyCoord(c,frame='icrs', unit=(u.hourangle, u.deg))
+            output = SkyCoord(c,frame='icrs', unit=(u.hourangle, u.deg))
     else:
         raise ValueError('\nCould not parse input format\n\n')
 
+    if kwargs.get('distance',False) != False:
+        d = copy.deepcopy(kwargs['distance'])
+        if not isinstance(d,u.quantity.Quantity):
+            d*=u.pc
+#        try:
+        d.to(u.pc)
+        print(output.distance)
+        output = SkyCoord(output,distance = d)
+#        except:
+#            print('\nWarning: could not integrate distance {} into coordinate'.format(distance))
+
+    return output
 
 
 
@@ -839,4 +925,218 @@ def weightedMeanVar(vals, winp, *args, **kwargs):
         var+=numpy.nansum([w**2 for w in winput])/(len(winput)**2)
 
     return mn,numpy.sqrt(var)
+
+
+
+#####################################################
+################   CODE MANAGEMENT   ################
+#####################################################
+#
+# Note that all of these should have a checkAccess() flag
+#
+#####################################################
+
+def codeStats():
+# library statistics - # of total/public spectra, # of total/public sources, # of source papers for public data
+    if checkAccess() == False:
+        raise ValueError('You do not have sufficient access to run this program\n')
+
+    sall = splat.searchLibrary()
+    print('Total number of spectra = {} of {} sources'.format(len(sall),len(numpy.unique(numpy.array(sall['SOURCE_KEY'])))))
+    s = splat.searchLibrary(public=True)
+    print('Total number of public spectra = {} of {} sources'.format(len(s),len(numpy.unique(numpy.array(s['SOURCE_KEY'])))))
+
+# data citations 
+    pubs = numpy.unique(numpy.array(s['DATA_REFERENCE']))
+    print('Total number of citations for public spectra = {}'.format(len(pubs)))
+    cites = []
+    cites_html = []
+    for p in pubs:
+        try:
+            cites_html.append('<li>{} [<a href="{}">NASA ADS</a>]'.format(splat.citations.longRef(str(p)),splat.citations.citeURL(str(p))))
+            cites.append('{}'.format(splat.citations.longRef(str(p))))
+        except:
+            print('Warning: no bibtex information for citation {}'.format(p))
+    cites.sort()
+    with open(SPLAT_PATH+DOCS_FOLDER+'_static/citation_list.txt', 'w') as f:
+        f.write('Data references in SPLAT:\n')
+        for c in cites:
+            f.write('{}\n'.format(c))
+    cites_html.sort()
+    with open(SPLAT_PATH+DOCS_FOLDER+'_static/citation_list.html', 'w') as f:
+        f.write('<ul>\n')
+        for c in cites_html:
+            f.write('\t{}\n'.format(c))
+        f.write('</ul>\n')
+
+# histogram of spectral types - all spectra
+    sptrng = [16,40]
+    xticks = range(sptrng[0],sptrng[1])
+    labels = [splat.typeToNum(x) for x in range(sptrng[0],sptrng[1])]
+    for i in range(2):
+        if i == 0:
+            s1 = sall[sall['OBJECT_TYPE'] == 'VLM']
+            fname = 'all'
+        else:
+            s1 = s[s['OBJECT_TYPE'] == 'VLM']
+            fname = 'published'
+        spex_spts = []
+        opt_spts = []
+        nir_spts = []
+        spts = []
+        for i,x in enumerate(s1['SPEX_TYPE']):
+            spt = -99.
+            if splat.isNumber(splat.typeToNum(x)): 
+                sspt = splat.typeToNum(x)
+                spex_spts.append(sspt)
+                spt = copy.deepcopy(sspt)
+            nspt = splat.typeToNum(s1['NIR_TYPE'][i])
+            if splat.isNumber(nspt):
+                nir_spts.append(spt)
+                if nspt > 28.: spt = copy.deepcopy(nspt)
+            ospt = splat.typeToNum(s1['OPT_TYPE'][i])
+            if splat.isNumber(ospt):
+                opt_spts.append(spt)
+                if ospt < 29.: spt = copy.deepcopy(ospt)
+            if spt > 0: spts.append(spt)
+    # SpeX type
+        sptarr = numpy.array(spex_spts)
+        plt.figure(figsize=(14,6))
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='green', alpha=0.75)
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='red', alpha=0.75)
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='b', alpha=0.75)
+        plt.xticks(xticks,labels)
+        plt.xlabel('SpeX Spectral Type')
+        plt.ylabel('log10 Number')
+        plt.xlim([sptrng[0]-0.5,sptrng[1]+0.5])
+        plt.legend(['M dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))])),'L dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))])),'T dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))]))])
+        plt.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/spt_spex_distribution_{}.png'.format(fname))
+        plt.clf()
+    # Optical type
+        sptarr = numpy.array(opt_spts)
+        plt.figure(figsize=(14,6))
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='green', alpha=0.75)
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='red', alpha=0.75)
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='b', alpha=0.75)
+        plt.xticks(xticks,labels)
+        plt.xlabel('Optical Spectral Type')
+        plt.ylabel('log10 Number')
+        plt.xlim([sptrng[0]-0.5,sptrng[1]+0.5])
+        plt.legend(['M dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))])),'L dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))])),'T dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))]))])
+        plt.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/spt_optical_distribution_{}.png'.format(fname))
+        plt.clf()
+    # NIR type
+        sptarr = numpy.array(nir_spts)
+        plt.figure(figsize=(14,6))
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='green', alpha=0.75)
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='red', alpha=0.75)
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='b', alpha=0.75)
+        plt.xticks(xticks,labels)
+        plt.xlabel('NIR Spectral Type')
+        plt.ylabel('log10 Number')
+        plt.xlim([sptrng[0]-0.5,sptrng[1]+0.5])
+        plt.legend(['M dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))])),'L dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))])),'T dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))]))])
+        plt.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/spt_nir_distribution_{}.png'.format(fname))
+        plt.clf()
+    # Adopted type
+        sptarr = numpy.array(spts)
+        plt.figure(figsize=(14,6))
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='green', alpha=0.75)
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='red', alpha=0.75)
+        n, bins, patches = plt.hist(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))], bins=len(range(sptrng[0],sptrng[1])), log=True, range=sptrng, facecolor='b', alpha=0.75)
+        plt.xticks(xticks,labels)
+        plt.xlabel('Adopted Spectral Type')
+        plt.ylabel('log10 Number')
+        plt.xlim([sptrng[0]-0.5,sptrng[1]+0.5])
+        plt.legend(['M dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))])),'L dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))])),'T dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))]))])
+        plt.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/spt_adopted_distribution_{}.png'.format(fname))
+        plt.clf()
+
+# histogram of S/N
+
+# map sources on sky
+    raref = Angle(numpy.linspace(0,359.,360)*u.degree)
+    raref.wrap_at(180.*u.degree)
+    ra = Angle(sall['RA'].filled(numpy.nan)*u.degree)
+    ra = ra.wrap_at(180*u.degree)
+    dec = Angle(sall['DEC'].filled(numpy.nan)*u.degree)
+    rap = Angle(s['RA'].filled(numpy.nan)*u.degree)
+    rap = rap.wrap_at(180*u.degree)
+    decp = Angle(s['DEC'].filled(numpy.nan)*u.degree)
+    fig = plt.figure(figsize=(8,6))
+    ax = fig.add_subplot(111, projection="mollweide")
+    p1 = ax.scatter(ra.radian, dec.radian,color='r',alpha=0.5,s=10)
+    p2 = ax.scatter(rap.radian, decp.radian,color='k',alpha=0.5, s=5)
+#    ur = ax.plot(raref.radian,Angle([67.]*len(raref)*u.degree).radian,'k--')
+#    ur = ax.plot(raref.radian,Angle([-50.]*len(raref)*u.degree).radian,'k--')
+    ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
+    ax.grid(True)
+#    ef = matplotlib.patheffects.withStroke(foreground="w", linewidth=3)
+#    axis = ax.axis['lat=0']
+#    axis.major_ticklabels.set_path_effects([ef])
+ #   axis.label.set_path_effects([ef])
+    plt.legend([p1,p2],['All Sources ({})'.format(len(sall)),'Published Sources ({})'.format(len(s))],bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
+    fig.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/map_all.png')
+    fig.clf()
+
+# map sources on based on spectral type
+    fig = plt.figure(figsize=(8,6))
+    ax = fig.add_subplot(111, projection="mollweide")
+    sm = splat.searchLibrary(spt_range=[10,19.9],spt_type='SPEX')
+    sm = sm[sm['OBJECT_TYPE'] == 'VLM']
+    sl = splat.searchLibrary(spt_range=[20,29.9],spt_type='SPEX')
+    sl = sl[sl['OBJECT_TYPE'] == 'VLM']
+    st = splat.searchLibrary(spt_range=[30,39.9],spt_type='SPEX')
+    st = st[st['OBJECT_TYPE'] == 'VLM']
+    ra = Angle(sm['RA'].filled(numpy.nan)*u.degree)
+    ra = ra.wrap_at(180*u.degree)
+    dec = Angle(sm['DEC'].filled(numpy.nan)*u.degree)
+    p1 = ax.scatter(ra.radian, dec.radian,color='k',alpha=0.5,s=10)
+    ra = Angle(sl['RA'].filled(numpy.nan)*u.degree)
+    ra = ra.wrap_at(180*u.degree)
+    dec = Angle(sl['DEC'].filled(numpy.nan)*u.degree)
+    p2 = ax.scatter(ra.radian, dec.radian,color='r',alpha=0.5,s=10)
+    ra = Angle(st['RA'].filled(numpy.nan)*u.degree)
+    ra = ra.wrap_at(180*u.degree)
+    dec = Angle(st['DEC'].filled(numpy.nan)*u.degree)
+    p3 = ax.scatter(ra.radian, dec.radian,color='b',alpha=0.5,s=10)
+    plt.legend([p1,p2,p3],['M dwarfs ({})'.format(len(sm)),'L dwarfs ({})'.format(len(sl)),'T dwarfs ({})'.format(len(st))],bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
+    ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
+    ax.grid(True)
+    fig.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/map_byspt.png')
+    fig.clf()
+
+# map sources on based on young or field
+    fig = plt.figure(figsize=(8,6))
+    ax = fig.add_subplot(111, projection="mollweide")
+    sy = splat.searchLibrary(young=True)
+    sy = sy[sy['OBJECT_TYPE'] == 'VLM']
+    so = splat.searchLibrary()
+    so = so[so['OBJECT_TYPE'] == 'VLM']
+    ra = Angle(so['RA'].filled(numpy.nan)*u.degree)
+#    ra = ra.wrap_at(180*u.degree)
+#    dec = Angle(so['DEC'].filled(numpy.nan)*u.degree)
+#    p1 = ax.scatter(ra.radian, dec.radian,color='k',alpha=0.1,s=5)
+    ra = Angle(sy['RA'].filled(numpy.nan)*u.degree)
+    ra = ra.wrap_at(180*u.degree)
+    dec = Angle(sy['DEC'].filled(numpy.nan)*u.degree)
+    p1 = ax.scatter(ra.radian, dec.radian,color='r',alpha=0.5,s=10)
+    ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
+    ax.grid(True)
+    plt.legend([p1],['Young Sources ({})'.format(len(sy))],bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
+    fig.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/map_young.png')
+    fig.clf()
+
+# pie chart of spectrum types
+    ot = numpy.unique(numpy.array(sall['OBJECT_TYPE']))
+    otypes = 'STAR','GIANT','WD','GALAXY','OTHER'
+    sizes = [len(sall[sall['OBJECT_TYPE']==o]) for o in otypes]
+    explode = (0.1,0,0,0,0)
+
+    fig, ax = plt.subplots()
+    ax.pie(sizes, explode=explode, labels=otypes, autopct='%1.1f%%',
+        shadow=True, startangle=90, pctdistance = 0.7)
+    ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    fig.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/object_othertypes.png')
+
 

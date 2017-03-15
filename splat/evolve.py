@@ -26,8 +26,8 @@ import scipy.integrate as integrate
 import scipy.stats as stats
 
 # imports: splat
-from .initialize import *
-from .utilities import *
+from splat.initialize import *
+from splat.utilities import *
 
 
 ###############################################################################
@@ -108,7 +108,7 @@ def loadEvolModel(*model,**kwargs):
     except TypeError: raise TypeError("Model must be a string.")
     except IndexError: model = 'baraffe'
     finally: print("You are using " + model + "'s models.")
-    assert model in EMODELS, "\nModel {} not in allowed model sets; please use: {}\n".format(model,' '.join(EMODELS))
+    assert model in list(EVOLUTIONARY_MODELS.keys()), "\nModel {} not in allowed model sets; please use: {}\n".format(model,' '.join(list(EVOLUTIONARY_MODELS.keys())))
 
 ##################### BARAFFE OR BURROWS MODEL #########################
     if model == 'baraffe' or model == 'burrows':
@@ -168,14 +168,14 @@ def loadEvolModel(*model,**kwargs):
 
 # read in parameters
     mparam = {}
-    for ep in EPARAMETERS:
+    for ep in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         mparam[ep] = []
 
     for i,age in enumerate(ages):
         mfile = prefix+'{:05d}.txt'.format(int(float(age)*1000.))
         try:
             dp=pandas.read_csv(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+mfile,comment='#',sep=',',header=0)
-            for ep in EPARAMETERS:
+            for ep in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
                 mparam[ep].append(dp[ep].values)
 
 # this is done in case models are not local - NOTE: currently just throwing an error
@@ -220,10 +220,10 @@ def _modelParametersSingle(*args, **kwargs):
 
 # prep output parameters
     params = {}
-    for e in EPARAMETERS:
+    for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         params[e] = 0.
 
-    for e in EPARAMETERS:
+    for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         if e in keywords:
             try: f = float(kwargs[e])
             except: raise ValueError('\nInput paramter {} must be a single number, not {}\n'.format(e,kwargs[e]))
@@ -405,7 +405,7 @@ def _modelParametersSingle(*args, **kwargs):
 
 # something failed	  
     else:
-        for e in EPARAMETERS:
+        for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
             params[e] = numpy.nan
         print('\nParameter set is not covered by models\n')
         return params
@@ -467,7 +467,7 @@ def modelParameters(*model,**kwargs):
 
 # do some key word replacement
     mkwargs = {}
-    for e in EPARAMETERS:
+    for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         if e in keywords:
             mkwargs[e] = kwargs[e]
     if 'temperature' not in keywords:
@@ -510,7 +510,7 @@ def modelParameters(*model,**kwargs):
     inparams = {}
     outparams = {}
     pkeys = list(mkwargs.keys())
-    for p in EPARAMETERS:
+    for p in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         outparams[p] = []
         if p in pkeys:
             if isinstance(mkwargs[p],float) or isinstance(mkwargs[p],int):
@@ -522,18 +522,18 @@ def modelParameters(*model,**kwargs):
         for p in pkeys:
             inparams[p] = mkwargs[p][i]
         par = _modelParametersSingle(model,**inparams)
-        for p in EPARAMETERS:
+        for p in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
             outparams[p].append(par[p])
 
 
 # remove lists if only one parameter set is being calculated
     if len(outparams['temperature']) == 1:
-        for e in EPARAMETERS:
+        for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
             outparams[e] = outparams[e][0]
 
 # add units
-    for e in EPARAMETERS:
-        outparams[e] *= EPARAMETER_UNITS[e]
+    for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
+        outparams[e] *= EVOLUTIONARY_MODEL_PARAMETERS[e]['unit']
 
     return outparams
 
@@ -732,8 +732,8 @@ def plotModelParameters(parameters,xparam,yparam,**kwargs):
                 plt.plot(xvals[i],yvals[i],color='grey')
 
 # add labels
-    plt.xlabel(kwargs.get('xlabel','{} ({})'.format(xmparam,EPARAMETER_UNITS[xmparam])))
-    plt.ylabel(kwargs.get('ylabel','{} ({})'.format(ymparam,EPARAMETER_UNITS[ymparam])))
+    plt.xlabel(kwargs.get('xlabel','{} ({})'.format(xmparam,EVOLUTIONARY_MODEL_PARAMETERS[xmparam]['unit'])))
+    plt.ylabel(kwargs.get('ylabel','{} ({})'.format(ymparam,EVOLUTIONARY_MODEL_PARAMETERS[yparam]['unit'])))
     if kwargs.get('title',False) != False:
         plt.title(kwargs.get('title'))
 # tighten plot

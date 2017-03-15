@@ -93,7 +93,7 @@ def filterMag(sp,filt,*args,**kwargs):
     filt = filt.replace(' ','_')
     filt.upper()
     if (filt not in FILTERS.keys() and isinstance(custom,bool) and isinstance(notch,bool)):
-        print('\nFilter '+filt+' not currently available for SPLAT; contact '+SPLAT_EMAIL+'\n')
+        if kwargs.get('verbose',True): print('\nFilter '+filt+' not currently available for SPLAT; contact '+SPLAT_EMAIL+'\n')
         info = True
 
 # print out what's available
@@ -119,11 +119,11 @@ def filterMag(sp,filt,*args,**kwargs):
 
 # check that spectrum and filter cover the same wavelength ranges
     if numpy.nanmax(fwave) < numpy.nanmin(sp.wave) or numpy.nanmin(fwave) > numpy.nanmax(sp.wave):
-        print('\nWarning: no overlap between spectrum for {} and filter {}'.format(sp.name,filter0))
+        if kwargs.get('verbose',True): print('\nWarning: no overlap between spectrum for {} and filter {}'.format(sp.name,filter0))
         return numpy.nan, numpy.nan
 
     if numpy.nanmin(fwave) < numpy.nanmin(sp.wave) or numpy.nanmax(fwave) > numpy.nanmax(sp.wave):
-        print('\nWarning: spectrum for {} does not span full filter profile for {}'.format(sp.name,filter0))
+        if kwargs.get('verbose',True): print('\nWarning: spectrum for {} does not span full filter profile for {}'.format(sp.name,filter0))
 
 # interpolate spectrum onto filter wavelength function
     wgood = numpy.where(~numpy.isnan(sp.noise))
@@ -132,7 +132,7 @@ def filterMag(sp,filt,*args,**kwargs):
         n = interp1d(sp.wave[wgood].value,sp.noise[wgood].value,bounds_error=False,fill_value=0)
 # catch for models
     else:
-        print('\nWarning: data values in range of filter {} have no uncertainties'.format(filt))
+        if kwargs.get('verbose',True): print('\nWarning: data values in range of filter {} have no uncertainties'.format(filt))
         d = interp1d(sp.wave.value,sp.flux.value,bounds_error=False,fill_value=0.)
         n = interp1d(sp.wave.value,sp.flux.value*1.e-9,bounds_error=False,fill_value=0.)
 
