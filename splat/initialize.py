@@ -275,8 +275,8 @@ INSTRUMENTS = {
 SPECTRAL_MODELS = {\
     'btsettl08': {'name': 'BT-Settl (2008)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['allard','allard12','allard2012','btsettl','btsettled','btsettl08','btsettl2008','BTSettl2008'], 'rawfolder': HOME_FOLDER+'/models/allard/cifist2011/'}, \
     'burrows06': {'name': 'Burrows et al. (2006)', 'bibcode': '2006ApJ...640.1063B', 'altnames': ['burrows','burrows2006'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows06/'}, \
-    'morley12': {'name': 'Morley et al. (2012)', 'bibcode': '2012ApJ...756..172M', 'altnames': ['morley','morley2012'], 'rawfolder': HOME_FOLDER+'/models/morley12/'}, \
-    'morley14': {'name': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altnames': ['morley2014'], 'rawfolder': HOME_FOLDER+'/models/morley14/'}, \
+    'morley12': {'name': 'Morley et al. (2012)', 'bibcode': '2012ApJ...756..172M', 'altnames': ['morley','morley2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley12/'}, \
+    'morley14': {'name': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altnames': ['morley2014'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley14/'}, \
     'saumon12': {'name': 'Saumon et al. (2012)', 'bibcode': '2012ApJ...750...74S', 'altnames': ['saumon','saumon2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Saumon12/'}, \
     'drift': {'name': 'Witte et al. (2011)', 'bibcode': '2011A&A...529A..44W', 'altnames': ['witte','witte11','witte2011','helling'], 'rawfolder': HOME_FOLDER+'/models/drift/'}}
 SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','fsed','cld','kzz']
@@ -290,6 +290,7 @@ SPECTRAL_MODEL_PARAMETERS = {\
 #    'kzz': u.dex(u.cm*u.cm/u.s), \
 #    'slit': {'unit': u.arcsec, 'default': 0.5, 'title': 'slit'}}
 SPECTRAL_MODEL_FLUX_UNIT = u.erg/(u.s*u.micron*(u.cm**2))
+SPECTRAL_MODEL_WAVE_UNIT = u.micron
 #DEFINED_MODEL_BIBCODES = {\
 #    'BTSettl2008': '', \
 #    'burrows06': '2006ApJ...640.1063B',\

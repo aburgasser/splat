@@ -48,7 +48,7 @@ MODELS_READIN = {}
 #######################################################
 
 def _test():
-    _processModels('btsettl08')
+    _processModels('morley14')
 
 # helper function to read in Saumon et al. 2012 models
 def _readBurrows06(file):
@@ -78,7 +78,17 @@ def _readBtsettl08(file):
     flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     return wave, flux
 
+def _readMorley14(file):
+    if not os.access(file, os.R_OK):
+        raise ValueError('Could not find model file {}'.format(file))
+    data = ascii.read(file,data_start=4)
+    freq = numpy.array(data['col1'])*u.Hz
+    wave = freq.to(SPECTRAL_MODEL_WAVE_UNIT,equivalencies=u.spectral())
+    flux = numpy.array(data['col2'])*u.erg/(u.s*u.Hz*u.cm**2)
+    flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    return wave, flux
 
+# this also reads in Morley et al. 2012 models
 def _readSaumon12(file):
     if not os.access(file, os.R_OK):
         raise ValueError('Could not find model file {}'.format(file))
@@ -122,7 +132,29 @@ def _processModels(*args,**kwargs):
         mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
         mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
         mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
-# Saumon 2012: no metallicity, fsed, kzz or clouds
+# Morley et al. 2012: no metallicity, fsed, kzz or clouds
+    elif modelset == 'morley12':
+        readfxn = _readSaumon12
+        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*')
+        mparam = {}
+        mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
+        mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
+        mparam['z'] = [SPECTRAL_MODEL_PARAMETERS['z']['default'] for f in files]
+        mparam['fsed'] = ['f'+((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1] for f in files]
+        mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
+        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
+# Morley et al. 2014: no metallicity, fsed, kzz or clouds
+    elif modelset == 'morley14':
+        readfxn = _readMorley14
+        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*')
+        mparam = {}
+        mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
+        mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
+        mparam['z'] = [SPECTRAL_MODEL_PARAMETERS['z']['default'] for f in files]
+        mparam['fsed'] = ['f'+(((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1]).split('h')[0] for f in files]
+        mparam['cld'] = ['h'+(((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1]).split('h')[-1] for f in files]
+        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
+# Saumon & Marley 2012: no metallicity, fsed, kzz or clouds
     elif modelset == 'saumon12':
         readfxn = _readSaumon12
         files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*')
@@ -154,7 +186,7 @@ def _processModels(*args,**kwargs):
 # generate models at instrumental resolutions
         if kwargs.get('make_instruments',True) == True:
             for instr in instrument_set:
-                outputfile = outputfolder+modelset+'_{}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.format(int(mparam['teff'][i]),mparam['logg'][i],mparam['z'][i],mparam['fsed'][i],mparam['cld'][i],mparam['kzz'][i],instr)
+                outputfile = outputfolder+modelset+'_{}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.format(int(mparam['teff'][i]),mparam['logg'][i],mparam['z'][i]-0.0001,mparam['fsed'][i],mparam['cld'][i],mparam['kzz'][i],instr)
 # first smooth relevant piece of spectrum            
                 w = numpy.where(numpy.logical_and(wv.value >= (INSTRUMENTS[instr]['waverange'].value[0]-0.1),wv.value <= (INSTRUMENTS[instr]['waverange'].value[1]+0.1)))
                 flxsm = _smooth2resolution(wv.value[w],flx.value[w],INSTRUMENTS[instr]['resolution'])
@@ -179,7 +211,7 @@ def _processModels(*args,**kwargs):
 
 # generate models for SEDs
         if kwargs.get('make_sed',True) == True:
-            outputfile = outputfolder+modelset+'_{}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.format(int(mparam['teff'][i]),mparam['logg'][i],mparam['z'][i],mparam['fsed'][i],mparam['cld'][i],mparam['kzz'][i],'SED')
+            outputfile = outputfolder+modelset+'_{}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.format(int(mparam['teff'][i]),mparam['logg'][i],mparam['z'][i]-0.0001,mparam['fsed'][i],mparam['cld'][i],mparam['kzz'][i],'SED')
 # first smooth relevant piece of spectrum            
             flxsm = _smooth2resolution(wv.value,flx.value,sedres)
 # interpret onto observed wavelength grid
@@ -227,45 +259,6 @@ def _smooth2resolution(wave,flux,resolution,**kwargs):
     return f(wave)
 
 
-
-
-
-def processModels(**kwargs):
-    '''
-    :Purpose: Generates a set of smoothed models and SEDs for an input model set; this is a function that requires 'superuser' access
-    '''
-
-    if checkAccess() is not True:
-        print('\nThis routine may only be run by SPLAT administrators\n')
-        return
-
-# ALLARD files
-    if kwargs.get('model',' ').lower() == 'btsettl2015':
-        basefolder = os.path.expanduser("~")+'/models/allard/cifist2015/BT-Settl_M-0.0a+0.0/'
-        files = glob.glob(basefolder+'lte*.7')
-        teff = [100.*float(f[len(basefolder)+3:len(basefolder)+8]) for f in files]
-        logg = [float(f[len(basefolder)+9:len(basefolder)+12]) for f in files]
-        z = [float(f[len(basefolder)+12:len(basefolder)+16]) for f in files]
-
-# baseline spectrum for wavelength solution        
-        ospex = Spectrum(10001) 
-#        uspex = Spectrum(12160)      - need to make this file available before using
-
-        for f in files:
-# read in file
-            print('\nReading in file {}'.format(f))
-            data = ascii.read(f,format='tab')
-            wave  = numpy.array([float(x[0][0:13])/1.e4 for x in data])
-            flux = numpy.array([10.**(float(x[0][13:25].replace('D','e'))-8.) for x in data])
-
-# generate SpeX formats using a baseline spectrum
-# THIS IS A TEMPORARY SET UP  
-            w = numpy.where(numpy.logical_and(wave >= 0.6,wave <= 2.5))
-            sp = Spectrum(wave=wave[w],flux=flux[w])
-            wn = wave[numpy.where(numpy.logical_and(wave >= 1.6,wave <= 1.7))]
-            sp.resolution = wn[1]/(wn[1]-wn[0])
-            sp.smooth(resolution=200)
-            s03 = sp.copy()
 
 
 
