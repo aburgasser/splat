@@ -1802,9 +1802,37 @@ def searchLibrary(*args, **kwargs):
 #        print(count,numpy.max(source_db['SELECT']))
 
 # search by spectral type
+# THIS COULD USE SOME CLEAN UP
+    
+
     spt_range = kwargs.get('spt_range',False)
     spt_range = kwargs.get('spt',spt_range)
     spt_type = kwargs.get('spt_type','LIT_TYPE')
+    if kwargs.get('opt_spt',False) != False:
+        spt_type = 'OPT_TYPE'
+        spt_range = kwargs['opt_spt']
+    if kwargs.get('optspt',False) != False:
+        spt_type = 'OPT_TYPE'
+        spt_range = kwargs['optspt']
+    if kwargs.get('spex_spt',False) != False:
+        spt_type = 'SPEX_TYPE'
+        spt_range = kwargs['spex_spt']
+    if kwargs.get('spexspt',False) != False:
+        spt_type = 'SPEX_TYPE'
+        spt_range = kwargs['spexspt']
+    if kwargs.get('nir_spt',False) != False:
+        spt_type = 'NIR_TYPE'
+        spt_range = kwargs['nir_spt']
+    if kwargs.get('nirspt',False) != False:
+        spt_type = 'NIR_TYPE'
+        spt_range = kwargs['nirspt']
+    if kwargs.get('lit_spt',False) != False:
+        spt_type = 'LIT_TYPE'
+        spt_range = kwargs['lit_spt']
+    if kwargs.get('litspt',False) != False:
+        spt_type = 'LIT_TYPE'
+        spt_range = kwargs['litspt']
+
     if spt_type.lower() == 'lit_type' or spt_type.lower() == 'lit' or spt_type.lower() == 'literature' or spt_type.lower() == 'pub' or spt_type.lower() == 'published':
         spt_type = 'LIT_TYPE'
     elif spt_type.lower() == 'spex_type' or spt_type.lower() == 'spex':
