@@ -48,7 +48,7 @@ MODELS_READIN = {}
 #######################################################
 
 def _test():
-    _processModels('morley14')
+    _processModels('madhusudhan2011')
 
 # helper function to read in Saumon et al. 2012 models
 def _readBurrows06(file):
@@ -122,6 +122,16 @@ def _processModels(*args,**kwargs):
         mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
         mparam['cld'] = [f.split('_')[2].replace('cf','nc') for f in files]
         mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
+    elif modelset == 'madhusudhan11':
+        readfxn = _readBurrows06
+        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/*')
+        mparam = {}
+        mparam['teff'] = [float(f.split('_')[1].split('t')[-1]) for f in files]
+        mparam['logg'] = [float(f.split('_')[2].split('g')[-1]) for f in files]
+        mparam['z'] = [numpy.round(numpy.log10(float(f.split('_')[3].split('z')[-1]))*10.)/10. for f in files]
+        mparam['fsed'] = [f.split('_')[-1].lower() for f in files]
+        mparam['cld'] = [(f.split('/')[-1]).split('_')[0].lower() for f in files]
+        mparam['kzz'] = [f.split('_')[-2].lower() for f in files]
     elif modelset == 'btsettl08':
         readfxn = _readBtsettl08
         files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz')

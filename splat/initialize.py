@@ -273,8 +273,9 @@ INSTRUMENTS = {
 #    'saumon12': 'Saumon et al. (2012)',\
 #    'drift': 'Witte et al. (2011)'}
 SPECTRAL_MODELS = {\
-    'btsettl08': {'name': 'BT-Settl (2008)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['allard','allard12','allard2012','btsettl','btsettled','btsettl08','btsettl2008','BTSettl2008'], 'rawfolder': HOME_FOLDER+'/models/allard/cifist2011/'}, \
     'burrows06': {'name': 'Burrows et al. (2006)', 'bibcode': '2006ApJ...640.1063B', 'altnames': ['burrows','burrows2006'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows06/'}, \
+    'btsettl08': {'name': 'BT-Settl (2008)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['allard','allard12','allard2012','btsettl','btsettled','btsettl08','btsettl2008','BTSettl2008'], 'rawfolder': HOME_FOLDER+'/models/allard/cifist2011/'}, \
+    'madhusudhan11': {'name': 'Madhusudhan et al. (2011)', 'bibcode': '2011ApJ...737...34M', 'altnames': ['madhu','madhusudhan','madhu11','madhu2011','madhusudhan2011'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows11/all/'}, \
     'morley12': {'name': 'Morley et al. (2012)', 'bibcode': '2012ApJ...756..172M', 'altnames': ['morley','morley2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley12/'}, \
     'morley14': {'name': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altnames': ['morley2014'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley14/'}, \
     'saumon12': {'name': 'Saumon et al. (2012)', 'bibcode': '2012ApJ...750...74S', 'altnames': ['saumon','saumon2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Saumon12/'}, \

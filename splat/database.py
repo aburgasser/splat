@@ -810,6 +810,7 @@ def importSpectra(*args,**kwargs):
             t_spec['JULIAN_DATE'] = [Time(properDate(str(a),output='YYYY-MM-DD')).mjd for a in t_input['DATE']]
         if 'RESOLUTION' in tkeys:
             t_spec['RESOLUTION'] = [r for r in t_input['RESOLUTION']]
+# CHANGE THIS TO BE INSTRUMENT SPECIFIC
         if 'SLIT' in tkeys:
             t_spec['RESOLUTION'] = [150.*0.5/float(s) for s in t_input['SLIT']]
         if 'AIRMASS' in tkeys:
@@ -843,8 +844,9 @@ def importSpectra(*args,**kwargs):
             sp.header['RA'] = sp.header['TCS_RA']
             sp.header['DEC'] = sp.header['TCS_DEC']
             sp.header['RA'] = sp.header['RA'].replace('+','')
-        if t_src['DESIGNATION'][i].strip() == '' and sp.header['RA'] != '' and sp.header['DEC'] != '':
-            t_src['DESIGNATION'][i] = 'J{}+{}'.format(sp.header['RA'].replace('+',''),sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('++','+').replace('J+','J').replace(' ','')
+        if t_src['DESIGNATION'][i].strip() == '' and 'RA' in sp.header.keys() and 'DEC' in sp.header.keys():
+            if sp.header['RA'] != '' and sp.header['DEC'] != '':
+                t_src['DESIGNATION'][i] = 'J{}+{}'.format(sp.header['RA'].replace('+',''),sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('++','+').replace('J+','J').replace(' ','')
 #            print('DETERMINED DESIGNATION {} FROM RA/DEC'.format(t_src['DESIGNATION'][i]))
         if t_src['RA'][i].strip() == '' and t_src['DESIGNATION'][i].strip() != '':
             coord = properCoordinates(t_src['DESIGNATION'][i])
@@ -857,9 +859,10 @@ def importSpectra(*args,**kwargs):
         if 'DESIGNATION' in tkeys:
             t_src['DESIGNATION'] = t_input['DESIGNATION']
             t_src['NAME'] = t_src['DESIGNATION']
-#            coord = [spl.properCoordinates(s) for s in t_src['DESIGNATION']]
-#            t_src['RA'] = [c.ra.value for c in coord]
-#            t_src['DEC'] = [c.dec.value for c in coord]
+# may want to check how we overrule fits file headers
+            coord = [properCoordinates(s) for s in t_src['DESIGNATION']]
+            t_src['RA'] = [c.ra.value for c in coord]
+            t_src['DEC'] = [c.dec.value for c in coord]
         if 'NAME' in tkeys:
             t_src['NAME'] = t_input['NAME']
         if 'RA' in tkeys and 'DEC' in tkeys:
@@ -872,6 +875,22 @@ def importSpectra(*args,**kwargs):
             t_src['OPT_TYPE'] = t_input['OPT_TYPE']
         if 'NIR_TYPE' in tkeys:
             t_src['NIR_TYPE'] = t_input['NIR_TYPE']
+        if 'J' in tkeys:
+            t_src['J_2MASS'] = t_input['J']
+        if 'J_E' in tkeys:
+            t_src['J_2MASS_E'] = t_input['J_E']
+        if 'H' in tkeys:
+            t_src['H_2MASS'] = t_input['H']
+        if 'H_E' in tkeys:
+            t_src['H_2MASS_E'] = t_input['H_E']
+        if 'K' in tkeys:
+            t_src['KS_2MASS'] = t_input['K']
+        if 'KS' in tkeys:
+            t_src['KS_2MASS'] = t_input['KS']
+        if 'K_E' in tkeys:
+            t_src['KS_2MASS_E'] = t_input['K_E']
+        if 'KS_E' in tkeys:
+            t_src['KS_2MASS_E'] = t_input['KS_E']
 
 #    for c in DB_SOURCES.keys():
 #        if c not in t_src.keys():
@@ -1072,16 +1091,16 @@ def importSpectra(*args,**kwargs):
 #    if 'SIMBAD_SEP' in t_src.keys():
 #        t_src.remove_column('SIMBAD_SEP')
 
-    for col in t_src.colnames:
-        tmp = t_src[col].astype(splat.DB_SOURCES[col].dtype)
-        t_src.replace_column(col,tmp)
-    t_merge = vstack([splat.DB_SOURCES,t_src])
-    t_merge.sort('SOURCE_KEY')
-    if 'SHORTNAME' in t_merge.keys():
-        t_merge.remove_column('SHORTNAME')
-    if 'SELECT' in t_merge.keys():
-        t_merge.remove_column('SELECT')
-    t_merge.write(review_folder+DB_SOURCES_FILE,format='ascii.tab')
+#    for col in t_src.colnames:
+#        tmp = t_src[col].astype(splat.DB_SOURCES[col].dtype)
+#        t_src.replace_column(col,tmp)
+#    t_merge = vstack([splat.DB_SOURCES,t_src])
+#    t_merge.sort('SOURCE_KEY')
+#    if 'SHORTNAME' in t_merge.keys():
+#        t_merge.remove_column('SHORTNAME')
+#    if 'SELECT' in t_merge.keys():
+#        t_merge.remove_column('SELECT')
+#    t_merge.write(review_folder+DB_SOURCES_FILE,format='ascii.tab')
 
 # spectrum db
     t_spec = fetchDatabase(review_folder+'spectrum_update.csv',csv=True)
@@ -1112,25 +1131,25 @@ def importSpectra(*args,**kwargs):
 #                    print('Moved {} to {}/unpublished/'.format(t_spec['DATA_FILE'][i],review_folder))
 
 # merge and export
-    for col in t_spec.colnames:
+#    for col in t_spec.colnames:
 #        print(col,DB_SPECTRA[col].dtype)
-        tmp = t_spec[col].astype(splat.DB_SPECTRA[col].dtype)
-        t_spec.replace_column(col,tmp)
-    t_merge = vstack([splat.DB_SPECTRA,t_spec])
-    t_merge.sort('DATA_KEY')
-    if 'SHORTNAME' in t_merge.keys():
-        t_merge.remove_column('SHORTNAME')
-    if 'SELECT' in t_merge.keys():
-        t_merge.remove_column('SELECT')
-    if 'SOURCE_SELECT' in t_merge.keys():
-        t_merge.remove_column('SOURCE_SELECT')
-    if 'DATEN' in t_merge.keys():
-        t_merge.remove_column('DATEN')
-    t_merge.write(review_folder+splat.DB_SPECTRA_FILE,format='ascii.tab')
+#        tmp = t_spec[col].astype(splat.DB_SPECTRA[col].dtype)
+#        t_spec.replace_column(col,tmp)
+#    t_merge = vstack([splat.DB_SPECTRA,t_spec])
+#    t_merge.sort('DATA_KEY')
+#    if 'SHORTNAME' in t_merge.keys():
+#        t_merge.remove_column('SHORTNAME')
+#    if 'SELECT' in t_merge.keys():
+#        t_merge.remove_column('SELECT')
+#    if 'SOURCE_SELECT' in t_merge.keys():
+#        t_merge.remove_column('SOURCE_SELECT')
+#    if 'DATEN' in t_merge.keys():
+#        t_merge.remove_column('DATEN')
+#    t_merge.write(review_folder+splat.DB_SPECTRA_FILE,format='ascii.tab')
 
     if verbose:
-        print('\nDatabases updated; be sure to move these from {} to {}{}'.format(review_folder,SPLAT_PATH,DB_FOLDER))
-        print('and to move spectral files from {}/published and {}/unpublished/\n'.format(review_folder,review_folder))
+        print('\nDatabases updated; be sure to add these to primary databases in {}{}'.format(SPLAT_PATH,DB_FOLDER))
+        print('and to move spectral files from {}/published and {}/unpublished/ to {}{}\n'.format(review_folder,review_folder,SPLAT_PATH,DATA_FOLDER))
 
     return
 

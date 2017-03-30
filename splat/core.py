@@ -832,6 +832,53 @@ class Spectrum(object):
         self.history.append('Converted wavelength to units of {}'.format(self.wunit))
         return
 
+    def waveUnit(self,wunit):
+        '''
+        :Purpose: Converts wavelength to microns. This routine changes the underlying Spectrum object.
+        
+        :Example:
+           >>> import splat
+           >>> import astropy.units as u
+           >>> sp = splat.Spectrum(file='somespectrum',wunit=u.Angstrom)
+           >>> sp.wave.unit
+            Unit("Angstrom")
+           >>> sp.toMicron()
+           >>> sp.wave.unit
+            Unit("micron")
+        '''
+        try:
+            self.wave = self.wave.to(wunit)
+            self.wunit = wunit
+            self.history.append('Converted wavelength to units of {}'.format(self.wunit))
+        except:
+            print('Warning! failed to convert to wavelength unit {}'.format(wunit))            
+        return
+
+    def fluxUnit(self,funit):
+        '''
+        :Purpose: Converts wavelength to microns. This routine changes the underlying Spectrum object.
+        
+        :Example:
+           >>> import splat
+           >>> import astropy.units as u
+           >>> sp = splat.Spectrum(file='somespectrum',wunit=u.Angstrom)
+           >>> sp.wave.unit
+            Unit("Angstrom")
+           >>> sp.toMicron()
+           >>> sp.wave.unit
+            Unit("micron")
+        '''
+        try:
+            self.flux = self.flux.to(funit,equivalencies=u.spectral_density(self.wave))
+            self.noise = self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
+            self.variance = self.noise**2
+            self.snr = self.computeSN()
+            self.funit = funit
+            self.history.append('Converted to flux units of {}'.format(self.funit))
+        except:
+            print('Warning! failed to convert to flux unit {}'.format(funit))
+        return
+
     def rvShift(self,rv):
         '''
         :Purpose: Shifts the wavelength scale by a radial velocity factor. This routine changes the underlying Spectrum object.
@@ -934,7 +981,7 @@ class Spectrum(object):
         return numpy.nanmax(fl)*self.funit
 
 
-    def normalize(self,**kwargs):
+    def normalize(self,*args,**kwargs):
         '''
         :Purpose: Normalize a spectrum to a maximum value of 1 (in its current units)
 
@@ -956,6 +1003,8 @@ class Spectrum(object):
         rng = kwargs.get('waverange',False)
         rng = kwargs.get('waveRange',rng)
         rng = kwargs.get('range',rng)
+        if len(args) > 0:
+            rng = args[0]
         if rng != False:
             if not isinstance(rng,list):
                 rng = [rng]
@@ -1384,6 +1433,84 @@ class Spectrum(object):
         return [numpy.nanmin(self.wave[ii]), numpy.nanmax(self.wave[ii])]
 
 
+# stitch spectrum
+def stitch(s1,s2,rng = [0.8,0.9],**kwargs):
+    '''
+    :Purpose: Stitches together two spectra covering different wavelength scales.
+
+    :Output: New spectrum object of stitched spectrum
+
+    :Example:
+       >>> import splat
+       >>> spopt = splat.Spectrum(file='myopticalspectrum.fits')
+       >>> spnir = splat.Spectrum(file='myopticalspectrum.fits')
+       >>> sp = splat.stitch(spopt,spnir,rng=[0.8,0.9],trim=[0.35,2.4])
+    '''
+
+# generate copies of spectrum objects
+    sp1 = copy.deepcopy(s1)
+    sp2 = copy.deepcopy(s2)
+    
+# assert common units
+    wunit = kwargs.get('wunit',SPECTRAL_MODEL_WAVE_UNIT)
+    sp1.waveUnit(wunit)
+    sp2.waveUnit(wunit)
+    funit = kwargs.get('funit',SPECTRAL_MODEL_FLUX_UNIT)
+    sp1.fluxUnit(funit)
+    sp2.fluxUnit(funit)
+
+# scale to overlap region - this assumes full overlap over the stitch region
+# for now doing simple normalization - better to do uncertainty-weighted scaling
+    if numpy.max(sp1.wave.value) >= rng[1] and numpy.min(sp2.wave.value) <= rng[0]:
+        sp1.normalize(rng)  
+        sp2.normalize(rng)
+    else:
+        raise ValueError('Stich region {} to {} does not overlap both spectra'.format(rng[0],rng[1]))
+
+# interpolation of second spectrum
+    f2r = interp1d(sp2.wave.value,sp2.flux.value)
+    v2r = interp1d(sp2.wave.value,sp2.variance.value)
+
+# start with first spectrum
+    wave = sp1.wave.value[numpy.where(sp1.wave.value < rng[0])]
+    flux = sp1.flux.value[numpy.where(sp1.wave.value < rng[0])]
+    variance = sp1.variance.value[numpy.where(sp1.wave.value < rng[0])]
+
+# mixed region
+    w1 = sp1.wave.value[numpy.where(numpy.logical_and(sp1.wave.value >= rng[0],sp1.wave.value < rng[1]))]
+    f1 = sp1.flux.value[numpy.where(numpy.logical_and(sp1.wave.value >= rng[0],sp1.wave.value < rng[1]))]
+    v1 = sp1.variance.value[numpy.where(numpy.logical_and(sp1.wave.value >= rng[0],sp1.wave.value < rng[1]))]
+    f12 = numpy.array([((f1[i]/v1[i])+(f2r(w1[i])/v2r(w1[i])))/(1./v1[i]+1./v2r(w1[i])) for i in range(len(w1))])
+    v12 = numpy.array([(1./(1./v1[i]+1./v2r(w1[i]))) for i in range(len(w1))])
+    wave = numpy.append(wave,w1)
+    flux = numpy.append(flux,f12)
+    variance = numpy.append(variance,v12)
+
+# tail of second spectrum
+    wave = numpy.append(wave,sp2.wave.value[numpy.where(sp2.wave.value >= rng[1])])
+    flux = numpy.append(flux,sp2.flux.value[numpy.where(sp2.wave.value >= rng[1])])
+    variance = numpy.append(variance,sp2.variance.value[numpy.where(sp2.wave.value >= rng[1])])
+
+# put back units
+    wave = wave*wunit
+    flux = flux*funit
+    variance = variance*(funit**2)
+
+# create new spectrum object containing combined spectrum
+    sp = copy.deepcopy(sp1)
+    sp.wave = wave
+    sp.flux = flux
+    sp.variance = variance
+    sp.noise = sp.variance**0.5
+    sp.snr = sp.computeSN()
+    sp.name = 'Stitched spectrum of {} and {}'.format(sopt.name,snir.name)
+
+# trim if desired
+    if kwargs.get('trim',False) != False:
+        sp.trim(kwargs['trim'])
+        
+    return sp
+
 
 #####################################################
 #################   DATA ACCESS   ###################
@@ -1654,9 +1781,11 @@ def searchLibrary(*args, **kwargs):
     :type combine: optional, default = 'and'
     :param optional date: search by date (e.g., ``date = '20040322'``) or range of dates (e.g., ``date=[20040301,20040330]``)
     :param optional reference: search by list of references (bibcodes) (e.g., ``reference = '2011ApJS..197...19K'``)
-    :param sort: sort results based on Right Ascension
-    :type sort: optional, default = True
-    :param list: if True, return just a list of the data files (can be done with searchLibrary as well)
+    :param sort: by default returned table is sorted by designation; set this parameter to a column name to sort on a different parameter
+    :type sort: optional, default = 'DESIGNATION'
+    :param reverse: set to True to do a reverse sort
+    :type reverse: optional, default = False
+    :param list: if True, return just a list of the data files
     :type list: optional, default = False
     :param lucky: if True, return one randomly selected spectrum from the selected sample
     :type lucky: optional, default = False
@@ -2141,16 +2270,23 @@ def searchLibrary(*args, **kwargs):
     else:
 
 # merge databases
-#        print(numpy.sum(spectral_db['SELECT']), numpy.sum(spectral_db['SOURCE_SELECT']))
-#        print(spectral_db[:][numpy.where(spectral_db['SELECT']==1)])
-#        print(spectral_db['SELECT'][numpy.where(spectral_db['SOURCE_SELECT']==True)])
-#        print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]))
         db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))],source_db,keys='SOURCE_KEY')
 
+# sort output - default is by designation
+        db.sort('DESIGNATION')
+        if kwargs.get('sort',False) != False:
+            if kwargs['sort'].upper() in db.colnames:
+                db.sort(kwargs['sort'].upper())
+            if kwargs['sort'].upper() == 'SNR': db.sort('MEDIAN_SNR')
+        if kwargs.get('reverse',False) != False: db.reverse()
+
+# select what to return
         if (ref == 'all'):
-            return db
+            outdb = db
         else:
-            return db[ref]
+            outdb = db[ref]
+
+        return outdb
 
 
 def _readAPOGEE(file,**kwargs):
