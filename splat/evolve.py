@@ -211,7 +211,7 @@ def _modelParametersSingle(*args, **kwargs):
 
 # retool models to allow for logarithmic interpolation
     lmodel = copy.deepcopy(model)
-# strip off units
+# convert to logarithmic values
     lmodel['age'] = [numpy.log10(m) for m in lmodel['age']]
     for i in range(len(lmodel['age'])):
         lmodel['mass'][i] = [numpy.log10(m) for m in lmodel['mass'][i]]
@@ -282,7 +282,7 @@ def _modelParametersSingle(*args, **kwargs):
             elif params['radius'] != 0.:
                 P.append(['radius', numpy.log10(params['radius'])])
             elif params['luminosity'] != 0.:
-                P.append(['luminosity', numpy.log10(params['luminosity'])])
+                P.append(['luminosity', params['luminosity']])
             else:
                 for k in list(params.keys()):
                     print('{}: {}'.format(k,params[k]))
@@ -305,7 +305,7 @@ def _modelParametersSingle(*args, **kwargs):
         Ge, Ag = [], []
 
 
-################ KNOWN AGE BUT UNKNOWN MASS AND ONE OTHER PARAMETER ###########
+################ KNOWN AGE BUT KNOWN MASS AND ONE OTHER PARAMETER ###########
 # generate mass as function of second parameter interpolated between two closest age models
 # evaluate mass(parameter) (resulting in both mass and age as knowns)
 ###############################################################################
@@ -322,7 +322,7 @@ def _modelParametersSingle(*args, **kwargs):
             elif params['radius'] != 0.:
                 P.append(['radius', numpy.log10(params['radius'])])
             elif params['luminosity'] != 0.:
-                P.append(['luminosity', numpy.log10(params['luminosity'])])
+                P.append(['luminosity', params['luminosity']])
             else:
                 for k in list(params.keys()):
                     print('{}: {}'.format(k,params[k]))

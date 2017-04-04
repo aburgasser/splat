@@ -641,7 +641,6 @@ def properCoordinates(c,**kwargs):
             d*=u.pc
 #        try:
         d.to(u.pc)
-        print(output.distance)
         output = SkyCoord(output,distance = d)
 #        except:
 #            print('\nWarning: could not integrate distance {} into coordinate'.format(distance))

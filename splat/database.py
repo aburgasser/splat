@@ -349,7 +349,7 @@ def querySimbad(variable,**kwargs):
         except:
             nameFlag = True
     else:
-        if isinstance(variable,unicode):
+        if isinstance(variable,bytes):
             c = variable.decode()
         else:
             c = str(variable)
@@ -411,7 +411,7 @@ def querySimbad(variable,**kwargs):
 
 # reformat to convert binary ascii data to text
         for s in list(t_sim.keys()):
-            if isinstance(t_sim[s][0],bytes) == True or isinstance(t_sim[s][0],numpy.bytes_) or isinstance(t_sim[s][0],unicode)  == True:
+            if isinstance(t_sim[s][0],bytes) == True or isinstance(t_sim[s][0],numpy.bytes_)  == True:
                 tmp = [x.decode() for x in t_sim[s]]
                 t_sim.remove_column(s)
                 t_sim[s] = tmp

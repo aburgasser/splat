@@ -2004,10 +2004,11 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(numpy.logical_and(source_db['KMAGN'] >= mag[0],source_db['KMAGN'] <= mag[1]))] += 1
         count+=1.
 
-# young
-    if (kwargs.get('young','') != ''):
-        source_db['YOUNG'] = [not numpy.ma.is_masked(i) for i in source_db['GRAVITY_CLASS_OPTICAL']] or [not numpy.ma.is_masked(i) for i in source_db['GRAVITY_CLASS_NIR']]
-        source_db['SELECT'][numpy.where(source_db['YOUNG'] == kwargs.get('young'))] += 1
+# low surface gravity
+    if (kwargs.get('lowg','') != ''):
+#        source_db['LOWG'] = [not numpy.ma.is_masked(i) for i in source_db['GRAVITY_CLASS_OPTICAL']] or [not numpy.ma.is_masked(i) for i in source_db['GRAVITY_CLASS_NIR']]
+        source_db['LOWG'] = [source_db['GRAVITY_CLASS_OPTICAL'][i]=='alpha' or source_db['GRAVITY_CLASS_OPTICAL'][i]=='beta' or source_db['GRAVITY_CLASS_OPTICAL'][i]=='gamma' or source_db['GRAVITY_CLASS_OPTICAL'][i]=='delta' or source_db['GRAVITY_CLASS_NIR'][i]=='INT-G' or source_db['GRAVITY_CLASS_NIR'][i]=='VL-G' or source_db['GRAVITY_CLASS_NIR'][i]=='LOW-G' for i in range(len(source_db))]
+        source_db['SELECT'][numpy.where(source_db['LOWG'] == kwargs.get('lowg'))] += 1
         count+=1.
 
 # specific gravity class
@@ -2016,6 +2017,18 @@ def searchLibrary(*args, **kwargs):
     if (flag != ''):
         source_db['SELECT'][numpy.where(numpy.ma.filled(source_db['GRAVITY_CLASS_OPTICAL'],'') == flag)] += 1
         source_db['SELECT'][numpy.where(numpy.ma.filled(source_db['GRAVITY_CLASS_NIR'],'') == flag)] += 1
+        count+=1.
+
+# young => member of a young cluster
+    if (kwargs.get('young','') != ''):
+        source_db['INCLUSTER'] = [not numpy.ma.is_masked(i) for i in source_db['CLUSTER']]
+        source_db['SELECT'][numpy.where(source_db['INCLUSTER'] == kwargs.get('young'))] += 1
+        count+=1.
+
+# young => member of a young cluster
+    if (kwargs.get('cluster','') != '' and isinstance(kwargs.get('cluster'),bool)):
+        source_db['INCLUSTER'] = [not numpy.ma.is_masked(i) for i in source_db['CLUSTER']]
+        source_db['SELECT'][numpy.where(source_db['INCLUSTER'] == kwargs.get('cluster'))] += 1
         count+=1.
 
 # specific cluster
