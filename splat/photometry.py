@@ -182,10 +182,10 @@ def filterMag(sp,filt,*args,**kwargs):
 
 
 #    val = numpy.nanmean(result)*outunit
-    err = numpy.nanstd(result)*outunit
+    err = numpy.nanstd(result)
     if len(sp.wave[wgood]) == 0:
         err = 0.
-    return val,err
+    return val*outunit,err*outunit
 
 
 def filterInfo(**kwargs):

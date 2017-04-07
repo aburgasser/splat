@@ -49,7 +49,10 @@ def plotSpectrum(*args, **kwargs):
         wavelength axis label; by default set by wlabel and wunit keywords in first spectrum object
     ylabel:
         flux axis label; by default set by fscale, flabel and funit keywords in first spectrum object
-
+    xlog = False:
+        set the x (wavelength) axis to plot as a log scale
+    ylog = False:
+        set the y (flux) axis to plot as a log scale
 
     features:
         a list of strings indicating chemical features to label on the spectra
@@ -522,6 +525,12 @@ def plotSpectrum(*args, **kwargs):
         ax.set_ylabel(ylabel, fontsize = fontsize)
         ax.tick_params(axis='x', labelsize=fontsize)
         ax.tick_params(axis='y', labelsize=fontsize)
+
+# log scale?
+        if kwargs.get('xlog',False):
+            ax.set_xscale('log',nonposx='clip')
+        if kwargs.get('ylog',False):
+            ax.set_yscale('log',nonposy='clip')
 
 # place legend
         if len(legend) > 0:

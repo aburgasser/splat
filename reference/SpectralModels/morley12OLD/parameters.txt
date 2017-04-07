@@ -1,4 +1,0 @@
-teff	logg	z	fsed	cld	kzz
-400	4.0	0.0	f2,f3,f4,f5	nc	eq
-1300	5.5	0.0			
-100	0.5	0.5			

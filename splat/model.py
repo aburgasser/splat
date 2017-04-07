@@ -73,7 +73,7 @@ def _readBtsettl08(file):
         with open(file,'rt') as f:
             for line in f:
                 data.append(line)
-    wave = numpy.array([float(d.split()[0])/1.e4 for d in data])*u.micron
+    wave = numpy.array([float((d.split()[0]).replace('D','e'))/1.e4 for d in data])*u.micron
     flux = numpy.array([10.**(float(d.split()[1].replace('D','e'))-8.) for d in data])*u.erg/(u.s*u.Angstrom*u.cm**2)
     flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     return wave, flux
@@ -98,21 +98,32 @@ def _readSaumon12(file):
     flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     return wave, flux
 
+# this also reads in old Drift models
+def _readDrift(file):
+    if not os.access(file, os.R_OK):
+        raise ValueError('Could not find model file {}'.format(file))
+    data = ascii.read(file)
+    wave = numpy.array(data['col1'])*u.micron
+    flux = numpy.array(data['col2'])*u.erg/(u.s*u.cm**3)
+    flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    return wave, flux
+
 
 def _processModels(*args,**kwargs):
     method = kwargs.get('method','hamming')
     overscale = kwargs.get('overscale',11)
     sedres = kwargs.get('sedres',100)
+
     if len(args) >= 1: mset = args[0]
-    else: mset = kwargs.get('set','saumon12')
+    else: mset = kwargs.get('set',False)
     modelset = checkSpectralModelName(mset)
+    if modelset == False:
+        raise ValueError('\nInvalid model set {}'.format(kwargs.get('set','saumon12')))
+
     instrument_set = kwargs.get('instrument_set',list(INSTRUMENTS.keys()))
     instrument_set = kwargs.get('instrument_set',['SPEX_PRISM','USPEX_PRISM','SPEX_SXD','USPEX_SXD'])
 
-    if modelset == False:
-        raise ValueError('\nInvalid model set {}'.format(kwargs.get('set','saumon12')))
-# BT Settl 2008 CIFIST 2011: no fsed, kzz or clouds
-    elif modelset == 'burrows06':
+    if modelset == 'burrows06':
         readfxn = _readBurrows06
         files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.txt')
         mparam = {}
@@ -132,6 +143,7 @@ def _processModels(*args,**kwargs):
         mparam['fsed'] = [f.split('_')[-1].lower() for f in files]
         mparam['cld'] = [(f.split('/')[-1]).split('_')[0].lower() for f in files]
         mparam['kzz'] = [f.split('_')[-2].lower() for f in files]
+# BT Settl 2008 CIFIST 2011: no fsed, kzz or clouds
     elif modelset == 'btsettl08':
         readfxn = _readBtsettl08
         files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz')
@@ -172,6 +184,16 @@ def _processModels(*args,**kwargs):
         mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-1].split('g'))[0][1:]) for f in files]
         mparam['logg'] = [2.+numpy.log10(float((((f.split('/'))[-1].split('_'))[-1].split('g'))[1].split('nc')[0])) for f in files]
         mparam['z'] = [SPECTRAL_MODEL_PARAMETERS['z']['default'] for f in files]
+        mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
+        mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
+        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
+    elif modelset == 'drift':
+        readfxn = _readBtsettl08
+        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte_*')
+        mparam = {}
+        mparam['teff'] = [float((f.split('/')[-1]).split('_')[1]) for f in files]
+        mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][:3]) for f in files]
+        mparam['z'] = [float((f.split('/')[-1]).split('_')[2][3:7]) for f in files]
         mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
         mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
         mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]

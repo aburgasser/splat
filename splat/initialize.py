@@ -108,6 +108,7 @@ STDS_ESD_SPEX_KEYS = { \
 #STDS_ESD_SPEX = {}
 
 # filters
+# this information is from the SVO filter profile service: http://svo2.cab.inta-csic.es/svo/theory/fps/
 FILTERS = { \
     '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band', 'zeropoint': 1594.0}, \
     '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band', 'zeropoint': 1024.0}, \
@@ -279,7 +280,7 @@ SPECTRAL_MODELS = {\
     'morley12': {'name': 'Morley et al. (2012)', 'bibcode': '2012ApJ...756..172M', 'altnames': ['morley','morley2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley12/'}, \
     'morley14': {'name': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altnames': ['morley2014'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley14/'}, \
     'saumon12': {'name': 'Saumon et al. (2012)', 'bibcode': '2012ApJ...750...74S', 'altnames': ['saumon','saumon2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Saumon12/'}, \
-    'drift': {'name': 'Witte et al. (2011)', 'bibcode': '2011A&A...529A..44W', 'altnames': ['witte','witte11','witte2011','helling'], 'rawfolder': HOME_FOLDER+'/models/drift/'}}
+    'drift': {'name': 'Witte et al. (2011)', 'bibcode': '2011A&A...529A..44W', 'altnames': ['witte','witte11','witte2011','helling'], 'rawfolder': HOME_FOLDER+'/models/drift/v1.2/'}}
 SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','fsed','cld','kzz']
 SPECTRAL_MODEL_PARAMETERS = {\
     'teff': {'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$'}, \

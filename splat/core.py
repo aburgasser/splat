@@ -756,10 +756,10 @@ class Spectrum(object):
            >>> sp.flux.unit
             Unit("Jy")
         '''
-        if self.fscale == 'Temperature':
+        if self.fscale == 'Temperature' or self.flabel == r'${\lambda}F_{\lambda}$':
             self.reset()
         self.funit = u.Jy
-        self.flabel = 'F_nu'
+        self.flabel = r'$F_{\nu}$'
         self.flux = self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
         self.noise = self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
         self.snr = self.computeSN()
@@ -783,15 +783,41 @@ class Spectrum(object):
            >>> sp.flux.unit
             Unit("erg / (cm2 micron s)")
         '''
-        if self.fscale == 'Temperature':
+        if self.fscale == 'Temperature' or self.flabel == r'${\lambda}F_{\lambda}$':
             self.reset()
         self.funit = u.erg/(u.cm**2 * u.s * u.micron)
-        self.flabel = 'F_lam'
+        self.flabel = r'$F_{\lambda}$'
         self.flux = self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
         self.noise = self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
         self.variance = self.noise**2
         self.snr = self.computeSN()
         self.history.append('Converted to Flam units of {}'.format(self.funit))
+        return
+
+    def toSED(self):
+        '''
+        :Purpose: Converts flux density in F\_lambda to lambda x F\_lambda with units of erg/s/cm\^2. This routine changes the underlying Spectrum object. 
+        
+        :Example:
+           >>> import splat
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> sp.toSED()
+           >>> sp.flux.unit
+            Unit("erg / (cm2 s)")
+        '''
+        if self.flabel == 'SED':
+            return
+# first convert to F_lambda
+        self.toFlam()
+# now convert to SED
+        un = self.wave.unit*self.flux.unit
+        self.flux = self.wave*self.flux
+        self.noise = self.wave*self.noise
+        self.variance = self.noise**2
+        self.snr = self.computeSN()
+        self.funit = self.flux.unit
+        self.flabel = r'${\lambda}F_{\lambda}$'
+        self.history.append('Converted to SED units of {}'.format(self.funit))
         return
 
     def toAngstrom(self):
@@ -924,8 +950,7 @@ class Spectrum(object):
            >>> splat.filterMag(sp,'2MASS J')
             (15.002545668628173, 0.017635234089677564)
         '''
-
-        if self.fscale == 'Temperature':
+        if self.fscale == 'Temperature' or self.fscale == 'SED':
             self.reset()
         if self.funit != u.erg/(u.cm**2 * u.s * u.micron):
             self.toFlam()
@@ -1352,6 +1377,8 @@ class Spectrum(object):
         if self.fscale != 'Surface':
             print('To convert to brightness temperature you must first scale spectrum to surface flux units')
             return
+        if self.funit != u.erg/(u.cm**2 * u.s * u.micron):
+            self.toFlam()
         fs = copy.deepcopy(self.flux).to(u.erg/u.s/u.cm**3)
         fse = copy.deepcopy(self.noise).to(u.erg/u.s/u.cm**3)
         w = copy.deepcopy(self.wave).to(u.cm)
@@ -1361,7 +1388,8 @@ class Spectrum(object):
         self.variance = self.noise**2
         self.snr = self.computeSN()
         self.history.append('Converted to brightness temperature')
-        self.fscale = 'Temperature'
+        self.flabel = 'Temperature'
+        self.fscale = ''
         self.funit = u.K
         return
 
