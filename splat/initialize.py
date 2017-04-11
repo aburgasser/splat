@@ -102,6 +102,29 @@ STDS_ESD_SPEX_KEYS = { \
     'esdM8.5': 10278} #'10278_10400.fits'}
 # EMPTY DICTIONARY
 
+# young spectral standards from Allers & Liu (2013) and Cruz et al. (2017)
+STDS_VLG_SPEX_KEYS = { \
+#    'M5.0': 10228,  # TWA11C - don't have this
+#    'M6.0': 10228,  # TWA8B - don't have this
+    'M7.0': 11199,  # 0335+2342
+    'M8.0': 10799,  # TWA27A
+    'M9.0': 10797,  # TWA26
+    'L0.0': 10228,  # 0141-4633 - proposed by Cruz et al. 2017
+    'L1.0': 11178,  # 0518-2756
+    'L2.0': 11696,  # 0536-1920
+    'L3.0': 11198,  # 2208+2921
+    'L4.0': 11177,  # 0501-0010 - proposed by Cruz et al. 2017
+    'L6.0': 10455}  # 2244+2043
+
+STDS_INTG_SPEX_KEYS = { \
+    'M8.0': 12572,  # 0019+4614
+    'L0.0': 11113,  # 1552+2948
+    'L1.0': 10845,  # 0227-1624 - proposed by Cruz et al. 2017
+    'L2.0': 11304,  # 0602+3910
+    'L3.0': 11070,  # 1726+1538
+    'L6.0': 10678}  # 0103+1935
+
+
 # containters for spectra
 #STDS_DWARF_SPEX = {}
 #STDS_SD_SPEX = {}

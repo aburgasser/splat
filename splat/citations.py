@@ -109,8 +109,10 @@ def shortRef(bib_dict,**kwargs):
             bib_dict = str(bib_dict)
         if type(bib_dict) is str:
             bib_dict = getBibTex(bib_dict,**kwargs)
+            if isinstance(bib_dict,dict) == False: return ''
         else:
-            raise NameError('Input to shortRef is neither a bibcode nor a bibTex dictionary')
+            if kwargs.get('verbose',False): print('Input to shortRef is neither a bibcode nor a bibTex dictionary')
+            return ''
 
     authors = bib_dict['author'].split(' and ')
     if len(authors) == 1:
@@ -158,8 +160,10 @@ def longRef(bib_dict,**kwargs):
             bib_dict = str(bib_dict)
         if type(bib_dict) is str:
             bib_dict = getBibTex(bib_dict,**kwargs)
+            if isinstance(bib_dict,dict) == False: return ''
         else:
-            raise NameError('Input to longRef is neither a bibcode nor a bibTex dictionary')
+            if kwargs.get('verbose',False): print('Input to longRef is neither a bibcode nor a bibTex dictionary')
+            return ''
 
     authors = bib_dict['author'].split(' and ')
     if len(authors) == 1:
@@ -207,8 +211,10 @@ def verylongRef(bib_dict,**kwargs):
             bib_dict = str(bib_dict)
         if type(bib_dict) is str:
             bib_dict = getBibTex(bib_dict,**kwargs)
+            if isinstance(bib_dict,dict) == False: return ''
         else:
-            raise NameError('Input to verylongRef is neither a bibcode nor a bibTex dictionary')
+            if kwargs.get('verbose',False): print('Input to verylongRef is neither a bibcode nor a bibTex dictionary')
+            return ''
 
     authors = bib_dict['author'].split(' and ')
     if len(authors) == 1:

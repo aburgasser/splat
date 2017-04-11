@@ -62,6 +62,8 @@ SPECTRA_READIN = {}
 STDS_DWARF_SPEX = {}
 STDS_SD_SPEX = {}
 STDS_ESD_SPEX = {}
+STDS_VLG_SPEX = {}
+STDS_INTG_SPEX = {}
 
 # databases - using the .txt files for now, will need to change to SQL at a future date
 DB_SOURCES = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE)
@@ -1640,6 +1642,14 @@ def getStandard(spt, **kwargs):
         stds = STDS_SD_SPEX
         kys = STDS_SD_SPEX_KEYS
         subclass = 'sd'
+    elif kwargs.get('vlg',False) or 'gamma' in sptstr:
+        stds = STDS_VLG_SPEX
+        kys = STDS_VLG_SPEX_KEYS
+        subclass = ''
+    elif kwargs.get('intg',False) or 'beta' in sptstr:
+        stds = STDS_INTG_SPEX
+        kys = STDS_INTG_SPEX_KEYS
+        subclass = ''
     else:
         stds = STDS_DWARF_SPEX
         kys = STDS_DWARF_SPEX_KEYS
@@ -1693,6 +1703,12 @@ def initiateStandards(**kwargs):
     elif kwargs.get('esd',False):
         stds = STDS_ESD_SPEX
         kys = STDS_ESD_SPEX_KEYS
+    elif kwargs.get('vlg',False):
+        stds = STDS_VLG_SPEX
+        kys = STDS_VLG_SPEX_KEYS
+    elif kwargs.get('intg',False):
+        stds = STDS_INTG_SPEX
+        kys = STDS_INTG_SPEX_KEYS
     else:
         stds = STDS_DWARF_SPEX
         kys = STDS_DWARF_SPEX_KEYS
@@ -2838,19 +2854,36 @@ def classifyByStandard(sp, *args, **kwargs):
     if kwargs.get('sd',False):
         stds = STDS_SD_SPEX
         subclass = 'sd'
+        stdtype = 'Subdwarf'
         initiateStandards(sd=True)
         if verbose:
             print('Using subdwarf standards')
     elif kwargs.get('esd',False):
         stds = STDS_ESD_SPEX
         subclass = 'esd'
+        stdtype = 'Extreme Subdwarf'
         initiateStandards(esd=True)
         if verbose:
             print('Using extreme subdwarf standards')
+    elif kwargs.get('vlg',False) or kwargs.get('lowg',False):
+        stds = STDS_VLG_SPEX
+        subclass = ''
+        stdtype = 'Very Low Gravity (gamma)'
+        initiateStandards(vlg=True)
+        if verbose:
+            print('Using very low gravity standards')
+    elif kwargs.get('intg',False):
+        stds = STDS_INTG_SPEX
+        subclass = ''
+        stdtype = 'Intermediate Gravity (beta)'
+        initiateStandards(intg=True)
+        if verbose:
+            print('Using intermediate low gravity standards')
     else:
         stds = STDS_DWARF_SPEX
         initiateStandards()
         subclass = ''
+        stdtype = 'Dwarf'
         if verbose:
             print('Using dwarf standards')
 
@@ -2913,20 +2946,21 @@ def classifyByStandard(sp, *args, **kwargs):
         output_spt = sptn
 
     if verbose:
-        print('\nBest match to {} spectral standard'.format(typeToNum(sorted_stdsptnum[0],subclass=subclass)))
+        print('\nBest match to {} {} standard'.format(typeToNum(sorted_stdsptnum[0],subclass=subclass),stdtype))
         print('Best spectral type = {}+/-{}'.format(output_spt,sptn_e))
 
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
 #        spstd = Spectrum(file=sorted_stdfiles[0])
 #        print(typeToNum(sorted_stdsptnum[0],subclass=subclass))
-        spstd = getStandard(typeToNum(sorted_stdsptnum[0],subclass=subclass))
+        spstd = stds[typeToNum(sorted_stdsptnum[0],subclass=subclass)]
+#        getStandard(typeToNum(sorted_stdsptnum[0],subclass=subclass))
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
         spstd.scale(scale)
         if kwargs.get('colors',False) == False:
             kwargs['colors'] = ['k','r','b']
         if kwargs.get('labels',False) == False:
-            kwargs['labels'] = [sp.name,'{} Standard'.format(typeToNum(sorted_stdsptnum[0],subclass=subclass)),'Difference']
+            kwargs['labels'] = [sp.name,'{} {} Standard'.format(typeToNum(sorted_stdsptnum[0],subclass=subclass),stdtype),'Difference']
         from .plot import plotSpectrum
         if kwargs.get('difference',True):
             kwargs['labels'].append('Difference')
@@ -3900,9 +3934,13 @@ def measureIndexSet(sp,**kwargs):
         inds[5],errs[5] = measureIndex(sp,[2.215,2.255],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
         inds[6],errs[6] = measureIndex(sp,[2.06,2.10],[1.25,1.29],method='ratio',sample='integrate',**kwargs)
         inds[7],errs[7] = measureIndex(sp,[1.61,1.64],[1.56,1.59],[1.66,1.69] ,method='inverse_line',sample='integrate',**kwargs)
+        inds[7]*=0.5
+        errs[7]*=0.5
         inds[8],errs[8] = measureIndex(sp,[2.06,2.10],[2.10,2.14],method='ratio',sample='integrate',**kwargs)
         inds[9],errs[9] = measureIndex(sp,[1.27,1.30],[1.30,1.33],method='ratio',sample='integrate',**kwargs)
         inds[10],errs[10] = measureIndex(sp,[1.04,1.07],[1.26,1.29],[1.14,1.17],method='line',sample='integrate',**kwargs)
+        inds[10]*=2.
+        errs[10]*=2.
         inds[11],errs[11] = measureIndex(sp,[1.54,1.57],[1.66,1.69],method='ratio',sample='integrate',**kwargs)
         inds[12],errs[12] = measureIndex(sp,[1.04,1.07],[1.14,1.17],method='ratio',sample='integrate',**kwargs)
     elif ('burgasser' in set.lower()):
