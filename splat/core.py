@@ -3771,7 +3771,7 @@ def measureIndex(sp,*args,**kwargs):
     method = kwargs.get('method','ratio')
     sample = kwargs.get('sample','integrate')
     nsamples = kwargs.get('nsamples',1000)
-    noiseFlag = kwargs.get('nonoise',False)
+    noiseFlag = kwargs.get('noise',True)
 
 # create interpolation functions
     w = numpy.where(numpy.isnan(sp.flux) == False)
@@ -3780,10 +3780,10 @@ def measureIndex(sp,*args,**kwargs):
 # note that units are stripped out
     if (numpy.size(w) != 0):
         s = interp1d(sp.wave.value[w],sp.noise.value[w],bounds_error=False,fill_value=numpy.nan)
-        noiseFlag = False
+        noiseFlag = kwargs.get('noise',False)
     else:
         s = interp1d(sp.wave.value[:],sp.noise.value[:],bounds_error=False,fill_value=numpy.nan)
-        noiseFlag = True
+        noiseFlag = kwargs.get('noise',True)
 
 # error checking on number of arguments provided
     if (len(args) < 2):

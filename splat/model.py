@@ -666,7 +666,7 @@ def loadInterpolatedModel(*args,**kwargs):
     bmodels = []
     bmodel_names = []
     for m in mpsmall:
-        bmodels.append(loadModel(**m,instrument=mkwargs['instrument']))
+        bmodels.append(loadModel(instrument=mkwargs['instrument'],**m))
         mstr = ''
         for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: mstr+=str(m[ms])
         bmodel_names.append(mstr)
