@@ -1761,7 +1761,10 @@ def modelFitEMCEE(spec, **kwargs):
     feedback_width = 50
 
 # plotting and reporting keywords
-    showRadius = kwargs.get('radius', spec.fscale == 'Absolute')
+    showRadius = False
+    try: showRadius = (spec.fscale == 'Absolute')
+    except: pass
+    showRadius = kwargs.get('radius', showRadius)
     filebase = kwargs.get('output', 'fit_')
     filebase = kwargs.get('filename',filebase)
     filebase = kwargs.get('outfile',filebase)
@@ -1771,6 +1774,7 @@ def modelFitEMCEE(spec, **kwargs):
     model_set = kwargs.get('set', 'BTSettl2008')
     model_set = kwargs.get('model', model_set)
     model_set = kwargs.get('model_set', model_set)
+    model_set = checkSpectralModelName(model_set)
 
 # prep outputs
     file_iterative = kwargs.get('file_iterative',os.path.splitext(filebase)[0]+'_iterative.dat')
@@ -1830,12 +1834,13 @@ def modelFitEMCEE(spec, **kwargs):
 
 # check the time it should take to run model, and that user has models
     testtimestart = time.time()
-    try:
-        mdl = loadModel(teff=2125,logg=5.1,z=-0.2,set='BTSettl2008')
-    except:
-        raise ValueError('\nProblem reading in a test model; make sure you have the full SPLAT model set installed')
+    try: mdl = loadModel(teff=parameters0[0],logg=parameters0[1],set=model_set)
+    except: raise ValueError('\nProblem reading in a test model; make sure you have the full SPLAT model set installed')
+    try: mdl = loadModel(teff=parameters0[0]+20.,logg=parameters0[1]+0.1,set=model_set)
+    except: pass
     testtimeend = time.time()
     time_estimate = (testtimeend-testtimestart)*nwalkers*nsamples*1.2
+    print(testtimeend,testtimestart)
     print('Estimated time to compute = {:.0f} seconds = {:.1f} minutes = {:.2f} hours'.\
         format(time_estimate,time_estimate/60.,time_estimate/3600.))
     if time_estimate > 1200. and not kwargs.get('noprompt',False):
@@ -1867,8 +1872,8 @@ def modelFitEMCEE(spec, **kwargs):
     #        radii = ((scales*(kwargs.get('distance',10.)*u.pc.to(u.cm)/const.R_sun)**2)**0.5).value.reshape(-1)
             n = int((feedback_width+1) * float(i) / nsamples)
             resp = '\rProgress: [{0}{1}] '.format('*' * n, ' ' * (feedback_width - n))
-            for kkk in ['teff','logg','z'][:nparameters]:
-                resp+=' {:s}={:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[kkk]['title'],bparam[kkk])
+            for i,kkk in enumerate(['teff','logg','z'][:nparameters]):
+                resp+=' {:s}={:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[kkk]['title'],bparam[i])
             resp+=' R={:.2f} lnP={:e}'.format(bparam[-1],lnp[-1])
             print(resp)
     # save iteratively
@@ -1889,9 +1894,9 @@ def modelFitEMCEE(spec, **kwargs):
     orig_samples = sampler.chain.reshape((-1, nparameters))
     orig_lnp = sampler.lnprobability.reshape(-1)
     orig_radii = ((numpy.array(sampler.blobs).reshape(-1)*(kwargs.get('distance',10.)*u.pc.to(u.cm)/const.R_sun)**2)**0.5).value.reshape(-1)
-    samples = sampler.chain[:, (burn_fraction*nsamples):, :].reshape((-1, nparameters))
-    lnp = orig_lnp[(burn_fraction*nsamples*nwalkers):]
-    radii = orig_radii[(burn_fraction*nsamples*nwalkers):]
+    samples = sampler.chain[:, int(burn_fraction*nsamples):, :].reshape((-1, nparameters))
+    lnp = orig_lnp[int(burn_fraction*nsamples*nwalkers):]
+    radii = orig_radii[int(burn_fraction*nsamples*nwalkers):]
     merged_samples = numpy.append(samples.transpose(),[radii],axis=0).transpose()
 
     if verbose: print(orig_radii.shape,orig_samples.shape,orig_lnp.shape)
@@ -1909,8 +1914,8 @@ def modelFitEMCEE(spec, **kwargs):
 
 # reporting
     _modelFitEMCEE_plotchains(sampler.chain,file_chains)
-    _modelFitEMCEE_plotcomparison(samples,spec,file_comparison,model=model_set,draws=20,parameter_weights=parameter_weights,**kwargs)
-    _modelFitEMCEE_plotbestcomparison(spec,bparam[:-1],file_bestcomparison,model=model_set,**kwargs)
+#    _modelFitEMCEE_plotcomparison(samples,spec,file_comparison,model=model_set,draws=20,parameter_weights=parameter_weights,**kwargs)
+#    _modelFitEMCEE_plotbestcomparison(spec,bparam[:-1],file_bestcomparison,model=model_set,**kwargs)
     _modelFitEMCEE_plotcorner(merged_samples,file_corner,parameter_weights=parameter_weights,**kwargs)
 
     end_time = time.time()
@@ -1929,6 +1934,7 @@ def _modelFitEMCEE_bestparameters(values,lnp,**kwargs):
     '''
     parameter_weights = kwargs.get('parameter_weights',numpy.ones(values.shape[-1]))
     quantiles = kwargs.get('quantiles',[16,50,84])
+    verbose = kwargs.get('verbose',False)
 
     quant_parameters = []
     best_parameters = []
@@ -1942,16 +1948,17 @@ def _modelFitEMCEE_bestparameters(values,lnp,**kwargs):
 
 
 def _modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params):
+    verbose = False
     mparam = copy.deepcopy(model_params)
-    for i in ['teff','logg','z'][len(theta)]:
-        mparam[i] = theta[i]
+    for i,v in enumerate(['teff','logg','z'][0:len(theta)]):
+        mparam[v] = theta[i]
     try:
         mdl = loadModel(**mparam)
     except:
         resp = '\nProblem reading in model '
         for k,v in enumerate(theta):
             resp+='{} = {}, '.format(['teff','logg','z'][k],v)
-        print(resp)
+        if verbose: print(resp)
         return -1.e30,0.
 #    chi,scl = splat.compareSpectra(sp,mdl,**model_params)
     chi,scl = compareSpectra(Spectrum(wave=x,flux=y,noise=yerr),mdl,**model_params)
@@ -2142,7 +2149,7 @@ def _modelFitEMCEE_summary(sampler,spec,file,**kwargs):
     nwalkers = base_samples.shape[0]
     nsamples = base_samples.shape[1]
     nparameters = base_samples.shape[2]
-    samples = base_samples[:, (kwargs['burn_fraction']*nsamples):, :].reshape((-1, nparameters))
+    samples = base_samples[:, int(kwargs['burn_fraction']*nsamples):, :].reshape((-1, nparameters))
 
     f = open(file,'w')
     f.write('EMCEE fitting analysis of spectrum of {} using the models of {}'.format(spec.name,kwargs['model']))
@@ -2154,9 +2161,9 @@ def _modelFitEMCEE_summary(sampler,spec,file,**kwargs):
     f.write('\n\tBurn-in fraction = {}'.format(kwargs['burn_fraction']))
 
     f.write('\n\nBest fit parameters')
-    for i in ['teff','logg','z'][0:nparameters]:
+    for i,v in enumerate(['teff','logg','z'][0:nparameters]):
         fit = numpy.percentile(samples[:,i], [16, 50, 84])
-        f.write('\n\t{} = {}+{}-{} {}'.format(SPECTRAL_MODEL_PARAMETERS[i]['title'],fit[1],fit[2]-fit[1],fit[1]-fit[0],SPECTRAL_MODEL_PARAMETERS[i]['unit'].to_string()))
+        f.write('\n\t{} = {}+{}-{} {}'.format(SPECTRAL_MODEL_PARAMETERS[v]['title'],fit[1],fit[2]-fit[1],fit[1]-fit[0],SPECTRAL_MODEL_PARAMETERS[v]['unit'].to_string()))
 
     mkwargs = copy.deepcopy(kwargs)
     for i,l in enumerate(['teff','logg','z'][:samples.shape[-1]]):
