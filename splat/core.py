@@ -1533,7 +1533,7 @@ def stitch(s1,s2,rng = [0.8,0.9],**kwargs):
     sp.variance = variance
     sp.noise = sp.variance**0.5
     sp.snr = sp.computeSN()
-    sp.name = 'Stitched spectrum of {} and {}'.format(sopt.name,snir.name)
+    sp.name = 'Stitched spectrum of {} and {}'.format(sp1.name,sp2.name)
 
 # trim if desired
     if kwargs.get('trim',False) != False:
@@ -3765,7 +3765,8 @@ def measureIndex(sp,*args,**kwargs):
                 index method can be ratio = 1/2, valley = 1-2/3, OTHERS
                 output is index value and uncertainty
     .. will also come back to this one
-    '''
+
+# NOTE: NOISE FLAG ERROR IS BACKWARDS HERE    '''
 
 # keyword parameters
     method = kwargs.get('method','ratio')

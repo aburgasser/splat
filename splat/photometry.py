@@ -79,12 +79,8 @@ def filterMag(sp,filt,*args,**kwargs):
     custom = kwargs.get('custom',False)
     notch = kwargs.get('notch',False)
     vega = kwargs.get('vega',True)
-    ab = kwargs.get('ab',False)
-    photons = kwargs.get('photons',False)
-    photons = kwargs.get('photon',photons)
-    energy = kwargs.get('energy',False)
-    if (photons or energy or ab):
-        vega = False
+    ab = kwargs.get('ab',not vega)
+    rsr = kwargs.get('rsr',False)
     nsamples = kwargs.get('nsamples',100)
 
 
@@ -101,14 +97,35 @@ def filterMag(sp,filt,*args,**kwargs):
         filterInfo()
         return numpy.nan, numpy.nan
 
+# reset filter calculation methods based on filter design
+    if 'ab' in FILTERS[filt]['method']: 
+        ab = kwargs.get('ab',True)
+        vega = not ab
+    if 'vega' in FILTERS[filt]['method']: 
+        vega = kwargs.get('vega',True)
+        ab = not vega
+    if 'rsr' in FILTERS[filt]['method']: 
+        rsr = kwargs.get('rsr',True)
+
+# other possibilities
+    photons = kwargs.get('photons',False)
+    photons = kwargs.get('photon',photons)
+    energy = kwargs.get('energy',False)
+    if (photons or energy):
+        vega = False
+        ab = False
+    if photons: energy = False
+    if energy: photons = False
+
+
 # Read in filter
     if isinstance(custom,bool) and isinstance(notch,bool):
         fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[filt]['file'], comments='#', unpack=True, \
             missing_values = ('NaN','nan'), filling_values = (numpy.nan))
 # notch filter
     elif isinstance(custom,bool) and isinstance(notch,list):
-        d = (notch[1]-notch[0])/1000
-        fwave = numpy.arange(notch[0]-5.*d,notch[1]+5.*d,d)
+        dn = (notch[1]-notch[0])/1000
+        fwave = numpy.arange(notch[0]-5.*dn,notch[1]+5.*dn,dn)
         ftrans = numpy.zeros(len(fwave))
         ftrans[numpy.where(numpy.logical_and(fwave >= notch[0],fwave <= notch[1]))] = 1.
 # custom filter
@@ -146,10 +163,16 @@ def filterMag(sp,filt,*args,**kwargs):
         vflux.to(sp.funit,equivalencies=u.spectral_density(vwave))
 # interpolate Vega onto filter wavelength function
         v = interp1d(vwave.value,vflux.value,bounds_error=False,fill_value=0.)
-        val = -2.5*numpy.log10(trapz(ftrans*d(fwave.value),fwave.value)/trapz(ftrans*v(fwave.value),fwave.value))
+        if rsr:
+            val = -2.5*numpy.log10(trapz(ftrans*fwave.value*d(fwave.value),fwave.value)/trapz(ftrans*fwave.value*v(fwave.value),fwave.value))
+        else:
+            val = -2.5*numpy.log10(trapz(ftrans*d(fwave.value),fwave.value)/trapz(ftrans*v(fwave.value),fwave.value))
         for i in numpy.arange(nsamples):
 #            result.append(-2.5*numpy.log10(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave)/trapz(ftrans*v(fwave)*sp.funit,fwave)))
-            result.append(-2.5*numpy.log10(trapz(ftrans*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)/trapz(ftrans*v(fwave.value),fwave.value)))
+            if rsr:
+                result.append(-2.5*numpy.log10(trapz(ftrans*fwave.value*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)/trapz(ftrans*fwave.value*v(fwave.value),fwave.value)))
+            else:
+                result.append(-2.5*numpy.log10(trapz(ftrans*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)/trapz(ftrans*v(fwave.value),fwave.value)))
         outunit = 1.
 
     elif (ab):
@@ -166,11 +189,21 @@ def filterMag(sp,filt,*args,**kwargs):
             a = trapz(ftrans*(d(filtnu.value)+numpy.random.normal(0,1)*n(filtnu.value))/filtnu.value,filtnu.value)
             result.append(-2.5*numpy.log10(a/b))
         outunit = 1.
+
     elif (energy):
-        val = trapz(ftrans*d(fwave.value),fwave.value)
+        if rsr:
+            val = trapz(ftrans*fwave.value*d(fwave.value),fwave.value)
+            print(val)
+        else:
+            val = trapz(ftrans*d(fwave.value),fwave.value)
+            print(val)
         for i in numpy.arange(nsamples):
-            result.append(trapz(ftrans*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value))
+            if rsr:
+                result.append(trapz(ftrans*fwave.value*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value))
+            else:
+                result.append(trapz(ftrans*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value))
         outunit = u.erg/u.s/u.cm**2
+
     elif (photons):
         convert = const.h.to('erg s')*const.c.to('micron/s')
         val = trapz(ftrans*fwave.value*convert.value*d(fwave.value),fwave.value)
