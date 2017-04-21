@@ -7,6 +7,7 @@ from __future__ import print_function, division
 """
 
 # imports - internal
+import copy
 import os
 
 # imports - external
@@ -25,6 +26,16 @@ from .utilities import *
 #####################################################
 ###############   SPECTROPHOTOMETRY   ###############
 #####################################################
+
+def checkFilter(filt,verbose=True,info=True):
+    f = filt
+    if f not in FILTERS.keys(): f = filt.replace(' ','_')
+    if f not in FILTERS.keys(): f.upper()
+    if f not in FILTERS.keys(): 
+        if verbose: print('\nFilter '+filt+' not currently available for SPLAT; contact '+SPLAT_EMAIL+'\n')
+        if info: filterInfo()
+        return False
+    return f
 
 
 def filterMag(sp,filt,*args,**kwargs):
@@ -85,17 +96,12 @@ def filterMag(sp,filt,*args,**kwargs):
 
 
 # check that requested filter is in list
-    filter0 = filt
-    filt = filt.replace(' ','_')
-    filt.upper()
-    if (filt not in FILTERS.keys() and isinstance(custom,bool) and isinstance(notch,bool)):
-        if kwargs.get('verbose',True): print('\nFilter '+filt+' not currently available for SPLAT; contact '+SPLAT_EMAIL+'\n')
-        info = True
-
-# print out what's available
-    if (info):
-        filterInfo()
-        return numpy.nan, numpy.nan
+    f0 = copy.deepcopy(filt)
+    filt = checkFilter(filt)
+    if isinstance(custom,bool) and isinstance(notch,bool):
+        filt = checkFilter(filt)
+        if filt == False: return numpy.nan, numpy.nan
+        
 
 # reset filter calculation methods based on filter design
     if 'ab' in FILTERS[filt]['method']: 
@@ -263,43 +269,175 @@ def filterProperties(filt,**kwargs):
       FOURSTAR H SHORT: FOURSTAR H short
       ...
     '''
-    filt = filt.replace(' ','_')
     filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
     if not os.path.exists(filterFolder):
         filterFolder = SPLAT_URL+FILTER_FOLDER
 
-    if (filt not in FILTERS.keys()):
-        print('Filter '+filt+' not among the available filters; run filterInfo() to get a list')
-#        filterInfo()
-        return None
-    else:
-        report = {}
-        report['name'] = filt
-        report['description'] = FILTERS[filt]['description']
-        report['zeropoint'] = FILTERS[filt]['zeropoint']
-        fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[filt]['file'], comments='#', unpack=True, \
-            missing_values = ('NaN','nan'), filling_values = (numpy.nan))
-        fw = fwave[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
-        ft = ftrans[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
-        fw05 = fwave[numpy.where(ftrans > 0.5*numpy.nanmax(ftrans))]
+# check that requested filter is in list
+    filt = checkFilter(filt)
+    if filt == False: return None
+
+    report = {}
+    report['name'] = filt
+    report['description'] = FILTERS[filt]['description']
+    report['zeropoint'] = FILTERS[filt]['zeropoint']
+    fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[filt]['file'], comments='#', unpack=True, \
+        missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+    fw = fwave[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
+    ft = ftrans[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
+    fw05 = fwave[numpy.where(ftrans > 0.5*numpy.nanmax(ftrans))]
 #        print(trapz(ft,fw))
 #        print(trapz(fw*ft,fw))
-        report['lambda_mean'] = trapz(ft*fw,fw)/trapz(ft,fw)
-        report['lambda_pivot'] = numpy.sqrt(trapz(fw*ft,fw)/trapz(ft/fw,fw))
-        report['lambda_central'] = 0.5*(numpy.max(fw)+numpy.min(fw))
-        report['lambda_fwhm'] = numpy.max(fw05)-numpy.min(fw05)
-        report['lambda_min'] = numpy.min(fw)
-        report['lambda_max'] = numpy.max(fw)
+    report['lambda_mean'] = trapz(ft*fw,fw)/trapz(ft,fw)
+    report['lambda_pivot'] = numpy.sqrt(trapz(fw*ft,fw)/trapz(ft/fw,fw))
+    report['lambda_central'] = 0.5*(numpy.max(fw)+numpy.min(fw))
+    report['lambda_fwhm'] = numpy.max(fw05)-numpy.min(fw05)
+    report['lambda_min'] = numpy.min(fw)
+    report['lambda_max'] = numpy.max(fw)
 # report values out
-        if kwargs.get('verbose',True):
-            print('\nFilter '+filt+': '+report['description'])
-            print('Zeropoint = {} Jy'.format(report['zeropoint']))
-            print('Pivot point: = {:.3f} micron'.format(report['lambda_pivot']))
-            print('FWHM = {:.3f} micron'.format(report['lambda_fwhm']))
-            print('Wavelength range = {:.3f} to {:.3f} micron\n'.format(report['lambda_min'],report['lambda_max']))
-        return report
+    if kwargs.get('verbose',True):
+        print('\nFilter '+filt+': '+report['description'])
+        print('Zeropoint = {} Jy'.format(report['zeropoint']))
+        print('Pivot point: = {:.3f} micron'.format(report['lambda_pivot']))
+        print('FWHM = {:.3f} micron'.format(report['lambda_fwhm']))
+        print('Wavelength range = {:.3f} to {:.3f} micron\n'.format(report['lambda_min'],report['lambda_max']))
+    return report
 
 
+def magToFlux(mag,filt,**kwargs):
+    '''
+    :Purpose: Converts a magnitude into an energy, and vice versa.
 
+    :param mag: magnitude on whatever system is defined for the filter or provided (required)
+    :param filter: name of filter, must be one of the specifed filters given by splat.FILTERS.keys() (required)
+    :param reverse: convert energy into magnitude instead (optional, default = False)
+    :param ab: magnitude is on the AB system (optional, default = filter preference)
+    :param vega: magnitude is on the Vega system (optional, default = filter preference)
+    :param rsr: magnitude is on the Vega system (optional, default = filter preference)
+    :param units: units for energy as an astropy.units variable; if this conversion does not work, the conversion is ignored (optional, default = erg/cm2/s)
+    :param verbose: print out information about filter to screen (optional, default = False)
+
+    WARNING: THIS CODE IS ONLY PARTIALLY COMPLETE
+    '''
+
+# keyword parameters
+    filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
+    if not os.path.exists(filterFolder):
+        filterFolder = SPLAT_URL+FILTER_FOLDER
+    vegaFile = kwargs.get('vegaFile','vega_kurucz.txt')
+    vega = kwargs.get('vega',True)
+    ab = kwargs.get('ab',not vega)
+    rsr = kwargs.get('rsr',False)
+    nsamples = kwargs.get('nsamples',100)
+    custom = kwargs.get('custom',False)
+    notch = kwargs.get('notch',False)
+    base_unit = u.erg/(u.cm**2 * u.s)
+    return_unit = kwargs.get('unit',base_unit)
+    e_mag = kwargs.get('uncertainty',0.)
+    e_mag = kwargs.get('unc',e_mag)
+    e_mag = kwargs.get('e_mag',e_mag)
+    if ~isinstance(mag,u.quantity.Quantity): mag*=u.s/u.s
+    if ~isinstance(e_mag,u.quantity.Quantity): e_mag*=mag.unit
+
+# check that requested filter is in list
+    filt = checkFilter(filt)
+    if filt == False: return numpy.nan, numpy.nan
+
+# reset filter calculation methods based on filter design
+    if 'ab' in FILTERS[filt]['method']: 
+        ab = kwargs.get('ab',True)
+        vega = not ab
+    if 'vega' in FILTERS[filt]['method']: 
+        vega = kwargs.get('vega',True)
+        ab = not vega
+    if 'rsr' in FILTERS[filt]['method']: 
+        rsr = kwargs.get('rsr',True)
+
+
+# Read in filter
+    if isinstance(custom,bool) and isinstance(notch,bool):
+        fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[filt]['file'], comments='#', unpack=True, \
+            missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+# notch filter
+    elif isinstance(custom,bool) and isinstance(notch,list):
+        dn = (notch[1]-notch[0])/1000
+        fwave = numpy.arange(notch[0]-5.*dn,notch[1]+5.*dn,dn)
+        ftrans = numpy.zeros(len(fwave))
+        ftrans[numpy.where(numpy.logical_and(fwave >= notch[0],fwave <= notch[1]))] = 1.
+# custom filter
+    else:
+        fwave,ftrans = custom[0],custom[1]
+    fwave = fwave[~numpy.isnan(ftrans)]*u.micron   # temporary fix
+    ftrans = ftrans[~numpy.isnan(ftrans)]
+
+    result = []
+    err = 0.
+# magnitude -> energy
+    if kwargs.get('reverse',False) == False:
+        
+        if vega:
+    # Read in Vega spectrum
+            vwave,vflux = numpy.genfromtxt(filterFolder+vegaFile, comments='#', unpack=True, \
+                missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+            vwave = vwave[~numpy.isnan(vflux)]*u.micron
+            vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))
+    # interpolate Vega onto filter wavelength function
+            v = interp1d(vwave.value,vflux.value,bounds_error=False,fill_value=0.)
+            if rsr: fact = trapz(ftrans*fwave.value*v(fwave.value),fwave.value)
+            else: fact = trapz(ftrans*v(fwave.value),fwave.value)
+            val = 10.**(-0.4*mag.value)*fact*u.erg/(u.cm**2 * u.s)
+    # calculate uncertainty        
+            if e_mag.value > 0.:
+                for i in numpy.arange(nsamples): result.append(10.**(-0.4*(mag.value+numpy.random.normal(0,1.)*e_mag.value))*fact)
+                err = (numpy.nanstd(result))*u.erg/(u.cm**2 * u.s)
+            else: err = 0.*u.erg/(u.cm**2 * u.s)
+        elif ab:
+            fconst = 3631*u.jansky
+            ftrans = (ftrans*fconst).to(u.erg/(u.cm**2 * u.s * u.micron),equivalencies=u.spectral_density(fwave))
+            if rsr: fact = trapz(ftrans*fwave.value,fwave.value)
+            else: fact = trapz(ftrans,fwave.value)
+            val = (10.**(-0.4*mag.value)*fact)*u.erg/(u.cm**2 * u.s)
+    # calculate uncertainty        
+            if e_mag.value > 0.:
+                for i in numpy.arange(nsamples): result.append(10.**(-0.4*(mag.value+numpy.random.normal(0,1.)*e_mag.value))*fact)
+                err = (numpy.nanstd(result))*u.erg/(u.cm**2 * u.s)
+            else: err = 0.*u.erg/(u.cm**2 * u.s)
+        else:
+            raise ValueError('\nmagToFlux needs vega or ab method specified')
+
+# convert to desired energy units
+#        try:
+        val.to(return_unit)
+        err.to(return_unit)
+#        except:
+#            print('\nWarning: unit {} is not an energy flux unit'.format(return_unit))
+        try:
+            val.to(base_unit)
+            err.to(base_unit)
+        except:
+            print('\nWarning: cannot convert result to an energy flux unit'.format(base_unit))
+            return numpy.nan, numpy.nan
+        return val, err
+
+# energy -> magnitude
+# THIS NEEDS TO BE COMPLETED
+    else:
+        print('passed')
+        pass
+# check that input is an energy flux
+#        try:
+#            mag.to(base_unit)        
+#            e_mag.to(base_unit)        
+#        except:
+#            raise ValueError('\nInput quantity unit {} is not a flux unit'.format(mag.unit))
+
+
+def visualizeFilter(filt,**kwargs):
+    '''
+    :Purpose: Plots a filter profile or set of filter profiles, optionally on top of a spectrum
+
+    FUTURE CODE, THIS IS A PLACEHOLDER
+    '''
+    pass
 
 

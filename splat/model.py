@@ -1661,28 +1661,23 @@ def modelFitEMCEE(spec, **kwargs):
         Returns the best estimate of the effective temperature, surface 
         gravity, and (if selected) metallicity.  Includes an estimate of the time required to run, prompts
         user if they want to proceed, and shows progress with iterative saving of outcomes
-    :param spec: Spectrum class object, which should contain wave, flux and noise array elements.
-    :param nwalkers: number of MCMC walkers, should have at least 20
-    :type nwalkers: optional, default = 20
-    :param nsamples: number of MCMC samples, for model fitting about 500 seems OK
-    :type nsamples: optional, default = 500
-    :param burn_fraction: the fraction of the initial steps to be discarded. (e.g., if 
-                ``burn_fraction = 0.2``, the first 20% of the samples are discarded.)
-    :type burn_fraction: optional, default = 0.5
+    :param spec: Spectrum class object, which should contain wave, flux and noise array elements (required)
+    :param nwalkers: number of MCMC walkers, should be at least 20 (optional, default = 20)
+    :param nsamples: number of MCMC samples (optional, default = 500)
+    :param threads: number of threads to run on a multiprocessing machine (optional, default = 1)
+    :param burn_fraction: the fraction of the initial steps to be discarded; e.g., if 
+                ``burn_fraction = 0.2``, the first 20% of the samples are discarded. (optional, default = 0.5)
     :param initial_guess: array including initial guess of the model parameters.
             Can also set individual guesses of spectral parameters by using 
             **initial_temperature**, **initial_teff**, or **t0**;
             **initial_gravity**, **initial_logg** or **g0**; 
-            and **initial_metallicity**, **initial_z** or **z0**.
-    :type initial_guess: optional, default = array of random numbers within allowed ranges
+            and **initial_metallicity**, **initial_z** or **z0** (optional, default = array of random numbers within allowed ranges)
     :param limits: list of 2-element arrays indicating ranges of the model parameters to limit the parameter space.
             Can also set individual ranges of spectral parameters by using 
             **temperature_range**, **teff_range** or **t_range**;
             **gravity_range**, **logg_range** or **g_range**;
-            and **metallicity_range** or **z_range**.
-    :type limits: optional, default = depends on model set
-    :param prior_scatter: array giving the widths of the normal distributions from which to draw prior parameter values
-    :type prior_scatter: optional, default = [25,0.1,0.1]
+            and **metallicity_range** or **z_range** (optional, default = depends on model set)
+    :param prior_scatter: array giving the widths of the normal distributions from which to draw prior parameter values (optional, default = [25,0.1,0.1])
     :param model: set of models to use (``set`` and ``model_set`` do the same); options include:
 
         - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
@@ -1839,9 +1834,9 @@ def modelFitEMCEE(spec, **kwargs):
     try: mdl = loadModel(teff=parameters0[0]+20.,logg=parameters0[1]+0.1,set=model_set)
     except: pass
     testtimeend = time.time()
-    time_estimate = (testtimeend-testtimestart)*nwalkers*nsamples*1.2
+    time_estimate = (testtimeend-testtimestart)*nwalkers*nsamples*1.2/(1.*threads)
     print(testtimeend,testtimestart)
-    print('Estimated time to compute = {:.0f} seconds = {:.1f} minutes = {:.2f} hours'.\
+    print('Very rough estimated time to compute = {:.0f} seconds = {:.1f} minutes = {:.2f} hours'.\
         format(time_estimate,time_estimate/60.,time_estimate/3600.))
     if time_estimate > 1200. and not kwargs.get('noprompt',False):
         resp = input('Do you want to continue? [Y/n]: ')
@@ -1851,7 +1846,7 @@ def modelFitEMCEE(spec, **kwargs):
 
 # run EMCEE with iterative saving and updates
     model_params = {'model': model_set, 'limits': limits, 'mask': mask}
-    sampler = emcee.EnsembleSampler(nwalkers, nparameters, _modelFitEMCEE_lnprob, args=(spec.wave.value,spec.flux.value,spec.noise.value,model_params))
+    sampler = emcee.EnsembleSampler(nwalkers, nparameters, _modelFitEMCEE_lnprob, threads=threads, args=(spec.wave.value,spec.flux.value,spec.noise.value,model_params))
     sys.stdout.write("\n")
     for i, result in enumerate(sampler.sample(initial_parameters, iterations=nsamples)):
         if i > 0:
