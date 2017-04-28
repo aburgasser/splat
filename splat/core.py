@@ -133,6 +133,7 @@ class Spectrum(object):
         self.idkey = kwargs.get('idkey',False)
         self.instrument = kwargs.get('instrument','SPEX_PRISM')
         self.history = []
+        self.runfast = kwargs.get('runfast',True)
 
 # breakouts for specific instruments
         if kwargs.get('APOGEE') == True and kwargs.get('file',False) != False:
@@ -171,7 +172,7 @@ class Spectrum(object):
                 if sdb != False:
                     self.filename = sdb['DATA_FILE'][0]
             except:
-                print('Warning: problem reading in spectral database, a known problem for Python 3.X')
+                print('Warning: problem reading in spectral database')
         elif self.ismodel == False and self.filename != '':
             kwargs['filename']=self.filename
             kwargs['silent']=True
@@ -180,7 +181,7 @@ class Spectrum(object):
                 if len(t) > 0:
                     sdb = t
             except:
-                print('Warning: problem reading in source or spectral database, a known problem for Python 3.X')            
+                print('Warning: problem reading in source or spectral database')            
         else:
             sdb = False
 
@@ -202,6 +203,12 @@ class Spectrum(object):
 
 # read in data from file
         elif self.filename != '':
+
+# return prior spectrum - THIS IS NOT WORKING SO COMMENTED OUT
+#            if self.filename in list(SPECTRA_READIN.keys()) and self.runfast == True:
+#                self = SPECTRA_READIN[self.filename]
+#                return
+
             try:
                 rs = readSpectrum(self.filename,**kwargs)
                 self.wave = rs['wave']
@@ -375,9 +382,15 @@ class Spectrum(object):
             if 'TIME_OBS' not in list(self.header.keys()) and 'observation_time' in list(self.__dict__.keys()):
                 self.header['TIME_OBS'] = self.observation_time.replace(' ',':')
 
+
         self.history.append('Spectrum successfully loaded')
 # create a copy to store as the original
         self.original = copy.deepcopy(self)
+
+# add to previous read spectra
+        if self.filename != '' and self.ismodel == False:
+            SPECTRA_READIN[self.filename] = self
+
         return
 
     def __copy__(self):

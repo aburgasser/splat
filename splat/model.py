@@ -37,7 +37,7 @@ import splat.photometry as spphot
 import splat.empirical as spemp
 from .core import Spectrum, classifyByIndex, compareSpectra, _generateMask
 
-# some constants
+# structure to store models that have been read in
 MODELS_READIN = {}
 
 
@@ -361,6 +361,8 @@ def loadModel(*args, **kwargs):
     kwargs['ismodel'] = True
     kwargs['force'] = kwargs.get('force',False)
     url = kwargs.get('url',SPLAT_URL)
+    runfast = kwargs.get('runfast',True)
+    verbose = kwargs.get('verbose',False)
 
 
 # a filename has been passed - assume this file is a local file
@@ -372,10 +374,14 @@ def loadModel(*args, **kwargs):
             kwargs['filename'] = kwargs['folder']+os.path.basename(kwargs['filename'])
             if not os.path.exists(kwargs['filename']):
                 raise NameError('\nCould not find model file {} or {}'.format(kwargs['filename'],kwargs['folder']+os.path.basename(kwargs['filename'])))
-            else:
-                return Spectrum(**kwargs)
+
+# check if already read in
+        if kwargs['filename'] in list(MODELS_READIN.keys()) and runfast == True:
+#            if verbose: print('RUNFAST 1: {}'.format(kwargs['filename']))
+            return MODELS_READIN[kwargs['filename']]
         else:
-            return Spectrum(**kwargs)
+            MODELS_READIN[kwargs['filename']] = Spectrum(**kwargs)
+            return MODELS_READIN[kwargs['filename']]
 
 
 # set up the model set
@@ -408,26 +414,6 @@ def loadModel(*args, **kwargs):
         if kwargs['cld'] == 'nc':
             kwargs['cld'] = 'f50'
 
-
-# check that folder/set is present either locally or online
-# if not present locally but present online, switch to this mode
-# if not present at either raise error
-    folder = checkLocal(kwargs['folder'])
-    if folder=='':
-        folder = checkOnline(kwargs['folder'])
-        if folder=='':
-            print('\nCould not find '+kwargs['folder']+' locally or on SPLAT website')
-            print('\nAvailable model set options are:')
-            for s in DEFINED_MODEL_SET:
-                print('\t{}'.format(s))
-            raise NameError()
-        else:
-            kwargs['folder'] = folder
-            kwargs['local'] = False
-            kwargs['online'] = True
-    else:
-        kwargs['folder'] = folder
-
 # convert model parameters to unitless numbers
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
         if isinstance(kwargs[ms],u.quantity.Quantity):
@@ -452,6 +438,32 @@ def loadModel(*args, **kwargs):
 #                raise NameError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,kwargs[ms],kwargs['set']))
 
 
+# have we already read in? if so just return saved spectrum object
+    if kwargs['filename'] in list(MODELS_READIN.keys()) and runfast == True:
+#        if verbose: print('RUNFAST 2: {}'.format(kwargs['filename']))
+        return MODELS_READIN[kwargs['filename']]
+    else:
+        if verbose: print('{}'.format(kwargs['filename']))
+
+
+# check that folder/set is present either locally or online
+# if not present locally but present online, switch to this mode
+# if not present at either raise error
+    folder = checkLocal(kwargs['folder'])
+    if folder=='':
+        folder = checkOnline(kwargs['folder'])
+        if folder=='':
+            print('\nCould not find '+kwargs['folder']+' locally or on SPLAT website')
+            print('\nAvailable model set options are:')
+            for s in DEFINED_MODEL_SET:
+                print('\t{}'.format(s))
+            raise NameError()
+        else:
+            kwargs['folder'] = folder
+            kwargs['local'] = False
+            kwargs['online'] = True
+    else:
+        kwargs['folder'] = folder
 
 # check if file is present; if so, read it in, otherwise go to interpolated
 # locally:
@@ -461,34 +473,32 @@ def loadModel(*args, **kwargs):
             if kwargs['force']:
                 raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
             else:
-                return loadInterpolatedModel(**kwargs)
+                sp = loadInterpolatedModel(**kwargs)
 #                kwargs['local']=False
 #                kwargs['online']=True
         else:
-#            try:
-            return Spectrum(**kwargs)
-#            except:
-#                raise NameError('\nProblem reading in '+kwargs['filename']+' locally\n\n')
+            MODELS_READIN[kwargs['filename']] = Spectrum(**kwargs)
+            return MODELS_READIN[kwargs['filename']]
 
 # online:
-    if kwargs['online']:
+    if kwargs['online'] == True:
         file = checkOnline(kwargs['filename'])
         if file=='':
             if kwargs['force']:
                 raise NameError('\nCould not find '+kwargs['filename']+' online\n\n')
             else:
-                return loadInterpolatedModel(**kwargs)
+                sp = loadInterpolatedModel(**kwargs)
         else:
-            try:
-                ftype = kwargs['filename'].split('.')[-1]
-                tmp = TMPFILENAME+'.'+ftype
-                open(os.path.basename(tmp), 'wb').write(requests.get(url+kwargs['filename']).content) 
-                kwargs['filename'] = os.path.basename(tmp)
-                sp = Spectrum(**kwargs)
-                os.remove(os.path.basename(tmp))
-                return sp
-            except:
-                raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
+            ftype = kwargs['filename'].split('.')[-1]
+            tmp = TMPFILENAME+'.'+ftype
+            open(os.path.basename(tmp), 'wb').write(requests.get(url+kwargs['filename']).content) 
+            mkwargs = copy.deepcopy(kwargs)
+            mkwargs['filename'] = os.path.basename(tmp)
+            MODELS_READIN[kwargs['filename']] = Spectrum(**mkwargs)
+            os.remove(os.path.basename(tmp))
+            return MODELS_READIN[kwargs['filename']]
+#                except:
+#                    raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
 
 
 def getModel(*args, **kwargs):
@@ -575,9 +585,9 @@ def loadInterpolatedModel(*args,**kwargs):
 
     if mkwargs.get('sed',False):
         mkwargs['instrument'] = 'SED'
-        mkwargs['name'] = kwargs['model']+' SED'
+        mkwargs['name'] = mkwargs['model']+' SED'
 
-    mkwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
+    mkwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mkwargs['model']+'/'
 
 # some special defaults
     if mkwargs['model'] == 'morley12':
@@ -647,7 +657,7 @@ def loadInterpolatedModel(*args,**kwargs):
                 for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: mstr+=str(mparams[-1][ms])
                 mparam_names.append(mstr)
 
-# generate meshgrid with slight offset and temperature on log scale
+# generate meshgrid with slight offset in temperature on log scale
     rng = []
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
         if ms=='teff' or ms =='logg' or ms=='z':

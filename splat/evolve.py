@@ -822,7 +822,7 @@ def simulateAges(num,**kwargs):
 
 # initial parameters
     distribution = kwargs.get('distribution','uniform')
-    allowed_distributions = ['uniform','flat','exponential','double-exponential','peaked','cosmic','aumer','aumer-double','aumer-peaked','just-peaked','just-peaked-a','just-peaked-b','miller','rujopakarn']
+    allowed_distributions = ['uniform','flat','exponential','double-exponential','peaked','cosmic','aumer','aumer-double','aumer-peaked','just','just_exponential','just-peaked','just-peaked-a','just-peaked-b','miller','rujopakarn']
     mn = kwargs.get('minage',0.1)
     mn = kwargs.get('min',mn)
     mx = kwargs.get('maxage',10.)
@@ -831,6 +831,8 @@ def simulateAges(num,**kwargs):
     age_range = kwargs.get('age_range',[mn,mx])
     age_range = kwargs.get('range',age_range)
     verbose = kwargs.get('verbose',False)
+    if distribution.lower() not in allowed_distributions:
+        raise ValueError('No distribution named {} in code; try one of the following: {}'.format(distribution,allowed_distributions))
 
 # protective offset
     if age_range[0] == age_range[1]:
@@ -857,13 +859,13 @@ def simulateAges(num,**kwargs):
 
 # 
 # exponential
-    if distribution.lower() == 'exponential' or distribution.lower() == 'aumer' or distribution.lower() == 'miller':
+    if distribution.lower() == 'exponential' or distribution.lower() == 'aumer' or distribution.lower() == 'miller' or distribution.lower() == 'just' or distribution.lower() == 'just_exponential':
         if verbose: print('using exponential distribution')
         if distribution.lower() == 'aumer':
             parameters['beta'] = 0.117
         if distribution.lower() == 'miller':
             parameters['beta'] = 0.5*numpy.max(age_range)
-        if distribution.lower() == 'just':
+        if distribution.lower() == 'just' or distribution.lower() == 'just_exponential':
             parameters['beta'] = 0.125
 
 # use CDF sampling
@@ -947,6 +949,9 @@ def simulateAges(num,**kwargs):
     elif distribution.lower() == 'uniform' or distribution.lower() == 'flat': 
         if verbose: print('using uniform distribution')
         ages = numpy.random.uniform(numpy.min(age_range), numpy.max(age_range), size=num)
+
+    else:
+        return ValueError('Did not recognize distribution {}'.format(distribution))
 
     if sfh:
         if verbose: print('reversing ages (SFH)')
