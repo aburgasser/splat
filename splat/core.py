@@ -965,6 +965,15 @@ class Spectrum(object):
            >>> splat.filterMag(sp,'2MASS J')
             (15.002545668628173, 0.017635234089677564)
         '''
+
+# check inputs
+        if isinstance(mag,str) and isNumber(filt):
+            m = mag
+            mag = filt
+            filt = m
+        if not isNumber(mag) or not isinstance(filt,str):
+            raise ValueError('\nSyntax for function is Spectrum.filterMag(filter,magnitude)')
+            
         if self.fscale == 'Temperature' or self.fscale == 'SED':
             self.reset()
         if self.funit != u.erg/(u.cm**2 * u.s * u.micron):

@@ -89,6 +89,45 @@ def bibTexParser(bib_tex,**kwargs):
     return bib_dict
 
 
+def veryShortRef(bib_dict,**kwargs):
+    '''
+    :Purpose:
+        Takes a bibtex dictionary and returns a short (in-line) version of the citation
+
+    :Required parameters:
+        :param bib_tex: Dictionary output from bibTexParser, else a bibcode that is fed into bibTexParser
+
+    :Optional parameters:
+        None
+
+    :Output:
+        A string of the format ``Burgasser et al. (2006)``
+
+    '''
+    if type(bib_dict) is not dict:
+        if type(bib_dict) is numpy.str:
+            bib_dict = str(bib_dict)
+        if type(bib_dict) is str:
+            bib_dict = getBibTex(bib_dict,**kwargs)
+            if isinstance(bib_dict,dict) == False: return ''
+        else:
+            if kwargs.get('verbose',False): print('Input to shortRef is neither a bibcode nor a bibTex dictionary')
+            return ''
+
+    authors = bib_dict['author'].split(' and ')
+    a = authors[0].replace('~',' ').split(' ')
+    a = a[0].replace(',','')
+    if len(authors) == 1:
+        output = a
+    else:
+        output = '{} et al.'.format(a)
+
+# fill in missing data
+    if 'year' not in bib_dict.keys():
+        bib_dict['year'] = ''
+
+    return output+' ({})'.format(bib_dict['year'])
+
 def shortRef(bib_dict,**kwargs):
     '''
     :Purpose:

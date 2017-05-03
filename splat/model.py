@@ -310,6 +310,7 @@ def loadModel(*args, **kwargs):
             - *morley14*: model set from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, sedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: `morley2014`)
             - *saumon12*: model set from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_ with effective temperatures of 400 to 1500 K (steps of 50 K); and surface gravities of 3.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, and no clouds are associated with these models (alternate designations: `saumon`, `saumon2012`)
             - *drift*: model set from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_ with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex); cloud opacity is fixed in this model, equilibrium chemistry is assumed (alternate designations: `witte`, `witte2011`, `helling`)
+            - *madhusudhan*: model set from `Madhusudhan et al. (2011) <http://adsabs.harvard.edu/abs/2011ApJ...737...34M>`_ with effective temperatures of 600 K to 1700 K (steps of 50-100 K); surface gravities of 3.5 and 5.0 in units of cm/s^2; and metallicities of 0.0 to 1.0 (in steps of 0.5 dex); there are multiple cloud prescriptions for this model, equilibrium chemistry is assumed (alternate designations: `madhusudhan`)
         
     Optional Inputs:
         :param: **teff**: effective temperature of the model in K (e.g. `teff` = 1000)
@@ -361,7 +362,7 @@ def loadModel(*args, **kwargs):
     kwargs['ismodel'] = True
     kwargs['force'] = kwargs.get('force',False)
     url = kwargs.get('url',SPLAT_URL)
-    runfast = kwargs.get('runfast',True)
+    runfast = kwargs.get('runfast',False)
     verbose = kwargs.get('verbose',False)
 
 
@@ -478,7 +479,7 @@ def loadModel(*args, **kwargs):
 #                kwargs['online']=True
         else:
             MODELS_READIN[kwargs['filename']] = Spectrum(**kwargs)
-            return MODELS_READIN[kwargs['filename']]
+            sp = MODELS_READIN[kwargs['filename']]
 
 # online:
     if kwargs['online'] == True:
@@ -494,11 +495,15 @@ def loadModel(*args, **kwargs):
             open(os.path.basename(tmp), 'wb').write(requests.get(url+kwargs['filename']).content) 
             mkwargs = copy.deepcopy(kwargs)
             mkwargs['filename'] = os.path.basename(tmp)
-            MODELS_READIN[kwargs['filename']] = Spectrum(**mkwargs)
+            sp = Spectrum(**mkwargs)
             os.remove(os.path.basename(tmp))
-            return MODELS_READIN[kwargs['filename']]
+#            sp = MODELS_READIN[kwargs['filename']]
 #                except:
 #                    raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
+
+# add to read in files
+    MODELS_READIN[kwargs['filename']] = sp
+    return sp
 
 
 def getModel(*args, **kwargs):
@@ -729,6 +734,7 @@ def _loadModelParameters(*args,**kwargs):
 
     if checkSpectralModelName(mset) == False:
         raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(mset,DEFINED_MODEL_SET))
+    mset = checkSpectralModelName(mset)
 
     parameters = {'model': mset, 'parameter_sets': []}
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:

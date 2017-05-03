@@ -83,6 +83,8 @@ def plotSpectrum(*args, **kwargs):
         plot the uncertainty for each spectrum
     residual = False:
         plots the residual between two spectra
+    colorComparison:
+        color of comparison source plot lines; by default all grey
 
     color or colors:
         color of plot lines; by default all black
