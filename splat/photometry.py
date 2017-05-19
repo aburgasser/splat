@@ -117,6 +117,7 @@ def filterMag(sp,filt,*args,**kwargs):
     photons = kwargs.get('photons',False)
     photons = kwargs.get('photon',photons)
     energy = kwargs.get('energy',False)
+    energy = kwargs.get('flux',energy)
     if (photons or energy):
         vega = False
         ab = False

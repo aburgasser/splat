@@ -12,6 +12,8 @@ import glob
 import os
 
 # imports: external
+from astropy.coordinates import Angle,SkyCoord      # coordinate conversion
+import astropy.units as u
 import matplotlib.cm as cm
 import matplotlib.colors as colmap
 import matplotlib.patches as patches
@@ -25,6 +27,86 @@ from scipy import ndimage
 from splat.initialize import *
 from splat.utilities import *
 import splat.core as splat
+
+
+def plotMap(*args,**kwargs):
+    '''
+    This code is currently in development
+    '''
+    
+    projection = kwargs.get('projection','mollweide')
+    figsize = kwargs.get('figsize',(8,6))
+    colors = kwargs.get('colors',['k' for i in range(len(args))])
+    colors = kwargs.get('color',colors)
+    alphas = kwargs.get('alphas',[0.5 for i in range(len(args))])
+    alphas = kwargs.get('alpha',alphas)
+    markers = kwargs.get('symbols',['o' for i in range(len(args))])
+    markers = kwargs.get('symbol',markers)
+    markers = kwargs.get('markers',markers)
+    markers = kwargs.get('marker',markers)
+    symsizes = kwargs.get('size',[10 for i in range(len(args))])
+    symsizes = kwargs.get('sizes',symsizes)
+    symsizes = kwargs.get('symsize',symsizes)
+    symsizes = kwargs.get('symsizes',symsizes)
+    rdec = kwargs.get('reference_declination',None)
+    rdec = kwargs.get('rdec',rdec)
+    file = kwargs.get('output',None)
+    file = kwargs.get('file',file)
+
+
+
+    fig = plt.figure(figsize=figsize)
+    ax = fig.add_subplot(111, projection=projection)
+    ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
+    ax.grid(kwargs.get('grid',False))
+
+    for i,pcoords in enumerate(args):
+# sense what the input values are
+        if not isinstance(pcoords,list):
+            pcoords = [pcoords]
+        if isinstance(pcoords[0],float) and len(pcoords) == 2:
+            pcoords = [pcoords]
+        if isinstance(pcoords[0],str):
+            pcoords = [splat.properCoordinates(c) for c in pcoords]
+        if isinstance(pcoords[0],list):
+            if isinstance(pcoords[0][0],float):
+                pcoords = [splat.properCoordinates(c) for c in pcoords]
+        if not isinstance(pcoords[0],SkyCoord):
+            raise ValueError('\nCould not parse coordinate input {}'.format(coords))
+
+# convert coordinates and scatter plot
+        ra = [c.ra for c in pcoords]
+        ra = [c.wrap_at(180*u.degree) for c in ra]
+        ra = [c.radian for c in ra]
+        dec = [c.dec.radian for c in pcoords]
+
+        p = ax.scatter(ra, dec,color=colors[i],alpha=alphas[i],s=symsizes[i],marker=markers[i])
+
+# declination reference
+    if rdec != None:
+        raref = Angle(numpy.arange(-180,180.,1.)*u.degree)
+        raref.wrap_at(180.*u.degree)
+        if not isinstance(rdec,list): rdec = [rdec]
+        for d in rdec:
+            pref = ax.plot(raref.radian,Angle([d]*len(raref)*u.degree).radian,'k--')
+
+# plot galactic plane - need to figure this out
+    if kwargs.get('galactic',False) != False:
+        pass
+
+# plot ecliptic plane - need to figure this out
+    if kwargs.get('galactic',False) != False:
+        pass
+
+# plot legend
+    if kwargs.get('legend',None) != None:
+        plt.legend(kwargs['legend'],bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
+
+# plot legend
+    if file != None:
+        fig.savefig(file)
+    
+    return fig 
 
 
 
@@ -348,7 +430,7 @@ def plotSpectrum(*args, **kwargs):
         ymax = [s.fluxMax().value for s in sp]
         yrng = kwargs.get('yrange',map(lambda x: x*numpy.nanmax(ymax)+numpy.nanmax(zeropoint),[-0.02,1.2]))
         bound.extend(yrng)
-        linestyle = kwargs.get('linestyle',['steps' for x in numpy.arange(len(sp))])
+        linestyle = kwargs.get('linestyle',['steps-mid' for x in numpy.arange(len(sp))])
         linestyle = kwargs.get('linestyles',linestyle)
         if (len(linestyle) < len(sp)):
             linestyle.extend(['steps' for x in numpy.arange(len(sp)-len(linestyle))])

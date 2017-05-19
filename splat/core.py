@@ -973,7 +973,7 @@ class Spectrum(object):
             filt = m
         if not isNumber(mag) or not isinstance(filt,str):
             raise ValueError('\nSyntax for function is Spectrum.filterMag(filter,magnitude)')
-            
+
         if self.fscale == 'Temperature' or self.fscale == 'SED':
             self.reset()
         if self.funit != u.erg/(u.cm**2 * u.s * u.micron):
@@ -2563,7 +2563,7 @@ def classifyByIndex(sp, *args, **kwargs):
 
     :param set: named set of indices to measure and compute spectral type
 
-        - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_ (default)
+        - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_, applicable for types  (default)
         - *'allers'*: H2O from `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_
         - *'reid'*:H2O-A and H2O-B from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_
         - *'testi'*: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_
@@ -2606,7 +2606,6 @@ def classifyByIndex(sp, *args, **kwargs):
         if (rem_flag or len(args) == 0):
             indices = measureIndexSet(sp, **kwargs)
         sptoffset = 20.
-        sptfact = 1.
         coeffs = { \
             'H2O-A': {'fitunc': 1.18, 'range': [18,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
             'coeff': [-32.1, 23.4]}, \
@@ -2617,8 +2616,7 @@ def classifyByIndex(sp, *args, **kwargs):
     elif (set.lower() == 'testi'):
         if (rem_flag or len(args) == 0):
             indices = measureIndexSet(sp, **kwargs)
-        sptoffset = 20.
-        sptfact = 10.
+        sptoffset = 10.
         coeffs = { \
             'sHJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
             'coeff': [-1.87, 1.67]}, \
@@ -2638,7 +2636,6 @@ def classifyByIndex(sp, *args, **kwargs):
         if (rem_flag or len(args) == 0):
             indices = measureIndexSet(sp, **kwargs)
         sptoffset = 20.
-        sptfact = 1.
         coeffs = { \
             'H2O-J': {'fitunc': 0.8, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., \
             'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
@@ -2665,7 +2662,6 @@ def classifyByIndex(sp, *args, **kwargs):
             else:
                 indices = dict(i1.items() | i2.items() | i3.items())
         sptoffset = 10.
-        sptfact = 1.
         coeffs = { \
             'H2O': {'fitunc': 0.390, 'range': [15,25], 'spt': 0., 'sptunc': 99., 'mask': 1., \
             'coeff': [24.0476, -104.424, 169.388,-83.5437]}, \
@@ -2723,12 +2719,16 @@ def classifyByIndex(sp, *args, **kwargs):
 
     for index in coeffs.keys():
         if indices[index][1] > 0.:
-            vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))*sptfact
+            vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))
             coeffs[index]['spt'] = numpy.polyval(coeffs[index]['coeff'],indices[index][0])+sptoffset
+            if (set.lower() == 'testi'):
+                vals = (vals-10.)*10.+10.
+                coeffs[index]['spt'] = (coeffs[index]['spt']-10.)*10.+10.
             coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
         else:
             coeffs[index]['spt'] = numpy.nan
             coeffs[index]['sptunc'] = numpy.nan
+# fix testi spectral types
 
         if (coeffs[index]['spt'] < coeffs[index]['range'][0] or coeffs[index]['spt'] > coeffs[index]['range'][1] or numpy.isnan(coeffs[index]['spt'])):
             coeffs[index]['mask'] = 0.
@@ -2747,6 +2747,7 @@ def classifyByIndex(sp, *args, **kwargs):
         for index in coeffs.keys():
             if (sptn < coeffs[index]['range'][0] or sptn > coeffs[index]['range'][1]):
                 coeffs[index]['mask'] = 0
+
 
 # report individual subtypes
     if verbose:
@@ -2793,36 +2794,28 @@ def classifyByStandard(sp, *args, **kwargs):
     :Output: A tuple listing the best match standard and uncertainty based on F-test weighting and systematic uncertainty of 0.5 subtypes
 
     :param sp: Spectrum class object, which should contain wave, flux and
-               noise array elements.
-    :param sp: required
-    :param sptrange: Set to the spectral type range over which comparisons should be made, can be a two-element array of strings or numbers
-    :type sptrange: optional, default = ['M0','T9']
+               noise array elements (required)
+    :param sptrange: set to the spectral type range over which comparisons should be made, can be a two-element array of strings or numbers (optional, default = ['M0','T9'])
     :param statistic: string defining which statistic to use in comparison; available options are:
 
-            - *'chisqr'*: compare by computing chi squared value (requires spectra with noise values)
+            - *'chisqr'*: (DEFAULT) compare by computing chi squared value (requires spectra with noise values)
             - *'stddev'*: compare by computing standard deviation
             - *'stddev_norm'*: compare by computing normalized standard deviation
             - *'absdev'*: compare by computing absolute deviation
 
-    :type statistic: optional, default = 'chisqr'
-    :param method: set to ``'kirkpatrick'`` to follow the `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_ method, fitting only to the 0.9-1.4 micron band
-    :type method: optional, default = ''
-    :param best: Set to True to return the best fit standard type
-    :type best: optional, default = True
-    :param average: Set to True to return an chi-square weighted type only
-    :type average: optional, default = False
-    :param compareto: Set to the single standard (string or number) you want to compare to 
-    :type compareto: optional, default = None
-    :param plot: Set to True to generate a plot comparing best fit template to source; can also set keywords associated with plotSpectrum_ routine 
-    :type plot: optional, default = False
-    :param string: return spectral type as a string
-    :type string: optional, default = True
-    :param verbose: Set to True to give extra feedback
-    :type verbose: optional, default = False
+    :param method: set to ``'kirkpatrick'`` to follow the `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_ method, fitting only to the 0.9-1.4 micron band (optional, default = '')
+    :param best: set to True to return the best fit standard type (optional, default = True)
+    :param average: set to True to return an chi-square weighted type only (optional, default = False)
+    :param compareto: set to the single standard (string or number) you want to compare to (optional, default = None)
+    :param plot: set to True to generate a plot comparing best fit template to source; can also set keywords associated with plotSpectrum_ routine (optional, default = False)
+    :param string: set to True to return spectral type as a string (optional, default = True)
+    :param return_standard: set to True to return a Spectrum class of the standard properly scaled (optional, default = False)
+    :param verbose: set to True to give extra feedback (optional, default = False)
 
     Users can also set keyword parameters defined in plotSpectrum_ and compareSpectra_ routine.
 
     .. _compareSpectra : api.html#splat.compareSpectra
+    .. _plotSpectrum : api.html#splat.plot.plotSpectrum
 
     :Example:
     >>> import splat
@@ -2989,6 +2982,12 @@ def classifyByStandard(sp, *args, **kwargs):
             pl = plotSpectrum(sp,spstd,sp-spstd,**kwargs)
         else:
             pl = plotSpectrum(sp,spstd,**kwargs)
+
+    if kwargs.get('return_standard',False) == True: 
+        spstd = stds[typeToNum(sorted_stdsptnum[0],subclass=subclass)]
+        chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
+        spstd.scale(scale)
+        return spstd
 
     return output_spt, sptn_e
 
