@@ -1034,9 +1034,9 @@ def modelFitGrid(spec, **kwargs):
                                 mparam['radius'] = ((scl*(10.*u.pc)**2)**0.5).to(u.Rsun).value
                                 parameters.append(copy.deepcopy(mparam))
                                 stats.append(chi)
-                                if kwargs.get('verbose',False): print('{}: T={},g={},z={},stat={},scale={},radius={}'.format(len(stats)-1,mparam['teff'],mparam['logg'],mparam['z'],numpy.round(mparam['stat']),mparam['scale'],mparam['radius']))
+                                if kwargs.get('verbose',False) == True: print('{}: T={},g={},z={},stat={},scale={},radius={}'.format(len(stats)-1,mparam['teff'],mparam['logg'],mparam['z'],numpy.round(mparam['stat']),mparam['scale'],mparam['radius']))
                             except:
-                                if kwargs.get('verbose',False): print('\nNo model for {}'.format(mparam))
+                                if kwargs.get('verbose',False) == True: print('\nNo model for {}'.format(mparam))
 
 # report best parameters
     parameters = [p for (c,p) in sorted(zip(stats,parameters))]
@@ -1053,8 +1053,8 @@ def modelFitGrid(spec, **kwargs):
     bmodel = loadModel(**bparam)
     bmodel.scale(parameters[0]['scale'])
 
-    if kwargs.get('verbose',False): 
-        print('\nBest Parameters to fit to {} models:'.format(DEFINED_MODEL_NAMES[model_set]))
+    if kwargs.get('verbose',False) == True: 
+        print('\nBest Parameters to fit to {} models:'.format(SPECTRAL_MODELS[model_set]['name']))
         for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
             print('\t{} = {} {}'.format(SPECTRAL_MODEL_PARAMETERS[ms]['title'],parameters[0][ms],SPECTRAL_MODEL_PARAMETERS[ms]['unit']))
         if compute_radius == True:
@@ -1763,11 +1763,13 @@ def modelFitEMCEE(spec, **kwargs):
 # keywords
     nwalkers = kwargs.get('nwalkers', 10)
     nsamples = kwargs.get('nsamples', 1000)
+    threads = kwargs.get('threads', 1)
     burn_fraction = kwargs.get('burn_fraction', 0.5)  # what fraction of the initial steps are to be discarded
     prior_scale = {'teff': 25, 'logg': 0.1, 'z': 0.1, 'radius': 0.001*const.R_sun.value}
     prior_scale['teff'] = kwargs.get('t_scale',prior_scale['teff'])
     prior_scale['logg'] = kwargs.get('g_scale',prior_scale['logg'])
     prior_scale['z'] = kwargs.get('z_scale',prior_scale['z'])
+    propose_scale = kwargs.get('scale', 1.1)  # emcee scale factor
     verbose = kwargs.get('verbose', False)
     feedback_width = 50
 
@@ -1840,6 +1842,15 @@ def modelFitEMCEE(spec, **kwargs):
     parameter_titles = [SPECTRAL_MODEL_PARAMETERS[p]['title'] for p in parameter_names]
     parameter_units = [SPECTRAL_MODEL_PARAMETERS[p]['unit'] for p in parameter_names]
     nparameters = len(parameters0)
+
+
+# initialize with modelFitGrid
+    if kwargs.get('initialize',False) == True:
+        if verbose: print('Running an initialization step')
+        param = modelFitGrid(spec,**kwargs)
+        parameters0 = [param[f] for f in parameter_names]
+
+# initial scatter
     pscale = [prior_scale[p] for p in parameter_names]
     initial_parameters = [parameters0+pscale*numpy.random.randn(len(parameters0)) for i in range(nwalkers)]
 
@@ -1851,7 +1862,7 @@ def modelFitEMCEE(spec, **kwargs):
     except: pass
     testtimeend = time.time()
     time_estimate = (testtimeend-testtimestart)*nwalkers*nsamples*1.2/(1.*threads)
-    print(testtimeend,testtimestart)
+#    print(testtimeend,testtimestart)
     print('Very rough estimated time to compute = {:.0f} seconds = {:.1f} minutes = {:.2f} hours'.\
         format(time_estimate,time_estimate/60.,time_estimate/3600.))
     if time_estimate > 1200. and not kwargs.get('noprompt',False):
@@ -1861,8 +1872,9 @@ def modelFitEMCEE(spec, **kwargs):
             return
 
 # run EMCEE with iterative saving and updates
+    testtimestart = time.time()
     model_params = {'model': model_set, 'limits': limits, 'mask': mask}
-    sampler = emcee.EnsembleSampler(nwalkers, nparameters, _modelFitEMCEE_lnprob, threads=threads, args=(spec.wave.value,spec.flux.value,spec.noise.value,model_params))
+    sampler = emcee.EnsembleSampler(nwalkers, nparameters, _modelFitEMCEE_lnprob, threads=threads, args=(spec.wave.value,spec.flux.value,spec.noise.value,model_params),a=propose_scale)
     sys.stdout.write("\n")
     for i, result in enumerate(sampler.sample(initial_parameters, iterations=nsamples)):
         if i > 0:
@@ -1877,7 +1889,7 @@ def modelFitEMCEE(spec, **kwargs):
             else:
                 parameter_weights = numpy.ones(len(lnp))
             bparam,mparam,qparam = _modelFitEMCEE_bestparameters(mcr,lnp,parameter_weights=parameter_weights)
-            if verbose: print(bparam)
+            if verbose: print(bparam,mparam,qparam)
     #        lnp = result[1]
     #        scales = result[-1]
     #        radii = ((scales*(kwargs.get('distance',10.)*u.pc.to(u.cm)/const.R_sun)**2)**0.5).value.reshape(-1)
@@ -1922,6 +1934,12 @@ def modelFitEMCEE(spec, **kwargs):
     bparam,mparam,qparam = _modelFitEMCEE_bestparameters(merged_samples,lnp,parameter_weights=parameter_weights)
     if verbose: print(bparam)
 
+# check time
+    testtimeend = time.time()
+    time_estimate = (testtimeend-testtimestart)
+#    print(testtimeend,testtimestart)
+    print('Actual time to compute = {:.0f} seconds = {:.1f} minutes = {:.2f} hours'.\
+        format(time_estimate,time_estimate/60.,time_estimate/3600.))
 
 # reporting
     _modelFitEMCEE_plotchains(sampler.chain,file_chains)
