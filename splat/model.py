@@ -633,7 +633,7 @@ def loadInterpolatedModel(*args,**kwargs):
 
 # get closest models in 8 quadrant points
     mparams = []
-    mparam_names = []
+#    mparam_names = []
     psets = numpy.array(parameters['parameter_sets'])
     for i in numpy.arange(0,2):
         dt = dist[numpy.where(tdiff*((-1)**i)>=0)]
@@ -658,11 +658,8 @@ def loadInterpolatedModel(*args,**kwargs):
 
                 pcorner = pz[numpy.argmin(dz)]
                 mparams.append(pz[numpy.argmin(dz)])
-                mstr = ''
-                for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: mstr+=str(mparams[-1][ms])
-                mparam_names.append(mstr)
 
-# generate meshgrid with slight offset in temperature on log scale
+# generate meshgrid with slight offset and temperature on log scale
     rng = []
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
         if ms=='teff' or ms =='logg' or ms=='z':
@@ -675,23 +672,56 @@ def loadInterpolatedModel(*args,**kwargs):
             rng.append(r)
     mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
 
-# read in only unique models
-    mpsmall = [dict(y) for y in set(tuple(x.items()) for x in mparams)]
-#    mpsmall = numpy.unique(numpy.array(mparams))
-    bmodels = []
-    bmodel_names = []
-    for m in mpsmall:
-        bmodels.append(loadModel(instrument=mkwargs['instrument'],**m))
-        mstr = ''
-        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: mstr+=str(m[ms])
-        bmodel_names.append(mstr)
-
-# then back fill all models
-    bmodels = numpy.array(bmodels)
-    bmodel_names = numpy.array(bmodel_names)
+# read in unique models
+    bmodels = {}
     models = []
-    for i,m in enumerate(mparam_names):
-        models.append(bmodels[numpy.where(bmodel_names==m)][0])
+    mp = copy.deepcopy(mparams[0])
+    for i in numpy.arange(len(mx.flatten())):
+        mp['teff'] = int(numpy.round(10.**(mx.flatten()[i])))
+        mp['logg'] = my.flatten()[i]
+        mp['z'] = mz.flatten()[i]
+        mstr = '{:d}{:.1f}{:.1f}'.format(mp['teff'],mp['logg'],mp['z'])
+        if mstr not in list(bmodels.keys()):
+            bmodels[mstr] = loadModel(instrument=mkwargs['instrument'],force=True,**mp)
+        models.append(bmodels[mstr])
+
+
+#    mpsmall = [dict(y) for y in set(tuple(x.items()) for x in mparams)]
+#    mpsmall = numpy.unique(numpy.array(mparams))
+#    bmodels = []
+#    bmodel_names = []
+#    for m in mpsmall:
+#        bmodels.append(loadModel(instrument=mkwargs['instrument'],force=True,**m))
+#        mstr = ''
+#        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: mstr+=str(m[ms])
+#        bmodel_names.append(mstr)
+#        if kwargs.get('verbose',False): print(m)
+#    bmodels = numpy.array(bmodels)
+#    bmodel_names = numpy.array(bmodel_names)
+
+# now set up model array in mx,my,mz order
+#    mparam_names = []
+#    models = []
+#    for i,m in enumerate(mparam_names):
+#    for i in numpy.arange(len(mx.flatten())):
+#        mstr = '{:d}{:.1f}{:.1f}'.format(mx.flatten()[i],my.flatten()[i],mz.flatten()[i])
+#        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: mstr+=str(mparams[-1][ms])
+#        models.append(bmodels[numpy.where(bmodel_names==m)][0])
+#        mparam_names.append(mstr)
+
+#    models = []
+#    for i,m in enumerate(mparam_names):
+#        models.append(bmodels[numpy.where(bmodel_names==m)][0])
+
+    if kwargs.get('verbose',False):
+        print(mx.flatten())
+        print([m.teff for m in models])
+        print(my.flatten())
+        print([m.logg for m in models])
+        print(mz.flatten())
+        print([m.z for m in models])
+#        print(mparams)
+#        print(mparam_names)
 
 
 # final interpolation

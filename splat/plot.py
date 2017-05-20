@@ -866,9 +866,9 @@ def plotBatch(*args, **kwargs):
             legends.extend(l)
 
 # generate plot
-    plotSpectrum(plotlist,multiplot=True,multipage=True,legends=legends,colors=clist,**kwargs)
+    fig = plotSpectrum(plotlist,multiplot=True,multipage=True,legends=legends,colors=clist,**kwargs)
 
-    return
+    return fig
 
 
 def plotIndices(*args, **kwargs):
