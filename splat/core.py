@@ -2908,9 +2908,12 @@ def classifyByStandard(sp, *args, **kwargs):
     spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
 
 # determine comparison range based on method
-    if (kwargs.get('method','') == 'kirkpatrick'):
+    if (kwargs.get('method','').lower() == 'kirkpatrick'):
         fit_ranges = [[0.9,1.4]]         # as prescribed in Kirkpatrick et al. 2010, ApJS,
+    elif (kwargs.get('method','').lower() == ''):
+        fit_ranges = [[0.7,2.45]]       # by default, compare whole spectrum
     else:
+        print('\nWarning: do not recognize method = {}'.format(kwargs['method']))
         fit_ranges = [[0.7,2.45]]       # by default, compare whole spectrum
     fit_ranges = kwargs.get('fitrange',fit_ranges)
     fit_ranges = kwargs.get('fitrng',fit_ranges)
