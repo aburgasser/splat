@@ -358,8 +358,8 @@ class Spectrum(object):
             self.slit = kwargs.get('slit',numpy.nan)
             self.modelset = kwargs.get('model','')
 # temporary fix of incorrect units in SED spectra            
-            if kwargs.get('sed',False):
-                self.scale(1.e4)
+#            if kwargs.get('sed',False):
+#                self.scale(1.e4)
             try:
                 self.name = DEFINED_MODEL_NAMES[self.modelset]
             except:

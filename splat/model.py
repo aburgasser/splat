@@ -68,7 +68,7 @@ def _readBtsettl08(file):
     if file[-3:] == '.gz':
         with gzip.open(file,'rt') as f:
             for line in f:
-                data.append(line)
+                data.append(line.replace('-',' -').replace('D -','D-'))
     else:
         with open(file,'rt') as f:
             for line in f:
@@ -151,6 +151,16 @@ def _processModels(*args,**kwargs):
         mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
         mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
         mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
+        mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
+        mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
+        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
+    elif modelset == 'btsettl15':
+        readfxn = _readBtsettl08
+        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz')
+        mparam = {}
+        mparam['teff'] = [float((f.split('/'))[-1][3:8])*100. for f in files]
+        mparam['logg'] = [float((f.split('/'))[-1][9:12]) for f in files]
+        mparam['z'] = [float((f.split('/'))[-1][12:16]) for f in files]
         mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
         mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
         mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
@@ -386,9 +396,12 @@ def loadModel(*args, **kwargs):
 
 
 # set up the model set
-    kwargs['model'] = kwargs.get('model','BTSettl2008')
-    kwargs['model'] = kwargs.get('set',kwargs['model'])
-    kwargs['model'] = checkSpectralModelName(kwargs['model'])
+    modelset = kwargs.get('model','BTSettl2008')
+    modelset = kwargs.get('set',modelset)
+    tmp = checkSpectralModelName(modelset)
+    if tmp == False: raise ValueError('Could not find model set {}'.format(modelset))
+    kwargs['model'] = tmp
+
     kwargs['instrument'] = kwargs.get('instrument','SPEX_PRISM')
     kwargs['instrument'] = checkInstrument(kwargs['instrument'])
     kwargs['name'] = kwargs['model']
@@ -1865,8 +1878,9 @@ def modelFitEMCEE(spec, **kwargs):
     parameters0[2] = kwargs.get('initial_z',parameters0[2])
     parameters0[2] = kwargs.get('z0',parameters0[2])
 
-    if not kwargs.get('fit_metallicity',False):
-        parameters0 = parameters0[0:2]
+    mflag = kwargs.get('fit_metallicity',False)
+    mflag = kwargs.get('fitmetallicity',mflag)
+    if not mflag: parameters0 = parameters0[0:2]
 
     parameter_names = ['teff','logg','z'][:len(parameters0)]
     parameter_titles = [SPECTRAL_MODEL_PARAMETERS[p]['title'] for p in parameter_names]
