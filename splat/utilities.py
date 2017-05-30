@@ -218,11 +218,11 @@ def checkSpectralModelName(model):
     Example:
 
     >>> import splat
-    >>> print(splat._checkModelName('burrows'))
+    >>> print(splat.checkSpectralModelName('burrows'))
         burrows06
-    >>> print(splat._checkModelName('allard'))
+    >>> print(splat.checkSpectralModelName('allard'))
         BTSettl2008
-    >>> print(splat._checkModelName('somethingelse'))
+    >>> print(splat.checkSpectralModelName('somethingelse'))
         False
     '''
     output = False
@@ -230,6 +230,38 @@ def checkSpectralModelName(model):
         return output
     for k in list(SPECTRAL_MODELS.keys()):
         if model.lower()==k.lower() or model.lower() in SPECTRAL_MODELS[k]['altnames']:
+            output = k
+    return output
+
+
+def checkEvolutionaryModelName(model):
+    '''
+
+    Purpose: 
+        Checks that an input model name is one of the available evolutionary models, including a check of alternate names
+
+    Required Inputs:
+        :param: model: A string containing the evolutionary model to be checked. This should be one of the models listed in splat.EVOLUTIONARY_MODELS.keys()
+        
+    Optional Inputs:
+        None
+
+    Output:
+        A string containing SPLAT's default name for a given model set, or False if that model set is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat.checkEvolutionaryModelName('burrows'))
+        burrows01
+    >>> print(splat.checkEvolutionaryModelName('allard'))
+        False
+    '''
+    output = False
+    if not isinstance(model,str):
+        return output
+    for k in list(EVOLUTIONARY_MODELS.keys()):
+        if model.lower()==k.lower() or model.lower() in EVOLUTIONARY_MODELS[k]['altnames']:
             output = k
     return output
 

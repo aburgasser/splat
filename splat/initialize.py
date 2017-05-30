@@ -327,9 +327,11 @@ SPECTRAL_MODEL_WAVE_UNIT = u.micron
 
 # evolutionary model information
 EVOLUTIONARY_MODELS = {\
-    'baraffe': {},\
-    'burrows': {},\
-    'saumon': {}}
+    'baraffe03': {'name': 'Baraffe et al. (2003)', 'bibcode': '2003A&A...402..701B', 'altnames': ['bar03','baraffe2003']},\
+    'baraffe15': {'name': 'Baraffe et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['baraffe','bar15','baraffe2015']},\
+    'burrows01': {'name': 'Burrows et al. (2001)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['burrows','bur01','burrows2001']},\
+    'saumon08': {'name': 'Saumon et al. (2008)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['saumon','sau08','saumon2008']}}
+
 EVOLUTIONARY_MODEL_PARAMETERS = {\
     'mass': {'unit': u.solMass, 'default': 0.05, 'title': '$M$'},\
     'age': {'unit': u.Gyr, 'default': 5., 'title': '$\tau$'},\

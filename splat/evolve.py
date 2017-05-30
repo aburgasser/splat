@@ -12,6 +12,7 @@ from __future__ import print_function, division
 
 # imports: internal
 import copy
+import glob
 import requests
 
 # imports: external
@@ -40,8 +41,9 @@ def loadEvolModel(*model,**kwargs):
 
     Available models are:
 
-        - **burrows** : Models from `Burrows et al. (2001) <http://adsabs.harvard.edu/abs/2001RvMP...73..719B>`_ for 1 Myr < age < 10 Gyr, 0.005 Msol < mass < 0.2 Msol, and solar metallicity
         - **baraffe** : Models from `Baraffe et al. (2003) <http://adsabs.harvard.edu/abs/2003A&A...402..701B>`_ for 1 Myr < age < 10 Gyr, 0.005 Msol < mass < 0.1 Msol, and solar metallicity (COND dust prescription)
+        - **baraffe15** : Models from `Baraffe et al. (2015) <http://adsabs.harvard.edu/abs/2015A&A...577A..42B>`_ for 1 Myr < age < 10 Gyr, 0.01 Msol < mass < 1.4 Msol, and solar metallicity
+        - **burrows** : Models from `Burrows et al. (2001) <http://adsabs.harvard.edu/abs/2001RvMP...73..719B>`_ for 1 Myr < age < 10 Gyr, 0.005 Msol < mass < 0.2 Msol, and solar metallicity
         - **saumon** : Models from `Saumon et al. (2003) <http://adsabs.harvard.edu/abs/2008ApJ...689.1327S>`_ for 3 Myr < age < 10 Gyr, 0.002 Msol < mass < 0.085 Msol, although mass and age ranges vary as the maximum temperature for the models is 2500 K. For these models there are additional options:
         
             - **metallicity** = `solar`, `+0.3`, or `-0.3`
@@ -105,23 +107,17 @@ def loadEvolModel(*model,**kwargs):
 
 # check model
     try: model = model[0].lower()
-    except TypeError: raise TypeError("Model must be a string.")
-    except IndexError: model = 'baraffe'
-    finally: print("You are using " + model + "'s models.")
-    assert model in list(EVOLUTIONARY_MODELS.keys()), "\nModel {} not in allowed model sets; please use: {}\n".format(model,' '.join(list(EVOLUTIONARY_MODELS.keys())))
+    except TypeError: raise TypeError('\nInput parameter must be a string')
+    except IndexError: model = 'baraffe15'
 
-##################### BARAFFE OR BURROWS MODEL #########################
-    if model == 'baraffe' or model == 'burrows':
-        ages = ['0.001', '0.005', '0.010', '0.050', '0.100',
-                '0.120', '0.500', '1.000', '5.000', '10.000']
+    m = checkEvolutionaryModelName(model)
+    if m == False: raise ValueError('\nDid not recognize model name {}'.format(model))
+    model = m
+    if kwargs.get('verbose',False): print('You are using evolutionary models from {}'.format(EVOLUTIONARY_MODELS[model]['name']))
 
-        if model == 'baraffe': 
-            prefix = 'Baraffe/cond_'
-        else: 
-            prefix = 'Burrows/b97_'
-
-########################### SAUMON MODEL ##############################
-    else:
+# read in models
+    files = glob.glob(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+model+'/{}*.txt'.format(model))
+    if model == 'saumon08':
 
 # set metallicity
         metallicity = kwargs.get('z',False)
@@ -157,37 +153,43 @@ def loadEvolModel(*model,**kwargs):
         else:
             raise ValueError('\nCould not recognize cloud choice for Saumon model: must be cloud-free, hybrid or f2, not {}\n'.format(cloud))
 
-        ages = ['0.003','0.004','0.006','0.008','0.010','0.015','0.020',
-                '0.030','0.040','0.060','0.080','0.100','0.150','0.200',
-                '0.300','0.400','0.600','0.800','1.000','1.500','2.000',
-                '3.000','4.000','6.000','8.000','10.000']
+        files = glob.glob(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+model+'/{}_{}_{}*.txt'.format(model,Z,C))
 
-        prefix = 'Saumon/sau08_{:s}_{:s}_'.format(Z,C)
 
 #######################################################################
 
 # read in parameters
+    ages = [(f.split('_')[-1]).replace('.txt','') for f in files]
+
     mparam = {}
+    mparam['name'] = model
     for ep in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         mparam[ep] = []
 
-    for i,age in enumerate(ages):
-        mfile = prefix+'{:05d}.txt'.format(int(float(age)*1000.))
+#    for i,age in enumerate(ages):
+#        mfile = prefix+'{:05d}.txt'.format(int(float(age)*1000.))
+#        try:
+#            dp=pandas.read_csv(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+mfile,comment='#',sep=',',header=0)
+#            for ep in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
+#                mparam[ep].append(dp[ep].values)
+
+    for f in files:
         try:
-            dp=pandas.read_csv(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+mfile,comment='#',sep=',',header=0)
+            dp=pandas.read_csv(f,comment='#',sep=',',header=0)
             for ep in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
                 mparam[ep].append(dp[ep].values)
 
+
 # this is done in case models are not local - NOTE: currently just throwing an error
         except:
-            raise ValueError('Could not find model file {} locally; aborting'.format(mfile))
+            raise ValueError('Could not find model file {} locally; aborting'.format(f))
 #            try:
 #                print('Could not read in model file {} locally; trying online'.format(mfile))
 #                data =ascii.read(requests.get(SPLAT_URL+EVOLUTIONARY_MODEL_FOLDER+mfile).content,comment='#',delimiter='\t')
 #            except: 
 #                raise ValueError('Could not find model file {} locally or online; aborting'.format(mfile))
 
-    mparam['age'] = [float(i) for i in ages]
+    mparam['age'] = [float(i)/1000. for i in ages]
 
     return mparam
 
@@ -206,8 +208,8 @@ def _modelParametersSingle(*args, **kwargs):
 # check that model is passed correctly
     try: model = args[0]
     except IndexError: 
-        model = loadEvolModel('baraffe')
-        print('\nWarning: model error; using Baraffe models by default\n')
+        model = loadEvolModel('baraffe03')
+        print('\nWarning: model error; using Baraffe et al. (2003) models by default\n')
 
 # retool models to allow for logarithmic interpolation
     lmodel = copy.deepcopy(model)
@@ -226,12 +228,14 @@ def _modelParametersSingle(*args, **kwargs):
     for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         if e in keywords:
             try: f = float(kwargs[e])
-            except: raise ValueError('\nInput paramter {} must be a single number, not {}\n'.format(e,kwargs[e]))
+            except: raise ValueError('\nInput parameter {} must be a single number, not {}\n'.format(e,kwargs[e]))
             finally: params[e] = f
 
     input_type = 'mass_age'
     Ag, Ma, Te, Le, Ge, Re, P = [],[],[],[],[],[],[]
 
+
+    if kwargs.get('debug',False) == True: print(lmodel)
 
 ############### UNKNOWN MASS AND AGE - INTERPOLATE AGE FROM OTHER PARAMETERS #################
 # for each age, interpolate mass as a function of first parameter and then second parameter as a function of mass
@@ -313,6 +317,8 @@ def _modelParametersSingle(*args, **kwargs):
     if params['age'] != 0. and params['mass'] == 0. and \
         not numpy.isnan(params['age']):
 
+        if kwargs.get('debug',False) == True: print(params)
+
         if input_type != 'two_params' and input_type != 'one_param': 
             input_type = 'one_param'
             if params['temperature'] != 0.:
@@ -353,6 +359,7 @@ def _modelParametersSingle(*args, **kwargs):
                 print('\nFailed in mass + parameter determination\n')
                 params['mass'] = numpy.nan
 
+
         Ma, Ge = [],[]
 
 
@@ -362,6 +369,8 @@ def _modelParametersSingle(*args, **kwargs):
 ###############################################################################
     if params['mass'] != 0. and params['age'] != 0. and \
         not numpy.isnan(params['age']) and not numpy.isnan(params['mass']):
+
+        if kwargs.get('debug',False) == True: print(params)
 
         for i,age in enumerate(lmodel['age']):
             if min(lmodel['mass'][i]) <= numpy.log10(params['mass']) \
@@ -401,13 +410,16 @@ def _modelParametersSingle(*args, **kwargs):
             except: 
                 params['radius'] = numpy.nan
   
+        if kwargs.get('debug',False) == True: print(params)
+
         return params
 
 # something failed	  
     else:
+        print(params)
         for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
             params[e] = numpy.nan
-        print('\nParameter set is not covered by models\n')
+        print('\nParameter set is not covered by model {}\n'.format(model['name']))
         return params
       
 
@@ -459,9 +471,10 @@ def modelParameters(*model,**kwargs):
     try: model = model[0]
     except IndexError: 
         if kwargs.get('model',False)==False:
-            model = 'baraffe'
+            model = loadEvolModel('baraffe03')
         else: model=kwargs.get('model')
     if type(model) is not dict: model = loadEvolModel(model,**kwargs)
+    if type(model) is not dict: raise ValueError('Something went wrong in loading in models')
 
     keywords = list(kwargs.keys())
 
@@ -508,6 +521,8 @@ def modelParameters(*model,**kwargs):
 
 # determine length of input arrays
     inparams = {}
+    inparams['debug'] = kwargs.get('debug',False)
+    inparams['verbose'] = kwargs.get('verbose',False)
     outparams = {}
     pkeys = list(mkwargs.keys())
     for p in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
@@ -662,7 +677,7 @@ def plotModelParameters(parameters,xparam,yparam,**kwargs):
 # read in models to display   
     if kwargs.get('showmodel',True) != False or kwargs.get('showmodels',True) != False:
         if kwargs.get('model',False) == False:
-            model = 'baraffe'
+            model = 'baraffe03'
         else:
             model = kwargs.get('model')
         try:
@@ -1148,8 +1163,8 @@ def simulateMassRatios(num,**kwargs):
     :param: distribution: can be a string set to one of the following to define the type of mass distribution to sample:
         * `uniform`: uniform distribution (default) 
         * `powerlaw` or `power-law`: single power-law distribution, P(M) ~ M\^-alpha. You must specify the parameter `alpha` or set ``distribution`` to TBD
-        * `allen`: power-law distribution with gamma = 1.8 based on `Allen (2007), ApJ 668, 492`_
-        * `burgasser`: power-law distribution with gamma = 4.2 based on `Burgasser et al (2006), ApJS 166, 585`_
+        * `allen`: power-law distribution with gamma = -1.8 based on `Allen (2007), ApJ 668, 492`_
+        * `burgasser`: power-law distribution with gamma = -4.2 based on `Burgasser et al (2006), ApJS 166, 585`_
     :param: parameters: dictionary containing the parameters for the age distribution/star formation model being used; options include:
         * `gamma`: exponent for power-law distribution
     :param: verbose: Give feedback (default = False)
@@ -1198,7 +1213,7 @@ def simulateMassRatios(num,**kwargs):
         if parameters['gamma'] == 1.:
             y = numpy.log(x)
         else:
-            y = x**(1.-parameters['gamma'])
+            y = x**(1.+parameters['gamma'])
 #        print(x,y)
         y -= numpy.min(y)
         y /= numpy.max(y)
