@@ -992,8 +992,8 @@ def simulateMasses(num,**kwargs):
         * `powerlaw` or `power-law`: single power-law distribution, P(M) ~ M\^-alpha. You must specify the parameter `alpha` or set ``distribution`` to TBD
         * `broken-powerlaw' or `broken-power-law: a broken power-law distribution; segments are specified by the parameters `alpha` (N array of numbers) for the slopes and `ranges` (N array of 2-element arrays) for the ranges over which these slopes occur; if the `scales` parameter is also included, the power-law segments are scaled by these factors; otherwise, the segments are forced to be continuous. You can also set ``distribution`` to `kroupa`
         * 'lognormal` or `log-normal`: log normal distribution, P(M) ~ exp(-0.5*(M-M0)\^2/sigmaM^2). You must specify the parameters `M0` and `sigmaM` or set ``distribution`` to `chabrier` (default parameters)
-        * `kroupa`: broken power-law distribution with parameters from Kroupa et al. (XXXX): XXXX
-        * `chabrier`: lognormal distribution with parameters from Chabrier et al. (XXX): XXXXX
+        * `kroupa`: broken power-law distribution with parameters from Kroupa (2001): `http://adsabs.harvard.edu/abs/2001MNRAS.322..231K`_
+        * `chabrier`: lognormal distribution with parameters from Chabrier (2003): `http://adsabs.harvard.edu/abs/2003PASP..115..763C`_
     :param: distribution can also be set to a 2 x N array specifying the mass distribution; the first vector should be the masses for the distribution function and the second vector the distribution function itself
     :param: parameters: dictionary containing the parameters for the age distribution/star formation model being used; options include:
         * `alpha`: exponent for power-law distribution, or array of numbers giving power-law factors for broken power-law distribution
@@ -1042,9 +1042,9 @@ def simulateMasses(num,**kwargs):
     if 'mass-broken' not in list(parameters.keys()):
         parameters['mass-broken'] = kwargs.get('mass-broken',[0.08,0.5])
     if 'log-mu' not in list(parameters.keys()):
-        parameters['log-mu'] = kwargs.get('log-mu',0.2)
+        parameters['log-mu'] = kwargs.get('log-mu',numpy.log(0.079))
     if 'log-sigma' not in list(parameters.keys()):
-        parameters['log-sigma'] = kwargs.get('log-sigma',0.55)
+        parameters['log-sigma'] = kwargs.get('log-sigma',0.69)
 
 # power-law - sample from CDF
     if distribution.lower() == 'power-law' or distribution.lower() == 'powerlaw' or distribution.lower() == 'salpeter':
@@ -1052,7 +1052,6 @@ def simulateMasses(num,**kwargs):
         x = numpy.linspace(numpy.min(mass_range),numpy.max(mass_range),num=10000)
         if parameters['alpha'] == 1.:
             y = numpy.log(x)
-            print('alpha=1')
         else:
             y = x**(1.-parameters['alpha'])
 #        print(x,y)
@@ -1062,7 +1061,7 @@ def simulateMasses(num,**kwargs):
 #        plt.plot(x,y)
         masses = f(numpy.random.uniform(size=num))
 
-# lognormal
+# lognormal - this doesn't quite work
     elif distribution.lower() == 'lognormal' or distribution.lower() == 'log-normal':
         masses = numpy.random.lognormal(parameters['log-mu'], parameters['log-sigma'], num)
 
@@ -1070,27 +1069,31 @@ def simulateMasses(num,**kwargs):
 # broken power law
     elif distribution.lower() == 'kroupa' or distribution.lower() == 'broken-power-law' or distribution.lower() == 'broken-powerlaw':
         if distribution.lower() == 'kroupa':
-            parameters['alpha-broken'] = [0.3,1.3,2.3]
-            parameters['mass-broken'] = [0.08,0.5]
-        if len(parameters['alpha-broken'])-1 != len(parameters['mass-broken']):
+            alphas = numpy.array([0.3,1.3,2.3])
+            mbs = numpy.array([0.08,0.5])
+        else:
+            alphas = numpy.array(parameters['alpha-broken'])
+            mbs = numpy.array(parameters['mass-broken'])
+        if len(alphas)-1 != len(mbs):
             raise ValueError('\nBroken Power Law should have one more alpha parameter than mass break parameter; your values are alpha = {} and masses = {}'.format(parameters['alpha-broken'],parameters['mass-broken']))
         yfull = []
         xfull = []
         mlow = numpy.min(mass_range)
-        for i,mb in enumerate(parameters['mass-broken']):
+        for i,mb in enumerate(mbs):
             if mlow < mb and mlow < numpy.max(mass_range):
 #                print(mb,mlow,numpy.min([mb,numpy.max(mass_range)]))
                 x = numpy.linspace(mlow,numpy.min([mb,numpy.max(mass_range)]),num=10000)
-                y = x**(-1.*parameters['alpha-broken'][i])
+                y = x**(-1.*alphas[i])
                 y -= y[0]
                 if len(yfull) > 0: y += yfull[-1]
                 yfull.extend(y)
                 xfull.extend(x)
                 mlow = mb
+# last mass range                
         if mlow < numpy.max(mass_range):
 #            print(mlow,numpy.max(mass_range))
             x = numpy.linspace(mlow,numpy.max(mass_range),num=10000)
-            y = x**(-1.*parameters['alpha-broken'][-1]+1.)
+            y = x**(-1.*alphas[-1])
             y -= y[0]
             if len(yfull) > 0: y += yfull[-1]
             yfull.extend(y)
@@ -1109,25 +1112,37 @@ def simulateMasses(num,**kwargs):
         masses = f(numpy.random.uniform(size=num))
 
 # Chabrier (2005) distribution
-    elif distribution.lower() == 'chabrier':
+    elif 'chabrier' in distribution.lower():
 # lognormal below 1 solar mass
         yfull = []
         xfull = []
         if numpy.min(mass_range) < 1.0:
-            xfull = numpy.linspace(numpy.min(mass_range),1.0,num=10000)
-            yfull = stats.lognorm.cdf(xfull-0.2,0.55)
-# salpeter above this
+            xfull = numpy.linspace(numpy.min(mass_range),numpy.min([numpy.max(mass_range),1.0]),num=10000)
+#            yfull = stats.lognorm.pdf(xfull/0.079,0.69)
+            yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.079))/0.69)**2)/xfull
+# salpeter or broken power law above this
         if numpy.max(mass_range) > 1.0:
-            x = numpy.linspace(1.0,numpy.max(mass_range),num=10000)
-            y = x**(-1.35)
-            y -= y[0]
-            if len(yfull) > 0:
-                y += yfull[-1]
-                yfull.extend(y)
-                xfull.extend(x)
-            else:
-                yfull = y
-                xfull = x
+            mbs = [numpy.max([numpy.min(mass_range),1.0]),numpy.max(mass_range)]
+            alphas = [2.3]
+            if 'broken' in distribution.lower():
+                mbs = numpy.array([numpy.max([numpy.min(mass_range),1.0]),10.**0.54,10.**1.26,10.**1.80])
+                alphas = numpy.array([5.37,4.53,3.11])
+                mbs = mbs[numpy.where(mbs < numpy.max(mass_range))]
+                if len(mbs) <= len(alphas): 
+                    mbs = numpy.append(mbs,numpy.max(mass_range))
+                else:
+                    mbs[-1] = numpy.max(mass_range)
+            for iii in range(len(mbs)-1):
+                x = numpy.linspace(mbs[iii],mbs[iii+1],num=10000)
+                y = numpy.array(x**(-1.*alphas[iii]))
+                y -= y[0]
+                if len(yfull) > 0:
+                    y += yfull[-1]
+                    yfull = numpy.append(yfull,y)
+                    xfull = numpy.append(xfull,x)
+                else:
+                    yfull = y
+                    xfull = x
         yfull -= numpy.min(yfull)
         yc = numpy.cumsum(yfull)
         yc -= numpy.min(yc)
