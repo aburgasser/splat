@@ -1061,7 +1061,7 @@ def simulateMasses(num,**kwargs):
 #        plt.plot(x,y)
         masses = f(numpy.random.uniform(size=num))
 
-# lognormal - this doesn't quite work
+# lognormal - this doesn't quite work?
     elif distribution.lower() == 'lognormal' or distribution.lower() == 'log-normal':
         masses = numpy.random.lognormal(parameters['log-mu'], parameters['log-sigma'], num)
 
@@ -1119,13 +1119,24 @@ def simulateMasses(num,**kwargs):
         if numpy.min(mass_range) < 1.0:
             xfull = numpy.linspace(numpy.min(mass_range),numpy.min([numpy.max(mass_range),1.0]),num=10000)
 #            yfull = stats.lognorm.pdf(xfull/0.079,0.69)
-            yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.079))/0.69)**2)/xfull
+            if 'system' in distribution.lower():
+                yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.22))/0.57)**2)/xfull
+                mcut = 1.0
+            elif 'globular' in distribution.lower():
+                yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.33))/0.34)**2)/xfull
+                mcut = 0.9
+            elif 'halo' in distribution.lower():
+                yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.22))/0.33)**2)/xfull
+                mcut = 0.7
+            else:
+                yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.079))/0.69)**2)/xfull
+                mcut = 1.0
 # salpeter or broken power law above this
-        if numpy.max(mass_range) > 1.0:
-            mbs = [numpy.max([numpy.min(mass_range),1.0]),numpy.max(mass_range)]
+        if numpy.max(mass_range) > mcut:
+            mbs = [numpy.max([numpy.min(mass_range),mcut]),numpy.max(mass_range)]
             alphas = [2.3]
             if 'broken' in distribution.lower():
-                mbs = numpy.array([numpy.max([numpy.min(mass_range),1.0]),10.**0.54,10.**1.26,10.**1.80])
+                mbs = numpy.array([numpy.max([numpy.min(mass_range),mcut]),10.**0.54,10.**1.26,10.**1.80])
                 alphas = numpy.array([5.37,4.53,3.11])
                 mbs = mbs[numpy.where(mbs < numpy.max(mass_range))]
                 if len(mbs) <= len(alphas): 
