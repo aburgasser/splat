@@ -214,7 +214,7 @@ def _processModels(*args,**kwargs):
     if len(files) == 0: 
         raise ValueError('Could not find spectral model files in {}'.format(SPECTRAL_MODELS[modelset]['rawfolder']))        
 
-    if kwargs.get('make_photometry',True) == True: 
+    if kwargs.get('make_photometry',False) == True: 
         phot_data = {}
         for p in SPECTRAL_MODEL_PARAMETERS_INORDER: phot_data[p] = [] 
         for f in list(FILTERS.keys()): phot_data[f] = []
@@ -1907,7 +1907,7 @@ def modelFitEMCEE(spec, **kwargs):
     testtimeend = time.time()
     time_estimate = (testtimeend-testtimestart)*nwalkers*nsamples*1.2/(1.*threads)
 #    print(testtimeend,testtimestart)
-    print('Very rough estimated time to compute = {:.0f} seconds = {:.1f} minutes = {:.2f} hours'.\
+    print('Estimated time to compute = {:.0f} seconds = {:.1f} minutes = {:.2f} hours'.\
         format(time_estimate,time_estimate/60.,time_estimate/3600.))
     if time_estimate > 1200. and not kwargs.get('noprompt',False):
         resp = input('Do you want to continue? [Y/n]: ')
@@ -2031,7 +2031,7 @@ def _modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params):
         resp = '\nProblem reading in model '
         for k,v in enumerate(theta):
             resp+='{} = {}, '.format(['teff','logg','z'][k],v)
-        if verbose: print(resp)
+        print(resp)
         return -1.e30,0.
 #    chi,scl = splat.compareSpectra(sp,mdl,**model_params)
     chi,scl = compareSpectra(Spectrum(wave=x,flux=y,noise=yerr),mdl,**model_params)
