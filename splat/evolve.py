@@ -1147,7 +1147,6 @@ def simulateMasses(num,**kwargs):
             for iii in range(len(mbs)-1):
                 x = numpy.linspace(mbs[iii],mbs[iii+1],num=10000)
                 y = numpy.array(x**(-1.*alphas[iii]))
-                y -= y[0]
                 if len(yfull) > 0:
                     y += yfull[-1]
                     yfull = numpy.append(yfull,y)
@@ -1155,8 +1154,11 @@ def simulateMasses(num,**kwargs):
                 else:
                     yfull = y
                     xfull = x
-        yfull -= numpy.min(yfull)
-        yc = numpy.cumsum(yfull)
+        f = interp1d(xfull,yfull)
+        xf = numpy.linspace(mass_range[0],mass_range[1],num=10000)
+        yf = f(xf)
+        yf -= numpy.min(yf)
+        yc = numpy.cumsum(yf)
         yc -= numpy.min(yc)
         yc /= numpy.max(yc)
         f = interp1d(yc,xfull)
