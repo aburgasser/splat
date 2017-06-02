@@ -826,11 +826,11 @@ class Spectrum(object):
         self.toFlam()
 # now convert to SED
         un = self.wave.unit*self.flux.unit
-        self.flux = self.wave*self.flux
-        self.noise = self.wave*self.noise
+        self.flux = (self.wave*self.flux).to(SPECTRAL_MODEL_SED_UNIT)
+        self.noise = (self.wave*self.noise).to(SPECTRAL_MODEL_SED_UNIT)
         self.variance = self.noise**2
         self.snr = self.computeSN()
-        self.funit = self.flux.unit
+        self.funit = SPECTRAL_MODEL_SED_UNIT
         self.flabel = r'${\lambda}F_{\lambda}$'
         self.history.append('Converted to SED units of {}'.format(self.funit))
         return

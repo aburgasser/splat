@@ -14,6 +14,8 @@ import os
 import numpy
 from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
 from scipy.integrate import trapz        # for numerical integration
 from scipy.interpolate import interp1d
 
@@ -36,6 +38,47 @@ def checkFilter(filt,verbose=True,info=True):
         if info: filterInfo()
         return False
     return f
+
+
+def filterProfile(filt,**kwargs):
+    '''
+    :Purpose: Retrieve the filter profile for a SPLAT filter. Returns two arrays: the filter wavelength and filter transmission curve.
+
+    :param filter: String giving the name of one of the predefined filters listed in splat.FILTERS.keys() (required)
+    
+    :param filterFolder: folder containing the filter transmission files (optional, default = splat.FILTER_FOLDER)
+
+    :Example:
+    >>> import splat
+    >>> import splat.photometry as spphot
+    >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
+    >>> sp.fluxCalibrate('2MASS J',14.5)
+    >>> spphot.filterMag(sp,'MKO J')
+        (14.345894376898123, 0.027596454828421831)
+    '''
+# keyword parameters
+    filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
+    if not os.path.exists(filterFolder):
+        filterFolder = SPLAT_URL+FILTER_FOLDER
+
+# check that requested filter is in list
+    f0 = copy.deepcopy(filt)
+    f0 = checkFilter(f0)
+    if f0 == False: 
+        print('\nFilter {} is not specified in SPLAT'.format(filt))
+        filterInfo()
+        raise ValueError
+    filt = f0
+
+# read in filter
+    fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[filt]['file'], comments='#', unpack=True, missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+#    print(type(fwave),type(ftrans),isinstance(fwave,numpy.ndarray),isinstance(ftrans,numpy.ndarray),not isinstance(fwave,numpy.ndarray) or not isinstance(ftrans,numpy.ndarray))
+    if not isinstance(fwave,numpy.ndarray) or not isinstance(ftrans,numpy.ndarray):
+        raise ValueError('\nProblem reading in {}'.format(filterFolder+FILTERS[filt]['file']))
+    fwave = fwave[~numpy.isnan(ftrans)]*u.micron
+    ftrans = ftrans[~numpy.isnan(ftrans)]
+    return fwave,ftrans
+
 
 
 def filterMag(sp,filt,*args,**kwargs):
@@ -76,32 +119,37 @@ def filterMag(sp,filt,*args,**kwargs):
 
     :Example:
     >>> import splat
+    >>> import splat.photometry as spphot
     >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
     >>> sp.fluxCalibrate('2MASS J',14.5)
-    >>> splat.filterMag(sp,'MKO J')
+    >>> spphot.filterMag(sp,'MKO J')
         (14.345894376898123, 0.027596454828421831)
     '''
 # keyword parameters
     filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
     if not os.path.exists(filterFolder):
         filterFolder = SPLAT_URL+FILTER_FOLDER
-    vegaFile = kwargs.get('vegaFile','vega_kurucz.txt')
+    vegaFile = kwargs.get('vegaFile',VEGAFILE)
     info = kwargs.get('info',False)
     custom = kwargs.get('custom',False)
     notch = kwargs.get('notch',False)
     vega = kwargs.get('vega',True)
     ab = kwargs.get('ab',not vega)
-    rsr = kwargs.get('rsr',False)
     nsamples = kwargs.get('nsamples',100)
 
 
 # check that requested filter is in list
     f0 = copy.deepcopy(filt)
-    filt = checkFilter(filt)
+    f0 = checkFilter(f0)
     if isinstance(custom,bool) and isinstance(notch,bool):
-        filt = checkFilter(filt)
-        if filt == False: return numpy.nan, numpy.nan
-        
+        f0 = checkFilter(f0)
+        if f0 == False: 
+            print('\nFilter {} is not specified in SPLAT'.format(filt))
+            filterInfo()
+            return numpy.nan, numpy.nan
+    filt = f0
+    rsr = kwargs.get('rsr',FILTERS[filt]['rsr'])
+
 
 # reset filter calculation methods based on filter design
     if 'ab' in FILTERS[filt]['method']: 
@@ -127,8 +175,7 @@ def filterMag(sp,filt,*args,**kwargs):
 
 # Read in filter
     if isinstance(custom,bool) and isinstance(notch,bool):
-        fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[filt]['file'], comments='#', unpack=True, \
-            missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+        fwave,ftrans = filterProfile(filt,**kwargs)
 # notch filter
     elif isinstance(custom,bool) and isinstance(notch,list):
         dn = (notch[1]-notch[0])/1000
@@ -138,8 +185,10 @@ def filterMag(sp,filt,*args,**kwargs):
 # custom filter
     else:
         fwave,ftrans = custom[0],custom[1]
-    fwave = fwave[~numpy.isnan(ftrans)]*u.micron   # temporary fix
-    ftrans = ftrans[~numpy.isnan(ftrans)]
+    try:
+        fwave = fwave.to(u.micron)
+    except:
+        fwave *= u.micron
 
 # check that spectrum and filter cover the same wavelength ranges
     if numpy.nanmax(fwave) < numpy.nanmin(sp.wave) or numpy.nanmin(fwave) > numpy.nanmax(sp.wave):
@@ -198,25 +247,29 @@ def filterMag(sp,filt,*args,**kwargs):
         outunit = 1.
 
     elif (energy):
+        outunit = u.erg/u.s/u.cm**2
         if rsr:
-            val = trapz(ftrans*fwave.value*d(fwave.value),fwave.value)
-            print(val)
+            a = trapz(ftrans*fwave.value*d(fwave.value),fwave.value)*sp.wave.unit*sp.flux.unit
+            b = trapz(ftrans*fwave.value,fwave.value)*sp.wave.unit
+            c = trapz(ftrans*fwave.value*fwave.value,fwave.value)*sp.wave.unit*sp.wave.unit
+            val = (a/b * c/b).to(outunit).value
         else:
-            val = trapz(ftrans*d(fwave.value),fwave.value)
-            print(val)
+            a = trapz(ftrans*d(fwave.value),fwave.value)*sp.wave.unit*sp.flux.unit
+            b = trapz(ftrans,fwave.value)*sp.wave.unit
+            c = trapz(ftrans*fwave.value,fwave.value)*sp.wave.unit*sp.wave.unit
+            val = (a/b * c/b).to(outunit).value
         for i in numpy.arange(nsamples):
             if rsr:
-                result.append(trapz(ftrans*fwave.value*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value))
+                result.append((trapz(ftrans*fwave.value*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)*sp.wave.unit*sp.flux.unit).to(outunit).value)
             else:
-                result.append(trapz(ftrans*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value))
-        outunit = u.erg/u.s/u.cm**2
+                result.append((trapz(ftrans*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)*sp.wave.unit*sp.flux.unit).to(outunit).value)
 
     elif (photons):
-        convert = const.h.to('erg s')*const.c.to('micron/s')
-        val = trapz(ftrans*fwave.value*convert.value*d(fwave.value),fwave.value)
-        for i in numpy.arange(nsamples):
-            result.append(trapz(ftrans*fwave.value*convert.value*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value))
         outunit = 1./u.s/u.cm**2
+        convert = const.h.to('erg s')*const.c.to('micron/s')
+        val = (trapz(ftrans*fwave.value*convert.value*d(fwave.value),fwave.value)*sp.wave.unit*sp.flux.unit*convert.unit).to(outunit).value
+        for i in numpy.arange(nsamples):
+            result.append((trapz(ftrans*fwave.value*convert.value*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)*sp.wave.unit*sp.flux.unit*convert.unit).to(outunit).value)
     else:
         raise NameError('\nfilterMag not given a correct physical quantity (vega, ab, energy, photons) to compute photometry\n\n')
 
@@ -282,8 +335,12 @@ def filterProperties(filt,**kwargs):
     report['name'] = filt
     report['description'] = FILTERS[filt]['description']
     report['zeropoint'] = FILTERS[filt]['zeropoint']
-    fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[filt]['file'], comments='#', unpack=True, \
-        missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+    report['rsr'] = FILTERS[filt]['rsr']
+    fwave,ftrans = filterProfile(filt,**kwargs)
+    try:
+        fwave = fwave.to(u.micron)
+    except:
+        fwave *= u.micron
     fw = fwave[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
     ft = ftrans[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
     fw05 = fwave[numpy.where(ftrans > 0.5*numpy.nanmax(ftrans))]
@@ -295,8 +352,10 @@ def filterProperties(filt,**kwargs):
     report['lambda_fwhm'] = numpy.max(fw05)-numpy.min(fw05)
     report['lambda_min'] = numpy.min(fw)
     report['lambda_max'] = numpy.max(fw)
+    report['wave'] = fwave
+    report['transmission'] = ftrans
 # report values out
-    if kwargs.get('verbose',True):
+    if kwargs.get('verbose',False):
         print('\nFilter '+filt+': '+report['description'])
         print('Zeropoint = {} Jy'.format(report['zeropoint']))
         print('Pivot point: = {:.3f} micron'.format(report['lambda_pivot']))
@@ -337,8 +396,8 @@ def magToFlux(mag,filt,**kwargs):
     e_mag = kwargs.get('uncertainty',0.)
     e_mag = kwargs.get('unc',e_mag)
     e_mag = kwargs.get('e_mag',e_mag)
-    if ~isinstance(mag,u.quantity.Quantity): mag*=u.s/u.s
-    if ~isinstance(e_mag,u.quantity.Quantity): e_mag*=mag.unit
+    if not isinstance(mag,u.quantity.Quantity): mag*=u.s/u.s
+    if not isinstance(e_mag,u.quantity.Quantity): e_mag*=mag.unit
 
 # check that requested filter is in list
     filt = checkFilter(filt)
@@ -357,8 +416,7 @@ def magToFlux(mag,filt,**kwargs):
 
 # Read in filter
     if isinstance(custom,bool) and isinstance(notch,bool):
-        fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[filt]['file'], comments='#', unpack=True, \
-            missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+        fwave,ftrans = filterProfile(filt,**kwargs)
 # notch filter
     elif isinstance(custom,bool) and isinstance(notch,list):
         dn = (notch[1]-notch[0])/1000
@@ -439,6 +497,24 @@ def visualizeFilter(filt,**kwargs):
 
     FUTURE CODE, THIS IS A PLACEHOLDER
     '''
-    pass
+    filt = checkFilter(filt)
+    if filt == False: return None
+
+    fwave,ftrans = filterProfile(filt,**kwargs)
+    if kwargs.get('normalize',False): ftrans /= numpy.nanmax(ftrans)
+    fig = plt.figure()
+    plt.plot(fwave,ftrans)
+    plt.ylim([0,1.2*numpy.nanmax(ftrans)])
+    plt.xlabel(kwargs.get('xlabel','Wavelength ({})'.format(fwave.unit))
+    if FILTERS[filt]['rsr'] == True:
+        plt.ylabel(kwargs.get('ylabel',r'Spectral Response Curve ($\lambda^{-1}$)'))
+    else:
+        plt.ylabel(kwargs.get('ylabel','Transmission Curve'))
+    plt.legend([FILTERS[filt]['description']])
+    file = kwargs.get('file','')
+    file = kwargs.get('filename',file)
+    file = kwargs.get('output',file)
+    if file != '': plt.savefig(file)
+    return fig
 
 
