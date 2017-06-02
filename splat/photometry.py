@@ -505,7 +505,7 @@ def visualizeFilter(filt,**kwargs):
     fig = plt.figure()
     plt.plot(fwave,ftrans)
     plt.ylim([0,1.2*numpy.nanmax(ftrans)])
-    plt.xlabel(kwargs.get('xlabel','Wavelength ({})'.format(fwave.unit))
+    plt.xlabel(kwargs.get('xlabel','Wavelength ({})'.format(fwave.unit)))
     if FILTERS[filt]['rsr'] == True:
         plt.ylabel(kwargs.get('ylabel',r'Spectral Response Curve ($\lambda^{-1}$)'))
     else:
