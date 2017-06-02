@@ -289,6 +289,7 @@ def plotSpectrum(*args, **kwargs):
         'co': {'label': r'CO', 'type': 'band', 'wavelengths': [[2.29,2.39]]}, \
         'tio': {'label': r'TiO', 'type': 'band', 'wavelengths': [[0.76,0.80],[0.825,0.831]]}, \
         'vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.04,1.08]]}, \
+        'young vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.17,1.20]]}, \
 #        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.86,0.90],[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
         'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
         'h2': {'label': r'H$_2$', 'type': 'band', 'wavelengths': [[1.5,2.4]]}, \
@@ -918,7 +919,7 @@ def plotSequence(*args, **kwargs):
 
 # check inputs
     if len(args) == 0:
-        raise ValueError('\nNeed to provide a spectrum object or filename for plotStandardSequence')
+        raise ValueError('\nNeed to provide a spectrum object or filename for plotSequence')
 
 #    from .splat import classifyByStandard, Spectrum
     parameters = ['type_range']

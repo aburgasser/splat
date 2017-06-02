@@ -1084,7 +1084,6 @@ def simulateMasses(num,**kwargs):
 #                print(mb,mlow,numpy.min([mb,numpy.max(mass_range)]))
                 x = numpy.linspace(mlow,numpy.min([mb,numpy.max(mass_range)]),num=10000)
                 y = x**(-1.*alphas[i])
-                y -= y[0]
                 if len(yfull) > 0: y += yfull[-1]
                 yfull.extend(y)
                 xfull.extend(x)
@@ -1094,21 +1093,23 @@ def simulateMasses(num,**kwargs):
 #            print(mlow,numpy.max(mass_range))
             x = numpy.linspace(mlow,numpy.max(mass_range),num=10000)
             y = x**(-1.*alphas[-1])
-            y -= y[0]
             if len(yfull) > 0: y += yfull[-1]
             yfull.extend(y)
             xfull.extend(x)
 #        plt.loglog(xfull,[a+10 for a in yfull])
 #        plt.ylim([7,10])
 #        plt.show()
-        yfull -= numpy.min(yfull)
-        yc = numpy.cumsum(yfull)
+        xf = numpy.linspace(mass_range[0],mass_range[1],num=10000)
+        f = interp1d(xfull,yfull)
+        yf = f(xf)
+        yf -= numpy.min(yf)
+        yc = numpy.cumsum(yf)
         yc -= numpy.min(yc)
         yc /= numpy.max(yc)
 #        plt.plot(xfull,yc)
 #        plt.ylim([7,10])
 #        plt.show()
-        f = interp1d(yc,xfull)
+        f = interp1d(yc,xf)
         masses = f(numpy.random.uniform(size=num))
 
 # Chabrier (2005) distribution

@@ -2883,14 +2883,14 @@ def classifyByStandard(sp, *args, **kwargs):
     elif kwargs.get('vlg',False) or kwargs.get('lowg',False):
         stds = STDS_VLG_SPEX
         subclass = ''
-        stdtype = 'Very Low Gravity (gamma)'
+        stdtype = 'Very Low Gravity'
         initiateStandards(vlg=True)
         if verbose:
             print('Using very low gravity standards')
     elif kwargs.get('intg',False):
         stds = STDS_INTG_SPEX
         subclass = ''
-        stdtype = 'Intermediate Gravity (beta)'
+        stdtype = 'Intermediate Gravity'
         initiateStandards(intg=True)
         if verbose:
             print('Using intermediate low gravity standards')
