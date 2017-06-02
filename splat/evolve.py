@@ -1084,7 +1084,7 @@ def simulateMasses(num,**kwargs):
 #                print(mb,mlow,numpy.min([mb,numpy.max(mass_range)]))
                 x = numpy.linspace(mlow,numpy.min([mb,numpy.max(mass_range)]),num=10000)
                 y = x**(-1.*alphas[i])
-                if len(yfull) > 0: y += yfull[-1]
+                if len(yfull) > 0: y *= yfull[-1]/y[0]
                 yfull.extend(y)
                 xfull.extend(x)
                 mlow = mb
@@ -1093,7 +1093,7 @@ def simulateMasses(num,**kwargs):
 #            print(mlow,numpy.max(mass_range))
             x = numpy.linspace(mlow,numpy.max(mass_range),num=10000)
             y = x**(-1.*alphas[-1])
-            if len(yfull) > 0: y += yfull[-1]
+            if len(yfull) > 0: y *= yfull[-1]/y[0]
             yfull.extend(y)
             xfull.extend(x)
 #        plt.loglog(xfull,[a+10 for a in yfull])
@@ -1148,7 +1148,7 @@ def simulateMasses(num,**kwargs):
                 x = numpy.linspace(mbs[iii],mbs[iii+1],num=10000)
                 y = numpy.array(x**(-1.*alphas[iii]))
                 if len(yfull) > 0:
-                    y += yfull[-1]
+                    y *= yfull[-1]/y[0]
                     yfull = numpy.append(yfull,y)
                     xfull = numpy.append(xfull,x)
                 else:
