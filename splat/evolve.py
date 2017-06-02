@@ -1161,7 +1161,7 @@ def simulateMasses(num,**kwargs):
         yc = numpy.cumsum(yf)
         yc -= numpy.min(yc)
         yc /= numpy.max(yc)
-        f = interp1d(yc,xfull)
+        f = interp1d(yc,xf)
         masses = f(numpy.random.uniform(size=num))
 
 # uniform distribution (default)
