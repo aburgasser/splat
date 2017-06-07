@@ -192,11 +192,11 @@ def filterMag(sp,filt,*args,**kwargs):
 
 # check that spectrum and filter cover the same wavelength ranges
     if numpy.nanmax(fwave) < numpy.nanmin(sp.wave) or numpy.nanmin(fwave) > numpy.nanmax(sp.wave):
-        if kwargs.get('verbose',True): print('\nWarning: no overlap between spectrum for {} and filter {}'.format(sp.name,filter0))
+        if kwargs.get('verbose',True): print('\nWarning: no overlap between spectrum for {} and filter {}'.format(sp.name,filt))
         return numpy.nan, numpy.nan
 
     if numpy.nanmin(fwave) < numpy.nanmin(sp.wave) or numpy.nanmax(fwave) > numpy.nanmax(sp.wave):
-        if kwargs.get('verbose',True): print('\nWarning: spectrum for {} does not span full filter profile for {}'.format(sp.name,filter0))
+        if kwargs.get('verbose',True): print('\nWarning: spectrum for {} does not span full filter profile for {}'.format(sp.name,filt))
 
 # interpolate spectrum onto filter wavelength function
     wgood = numpy.where(~numpy.isnan(sp.noise))
