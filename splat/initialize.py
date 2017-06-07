@@ -13,6 +13,7 @@ from astropy import units as u
 
 # things that are constants
 VERSION = '0.31'
+__version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 SPLAT_EMAIL = 'aburgasser@gmail.com'
 DATA_FOLDER = '/reference/Spectra/'
@@ -197,17 +198,17 @@ FILTERS = { \
     'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'NIRC2 Fe II', 'zeropoint': 1019.7, 'method': 'vega', 'rsr': False}, \
     'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'NIRC2 LP', 'zeropoint': 248.0, 'method': 'vega', 'rsr': False}, \
     'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'NIRC2 M', 'zeropoint': 165.8, 'method': 'vega', 'rsr': False}, \
-    'PANSTARRS_G': {'file': 'panstarrs-g.txt', 'description': 'PANSTARRS g-band', 'zeropoint': 3909.11, 'method': 'ab'}, \
-    'PANSTARRS_R': {'file': 'panstarrs-r.txt', 'description': 'PANSTARRS r-band', 'zeropoint': 3151.44, 'method': 'ab'}, \
-    'PANSTARRS_W': {'file': 'panstarrs-w.txt', 'description': 'PANSTARRS w-band', 'zeropoint': 3024.76, 'method': 'ab'}, \
-    'PANSTARRS_I': {'file': 'panstarrs-i.txt', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6, 'method': 'ab'}, \
-    'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2273.09, 'method': 'ab'}, \
-    'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2205.95, 'method': 'ab'}, \
-    'SDSS_U': {'file': 'sdss-u.txt', 'description': 'SDSS u-band', 'zeropoint': 1568.5, 'method': 'ab'}, \
-    'SDSS_G': {'file': 'sdss-g.txt', 'description': 'SDSS g-band', 'zeropoint': 3965.9, 'method': 'ab'}, \
-    'SDSS_R': {'file': 'sdss-r.txt', 'description': 'SDSS r-band', 'zeropoint': 3162.0, 'method': 'ab'}, \
-    'SDSS_I': {'file': 'sdss-i.txt', 'description': 'SDSS i-band', 'zeropoint': 2602.0, 'method': 'ab'}, \
-    'SDSS_Z': {'file': 'sdss-z.txt', 'description': 'SDSS z-band', 'zeropoint': 2244.7, 'method': 'ab'}, \
+    'PANSTARRS_G': {'file': 'panstarrs-g.txt', 'description': 'PANSTARRS g-band', 'zeropoint': 3909.11, 'method': 'ab', 'rsr': False}, \
+    'PANSTARRS_R': {'file': 'panstarrs-r.txt', 'description': 'PANSTARRS r-band', 'zeropoint': 3151.44, 'method': 'ab', 'rsr': False}, \
+    'PANSTARRS_W': {'file': 'panstarrs-w.txt', 'description': 'PANSTARRS w-band', 'zeropoint': 3024.76, 'method': 'ab', 'rsr': False}, \
+    'PANSTARRS_I': {'file': 'panstarrs-i.txt', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6, 'method': 'ab', 'rsr': False}, \
+    'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2273.09, 'method': 'ab', 'rsr': False}, \
+    'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2205.95, 'method': 'ab', 'rsr': False}, \
+    'SDSS_U': {'file': 'sdss-u.txt', 'description': 'SDSS u-band', 'zeropoint': 1568.5, 'method': 'ab', 'rsr': False}, \
+    'SDSS_G': {'file': 'sdss-g.txt', 'description': 'SDSS g-band', 'zeropoint': 3965.9, 'method': 'ab', 'rsr': False}, \
+    'SDSS_R': {'file': 'sdss-r.txt', 'description': 'SDSS r-band', 'zeropoint': 3162.0, 'method': 'ab', 'rsr': False}, \
+    'SDSS_I': {'file': 'sdss-i.txt', 'description': 'SDSS i-band', 'zeropoint': 2602.0, 'method': 'ab', 'rsr': False}, \
+    'SDSS_Z': {'file': 'sdss-z.txt', 'description': 'SDSS z-band', 'zeropoint': 2244.7, 'method': 'ab', 'rsr': False}, \
     'UKIDSS_Z': {'file': 'ukidss-z.txt', 'description': 'UKIDSS Z-band', 'zeropoint': 2261.4, 'method': 'vega', 'rsr': False}, \
     'UKIDSS_Y': {'file': 'ukidss-y.txt', 'description': 'UKIDSS Y-band', 'zeropoint': 2057.2, 'method': 'vega', 'rsr': False}, \
     'UKIDSS_J': {'file': 'ukidss-j.txt', 'description': 'UKIDSS J-band', 'zeropoint': 1556.8, 'method': 'vega', 'rsr': False}, \
@@ -308,12 +309,12 @@ SPECTRAL_MODELS = {\
     'drift': {'name': 'Witte et al. (2011)', 'bibcode': '2011A&A...529A..44W', 'altnames': ['witte','witte11','witte2011','helling'], 'rawfolder': HOME_FOLDER+'/models/drift/v1.2/'}}
 SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','fsed','cld','kzz']
 SPECTRAL_MODEL_PARAMETERS = {\
-    'teff': {'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$'}, \
-    'logg': {'unit': u.dex(u.cm/u.s/u.s), 'default': 5.0, 'title': '$\log{g}$'}, \
-    'z': {'unit': u.dex(), 'default': 0., 'title': '$[M/H]$'}, \
-    'fsed': {'unit': u.m/u.m, 'default': 'nc', 'title': '$f_{sed}$'}, \
-    'cld': {'unit': u.m/u.m, 'default': 'nc', 'title': '$cld$'}, \
-    'kzz': {'unit': u.m/u.m, 'default': 'eq', 'title': '$log\ \kappa_{zz}$'}}
+    'teff': {'prefix': 't', 'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$', 'type': 'continuous'}, \
+    'logg': {'prefix': 'g', 'unit': u.dex(), 'default': 5.0, 'title': '$\log{g}$', 'type': 'continuous'}, \
+    'z': {'prefix': 'z', 'unit': u.dex(), 'default': 0., 'title': '$[M/H]$', 'type': 'continuous'}, \
+    'fsed': {'prefix': 'f', 'unit': u.m/u.m, 'default': 'nc', 'title': '$f_{sed}$', 'type': 'discrete'}, \
+    'cld': {'prefix': 'c', 'unit': u.m/u.m, 'default': 'nc', 'title': '$cld$', 'type': 'discrete'}, \
+    'kzz': {'prefix': 'k', 'unit': u.m/u.m, 'default': 'eq', 'title': '$log\ \kappa_{zz}$', 'type': 'discrete'}}
 #    'kzz': u.dex(u.cm*u.cm/u.s), \
 #    'slit': {'unit': u.arcsec, 'default': 0.5, 'title': 'slit'}}
 SPECTRAL_MODEL_FLUX_UNIT = u.erg/(u.s*u.micron*(u.cm**2))

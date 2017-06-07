@@ -20,7 +20,7 @@ import sys
 import os
 import shlex
 import sphinx_rtd_theme
-from splat import __version__
+from splat.initialize import __version__
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

@@ -926,6 +926,8 @@ def modelFitGrid(spec, **kwargs):
 
     .. _`compareSpectra()` : api.html#splat.compareSpectra
 
+    :param nbest: sets the number of best-fit models to return (default = 1)
+
     :param weights: an array of the same length as the spectrum flux array, specifying the weight for each pixel (default: equal weighting)
     :param mask: an array of the same length as the spectrum flux array, specifying which data to include in comparison statistic as coded by 0 = good data, 1 = bad (masked). The routine `generateMask()`_ is called to create a mask, so parameters from that routine may be specified (default: no masking)
 
@@ -941,8 +943,9 @@ def modelFitGrid(spec, **kwargs):
     :param return\_mean\_parameters: set to True a dictionary of mean parameters (default = False)
     :param return\_all\_parameters: set to True to return all of the parameter sets and fitting values (default = False)
 
+    :param summary: set to True to report a summary of results (default = True)
     :param output: a string containing the base filename for outputs associated with this fitting routine (``file`` and ``filename`` may also be used; default = 'fit')
-    :param noPlot: set to True to suppress plotting outputs (default = False)
+    :param plot: set to True to suppress plotting outputs (default = False)
     :param plot\_format: specifes the file format for output plots (default = `pdf`)
     :param file\_best\_comparison: filename to use for plotting spectrum vs. best-fit model (default = '``OUTPUT``\_best\_comparison.``PLOT_FORMAT``')
     :param file\_mean\_comparison: filename to use for plotting spectrum vs. mean parameter model (default = '``OUTPUT``\_mean\_comparison.``PLOT_FORMAT``')
@@ -962,9 +965,10 @@ def modelFitGrid(spec, **kwargs):
 
     :Example:
     >>> import splat
+    >>> import splat.model as spmod
     >>> sp = splat.Spectrum(shortname='1507-1627')[0]
     >>> sp.fluxCalibrate('2MASS J',12.32,absolute=True)
-    >>> p = splat.modelFitGrid(sp,teff_range=[1200,2500],model='Saumon',file='fit1507')
+    >>> p = spmod.modelFitGrid(sp,teff_range=[1200,2500],model='Saumon',file='fit1507')
         Best Parameters to fit to BT-Settl (2008) models:
             $T_{eff}$=1800.0 K
             $log\ g$=5.0 dex(cm / s2)
@@ -990,9 +994,12 @@ def modelFitGrid(spec, **kwargs):
         raise ValueError('\n{} is not in the SPLAT model suite; try {}'.format(kwargs['set'],' '.join(list(DEFINED_MODEL_NAMES.keys()))))
     if kwargs.get('verbose',False) == True:
         print('\nmodelFitGrid is using {} model set'.format(model_set))
+        kwargs['summary'] = True
 
 # fitting parameters
     stat = kwargs.get('stat','chisqr')
+    stat = kwargs.get('statistic',stat)
+    nbest = kwargs.get('nbest',1)
     mask = kwargs.get('mask',_generateMask(spec.wave,**kwargs))
     weights = kwargs.get('weights',numpy.ones(len(spec.wave)))
 
@@ -1096,7 +1103,7 @@ def modelFitGrid(spec, **kwargs):
     bmodel = loadModel(**bparam)
     bmodel.scale(parameters[0]['scale'])
 
-    if kwargs.get('verbose',False) == True: 
+    if kwargs.get('summary',True) == True: 
         print('\nBest Parameters to fit to {} models:'.format(SPECTRAL_MODELS[model_set]['name']))
         for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
             print('\t{} = {} {}'.format(SPECTRAL_MODEL_PARAMETERS[ms]['title'],parameters[0][ms],SPECTRAL_MODEL_PARAMETERS[ms]['unit']))
@@ -1104,7 +1111,7 @@ def modelFitGrid(spec, **kwargs):
             print('\tRadius = {} {}'.format(parameters[0]['radius'].value,parameters[0]['radius'].unit))
         print('\tchi={}'.format(stats[0]))
 
-    if kwargs.get('noPlot',False) != True:
+    if kwargs.get('plot',True) == True:
         _modelFitPlotComparison(spec,bmodel,stat=stats[0],file=file_best_comparison)
 
 # weighted means/uncertainties
@@ -1122,7 +1129,7 @@ def modelFitGrid(spec, **kwargs):
         fparam['radius']*=u.Rsun
         fparam['radius_unc']*=u.Rsun
 
-    if kwargs.get('verbose',False): 
+    if kwargs.get('summary',True) == True:
         print('\nStatistic-weighted Mean Parameters:')
         for k in list(fparam.keys()):
             if k in SPECTRAL_MODEL_PARAMETERS_INORDER:
@@ -1131,7 +1138,7 @@ def modelFitGrid(spec, **kwargs):
 #        if k == 'radius':
 #            print('\tRadius: {}+/-{} {}'.format(fparam[k].value,fparam[k+'_unc'].value,fparam[k].unit))
 
-    if kwargs.get('noPlot',False) != True:
+    if kwargs.get('plot',True) == True:
         mmodel = loadModel(**fparam)
         chi,scl = compareSpectra(spec, mmodel, mask=mask, weights=weights, stat=stat)
         mmodel.scale(scl)
@@ -1145,63 +1152,26 @@ def modelFitGrid(spec, **kwargs):
     elif kwargs.get('return_all_parameters',False) == True:
         return parameters
     else:
-        return bparam
+        return parameters[0:nbest]
 
 
 
 def modelFitMCMC(spec, **kwargs):
     '''
-    :Purpose: Uses Markov chain Monte Carlo method to compare an object with models from a 
-                given set. Returns the best estimate of the effective temperature, surface 
-                gravity, and metallicity. Can also determine the radius of the object by 
-                using these estimates. 
-    :param spec: Spectrum class object, which should contain wave, flux and 
-                  noise array elements.
-    :param nsamples: number of Monte Carlo samples
-    :type nsamples: optional, default = 1000
-    :param initial_cut: the fraction of the initial steps to be discarded. (e.g., if 
-                ``initial_cut = 0.2``, the first 20% of the samples are discarded.)
-    :type initial_cut: optional, default = 0.1
-    :param burn: the same as ``initial_cut``
-    :type burn: optional, default = 0.1
-    :param set: set of models to use; options include:
+    :Purpose: Uses Metropolis-Hastings Markov Chain Monte Carlo method to compare a spectrum to
+                atmosphere models. Returns the best estimate of whatever parameters are allowed to
+                vary; can also compute the radius based on the scaling factor.
+    :param spec: Spectrum class object, which should contain wave, flux and noise array elements (required)
+    :param nsamples: number of MCMC samples (optional, default = 1000)
+    :param burn: the decimal fraction (0 to 1) of the initial steps to be discarded (optional; default = 0.1; alternate keywords ``initial_cut``)
+    :param set: set of models to use; see loadModel for list (optional; default = 'BTSettl2008'; alternate keywords ``model``, ``models``)
+    :param verbose: give lots of feedback (optional; default = False)
+    :param showRadius: set to True so evaluate radius (optional; default = False unless spec is absolute flux calibrated)
 
-        - *'BTSettl2008'*: model set with effective temperature of 400 to 2900 K, surface gravity of 3.5 to 5.5 and metallicity of -3.0 to 0.5 
-          from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
-        - *'burrows06'*: model set with effective temperature of 700 to 2000 K, surface gravity of 4.5 to 5.5, metallicity of -0.5 to 0.5, 
-          and sedimentation efficiency of either 0 or 100 from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_
-        - *'morley12'*: model set with effective temperature of 400 to 1300 K, surface gravity of 4.0 to 5.5, metallicity of 0.0 
-          and sedimentation efficiency of 2 to 5 from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_
-        - *'morley14'*: model set with effective temperature of 200 to 450 K, surface gravity of 3.0 to 5.0, metallicity of 0.0 
-          and sedimentation efficiency of 5 from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_
-        - *'saumon12'*: model set with effective temperature of 400 to 1500 K, surface gravity of 3.0 to 5.5 and metallicity of 0.0 
-          from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_
-        - *'drift'*: model set with effective temperature of 1700 to 3000 K, surface gravity of 5.0 to 5.5 and metallicity of -3.0 to 0.0 
-          from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_
+    Also takes commands for compareSpectra
+
     
-    :type set: optional, default = 'BTSettl2008'
-    :param model: the same as ``set``
-    :type model: optional, default = 'BTSettl2008'
-    :param models: the same as ``set``
-    :type models: optional, default = 'BTSettl2008'
-    :param verbose: give lots of feedback
-    :type verbose: optional, default = False
-    :param mask_ranges: mask any flux value of ``spec`` by specifying the wavelength range.
-                        Must be in microns.
-    :type mask_ranges: optional, default = []
-    :param mask_telluric: masks certain wavelengths to avoid effects from telluric absorption
-    :type mask_telluric: optional, default = False
-    :param mask_standard: masks wavelengths below 0.8 and above 2.35 microns
-    :type mask_standard: optional, default = True
-    :param mask: mask any flux value of ``spec``; has to be an array with length equal as ``spec`` with only 0 (unmask) or 1 (mask).
-    :type mask: optional, default = [0, ..., 0] for len(sp1.wave)
-    :param radius: calculates and returns radius of object if True
-    :type radius: optional
-    
-    :param filename: filename or filename base for output
-    :type filename: optional
-    :param filebase: the same as ``filename``
-    :type filebase: optional
+    :param output: filename or filename base for output files (optional; alternate keywords ``filename``, ``filebase``)
     :param savestep: indicate when to save data output (e.g. ``savestep = 10`` will save the output every 10 samples)
     :type savestep: optional, default = ``nsamples/10``
     :param dataformat: output data format type
@@ -1234,85 +1204,52 @@ def modelFitMCMC(spec, **kwargs):
     
     :Example:
     >>> import splat
+    >>> import splat.model as spmod
     >>> sp = splat.getSpectrum(shortname='1047+2124')[0]        # T6.5 radio emitter
-    >>> spt, spt_e = splat.classifyByStandard(sp,spt=['T2','T8'])
-    >>> teff,teff_e = splat.typeToTeff(spt)
-    >>> sp.fluxCalibrate('MKO J',splat.typeToMag(spt,'MKO J')[0],absolute=True)
-    >>> table = splat.modelFitMCMC(sp, mask_standard=True, initial_guess=[teff, 5.3, 0.], zstep=0.1, nsamples=100, savestep=0, verbose=True)
-        Trouble with model BTSettl2008 T=1031.61, logg=5.27, z=-0.02
-        At cycle 0: fit = T=1031.61, logg=5.27, z=0.00 with chi2 = 35948.5
-        Trouble with model BTSettl2008 T=1031.61, logg=5.27, z=-0.13
-        At cycle 1: fit = T=1031.61, logg=5.27, z=0.00 with chi2 = 35948.5 
-                                        .
-                                        .
-                                        .
-                            # Skipped a few lines
-                                        .
-                                        .
-                                        .
-        Trouble with model BTSettl2008 T=973.89, logg=4.95, z=-0.17
-        At cycle 99: fit = T=973.89, logg=4.95, z=0.00 with chi2 = 30569.6 
-        <BLANKLINE>
-        Number of steps = 170
-        <BLANKLINE>
-        Best Fit parameters:
-        Lowest chi2 value = 29402.3750247 for 169.0 degrees of freedom
-        Effective Temperature = 1031.608 (K)
-        log Surface Gravity = 5.267 
-        Metallicity = 0.000 
-        Radius (relative to Sun) from surface fluxes = 0.103 
-        <BLANKLINE>
-        Median parameters:
-        Effective Temperature = 1029.322 + 66.535 - 90.360 (K)
-        log Surface Gravity = 5.108 + 0.338 - 0.473 
-        Metallicity = 0.000 + 0.000 - 0.000 
-        Radius (relative to Sun) from surface fluxes = 0.094 + 0.012 - 0.007 
-        <BLANKLINE>
-        <BLANKLINE>
-        fit_J1047+2124_BTSettl2008
-        Quantiles:
-        [(0.16, 0.087231370556002871), (0.5, 0.09414839610875167), (0.84, 0.10562967101117798)]
-        Quantiles:
-        [(0.16, 4.6366512070621884), (0.5, 5.1077094570511488), (0.84, 5.4459108887603094)]
-        Quantiles:
-        [(0.16, 938.96254520460286), (0.5, 1029.3222563137401), (0.84, 1095.8574021575118)]
-        <BLANKLINE>
-        Total time elapsed = 0:01:46.340169
-    >>> print table
-             teff          logg      z       radius         chisqr   
-        ------------- ------------- --- --------------- -------------
-        1031.60790828 5.26704520744 0.0  0.103152256465 29402.3750247
-        1031.60790828 5.26704520744 0.0  0.103152256465 29402.3750247
-                  ...           ... ...             ...           ...   # Skipped a few lines
-        938.962545205 5.43505121711 0.0  0.125429265207 43836.3720496
-        938.962545205 5.43505121711 0.0  0.129294090544 47650.4267022
+    >>> parameters = spmod.modelFitMCMC(sp,initial_guess=[900,5.0,0.0],nsamples=1000)
     '''
 
 # MCMC keywords
     timestart = time.time()
     nsample = kwargs.get('nsamples', 1000)
-    burn = kwargs.get('initial_cut', 0.1)  # what fraction of the initial steps are to be discarded
+    burn = kwargs.get('initial_cut', 0.5)  # what fraction of the initial steps are to be discarded
     burn = kwargs.get('burn', burn)  # what fraction of the initial steps are to be discarded
+    if burn > 1.: burn /= 100.
     m_set = kwargs.get('set', 'BTSettl2008')
     m_set = kwargs.get('model', m_set)
-    m_set = kwargs.get('models', m_set)
+    tmp = checkSpectralModelName(m_set)
+    if tmp == False: raise ValueError('\nSPLAT does not have model set {}'.format(m_set))
+    m_set = tmp
     verbose = kwargs.get('verbose', False)
 
 # plotting and reporting keywords
-    showRadius = kwargs.get('radius', spec.fscale == 'Absolute')
+    showRadius = kwargs.get('showRadius', spec.fscale == 'Absolute')
+    showRadius = kwargs.get('radius', showRadius)
     try:
         filebase = kwargs.get('filebase', 'fit_'+spec.name+'_'+m_set)
     except:
         filebase = kwargs.get('filebase', 'fit_'+m_set)
-    filebase = kwargs.get('filename',filebase)
-    kwargs['filebase'] = filebase
-    savestep = kwargs.get('savestep', nsample/10)
-    dataformat = kwargs.get('dataformat','ascii.csv')
+    filebase = kwargs.get('filename', 'fit_'+m_set)
+    filebase = kwargs.get('folder', '')+filebase
+#    kwargs['filebase'] = filebase
+    output_parameters = kwargs.get('output_parameters',filebase+'modelfitmcmc_parameters.csv')
+    output_chain = kwargs.get('output_chain',filebase+'modelfitmcmc_chain.pdf')
+    output_corner = kwargs.get('output_corner',filebase+'modelfitmcmc_corner.pdf')
+    output_comparison = kwargs.get('output_comparison',filebase+'modelfitmcmc_bestfit.pdf')
+    output_summary = kwargs.get('output_summary',filebase+'modelfitmcmc_summary.txt')
+    try:
+        srcname = kwargs.get('name',spec.name)
+    except:
+        srcname = kwargs.get('name','Source')
+    savestep = kwargs.get('savestep', nsample/10)    
+#    dataformat = kwargs.get('dataformat','ascii.csv')
 # evolutionary models    
-    emodel = kwargs.get('evolutionary_model', 'baraffe')
+    emodel = kwargs.get('evolutionary_model', 'baraffe15')
+    emodel = kwargs.get('evolution', emodel)
     emodel = kwargs.get('emodel', emodel)
 
 # set mask   
+    mask_ranges = kwargs.get('mask_ranges',None)
     mask = kwargs.get('mask',_generateMask(spec.wave,**kwargs))
     
 # set the degrees of freedom    
@@ -1320,69 +1257,64 @@ def modelFitMCMC(spec, **kwargs):
         slitwidth = spec.slitpixelwidth
     except:
         slitwidth = 3.
-    eff_dof = numpy.round((numpy.nansum(mask) / slitwidth) - 1.)
-
-# TBD - LOAD IN ENTIRE MODEL SET
+    eff_dof = numpy.round((numpy.nansum(1.-numpy.array(mask)) / slitwidth) - 1.)
 
 # set ranges for models - input or set by model itself
+    param_range = {}
     modelgrid = _loadModelParameters(m_set) # Range parameters can fall in
-    ranges = kwargs.get('ranges', \
-        [[numpy.min(modelgrid['teff']),numpy.max(modelgrid['teff'])],\
-        [numpy.min(modelgrid['logg']),numpy.max(modelgrid['logg'])],\
-        [numpy.min(modelgrid['z']),numpy.max(modelgrid['z'])]])
-    teff_range = kwargs.get('teff_range',ranges[0])
-    teff_range = kwargs.get('temperature_range',teff_range)
-    logg_range = kwargs.get('logg_range',ranges[1])
-    logg_range = kwargs.get('gravity_range',logg_range)
-    z_range = kwargs.get('z_range',ranges[2])
-    z_range = kwargs.get('metallicity_range',z_range)
+    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: 
+        if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
+            param_range[ms] = [numpy.min(modelgrid[ms]),numpy.max(modelgrid[ms])]
+        else:
+            param_range[ms] = modelgrid[ms]
+    param_range['teff'] = kwargs.get('teff_range',param_range['teff'])
+    param_range['teff'] = kwargs.get('temperature_range',param_range['teff'])
+    param_range['logg'] = kwargs.get('logg_range',param_range['logg'])
+    param_range['logg'] = kwargs.get('gravity_range',param_range['logg'])
+    param_range['z'] = kwargs.get('z_range',param_range['z'])
+    param_range['z'] = kwargs.get('metallicity_range',param_range['z'])
 
 # set initial parameters
-
-    param0_init = kwargs.get('initial_guess',[\
-        numpy.random.uniform(teff_range[0],teff_range[1]),\
-        numpy.random.uniform(logg_range[0],logg_range[1]),\
+    param0 = {}
+    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: param0[ms] = SPECTRAL_MODEL_PARAMETERS[ms]['default']
+    p = kwargs.get('initial_guess',[param0['teff'],param0['logg'],param0['z']])
+    param0['teff'] = kwargs.get('initial_temperature',p[0])
+    param0['teff'] = kwargs.get('initial_teff',param0['teff'])
+    param0['logg'] = kwargs.get('initial_gravity',p[1])
+    param0['logg'] = kwargs.get('initial_logg',param0['logg'])
+    param0['z'] = kwargs.get('initial_metallicity',p[2])
+    param0['z'] = kwargs.get('initial_z',param0['z'])
+#    kwargs.get('initial_guess',[\
+#        numpy.random.uniform(teff_range[0],teff_range[1]),\
+#        numpy.random.uniform(logg_range[0],logg_range[1]),\
 #        numpy.random.uniform(z_range[0],z_range[1])])
-        numpy.random.uniform(0.,0.)])
-    if len(param0_init) < 3:
-        param0_init.append(0.0)
+#        numpy.random.uniform(0.,0.)])
+#    if len(param0_init) < 3:
+#        param0_init.append(0.0)
         
-    t0 = kwargs.get('initial_temperature',param0_init[0])
-    t0 = kwargs.get('initial_teff',t0)
-    g0 = kwargs.get('initial_gravity',param0_init[1])
-    g0 = kwargs.get('initial_logg',g0)
-    z0 = kwargs.get('initial_metallicity',param0_init[2])
-    z0 = kwargs.get('initial_z',z0)
-    param0 = [t0,g0,z0]
+# set parameter steps for continuous variables
+    param_step = {}
+    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: param_step[ms] = 0.
+    p = kwargs.get('step_sizes',[50,0.1,0.1])
+    param_step['teff'] = kwargs.get('teff_step',p[0])
+    param_step['teff'] = kwargs.get('temperature_step',param_step['teff'])
+    param_step['logg'] = kwargs.get('logg_step',p[1])
+    param_step['logg'] = kwargs.get('gravity_step',param_step['logg'])
+    param_step['z'] = kwargs.get('z_step',p[2])
+    param_step['z'] = kwargs.get('metallicity_step',param_step['z'])
+    if kwargs.get('nometallicity',False) == False or kwargs.get('vary_metallicity',True) == True:
+        param_range['z'] = [0.,0.]
+        param_step['z'] = 0.
+        param0['z'] = 0.0
+    if kwargs.get('vary_fsed',False) == True: param_step['fsed'] = 1.
+    if kwargs.get('vary_cloud',False) == True: param_step['cld'] = 1.
+    if kwargs.get('vary_kzz',False) == True: param_step['kzz'] = 1.
 
-    tstep = kwargs.get('teff_step',50)
-    tstep = kwargs.get('temperature_step',tstep)
-    gstep = kwargs.get('logg_step',0.25)
-    gstep = kwargs.get('gravity_step',gstep)
-    zstep = kwargs.get('z_step',0.1)
-    zstep = kwargs.get('metallicity_step',zstep)
-
-# catch for no metallicity input - assume not fitting this parameter
-    param_step = kwargs.get('step_sizes',[tstep,gstep,zstep])
-    if len(param_step) < 3:
-        param_step.append[0.0]
-        kwargs['nometallicity'] = True
-
-    if kwargs.get('nometallicity',False):
-        param_step[2] = 0.
-        param0[2] = 0.0
-
-    
-# Check that initial guess is within range of models
-    if not (teff_range[0] <= param0[0] <= teff_range[1] and \
-        logg_range[0] <= param0[1] <= logg_range[1] and \
-        z_range[0] <= param0[2] <= z_range[1]):
-        sys.stderr.write("\nInitial guess T={}, logg = {} and [M/H] = {} is out of model range;" + \
-            "defaulting to a random initial guess in range.".format(param0[0],param0[1],param0[2]))
-        param0 = param0_init
-        if param0[2] == 0.:
-            param_step[2] = 0.
-
+# choose what parameters to plot
+    param_plot = []
+    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: 
+        if param_step[ms] != 0.: param_plot.append(ms)
+    if showRadius == True: param_plot.append('radius')
 
 # read in prior calculation and start from there
     if kwargs.get('addon',False) != False:
@@ -1402,25 +1334,45 @@ def modelFitMCMC(spec, **kwargs):
             except:
                 print('\nCould not read in parameter file {}'.format(kwargs.get('addon')))
 
-
-# initial fit cycle
+# Check that initial guess is within range of models
     try:
-        model = loadModel(teff = param0[0], logg = param0[1], z = param0[2], set = m_set)
+        model = loadModel(set=m_set, **param0)
     except:
-        raise ValueError('\nInitial {} model with T = {}, logg = {} and [M/H] = {} did not work; aborting.'.format(m_set,param0[0],param0[1],param0[2]))
+        line=''
+        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: line+='{}:{} '.format(ms,param0[ms])
+        raise ValueError('\nInitial parameter set {} outside of parameter range for {} models'.format(line,m_set))
+#    if not (numpy.min(param_range['teff']) <= param0['teff'] <= numpy.max(param_range['teff']) and \
+#        numpy.min(param_range['teff']) <= param0['teff'] <= numpy.max(param_range['teff']) and \
+#        numpy.min(param_range['teff']) <= param0['teff'] <= numpy.max(param_range['teff'])):
+#        sys.stderr.write("\nInitial guess T={}, logg = {} and [M/H] = {} is out of model range;" + \
+#            "defaulting to a random initial guess in range.".format(param0[0],param0[1],param0[2]))
+#        param0 = param0_init
+#        if param0[2] == 0.:
+#            param_step[2] = 0.
 
-    chisqr0,alpha0 = compareSpectra(spec, model, mask_ranges=mask_ranges)
+    chisqr0,alpha0 = compareSpectra(spec, model, **kwargs)
     chisqrs = [chisqr0]    
     params = [param0]
     radii = [(10.*u.pc*numpy.sqrt(alpha0)).to(u.Rsun)]
     for i in numpy.arange(nsample):
-        for j in numpy.arange(len(param0)):
-            if param_step[j] > 0.:          # efficient consideration - if statement or just run a model?
-                param1 = copy.deepcopy(param0)
-                param1[j] = numpy.random.normal(param1[j],param_step[j])
+        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+            param1 = copy.deepcopy(param0)
+            if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous' and param_step[ms] != 0.:
+                param1[ms] = numpy.random.normal(param1[ms],param_step[ms])
+                vflag = True
+            elif SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'discrete' and param_step[ms] != 0.:
+                param1[ms] = numpy.random.choice(modelgrid[ms])
+                vflag = True
+                param_range[ms] = modelgrid[ms]
+            else:
+                vflag = False
+#            print(ms, param_step[ms], param0[ms], param1[ms],vflag)
+            if vflag:
                 try:            
-                    model = loadModel(teff = param1[0], logg = param1[1],z = param1[2], set = m_set)
-                    chisqr1,alpha1 = compareSpectra(spec, model ,mask_ranges=mask_ranges)  
+                    model = loadModel(set = m_set,**param1)
+                    mkwargs = copy.deepcopy(kwargs)
+                    mkwargs['plot'] = False
+                    chisqr1,alpha1 = compareSpectra(spec, model ,**mkwargs)  
 
 # Probability that it will jump to this new point; determines if step will be taken
                     h = 1. - stats.f.cdf(chisqr1/chisqr0, eff_dof, eff_dof)
@@ -1437,53 +1389,264 @@ def modelFitMCMC(spec, **kwargs):
                     
                 except:
                     if verbose:
-                        print('Trouble with model {} T={:.2f}, logg={:.2f}, z={:.2f}'.format(m_set,param1[0],param1[1],param1[2]))
+                        line=''
+                        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: line+='{}:{} '.format(ms,param1[ms])
+                        print('Trouble with model {} with parameters {}'.format(m_set,line))
                     continue
 
         if verbose:
-            print('At cycle {}: fit = T={:.2f}, logg={:.2f}, z={:.2f} with chi2 = {:.1f}'.format(i,param0[0],param0[1],param0[2],chisqr0))
+            line=''
+            for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: line+='{}:{} '.format(ms,param0[ms])
+            print('At cycle {}: chi2 = {:.1f} parameters {}'.format(i,chisqr0,**param0))
+
 
 # save results iteratively
-        if i*savestep != 0:
-            if i%savestep == 0:
-                t = Table(zip(*params[::-1]),names=['teff','logg','z'])
-                if param_step[2] == 0.:
-                    del t['z']
-                if showRadius:
-                    t['radius'] = radii
-                t['chisqr'] = chisqrs
-                t.write(filebase+'rawdata.dat',format=dataformat)
-                reportModelFitResults(spec,t,iterative=True,model_set=m_set,**kwargs)
+        if i*savestep != 0 and i%savestep == 0:
+            dp = pandas.DataFrame(params)
+            dp['radius'] = radii
+            dp['chisqr'] = chisqrs
+            dp['weights'] = [1.-stats.f.cdf(c/numpy.nanmin(chisqrs), eff_dof, eff_dof) for c in chisqrs]
+            dp.to_csv(output_parameters,index=False)
+            _modelFitMCMC_plotChains(dp,columns=param_plot,burn=burn,output=output_chain,stat='weights')
+            _modelFitMCMC_plotCorner(dp[int(burn*len(dp)):],columns=param_plot,output=output_corner)
+            param_best = {}
+            for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: param_best[ms] = dp[ms].iloc[numpy.argmin(dp['chisqr'])]
+            model = loadModel(set = m_set,**param_best)
+            line=''
+            for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: 
+                if param_step[ms] != 0.: line+='{}={:.2f} '.format(ms,param_best[ms])
+            c,a = compareSpectra(spec, model, output=output_comparison,legend=[srcname,'{}\n{}'.format(SPECTRAL_MODELS[m_set]['name'],line),'Difference'],**kwargs)
+#            _modelFitMCMC_reportResults(spec,dp,iterative=True,model_set=m_set,**kwargs)
 
 # Final results
-    t = Table(zip(*params[::-1]),names=['teff','logg','z'])
-    if param_step[2] == 0. or kwargs.get('nometallicity',False):
-        del t['z']
-    if showRadius:
-        t['radius'] = radii
-    t['chisqr'] = chisqrs
-# cut first x% of parameters
-    s = Table(t[burn*len(t):])
+    dp = pandas.DataFrame(params)
+    dp['radius'] = radii
+    dp['chisqr'] = chisqrs
+    dp['weights'] = [1.-stats.f.cdf(c/numpy.nanmin(chisqrs), eff_dof, eff_dof) for c in chisqrs]
+    dp.to_csv(output_parameters,index=False)
+    fig_chains = _modelFitMCMC_plotChains(dp,columns=param_plot,burn=burn,output=output_chain,stat='weights')
+    fig_corner = _modelFitMCMC_plotCorner(dp[int(burn*len(dp)):],columns=param_plot,output=output_corner)
+    param_best = {}
+    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: param_best[ms] = dp[ms].iloc[numpy.argmin(dp['chisqr'])]
+    model = loadModel(set = m_set,**param_best)
+    line=''
+    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: 
+        if param_step[ms] != 0.: line+='{}={:.2f} '.format(ms,param_best[ms])
+    c,a = compareSpectra(spec, model, output=output_comparison,legend=[srcname,'{}\n{}'.format(SPECTRAL_MODELS[m_set]['name'],line),'Difference'], **kwargs)
 
-# save data
-    s.write(filebase+'rawdata.dat',format=dataformat)
-    
-    reportModelFitResults(spec,s,iterative=False,model_set=m_set,**kwargs)
+# save data    
     if verbose:
         print('\nTotal time elapsed = {}'.format(time.time()-timestart))
-    return s
+    if kwargs.get('return_model',False) == True: 
+        return model.scale(a)
+    if kwargs.get('return_chains',False) == True: 
+        return fig_chains
+    if kwargs.get('return_corner',False) == True: 
+        return fig_corner
+    else: return dp
 
 
 
-def reportModelFitResults(spec,t,*arg,**kwargs):
+def _modelFitMCMC_plotChains(dp,**kwargs):
+    '''
+    :Purpose: Plots the parameter chains from an MCMC analysis (internal program)
+    :param database: pandas DataFrame or list of DataFrames providing the parameters used to plot (required)
+    :param columns: list of strings specifying which columns to plot (optional; default is all columns)
+    :param stat: special column that displays the fitting statistc
+    :param burn: decimal fraction (0 to 1) of starting parameters to reject (optional; default = 0.)
+    :param output: name of file for plotting chains (optional; alterate keywords file and filename)
+    :param figsize: size of resulting figure (optional; default is set by number of parameters plotted)
+    
+    :Example:
+    >>> import splat
+    >>> import splat.model as spmod
+    >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
+    >>> parameters = spmod.modelFitMCMC(sp,initial_guess=[800,5.0,0.0],nsamples=1000)
+    >>> spmod._modelFitMCMC_plotChains(parameters,columns=['teff','logg','z'])
+    '''
+
+    plotname_assoc = {}
+    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: plotname_assoc[ms] = '{} ({})'.format(SPECTRAL_MODEL_PARAMETERS[ms]['title'],SPECTRAL_MODEL_PARAMETERS[ms]['unit'])
+    plotname_assoc['mass'] = r'Mass (M$_{\odot}$)'
+    plotname_assoc['age'] = r'Age (Gyr)'
+    plotname_assoc['luminosity'] = r'log L$_{bol}$/L$_{\odot}$'
+    plotname_assoc['radius'] = r'Radius (R$_{\odot}$)'
+    plotname_assoc['denisty'] = r'$\rho$ ($\rho_{\odot}$)'
+    stat = kwargs.get('stat', 'chisqr')
+
+# check input format
+    inp = copy.deepcopy(dp)
+    if isinstance(inp,pandas.core.frame.DataFrame):
+        inp = [inp]
+    if isinstance(inp,list):
+        if isinstance(inp[0],dict):
+            try:
+                tmp = [pandas.DataFrame(x) for x in inp]
+                inp = tmp
+            except:
+                raise ValueError('\nInput must be a single or list of pandas dataframe or list of parameter dictionaries')
+    else:
+        print(type(inp),type(inp[0]))
+        raise ValueError('\nCould not process input')
+
+# prep output
+    output = kwargs.get('output','')
+    output = kwargs.get('file',output)
+    output = kwargs.get('filename',output)
+    columns = kwargs.get('columns',list(inp[0].columns))
+    nplots = len(columns)
+    if stat in list(dp.columns):
+        nplots += 1
+
+# make figure
+    plt.clf()
+    fig = plt.figure(1,figsize=kwargs.get('figsize',[8,4*(nplots)]))
+    xr = [0,len(inp[0])-1]
+    for i,ms in enumerate(columns):
+        v = []
+        for dp in inp: v.extend(list(dp[ms].values))
+        plt.subplot(int('{}1{}'.format(nplots,i+1)))
+        yr = [numpy.min(v),numpy.max(v)]
+        yr[0] -= 0.05*(yr[1]-yr[0])
+        yr[1] += 0.05*(yr[1]-yr[0])
+#        print(yr)
+        for dp in inp:
+            plt.plot(numpy.arange(len(dp)),dp[ms],'k-',alpha=0.5)
+        plt.xlim(xr)
+        plt.ylim(yr)
+        if kwargs.get('burn',0) > 0:
+            plt.plot([kwargs['burn']*len(inp[0])]*2,yr,'k:')
+            v = []
+            for dp in inp: v.extend(list(dp[ms][int(kwargs['burn']*len(dp)):].values))
+        plt.plot(xr,[numpy.nanmean(v),numpy.nanmean(v)],'r-')
+        plt.plot(xr,[numpy.nanmean(v)+numpy.nanstd(v),numpy.nanmean(v)+numpy.nanstd(v)],'r:')
+        plt.plot(xr,[numpy.nanmean(v)-numpy.nanstd(v),numpy.nanmean(v)-numpy.nanstd(v)],'r:')
+        plt.xlabel('Steps')
+        ylabel = ms
+        if ms in list(plotname_assoc.keys()): ylabel = plotname_assoc[ms]
+        plt.ylabel(ylabel)
+    if stat in list(dp.columns):
+        plt.subplot(int('{}1{}'.format(nplots,nplots)))
+        v = []
+        for dp in inp: v.extend(list(dp[stat].values))
+        vp = [-0.5*(c-numpy.nanmin(v)) for c in v]
+        yr = [numpy.min(vp),numpy.max(vp)]
+        yr[0] -= 0.05*(yr[1]-yr[0])
+        yr[1] += 0.05*(yr[1]-yr[0])
+    #        print(yr)
+        plt.xlim(xr)
+        plt.ylim(yr)
+        for dp in inp:
+            plt.plot(numpy.arange(len(dp)),-0.5*(dp[stat]-numpy.nanmin(v)),'k-',alpha=0.5)
+        plt.xlabel('Steps')
+        plt.ylabel('Statistic')
+
+# save output
+    if output != '':
+        try:
+            plt.savefig(output)
+        except:
+            print('\nProblem saving chains plot to {}'.format(output))
+    return fig
+
+
+def _modelFitMCMC_plotCorner(dp,**kwargs):
+    '''
+    :Purpose: Plots the parameter chains from an MCMC analysis (internal program)
+    :param database: pandas DataFrame or list of DataFrames providing the parameters used to plot (required)
+    :param columns: list of strings specifying which columns to plot (optional; default is all columns)
+    :param burn: decimal fraction (0 to 1) of starting parameters to reject (optional; default = 0.)
+    :param output: name of file for plotting chains (optional; alterate keywords file and filename)
+    :param figsize: size of resulting figure (optional; default is set by number of parameters plotted)
+    
+    :Example:
+    >>> import splat
+    >>> import splat.model as spmod
+    >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
+    >>> parameters = spmod.modelFitMCMC(sp,initial_guess=[800,5.0,0.0],nsamples=1000)
+    >>> spmod._modelFitMCMC_plotChains(parameters,columns=['teff','logg','z'])
+    '''
+
+    try:
+        import corner
+    except:
+        print('\nYou must install corner to display corner plot; see http://corner.readthedocs.io/en/latest/')
+        return None
+
+    plotname_assoc = {}
+    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: plotname_assoc[ms] = '{} ({})'.format(SPECTRAL_MODEL_PARAMETERS[ms]['title'],SPECTRAL_MODEL_PARAMETERS[ms]['unit'])
+    plotname_assoc['mass'] = r'Mass (M$_{\odot}$)'
+    plotname_assoc['age'] = r'Age (Gyr)'
+    plotname_assoc['luminosity'] = r'log L$_{bol}$/L$_{\odot}$'
+    plotname_assoc['radius'] = r'Radius (R$_{\odot}$)'
+    plotname_assoc['denisty'] = r'$\rho$ ($\rho_{\odot}$)'
+
+
+# prep output
+    output = kwargs.get('output','')
+    output = kwargs.get('file',output)
+    output = kwargs.get('filename',output)
+    columns = kwargs.get('columns',list(dp.columns))
+
+# make sure columns are all there - drop those that aren't
+    tmp = []
+    for c in columns:
+        if c in list(dp.columns): tmp.append(c)
+
+# go through and check that each column has some variability, and compute medians  
+    cnames = []
+    truths = []
+    for c in tmp:
+        if numpy.nanstd(dp[c]) != 0.:
+            cnames.append(c)
+            truths.append(numpy.nanmedian(dp[c]))
+
+# get labels all set
+    labels = []
+    for c in cnames: 
+        if c in list(plotname_assoc.keys()):
+            labels.append(plotname_assoc[c])
+        else:
+            labels.append(c)
+
+#    if len(kwargs.get('truths',[])) == 0:
+#        truths = [numpy.inf for i in range(samples.shape[-1])]
+
+#    labels = [r''+SPECTRAL_MODEL_PARAMETERS[i]['title']+' ('+SPECTRAL_MODEL_PARAMETERS[i]['unit'].to_string()+')' for i in ['teff','logg','z'][:samples.shape[-1]-1]]
+#    labels.append(r'Radius (R$_{\odot}$)')
+    weights = kwargs.get('parameter_weights',numpy.ones(len(dp)))
+
+    plt.clf()
+    fig = corner.corner(dp.loc[:,cnames], quantiles=[0.16, 0.5, 0.84], truths=truths, \
+            labels=labels, show_titles=True, weights=weights,\
+            title_kwargs={"fontsize": kwargs.get('fontsize',12)})
+
+# save output
+    if output != '':
+        try:
+            plt.savefig(output)
+        except:
+            print('\nProblem saving chains plot to {}'.format(output))
+    return fig
+
+    try:
+        fig.savefig(file)
+    except:
+        print('\nProblem saving corner plot to {}'.format(file))
+    return fig
+
+
+
+def _modelFitMCMC_reportResults(spec,dp,*arg,**kwargs):
     '''
     :Purpose: 
-        Reports the result of model fitting parameters. Produces triangle plot, best fit model, statistics of parameters and saves raw data if ``iterative = True``.
+        Reports the result of model fitting parameters. Produces chain plot, corner plot, best fit model comparison and summarizes
+        statistics of parameters
 
     Required Inputs:
 
         :param spec: Spectrum class object, which should contain wave, flux and noise array elements.
-        :param t: Must be an astropy Table with columns containing parameters fit, and one column for chi-square values ('chisqr').
+        :param dp: Must be an pandas DataFrame with columns containing parameters fit, and one column for chi-square values ('chisqr').
     
     Optional Inputs:
         :param evol: computes the mass, age, temperature, radius, surface gravity, and luminosity by using various evolutionary model sets. See below for the possible set options and the Brown Dwarf Evolutionary Models page for more details (default = True)

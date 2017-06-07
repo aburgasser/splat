@@ -55,8 +55,6 @@ import splat.citations as spbib
 from splat.photometry import filterMag
 #from splat.database import searchLibrary, keySpectrum
 
-__version__ = VERSION
-
 # holding arrays
 SPECTRA_READIN = {}
 STDS_DWARF_SPEX = {}
@@ -252,6 +250,7 @@ class Spectrum(object):
             self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
             self.noisenu = self.noise.to('Jy',equivalencies=u.spectral_density(self.wave))
             self.fnu_unit = u.Jansky
+            self.temperature = numpy.zeros(len(self.flux))
 # calculate variance
             self.variance = self.noise**2
 # signal to noise
@@ -1384,9 +1383,9 @@ class Spectrum(object):
             print('To convert to surface fluxes you must first scale spectrum to absolute (10 pc) flux units')
             return
         r = copy.deepcopy(radius)
-        if ~isinstance(r,u.quantity.Quantity):
+        if not isinstance(r,u.quantity.Quantity):
             r*=const.R_sun
-        self.scale(((10.*u.pc/r).to(u.m/u.m).value)**2,silent=True)
+        self.scale((((10.*u.pc/r).to(u.m/u.m)).value)**2,silent=True)
         self.history.append('Converted to surface fluxes assuming a radius of {} solar radii'.format((r/const.R_sun).to(u.m/u.m)))
         self.fscale = 'Surface'
         return
@@ -1407,6 +1406,8 @@ class Spectrum(object):
         fse = copy.deepcopy(self.noise).to(u.erg/u.s/u.cm**3)
         w = copy.deepcopy(self.wave).to(u.cm)
         x = (2.*numpy.pi*const.h.to(u.erg*u.s)*(const.c.to(u.cm/u.s)**2)/(fs*(w**5))).to(u.m/u.m).value
+        self.temperature = (const.h*const.c/(const.k_B*w)).to(u.K)/numpy.log(1.+x)
+#        self.temperature_unc = self.flux*x/((1.+x)*numpy.log(1.+x))*((fs/fse).to(u.m/u.m))
         self.flux = (const.h*const.c/(const.k_B*w)).to(u.K)/numpy.log(1.+x)
         self.noise = self.flux*x/((1.+x)*numpy.log(1.+x))*((fs/fse).to(u.m/u.m))
         self.variance = self.noise**2
