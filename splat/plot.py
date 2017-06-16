@@ -31,7 +31,53 @@ import splat.core as splat
 
 def plotMap(*args,**kwargs):
     '''
-    This code is currently in development
+    :Purpose: Plot coordinates onto an equatorial map grid
+
+    :Input
+    One or more coordinates, specified as astropy.coordinates.SkyCoord objects, two-element arrays 
+    (RA and declination in decimal degrees), or string coordinate designation; the latter two are 
+    converted to SkyCoord variables using `splat.properCoordinates()`
+
+    :Parameters:
+    projection = 'mollweide'
+        projection type; see the `Basemap documentation <https://matplotlib.org/basemap/users/mapsetup.html>`_
+    reference_declination or rdec
+        a single or array of declinations to indicates as references, useful for denoting pointing limits
+
+    galactic = False
+        Plot in galactic coordinates (NOT YET IMPLEMENTED)
+    ecliptic = False
+        Plot in ecliptic coordinates (NOT YET IMPLEMENTED)
+    extrgalactic or supergalactic = False
+        Plot in supergalactic coordinates (NOT YET IMPLEMENTED)
+
+    marker or markers or symbol or symbols = 'o'
+        symbol type; see the `matplotlib documentation <https://matplotlib.org/api/markers_api.html>`_
+    size or sizes or symsize or symsizes = 10
+        symbol size
+    color or colors = 'k'
+        color of plot symbols
+    alpha or alphas = 0.5
+        transparency of plot symbols
+
+    legend, legends, label or labels = None
+        list of strings providing legend-style labels for each spectrum plotted
+    grid = True:
+        add a grid
+
+    file or filename or output:
+        filename or filename base for output
+    figsize = (8,6)
+        set the figure size; set to default size if not indicated
+    tight = True:
+        makes a ``tight'' box plot to elimate extra whitespace
+        
+    :Example: 
+       >>> import splat
+       >>> import splat.plot as splot
+       >>> s = splat.searchLibrary(young=True)
+       >>> c = [splat.properCoordinates(x) for x in s['DESIGNATION']]
+       >>> splot.plotMap(c)
     '''
     
     projection = kwargs.get('projection','mollweide')
@@ -52,13 +98,13 @@ def plotMap(*args,**kwargs):
     rdec = kwargs.get('rdec',rdec)
     file = kwargs.get('output',None)
     file = kwargs.get('file',file)
-
+    file = kwargs.get('filename',file)
 
 
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection=projection)
     ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
-    ax.grid(kwargs.get('grid',False))
+    ax.grid(kwargs.get('grid',True))
 
     for i,pcoords in enumerate(args):
 # sense what the input values are
@@ -68,11 +114,12 @@ def plotMap(*args,**kwargs):
             pcoords = [pcoords]
         if isinstance(pcoords[0],str):
             pcoords = [splat.properCoordinates(c) for c in pcoords]
+            print(pcoords)
         if isinstance(pcoords[0],list):
             if isinstance(pcoords[0][0],float):
                 pcoords = [splat.properCoordinates(c) for c in pcoords]
         if not isinstance(pcoords[0],SkyCoord):
-            raise ValueError('\nCould not parse coordinate input {}'.format(coords))
+            raise ValueError('\nCould not parse coordinate input {}'.format(pcoords))
 
 # convert coordinates and scatter plot
         ra = [c.ra for c in pcoords]
@@ -92,10 +139,12 @@ def plotMap(*args,**kwargs):
 
 # plot galactic plane - need to figure this out
     if kwargs.get('galactic',False) != False:
+        print('\nHave not set up galactic coordinate format yet')
         pass
 
 # plot ecliptic plane - need to figure this out
-    if kwargs.get('galactic',False) != False:
+    if kwargs.get('ecliptic',False) != False:
+        print('\nHave not set up ecliptic coordinate format yet')
         pass
 
 # plot legend
@@ -104,7 +153,10 @@ def plotMap(*args,**kwargs):
 
 # plot legend
     if file != None:
-        fig.savefig(file)
+        if kwargs.get('tight') == True:
+            plt.savefig(file, bbox_inches='tight')
+        else:
+            plt.savefig(file)
     
     return fig 
 
@@ -175,7 +227,7 @@ def plotSpectrum(*args, **kwargs):
     colorScheme or colorMap:
         color map to apply based on matplotlib colormaps; 
         see http://matplotlib.org/api/pyplot_summary.html?highlight=colormaps#matplotlib.pyplot.colormaps
-    linestyle:
+    linestyle or linestyles:
         line style of plot lines; by default all solid
     fontscale = 1:
         sets a scale factor for the fontsize
@@ -204,6 +256,8 @@ def plotSpectrum(*args, **kwargs):
         set the figure size; set to default size if not indicated
     interactive = False:
         if plotting to window, set this to make window interactive
+    tight = True:
+        makes a ``tight'' box plot to elimate extra whitespace
         
         
     :Example 1: A simple view of a random spectrum
@@ -694,7 +748,10 @@ def plotSpectrum(*args, **kwargs):
 # save to file or display
         if multipage == False:
             if filebase != '' and (plts % nplot == 3 or plts == len(splist)-1):
-                plt.savefig(files[plts], format=filetype)
+                if kwargs.get('tight',True) == True: 
+                    plt.savefig(files[plts], format=filetype, bbox_inches='tight')
+                else:
+                    plt.savefig(files[plts], format=filetype)
     if filename == '' and not kwargs.get('web',False):
         plt.show()
         if (kwargs.get('interactive',False) != False):

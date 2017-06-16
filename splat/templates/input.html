@@ -1,0 +1,164 @@
+<!doctype html>
+
+<head>
+<title>SpeX Web Interface</title>
+
+<link href="http://cdn.pydata.org/bokeh/release/bokeh-0.12.1.css" rel="stylesheet">
+<link href="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.1.css" rel="stylesheet">
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.1.js"></script>
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.1.js"></script>
+<link rel="shortcut icon" href="http://www.browndwarfs.org/graphics/logo2.ico">
+<link rel="stylesheet" type="text/css" href="http://www.browndwarfs.org/spexprism/styles/mainstyle.css">
+
+<meta name="keywords" content="low mass stars, brown dwarfs, M dwarfs, L dwarfs, T dwarfs, astronomy, astrophysics, SpeX, near-infrared, spectroscopy">
+</head>
+
+<body>
+<a name="top"></a>
+
+
+<table cellpadding=5>
+<tr>
+<td valign=middle align=center>
+<a href="http://www.browndwarfs.org/" border=0>
+<img src="http://www.browndwarfs.org/graphics/logo.jpg" height=100 width=103 border=0 vspace=3 hspace=10 align=middle><br>
+<img src="http://www.browndwarfs.org/graphics/titlesm.jpg" width=180 height=25 border=0 vspace=3 hspace=10 align=middle>
+</a>
+
+<td valign=middle>
+<h1>The SpeX Prism Spectral Libraries</h1>
+</tr>
+</table>
+
+<table cellpadding=15>
+<tr>
+<td align=right valign=top width=100>
+<br>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/index.html">Home</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/about.html">Using the Libraries</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/library.html">The Libraries</a></h3>
+<h3><a href="input.html">SPLAT Web Interface</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/publications.html">Publications</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/links.html">Links</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/contact.html">Contact</a></h3>
+
+</td>
+
+<td width=600 valign=top>
+<br>
+
+
+
+<style>
+.firstForm {
+    float: center;
+}
+
+.loadButton {
+    float: ;}
+</style>
+
+<h1>SPLAT Web Interface</h1>
+<p>
+Use the form below to retrieve a spectrum or set of spectra from the Library, or upload your own SpeX spectrum to visualize.
+</p>
+
+
+<div>
+<h2>Get Lucky</h2>
+<p>
+Just grab any old spectrum.
+</p>
+<form class = "form-horizontal" method="post" enctype="multipart/form-data" action="{{ url_for('load_spectra') }}">
+<input type="submit" style="loadButton" name="submit" value="Get Lucky!">
+</form>
+</div>
+
+
+<div>
+<h2>Upload Spectrum</h2>
+<p>
+Enter the full path to the your file, which must be ascii (tab or comma delimited) or fits file with columns of wavelength, flux and (optionally) uncertainty.
+</p>
+<form class = "form-horizontal"  method="post" enctype="multipart/form-data" action="{{ url_for('load_spectra') }}">
+<!-- <div>
+This is not yet working
+<input type="file" name="path">
+<input type="submit" name="submit" value="Load File">
+</div>
+-->
+<div>
+<input class="firstForm" type="filename" name="path" placeholder="Path to file" multiple="">
+<input type="submit" name="submit" value="Load File ">
+</div>
+</form>
+</div>
+
+
+<div>
+<h2>Search by Name or Short Name</h2>
+<p>
+Names must be the SIMBAD name of the source; shortnames are in the form hhmm+ddmm, where hhmm is the Right Ascension hour and minute, +ddmm is the declination degrees and minute
+</p>
+<form class = "form-horizontal" method="post" enctype="multipart/form-data" action="{{ url_for('load_spectra') }}">
+<div>
+<input type="text" name="name" placeholder = "e.g., Gliese 570D" />
+<input type="submit" name="submit" value="Load by Name">
+</div>
+<div>
+<input type="text" name="shortname" placeholder = "e.g., 0415-0935" />
+<input type="submit" name="submit" value="Load by Shortname">
+</div>
+</form>
+</div>
+
+<div>
+<h2>Search by Observation Date</h2>
+<p>
+Search for data based on when they were observed, in format YYYYMMDD where YYYY = year, MM = date, DD = day
+</p>
+<form class = "form-horizontal" method="post" enctype="multipart/form-data" action="{{ url_for('load_spectra') }}">
+<div>
+<input type="text" name="date" placeholder = "e.g., 20030917" />
+<input type="submit" name="submit" value="Load by Date">
+</div>
+</form>
+</div>
+
+
+
+<div>
+<h2>Search by Parameters (Experimental)</h2>
+<p>
+Fill in parameters below to contrain search to various properties
+</p>
+
+<form class = "form-horizontal" method="post" enctype="multipart/form-data" action="{{ url_for('load_spectra') }}">
+<div>
+<input type="text" name="sp1" placeholder = "SpT 1" />
++
+<input type="text" name="sp2" placeholder = "SpT 2" />
+</div>
+<div>
+<input type="text" name="mag1" placeholder = "Low Magnitude" />
++
+<input type="text" name="mag2" placeholder = "High Magnitude" />
+  <input type="submit" style="loadButton" name="submit" value="Load by Options"></div>
+</div>
+<div>
+<input type="text" name="snr" placeholder = "Signal to Noise" />
+or
+<input type="text" name="date" placeholder = "YYYYMMDD" />
+</div>
+</form>
+</div>
+
+<div>
+<center>
+{{error}}
+</center>
+</div>
+
+</html>
+
+

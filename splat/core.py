@@ -64,8 +64,8 @@ STDS_VLG_SPEX = {}
 STDS_INTG_SPEX = {}
 
 # databases - using the .txt files for now, will need to change to SQL at a future date
-DB_SOURCES = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE)
-DB_SPECTRA = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SPECTRA_FILE)
+DB_SOURCES = ascii.read(DB_FOLDER+DB_SOURCES_FILE)
+DB_SPECTRA = ascii.read(DB_FOLDER+DB_SPECTRA_FILE)
 
 
 # suppress warnings - probably not an entirely safe approach!
@@ -76,7 +76,7 @@ warnings.simplefilter("ignore")
 spex_pixel_scale = 0.15            # spatial scale in arcseconds per pixel
 uspex_pixel_scale = 0.10            # spatial scale in arcseconds per pixel
 spex_wave_range = [0.65,2.45]*u.micron    # default wavelength range
-max_snr = 1000.0                # maximum S/N ratio permitted
+max_snr = 10000.0                # maximum S/N ratio permitted
 
 
 #####################################################
@@ -121,13 +121,17 @@ class Spectrum(object):
         self.wunit = kwargs.get('wunit',u.micron)
         self.wunit_label = kwargs.get('wunit_label',r'$\mu$m')
         self.flabel = kwargs.get('flabel',r'F$_{\lambda}$')
-        self.fscale = kwargs.get('fscale','')
+        self.fscale = kwargs.get('fscale','Arbitrary')
+        if kwargs.get('surface',False) == True: self.fscale = 'Surface'
+        if kwargs.get('apparent',False) == True: self.fscale = 'Apparent'
+        if kwargs.get('absolute',False) == True: self.fscale = 'Absolute'
         self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.micron))
         self.funit_label = kwargs.get('funit_label',r'erg~cm$^{-2}$~s$^{-1}$~$\mu$m$^{-1}$')
 #        self.header = kwargs.get('header',fits.PrimaryHDU())
         self.header = kwargs.get('header',{})
         self.filename = kwargs.get('file','')
         self.filename = kwargs.get('filename',self.filename)
+        self.name = kwargs.get('name','')
         self.idkey = kwargs.get('idkey',False)
         self.instrument = kwargs.get('instrument','SPEX_PRISM')
         self.history = []
@@ -147,30 +151,44 @@ class Spectrum(object):
             self.original = copy.deepcopy(self)
             return
 
-
+# process arguments
 # option 1: a filename is given
-        if (len(args) > 0):
+        if len(args) > 1:
             if isinstance(args[0],str):
                 self.filename = args[0]
-        if kwargs.get('file',self.filename) != '':
-            self.filename = kwargs.get('file',self.filename)
-        if kwargs.get('filename',self.filename) != '':
-            self.filename = kwargs.get('filename',self.filename)
 
 # option 2: a spectrum ID is given
-        if (len(args) > 0):
             if isinstance(args[0],int):
                 self.idkey = args[0]
 
+# option 3: an array is given - interpret as wave, flux, noise
+        if len(args) > 1:
+            if (isinstance(args[0],list) or isinstance(args[0],numpy.ndarray)) and (isinstance(args[1],list) or isinstance(args[1],numpy.ndarray)):
+                kwargs['wave'] = kwargs.get('wave',args[0])
+                kwargs['flux'] = kwargs.get('flux',args[1])
+                if len(args) > 2:
+                    if isinstance(args[0],list) or isinstance(args[0],numpy.ndarray):
+                        kwargs['noise'] = kwargs.get('noise',args[2])
 
+# search spectral database given an idkey
         if self.idkey != False:
-#            self.idkey = kwargs.get('idkey',self.idkey)
             try:
                 sdb = keySpectrum(self.idkey)
                 if sdb != False:
                     self.filename = sdb['DATA_FILE'][0]
             except:
                 print('Warning: problem reading in spectral database')
+
+# create object with wave and flux are given
+        if len(kwargs.get('wave','')) > 0 and len(kwargs.get('flux','')) > 0:
+            self.wave = kwargs['wave']
+            self.flux = kwargs['flux']
+            if len(kwargs.get('noise','')) > 0:
+                self.noise = kwargs['noise']
+            else:
+                self.noise = numpy.array([numpy.nan for i in self.wave])
+
+# search database for a particular file
         elif self.ismodel == False and self.filename != '':
             kwargs['filename']=self.filename
             kwargs['silent']=True
@@ -180,27 +198,18 @@ class Spectrum(object):
                     sdb = t
             except:
                 print('Warning: problem reading in source or spectral database')            
-        else:
-            sdb = False
-
-# set up folder - by default this is local data directory
-        kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DATA_FOLDER)
-        self.simplefilename = os.path.basename(self.filename)
-        self.file = self.filename
-        self.name = kwargs.get('name',self.simplefilename)
-        kwargs['filename'] = self.filename
-
-# option 3: wave and flux are given
-        if len(kwargs.get('wave','')) > 0 and len(kwargs.get('flux','')) > 0:
-            self.wave = kwargs['wave']
-            self.flux = kwargs['flux']
-            if len(kwargs.get('noise','')) > 0:
-                self.noise = kwargs['noise']
-            else:
-                self.noise = numpy.array([numpy.nan for i in self.wave])
+#        else:
+#            sdb = False
 
 # read in data from file
         elif self.filename != '':
+
+# set up folder - by default this is local data directory
+            kwargs['folder'] = kwargs.get('folder',DATA_FOLDER)
+            self.simplefilename = os.path.basename(self.filename)
+            self.file = self.filename
+            self.name = kwargs.get('name',self.simplefilename)
+            kwargs['filename'] = self.filename
 
 # return prior spectrum - THIS IS NOT WORKING SO COMMENTED OUT
 #            if self.filename in list(SPECTRA_READIN.keys()) and self.runfast == True:
@@ -222,6 +231,7 @@ class Spectrum(object):
             self.flux = []
             self.noise = []
             print ('Warning: Creating an empty Spectrum object')
+            return
 
 # process spectral data
         if len(self.wave) > 0:
@@ -238,11 +248,11 @@ class Spectrum(object):
                 self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
 # convert to astropy quantities with units
 # assuming input is flam in erg/s/cm2/micron
-            if ~isinstance(self.wave,u.quantity.Quantity):
+            if not isinstance(self.wave,u.quantity.Quantity):
                 self.wave = numpy.array(self.wave)*self.wunit
-            if ~isinstance(self.flux,u.quantity.Quantity):
+            if not isinstance(self.flux,u.quantity.Quantity):
                 self.flux = numpy.array(self.flux)*self.funit
-            if ~isinstance(self.wave,u.quantity.Quantity):
+            if not isinstance(self.noise,u.quantity.Quantity):
                 self.noise = numpy.array(self.noise)*self.funit
 # some conversions
             self.flam = self.flux

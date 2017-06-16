@@ -1,0 +1,167 @@
+<html>
+
+<!-- START OF HEADER -->
+
+<head>
+<title>SPLAT</title>
+
+<link rel="shortcut icon" href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/graphics/splat_logo.jpg">
+<link rel="stylesheet" type="text/css" href="http://www.browndwarfs.org/spexprism/styles/mainstyle.css">
+
+<meta name="keywords" content="low mass stars, brown dwarfs, M dwarfs, L dwarfs, T dwarfs, astronomy, astrophysics, SpeX, near-infrared, spectroscopy">
+</head>
+
+<!-- <body> --><body style="background-color:ffffff;" style="font-family:IMPACT;">
+<!-- 
+BODY
+ {
+ color:#000000;
+ background-color:#B3C0C4;
+ font-family:IMPACT;
+ }
+a { text-decoration:none; }
+a:link {color:#660033; }
+a:visited {color:#660033; }
+a:hover { color:#ff0000; }
+h1 {font-size:24pt; color:#660033; }
+h2 {font-size:14pt; color:#660033; text-decoration:italics; }
+ -->
+<a name="top"></a>
+
+
+<table cellpadding=1>
+<tr>
+<td valign=middle align=center>
+
+<img src="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/graphics/splat_logo.jpg" height=100 width=103 border=0 vspace=3 hspace=10 align=middle><br>
+<!-- <img src="http://www.browndwarfs.org/graphics/titlesm.jpg" width=180 height=25 border=0 vspace=3 hspace=10 align=middle> -->
+</a>
+
+<td valign=middle>
+<h1>The SpeX Prism Library Analysis Toolkit</h1>
+</tr>
+</table>
+
+<table cellpadding=15>
+<tr>
+<td align=right valign=top width=100>
+<br>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/index.html">Home</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/about.html">Using the Libraries</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/library.html">The Libraries</a></h3>
+<h3><a href="in.html">SPLAT Interface</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/publications.html">Publications</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/links.html">Links</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/contact.html">Contact</a></h3>
+<h3><a href="http://pono.ucsd.edu/~adam/browndwarfs/spexprism/acknowledgements.html">Acknowledgements</a></h3>
+</td>
+
+<td width=600 valign=top>
+<br>
+
+<!-- END OF HEADER -->
+
+
+<hr width=200 align=left></h2>
+
+<p>
+Welcome to SPLAT! Here, you can access the SpeX Prism Library Analysis Toolkit (or <a href="https://www.google.com/url?q=http://pono.ucsd.edu/~adam/browndwarfs/splat/&sa=D&ust=1470083639367000&usg=AFQjCNFPEXUTlHHl8zZDHoL8gh43Uh_SLg">SPLAT</a>) to quickly generate interactive spectrum plots of Ultra Cool Dwarfs from the 
+SpeX Prism Library.<br><p> To generate your plot, enter your data here:
+
+<!--Add "Get Started!" Button here. -->
+
+
+<!--This is where you input your data.-->
+<center><form class = "form-horizontal"  method="post" enctype="multipart/form-data" action="{{ url_for('load_spectra') }}">
+				
+					<input class="firstForm" type="text" name="path" placeholder="Path to file" multiple="">
+					<input type="submit" name="submit" value="Load Spectra">
+					</div>	
+			</form>
+		<hr>
+			or<form class = "form-horizontal" method="post" enctype="multipart/form-data" action="{{ url_for('load_spectra') }}">
+				<input type="text" name="name" placeholder = "Shortname or Simbad Name" />
+				<input type="submit" name="submit" value="Load Spectra ">
+			</form>
+		<hr>
+			or<form class = "form-horizontal" method="post" enctype="multipart/form-data" action="{{ url_for('load_spectra') }}">
+				<p>
+					<input type="text" name="sp1" placeholder = "SpT 1" />
+					+
+					<input type="text" name="sp2" placeholder = "SpT 2" />
+				</p>		
+				<p>
+					<input type="text" name="mag1" placeholder = "Low Magnitude" />
+					+
+					<input type="text" name="mag2" placeholder = "High Magnitude" />
+				</p>
+				<p>
+					<input type="text" name="snr" placeholder = "Signal to Noise" />
+					or
+					<input type="text" name="date" placeholder = "YYYYMMDD" />
+				</p>
+			<table class="nav" align="center">
+				<tr>
+					<td>
+						<div class="nav_button">
+						<div class="b_left"><input type="submit" style="loadButton" name="submit" value="Load Spectra  "></div>
+						<div class="b_middle"></div>
+						<div class="b_right"></div>
+						</div>				
+					</td>
+				</tr>
+			</table>	
+			</form>
+			
+		<hr>or
+		<input type="submit" style="loadButton" name="submit" value="Get Lucky!">
+		
+</div></center>
+<p>
+The interactivity of the spectrum comes from <a href="http://bokeh.pydata.org/en/latest/">Bokeh</a>, a Python interactive visualization library. Bokeh provides elegant, concise construction of novel graphics with high-performance interactivity over very large or streaming datasets in a quick and easy way.<br>
+In the future, more SPLAT functions will be added to this interface until it is a fully functional interface.
+
+<p>
+
+<b>Mahalo to those of you who have contributed to this site!</b>
+
+<ul>
+<li>Andrew Davis 
+<li>Jessica Birky
+<li>Guillaume Ship
+<li>Russell Van Linge
+<li>Elizabeth Moreno
+<li>Tomoki Tamiya
+<li>Vidur Butalia
+</ul>
+
+<!-- BEGIN FOOTER -->
+
+</td>
+</tr>
+</table>
+
+<br><br><br>
+
+<a href="http://www.browndwarfs.org/spexprism/">The SpeX Prism Libraries</a><br> http://www.browndwarfs.org/spexprism/<br><br>
+
+This site has been visited
+<!-- Start of StatCounter Code. Let's see if we can make this useful! -->
+<script type="text/javascript">
+var sc_project=3306879; 
+var sc_invisible=0; 
+var sc_partition=36; 
+var sc_security="cb1a8df0"; 
+var sc_text=3; 
+</script>
+
+<script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script><noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c37.statcounter.com/3306879/0/cb1a8df0/0/" alt="click analytics" /></a></div></noscript>
+<!-- End of StatCounter Code -->
+times since 4 January 2008 - <a href="http://my.statcounter.com/project/standard/stats.php?project_id=3306879&guest=1">View Stats</a>
+
+
+</body>
+
+<!-- END FOOTER -->
+
+</html>

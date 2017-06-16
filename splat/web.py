@@ -8,7 +8,6 @@ from __future__ import print_function, division
 
 # imports: internal
 import os
-import splat
 import sys
 
 # imports: external
@@ -18,12 +17,16 @@ from bokeh.models.widgets import Panel, Tabs
 from bokeh.embed import components
 from flask import Flask, render_template, request
 
+import splat
+from splat.initialize import *
+from splat.utilities import *
+import splat.plot as splot
+
 app = Flask(__name__)
 
 app.config['UPLOAD_FOLDER'] = '/tmp/'
 # These are the extension that we are accepting to be uploaded
 app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'fits'])
-
 
 
 @app.route('/')
@@ -134,7 +137,7 @@ def load_spectra():
 
 			for s in sp:
 				spectral_type = splat.classifyByStandard(s)[0]
-				mpl_fig = splat.plotSpectrum(s, web=True, uncertainty = True, mdwarf=True)[0]
+				mpl_fig = splot.plotSpectrum(s, web=True, uncertainty = True)[0]
 				bokehfig = mpl.to_bokeh(fig=mpl_fig)
 				bokehfig.set(x_range=Range1d(.8,2.4),y_range=Range1d(0,s.fluxMax().value*1.2))
 #				sys.stdout = open("out1.txt", "w") 
@@ -153,7 +156,7 @@ def load_spectra():
 		except:
 				return render_template('input.html', error = "\n\nProblem Plotting Spectra")
 		
-		return render_template('out.html', star_type = spectral_type, script=script,  div=div_dict)	
+		return render_template('output.html', star_type = spectral_type, script=script,  div=div_dict)	
 
 if __name__ == '__main__':
 	port = int(os.environ.get('PORT', 5000))

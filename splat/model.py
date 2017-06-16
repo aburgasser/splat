@@ -210,7 +210,7 @@ def _processModels(*args,**kwargs):
     else:
         raise ValueError('\nHave not yet gotten model set {} into _processModels'.format(modelset))
 
-    outputfolder = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+modelset+'/'
+    outputfolder = SPECTRAL_MODEL_FOLDER+'/'+modelset+'/'
     if len(files) == 0: 
         raise ValueError('Could not find spectral model files in {}'.format(SPECTRAL_MODELS[modelset]['rawfolder']))        
 
@@ -303,7 +303,6 @@ def _smooth2resolution(wave,flux,resolution,**kwargs):
 
 
 
-
 def loadModel(*args, **kwargs):
     '''
     Purpose: 
@@ -337,6 +336,7 @@ def loadModel(*args, **kwargs):
         :param: **folder**: string of the folder name containing the model set (default = '')
         :param: **filename**: string of the filename of the desired model; should be a space-delimited file containing columns for wavelength (units of microns) and surface flux (F_lambda units of erg/cm^2/s/micron) (default = '')
         :param: **force**: force the filename to be exactly as specified
+        :param: **fast**: set to True to do a fast interpolation if needed, only for Teff and logg (default = False)
         :param: **url**: string of the url to the SPLAT website (default = 'http://www.browndwarfs.org/splat/')
 
     Output:
@@ -412,7 +412,7 @@ def loadModel(*args, **kwargs):
 
 
 # set replacements
-    kwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
+    kwargs['folder'] = SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
 
 # preset defaults
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
@@ -605,7 +605,7 @@ def loadInterpolatedModel(*args,**kwargs):
         mkwargs['instrument'] = 'SED'
         mkwargs['name'] = mkwargs['model']+' SED'
 
-    mkwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mkwargs['model']+'/'
+    mkwargs['folder'] = SPECTRAL_MODEL_FOLDER+mkwargs['model']+'/'
 
 # some special defaults
     if mkwargs['model'] == 'morley12':
@@ -618,85 +618,147 @@ def loadInterpolatedModel(*args,**kwargs):
             mkwargs['cld'] = 'f50'
 
 # first get model parameters
-    parameters = _loadModelParameters(**mkwargs)
     if _checkModelParametersInRange(mkwargs) == False:
         raise ValueError('\n\nModel parameter values out of range for model set {}\n'.format(mkwargs['model']))
     
-# check that given parameters are in range
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        if ms=='teff' or ms =='logg' or ms=='z':
-            if (float(mkwargs[ms]) < numpy.min(parameters[ms]) or float(mkwargs[ms]) > numpy.max(parameters[ms])):
-                raise ValueError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,mkwargs[ms],mkwargs['model']))
-#            return Spectrum()
-        else:
-            if (mkwargs[ms] not in parameters[ms]):
-                raise ValueError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,mkwargs[ms],mkwargs['model']))
-#            return Spectrum()
+# check that given parameters are in range - RETHINK THIS
+#    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+#        if ms=='teff' or ms =='logg' or ms=='z':
+#            if (float(mkwargs[ms]) < numpy.min(parameters[ms]) or float(mkwargs[ms]) > numpy.max(parameters[ms])):
+#                raise ValueError('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,mkwargs[ms],mkwargs['model']))
+#        else:
+#            if (mkwargs[ms] not in parameters[ms]):
+#                raise ValueError('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,mkwargs[ms],mkwargs['model']))
+
+
+
+# FAST METHOD - just calculate a simple weight factor that linearly interpolates between grid points (all logarithmic)
+
+    if kwargs.get('fast',True) == True:
+        parameters = _loadModelParameters(model=mkwargs['model'],pandas=True)
+        mparams = {}
+        mweights = {}
+        mgrid = []
+        pgrid = []
+        plin = []
+        for ms in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+            if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'discrete': 
+                mparams[ms] = mkwargs[ms]
+                mweights[ms] = 1.
+                plin.append(ms)
+            else:                
+                l = parameters[parameters[ms] <= mkwargs[ms]].sort(ms)[ms].iloc[-1]
+                h = parameters[parameters[ms] >= mkwargs[ms]].sort(ms)[ms].iloc[0]
+                if ms == 'teff':
+                    d = numpy.log10(h)-numpy.log10(l)
+                    w = (numpy.log10(h)-numpy.log10(mkwargs[ms]))/d
+                else:
+                    d = h-l
+                    w = (h-mkwargs[ms])/d
+                if d == 0.: w = 0.5
+                mparams[ms] = [l,h]
+                mweights[ms] = w
+                mgrid.append([l,h])
+                pgrid.append(ms)
+
+# generate all possible combinations - doing this tediously due to concerns over ordering
+        x = numpy.meshgrid(*mgrid)
+        a = {}
+        weights = numpy.ones(len(x[0].flatten()))
+        for i,ms in enumerate(pgrid): 
+            a[ms] = x[i].flatten()
+            for j,v in enumerate(a[ms]):
+                if v == mparams[ms][0]:
+                    weights[j] *= mweights[ms]
+                else:
+                    weights[j] *= (1.-mweights[ms])
+
+# read in models
+        models = []
+        for i in numpy.arange(len(weights)):
+            mparam = copy.deepcopy(mkwargs)
+            for ms in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+                if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'discrete': 
+                    mparam[ms] = mkwargs[ms]
+                else:
+                    mparam[ms] = a[ms][i]
+            models.append(loadModel(**mparam))
+
+# create interpolation
+        mflx = []
+        for i,w in enumerate(models[0].wave):
+            val = numpy.array([numpy.log10(m.flux.value[i]) for m in models])
+            mflx.append(10.**(numpy.sum(val*weights)/numpy.sum(weights)))
+
+
+# REGULAR METHOD - uses meshgrid & griddata - about 4x slower
+    else:
 
 # identify grid points around input parameters
 # 3x3 grid for teff, logg, z
+        parameters = _loadModelParameters(model=mkwargs['model'])
 
-    tvals = numpy.array([float(p['teff']) for p in parameters['parameter_sets']])
-    tdiff = numpy.array([numpy.log10(float(mkwargs['teff']))-numpy.log10(v) for v in tvals])
-    gvals = numpy.array([float(p['logg']) for p in parameters['parameter_sets']])
-    gdiff = numpy.array([float(mkwargs['logg'])-v for v in gvals])
-    zvals = numpy.array([float(p['z']) for p in parameters['parameter_sets']])
-    zdiff = numpy.array([float(mkwargs['z'])-v for v in zvals])
-    dist = tdiff**2+gdiff**2+zdiff**2
+        tvals = numpy.array([float(p['teff']) for p in parameters['parameter_sets']])
+        gvals = numpy.array([float(p['logg']) for p in parameters['parameter_sets']])
+        zvals = numpy.array([float(p['z']) for p in parameters['parameter_sets']])
+        tdiff = numpy.array([numpy.log10(float(mkwargs['teff']))-numpy.log10(v) for v in tvals])
+        gdiff = numpy.array([float(mkwargs['logg'])-v for v in gvals])
+        zdiff = numpy.array([float(mkwargs['z'])-v for v in zvals])
+        dist = tdiff**2+gdiff**2+zdiff**2
 
 # get closest models in 8 quadrant points
-    mparams = []
+        mparams = []
 #    mparam_names = []
-    psets = numpy.array(parameters['parameter_sets'])
-    for i in numpy.arange(0,2):
-        dt = dist[numpy.where(tdiff*((-1)**i)>=0)]
-        pt = psets[numpy.where(tdiff*((-1)**i)>=0)]
-        gt = gdiff[numpy.where(tdiff*((-1)**i)>=0)]
-        zt = numpy.round(zdiff[numpy.where(tdiff*((-1)**i)>=0)]*50.)/50.
-        for j in numpy.arange(0,2):
-            dg = dt[numpy.where(gt*((-1)**j)>=0)]
-            pg = pt[numpy.where(gt*((-1)**j)>=0)]
-            zg = zt[numpy.where(gt*((-1)**j)>=0)]
-            for k in numpy.arange(0,2):
-                dz = dg[numpy.where(zg*((-1)**k)>=0)]
-                pz = pg[numpy.where(zg*((-1)**k)>=0)]
+        psets = numpy.array(parameters['parameter_sets'])
+        for i in numpy.arange(0,2):
+            dt = dist[numpy.where(tdiff*((-1)**i)>=0)]
+            pt = psets[numpy.where(tdiff*((-1)**i)>=0)]
+            gt = gdiff[numpy.where(tdiff*((-1)**i)>=0)]
+            zt = numpy.round(zdiff[numpy.where(tdiff*((-1)**i)>=0)]*50.)/50.
+            for j in numpy.arange(0,2):
+                dg = dt[numpy.where(gt*((-1)**j)>=0)]
+                pg = pt[numpy.where(gt*((-1)**j)>=0)]
+                zg = zt[numpy.where(gt*((-1)**j)>=0)]
+                for k in numpy.arange(0,2):
+                    dz = dg[numpy.where(zg*((-1)**k)>=0)]
+                    pz = pg[numpy.where(zg*((-1)**k)>=0)]
 
 # if we can't get a quadrant point, quit out
-                if len(pz) == 0: 
+                    if len(pz) == 0: 
 #                    print(i,j,k)
 #                    print(pg)
 #                    print(zg)
 #                    print(zg)
-                    raise ValueError('\n\nModel parameter values out of range for model set {}\n'.format(mkwargs['model']))
+                        raise ValueError('\n\nModel parameter values out of range for model set {}\n'.format(mkwargs['model']))
 
-                pcorner = pz[numpy.argmin(dz)]
-                mparams.append(pz[numpy.argmin(dz)])
+                    pcorner = pz[numpy.argmin(dz)]
+                    mparams.append(pz[numpy.argmin(dz)])
 
 # generate meshgrid with slight offset and temperature on log scale
-    rng = []
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        if ms=='teff' or ms =='logg' or ms=='z':
-            vals = [float(m[ms]) for m in mparams]
-            r = [numpy.min(vals),numpy.max(vals)]
-            if numpy.absolute(r[0]-r[1]) < 1.e-3*numpy.absolute(parameters[ms][1]-parameters[ms][0]):
-                r[1] = r[0]+1.e-3*numpy.absolute(parameters[ms][1]-parameters[ms][0])
-            if ms == 'teff':
-                r = numpy.log10(r)
-            rng.append(r)
-    mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
+        rng = []
+        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+            if ms=='teff' or ms =='logg' or ms=='z':
+                vals = [float(m[ms]) for m in mparams]
+                r = [numpy.min(vals),numpy.max(vals)]
+                if numpy.absolute(r[0]-r[1]) < 1.e-3*numpy.absolute(parameters[ms][1]-parameters[ms][0]):
+                    r[1] = r[0]+1.e-3*numpy.absolute(parameters[ms][1]-parameters[ms][0])
+                if ms == 'teff':
+                    r = numpy.log10(r)
+                rng.append(r)
+        mx,my,mz = numpy.meshgrid(rng[0],rng[1],rng[2])
 
 # read in unique models
-    bmodels = {}
-    models = []
-    mp = copy.deepcopy(mparams[0])
-    for i in numpy.arange(len(mx.flatten())):
-        mp['teff'] = int(numpy.round(10.**(mx.flatten()[i])))
-        mp['logg'] = my.flatten()[i]
-        mp['z'] = mz.flatten()[i]
-        mstr = '{:d}{:.1f}{:.1f}'.format(mp['teff'],mp['logg'],mp['z'])
-        if mstr not in list(bmodels.keys()):
-            bmodels[mstr] = loadModel(instrument=mkwargs['instrument'],force=True,**mp)
-        models.append(bmodels[mstr])
+        bmodels = {}
+        models = []
+        mp = copy.deepcopy(mparams[0])
+        for i in numpy.arange(len(mx.flatten())):
+            mp['teff'] = int(numpy.round(10.**(mx.flatten()[i])))
+            mp['logg'] = my.flatten()[i]
+            mp['z'] = mz.flatten()[i]
+            mstr = '{:d}{:.1f}{:.1f}'.format(mp['teff'],mp['logg'],mp['z'])
+            if mstr not in list(bmodels.keys()):
+                bmodels[mstr] = loadModel(instrument=mkwargs['instrument'],force=True,**mp)
+            models.append(bmodels[mstr])
 
 
 #    mpsmall = [dict(y) for y in set(tuple(x.items()) for x in mparams)]
@@ -726,23 +788,23 @@ def loadInterpolatedModel(*args,**kwargs):
 #    for i,m in enumerate(mparam_names):
 #        models.append(bmodels[numpy.where(bmodel_names==m)][0])
 
-    if kwargs.get('verbose',False):
-        print(mx.flatten())
-        print([m.teff for m in models])
-        print(my.flatten())
-        print([m.logg for m in models])
-        print(mz.flatten())
-        print([m.z for m in models])
+        if kwargs.get('verbose',False):
+            print(mx.flatten())
+            print([m.teff for m in models])
+            print(my.flatten())
+            print([m.logg for m in models])
+            print(mz.flatten())
+            print([m.z for m in models])
 #        print(mparams)
 #        print(mparam_names)
 
 
 # final interpolation
-    mflx = []
-    for i,w in enumerate(models[0].wave):
-        val = numpy.array([numpy.log10(m.flux.value[i]) for m in models])
-        mflx.append(10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),\
-            val,(numpy.log10(float(mkwargs['teff'])),float(mkwargs['logg']),float(mkwargs['z'])),'linear')))
+        mflx = []
+        for i,w in enumerate(models[0].wave):
+            val = numpy.array([numpy.log10(m.flux.value[i]) for m in models])
+            mflx.append(10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),\
+                val,(numpy.log10(float(mkwargs['teff'])),float(mkwargs['logg']),float(mkwargs['z'])),'linear')))
 
     return Spectrum(wave=models[0].wave,flux=mflx*models[0].funit,**mkwargs)
 
@@ -758,10 +820,10 @@ def _loadModelParameters(*args,**kwargs):
 
     Required Inputs:
         :param: model: set of models to use; see options in `loadModel()`_ (default = 'BTSettl2008')
-
-    Optional Inputs:
-        :param old: Old format for returning model parameters based parameter.txt file; now obsolete (default = False)
     
+    Optional Inputs:
+        :param: pandas: return a pandas Dataframe
+
     The parameters for `loadModel()`_ can also be used here.
 
     Output:
@@ -784,26 +846,65 @@ def _loadModelParameters(*args,**kwargs):
         parameters[ms] = []
 
 # establish parameters from list of filenames
-    if kwargs.get('old',False) == False:
-        mfiles = glob.glob(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+mset+'*.txt')
-        if len(mfiles) == 0:
-            raise ValueError('\nCould not find any model files locally; try running without the "new" keyword')
-        for mf in mfiles:
-            sp = mf.replace('.txt','').split('_')[1:]
-            if len(sp) >= len(SPECTRAL_MODEL_PARAMETERS_INORDER):
-                p = {'model': mset}
-                for i,ms in enumerate(SPECTRAL_MODEL_PARAMETERS_INORDER):
-                    if sp[i] not in parameters[ms]:
-                        parameters[ms].append(sp[i])
-                    p[ms] = sp[i]
-                parameters['parameter_sets'].append(p)
-        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-            if ms=='teff' or ms =='logg' or ms=='z':
-                parameters[ms] = [float(x) for x in parameters[ms]]
-            parameters[ms].sort()
-            parameters[ms] = numpy.array(parameters[ms])
+#    if kwargs.get('old',False) == False:
+    mfiles = glob.glob(SPECTRAL_MODEL_FOLDER+mset+'/'+mset+'*.txt')
+    if len(mfiles) == 0:
+        raise ValueError('\nCould not find any model files in {}'.format(SPECTRAL_MODEL_FOLDER+mset+'/'+mset))
+    for mf in mfiles:
+        sp = mf.replace('.txt','').split('_')[1:]
+        if len(sp) >= len(SPECTRAL_MODEL_PARAMETERS_INORDER):
+            p = {'model': mset}
+            for i,ms in enumerate(SPECTRAL_MODEL_PARAMETERS_INORDER):
+                if sp[i] not in parameters[ms]:
+                    parameters[ms].append(sp[i])
+                p[ms] = sp[i]
+            parameters['parameter_sets'].append(p)
+    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+        if ms=='teff' or ms =='logg' or ms=='z':
+            parameters[ms] = [float(x) for x in parameters[ms]]
+        parameters[ms].sort()
+        parameters[ms] = numpy.array(parameters[ms])
+
+    if kwargs.get('pandas',False) == True:
+        dp = pandas.DataFrame(parameters['parameter_sets'])
+        for ms in ['teff','logg','z']: dp[ms] = [float(t) for t in dp[ms]]
+        return dp
+    else:
         return parameters
 
+
+def blackbody(temperature,**kwargs):
+    '''
+    This program is still in development
+    '''
+
+    nsamp = kwargs.get('samples',1000)
+    nsamp = kwargs.get('nsamp',nsamp)
+    wunit = kwargs.get('wunit',u.micron)
+    wunit = kwargs.get('wave_unit',wunit)
+    w0 = kwargs.get('w0',0.1*u.micron)
+    w0 = kwargs.get('lam0',w0)
+    w1 = kwargs.get('w1',100.*u.micron)
+    w1 = kwargs.get('lam1',w1)
+    wrng = kwargs.get('wave_range',[w0,w1])
+    wrng = kwargs.get('range',wrng)
+    wrng = kwargs.get('wrng',wrng)
+    if not isinstance(wrng[0],u.quantity.Quantity):
+        wrng = [w*wunit for w in wrng]
+    wrng = [w.to(wunit) for w in wrng]
+    if not isinstance(temperature,u.quantity.Quantity):
+        temperature *= u.K
+    logsamp = kwargs.get('log',False)
+    logsamp = kwargs.get('logsample',logsamp)
+
+    wave = numpy.linspace(wrng[0],wrng[1],nsamp)
+    if logsamp == True: wave = numpy.logspace(numpy.log10(wrng[0].value),numpy.log10(wrng[1].value),nsamp)*wunit
+    wave = kwargs.get('wave',wave)
+    if not isinstance(wave,u.quantity.Quantity):
+        wave*=wunit
+
+    flux = numpy.pi*((2.*const.h*const.c**2)/(wave**5)).to(u.erg/u.second/u.cm**2/u.micron)/(numpy.exp((const.h*const.c/(const.k_B*wave*temperature)).to(u.m/u.m))-1.)
+    return splat.Spectrum(wave=wave,flux=flux,name='Blackbody T = {} K'.format(temperature.value),surface=True)
 
 
 #######################################################
@@ -1172,8 +1273,10 @@ def modelFitMCMC(spec, **kwargs):
 
     
     :param output: filename or filename base for output files (optional; alternate keywords ``filename``, ``filebase``)
-    :param savestep: indicate when to save data output (e.g. ``savestep = 10`` will save the output every 10 samples)
-    :type savestep: optional, default = ``nsamples/10``
+    :param savestep: indicate when to save data output; e.g. ``savestep = 10`` will save the output every 10 samples (optional, default = ``nsamples``/10)
+
+
+
     :param dataformat: output data format type
     :type dataformat: optional, default = 'ascii.csv'
     :param initial_guess: array including initial guess of the effective temperature, surface gravity and metallicity of ``spec``.
@@ -1375,7 +1478,10 @@ def modelFitMCMC(spec, **kwargs):
                     chisqr1,alpha1 = compareSpectra(spec, model ,**mkwargs)  
 
 # Probability that it will jump to this new point; determines if step will be taken
-                    h = 1. - stats.f.cdf(chisqr1/chisqr0, eff_dof, eff_dof)
+                    if kwargs.get('stat','ftest').lower() == 'ftest' or kwargs.get('stat','f-test').lower() == 'f-test':
+                        h = 1. - stats.f.cdf(chisqr1/chisqr0, eff_dof, eff_dof)
+                    elif kwargs.get('stat','ftest').lower() == 'exponential':
+                        h = 1. - numpy.exp(0.5*(chisqr1-chisqr0)/eff_dof)
 #                    print(chisqr1, chisqr0, eff_dof, h)
                     if numpy.random.uniform(0,1) < h:
                         param0 = copy.deepcopy(param1)
