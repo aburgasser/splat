@@ -116,7 +116,7 @@ def loadEvolModel(*model,**kwargs):
     if kwargs.get('verbose',False): print('You are using evolutionary models from {}'.format(EVOLUTIONARY_MODELS[model]['name']))
 
 # read in models
-    files = glob.glob(EVOLUTIONARY_MODEL_FOLDER+model+'/{}*.txt'.format(model))
+    files = glob.glob(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+model+'/{}*.txt'.format(model))
     if model == 'saumon08':
 
 # set metallicity
@@ -153,7 +153,7 @@ def loadEvolModel(*model,**kwargs):
         else:
             raise ValueError('\nCould not recognize cloud choice for Saumon model: must be cloud-free, hybrid or f2, not {}\n'.format(cloud))
 
-        files = glob.glob(EVOLUTIONARY_MODEL_FOLDER+model+'/{}_{}_{}*.txt'.format(model,Z,C))
+        files = glob.glob(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+model+'/{}_{}_{}*.txt'.format(model,Z,C))
 
 
 #######################################################################

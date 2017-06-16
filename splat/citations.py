@@ -343,11 +343,11 @@ def getBibTex(bibcode,**kwargs):
 
 # read locally first
     else:
-        biblibrary = kwargs.get('biblibrary', DB_FOLDER+BIBFILE)
+        biblibrary = kwargs.get('biblibrary', SPLAT_PATH+DB_FOLDER+BIBFILE)
 # check the file
         if not os.path.exists(biblibrary):
             if kwargs.get('verbose',True) == True: print('Could not find bibtex library {}'.format(biblibrary))
-            biblibrary = DB_FOLDER+BIBFILE
+            biblibrary = SPLAT_PATH+DB_FOLDER+BIBFILE
 
         if not os.path.exists(biblibrary):
             raise NameError('Could not find SPLAT main bibtext library {}; something is wrong'.format(biblibrary))

@@ -56,7 +56,7 @@ def fetchDatabase(*args, **kwargs):
         filename = args[0]
     kwargs['filename'] = kwargs.get('filename',filename)
     kwargs['filename'] = kwargs.get('file',kwargs['filename'])
-    kwargs['folder'] = kwargs.get('folder',DB_FOLDER)
+    kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DB_FOLDER)
     url = kwargs.get('url',SPLAT_URL)+kwargs['folder']
     local = kwargs.get('local',True)
     online = kwargs.get('online',not local and checkOnline())
@@ -1148,8 +1148,8 @@ def importSpectra(*args,**kwargs):
 #    t_merge.write(review_folder+splat.DB_SPECTRA_FILE,format='ascii.tab')
 
     if verbose:
-        print('\nDatabases updated; be sure to add these to primary databases in {}{}'.format(SPLAT_PATH,DB_FOLDER))
-        print('and to move spectral files from {}/published and {}/unpublished/ to {}{}\n'.format(review_folder,review_folder,SPLAT_PATH,DATA_FOLDER))
+        print('\nDatabases updated; be sure to add these to primary databases in {}'.format(SPLAT_PATH+DB_FOLDER))
+        print('and to move spectral files from {}/published and {}/unpublished/ to {}\n'.format(review_folder,review_folder,SPLAT_PATH+DATA_FOLDER))
 
     return
 

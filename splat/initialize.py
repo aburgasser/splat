@@ -23,6 +23,14 @@ BIBFILE = 'splat_bibs.bib'
 TMPFILENAME = 'splattmpfile'
 ACCESS_FILE = '.splat_access'
 HOME_FOLDER = os.path.expanduser('~')
+DATA_FOLDER = '/reference/Spectra/'
+FILTER_FOLDER = '/reference/Filters/'
+SPECTRAL_MODEL_FOLDER = '/reference/SpectralModels/'
+EVOLUTIONARY_MODEL_FOLDER = '/reference/EvolutionaryModels/'
+DOCS_FOLDER = '/docs/'
+DOCS_INDEX_HTML = '/docs/_build/html/index.html'
+WEB_HTML_BASE = '/docs/_templates/'
+DB_FOLDER = '/db/'
 
 #set the SPLAT PATH, either from set environment variable or from sys.path
 SPLAT_PATH = './'
@@ -40,14 +48,6 @@ if SPLAT_PATH == './':
     if max(checkpath):
         SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
 
-DATA_FOLDER = SPLAT_PATH+'/reference/Spectra/'
-FILTER_FOLDER = SPLAT_PATH+'/reference/Filters/'
-SPECTRAL_MODEL_FOLDER = SPLAT_PATH+'/reference/SpectralModels/'
-EVOLUTIONARY_MODEL_FOLDER = SPLAT_PATH+'/reference/EvolutionaryModels/'
-DOCS_FOLDER = SPLAT_PATH+'/docs/'
-DOCS_INDEX_HTML = SPLAT_PATH+'/docs/_build/html/index.html'
-WEB_HTML_BASE = SPLAT_PATH+'/docs/_templates/'
-DB_FOLDER = SPLAT_PATH+'/db/'
 
 MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 

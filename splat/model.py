@@ -210,7 +210,7 @@ def _processModels(*args,**kwargs):
     else:
         raise ValueError('\nHave not yet gotten model set {} into _processModels'.format(modelset))
 
-    outputfolder = SPECTRAL_MODEL_FOLDER+'/'+modelset+'/'
+    outputfolder = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+modelset+'/'
     if len(files) == 0: 
         raise ValueError('Could not find spectral model files in {}'.format(SPECTRAL_MODELS[modelset]['rawfolder']))        
 
@@ -412,7 +412,7 @@ def loadModel(*args, **kwargs):
 
 
 # set replacements
-    kwargs['folder'] = SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
+    kwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
 
 # preset defaults
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
@@ -605,7 +605,7 @@ def loadInterpolatedModel(*args,**kwargs):
         mkwargs['instrument'] = 'SED'
         mkwargs['name'] = mkwargs['model']+' SED'
 
-    mkwargs['folder'] = SPECTRAL_MODEL_FOLDER+mkwargs['model']+'/'
+    mkwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mkwargs['model']+'/'
 
 # some special defaults
     if mkwargs['model'] == 'morley12':
@@ -847,9 +847,9 @@ def _loadModelParameters(*args,**kwargs):
 
 # establish parameters from list of filenames
 #    if kwargs.get('old',False) == False:
-    mfiles = glob.glob(SPECTRAL_MODEL_FOLDER+mset+'/'+mset+'*.txt')
+    mfiles = glob.glob(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+mset+'*.txt')
     if len(mfiles) == 0:
-        raise ValueError('\nCould not find any model files in {}'.format(SPECTRAL_MODEL_FOLDER+mset+'/'+mset))
+        raise ValueError('\nCould not find any model files in {}'.format(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+mset))
     for mf in mfiles:
         sp = mf.replace('.txt','').split('_')[1:]
         if len(sp) >= len(SPECTRAL_MODEL_PARAMETERS_INORDER):

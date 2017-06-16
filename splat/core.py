@@ -64,8 +64,8 @@ STDS_VLG_SPEX = {}
 STDS_INTG_SPEX = {}
 
 # databases - using the .txt files for now, will need to change to SQL at a future date
-DB_SOURCES = ascii.read(DB_FOLDER+DB_SOURCES_FILE)
-DB_SPECTRA = ascii.read(DB_FOLDER+DB_SPECTRA_FILE)
+DB_SOURCES = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE)
+DB_SPECTRA = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SPECTRA_FILE)
 
 
 # suppress warnings - probably not an entirely safe approach!
@@ -136,6 +136,7 @@ class Spectrum(object):
         self.instrument = kwargs.get('instrument','SPEX_PRISM')
         self.history = []
         self.runfast = kwargs.get('runfast',True)
+        self.published = kwargs.get('published','N')
 
 # breakouts for specific instruments
         if kwargs.get('APOGEE') == True and kwargs.get('file',False) != False:
@@ -153,13 +154,13 @@ class Spectrum(object):
 
 # process arguments
 # option 1: a filename is given
-        if len(args) > 1:
+        if len(args) > 0:
             if isinstance(args[0],str):
                 self.filename = args[0]
 
 # option 2: a spectrum ID is given
-            if isinstance(args[0],int):
-                self.idkey = args[0]
+            elif isinstance(args[0],int) or isinstance(args[0],float):
+                self.idkey = int(args[0])
 
 # option 3: an array is given - interpret as wave, flux, noise
         if len(args) > 1:
@@ -189,23 +190,21 @@ class Spectrum(object):
                 self.noise = numpy.array([numpy.nan for i in self.wave])
 
 # search database for a particular file
-        elif self.ismodel == False and self.filename != '':
-            kwargs['filename']=self.filename
-            kwargs['silent']=True
-            try:
-                t = searchLibrary(**kwargs)
-                if len(t) > 0:
-                    sdb = t
-            except:
-                print('Warning: problem reading in source or spectral database')            
+        elif self.filename != '':
+            if self.ismodel == False:
+                kwargs['filename']=self.filename
+                kwargs['silent']=True
+                try:
+                    t = searchLibrary(**kwargs)
+                    if len(t) > 0:
+                        sdb = t
+                except:
+                    print('Warning: problem reading in source or spectral database')            
 #        else:
 #            sdb = False
 
-# read in data from file
-        elif self.filename != '':
-
 # set up folder - by default this is local data directory
-            kwargs['folder'] = kwargs.get('folder',DATA_FOLDER)
+            kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DATA_FOLDER)
             self.simplefilename = os.path.basename(self.filename)
             self.file = self.filename
             self.name = kwargs.get('name',self.simplefilename)
@@ -216,14 +215,14 @@ class Spectrum(object):
 #                self = SPECTRA_READIN[self.filename]
 #                return
 
-            try:
-                rs = readSpectrum(self.filename,**kwargs)
-                self.wave = rs['wave']
-                self.flux = rs['flux']
-                self.noise = rs['noise']
-                self.header = rs['header']
-            except:
-                raise NameError('\nCould not load spectral file {:s}, recheck the filename and path'.format(kwargs.get('filename','')))
+#            try:
+            rs = readSpectrum(self.filename,**kwargs)
+            self.wave = rs['wave']
+            self.flux = rs['flux']
+            self.noise = rs['noise']
+            self.header = rs['header']
+#            except:
+#                raise NameError('\nCould not load spectral file {:s}, recheck the filename and path'.format(kwargs.get('filename','')))
 
 # empty spectrum vessel (used for copying)
         else:
@@ -352,8 +351,8 @@ class Spectrum(object):
 
 
 # published? assume not
-        if not hasattr(self,'published'):
-            self.published = kwargs.get('published','N')
+#        if not hasattr(self,'published'):
+#            self.published = kwargs.get('published','N')
         
 
 # information on model
@@ -376,6 +375,7 @@ class Spectrum(object):
             self.shortname = self.name
             self.name = self.name+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.z)
             self.fscale = 'Surface'
+            self.published = 'Y'
 
 # populate header            
         else:
@@ -2462,8 +2462,9 @@ def readSpectrum(*args,**kwargs):
 
 # fits file
     if (ftype == 'fit' or ftype == 'fits'):
-        df = fits.open(file)
-        with fits.open(file) as data:
+#        df = fits.open(file)
+#        with fits.open(file, ignore_missing_end=True) as data:
+        with fits.open(file,ignore_missing_end=True) as data:
             data.verify('silentfix+warn')
             if 'NAXIS3' in list(data[0].header.keys()):
                 d = numpy.copy(data[0].data[0,:,:])
