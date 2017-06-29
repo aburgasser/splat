@@ -195,7 +195,17 @@ def plotSpectrum(*args, **kwargs):
         add in features characteristic of these classes
     telluric = False:
         mark telluric absorption features
-    legend, legends, label or labels:
+    band(s) = []
+        a single or array of 2-element arrays that indicate bands that you want to specifically shade in
+    bandcolor(s) = []
+        a single or array of colors to shade the bands (default = 'k')
+    bandalpha(s) = []
+        a single or array of alphas to shade the bands (default = 0.2)
+    bandlabel(s) = []
+        a single or array of labels to annotate the bands (default = '')
+    bandlabelposition(s) = []
+        a single or array of strings indicating the position of the labels; can be 'bottom', 'middle', or 'top' (default = 'bottom')
+    legend(s) or label(s):
         list of strings providing legend-style labels for each spectrum plotted
     legendLocation or labelLocation = 'upper right':
         place of legend; options are 'upper left', 'center middle', 'lower right' (variations thereof) and 'outside'
@@ -689,6 +699,48 @@ def plotSpectrum(*args, **kwargs):
                 rect = patches.Rectangle((waveRng[0],bound[2]),waveRng[1]-waveRng[0],bound[3]-bound[2],facecolor='0.95',alpha=0.2,color='0.95')
                 ax.add_patch(rect)
                 ax.text(numpy.mean(waveRng),bound[2]+3*yoff,r'$\oplus$',horizontalalignment='center',fontsize=fontsize)
+
+# overplot color swaths for pre-specified bands
+        bands = kwargs.get('bands',[])
+        bands = kwargs.get('band',bands)
+        if len(bands) > 0:
+            if len(bands) == 2 and isinstance(bands[0],list) == False: bands = [bands]
+            bandcolors = kwargs.get('bandcolors',[])
+            bandcolor = kwargs.get('bandcolor',bandcolors)
+            if not isinstance(bandcolors,list): bandcolors = [bandcolors]*len(bands)
+            if len(bandcolors) < len(bands): 
+                for i in range(len(bands)-len(bandcolors)): bandcolors.append('k')
+            bandalphas = kwargs.get('bandalphas',[])
+            bandalpha = kwargs.get('bandalpha',bandalphas)
+            if not isinstance(bandalphas,list): bandalphas = [bandalphas]*len(bands)
+            if len(bandalphas) < len(bands): 
+                for i in range(len(bands)-len(bandalphas)): bandalphas.append(0.2)
+            bandlabels = kwargs.get('bandlabels',[])
+            bandlabel = kwargs.get('bandlabel',bandlabels)
+            if not isinstance(bandlabels,list): bandlabels = [bandlabels]*len(bands)
+            if len(bandlabels) < len(bands): 
+                for i in range(len(bands)-len(bandlabels)): bandlabels.append('')
+            bandlabelpositions = kwargs.get('bandlabelpositions',[])
+            bandlabelposition = kwargs.get('bandlabelposition',bandlabelpositions)
+            if not isinstance(bandlabelpositions,list): bandlabelpositions = [bandlabelpositions]*len(bands)
+            if len(bandlabelpositions) < len(bands): 
+                for i in range(len(bands)-len(bandlabelpositions)): bandlabelpositions.append('bottom')
+            bandwidth = kwargs.get('bandwidth',0.1)
+            for i,b in enumerate(bands):
+                if not isinstance(b,list): 
+                    try:
+                        b = [float(b)-0.5*bandwidth,float(b)+0.5*bandwidth]
+                    except:
+                        print('\nWarning: plotSpectrum bands variables should be array of 2-element arrays; you passed {}'.format(bands))
+                        b = [0.,0.]
+                rect = patches.Rectangle((b[0],bound[2]),b[1]-b[0],bound[3]-bound[2],facecolor=bandcolors[i],color=bandcolors[i],alpha=bandalphas[i])
+                ax.add_patch(rect)
+                if bandlabelpositions[i].lower() == 'top':
+                    ax.text(numpy.mean(b),bound[3]-3*yoff,bandlabels[i],horizontalalignment='center',fontsize=fontsize)
+                elif bandlabelpositions[i].lower() == 'middle':
+                    ax.text(numpy.mean(b),0.5*(bound[2]+bound[3]),bandlabels[i],horizontalalignment='center',fontsize=fontsize)
+                else:
+                    ax.text(numpy.mean(b),bound[2]+3*yoff,bandlabels[i],horizontalalignment='center',fontsize=fontsize)
 
 # place inset - RIGHT NOW ONLY SETTING LIMITS WITH FIRST SPECTRUM IN LIST
         if inset == True and inset_xrange != False:

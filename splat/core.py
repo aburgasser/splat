@@ -175,7 +175,7 @@ class Spectrum(object):
         if self.idkey != False:
             try:
                 sdb = keySpectrum(self.idkey)
-                if sdb != False:
+                if isinstance(sdb,bool) == False:
                     self.filename = sdb['DATA_FILE'][0]
             except:
                 print('Warning: problem reading in spectral database')
@@ -273,7 +273,8 @@ class Spectrum(object):
 
 
 # populate information on source and spectrum from database
-        if sdb != False:
+#        print(sdb)
+        if isinstance(sdb,bool) == False:
             for k in sdb.keys():
                 setattr(self,k.lower(),str(sdb[k][0]))
             self.shortname = designationToShortName(self.designation)
@@ -1020,6 +1021,10 @@ class Spectrum(object):
            >>> sp.fluxMax()
            <Quantity 1.0 erg / (cm2 micron s)>
         '''
+        if len(self.flux) == 0:
+            print('\nWarning: spectrum object has a flux vector of zero length - maybe empty?')
+            return numpy.nan
+
         if kwargs.get('maskTelluric',True):            
             try:
                 fl = self.flux[numpy.where(numpy.logical_or(\
@@ -1066,15 +1071,24 @@ class Spectrum(object):
         if rng != False:
             if not isinstance(rng,list):
                 rng = [rng]
+            if isinstance(rng[0],u.quantity.Quantity): rng = [r.value for r in rng]
             if len(rng) < 2:
                 rng = [rng[0]-0.02,rng[0]+0.02]
-            self.scale(1./numpy.nanmax(self.flux.value[numpy.where(numpy.logical_and(self.wave > rng[0]*u.micron,self.wave < rng[1]*u.micron))]))
+            wave = self.wave
+            if isinstance(wave,u.quantity.Quantity): wave = wave.to(u.micron).value
+            flux = self.flux
+            if isinstance(flux,u.quantity.Quantity): flux = flux.value
+            scalefactor = numpy.nanmax(flux[numpy.where(numpy.logical_and(wave > rng[0],wave < rng[1]))])
         else:
-            self.scale(1./self.fluxMax(**kwargs).value,silent=True)
-        self.fscale = 'Normalized'
-        if not kwargs.get('silent',False):
+            scalefactor = self.fluxMax(**kwargs)
+        if isinstance(scalefactor,u.quantity.Quantity): scalefactor = scalefactor.value
+        if scalefactor == 0.: print('\nWarning: normalize is attempting to divide by zero; ignoring')
+        elif numpy.isnan(scalefactor) == True: print('\nWarning: normalize is attempting to divide by nan; ignoring')
+        else: 
+            self.scale(1./scalefactor,silent=True)
+            self.fscale = 'Normalized'
             self.history.append('Spectrum normalized')
-        self.snr = self.computeSN()
+            self.snr = self.computeSN()
         return
 
     def plot(self,**kwargs):
