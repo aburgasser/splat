@@ -142,7 +142,6 @@ def filterMag(sp,filt,*args,**kwargs):
 # check that requested filter is in list
     if isinstance(custom,bool) and isinstance(notch,bool):
         f0 = copy.deepcopy(filt)
-        print(custom,notch)
         f0 = checkFilter(f0)
         if f0 == False: 
             print('\nFilter {} is not specified in SPLAT'.format(filt))
@@ -279,15 +278,45 @@ def filterMag(sp,filt,*args,**kwargs):
     return val*outunit,err*outunit
 
 
-def filterInfo(**kwargs):
+def filterInfo(*args,**kwargs):
     '''
     :Purpose: Prints out the current list of filters in the SPLAT reference library.
     '''
 
-    fname = kwargs.get('filter',sorted(list(FILTERS.keys())))
+    if len(args) > 0: 
+        fname = list(args)
+    elif kwargs.get('filter',False) != False: 
+        fname = kwargs['filter']
+    else: 
+        fname = sorted(list(FILTERS.keys()))
+    if isinstance(fname,list) == False: 
+        fname = [fname]
+
     for k in fname:
-        if k in list(FILTERS.keys()):
-        	print('  '+k.replace('_',' ')+': '+FILTERS[k]['description'])
+        f = checkFilter(k)
+        if f != False:
+            print('  '+f.replace('_',' ')+': '+FILTERS[f]['description'])
+            if kwargs.get('verbose',False) == True or kwargs.get('long',False) == True:
+                fwave,ftrans = filterProfile(f,**kwargs)
+                try:
+                    fwave = fwave.to(u.micron)
+                except:
+                    fwave *= u.micron
+                fw = fwave[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
+                ft = ftrans[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
+                fw05 = fwave[numpy.where(ftrans > 0.5*numpy.nanmax(ftrans))]
+                lambda_mean = trapz(ft*fw,fw)/trapz(ft,fw)
+                lambda_pivot = numpy.sqrt(trapz(fw*ft,fw)/trapz(ft/fw,fw))
+                lambda_central = 0.5*(numpy.max(fw)+numpy.min(fw))
+                lambda_fwhm = numpy.max(fw05)-numpy.min(fw05)
+                lambda_min = numpy.min(fw)
+                lambda_max = numpy.max(fw)
+                print('Zeropoint = {} Jy'.format(FILTERS[f]['zeropoint']))
+                print('Central wavelength: = {:.3f}'.format(lambda_central))
+                print('Mean wavelength: = {:.3f}'.format(lambda_mean))
+                print('Pivot point: = {:.3f}'.format(lambda_pivot))
+                print('FWHM = {:.3f}'.format(lambda_fwhm))
+                print('Wavelength range = {:.3f} to {:.3f}\n'.format(lambda_min,lambda_max))             
         else:
         	print('  Filter {} not in SPLAT filter list'.format(k))
     return
@@ -356,9 +385,9 @@ def filterProperties(filt,**kwargs):
     if kwargs.get('verbose',False):
         print('\nFilter '+filt+': '+report['description'])
         print('Zeropoint = {} Jy'.format(report['zeropoint']))
-        print('Pivot point: = {:.3f} micron'.format(report['lambda_pivot']))
-        print('FWHM = {:.3f} micron'.format(report['lambda_fwhm']))
-        print('Wavelength range = {:.3f} to {:.3f} micron\n'.format(report['lambda_min'],report['lambda_max']))
+        print('Pivot point: = {:.3f}'.format(report['lambda_pivot']))
+        print('FWHM = {:.3f}'.format(report['lambda_fwhm']))
+        print('Wavelength range = {:.3f} to {:.3f}\n'.format(report['lambda_min'],report['lambda_max']))
     return report
 
 
