@@ -135,31 +135,29 @@ def filterMag(sp,filt,*args,**kwargs):
     notch = kwargs.get('notch',False)
     vega = kwargs.get('vega',True)
     ab = kwargs.get('ab',not vega)
+    rsr = kwargs.get('rsr',False)
     nsamples = kwargs.get('nsamples',100)
 
 
 # check that requested filter is in list
-    f0 = copy.deepcopy(filt)
-    f0 = checkFilter(f0)
     if isinstance(custom,bool) and isinstance(notch,bool):
+        f0 = copy.deepcopy(filt)
+        print(custom,notch)
         f0 = checkFilter(f0)
         if f0 == False: 
             print('\nFilter {} is not specified in SPLAT'.format(filt))
             filterInfo()
             return numpy.nan, numpy.nan
-    filt = f0
-    rsr = kwargs.get('rsr',FILTERS[filt]['rsr'])
-
-
+        filt = f0
+        
 # reset filter calculation methods based on filter design
-    if 'ab' in FILTERS[filt]['method']: 
-        ab = kwargs.get('ab',True)
-        vega = not ab
-    if 'vega' in FILTERS[filt]['method']: 
-        vega = kwargs.get('vega',True)
-        ab = not vega
-    if 'rsr' in FILTERS[filt]['method']: 
-        rsr = kwargs.get('rsr',True)
+        if 'ab' in FILTERS[filt]['method']: 
+            ab = kwargs.get('ab',True)
+            vega = not ab
+        if 'vega' in FILTERS[filt]['method']: 
+            vega = kwargs.get('vega',True)
+            ab = not vega
+        rsr = FILTERS[filt]['rsr']
 
 # other possibilities
     photons = kwargs.get('photons',False)
