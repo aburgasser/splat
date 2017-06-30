@@ -182,10 +182,12 @@ def filterMag(sp,filt,*args,**kwargs):
 # custom filter
     else:
         fwave,ftrans = custom[0],custom[1]
-    try:
+
+# units
+    if isinstance(fwave,u.quantity.Quantity) == True:
         fwave = fwave.to(u.micron)
-    except:
-        fwave *= u.micron
+    else:
+        fwave = fwave*u.micron
 
 # check that spectrum and filter cover the same wavelength ranges
     if numpy.nanmax(fwave) < numpy.nanmin(sp.wave) or numpy.nanmin(fwave) > numpy.nanmax(sp.wave):
@@ -301,7 +303,7 @@ def filterInfo(*args,**kwargs):
                 try:
                     fwave = fwave.to(u.micron)
                 except:
-                    fwave *= u.micron
+                    fwave = fwave*u.micron
                 fw = fwave[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
                 ft = ftrans[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
                 fw05 = fwave[numpy.where(ftrans > 0.5*numpy.nanmax(ftrans))]
@@ -367,7 +369,7 @@ def filterProperties(filt,**kwargs):
     try:
         fwave = fwave.to(u.micron)
     except:
-        fwave *= u.micron
+        fwave = fwave*u.micron
     fw = fwave[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
     ft = ftrans[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
     fw05 = fwave[numpy.where(ftrans > 0.5*numpy.nanmax(ftrans))]
@@ -423,8 +425,8 @@ def magToFlux(mag,filt,**kwargs):
     e_mag = kwargs.get('uncertainty',0.)
     e_mag = kwargs.get('unc',e_mag)
     e_mag = kwargs.get('e_mag',e_mag)
-    if not isinstance(mag,u.quantity.Quantity): mag*=u.s/u.s
-    if not isinstance(e_mag,u.quantity.Quantity): e_mag*=mag.unit
+    if not isinstance(mag,u.quantity.Quantity): mag=mag*u.s/u.s
+    if not isinstance(e_mag,u.quantity.Quantity): e_mag=e_mag*mag.unit
 
 # check that requested filter is in list
     filt = checkFilter(filt)
@@ -537,9 +539,9 @@ def visualizeFilter(filt,**kwargs):
             raise ValueError('Could not parse input {}'.format(filt))
     else:
         raise ValueError('Could not parse input {}'.format(filt))
-    if isinstance(fwave,u.quantity.Quantity) == False: fwave*=u.micron
+    if isinstance(fwave,u.quantity.Quantity) == False: fwave=fwave*u.micron
         
-    if kwargs.get('normalize',False): ftrans /= numpy.nanmax(ftrans)
+    if kwargs.get('normalize',False): ftrans = ftrans/numpy.nanmax(ftrans)
     xra = [numpy.nanmin(fwave.value),numpy.nanmax(fwave.value)]
     yra = [0,1.2*numpy.nanmax(ftrans)]
 
