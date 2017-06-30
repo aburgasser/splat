@@ -322,21 +322,21 @@ class Spectrum(object):
             self.slitpixelwidth = (self.slitwidth/self.pixelscale).value
             if isNumber(kwargs.get('resolution',False)) != False:
                 if kwargs['resolution'] > 0.:
-                    self.slitwidth *= self.resolution/kwargs['resolution']
-                    self.slitpixelwidth *= self.resolution/kwargs['resolution']
+                    self.slitwidth = self.slitwidth*self.resolution/kwargs['resolution']
+                    self.slitpixelwidth = self.slitpixelwidth*self.resolution/kwargs['resolution']
                     self.resolution = kwargs['resolution']
             if isNumber(kwargs.get('slitwidth',False)) != False:
                 sl = kwargs['slitwidth']
                 if isinstance(sl,u.quantity.Quantity): sl = sl.value
                 if s1 > 0.:
-                    self.resolution *= (self.slitwidth.value)/sl
-                    self.slitpixelwidth *= s1/(self.slitwidth.value)
+                    self.resolution = self.resolution*(self.slitwidth.value)/sl
+                    self.slitpixelwidth = self.slitpixelwidth*s1/(self.slitwidth.value)
                     self.slitwidth = kwargs['slitwidth']
-                    if not isinstance(self.slitwidth,u.quantity.Quantity): sef.slitwidth *= u.arcsec
+                    if not isinstance(self.slitwidth,u.quantity.Quantity): self.slitwidth = self.slitwidth*u.arcsec
             if isNumber(kwargs.get('slitpixelwidth',False)) != False:
                 if kwargs['slitpixelwidth'] > 0.:
-                    self.resolution *= self.slitpixelwidth/kwargs['slitpixelwidth']
-                    self.slitwidth *= kwargs['slitpixelwidth']/self.slitpixelwidth
+                    self.resolution = self.resolution*self.slitpixelwidth/kwargs['slitpixelwidth']
+                    self.slitwidth = self.slitwidth*kwargs['slitpixelwidth']/self.slitpixelwidth
                     self.slitpixelwidth = kwargs['slitpixelwidth']
         else:
             kys = list(splat.INSTRUMENTS.keys())
@@ -945,7 +945,7 @@ class Spectrum(object):
             Unit("micron")
         '''
         if not isinstance(rv,u.quantity.Quantity):
-            rv*=(u.km/u.s)
+            rv=rv*(u.km/u.s)
         rv.to(u.km/u.s)
         self.wave = self.wave*(1.+(rv/const.c).to(u.m/u.m))
         return
@@ -1307,8 +1307,8 @@ class Spectrum(object):
             self.variance = v(self.wave.value)*self.funit**2
             self.noise = [ns**0.5 for ns in self.variance.value]*self.funit
             self.snr = self.computeSN()
-            self.slitpixelwidth *= self.resolution/res
-            self.slitwidth *= self.resolution/res
+            self.slitpixelwidth = self.slitpixelwidth*self.resolution/res
+            self.slitwidth = self.slitwidth*self.resolution/res
             self.resolution = res
             self.history.append('Smoothed to a constant resolution of {}'.format(self.resolution))
         else:
@@ -1352,8 +1352,8 @@ class Spectrum(object):
             self.variance = signal.convolve(self.variance.value, window/numpy.sum(window), mode='same')/neff*(self.funit**2)
             self.noise = [n**0.5 for n in self.variance.value]*self.funit
             self.snr = self.computeSN()
-            self.resolution *= self.slitpixelwidth/width
-            self.slitwidth *= width/self.slitpixelwidth
+            self.resolution = self.resolution*self.slitpixelwidth/width
+            self.slitwidth = self.slitwidth*width/self.slitpixelwidth
             self.slitpixelwidth = width
             self.history.append('Smoothed to slit pixel width of {}'.format(self.slitpixelwidth))
         else:
@@ -1391,7 +1391,7 @@ class Spectrum(object):
         method = kwargs.get('method','hanning')
         kwargs['method'] = method
         if not isinstance(width,u.quantity.Quantity):
-            width*=u.arcsec
+            width=width*u.arcsec
         pwidth = self.slitpixelwidth*(width/self.slitwidth).value
         self._smoothToSlitPixelWidth(pwidth,**kwargs)
         return
@@ -1408,7 +1408,7 @@ class Spectrum(object):
             return
         r = copy.deepcopy(radius)
         if not isinstance(r,u.quantity.Quantity):
-            r*=const.R_sun
+            r=r*const.R_sun
         self.scale((((10.*u.pc/r).to(u.m/u.m)).value)**2,silent=True)
         self.history.append('Converted to surface fluxes assuming a radius of {} solar radii'.format((r/const.R_sun).to(u.m/u.m)))
         self.fscale = 'Surface'
@@ -1477,7 +1477,7 @@ class Spectrum(object):
         mask = numpy.zeros(len(self.wave))
         for r in rng:
             if ~isinstance(r[0],u.quantity.Quantity):
-                r*=u.micron
+                r=r*u.micron
             mask[numpy.where(((self.wave.value >= r[0].value) & (self.wave.value <= r[1].value)))] = 1
         w = numpy.where(mask == 1)
         self.wave = self.wave[w]
@@ -3542,7 +3542,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     minreturn = 1.e-60
 # THERE IS A MAJOR FLAW HERE
     if ~isinstance(fit_ranges[0],u.quantity.Quantity):
-        fit_ranges*=u.micron
+        fit_ranges=fit_ranges*u.micron
 #    if ~isinstance(fit_ranges[0],list) or ~isinstance(fit_ranges[0],'numpy.ndarray'):
 #        print(type(fit_ranges[0]))
 #        fit_ranges = [fit_ranges]
@@ -3670,7 +3670,7 @@ def _generateMask(wave,**kwargs):
 
 # make sure mask_ranges array has same units as wave array
     if ~isinstance(wave[0],u.quantity.Quantity):
-        mask_ranges*=wave.unit
+        mask_ranges=mask_ranges*wave.unit
 
 # generate mask
     for ranges in mask_ranges:
@@ -3985,13 +3985,13 @@ def measureIndexSet(sp,**kwargs):
         inds[5],errs[5] = measureIndex(sp,[2.215,2.255],[2.08,2.12],method='ratio',sample='integrate',**kwargs)
         inds[6],errs[6] = measureIndex(sp,[2.06,2.10],[1.25,1.29],method='ratio',sample='integrate',**kwargs)
         inds[7],errs[7] = measureIndex(sp,[1.61,1.64],[1.56,1.59],[1.66,1.69] ,method='inverse_line',sample='integrate',**kwargs)
-        inds[7]*=0.5
-        errs[7]*=0.5
+        inds[7]=inds[7]*0.5
+        errs[7]=errs[7]*0.5
         inds[8],errs[8] = measureIndex(sp,[2.06,2.10],[2.10,2.14],method='ratio',sample='integrate',**kwargs)
         inds[9],errs[9] = measureIndex(sp,[1.27,1.30],[1.30,1.33],method='ratio',sample='integrate',**kwargs)
         inds[10],errs[10] = measureIndex(sp,[1.04,1.07],[1.26,1.29],[1.14,1.17],method='line',sample='integrate',**kwargs)
-        inds[10]*=2.
-        errs[10]*=2.
+        inds[10]=inds[10]*2.
+        errs[10]=errs[10]*2.
         inds[11],errs[11] = measureIndex(sp,[1.54,1.57],[1.66,1.69],method='ratio',sample='integrate',**kwargs)
         inds[12],errs[12] = measureIndex(sp,[1.04,1.07],[1.14,1.17],method='ratio',sample='integrate',**kwargs)
     elif ('burgasser' in set.lower()):
