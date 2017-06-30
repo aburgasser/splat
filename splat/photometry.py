@@ -295,7 +295,7 @@ def filterInfo(*args,**kwargs):
     for k in fname:
         f = checkFilter(k)
         if f != False:
-            print('  '+f.replace('_',' ')+': '+FILTERS[f]['description'])
+            print(f.replace('_',' ')+': '+FILTERS[f]['description'])
             if kwargs.get('verbose',False) == True or kwargs.get('long',False) == True:
                 fwave,ftrans = filterProfile(f,**kwargs)
                 try:
@@ -524,20 +524,50 @@ def visualizeFilter(filt,**kwargs):
 
     FUTURE CODE, THIS IS A PLACEHOLDER
     '''
-    filt = checkFilter(filt)
-    if filt == False: return None
-
-    fwave,ftrans = filterProfile(filt,**kwargs)
+    if isinstance(filt,str):
+        filt = checkFilter(filt)
+        if filt == False: return None
+        fwave,ftrans = filterProfile(filt,**kwargs)
+    elif isinstance(filt,list):
+        if kwargs.get('notch',False) == True:
+            fwave,ftrans = numpy.linspace(filt[0],filt[1],1000),numpy.ones(1000)
+        elif isinstance(filt[0],list) and len(filt) >= 2: 
+            fwave,ftrans = filt[0],filt[1]
+        else:
+            raise ValueError('Could not parse input {}'.format(filt))
+    else:
+        raise ValueError('Could not parse input {}'.format(filt))
+    if isinstance(fwave,u.quantity.Quantity) == False: fwave*=u.micron
+        
     if kwargs.get('normalize',False): ftrans /= numpy.nanmax(ftrans)
+    xra = [numpy.nanmin(fwave.value),numpy.nanmax(fwave.value)]
+    yra = [0,1.2*numpy.nanmax(ftrans)]
+
     fig = plt.figure()
     plt.plot(fwave,ftrans)
-    plt.ylim([0,1.2*numpy.nanmax(ftrans)])
     plt.xlabel(kwargs.get('xlabel','Wavelength ({})'.format(fwave.unit)))
     if FILTERS[filt]['rsr'] == True:
         plt.ylabel(kwargs.get('ylabel',r'Spectral Response Curve ($\lambda^{-1}$)'))
     else:
         plt.ylabel(kwargs.get('ylabel','Transmission Curve'))
-    plt.legend([FILTERS[filt]['description']])
+    legend = [FILTERS[filt]['description']]
+
+# add a comparison spectrum
+    sp = kwargs.get('spectrum',None)
+    sp = kwargs.get('comparison',sp)
+
+    print(isinstance(sp,splat.core.Spectrum))
+    if isinstance(sp,splat.core.Spectrum) == True:
+        sp.normalize(range=xra)
+        sp.scale(numpy.nanmax(ftrans)*kwargs.get('comparison_scale',0.8))
+        plt.plot(sp.wave,sp.flux,color=kwargs.get('comparison_color','k'),alpha=kwargs.get('comparison_alpha',0.5))
+        legend.append(sp.name)
+
+    plt.xlim(xra)
+    plt.ylim(yra)
+    plt.legend(legend)
+
+
     file = kwargs.get('file','')
     file = kwargs.get('filename',file)
     file = kwargs.get('output',file)
