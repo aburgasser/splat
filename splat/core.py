@@ -1911,7 +1911,9 @@ def searchLibrary(*args, **kwargs):
 # program parameters
     ref = kwargs.get('output','all')
     radius = kwargs.get('radius',10.)      # search radius in arcseconds
-    classes = ['YOUNG','SUBDWARF','BINARY','SPBINARY','RED','BLUE','GIANT','WD','STANDARD','COMPANION']
+    object_classes = numpy.unique(numpy.sort(numpy.array(splat.DB_SOURCES['OBJECT_TYPE'])))
+    object_classes = object_classes[numpy.where(object_classes != '0')]  # eliminate masked element
+#    classes = ['YOUNG','SUBDWARF','BINARY','SPBINARY','RED','BLUE','GIANT','WD','STANDARD','COMPANION']
     verbose = kwargs.get('verbose',False)
 
 # logic of search
@@ -1944,6 +1946,7 @@ def searchLibrary(*args, **kwargs):
         for s in idkey:
             source_db['SELECT'][numpy.where(source_db['SOURCE_KEY'] == s)] += 1
         count+=1.
+
 # search by name
     if kwargs.get('name',False) != False:
         nm = kwargs['name']
@@ -1952,6 +1955,7 @@ def searchLibrary(*args, **kwargs):
         for n in nm:
             source_db['SELECT'][numpy.where(source_db['NAME'] == n)] += 1
         count+=1.
+
 # search by shortname
     if kwargs.get('shortname',False) != False:
         if 'SHORTNAME' not in source_db.keys():
@@ -1964,6 +1968,7 @@ def searchLibrary(*args, **kwargs):
                 sn = 'J'+sn
             source_db['SELECT'][numpy.where(source_db['SHORTNAME'] == sn)] += 1
         count+=1.
+
 # exclude by shortname
     sname = kwargs.get('excludesource',False)
     sname = kwargs.get('excludeshortname',sname)
@@ -1978,6 +1983,7 @@ def searchLibrary(*args, **kwargs):
 #            if numpy.sum(source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)]) > t:
 #                print('rejected '+sn)
         count+=1.
+
 # search by reference list
     if kwargs.get('reference',False) != False:
         refer = kwargs['reference']
@@ -1986,6 +1992,7 @@ def searchLibrary(*args, **kwargs):
         for r in refer:
             source_db['SELECT'][numpy.where(source_db['DISCOVERY_REFERENCE'] == r)] += 1
         count+=1.
+
 # search by designation
     if kwargs.get('designation',False) != False:
         desig = kwargs['designation']
@@ -1994,6 +2001,7 @@ def searchLibrary(*args, **kwargs):
         for d in desig:
             source_db['SELECT'][numpy.where(source_db['DESIGNATION'] == d)] += 1
         count+=1.
+
 # search by coordinate - NOTE: THIS IS VERY SLOW RIGHT NOW
     if kwargs.get('coordinate',False) != False:
         print('\nWarning, search by coordinates may take a few minutes\n')
@@ -2023,8 +2031,6 @@ def searchLibrary(*args, **kwargs):
 
 # search by spectral type
 # THIS COULD USE SOME CLEAN UP
-    
-
     spt_range = kwargs.get('spt_range',False)
     spt_range = kwargs.get('spt',spt_range)
     spt_type = kwargs.get('spt_type','LIT_TYPE')
@@ -2128,12 +2134,21 @@ def searchLibrary(*args, **kwargs):
         source_db['SELECT'][numpy.where(source_db['CLUSTER_FLAG'] == True)] += 1
         count+=1.
 
+# select out object classes
+    for oc in object_classes:
+        if kwargs.get(oc.lower(),'') != '':
+            if (kwargs[oc.lower()] == True):
+                source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == oc.upper())] += 1
+                count+=1.
+            if (kwargs[oc.lower()] == False):
+                source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] != oc.upper())] += 1
+                count+=1.
+
 # giant
-    if (kwargs.get('giant','') != ''):
-#        kwargs['vlm'] = False
-        source_db['GIANT'] = [not numpy.ma.is_masked(i) for i in source_db['LUMINOSITY_CLASS']]
-        source_db['SELECT'][numpy.where(source_db['GIANT'] == kwargs.get('giant'))] += 1
-        count+=1.
+#    if (kwargs.get('giant','') != ''):
+#        source_db['GIANT'] = [not numpy.ma.is_masked(i) for i in source_db['LUMINOSITY_CLASS']]
+#        source_db['SELECT'][numpy.where(source_db['GIANT'] == kwargs.get('giant'))] += 1
+#        count+=1.
 
 # luminosity class - this is not quite right
     if (kwargs.get('giant_class','') != ''):
@@ -2186,25 +2201,34 @@ def searchLibrary(*args, **kwargs):
         count+=1.
 
 # white dwarfs
-    if (kwargs.get('wd','') != ''):
-        kwargs['vlm'] = False
-        source_db['WHITEDWARF'] = [i == 'WD' for i in numpy.ma.filled(source_db['OBJECT_TYPE'],'')]
-        source_db['SELECT'][numpy.where(source_db['WHITEDWARF'] == kwargs.get('wd'))] += 1
-        count+=1.
+#    if (kwargs.get('wd','') != ''):
+#        kwargs['vlm'] = False
+#        source_db['WHITEDWARF'] = [i == 'WD' for i in numpy.ma.filled(source_db['OBJECT_TYPE'],'')]
+#        source_db['SELECT'][numpy.where(source_db['WHITEDWARF'] == kwargs.get('wd'))] += 1
+#        count+=1.
+
+# white dwarfs
+#    if (kwargs.get('wd','') != ''):
+#        if (kwargs['wd'] == True):
+#            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == 'WD')] += 1
+#            count+=1.
+#        if (kwargs['wd'] == False):
+#            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] != 'WD')] += 1
+#            count+=1.
 
 # galaxies
-    if (kwargs.get('galaxy','') != ''):
-        kwargs['vlm'] = False
-        source_db['GALAXY'] = [i == 'GAL' for i in numpy.ma.filled(source_db['OBJECT_TYPE'],'')]
-        source_db['SELECT'][numpy.where(source_db['GALAXY'] == kwargs.get('galaxy'))] += 1
-        count+=1.
+#    if (kwargs.get('galaxy','') != ''):
+#        kwargs['vlm'] = False
+#        source_db['GALAXY'] = [i == 'GAL' for i in numpy.ma.filled(source_db['OBJECT_TYPE'],'')]
+#        source_db['SELECT'][numpy.where(source_db['GALAXY'] == kwargs.get('galaxy'))] += 1
+#        count+=1.
 
 # carbon stars
-    if (kwargs.get('carbon','') != ''):
-        kwargs['vlm'] = False
-        source_db['CARBON'] = [i == 'C' for i in numpy.ma.filled(source_db['OBJECT_TYPE'],'')]
-        source_db['SELECT'][numpy.where(source_db['CARBON'] == kwargs.get('carbon'))] += 1
-        count+=1.
+#    if (kwargs.get('carbon','') != ''):
+#        kwargs['vlm'] = False
+#        source_db['CARBON'] = [i == 'C' for i in numpy.ma.filled(source_db['OBJECT_TYPE'],'')]
+#        source_db['SELECT'][numpy.where(source_db['CARBON'] == kwargs.get('carbon'))] += 1
+#        count+=1.
 
 # peculiars
     if (kwargs.get('peculiar','') != ''):
@@ -2214,13 +2238,13 @@ def searchLibrary(*args, **kwargs):
         count+=1.
 
 # VLM dwarfs
-    if (kwargs.get('vlm','') != ''):
-        if (kwargs.get('vlm') == True):
-            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == 'VLM')] += 1
-            count+=1.
-        if (kwargs.get('vlm') == False):
-            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] != 'VLM')] += 1
-            count+=1.
+#    if (kwargs.get('vlm','') != ''):
+#        if (kwargs['vlm'] == True):
+#            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == 'VLM')] += 1
+#            count+=1.
+#        if (kwargs['vlm'] == False):
+#            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] != 'VLM')] += 1
+#            count+=1.
 
 # select source keys
     if (count > 0):
@@ -2390,7 +2414,13 @@ def searchLibrary(*args, **kwargs):
         else:
             outdb = db[ref]
 
-        return outdb
+# return only first or lucky or all
+        if kwargs.get('first',False) == True:
+            return outdb[:][0]
+        elif kwargs.get('lucky',False) == True:
+            return outdb[:][numpy.random.choice(len(outdb))]
+        else:
+            return outdb
 
 
 def _readAPOGEE(file,**kwargs):
