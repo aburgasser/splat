@@ -2836,6 +2836,7 @@ def classifyByStandard(sp, *args, **kwargs):
     :param plot: set to True to generate a plot comparing best fit template to source; can also set keywords associated with plotSpectrum_ routine (optional, default = False)
     :param string: set to True to return spectral type as a string (optional, default = True)
     :param return_standard: set to True to return a Spectrum class of the standard properly scaled (optional, default = False)
+    :param return_statistic: set to True to return a best match spectral type and statistic (instead of uncertainty) (optional, default = False)
     :param verbose: set to True to give extra feedback (optional, default = False)
 
     Users can also set keyword parameters defined in plotSpectrum_ and compareSpectra_ routine.
@@ -3017,8 +3018,10 @@ def classifyByStandard(sp, *args, **kwargs):
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
         spstd.scale(scale)
         return spstd
-
-    return output_spt, sptn_e
+    elif kwargs.get('return_statistic',False) == True: 
+        return output_spt, numpy.nanmin(stat)
+    else:
+        return output_spt, sptn_e
 
 
 
