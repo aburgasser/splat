@@ -1709,7 +1709,6 @@ def getSpectrum(*args, **kwargs):
 #            else:
             print('\nRetrieving {} files\n'.format(len(files)))
             for i,x in enumerate(files):
-                print(dict(search.iloc[i]))
                 result.append(Spectrum(x,header=dict(search.iloc[i])))
 
     else:
