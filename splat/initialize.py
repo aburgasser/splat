@@ -341,8 +341,8 @@ SPECTRAL_MODELS = {\
 SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','fsed','cld','kzz']
 SPECTRAL_MODEL_PARAMETERS = {\
     'teff': {'prefix': 't', 'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$', 'type': 'continuous'}, \
-    'logg': {'prefix': 'g', 'unit': u.dex(), 'default': 5.0, 'title': '$\log{g}$', 'type': 'continuous'}, \
-    'z': {'prefix': 'z', 'unit': u.dex(), 'default': 0., 'title': '$[M/H]$', 'type': 'continuous'}, \
+    'logg': {'prefix': 'g', 'unit': u.dex, 'default': 5.0, 'title': '$\log{g}$', 'type': 'continuous'}, \
+    'z': {'prefix': 'z', 'unit': u.dex, 'default': 0., 'title': '$[M/H]$', 'type': 'continuous'}, \
     'fsed': {'prefix': 'f', 'unit': u.m/u.m, 'default': 'nc', 'title': '$f_{sed}$', 'type': 'discrete'}, \
     'cld': {'prefix': 'c', 'unit': u.m/u.m, 'default': 'nc', 'title': '$cld$', 'type': 'discrete'}, \
     'kzz': {'prefix': 'k', 'unit': u.m/u.m, 'default': 'eq', 'title': '$log\ \kappa_{zz}$', 'type': 'discrete'}}
