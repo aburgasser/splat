@@ -33,6 +33,7 @@ import warnings
 # imports - external
 import matplotlib.pyplot as plt
 import numpy
+import pandas
 import requests
 from astropy.io import ascii, fits            # for reading in spreadsheet
 from astropy.table import Table, join            # for reading in table files
@@ -64,8 +65,10 @@ STDS_VLG_SPEX = {}
 STDS_INTG_SPEX = {}
 
 # databases - using the .txt files for now, will need to change to SQL at a future date
-DB_SOURCES = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE)
-DB_SPECTRA = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SPECTRA_FILE)
+#DB_SOURCES = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE)
+#DB_SPECTRA = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SPECTRA_FILE)
+DB_SOURCES = pandas.read_csv(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE,delimiter='\t')
+DB_SPECTRA = pandas.read_csv(SPLAT_PATH+DB_FOLDER+DB_SPECTRA_FILE,delimiter='\t')
 
 
 # suppress warnings - probably not an entirely safe approach!
@@ -176,7 +179,7 @@ class Spectrum(object):
             try:
                 sdb = keySpectrum(self.idkey)
                 if isinstance(sdb,bool) == False:
-                    self.filename = sdb['DATA_FILE'][0]
+                    self.filename = sdb['DATA_FILE'].iloc[0]
             except:
                 print('Warning: problem reading in spectral database')
 
@@ -195,9 +198,9 @@ class Spectrum(object):
                 kwargs['filename']=self.filename
                 kwargs['silent']=True
                 try:
-                    t = searchLibrary(**kwargs)
-                    if len(t) > 0:
-                        sdb = t
+                    sdb = searchLibrary(**kwargs)
+#                    if len(t) > 0:
+#                        sdb = t
                 except:
                     print('Warning: problem reading in source or spectral database')            
 #        else:
@@ -275,23 +278,42 @@ class Spectrum(object):
 # populate information on source and spectrum from database
 #        print(sdb)
         if isinstance(sdb,bool) == False:
-            for k in sdb.keys():
-                setattr(self,k.lower(),str(sdb[k][0]))
-            self.shortname = designationToShortName(self.designation)
-            self.date = str(self.observation_date)
-# convert some data into numbers
-            kconv = ['ra','dec','julian_date','median_snr','resolution','airmass',\
-            'jmag','jmag_error','hmag','hmag_error','kmag','kmag_error','source_key']
-            for k in kconv:
+            if isinstance(sdb,pandas.core.frame.DataFrame):
+                for k in list(sdb.columns):
+                    setattr(self,k.lower(),str(sdb[k].iloc[0]))
+#            elif isinstance(sdb,dict) == True: 
+#                for k in list(sdb.keys()):
+#                    setattr(self,k.lower(),str(sdb[k][0]))
+            else:
                 try:
-                    setattr(self,k,float(getattr(self,k)))
+                    for k in list(sdb.keys()):
+                        setattr(self,k.lower(),str(sdb[k][0]))
                 except:
-                    setattr(self,k,numpy.nan)
+                    pass
+        try:
+            self.shortname = designationToShortName(self.designation)
+        except:
+            pass
+        try:
+            self.date = str(self.observation_date)
+        except:
+            pass
+# convert some data into numbers
+        kconv = ['ra','dec','julian_date','median_snr','resolution','airmass',\
+        'jmag','jmag_error','hmag','hmag_error','kmag','kmag_error','source_key']
+        for k in kconv:
+            try:
+                setattr(self,k,float(getattr(self,k)))
+            except:
+                setattr(self,k,numpy.nan)
 # this is to make sure the database resolution is the default value
+        try:
             if kwargs.get('resolution',False) == False:
                 kwargs['resolution'] = self.resolution
             if kwargs.get('instrument',False) == False:
                 kwargs['resolution'] = self.resolution
+        except:
+            pass
 
 # instrument specific information
         hkys = list(self.header.keys())
@@ -449,10 +471,19 @@ class Spectrum(object):
         sp.snr = sp.computeSN()
 # update information
         sp.name = self.name+' + '+other.name
+# remove these attributes
         ref = ['date','observer','airmass','designation','source_key','data_key']
         for r in ref:
+            if r in sp.__dict__.keys():
+                delattr(sp,r)
+# combine these attributes
+        ref = ['data_reference','date','observer','airmass','designation','source_key','data_key']
+        for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
-                setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
+                setattr(sp,r,[getattr(self,r),getattr(other,r)])
+#        ref = ['source_key','data_key']
+#        for r in ref:
+#            setattr(sp,r,0)
         sp.history.append('Sum of {} and {}'.format(self.name,other.name))
 # reset original
         sp.original = copy.deepcopy(sp)
@@ -481,10 +512,13 @@ class Spectrum(object):
         sp.snr = sp.computeSN()
 # update information
         sp.name = self.name+' - '+other.name
-        ref = ['date','observer','airmass','designation','source_key','data_key']
+        ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
                 setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
+        ref = ['source_key','data_key']
+        for r in ref:
+            setattr(sp,r,0)
         sp.history.append('Subtraction of {} by {}'.format(self.name,other.name))
 # reset original
         sp.original = copy.deepcopy(sp)
@@ -519,10 +553,13 @@ class Spectrum(object):
 #        sp.funit = sp.flux.unit
 # update information
         sp.name = self.name+' x '+other.name
-        ref = ['date','observer','airmass','designation','source_key','data_key']
+        ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
                 setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
+        ref = ['source_key','data_key']
+        for r in ref:
+            setattr(sp,r,0)
         sp.history.append('Product of {} by {}'.format(self.name,other.name))
 # reset original
         sp.original = copy.deepcopy(sp)
@@ -556,10 +593,13 @@ class Spectrum(object):
         sp.variance = numpy.where(numpy.absolute(sp.variance) == numpy.inf, numpy.nan, sp.variance)*u.erg/u.erg
 # update information
         sp.name = self.name+' / '+other.name
-        ref = ['date','observer','airmass','designation','source_key','data_key']
+        ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
                 setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
+        ref = ['source_key','data_key']
+        for r in ref:
+            setattr(sp,r,0)
         sp.history.append('Division of {} by {}'.format(self.name,other.name))
 # reset original
         sp.original = copy.deepcopy(sp)
@@ -592,10 +632,13 @@ class Spectrum(object):
         sp.variance = numpy.where(numpy.absolute(sp.variance) == numpy.inf, numpy.nan, sp.variance)*u.erg/u.erg
 # update information
         sp.name = self.name+' / '+other.name
-        ref = ['date','observer','airmass','designation','source_key','data_key']
+        ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
                 setattr(sp,r,'{} and {}'.format(getattr(self,r),getattr(other,r)))
+        ref = ['source_key','data_key']
+        for r in ref:
+            setattr(sp,r,0)
         sp.history.append('Division of {} by {}'.format(self.name,other.name))
 # reset original
         sp.original = copy.deepcopy(sp)
@@ -657,17 +700,37 @@ class Spectrum(object):
             f = '\n'
             if hasattr(self,'instrument_name'): f+='{} '.format(self.instrument_name)
             if hasattr(self,'name'): f+='spectrum of {}'.format(self.name)
-            if hasattr(self,'observer') and hasattr(self,'date'): f+='\nObserved by {} on {}'.format(self.observer,properDate(self.date,output='YYYY MMM DD'))
+            if hasattr(self,'observer') and hasattr(self,'date'): 
+                if isinstance(self.observer,list):
+                    for i in range(len(self.observer)):
+                        f+='\nObserved by {} on {}'.format(self.observer[i],properDate(self.date[i],output='YYYY MMM DD'))
+                else:
+                    f+='\nObserved by {} on {}'.format(self.observer,properDate(self.date,output='YYYY MMM DD'))
             if hasattr(self,'airmass'): f+='\nAirmass = {}'.format(self.airmass)
             if hasattr(self,'designation'): f+='\nSource designation = {}'.format(self.designation)
             if hasattr(self,'median_snr'): f+='\nMedian S/N = {}'.format(self.median_snr)
             if hasattr(self,'spex_type'): f+='\nSpeX Classification = {}'.format(self.spex_type)
-            if hasattr(self,'lit_type'): f+='\nLiterature Classification = {} from {}'.format(self.lit_type,spbib.shortRef(self.lit_type_ref))
-            if hasattr(self,'source_key') and hasattr(self,'data_key'): f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key),int(self.source_key))
+            if hasattr(self,'lit_type'): 
+                if isinstance(self.lit_type,list):
+                    for i in range(len(self.lit_type)):
+                        f+='\nLiterature Classification = {} from {}'.format(self.lit_type[i],spbib.shortRef(self.lit_type_ref[i]))
+                else:
+                    f+='\nLiterature Classification = {} from {}'.format(self.lit_type,spbib.shortRef(self.lit_type_ref))
+            if hasattr(self,'source_key') and hasattr(self,'data_key'): 
+                if isinstance(self.source_key,list):
+                    for i in range(len(self.source_key)):
+                        f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key[i]),int(self.source_key[i]))
+                else:
+                    f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key),int(self.source_key))
             if self.published == 'Y':
                 f+='\n\nIf you use these data, please cite:'
-                f+='\n\t{}'.format(spbib.shortRef(self.data_reference))
-                f+='\n\tbibcode: {}'.format(self.data_reference)
+                if isinstance(self.data_reference,list):
+                    for i in range(len(self.data_reference)):
+                        f+='\n\t{}'.format(spbib.shortRef(self.data_reference[i]))
+                        f+='\n\tbibcode: {}'.format(self.data_reference[i])
+                else:
+                    f+='\n\t{}'.format(spbib.shortRef(self.data_reference))
+                    f+='\n\tbibcode: {}'.format(self.data_reference)
             else:
                 f+='\n\nUNPUBLISHED DATA'
             f+='\n\nHistory:'
@@ -1620,25 +1683,34 @@ def getSpectrum(*args, **kwargs):
 
     if len(search) > 0:
         files = []
-        for i,x in enumerate(search['DATA_KEY']):
-            files.append(str(search['DATA_KEY'][i])+'_'+str(search['SOURCE_KEY'][i])+'.fits')
+        if len(search) == 1:
+            files.append(search['DATA_FILE'].iloc[0])
+        else:
+            for i,x in enumerate(search['DATA_FILE']):
+                files.append(search['DATA_FILE'].iloc[i])
+
 
 # return just the filenames
         if (kwargs.get('list',False) != False):
             return files
 
-        if (len(files) == 1):
-            print('\nRetrieving 1 file\n')
-            result.append(Spectrum(files[0],header=search[0]))
-        else:
-            if (kwargs.get('lucky',False) == True):
+        if len(files) == 1:
+            if kwargs.get('lucky',False) == True:
                 print('\nRetrieving 1 lucky file\n')
-                ind = numpy.random.choice(numpy.arange(len(files)))
-                result.append(Spectrum(files[ind],header=search[ind]))
             else:
-                print('\nRetrieving {} files\n'.format(len(files)))
-                for i,x in enumerate(files):
-                    result.append(Spectrum(x,header=search[i:i+1]))
+                print('\nRetrieving 1 file\n')
+            result.append(Spectrum(files[0],header=search.iloc[0]))
+        else:
+#            if (kwargs.get('lucky',False) == True):
+#                print('\nRetrieving 1 lucky file\n')
+#                ind = numpy.random.choice(numpy.arange(len(files)))
+#                print(x)
+#                result.append(Spectrum(files[ind],header=search[ind]))
+#            else:
+            print('\nRetrieving {} files\n'.format(len(files)))
+            for i,x in enumerate(files):
+                print(dict(search.iloc[i]))
+                result.append(Spectrum(x,header=dict(search.iloc[i])))
 
     else:
         if checkAccess() == False:
@@ -1795,15 +1867,17 @@ def keySource(keys, **kwargs):
 
 #    sdb = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
 #    sdb = fetchDatabase(SPLAT_PATH+DB_FOLDER+SOURCES_DB)
-    sdb = copy.deepcopy(DB_SOURCES)
-    sdb['SELECT'] = [x in keys for x in sdb['SOURCE_KEY']]
+#    sdb = copy.deepcopy(DB_SOURCES)
+#    sdb['SELECT'] = [x in keys for x in sdb['SOURCE_KEY']]
 
-    if sum(sdb['SELECT']) == 0.:
-        print('No sources found with source key {}'.format(keys[0]))
+    sdb = DB_SOURCES[[x in keys for x in DB_SOURCES['SOURCE_KEY']]]
+#    if sum(sdb['SELECT']) == 0.:
+    if len(sdb) == 0.:
+        if kwargs.get('verbose',True) == True: print('No sources found with source key(s) = {}'.format(*keys))
         return False
     else:
-        db = sdb[:][numpy.where(sdb['SELECT']==1)]
-        return db
+#        db = sdb[:][numpy.where(sdb['SELECT']==1)]
+        return sdb
 
 
 def keySpectrum(keys, **kwargs):
@@ -1826,27 +1900,27 @@ def keySpectrum(keys, **kwargs):
         False
     '''
 
-    verbose = kwargs.get('verbose',False)
-
 # vectorize
     if isinstance(keys,list) == False:
         keys = [keys]
 
-#    sdb = ascii.read(SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
-#    sdb = fetchDatabase(SPLAT_PATH+DB_FOLDER+SPECTRA_DB)
-    sdb = copy.deepcopy(DB_SPECTRA)
-    sdb['SELECT'] = [x in keys for x in sdb['DATA_KEY']]
+#    sdb = copy.deepcopy(DB_SPECTRA)
+#    sdb['SELECT'] = [x in keys for x in sdb['DATA_KEY']]
 
-    if sum(sdb['SELECT']) == 0.:
-        if verbose: print('No spectra found with spectrum key {}'.format(keys[0]))
+#    if sum(sdb['SELECT']) == 0.:
+#        if verbose: print('No spectra found with spectrum key {}'.format(keys[0]))
+#        return False
+#    else:
+#        s2db = copy.deepcopy(DB_SOURCES)
+#        db = join(sdb[:][numpy.where(sdb['SELECT']==1)],s2db,keys='SOURCE_KEY')
+#        return db
+
+    sdb = DB_SPECTRA[[x in keys for x in DB_SPECTRA['DATA_KEY']]]
+    if len(sdb) == 0.:
+        if kwargs.get('verbose',True) == True: print('No sources found with spectrum key(s) = {}'.format(*keys))
         return False
     else:
-#        s2db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
-#        s2db = fetchDatabase(SPLAT_PATH+DB_FOLDER+SOURCES_DB)
-        s2db = copy.deepcopy(DB_SOURCES)
-        db = join(sdb[:][numpy.where(sdb['SELECT']==1)],s2db,keys='SOURCE_KEY')
-        return db
-
+        return sdb
 
 
 def searchLibrary(*args, **kwargs):
@@ -1911,9 +1985,9 @@ def searchLibrary(*args, **kwargs):
 # program parameters
     ref = kwargs.get('output','all')
     radius = kwargs.get('radius',10.)      # search radius in arcseconds
-    object_classes = numpy.unique(numpy.sort(numpy.array(splat.DB_SOURCES['OBJECT_TYPE'])))
+    object_classes = numpy.unique(numpy.sort(numpy.array([str(x) for x in splat.DB_SOURCES['OBJECT_TYPE']])))
     object_classes = object_classes[numpy.where(object_classes != '0')]  # eliminate masked element
-#    classes = ['YOUNG','SUBDWARF','BINARY','SPBINARY','RED','BLUE','GIANT','WD','STANDARD','COMPANION']
+    object_classes = object_classes[numpy.where(object_classes != 'nan')]  # eliminate masked element
     verbose = kwargs.get('verbose',False)
 
 # logic of search
@@ -1929,7 +2003,7 @@ def searchLibrary(*args, **kwargs):
     source_db = copy.deepcopy(DB_SOURCES)
 
 # first search by source parameters
-    source_db['SELECT'] = numpy.zeros(len(source_db['RA']))
+    source_db['SELECT'] = numpy.zeros(len(source_db['SOURCE_KEY']))
     count = 0.
 
 # search by source key
@@ -1944,7 +2018,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(idkey[0],str):
             idkey = [int(i) for i in idkey]
         for s in idkey:
-            source_db['SELECT'][numpy.where(source_db['SOURCE_KEY'] == s)] += 1
+            source_db['SELECT'][source_db['SOURCE_KEY'] == s] += 1
         count+=1.
 
 # search by name
@@ -1953,7 +2027,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(nm,str):
             nm = [nm]
         for n in nm:
-            source_db['SELECT'][numpy.where(source_db['NAME'] == n)] += 1
+            source_db['SELECT'][source_db['NAME'] == n] += 1
         count+=1.
 
 # search by shortname
@@ -1966,7 +2040,7 @@ def searchLibrary(*args, **kwargs):
         for sn in sname:
             if sn[0].lower() != 'j':
                 sn = 'J'+sn
-            source_db['SELECT'][numpy.where(source_db['SHORTNAME'] == sn)] += 1
+            source_db['SELECT'][source_db['SHORTNAME'] == sn] += 1
         count+=1.
 
 # exclude by shortname
@@ -1979,7 +2053,7 @@ def searchLibrary(*args, **kwargs):
             if sn[0].lower() != 'j':
                 sn = 'J'+sn
 #            t = numpy.sum(source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)])
-            source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)] += 1
+            source_db['SELECT'][source_db['SHORTNAME'] != sn] += 1
 #            if numpy.sum(source_db['SELECT'][numpy.where(source_db['SHORTNAME'] != sn)]) > t:
 #                print('rejected '+sn)
         count+=1.
@@ -1990,7 +2064,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(refer,str):
             refer = [refer]
         for r in refer:
-            source_db['SELECT'][numpy.where(source_db['DISCOVERY_REFERENCE'] == r)] += 1
+            source_db['SELECT'][source_db['DISCOVERY_REFERENCE'] == r] += 1
         count+=1.
 
 # search by designation
@@ -1999,7 +2073,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(desig,str):
             desig = [desig]
         for d in desig:
-            source_db['SELECT'][numpy.where(source_db['DESIGNATION'] == d)] += 1
+            source_db['SELECT'][source_db['DESIGNATION'] == d] += 1
         count+=1.
 
 # search by coordinate - NOTE: THIS IS VERY SLOW RIGHT NOW
@@ -2025,7 +2099,7 @@ def searchLibrary(*args, **kwargs):
 #        source_db['SEPARATION'] = [cc.separation(source_db['SKYCOORDS'][i]).arcsecond for i in numpy.arange(len(source_db['SKYCOORDS']))]
         source_db['SEPARATION'] = [cc.separation(c).arcsecond for c in source_db['SKYCOORD']]
 #        print('done')
-        source_db['SELECT'][numpy.where(source_db['SEPARATION'] <= radius)] += 1
+        source_db['SELECT'][source_db['SEPARATION'] <= radius] += 1
         count+=1.
 #        print(count,numpy.max(source_db['SELECT']))
 
@@ -2070,12 +2144,12 @@ def searchLibrary(*args, **kwargs):
     else:
         spt_type = 'LIT_TYPE'
     if spt_range != False and spt_type != 'SPEX_TYPE':
-        if not isinstance(spt_range,list):        # one value = only this type
+        if not isinstance(spt_range,list) == True:        # one value = only this type
             spt_range = [spt_range,spt_range]
-        if isinstance(spt_range[0],str):          # convert to numerical spt
+        if isinstance(spt_range[0],str) == True:          # convert to numerical spt
             spt_range = [typeToNum(spt_range[0]),typeToNum(spt_range[1])]
         source_db['SPTN'] = [typeToNum(x) for x in source_db[spt_type]]
-        source_db['SELECT'][numpy.where(numpy.logical_and(source_db['SPTN'] >= spt_range[0],source_db['SPTN'] <= spt_range[1]))] += 1
+        source_db['SELECT'][numpy.logical_and(source_db['SPTN'] >= spt_range[0],source_db['SPTN'] <= spt_range[1])] += 1
         count+=1.
 
 # search by magnitude range
@@ -2084,64 +2158,66 @@ def searchLibrary(*args, **kwargs):
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
         source_db['JMAGN'] = [float('0'+x) for x in numpy.ma.filled(source_db['J_2MASS'],'')]
-        source_db['SELECT'][numpy.where(numpy.logical_and(source_db['JMAGN'] >= mag[0],source_db['JMAGN'] <= mag[1]))] += 1
+        source_db['SELECT'][numpy.logical_and(source_db['JMAGN'] >= mag[0],source_db['JMAGN'] <= mag[1])] += 1
         count+=1.
     if kwargs.get('hmag',False) != False:
         mag = kwargs['hmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
         source_db['HMAGN'] = [float('0'+x) for x in numpy.ma.filled(source_db['H_2MASS'],'')]
-        source_db['SELECT'][numpy.where(numpy.logical_and(source_db['HMAGN'] >= mag[0],source_db['HMAGN'] <= mag[1]))] += 1
+        source_db['SELECT'][numpy.logical_and(source_db['HMAGN'] >= mag[0],source_db['HMAGN'] <= mag[1])] += 1
         count+=1.
     if kwargs.get('kmag',False) != False:
         mag = kwargs['kmag']
         if not isinstance(mag,list):        # one value = faint limit
             mag = [0,mag]
         source_db['KMAGN'] = [float('0'+x) for x in numpy.ma.filled(source_db['KS_2MASS'],'')]
-        source_db['SELECT'][numpy.where(numpy.logical_and(source_db['KMAGN'] >= mag[0],source_db['KMAGN'] <= mag[1]))] += 1
+        source_db['SELECT'][numpy.logical_and(source_db['KMAGN'] >= mag[0],source_db['KMAGN'] <= mag[1])] += 1
         count+=1.
 
 # low surface gravity
     if (kwargs.get('lowg','') != ''):
 #        source_db['LOWG'] = [not numpy.ma.is_masked(i) for i in source_db['GRAVITY_CLASS_OPTICAL']] or [not numpy.ma.is_masked(i) for i in source_db['GRAVITY_CLASS_NIR']]
         source_db['LOWG'] = [source_db['GRAVITY_CLASS_OPTICAL'][i]=='alpha' or source_db['GRAVITY_CLASS_OPTICAL'][i]=='beta' or source_db['GRAVITY_CLASS_OPTICAL'][i]=='gamma' or source_db['GRAVITY_CLASS_OPTICAL'][i]=='delta' or source_db['GRAVITY_CLASS_NIR'][i]=='INT-G' or source_db['GRAVITY_CLASS_NIR'][i]=='VL-G' or source_db['GRAVITY_CLASS_NIR'][i]=='LOW-G' for i in range(len(source_db))]
-        source_db['SELECT'][numpy.where(source_db['LOWG'] == kwargs.get('lowg'))] += 1
+        source_db['SELECT'][source_db['LOWG'] == kwargs.get('lowg')] += 1
         count+=1.
 
 # specific gravity class
     flag = kwargs.get('gravity_class','')
     flag = kwargs.get('gravity',flag)
     if (flag != ''):
-        source_db['SELECT'][numpy.where(numpy.ma.filled(source_db['GRAVITY_CLASS_OPTICAL'],'') == flag)] += 1
-        source_db['SELECT'][numpy.where(numpy.ma.filled(source_db['GRAVITY_CLASS_NIR'],'') == flag)] += 1
+#        source_db['SELECT'][numpy.ma.filled(source_db['GRAVITY_CLASS_OPTICAL'],'') == flag] += 1
+#        source_db['SELECT'][numpy.ma.filled(source_db['GRAVITY_CLASS_NIR'],'') == flag] += 1
+        source_db['SELECT'][source_db['GRAVITY_CLASS_OPTICAL'] == flag] += 1
+        source_db['SELECT'][source_db['GRAVITY_CLASS_NIR'] == flag] += 1
         count+=1.
 
 # young => member of a young cluster
     if (kwargs.get('young','') != ''):
-        source_db['INCLUSTER'] = [not numpy.ma.is_masked(i) for i in source_db['CLUSTER']]
-        source_db['SELECT'][numpy.where(source_db['INCLUSTER'] == kwargs.get('young'))] += 1
+        source_db['INCLUSTER'] = [str(x).lower() != 'nan' for x in source_db['CLUSTER']]
+        source_db['SELECT'][source_db['INCLUSTER'] == kwargs.get('young')] += 1
         count+=1.
 
 # young => member of a young cluster
     if (kwargs.get('cluster','') != '' and isinstance(kwargs.get('cluster'),bool)):
-        source_db['INCLUSTER'] = [not numpy.ma.is_masked(i) for i in source_db['CLUSTER']]
-        source_db['SELECT'][numpy.where(source_db['INCLUSTER'] == kwargs.get('cluster'))] += 1
+        source_db['INCLUSTER'] = [str(x).lower() != 'nan' for x in source_db['CLUSTER']]
+        source_db['SELECT'][source_db['INCLUSTER'] == kwargs.get('cluster')] += 1
         count+=1.
 
 # specific cluster
     if (kwargs.get('cluster','') != '' and isinstance(kwargs.get('cluster'),str)):
-        source_db['CLUSTER_FLAG'] = [i.lower() == kwargs.get('cluster').lower() for i in numpy.ma.filled(source_db['CLUSTER'],'')]
-        source_db['SELECT'][numpy.where(source_db['CLUSTER_FLAG'] == True)] += 1
+        source_db['CLUSTER_FLAG'] = [str(i).lower() == kwargs.get('cluster').lower() for i in source_db['CLUSTER']]
+        source_db['SELECT'][source_db['CLUSTER_FLAG'] == True] += 1
         count+=1.
 
 # select out object classes
     for oc in object_classes:
         if kwargs.get(oc.lower(),'') != '':
             if (kwargs[oc.lower()] == True):
-                source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == oc.upper())] += 1
+                source_db['SELECT'][source_db['OBJECT_TYPE'] == oc.upper()] += 1
                 count+=1.
             if (kwargs[oc.lower()] == False):
-                source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] != oc.upper())] += 1
+                source_db['SELECT'][source_db['OBJECT_TYPE'] != oc.upper()] += 1
                 count+=1.
 
 # giant
@@ -2155,108 +2231,73 @@ def searchLibrary(*args, **kwargs):
 #        if 'GIANT' not in source_db.keys():
 #            source_db['GIANT'] = [not numpy.ma.is_masked(i) for i in source_db['LUMINOSITY_CLASS']]
         source_db['GIANT_FLAG'] = [i.lower() == kwargs.get('giant_class').lower() for i in numpy.ma.filled(source_db['LUMINOSITY_CLASS'],'')]
-        source_db['SELECT'][numpy.where(source_db['GIANT_FLAG'] == True)] += 1
+        source_db['SELECT'][source_db['GIANT_FLAG'] == True] += 1
         count+=1.
 
 # subdwarf
     if (kwargs.get('subdwarf','') != ''):
-        source_db['SUBDWARF'] = [not numpy.ma.is_masked(i) for i in source_db['METALLICITY_CLASS']]
-        source_db['SELECT'][numpy.where(source_db['SUBDWARF'] == kwargs.get('subdwarf'))] += 1
+        source_db['SUBDWARF'] = [str(i).lower() != 'nan' for i in source_db['METALLICITY_CLASS']]
+        source_db['SELECT'][source_db['SUBDWARF'] == kwargs.get('subdwarf')] += 1
         count+=1.
 
 # metallicity class
     if (kwargs.get('subdwarf_class','') != ''):
-        source_db['SD_FLAG'] = [i.lower() == kwargs.get('subdwarf_class').lower() for i in numpy.ma.filled(source_db['METALLICITY_CLASS'],'')]
-        source_db['SELECT'][numpy.where(source_db['SD_FLAG'] == True)] += 1
+        source_db['SD_FLAG'] = [str(i).lower() == kwargs.get('subdwarf_class').lower() for i in source_db['METALLICITY_CLASS']]
+        source_db['SELECT'][source_db['SD_FLAG'] == True] += 1
         count+=1.
 
 # red - THIS NEEDS TO BE CHANGED
     if (kwargs.get('red','') != ''):
-        source_db['RED'] = ['red' in i for i in numpy.ma.filled(source_db['LIBRARY'],'')]
-        source_db['SELECT'][numpy.where(source_db['RED'] == kwargs.get('red'))] += 1
+        source_db['RED'] = ['red' in str(i).lower() for i in source_db['LIBRARY']]
+        source_db['SELECT'][source_db['RED'] == kwargs.get('red')] += 1
         count+=1.
 
 # blue - THIS NEEDS TO BE CHANGED
     if (kwargs.get('blue','') != ''):
-        source_db['BLUE'] = ['blue' in i for i in numpy.ma.filled(source_db['LIBRARY'],'')]
-        source_db['SELECT'][numpy.where(source_db['BLUE'] == kwargs.get('blue'))] += 1
+        source_db['BLUE'] = ['blue' in str(i).lower() for i in source_db['LIBRARY']]
+        source_db['SELECT'][source_db['BLUE'] == kwargs.get('blue')] += 1
         count+=1.
 
 # binaries
     if (kwargs.get('binary','') != ''):
-        source_db['BINARY_FLAG'] = [not numpy.ma.is_masked(i) for i in source_db['BINARY']]
-        source_db['SELECT'][numpy.where(source_db['BINARY_FLAG'] == kwargs.get('binary'))] += 1
+        source_db['BINARY_FLAG'] = [str(i).lower() != 'nan' for i in source_db['BINARY']]
+        source_db['SELECT'][source_db['BINARY_FLAG'] == kwargs.get('binary')] += 1
         count+=1.
 
 # spectral binaries
     if (kwargs.get('sbinary','') != ''):
-        source_db['SBINARY_FLAG'] = [not numpy.ma.is_masked(i) for i in source_db['SBINARY']]
-        source_db['SELECT'][numpy.where(source_db['SBINARY_FLAG'] == kwargs.get('sbinary'))] += 1
+        source_db['SBINARY_FLAG'] = [str(i).lower() != 'nan' for i in source_db['SBINARY']]
+        source_db['SELECT'][source_db['SBINARY_FLAG'] == kwargs.get('sbinary')] += 1
         count+=1.
 
 # companions
     if (kwargs.get('companion','') != ''):
-        source_db['COMPANION_FLAG'] = [not numpy.ma.is_masked(i) for i in source_db['COMPANION_NAME']]
-        source_db['SELECT'][numpy.where(source_db['COMPANION_FLAG'] == kwargs.get('companion'))] += 1
+        source_db['COMPANION_FLAG'] = [str(i).lower() != 'nan' for i in source_db['COMPANION_NAME']]
+        source_db['SELECT'][source_db['COMPANION_FLAG'] == kwargs.get('companion')] += 1
         count+=1.
-
-# white dwarfs
-#    if (kwargs.get('wd','') != ''):
-#        kwargs['vlm'] = False
-#        source_db['WHITEDWARF'] = [i == 'WD' for i in numpy.ma.filled(source_db['OBJECT_TYPE'],'')]
-#        source_db['SELECT'][numpy.where(source_db['WHITEDWARF'] == kwargs.get('wd'))] += 1
-#        count+=1.
-
-# white dwarfs
-#    if (kwargs.get('wd','') != ''):
-#        if (kwargs['wd'] == True):
-#            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == 'WD')] += 1
-#            count+=1.
-#        if (kwargs['wd'] == False):
-#            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] != 'WD')] += 1
-#            count+=1.
-
-# galaxies
-#    if (kwargs.get('galaxy','') != ''):
-#        kwargs['vlm'] = False
-#        source_db['GALAXY'] = [i == 'GAL' for i in numpy.ma.filled(source_db['OBJECT_TYPE'],'')]
-#        source_db['SELECT'][numpy.where(source_db['GALAXY'] == kwargs.get('galaxy'))] += 1
-#        count+=1.
-
-# carbon stars
-#    if (kwargs.get('carbon','') != ''):
-#        kwargs['vlm'] = False
-#        source_db['CARBON'] = [i == 'C' for i in numpy.ma.filled(source_db['OBJECT_TYPE'],'')]
-#        source_db['SELECT'][numpy.where(source_db['CARBON'] == kwargs.get('carbon'))] += 1
-#        count+=1.
 
 # peculiars
     if (kwargs.get('peculiar','') != ''):
 #        kwargs['vlm'] = False
-        source_db['PECULIAR'] = ['p' in i for i in numpy.ma.filled(source_db['LIT_TYPE'],'')]
-        source_db['SELECT'][numpy.where(source_db['PECULIAR'] == kwargs.get('peculiar'))] += 1
+        source_db['PECULIAR'] = ['p' in str(i).lower() for i in source_db['LIT_TYPE']]
+        source_db['SELECT'][source_db['PECULIAR'] == kwargs.get('peculiar')] += 1
         count+=1.
 
-# VLM dwarfs
-#    if (kwargs.get('vlm','') != ''):
-#        if (kwargs['vlm'] == True):
-#            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] == 'VLM')] += 1
-#            count+=1.
-#        if (kwargs['vlm'] == False):
-#            source_db['SELECT'][numpy.where(source_db['OBJECT_TYPE'] != 'VLM')] += 1
-#            count+=1.
-
 # select source keys
-    if (count > 0):
+    if count > 0:
         if (logic == 'and'):
             source_db['SELECT'] = numpy.floor(source_db['SELECT']/count)
         elif (logic == 'or'):
             source_db['SELECT'] = numpy.ceil(source_db['SELECT']/count)
 
-        source_keys = source_db['SOURCE_KEY'][numpy.where(source_db['SELECT']==1)]
+#        source_keys = source_db['SOURCE_KEY'][source_db['SELECT']==1]
+        source_db = source_db[source_db['SELECT'] == 1]
+#        source_keys = list(source_db[source_db['SELECT']==1]['SOURCE_KEY'])
+#        print(source_keys)
 # no selection made on sources - choose everything
-    else:
-        source_keys = source_db['SOURCE_KEY']
+#    else:
+#        source_keys = list(source_db['SOURCE_KEY'])
+
 
 #    print(count,numpy.max(source_db['SELECT']),len(source_db[:][numpy.where(source_db['SELECT']==1)]),len(source_keys))
 
@@ -2264,15 +2305,22 @@ def searchLibrary(*args, **kwargs):
 # read in spectral database
 #    spectral_db = ascii.read(SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
 #    spectral_db = fetchDatabase(SPLAT_PATH+DB_FOLDER+SPECTRA_DB)
-    spectral_db = copy.deepcopy(DB_SPECTRA)
+#    spectral_db = copy.deepcopy(DB_SPECTRA)
+
+# merge with source_db selected sources
+#    print(DB_SPECTRA['DATA_FILE'])
+#    spectral_db = source_db.join(copy.deepcopy(DB_SPECTRA),on='SOURCE_KEY',rsuffix='_SP')
+    spectral_db = source_db.join(DB_SPECTRA.set_index('SOURCE_KEY'),on='SOURCE_KEY',how='inner',rsuffix='_SP')
+#    print(spectral_db['DATA_FILE'])
+
 # having to force dtype here so SELECT remains an integer
-    spectral_db['SELECT'] = Table.Column(numpy.zeros(len(spectral_db['DATA_KEY'])),dtype=int)
+    spectral_db['SELECT'] = numpy.zeros(len(spectral_db['DATA_KEY']))
     count = 0.
 
-    spectral_db['SOURCE_SELECT'] = [x in source_keys for x in spectral_db['SOURCE_KEY']]
+#    spectral_db['SOURCE_SELECT'] = [x in source_keys for x in spectral_db['SOURCE_KEY']]
 #    print(spectral_db['SOURCE_KEY'][numpy.where(spectral_db['SOURCE_SELECT']==True)])
 
-# search by source key
+# search by data key
     datakey = kwargs.get('datakey',False)
     datakey = kwargs.get('data_key',datakey)
     if datakey != False:
@@ -2281,7 +2329,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(datakey[0],str):
             datakey = [int(i) for i in datakey]
         for s in datakey:
-            spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] == s)] += 1
+            spectral_db['SELECT'][spectral_db['DATA_KEY'] == s] += 1
         count+=1.
 
 # search by filename
@@ -2291,7 +2339,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(file,str):
             file = [file]
         for f in file:
-            spectral_db['SELECT'][numpy.where(spectral_db['DATA_FILE'] == f)] += 1
+            spectral_db['SELECT'][spectral_db['DATA_FILE'] == f] += 1
         count+=1.
 
 # exclude by data key
@@ -2301,7 +2349,7 @@ def searchLibrary(*args, **kwargs):
             if isinstance(exkey,str):
                 exkey = [exkey]
             for f in exkey:
-                spectral_db['SELECT'][numpy.where(spectral_db['DATA_KEY'] != f)] += 1
+                spectral_db['SELECT'][spectral_db['DATA_KEY'] != f] += 1
             count+=1.
 
 # exclude by filename
@@ -2311,7 +2359,7 @@ def searchLibrary(*args, **kwargs):
             if isinstance(file,str):
                 file = [file]
             for f in file:
-                spectral_db['SELECT'][numpy.where(spectral_db['DATA_FILE'] != f)] += 1
+                spectral_db['SELECT'][spectral_db['DATA_FILE'] != f] += 1
             count+=1.
 
 # search by observation date range
@@ -2329,7 +2377,7 @@ def searchLibrary(*args, **kwargs):
         except:
             raise ValueError('\nCould not parse date input {}\n\n'.format(date))
         spectral_db['DATEN'] = [float(x) for x in spectral_db['OBSERVATION_DATE']]
-        spectral_db['SELECT'][numpy.where(numpy.logical_and(spectral_db['DATEN'] >= date[0],spectral_db['DATEN'] <= date[1]))] += 1
+        spectral_db['SELECT'][numpy.logical_and(spectral_db['DATEN'] >= date[0],spectral_db['DATEN'] <= date[1])] += 1
         count+=1.
 
 # search by S/N range
@@ -2338,7 +2386,7 @@ def searchLibrary(*args, **kwargs):
         if not isinstance(snr,list):        # one value = minimum S/N
             snr = [float(snr),1.e9]
         spectral_db['SNRN'] = [float('0'+x) for x in spectral_db['MEDIAN_SNR']]
-        spectral_db['SELECT'][numpy.where(numpy.logical_and(spectral_db['SNRN'] >= snr[0],spectral_db['SNRN'] <= snr[1]))] += 1
+        spectral_db['SELECT'][numpy.logical_and(spectral_db['SNRN'] >= snr[0],spectral_db['SNRN'] <= snr[1])] += 1
         count+=1.
 
 # search by reference list
@@ -2347,7 +2395,7 @@ def searchLibrary(*args, **kwargs):
         if isinstance(drefer,str):
             drefer = [drefer]
         for r in drefer:
-            spectral_db['SELECT'][numpy.where(spectral_db['DATA_REFERENCE'] == r)] += 1
+            spectral_db['SELECT'][spectral_db['DATA_REFERENCE'] == r] += 1
         count+=1.
 
 # search by spex type
@@ -2357,12 +2405,12 @@ def searchLibrary(*args, **kwargs):
         if isinstance(spt_range[0],str):          # convert to numerical spt
             spt_range = [typeToNum(spt_range[0]),typeToNum(spt_range[1])]
         spectral_db['SPTN'] = [typeToNum(x) for x in spectral_db['SPEX_TYPE']]
-        spectral_db['SELECT'][numpy.where(numpy.logical_and(spectral_db['SPTN'] >= spt_range[0],spectral_db['SPTN'] <= spt_range[1]))] += 1
+        spectral_db['SELECT'][numpy.logical_and(spectral_db['SPTN'] >= spt_range[0],spectral_db['SPTN'] <= spt_range[1])] += 1
         count+=1.
 
-# exclude by filename
+# select by quality flag
     if kwargs.get('ok',False) != False or kwargs.get('quality','').upper() == 'OK':
-        spectral_db['SELECT'][numpy.where(spectral_db['QUALITY_FLAG'] == 'OK')] += 1
+        spectral_db['SELECT'][spectral_db['QUALITY_FLAG'] == 'OK'] += 1
         count+=1.
 
 # combine selection logically
@@ -2382,7 +2430,7 @@ def searchLibrary(*args, **kwargs):
 #    print(len(spectral_db[:][numpy.where(spectral_db['SOURCE_SELECT']==True)]))
 #    print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]))
     if (not checkAccess() or kwargs.get('published',False) or kwargs.get('public',False)):
-        spectral_db['SELECT'][numpy.where(spectral_db['PUBLISHED'] != 'Y')] = 0.
+        spectral_db['SELECT'][spectral_db['PUBLISHED'] != 'Y'] = 0.
 
 #    print(spectral_db['SOURCE_KEY'][numpy.where(spectral_db['SELECT']==1)])
 #    print(spectral_db['SOURCE_KEY'][numpy.where(spectral_db['SOURCE_SELECT']==True)])
@@ -2392,35 +2440,34 @@ def searchLibrary(*args, **kwargs):
 #    print(len(spectral_db[:][numpy.where(spectral_db['SELECT']==1)]))
 #    print(len(spectral_db[:][numpy.where(spectral_db['SOURCE_SELECT']==True)]))
 #    print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]))
-    if len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]) == 0:
+    db = spectral_db[spectral_db['SELECT']==1]
+#    sdb = spectral_db[spectral_db['SOURCE_SELECT']==True]
+#    if len(spectral_db[numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True)]) == 0:
+    if len(db) == 0:
         if verbose: print('No spectra in the SPL database match the selection criteria')
-        return Table()
+        return db
     else:
 
 # merge databases
-        db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))],source_db,keys='SOURCE_KEY')
+#        db = join(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))],source_db,keys='SOURCE_KEY')
 
 # sort output - default is by designation
-        db.sort('DESIGNATION')
-        if kwargs.get('sort',False) != False:
-            if kwargs['sort'].upper() in db.colnames:
-                db.sort(kwargs['sort'].upper())
-            if kwargs['sort'].upper() == 'SNR': db.sort('MEDIAN_SNR')
-        if kwargs.get('reverse',False) != False: db.reverse()
+        sortkey = kwargs.get('sort','DESIGNATION')
+        if sortkey.upper() == 'SNR': sortkey='MEDIAN_SNR'
+        if sortkey.upper() in list(db.columns):
+            db.sort(sortkey.upper(),ascending=(not kwargs.get('reverse',False)))
 
 # select what to return
-        if (ref == 'all'):
-            outdb = db
-        else:
-            outdb = db[ref]
+        if ref != 'all' and ref in list(db.columns):
+            db = db[ref]
 
 # return only first or lucky or all
         if kwargs.get('first',False) == True:
-            return outdb[:][0]
+            return db.iloc[[0]]
         elif kwargs.get('lucky',False) == True:
-            return outdb[:][numpy.random.choice(len(outdb))]
+            return db.iloc[[numpy.random.choice(len(db))]]
         else:
-            return outdb
+            return db
 
 
 def _readAPOGEE(file,**kwargs):
