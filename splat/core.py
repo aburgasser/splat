@@ -2455,7 +2455,7 @@ def searchLibrary(*args, **kwargs):
         sortkey = kwargs.get('sort','DESIGNATION')
         if sortkey.upper() == 'SNR': sortkey='MEDIAN_SNR'
         if sortkey.upper() in list(db.columns):
-            db.sort(sortkey.upper(),ascending=(not kwargs.get('reverse',False)))
+            db.sort_values(sortkey.upper(),ascending=(not kwargs.get('reverse',False)))
 
 # select what to return
         if ref != 'all' and ref in list(db.columns):
