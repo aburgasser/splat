@@ -67,8 +67,8 @@ STDS_INTG_SPEX = {}
 # databases - using the .txt files for now, will need to change to SQL at a future date
 #DB_SOURCES = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE)
 #DB_SPECTRA = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SPECTRA_FILE)
-DB_SOURCES = pandas.read_csv(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE,delimiter='\t')
-DB_SPECTRA = pandas.read_csv(SPLAT_PATH+DB_FOLDER+DB_SPECTRA_FILE,delimiter='\t')
+DB_SOURCES = pandas.read_csv(os.path.normpath(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE),delimiter='\t')
+DB_SPECTRA = pandas.read_csv(os.path.normpath(SPLAT_PATH+DB_FOLDER+DB_SPECTRA_FILE),delimiter='\t')
 
 
 # suppress warnings - probably not an entirely safe approach!
