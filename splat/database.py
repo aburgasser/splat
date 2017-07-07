@@ -104,7 +104,7 @@ def fetchDatabase(*args, **kwargs):
             raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
         else:
             try:
-                data = ascii.read(infile, delimiter=delimiter,fill_values='-99.',format=fmt)
+                data = ascii.read(os.path.normpath(infile), delimiter=delimiter,fill_values='-99.',format=fmt)
 #                data = ascii.read(infile, delimiter='\t',fill_values='-99.',format='tab')
             except:
                 raise NameError('\nCould not load {}: this may be a decoding error\n'.format(infile))

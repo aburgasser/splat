@@ -876,7 +876,7 @@ def plotBatch(*args, **kwargs):
 # if filenames, read in each file to a spectrum object
     if isinstance(inputlist[0],str):
 # try a glob search string  
-        files = glob.glob(inputlist[0])
+        files = glob.glob(os.path.normpath(inputlist[0]))
         if len(files) > 1 or (len(files) == 1 and inputlist[0].find('*') != -1):
             inputlist = files
 # try reading in files into Spectrum object
@@ -1046,7 +1046,7 @@ def plotSequence(*args, **kwargs):
 
 # process input
     if isinstance(args[0],str):
-        if len(glob.glob(args[0])) == 0:
+        if len(glob.glob(os.path.normpath(args[0]))) == 0:
             raise ValueError('\nCannot find input file {} - make sure full path is included'.format(args[0]))
         try:
             sp = splat.Spectrum(file = args[0])
@@ -1087,7 +1087,7 @@ if __name__ == '__main__':
     out_folder = '/Users/adam/projects/splat/code/testing/'
     def test_plotBatch():
         data_folder = '/Users/adam/projects/splat/adddata/done/daniella/'
-        files = glob.glob(data_folder+'*.fits')
+        files = glob.glob(os.path.normpath(data_folder+'*.fits'))
         plotBatch(files,classify=True,output=out_folder+'plotBatch_test1.pdf',telluric=True)
         plotBatch(data_folder+'*.fits',classify=True,output=out_folder+'plotBatch_test2.pdf',noise=True)
         splist = [splat.Spectrum(file=f) for f in files]
@@ -1099,7 +1099,7 @@ if __name__ == '__main__':
         plotSequence(sp,output=out_folder+'plotSequence_test1.pdf')
         plotSequence(sp,type_range=3,output=out_folder+'plotSequence_test2.png')
         data_folder = '/Users/adam/projects/splat/adddata/done/daniella/'
-        files = glob.glob(data_folder+'*.fits')
+        files = glob.glob(os.path.normpath(data_folder+'*.fits'))
         plotSequence(files[0],telluric=True,stack=0.7,spt='M0',output=out_folder+'plotSequence_test3.eps')
         sp = splat.getSpectrum(shortname='0415-0935')[0]
         plotSequence(sp,telluric=True,stack=0.3,output=out_folder+'plotSequence_test4.eps')

@@ -2518,9 +2518,9 @@ def readSpectrum(*args,**kwargs):
 # first pass: check if file is local
     if online == False:
         file = kwargs['filename']
-        if not os.path.exists(file):
+        if not os.path.exists(os.path.normpath(file)):
             file = folder+os.path.basename(kwargs['filename'])
-            if not os.path.exists(file):
+            if not os.path.exists(os.path.normpath(file)):
 #                print('Cannot find '+kwargs['filename']+' locally, trying online\n\n')
                 local = False
 
@@ -2535,10 +2535,10 @@ def readSpectrum(*args,**kwargs):
             file = kwargs['filename']
             try:
 #                file = TMPFILENAME+'.'+ftype
-                if os.path.exists(os.path.basename(file)):
-                    os.remove(os.path.basename(file))
+                if os.path.exists(os.path.normpath(os.path.basename(file))):
+                    os.remove(os.path.normpath(os.path.basename(file)))
 #                open(os.path.basename(file), 'wb').write(urllib2.urlopen(url+file).read())
-                open(os.path.basename(file), 'wb').write(requests.get(url+file).content)
+                open(os.path.normpath(os.path.basename(file)), 'wb').write(requests.get(url+file).content)
 #                print(file)
 #                kwargs['filename'] = os.path.basename(file)
 #               sp = Spectrum(**kwargs)
@@ -2554,7 +2554,7 @@ def readSpectrum(*args,**kwargs):
     if (ftype == 'fit' or ftype == 'fits'):
 #        df = fits.open(file)
 #        with fits.open(file, ignore_missing_end=True) as data:
-        with fits.open(file,ignore_missing_end=True) as data:
+        with fits.open(os.path.normpath(file),ignore_missing_end=True) as data:
             data.verify('silentfix+warn')
             if 'NAXIS3' in list(data[0].header.keys()):
                 d = numpy.copy(data[0].data[0,:,:])
@@ -2565,16 +2565,16 @@ def readSpectrum(*args,**kwargs):
 # ascii file
     else:
         try:
-            d = numpy.genfromtxt(file, comments='#', unpack=False, \
+            d = numpy.genfromtxt(os.path.normpath(file), comments='#', unpack=False, \
                 missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
         except ValueError:
-            d = numpy.genfromtxt(file, comments=';', unpack=False, \
+            d = numpy.genfromtxt(os.path.normpath(file), comments=';', unpack=False, \
                  missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
         header = fits.Header()      # blank header
 
 # delete file if this was an online read
     if online and not local and os.path.exists(os.path.basename(file)):
-        os.remove(os.path.basename(file))
+        os.remove(os.path.normpath(os.path.basename(file)))
 
 # assign arrays to wave, flux, noise
     if len(d[:,0]) > len(d[0,:]): d = d.transpose()  # array is oriented wrong

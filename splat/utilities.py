@@ -101,8 +101,8 @@ def checkLocal(inputfile):
        >>> spl.checkLocal('SpectralModels/BTSettl08/parameters.txt')
        True  # found it
     '''
-    if not os.path.exists(inputfile):
-        if not os.path.exists(SPLAT_PATH+inputfile):
+    if not os.path.exists(os.path.normpath(inputfile)):
+        if not os.path.exists(os.path.normpath(SPLAT_PATH+inputfile)):
             return ''
         else:
             return SPLAT_PATH+inputfile

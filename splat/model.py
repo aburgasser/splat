@@ -54,7 +54,7 @@ def _test():
 def _readBurrows06(file):
     if not os.access(file, os.R_OK):
         raise ValueError('Could not find model file {}'.format(file))
-    data = ascii.read(file,data_start=2)
+    data = ascii.read(os.path.normpath(file),data_start=2)
     wave = numpy.array([float(l.replace('D','e')) for l in data['LAMBDA(mic)']])*u.micron
     fnu = numpy.array([float(l.replace('D','e')) for l in data['FNU']])*(u.erg/u.s/u.cm/u.cm/u.Hz)
     flux = fnu.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
@@ -66,11 +66,11 @@ def _readBtsettl08(file):
         raise ValueError('Could not find model file {}'.format(file))
     data = []
     if file[-3:] == '.gz':
-        with gzip.open(file,'rt') as f:
+        with gzip.open(os.path.normpath(file),'rt') as f:
             for line in f:
                 data.append(line.replace('-',' -').replace('D -','D-'))
     else:
-        with open(file,'rt') as f:
+        with open(os.path.normpath(file),'rt') as f:
             for line in f:
                 data.append(line)
     wave = numpy.array([float((d.split()[0]).replace('D','e'))/1.e4 for d in data])*u.micron
@@ -81,7 +81,7 @@ def _readBtsettl08(file):
 def _readMorley14(file):
     if not os.access(file, os.R_OK):
         raise ValueError('Could not find model file {}'.format(file))
-    data = ascii.read(file,data_start=4)
+    data = ascii.read(os.path.normpath(file),data_start=4)
     freq = numpy.array(data['col1'])*u.Hz
     wave = freq.to(SPECTRAL_MODEL_WAVE_UNIT,equivalencies=u.spectral())
     flux = numpy.array(data['col2'])*u.erg/(u.s*u.Hz*u.cm**2)
@@ -92,7 +92,7 @@ def _readMorley14(file):
 def _readSaumon12(file):
     if not os.access(file, os.R_OK):
         raise ValueError('Could not find model file {}'.format(file))
-    data = ascii.read(file,data_start=2)
+    data = ascii.read(os.path.normpath(file),data_start=2)
     wave = numpy.array(data['col1'])*u.micron
     flux = numpy.array(data['col2'])*u.erg/(u.s*u.Hz*u.cm**2)
     flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
@@ -102,7 +102,7 @@ def _readSaumon12(file):
 def _readDrift(file):
     if not os.access(file, os.R_OK):
         raise ValueError('Could not find model file {}'.format(file))
-    data = ascii.read(file)
+    data = ascii.read(os.path.normpath(file))
     wave = numpy.array(data['col1'])*u.micron
     flux = numpy.array(data['col2'])*u.erg/(u.s*u.cm**3)
     flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
@@ -125,7 +125,7 @@ def _processModels(*args,**kwargs):
 
     if modelset == 'burrows06':
         readfxn = _readBurrows06
-        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.txt')
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.txt'))
         mparam = {}
         mparam['teff'] = [float(f.split('_')[0].split('T')[-1]) for f in files]
         mparam['logg'] = [float(f.split('_')[1][1:]) for f in files]
@@ -135,7 +135,7 @@ def _processModels(*args,**kwargs):
         mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
     elif modelset == 'madhusudhan11':
         readfxn = _readBurrows06
-        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/*')
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*'))
         mparam = {}
         mparam['teff'] = [float(f.split('_')[1].split('t')[-1]) for f in files]
         mparam['logg'] = [float(f.split('_')[2].split('g')[-1]) for f in files]
@@ -146,7 +146,7 @@ def _processModels(*args,**kwargs):
 # BT Settl 2008 CIFIST 2011: no fsed, kzz or clouds
     elif modelset == 'btsettl08':
         readfxn = _readBtsettl08
-        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz')
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz'))
         mparam = {}
         mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
         mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
@@ -156,7 +156,7 @@ def _processModels(*args,**kwargs):
         mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
     elif modelset == 'btsettl15':
         readfxn = _readBtsettl08
-        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz')
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz'))
         mparam = {}
         mparam['teff'] = [float((f.split('/'))[-1][3:8])*100. for f in files]
         mparam['logg'] = [float((f.split('/'))[-1][9:12]) for f in files]
@@ -167,7 +167,7 @@ def _processModels(*args,**kwargs):
 # Morley et al. 2012: no metallicity, fsed, kzz or clouds
     elif modelset == 'morley12':
         readfxn = _readSaumon12
-        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*')
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
         mparam = {}
         mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
         mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
@@ -178,7 +178,7 @@ def _processModels(*args,**kwargs):
 # Morley et al. 2014: no metallicity, fsed, kzz or clouds
     elif modelset == 'morley14':
         readfxn = _readMorley14
-        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*')
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
         mparam = {}
         mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
         mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
@@ -189,7 +189,7 @@ def _processModels(*args,**kwargs):
 # Saumon & Marley 2012: no metallicity, fsed, kzz or clouds
     elif modelset == 'saumon12':
         readfxn = _readSaumon12
-        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*')
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
         mparam = {}
         mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-1].split('g'))[0][1:]) for f in files]
         mparam['logg'] = [2.+numpy.log10(float((((f.split('/'))[-1].split('_'))[-1].split('g'))[1].split('nc')[0])) for f in files]
@@ -199,7 +199,7 @@ def _processModels(*args,**kwargs):
         mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
     elif modelset == 'drift':
         readfxn = _readBtsettl08
-        files = glob.glob(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte_*')
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte_*'))
         mparam = {}
         mparam['teff'] = [float((f.split('/')[-1]).split('_')[1]) for f in files]
         mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][:3]) for f in files]
@@ -380,9 +380,9 @@ def loadModel(*args, **kwargs):
 # and check that the path is correct if its fully provided
 # otherwise assume path is inside model set folder
     if (len(args) > 0):
-        kwargs['filename'] = args[0]
+        kwargs['filename'] = os.path.normpath(args[0])
         if not os.path.exists(kwargs['filename']):
-            kwargs['filename'] = kwargs['folder']+os.path.basename(kwargs['filename'])
+            kwargs['filename'] = os.path.normpath(kwargs['folder']+os.path.basename(kwargs['filename']))
             if not os.path.exists(kwargs['filename']):
                 raise NameError('\nCould not find model file {} or {}'.format(kwargs['filename'],kwargs['folder']+os.path.basename(kwargs['filename'])))
 
@@ -434,8 +434,8 @@ def loadModel(*args, **kwargs):
             kwargs[ms] = kwargs[ms].value
 
 # generate model filename
-    kwargs['filename'] = kwargs['folder']+'{}_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.\
-        format(kwargs['model'],float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],kwargs['instrument'])
+    kwargs['filename'] = os.path.normpath(kwargs['folder']+'{}_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.\
+        format(kwargs['model'],float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],kwargs['instrument']))
 #    if kwargs.get('sed',False):
 #        kwargs['filename'] = kwargs['folder']+kwargs['model']+'_{:.0f}_{:.1f}_{:.1f}_nc_nc_eq_sed.txt'.\
 #            format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001)
@@ -647,8 +647,8 @@ def loadInterpolatedModel(*args,**kwargs):
                 mweights[ms] = 1.
                 plin.append(ms)
             else:                
-                l = parameters[parameters[ms] <= mkwargs[ms]].sort(ms)[ms].iloc[-1]
-                h = parameters[parameters[ms] >= mkwargs[ms]].sort(ms)[ms].iloc[0]
+                l = parameters[parameters[ms] <= mkwargs[ms]].sort_values(ms)[ms].iloc[-1]
+                h = parameters[parameters[ms] >= mkwargs[ms]].sort_values(ms)[ms].iloc[0]
                 if ms == 'teff':
                     d = numpy.log10(h)-numpy.log10(l)
                     w = (numpy.log10(h)-numpy.log10(mkwargs[ms]))/d
@@ -847,7 +847,7 @@ def _loadModelParameters(*args,**kwargs):
 
 # establish parameters from list of filenames
 #    if kwargs.get('old',False) == False:
-    mfiles = glob.glob(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+mset+'*.txt')
+    mfiles = glob.glob(os.path.normpath(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+mset+'*.txt'))
     if len(mfiles) == 0:
         raise ValueError('\nCould not find any model files in {}'.format(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+mset))
     for mf in mfiles:
@@ -1433,7 +1433,7 @@ def modelFitMCMC(spec, **kwargs):
 # a filename is passed
         elif isinstance(kwargs.get('addon'),str):
             try:
-                p = ascii.read(kwargs.get('addon'))
+                p = ascii.read(os.path.normpath(kwargs.get('addon')))
             except:
                 print('\nCould not read in parameter file {}'.format(kwargs.get('addon')))
 
