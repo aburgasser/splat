@@ -196,8 +196,10 @@ def typeToColor(spt,color, **kwargs):
     empirical_sets = {
         'skrzypek': {
             'reference': 'Skrzypek et al. (2015)',
+            'bibcode': '2015A%26A...574A..78S',
             'rng': [15,38],
             'filters': ['i','z','y','j','h','k','w1','w2'],
+            'scatter': 0.07,
             'values': { 
                 'i-z': [0.91,1.45,1.77,1.93,1.99,2.01,2.02,2.04,2.1,2.2,2.33,2.51,2.71,2.93,3.15,3.36,3.55,3.7,3.82,3.9,3.95,3.98,4.01,4.08], \
                 'z-y': [0.47,0.6,0.7,0.77,0.82,0.86,0.88,0.9,0.92,0.94,0.97,1.0,1.04,1.09,1.16,1.23,1.33,1.43,1.55,1.68,1.81,1.96,2.11,2.26], \
@@ -221,6 +223,7 @@ def typeToColor(spt,color, **kwargs):
         rng = empirical_sets[ref.lower()]['rng']
         filters = empirical_sets[ref.lower()]['filters']
         values = empirical_sets[ref.lower()]['values']
+        scatter = empirical_sets[ref.lower()]['scatter']
 
     else:
         sys.stderr.write('\nColor set from {} has not be intergrated into SPLAT\n\n'.format(ref))
@@ -248,9 +251,9 @@ def typeToColor(spt,color, **kwargs):
             f = interp1d(numpy.arange(rng[0],rng[1]+1),values[color.lower()],bounds_error=False,fill_value=0.)
             if (unc > 0.):
                 vals = [f(x) for x in numpy.random.normal(spt, unc, nsamples)]
-                return float(f(spt)), numpy.nanstd(vals)
+                return float(f(spt)), (numpy.nanstd(vals)**2+scatter**2)**0.5
             else:
-                return float(f(spt)), numpy.nan
+                return float(f(spt)), scatter
         else:
             sys.stderr.write('\n Color {} is not in reference set for {}\n\n'.format(color,reference))
             return numpy.nan, numpy.nan
@@ -381,14 +384,13 @@ def typeToMag(spt, filt, **kwargs):
 
 # compute magnitude if its in the right spectral type range
     if (rng[0] <= spt <= rng[1]):
+        abs_mag = numpy.polyval(coeff, spt-sptoffset)
+        abs_mag_error = fitunc
         if (unc > 0.):
             vals = numpy.polyval(coeff, numpy.random.normal(spt - sptoffset, unc, nsamples))
-            abs_mag = numpy.nanmean(vals)
+#            abs_mag = numpy.nanmean(vals)
             abs_mag_error = (numpy.nanstd(vals)**2+fitunc**2)**0.5
-            return abs_mag, abs_mag_error
-        else:
-            abs_mag = numpy.polyval(coeff, spt-sptoffset)
-            return abs_mag, fitunc
+        return abs_mag, abs_mag_error
     else:
         if verbose: sys.stderr.write('\nSpectral Type {} is out of range for {}\n'.format(typeToNum(spt),reference))
         return numpy.nan, numpy.nan
@@ -440,6 +442,7 @@ def typeToTeff(inp, **kwargs):
     unc = kwargs.get('unc',unc)
     unc = kwargs.get('spt_e',unc)
     ref = kwargs.get('ref','stephens2009')
+    ref = kwargs.get('reference',ref)
     ref = kwargs.get('set',ref)
     ref = kwargs.get('method',ref)
 
@@ -525,14 +528,14 @@ def typeToTeff(inp, **kwargs):
 
     if (sptrange[0] <= spt <= sptrange[1]):
         teff = numpy.polyval(coeff,spt-sptoffset)
-        x = numpy.random.normal(spt-sptoffset,unc,nsamples)
-        x = x[numpy.where(numpy.logical_and(spt >= sptrange[0],spt <= sptrange[1]))]
-        vals = numpy.polyval(coeff,x)
+        x = numpy.random.normal(spt,unc,nsamples)
+        x = x[numpy.where(numpy.logical_and(x >= sptrange[0],x <= sptrange[1]))]
+        vals = numpy.polyval(coeff,x-sptoffset)
         if ('stephens' in ref.lower()):
             if (range_alt[0] <= spt <= range_alt[1]):
                 teff = numpy.polyval(coeff_alt,spt-sptoffset)
-                vals = numpy.polyval(coeff_alt,x)
-        teff = numpy.nanmean(vals)
+                vals = numpy.polyval(coeff_alt,x-sptoffset)
+#        teff = numpy.nanmean(vals)
         teff_e = (numpy.nanstd(vals)**2+fitunc**2)**0.5
         return teff, teff_e
     else:
