@@ -508,7 +508,7 @@ def plotSpectrum(*args, **kwargs):
             colors = [colors]
         if (len(colors) < len(sp)):
             while len(colors) < len(sp):
-                colors.extend(colors[-1])
+                colors.append(colors[-1])
         colorScheme = kwargs.get('colorScheme',None)
         colorScheme = kwargs.get('colorMap',colorScheme)
         if (colorScheme != None):
@@ -522,7 +522,15 @@ def plotSpectrum(*args, **kwargs):
         colorsUnc = kwargs.get('colorUnc',colorsUnc)
         if (len(colorsUnc) < len(sp)):
             while len(colorsUnc) < len(sp):
-                colorsUnc.extend(colors[-1])
+                colorsUnc.append(colors[-1])
+        linewidths = kwargs.get('linewidths',1.5)
+        linewidths = kwargs.get('linewidth',linewidths)
+        linewidths = kwargs.get('lw',linewidths)
+        if not isinstance(linewidths,list):
+            linewidths = [linewidths]
+        if (len(linewidths) < len(sp)):
+            while len(linewidths) < len(sp):
+                linewidths.append(linewidths[-1])
 
 
 # show uncertainties
@@ -577,18 +585,19 @@ def plotSpectrum(*args, **kwargs):
 #                if kwargs.get('yrange') == None:
 #                    bound[3] = bound[3] + stack
 
-            ax.plot(a.wave.value,flx,color=colors[ii],linestyle=linestyle[ii], zorder = 10, label = legend[lg_n])  
+            ax.plot(a.wave.value,flx,color=colors[ii],linestyle=linestyle[ii], lw=linewidths[ii], zorder = 10, label = legend[lg_n])  
 
 # add comparison
             if comparison != False:
                 colorComparison = kwargs.get('colorComparison',colors[0])
                 linestyleComparison = kwargs.get('linestyleComparison',linestyle[0])
+                linewidthComparison = kwargs.get('linewidthComparison',linewidths[0])
                 cflx = [i+zeropoint[ii] for i in comparison.flux.value]
 
                 if stack > 0:
                     cflx = [f + (len(sp)-ii-1)*stack for f in cflx]
 
-                ax.plot(comparison.wave.value,cflx,color=colorComparison,linestyle=linestyleComparison,alpha=0.5, zorder = 10)
+                ax.plot(comparison.wave.value,cflx,color=colorComparison,linestyle=linestyleComparison, lw=linewidthComparison, alpha=0.5, zorder = 10)
     
 # add residual
             if residual == True and len(sp) == 2:
