@@ -277,8 +277,8 @@ class Spectrum(object):
 
 # populate information on source and spectrum from database
 #        print(sdb)
-        if isinstance(sdb,bool) == False:
-            if isinstance(sdb,pandas.core.frame.DataFrame):
+        if isinstance(sdb,bool) == False :
+            if isinstance(sdb,pandas.core.frame.DataFrame) and len(sdb) != 0:
                 for k in list(sdb.columns):
                     setattr(self,k.lower(),str(sdb[k].iloc[0]))
 #            elif isinstance(sdb,dict) == True: 

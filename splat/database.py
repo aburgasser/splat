@@ -688,7 +688,7 @@ def importSpectra(*args,**kwargs):
     spreadsheet = kwargs.get('spreadsheet','')
     spreadsheet = kwargs.get('sheet',spreadsheet)
     spreadsheet = kwargs.get('entry',spreadsheet)
-    instrument = kwargs.get('instrument','SpeX prism')
+    instrument = kwargs.get('instrument','UNKNOWN')
     verbose = kwargs.get('verbose',True)
 
 # make sure relevant files and folders are in place
@@ -737,9 +737,23 @@ def importSpectra(*args,**kwargs):
 
 # otherwise search for *.fits and *.txt files in data folder
     else:
-        files = glob.glob(data_folder+'*.fits')+glob.glob(data_folder+'*.txt')
+        files = glob.glob(os.path.normpath(data_folder+'*.fits'))+glob.glob(os.path.normpath(data_folder+'*.txt'))
         if len(files) == 0:
             raise NameError('\nNo spectral files in {}\n'.format(data_folder))
+
+# what instrument is this?
+    s = splat.Spectrum(filename=files[0])
+    if 'INSTRUME' in list(s.header.keys()):
+        instrument = s.header['INSTRUME'].replace(' ','').upper()
+    if 'INSTR' in list(s.header.keys()):
+        instrument = s.header['INSTR'].replace(' ','').upper()
+        if 'MODENAME' in list(s.header.keys()):
+            instrument+=' {}'.format(s.header['MODENAME'].replace(' ','').upper())
+
+    if instrument.upper() in list(splat.INSTRUMENTS.keys()):
+        instrument_info = splat.INSTRUMENTS[instrument.upper()]
+    else:
+        instrument_info = {'instrument_name': instrument, 'resolution': 0.*u.arcsec, 'slitwidth': 0.}
 
 # prep tables containing information
     t_spec = Table()
@@ -752,18 +766,16 @@ def importSpectra(*args,**kwargs):
     spectrum_id0 = numpy.max(splat.DB_SPECTRA['DATA_KEY'])
 
 # read in files into Spectrum objects
-    if verbose:
-        print('\nReading in {} files from {}'.format(len(files),data_folder))
+    if verbose: print('\nReading in {} files from {}'.format(len(files),data_folder))
 #    splist = []
     t_spec['DATA_FILE'] = Column(files,dtype='str')
     t_spec['SPECTRUM'] = [splat.Spectrum(filename=f) for f in files]
-    t_spec['INSTRUMENT'] = [instrument for f in files]
+    t_spec['INSTRUMENT'] = [instrument_info['instrument_name'] for f in files]
 #    for f in files:
 #        splist.append()
 
 # populate spec array
-    if verbose:
-        print('\nGenerating initial input tables')
+    if verbose: print('\nGenerating initial input tables')
     t_spec['SOURCE_KEY'] = Column(numpy.arange(len(files))+source_id0+1,dtype='int')
     t_spec['DATA_KEY'] = Column(numpy.arange(len(files))+spectrum_id0+1,dtype='int')
 #    t_spec['SPECTRUM'] = [sp for sp in splist]
@@ -771,32 +783,34 @@ def importSpectra(*args,**kwargs):
     t_spec['PUBLISHED'] = Column(['N' for f in t_spec['DATA_FILE']],dtype='str')
 #  measurements
     t_spec['MEDIAN_SNR'] = Column([sp.computeSN() for sp in t_spec['SPECTRUM']],dtype='float')
-    t_spec['SPEX_TYPE'] = Column([splat.classifyByStandard(sp,string=True,method=kwargs.get('method',''),mask_telluric=True)[0] for sp in t_spec['SPECTRUM']],dtype='str')
+    t_spec['SPEX_TYPE'] = Column([splat.classifyByStandard(sp,string=True,method=kwargs.get('method','kirkpatrick'),mask_telluric=True)[0] for sp in t_spec['SPECTRUM']],dtype='str')
     t_spec['SPEX_GRAVITY_CLASSIFICATION'] = Column([splat.classifyGravity(sp,string=True) for sp in t_spec['SPECTRUM']],dtype='str')
 # populate spectral data table from fits file header
     for i,sp in enumerate(t_spec['SPECTRUM']):
-        if 'DATE_OBS' in sp.header:
+        if 'DATE_OBS' in list(sp.header.keys()):
             t_spec['OBSERVATION_DATE'][i] = sp.header['DATE_OBS'].replace('-','')
             t_spec['JULIAN_DATE'][i] = Time(sp.header['DATE_OBS']).mjd
-        if 'DATE' in sp.header:
+        if 'DATE' in list(sp.header.keys()):
             t_spec['OBSERVATION_DATE'][i] = sp.header['DATE'].replace('-','')
-            print(i,t_spec['OBSERVATION_DATE'][i],properDate(t_spec['OBSERVATION_DATE'][i],output='YYYYMMDD'))
+            if verbose: print(i,t_spec['OBSERVATION_DATE'][i],properDate(t_spec['OBSERVATION_DATE'][i],output='YYYYMMDD'))
             t_spec['JULIAN_DATE'][i] = Time(sp.header['DATE']).mjd
-        if 'TIME_OBS' in sp.header:
+        if 'TIME_OBS' in list(sp.header.keys()):
             t_spec['OBSERVATION_TIME'][i] = sp.header['TIME_OBS'].replace(':',' ')
-        if 'MJD_OBS' in sp.header:
+        if 'MJD_OBS' in list(sp.header.keys()):
             t_spec['JULIAN_DATE'][i] = sp.header['MJD_OBS']
-        if 'OBSERVER' in sp.header:
+        if 'OBSERVER' in list(sp.header.keys()):
             t_spec['OBSERVER'][i] = sp.header['OBSERVER']
-        if 'RESOLUTION' in sp.header:
+        if 'RESOLUTION' in list(sp.header.keys()):
             t_spec['RESOLUTION'][i] = sp.header['RESOLUTION']
-        elif 'RES' in sp.header:
+        elif 'RES' in list(sp.header.keys()):
             t_spec['RESOLUTION'][i] = sp.header['RES']
-        elif 'SLITW' in sp.header:
-            t_spec['RESOLUTION'][i] = 200.*0.3/sp.header['SLITW']       # this is for new spex
-        if 'AIRMASS' in sp.header:
+        elif 'SLITW' in list(sp.header.keys()):
+            t_spec['RESOLUTION'][i] = instrument_info['resolution']*(instrument_info['slitwidth'].value)/sp.header['SLITW']
+        elif 'SLTW_ARC' in list(sp.header.keys()):
+            t_spec['RESOLUTION'][i] = instrument_info['resolution']*(instrument_info['slitwidth'].value)/sp.header['SLTW_ARC']
+        if 'AIRMASS' in list(sp.header.keys()):
             t_spec['AIRMASS'][i] = sp.header['AIRMASS']
-        if 'VERSION' in sp.header:
+        if 'VERSION' in list(sp.header.keys()):
             v = sp.header['VERSION']
             t_spec['REDUCTION_SPEXTOOL_VERSION'][i] = 'v{}'.format(v.split('v')[-1])
 # populate spectral data table from spreadsheet 
@@ -812,7 +826,7 @@ def importSpectra(*args,**kwargs):
             t_spec['RESOLUTION'] = [r for r in t_input['RESOLUTION']]
 # CHANGE THIS TO BE INSTRUMENT SPECIFIC
         if 'SLIT' in tkeys:
-            t_spec['RESOLUTION'] = [150.*0.5/float(s) for s in t_input['SLIT']]
+            t_spec['RESOLUTION'] = [t_spec['RESOLUTION']*(instrument_info['slitwidth'].value)/float(s) for s in t_input['SLIT']]
         if 'AIRMASS' in tkeys:
             t_spec['AIRMASS'] = t_input['AIRMASS']
         if 'OBSERVER' in tkeys:
@@ -840,11 +854,11 @@ def importSpectra(*args,**kwargs):
 #        if i == 0:
 #            for k in list(sp.header.keys()):
 #                print(k,sp.header[k])
-        if 'TCS_RA' in sp.header.keys() and 'TCS_DEC' in sp.header.keys():
+        if 'TCS_RA' in list(sp.header.keys()) and 'TCS_DEC' in list(sp.header.keys()):
             sp.header['RA'] = sp.header['TCS_RA']
             sp.header['DEC'] = sp.header['TCS_DEC']
             sp.header['RA'] = sp.header['RA'].replace('+','')
-        if t_src['DESIGNATION'][i].strip() == '' and 'RA' in sp.header.keys() and 'DEC' in sp.header.keys():
+        if t_src['DESIGNATION'][i].strip() == '' and 'RA' in list(sp.header.keys()) and 'DEC' in list(sp.header.keys()):
             if sp.header['RA'] != '' and sp.header['DEC'] != '':
                 t_src['DESIGNATION'][i] = 'J{}+{}'.format(sp.header['RA'].replace('+',''),sp.header['DEC']).replace(':','').replace('.','').replace('+-','-').replace('++','+').replace('J+','J').replace(' ','')
 #            print('DETERMINED DESIGNATION {} FROM RA/DEC'.format(t_src['DESIGNATION'][i]))
@@ -1103,12 +1117,12 @@ def importSpectra(*args,**kwargs):
 #    t_merge.write(review_folder+DB_SOURCES_FILE,format='ascii.tab')
 
 # spectrum db
-    t_spec = fetchDatabase(review_folder+'spectrum_update.csv',csv=True)
+    t_spec = fetchDatabase(review_folder+'/spectrum_update.csv',csv=True)
 
 # move files
     for i,file in enumerate(t_spec['DATA_FILE']):
         t_spec['DATA_FILE'][i] = '{}_{}.fits'.format(t_spec['DATA_KEY'][i],t_spec['SOURCE_KEY'][i])
-        print(file[-4:],t_spec['DATA_FILE'][i])
+#        print(file[-4:],t_spec['DATA_FILE'][i])
         if file[-4:] == 'fits':
             if t_spec['PUBLISHED'][i] == 'Y':
                 copyfile(file,'{}/published/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
@@ -1119,7 +1133,7 @@ def importSpectra(*args,**kwargs):
 #                if verbose:
 #                    print('Moved {} to {}/unpublished/'.format(t_spec['DATA_FILE'][i],review_folder))
         else:
-            print(data_folder+file)
+#            print(data_folder+file)
             sp = splat.Spectrum(file=file)
             if t_spec['PUBLISHED'][i] == 'Y':
                 sp.export('{}/published/{}'.format(review_folder,t_spec['DATA_FILE'][i]))
@@ -1130,7 +1144,10 @@ def importSpectra(*args,**kwargs):
 #                if verbose:
 #                    print('Moved {} to {}/unpublished/'.format(t_spec['DATA_FILE'][i],review_folder))
 
-# merge and export
+# save off updated spectrum update file
+    t_spec.write(review_folder+'/spectrum_update.csv',format='ascii.csv')
+
+# merge and export - THIS WASN'T WORKING
 #    for col in t_spec.colnames:
 #        print(col,DB_SPECTRA[col].dtype)
 #        tmp = t_spec[col].astype(splat.DB_SPECTRA[col].dtype)
