@@ -2154,24 +2154,18 @@ def searchLibrary(*args, **kwargs):
 # search by magnitude range
     if kwargs.get('jmag',False) != False:
         mag = kwargs['jmag']
-        if not isinstance(mag,list):        # one value = faint limit
-            mag = [0,mag]
-        source_db['JMAGN'] = [float('0'+x) for x in numpy.ma.filled(source_db['J_2MASS'],'')]
-        source_db['SELECT'][numpy.logical_and(source_db['JMAGN'] >= mag[0],source_db['JMAGN'] <= mag[1])] += 1
+        if not isinstance(mag,list): mag = [0,mag]
+        source_db['SELECT'][numpy.logical_and(source_db['J_2MASS'] >= mag[0],source_db['J_2MASS'] <= mag[1])] += 1
         count+=1.
     if kwargs.get('hmag',False) != False:
         mag = kwargs['hmag']
-        if not isinstance(mag,list):        # one value = faint limit
-            mag = [0,mag]
-        source_db['HMAGN'] = [float('0'+x) for x in numpy.ma.filled(source_db['H_2MASS'],'')]
-        source_db['SELECT'][numpy.logical_and(source_db['HMAGN'] >= mag[0],source_db['HMAGN'] <= mag[1])] += 1
+        if not isinstance(mag,list): mag = [0,mag]
+        source_db['SELECT'][numpy.logical_and(source_db['H_2MASS'] >= mag[0],source_db['H_2MASS'] <= mag[1])] += 1
         count+=1.
     if kwargs.get('kmag',False) != False:
         mag = kwargs['kmag']
-        if not isinstance(mag,list):        # one value = faint limit
-            mag = [0,mag]
-        source_db['KMAGN'] = [float('0'+x) for x in numpy.ma.filled(source_db['KS_2MASS'],'')]
-        source_db['SELECT'][numpy.logical_and(source_db['KMAGN'] >= mag[0],source_db['KMAGN'] <= mag[1])] += 1
+        if not isinstance(mag,list): mag = [0,mag]
+        source_db['SELECT'][numpy.logical_and(source_db['KS_2MASS'] >= mag[0],source_db['KS_2MASS'] <= mag[1])] += 1
         count+=1.
 
 # low surface gravity
