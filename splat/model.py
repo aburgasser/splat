@@ -1182,7 +1182,7 @@ def modelFitGrid(spec, **kwargs):
                                 chi,scl = compareSpectra(spec, model, mask=mask, weights=weights, stat=stat)
                                 mparam['stat'] = chi
                                 mparam['scale'] = scl
-                                mparam['radius'] = ((scl*(10.*u.pc)**2)**0.5).to(u.Rsun).value
+                                mparam['radius'] = ((scl*(10.*u.pc)**2)**0.5).to(u.Rsun)
                                 parameters.append(copy.deepcopy(mparam))
                                 stats.append(chi)
                                 if kwargs.get('verbose',False) == True: print('{}: T={},g={},z={},stat={},scale={},radius={}'.format(len(stats)-1,mparam['teff'],mparam['logg'],mparam['z'],numpy.round(mparam['stat']),mparam['scale'],mparam['radius']))
