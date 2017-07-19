@@ -3994,6 +3994,10 @@ def measureIndex(sp,*args,**kwargs):
         val = value[0]/value[1]
         vals = value_sim[0,:]/value_sim[1,:]
 
+# PLOTTING/VISUALIZATION?
+    if kwargs.get('plot',False) == True:
+        from .plot import plotSpectrum
+        plotSpectrum(sp,bands=args,**kwargs)        
 
 # output mean, standard deviation
     if (noiseFlag):

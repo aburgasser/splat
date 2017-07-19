@@ -526,21 +526,48 @@ def typeToTeff(inp, **kwargs):
         sys.stderr.write('\nInvalid Teff/SpT relation given ({})\n'.format(ref))
         return numpy.nan, numpy.nan
 
-    if (sptrange[0] <= spt <= sptrange[1]):
-        teff = numpy.polyval(coeff,spt-sptoffset)
-        x = numpy.random.normal(spt,unc,nsamples)
-        x = x[numpy.where(numpy.logical_and(x >= sptrange[0],x <= sptrange[1]))]
-        vals = numpy.polyval(coeff,x-sptoffset)
-        if ('stephens' in ref.lower()):
-            if (range_alt[0] <= spt <= range_alt[1]):
-                teff = numpy.polyval(coeff_alt,spt-sptoffset)
-                vals = numpy.polyval(coeff_alt,x-sptoffset)
-#        teff = numpy.nanmean(vals)
-        teff_e = (numpy.nanstd(vals)**2+fitunc**2)**0.5
-        return teff, teff_e
+    if kwargs.get('reverse',False) == True:
+
+        teff = spt
+        teff_e = unc
+        if numpy.min(numpy.polyval(coeff,[r-sptoffset for r in sptrange])) <= teff <= numpy.max(numpy.polyval(coeff,[r-sptoffset for r in sptrange])):
+            x = numpy.linspace(sptrange[1]-sptoffset,sptrange[0]-sptoffset,nsamples)
+            f = interp1d(numpy.polyval(coeff,x),x,bounds_error=False)
+            spto = float(f(teff))+sptoffset
+            x = numpy.random.normal(teff,teff_e,nsamples)
+            vals = f(x)+sptoffset
+            if 'stephens' in ref.lower():
+                if numpy.min(numpy.polyval(coeff_alt,[r-sptoffset for r in range_alt])) <= teff <= numpy.max(numpy.polyval(coeff_alt,[r-sptoffset for r in range_alt])):
+                    x = numpy.linspace(range_alt[1]-sptoffset,range_alt[0]-sptoffset,nsamples)
+                    f = interp1d(numpy.polyval(coeff_alt,x),x,bounds_error=False)
+                    spto = float(f(teff))+sptoffset
+                    if kwargs.get('string',False) == True: spto = splat.typeToNum(spto)
+                    x = numpy.random.normal(teff,teff_e,nsamples)+sptoffset
+                    vals = f(x)
+# assuming an at least 0.5 spectral type uncertainty
+            spto_e = (numpy.nanstd(vals)**2+0.5**2)**0.5
+            return spto, spto_e
+        else:
+            if verbose: sys.stderr.write('\nTeff is out of range for {:s} Teff/SpT relation\n'.format(reference))
+            return numpy.nan, numpy.nan
+
     else:
-        if verbose: sys.stderr.write('\nSpectral Type is out of range for {:s} Teff/SpT relation\n'.format(reference))
-        return numpy.nan, numpy.nan
+
+        if (sptrange[0] <= spt <= sptrange[1]):
+            teff = numpy.polyval(coeff,spt-sptoffset)
+            x = numpy.random.normal(spt,unc,nsamples)
+            x = x[numpy.where(numpy.logical_and(x >= sptrange[0],x <= sptrange[1]))]
+            vals = numpy.polyval(coeff,x-sptoffset)
+            if ('stephens' in ref.lower()):
+                if (range_alt[0] <= spt <= range_alt[1]):
+                    teff = numpy.polyval(coeff_alt,spt-sptoffset)
+                    vals = numpy.polyval(coeff_alt,x-sptoffset)
+    #        teff = numpy.nanmean(vals)
+            teff_e = (numpy.nanstd(vals)**2+fitunc**2)**0.5
+            return teff, teff_e
+        else:
+            if verbose: sys.stderr.write('\nSpectral Type is out of range for {:s} Teff/SpT relation\n'.format(reference))
+            return numpy.nan, numpy.nan
 
 
 def redden(sp, **kwargs):

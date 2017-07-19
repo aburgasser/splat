@@ -116,7 +116,7 @@ def loadEvolModel(*model,**kwargs):
     if kwargs.get('verbose',False): print('You are using evolutionary models from {}'.format(EVOLUTIONARY_MODELS[model]['name']))
 
 # read in models
-    files = glob.glob(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+model+'/{}*.txt'.format(model))
+    files = glob.glob(os.path.normpath(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+model+'/{}*.txt'.format(model)))
     if model == 'saumon08':
 
 # set metallicity
@@ -153,7 +153,7 @@ def loadEvolModel(*model,**kwargs):
         else:
             raise ValueError('\nCould not recognize cloud choice for Saumon model: must be cloud-free, hybrid or f2, not {}\n'.format(cloud))
 
-        files = glob.glob(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+model+'/{}_{}_{}*.txt'.format(model,Z,C))
+        files = glob.glob(os.path.normpath(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+model+'/{}_{}_{}*.txt'.format(model,Z,C)))
 
 
 #######################################################################
@@ -175,7 +175,7 @@ def loadEvolModel(*model,**kwargs):
 
     for f in files:
         try:
-            dp=pandas.read_csv(f,comment='#',sep=',',header=0)
+            dp=pandas.read_csv(os.path.normpath(f),comment='#',sep=',',header=0)
             for ep in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
                 mparam[ep].append(dp[ep].values)
 
@@ -519,7 +519,7 @@ def modelParameters(*model,**kwargs):
             mkwargs['luminosity'] = kwargs['lbol']
 
 
-# determine length of input arrays
+# determine length of input arrays and assert they must be pure numbers 
     inparams = {}
     inparams['debug'] = kwargs.get('debug',False)
     inparams['verbose'] = kwargs.get('verbose',False)
@@ -530,7 +530,13 @@ def modelParameters(*model,**kwargs):
         if p in pkeys:
             if isinstance(mkwargs[p],float) or isinstance(mkwargs[p],int):
                 mkwargs[p] = [mkwargs[p]]
+            if isinstance(mkwargs[p],u.quantity.Quantity):
+                unit = mkwargs[p].unit
+                mkwargs[p] = mkwargs[p].value
+            if isinstance(mkwargs[p][0],u.quantity.Quantity):
+                mkwargs[p] = [x*value for x in mkwargs[p]]
             numberValues = len(mkwargs[p])
+
 
 # now loop through each parameter set to determine remaining parameters
     for i in range(numberValues):

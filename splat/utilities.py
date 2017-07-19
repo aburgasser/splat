@@ -968,16 +968,23 @@ def weightedMeanVar(vals, winp, *args, **kwargs):
 #####################################################
 
 def codeStats():
-# library statistics - # of total/public spectra, # of total/public sources, # of source papers for public data
     if checkAccess() == False:
         raise ValueError('You do not have sufficient access to run this program\n')
 
+# library statistics - # of total/public spectra, # of total/public sources, # of source papers for public data
     sall = splat.searchLibrary()
     print('Total number of spectra = {} of {} sources'.format(len(sall),len(numpy.unique(numpy.array(sall['SOURCE_KEY'])))))
     s = splat.searchLibrary(public=True)
     print('Total number of public spectra = {} of {} sources'.format(len(s),len(numpy.unique(numpy.array(s['SOURCE_KEY'])))))
 
 # data citations 
+    pubs = numpy.unique(numpy.array(sall['DATA_REFERENCE']))
+    print('Total number of citations for all spectra = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
     pubs = numpy.unique(numpy.array(s['DATA_REFERENCE']))
     print('Total number of citations for public spectra = {}'.format(len(pubs)))
     cites = []
@@ -987,7 +994,7 @@ def codeStats():
             cites_html.append('<li>{} [<a href="{}">NASA ADS</a>]'.format(splat.citations.longRef(str(p)),splat.citations.citeURL(str(p))))
             cites.append('{}'.format(splat.citations.longRef(str(p))))
         except:
-            print('Warning: no bibtex information for citation {}'.format(p))
+            print('\tWarning: no bibtex information for citation {}'.format(p))
     cites.sort()
     with open(SPLAT_PATH+DOCS_FOLDER+'_static/citation_list.txt', 'w') as f:
         f.write('Data references in SPLAT:\n')
@@ -999,6 +1006,113 @@ def codeStats():
         for c in cites_html:
             f.write('\t{}\n'.format(c))
         f.write('</ul>\n')
+
+# source citations 
+    pubs = numpy.unique(numpy.array(sall['DISCOVERY_REFERENCE'].replace(numpy.nan,'')))
+    print('Total number of citations for all sources = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['OPT_TYPE_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all optical spectral types = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['NIR_TYPE_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all NIR spectral types = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['LIT_TYPE_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all literature spectral types = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['GRAVITY_CLASS_OPTICAL_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all optical gravity types = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['GRAVITY_CLASS_NIR_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all NIR gravity types = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['CLUSTER_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all cluster associations = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['BINARY_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all binary associations = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['SBINARY_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all spectral binary associations = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['COMPANION_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all companion associations = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['SIMBAD_SPT_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all SIMBAD SpTs = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['PARALLEX_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all parallaxes = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['MU_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all proper motions = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['RV_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all RVs = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
+    pubs = numpy.unique(numpy.array(sall['VSINI_REF'].replace(numpy.nan,'')))
+    print('Total number of citations for all vsini values = {}'.format(len(pubs)))
+    for p in pubs:
+        try:
+            x = splat.citations.longRef(str(p))
+        except:
+            print('\tWarning: no bibtex information for citation {}'.format(p))
 
 # histogram of spectral types - all spectra
     sptrng = [16,40]
@@ -1021,11 +1135,12 @@ def codeStats():
                 sspt = splat.typeToNum(x)
                 spex_spts.append(sspt)
                 spt = copy.deepcopy(sspt)
-            nspt = splat.typeToNum(s1['NIR_TYPE'][i])
+
+            nspt = splat.typeToNum(s1['NIR_TYPE'].iloc[i])
             if splat.isNumber(nspt):
                 nir_spts.append(spt)
                 if nspt > 28.: spt = copy.deepcopy(nspt)
-            ospt = splat.typeToNum(s1['OPT_TYPE'][i])
+            ospt = splat.typeToNum(s1['OPT_TYPE'].iloc[i])
             if splat.isNumber(ospt):
                 opt_spts.append(spt)
                 if ospt < 29.: spt = copy.deepcopy(ospt)
@@ -1088,12 +1203,12 @@ def codeStats():
 # map sources on sky
     raref = Angle(numpy.linspace(0,359.,360)*u.degree)
     raref.wrap_at(180.*u.degree)
-    ra = Angle(sall['RA'].filled(numpy.nan)*u.degree)
+    ra = Angle(list(sall['RA'])*u.degree)
     ra = ra.wrap_at(180*u.degree)
-    dec = Angle(sall['DEC'].filled(numpy.nan)*u.degree)
-    rap = Angle(s['RA'].filled(numpy.nan)*u.degree)
+    dec = Angle(list(sall['DEC'])*u.degree)
+    rap = Angle(list(s['RA'])*u.degree)
     rap = rap.wrap_at(180*u.degree)
-    decp = Angle(s['DEC'].filled(numpy.nan)*u.degree)
+    decp = Angle(list(s['DEC'])*u.degree)
     fig = plt.figure(figsize=(8,6))
     ax = fig.add_subplot(111, projection="mollweide")
     p1 = ax.scatter(ra.radian, dec.radian,color='r',alpha=0.5,s=10)
@@ -1119,17 +1234,17 @@ def codeStats():
     sl = sl[sl['OBJECT_TYPE'] == 'VLM']
     st = splat.searchLibrary(spt_range=[30,39.9],spt_type='SPEX')
     st = st[st['OBJECT_TYPE'] == 'VLM']
-    ra = Angle(sm['RA'].filled(numpy.nan)*u.degree)
+    ra = Angle(list(sm['RA'])*u.degree)
     ra = ra.wrap_at(180*u.degree)
-    dec = Angle(sm['DEC'].filled(numpy.nan)*u.degree)
+    dec = Angle(list(sm['DEC'])*u.degree)
     p1 = ax.scatter(ra.radian, dec.radian,color='k',alpha=0.5,s=10)
-    ra = Angle(sl['RA'].filled(numpy.nan)*u.degree)
+    ra = Angle(list(sl['RA'])*u.degree)
     ra = ra.wrap_at(180*u.degree)
-    dec = Angle(sl['DEC'].filled(numpy.nan)*u.degree)
+    dec = Angle(list(sl['DEC'])*u.degree)
     p2 = ax.scatter(ra.radian, dec.radian,color='r',alpha=0.5,s=10)
-    ra = Angle(st['RA'].filled(numpy.nan)*u.degree)
+    ra = Angle(list(st['RA'])*u.degree)
     ra = ra.wrap_at(180*u.degree)
-    dec = Angle(st['DEC'].filled(numpy.nan)*u.degree)
+    dec = Angle(list(st['DEC'])*u.degree)
     p3 = ax.scatter(ra.radian, dec.radian,color='b',alpha=0.5,s=10)
     plt.legend([p1,p2,p3],['M dwarfs ({})'.format(len(sm)),'L dwarfs ({})'.format(len(sl)),'T dwarfs ({})'.format(len(st))],bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
     ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
@@ -1144,13 +1259,13 @@ def codeStats():
     sy = sy[sy['OBJECT_TYPE'] == 'VLM']
     so = splat.searchLibrary()
     so = so[so['OBJECT_TYPE'] == 'VLM']
-    ra = Angle(so['RA'].filled(numpy.nan)*u.degree)
+    ra = Angle(list(so['RA'])*u.degree)
 #    ra = ra.wrap_at(180*u.degree)
 #    dec = Angle(so['DEC'].filled(numpy.nan)*u.degree)
 #    p1 = ax.scatter(ra.radian, dec.radian,color='k',alpha=0.1,s=5)
-    ra = Angle(sy['RA'].filled(numpy.nan)*u.degree)
+    ra = Angle(list(sy['RA'])*u.degree)
     ra = ra.wrap_at(180*u.degree)
-    dec = Angle(sy['DEC'].filled(numpy.nan)*u.degree)
+    dec = Angle(list(sy['DEC'])*u.degree)
     p1 = ax.scatter(ra.radian, dec.radian,color='r',alpha=0.5,s=10)
     ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
     ax.grid(True)

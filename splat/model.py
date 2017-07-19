@@ -1503,7 +1503,7 @@ def modelFitMCMC(spec, **kwargs):
         if verbose:
             line=''
             for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: line+='{}:{} '.format(ms,param0[ms])
-            print('At cycle {}: chi2 = {:.1f} parameters {}'.format(i,chisqr0,**param0))
+            print('At cycle {}: chi2 = {:.1f} parameters {}'.format(i,chisqr0,line))
 
 
 # save results iteratively
@@ -1611,19 +1611,23 @@ def _modelFitMCMC_plotChains(dp,**kwargs):
     for i,ms in enumerate(columns):
         v = []
         for dp in inp: v.extend(list(dp[ms].values))
+        if isinstance(v[0],u.quantity.Quantity):
+            v = [x.value for x in v]
         plt.subplot(int('{}1{}'.format(nplots,i+1)))
         yr = [numpy.min(v),numpy.max(v)]
         yr[0] -= 0.05*(yr[1]-yr[0])
         yr[1] += 0.05*(yr[1]-yr[0])
 #        print(yr)
         for dp in inp:
-            plt.plot(numpy.arange(len(dp)),dp[ms],'k-',alpha=0.5)
+            plt.plot(numpy.arange(len(dp)),v,'k-',alpha=0.5)
         plt.xlim(xr)
         plt.ylim(yr)
         if kwargs.get('burn',0) > 0:
             plt.plot([kwargs['burn']*len(inp[0])]*2,yr,'k:')
             v = []
             for dp in inp: v.extend(list(dp[ms][int(kwargs['burn']*len(dp)):].values))
+            if isinstance(v[0],u.quantity.Quantity):
+                v = [x.value for x in v]
         plt.plot(xr,[numpy.nanmean(v),numpy.nanmean(v)],'r-')
         plt.plot(xr,[numpy.nanmean(v)+numpy.nanstd(v),numpy.nanmean(v)+numpy.nanstd(v)],'r:')
         plt.plot(xr,[numpy.nanmean(v)-numpy.nanstd(v),numpy.nanmean(v)-numpy.nanstd(v)],'r:')
@@ -1635,6 +1639,8 @@ def _modelFitMCMC_plotChains(dp,**kwargs):
         plt.subplot(int('{}1{}'.format(nplots,nplots)))
         v = []
         for dp in inp: v.extend(list(dp[stat].values))
+        if isinstance(v[0],u.quantity.Quantity):
+            v = [x.value for x in v]
         vp = [-0.5*(c-numpy.nanmin(v)) for c in v]
         yr = [numpy.min(vp),numpy.max(vp)]
         yr[0] -= 0.05*(yr[1]-yr[0])
@@ -1643,7 +1649,7 @@ def _modelFitMCMC_plotChains(dp,**kwargs):
         plt.xlim(xr)
         plt.ylim(yr)
         for dp in inp:
-            plt.plot(numpy.arange(len(dp)),-0.5*(dp[stat]-numpy.nanmin(v)),'k-',alpha=0.5)
+            plt.plot(numpy.arange(len(dp)),-0.5*(v-numpy.nanmin(v)),'k-',alpha=0.5)
         plt.xlabel('Steps')
         plt.ylabel('Statistic')
 
@@ -1703,6 +1709,9 @@ def _modelFitMCMC_plotCorner(dp,**kwargs):
     cnames = []
     truths = []
     for c in tmp:
+        v = list(dp[c])
+        if isinstance(v[0],u.quantity.Quantity):
+            dp[c] = [x.value for x in v]
         if numpy.nanstd(dp[c]) != 0.:
             cnames.append(c)
             truths.append(numpy.nanmedian(dp[c]))
@@ -1732,7 +1741,7 @@ def _modelFitMCMC_plotCorner(dp,**kwargs):
         try:
             plt.savefig(output)
         except:
-            print('\nProblem saving chains plot to {}'.format(output))
+            print('\nProblem saving corner plot to {}'.format(output))
     return fig
 
     try:
