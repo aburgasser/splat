@@ -142,18 +142,27 @@ class Spectrum(object):
         self.published = kwargs.get('published','N')
 
 # breakouts for specific instruments
-        if kwargs.get('APOGEE') == True and kwargs.get('file',False) != False:
+        if (kwargs.get('APOGEE') == True or kwargs.get('apogee') == True or kwargs.get('instrument','SPEX_PRISM').upper() == 'APOGEE') and kwargs.get('file',False) != False:
             rs = _readAPOGEE(kwargs['file'],**kwargs)
             self.instrument = 'APOGEE'
-            self.wave = rs['wave']
-            self.flux = rs['flux']
-            self.noise = rs['noise']
-            self.model = rs['model']
-            self.header = rs['header']        
+            for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
+            self.wunit = kwargs.get('wunit',u.Angstrom)
+            self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.Angstrom))
             self.history.append('Spectrum successfully loaded')
     # create a copy to store as the original
             self.original = copy.deepcopy(self)
             return
+
+        if (kwargs.get('BOSS',False) == True or kwargs.get('boss',False) == True or kwargs.get('eboss',False) == True or kwargs.get('EBOSS',False) == True or kwargs.get('instrument','SPEX_PRISM').upper() == 'BOSS' or kwargs.get('instrument','SPEX_PRISM').upper() == 'EBOSS') and kwargs.get('file',False) != False:
+            rs = _readBOSS(kwargs['file'])
+            for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
+            self.wunit = kwargs.get('wunit',u.Angstrom)
+            self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.Angstrom))
+            self.history.append('Spectrum successfully loaded')
+    # create a copy to store as the original
+            self.original = copy.deepcopy(self)
+            return
+
 
 # process arguments
 # option 1: a filename is given
@@ -220,10 +229,11 @@ class Spectrum(object):
 
 #            try:
             rs = readSpectrum(self.filename,**kwargs)
-            self.wave = rs['wave']
-            self.flux = rs['flux']
-            self.noise = rs['noise']
-            self.header = rs['header']
+            for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
+#            self.wave = rs['wave']
+#            self.flux = rs['flux']
+#            self.noise = rs['noise']
+#            self.header = rs['header']
 #            except:
 #                raise NameError('\nCould not load spectral file {:s}, recheck the filename and path'.format(kwargs.get('filename','')))
 
@@ -2463,26 +2473,6 @@ def searchLibrary(*args, **kwargs):
             return db
 
 
-def _readAPOGEE(file,**kwargs):
-    '''
-    This assumes you have an ascap data file with data dimensions of [data],[uncertainty],[]
-    '''
-
-# make sure file is there
-    if not os.path.exists(file):
-        raise NameError('\nCould not find APOGEE file {}'.format(file))
-
-    hdulist = fits.open(file)
-    header = hdulist[0].header
-    wave = 10.**(numpy.linspace(hdulist[0].header['CRVAL1'],hdulist[0].header['CRVAL1']+hdulist[0].header['NAXIS1']*hdulist[0].header['CDELT1'],num=hdulist[0].header['NAXIS1'],endpoint=False)-4.)
-    flx = hdulist[1].data
-    unc = hdulist[2].data
-    mdl = hdulist[3].data
-    return Spectrum()
-
-
-
-
 
 def readSpectrum(*args,**kwargs):
     '''
@@ -2636,6 +2626,55 @@ def readSpectrum(*args,**kwargs):
 
     return {'wave':wave,'flux':flux,'noise':noise,'header':header}
 
+
+def _readAPOGEE(file,**kwargs):
+    '''
+    This assumes you have an ascap data file with data dimensions of [data],[uncertainty],[]
+    '''
+
+# make sure file is there
+    if not os.path.exists(file):
+        raise NameError('\nCould not find APOGEE file {}'.format(file))
+
+    hdulist = fits.open(file)
+    header = hdulist[0].header
+    wave = 10.**(numpy.linspace(hdulist[0].header['CRVAL1'],hdulist[0].header['CRVAL1']+hdulist[0].header['NAXIS1']*hdulist[0].header['CDELT1'],num=hdulist[0].header['NAXIS1'],endpoint=False))
+    flux = numpy.array(hdulist[1].data)*1.e-17
+    noise = numpy.array(hdulist[2].data)*1.e-17
+    model = numpy.array(hdulist[3].data)*1.e-17
+
+    return {'wave': wave,
+          'flux': flux,
+          'noise': noise,
+          'header': header,
+          'model': model}
+
+
+def _readBOSS(file):
+    """
+    This function reads in a BOSS spectrum 
+    following instructions from goo.gl/njCQp5
+    
+    """
+    if not os.path.exists(file):
+        raise NameError('\nCould not find BOSS file {}'.format(file))
+
+    hdulist=fits.open(file)
+    header = hdulist[0].header
+    wave = 10.**(hdulist[1].data['loglam'])*u.Angstrom  # log10(wavelength [Å]
+    flux = numpy.array(hdulist[1].data['flux'])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)   # coadded calibrated flux in 10^-17 ergs/s/cm2/Å
+    ivar = numpy.array(hdulist[1].data['ivar'])   # 'inverse variance of the flux'
+    noise = numpy.array([(i**(-0.5)) for i in ivar])*1.e-17 *(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+    sky = numpy.array(hdulist[1].data['sky'])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)     # subtracted sky flux in 10^-17 ergs/s/cm2/Å
+    model = numpy.array(hdulist[1].data['model'])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) # pipeline best model fit used for classification and redshift
+    
+    return {'wave': wave,
+          'flux': flux,
+          'noise': noise,
+          'header': header,
+          'sky': sky,
+          'model': model}
+    
 
 
 
