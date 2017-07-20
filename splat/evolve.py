@@ -22,7 +22,7 @@ from astropy.io import ascii
 import pandas
 import matplotlib.pyplot as plt
 import numpy
-from scipy.interpolate import interp1d 
+from scipy.interpolate import griddata, interp1d
 import scipy.integrate as integrate
 import scipy.stats as stats
 
@@ -222,10 +222,10 @@ def _modelParametersSingle(*args, **kwargs):
 
 # prep output parameters
     params = {}
-    for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
-        params[e] = 0.
+#    for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
 
     for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
+        params[e] = 0.
         if e in keywords:
             try: f = float(kwargs[e])
             except: raise ValueError('\nInput parameter {} must be a single number, not {}\n'.format(e,kwargs[e]))
@@ -242,7 +242,60 @@ def _modelParametersSingle(*args, **kwargs):
 # and obtain second parameter as a function of age; then interpolate the model ages as a function of 
 # the second parameter and evaluate for known parameter to get age
 ###############################################################################
-    if (params['mass'] == 0.) and (params['age'] == 0.):
+
+# REVISED METHOD USING GRIDDATA    
+    if (params['mass'] == 0.) and (params['age'] == 0.) and kwargs.get('alt',False) == False:
+
+        Ma1, Ma2 = [], []
+        input_type = 'two_params'
+        if params['temperature'] != 0.:
+            P.append(['temperature', numpy.log10(params['temperature'])])
+        if params['gravity'] != 0.:
+            P.append(['gravity', params['gravity']])
+        if params['radius'] != 0.:
+            P.append(['radius', numpy.log10(params['radius'])])
+        if params['luminosity'] != 0.:
+            P.append(['luminosity', params['luminosity']])
+
+# create a grid to produce extract the mass and age
+        points = []
+        Ag, Ma = [], []
+
+        for i,age in enumerate(lmodel['age']):
+            if numpy.nanmin(lmodel[P[0][0]][i]) <= P[0][1] <= numpy.nanmax(lmodel[P[0][0]][i]) \
+                and numpy.nanmin(lmodel[P[1][0]][i]) <= P[1][1] <= numpy.nanmax(lmodel[P[1][0]][i]):
+                for j,m in enumerate(lmodel[P[0][0]][i]): 
+                    points.append((lmodel[P[0][0]][i][j],lmodel[P[1][0]][i][j]))
+                    Ag.append(age)
+                Ma.extend(lmodel['mass'][i])
+
+        if kwargs.get('debug',False) == True:
+            pts = numpy.array(points)
+            print('\n')
+            print(pts,pts.shape)
+            print('\n')
+            print(Ag,len(Ag))
+            print('\n')
+            print(Ma,len(Ma))
+            print('\n')
+            print(P[0][1],P[1][1])
+
+        try: 
+            params['age'] = 10.**(griddata(numpy.array(points),Ag,numpy.array((P[0][1],P[1][1])),method='linear')[0])
+        except: 
+            params['age'] = float('nan')
+        try: 
+            params['mass'] = 10.**(griddata(numpy.array(points),Ma,numpy.array((P[0][1],P[1][1])),method='linear')[0])
+        except: 
+            params['mass'] = float('nan')
+
+        if kwargs.get('debug',False) == True: print('\nMass and Age unknown; determined age to be {} and mass to be {}'.format(params['age'],params['mass']))
+        Ge, Ag, Ma = [], [], []
+
+
+# OLD WAY OF DOING THIS
+
+    if (params['mass'] == 0.) and (params['age'] == 0.) and kwargs.get('alt',False) == True:
 
         input_type = 'two_params'
         if params['temperature'] != 0.:
@@ -254,9 +307,10 @@ def _modelParametersSingle(*args, **kwargs):
         if params['luminosity'] != 0.:
             P.append(['luminosity', params['luminosity']])
 
+# compute for each age the appropriate mass for each parameter
         for i,age in enumerate(lmodel['age']):
-            if min(lmodel[P[0][0]][i]) <= P[0][1] <= max(lmodel[P[0][0]][i]) \
-                and min(lmodel[P[1][0]][i]) <= P[1][1] <= max(lmodel[P[1][0]][i]):
+            if numpy.nanmin(lmodel[P[0][0]][i]) <= P[0][1] <= numpy.nanmax(lmodel[P[0][0]][i]) \
+                and numpy.nanmin(lmodel[P[1][0]][i]) <= P[1][1] <= numpy.nanmax(lmodel[P[1][0]][i]):
                 Ag.append(age)
                 f = interp1d(lmodel[P[0][0]][i], lmodel['mass'][i])
                 Ma = f(P[0][1])
@@ -266,8 +320,21 @@ def _modelParametersSingle(*args, **kwargs):
         try: 
             f = interp1d(Ge, Ag)
             params['age'] = 10.**f(P[1][1])
-        except: params['age'] = float('nan')
+        except: 
+            params['age'] = float('nan')
+            if kwargs.get('debug',False) == True: 
+                print('\nFailed:\nP = {}\nGe = {}\nAg = {}'.format(P,Ge,Ag))
+                for a in Ag:
+                    i = numpy.argmin(numpy.abs(numpy.array(lmodel['age'])-a))
+                    print(a,i,numpy.nanmin(lmodel[P[0][0]][i]),P[0][1],numpy.nanmax(lmodel[P[0][0]][i]),numpy.nanmin(lmodel[P[1][0]][i]),P[1][1],numpy.nanmax(lmodel[P[1][0]][i]))
+                    f = interp1d(lmodel[P[0][0]][i], lmodel['mass'][i])
+                    Ma = f(P[0][1])
+                    print(lmodel[P[0][0]][i],lmodel['mass'][i],Ma)
+                    f = interp1d(lmodel['mass'][i], lmodel[P[1][0]][i])
+                    print(lmodel[P[1][0]][i],lmodel['mass'][i],f(Ma))
 
+
+        if kwargs.get('debug',False) == True: print('\nMass and Age unknown; determined age to be {}'.format(params['age']))
         Ge, Ag, Ma = [], [], []
 
 ################ UNKNOWN AGE BUT KNOWN MASS AND ONE OTHER PARAMETER ###########
@@ -305,6 +372,8 @@ def _modelParametersSingle(*args, **kwargs):
         except: 
             print('\nFailed in age + parameter determination\n')
             params['age'] = float('nan')
+
+        if kwargs.get('debug',False) == True: print('\nMass known and Age unknown; determined age to be {}'.format(params['age']))
 
         Ge, Ag = [], []
 
@@ -359,6 +428,7 @@ def _modelParametersSingle(*args, **kwargs):
                 print('\nFailed in mass + parameter determination\n')
                 params['mass'] = numpy.nan
 
+        if kwargs.get('debug',False) == True: print('\nMass unknown and Age known; determined mass to be {}'.format(params['mass']))
 
         Ma, Ge = [],[]
 
@@ -410,13 +480,13 @@ def _modelParametersSingle(*args, **kwargs):
             except: 
                 params['radius'] = numpy.nan
   
-        if kwargs.get('debug',False) == True: print(params)
+        if kwargs.get('debug',False) == True: print('\nDetermined parameters: {}'.format(params))
 
         return params
 
 # something failed	  
     else:
-        print(params)
+#        print(params)
         for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
             params[e] = numpy.nan
         print('\nParameter set is not covered by model {}\n'.format(model['name']))
@@ -522,6 +592,7 @@ def modelParameters(*model,**kwargs):
 # determine length of input arrays and assert they must be pure numbers 
     inparams = {}
     inparams['debug'] = kwargs.get('debug',False)
+    inparams['alt'] = kwargs.get('alt',False)
     inparams['verbose'] = kwargs.get('verbose',False)
     outparams = {}
     pkeys = list(mkwargs.keys())
@@ -692,12 +763,19 @@ def plotModelParameters(parameters,xparam,yparam,**kwargs):
             print('\nProblem in reading in original models\n')
             kwargs['showmodel'] = False
 
-    if kwargs.get('showmodel',True) != False or kwargs.get('showmodels',True) != False:
-        tvals,xvals,yvals = [],[],[]
+# models tracks (mass by default)
+        tracks = kwargs.get('tracks',['mass'])
+        if isinstance(tracks,bool):
+            if tracks == True: 
+                tracks = ['mass','age']
+            else:
+                tracks = ['']
+        if tracks == 'all': tracks = ['mass','age']
+        if not isinstance(tracks,list): tracks = [tracks]
+        tracks = [t.lower() for t in tracks]
 
-# models tracks trace mass (by default)
-        if kwargs.get('tracks','mass') == 'mass':
-            masses = []
+        if 'mass' in tracks:
+            xvals, yvals, masses = [], [], []
             for i in model['mass']:
                 masses.extend(i)
             masses.sort()
@@ -720,11 +798,22 @@ def plotModelParameters(parameters,xparam,yparam,**kwargs):
                 xvals.append(xx)
                 yvals.append(yy)
 
+            for i,x in enumerate(xvals):
+                if xlogflag == True and ylogflag == True:
+                    plt.loglog(xvals[i],yvals[i],color='grey',linestyle='-')
+                elif xlogflag == False and ylogflag == True:
+                    plt.semilogy(xvals[i],yvals[i],color='grey',linestyle='-')
+                elif xlogflag == True and ylogflag == False:
+                    plt.semilogx(xvals[i],yvals[i],color='grey',linestyle='-')
+                else:
+                    plt.plot(xvals[i],yvals[i],color='grey',linestyle='-')
+
 # models tracks trace isochrones
-        else:
+        if 'age' in tracks:
+            xvals, yvals = [], []
             tvals = model['age']
 # fix to account for unequal lengths of model values
-            maxlen = numpy.max([len(a) for a in models['mass']])
+            maxlen = numpy.max([len(a) for a in model['mass']])
             for i,x in enumerate(tvals):
                 t = numpy.zeros(maxlen)
                 t.fill(numpy.nan)
@@ -742,15 +831,15 @@ def plotModelParameters(parameters,xparam,yparam,**kwargs):
                 yvals.append(s.tolist())
 
 # plot them
-        for i,x in enumerate(xvals):
-            if xlogflag == True and ylogflag == True:
-                plt.loglog(xvals[i],yvals[i],color='grey')
-            elif xlogflag == False and ylogflag == True:
-                plt.semilogy(xvals[i],yvals[i],color='grey')
-            elif xlogflag == True and ylogflag == False:
-                plt.semilogx(xvals[i],yvals[i],color='grey')
-            else:
-                plt.plot(xvals[i],yvals[i],color='grey')
+            for i,x in enumerate(xvals):
+                if xlogflag == True and ylogflag == True:
+                    plt.loglog(xvals[i],yvals[i],color='grey',linestyle='--')
+                elif xlogflag == False and ylogflag == True:
+                    plt.semilogy(xvals[i],yvals[i],color='grey',linestyle='--')
+                elif xlogflag == True and ylogflag == False:
+                    plt.semilogx(xvals[i],yvals[i],color='grey',linestyle='--')
+                else:
+                    plt.plot(xvals[i],yvals[i],color='grey',linestyle='--')
 
 # add labels
     plt.xlabel(kwargs.get('xlabel','{} ({})'.format(xmparam,EVOLUTIONARY_MODEL_PARAMETERS[xmparam]['unit'])))
