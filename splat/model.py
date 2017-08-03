@@ -50,7 +50,7 @@ MODELS_READIN = {}
 def _test():
     _processModels('madhusudhan2011')
 
-# helper function to read in Saumon et al. 2012 models
+# helper functions to read in raw models
 def _readBurrows06(file):
     if not os.access(file, os.R_OK):
         raise ValueError('Could not find model file {}'.format(file))
@@ -108,6 +108,46 @@ def _readDrift(file):
     flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     return wave, flux
 
+def _modelToInstrument(model,instrument,*args,**kwargs):
+    '''
+    Converts a spectrum (presumable a full-resolution model spectrum) into instrument-specific parameters by applying wavelength cut, resolution smoothing and resampling
+    '''
+# check inputs
+    if not isinstance(model,splat.Spectrum):
+        raise ValueError('\nInput model must be a SPLAT Spectrum objects')
+    mdl = copy.deepcopy(model)
+    mdl.waveUnit(u.micron)
+
+    instr = checkInstrument(instrument)
+    print(instrument,instr)
+    if instr == False: 
+        raise ValueError('\nInvalid instrument {}'.format(instrument))
+
+    buff = kwargs.get('buffer',[-0.1*u.micron,0.1*u.micron])
+
+# convert spectrum by trimming and smoothing    
+    mdl.trim([INSTRUMENTS[instr]['waverange'][0]-buff[0],INSTRUMENTS[instr]['waverange'][1]+buff[1]])
+    mdl.smooth(resolution=INSTRUMENTS[instr]['resolution'])
+
+# generate a resampled version and replace 
+    resscale = 3.
+    if INSTRUMENTS[instr]['slitwidth'].value != 0 and INSTRUMENTS[instr]['pixelscale'].value != 0:
+        resscale = INSTRUMENTS[instr]['slitwidth'].value/INSTRUMENTS[instr]['pixelscale'].value
+    effres = INSTRUMENTS[instr]['resolution']*resscale
+    npix = numpy.floor(numpy.log(INSTRUMENTS[instr]['waverange'].value[1]/INSTRUMENTS[instr]['waverange'].value[0])/numpy.log(1.+1./effres))
+    wvout = [INSTRUMENTS[instr]['waverange'].value[0]*(1.+1./effres)**i for i in numpy.arange(npix)]
+    f = interp1d(mdl.wave.value,mdl.flux.value,bounds_error=False,fill_value=0.)
+    v = interp1d(mdl.wave.value,mdl.variance.value,bounds_error=False,fill_value=0.)
+    flxout = f(wvout)
+    varout = v(wvout)
+    mdl.wave = wvout*u.micron
+    mdl.flux = flxout*model.flux.unit
+    mdl.variance = varout*model.variance.unit
+    mdl.noise = mdl.variance**0.5
+    mdl.waveUnit(model.wave.unit)
+    mdl.history.append('Smoothed to match instrument {}'.format(instr))
+# reset original
+    return mdl
 
 def _processModels(*args,**kwargs):
     method = kwargs.get('method','hamming')
@@ -284,6 +324,96 @@ def _processModels(*args,**kwargs):
 
     return True
 
+
+
+
+def loadOriginalModel(model='btsettl08',instrument='UNKNOWN',file='',**kwargs):
+    '''
+    Purpose: 
+        Loads up an original model spectrum at full resolution/spectral range, based on filename or model parameters. 
+
+    Required Inputs:
+
+        None
+
+    Optional Inputs:
+        :param: **model**: The model set to use; may be one of the following:
+
+            - *btsettl08*: (default) model set from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  with effective temperatures of 400 to 2900 K (steps of 100 K); surface gravities of 3.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity of -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.3, and 0.5 for temperatures greater than 2000 K only; cloud opacity is fixed in this model, and equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `btsettled`, `btsettl`, `allard`, `allard12`)
+            - *burrows06*: model set from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_ with effective temperatures of 700 to 2000 K (steps of 50 K); surface gravities of 4.5 to 5.5 in units of cm/s^2 (steps of 0.1 dex); metallicity of -0.5, 0.0 and 0.5; and either no clouds or grain size 100 microns (fsed = 'nc' or 'f100'). equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `burrows`, `burrows2006`)
+            - *morley12*: model set from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_ with effective temperatures of 400 to 1300 K (steps of 50 K); surface gravities of 4.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and sedimentation efficiency (fsed) of 2, 3, 4 or 5; metallicity is fixed to solar, equilibrium chemistry is assumed, and there are no clouds associated with this model (alternate designations: `morley2012`)
+            - *morley14*: model set from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, sedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: `morley2014`)
+            - *saumon12*: model set from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_ with effective temperatures of 400 to 1500 K (steps of 50 K); and surface gravities of 3.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, and no clouds are associated with these models (alternate designations: `saumon`, `saumon2012`)
+            - *drift*: model set from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_ with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex); cloud opacity is fixed in this model, equilibrium chemistry is assumed (alternate designations: `witte`, `witte2011`, `helling`)
+            - *madhusudhan*: model set from `Madhusudhan et al. (2011) <http://adsabs.harvard.edu/abs/2011ApJ...737...34M>`_ with effective temperatures of 600 K to 1700 K (steps of 50-100 K); surface gravities of 3.5 and 5.0 in units of cm/s^2; and metallicities of 0.0 to 1.0 (in steps of 0.5 dex); there are multiple cloud prescriptions for this model, equilibrium chemistry is assumed (alternate designations: `madhusudhan`)
+        
+        :param: **teff**: effective temperature of the model in K (e.g. `teff` = 1000)
+        :param: **logg**: log10 of the surface gravity of the model in cm/s^2 units (e.g. `logg` = 5.0)
+        :param: **z**: log10 of metallicity of the model relative to solar metallicity (e.g. `z` = -0.5)
+        :param: **fsed**: sedimentation efficiency of the model (e.g. `fsed` = 'f2')
+        :param: **cld**: cloud shape function of the model (e.g. `cld` = 'f50')
+        :param: **kzz**: vertical eddy diffusion coefficient of the model (e.g. `kzz` = 2)
+        :param: **instrument**: instrument the model should be converted to (default = 'raw')
+        :param: **file**: file name for model (default = '' or generated from parameters)
+        :param: **folder**: folder containing file (default = '' or default folder for model set)
+        :param: **verbose**: give lots of feedback
+
+    Output:
+        A SPLAT Spectrum object of the model with wavelength in microns and surface fluxes in F_lambda units of erg/cm^2/s/micron.
+
+    Example:
+
+    >>> import splat
+    >>> mdl = splat.loadOriginalModel(model='btsettl',teff=2600,logg=4.5)
+    >>> mdl.info()
+        btsettl08 Teff=2600 logg=4.5 [M/H]=0.0 atmosphere model with the following parmeters:
+        Teff = 2600 K
+        logg = 4.5 dex
+        z = 0.0 dex
+        fsed = nc
+        cld = nc
+        kzz = eq
+
+        If you use this model, please cite Allard, F. et al. (2012, Philosophical Transactions of the Royal Society A, 370, 2765-2777)
+        bibcode = 2012RSPTA.370.2765A
+    '''
+
+    mkwargs = {}
+    mkwargs['ismodel'] = True
+    
+# check modelset name
+    mset = checkSpectralModelName(model)
+    if mset == False:
+        raise ValueError('\{} is not a valid model set name'.format(model))
+    mkwargs['model'] = mset
+
+# if not a specific file, generate it
+    if file == '':
+        for k in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+            mkwargs[k] = kwargs.get(k,SPECTRAL_MODEL_PARAMETERS[k]['default'])
+        if mset == 'btsettl08':
+            readfxn = _readBtsettl08
+            file = SPECTRAL_MODELS[mset]['rawfolder']+'lte{:s}-{:.1f}{:.1f}a+0.0.BT-Settl.spec.7.gz'.format(str((float(mkwargs['teff'])+0.01)/1.e5)[2:5],mkwargs['logg'],mkwargs['z']-0.0001)
+        else:
+            raise ValueError('\nOnly have btsettl08 at this point')
+
+# check file name
+    if not os.access(file, os.R_OK):
+        filetmp = SPECTRAL_MODELS[mset]['rawfolder']
+        if not os.access(filetmp, os.R_OK):
+            raise ValueError('Could not find model file {}'.format(file))
+        else: file=filetmp
+    mkwargs['filename'] = os.path.basename(file)
+
+# read in data            
+    wave,flux = readfxn(file)
+    mkwargs['wave'] = wave
+    mkwargs['flux'] = flux
+
+# convert to instrument - TBD
+    mkwargs['instrument'] = instrument
+
+    return Spectrum(**mkwargs)
 
 
 def _smooth2resolution(wave,flux,resolution,**kwargs):
@@ -572,17 +702,19 @@ def loadInterpolatedModel(*args,**kwargs):
 
     Example:
 
-    >>> import splat
-    >>> mdl = splat.loadModel(teff=1000,logg=5.0)
+    >>> import splat.model as spmdl
+    >>> mdl = spmdl.loadModel(teff=1000,logg=5.0)
     >>> mdl.info()
-        morley12 model with the following parmeters:
-        Teff = 540 K
-        logg = 4.7 cm/s2
-        z = 0.0
-        fsed = f3
+        BT-Settl (2008) Teff=1000 logg=5.0 [M/H]=0.0 atmosphere model with the following parmeters:
+        Teff = 1000 K
+        logg = 5.0 dex
+        z = 0.0 dex
+        fsed = nc
         cld = nc
         kzz = eq
-        Smoothed to slit width 0.5 arcseconds
+
+        If you use this model, please cite Allard, F. et al. (2012, Philosophical Transactions of the Royal Society A, 370, 2765-2777)
+        bibcode = 2012RSPTA.370.2765A
     '''
 # attempt to generalize models to extra dimensions
     mkwargs = kwargs.copy()
@@ -871,6 +1003,123 @@ def _loadModelParameters(*args,**kwargs):
         return dp
     else:
         return parameters
+
+
+
+def loadTelluric(*args,wave_range=None,ndata=100,linear=True,log=False,output='transmission',folder=splat.SPLAT_PATH+'/reference/SolAtlas/'):
+    '''
+    Purpose: 
+
+        Loads up telluric absorption spectrum from `Livingston and Wallace (1991) <http://adsabs.harvard.edu/abs/1991aass.book.....L>`_
+
+    Required Inputs:
+
+        A wavelength array must be input in one of the following manners:
+
+            - as an list passed as an argument ``wave``; e.g., loadTelluric(wave)
+            - by specifying the min and max wavelengths with ``wave_range`` and number of points with ``ndata``; e.g., loadTelluric(wave_range=[1.3,1.5],ndata=100)
+
+    Optional Inputs:
+
+        :param: **linear**: linear sampling over ``wave_range`` (default = True)
+        :param: **log**: log-linear sampling over ``wave_range`` (default = False)
+        :param: **folder**: set to folder containing the Livingston and Wallace files (default = SPLAT's reference folder)
+        :param: **output**: set to one of the following possible outputs:
+            - ``transmission`` (default) - a numpy array containing the transmission spectrum
+            - ``spectrum`` - a Spectrum object containing the transmission spectrum
+
+    Output:
+
+        Either a numpy array or Spectrum object containing the transmission spectrum sampled 
+        over the wavelength range provided, with values ranging from 0 to 1
+
+    Example:
+
+    >>> import splat.model as spmdl
+    >>> trans = spmdl.loadTelluric(wave_range=[1.3,1.5],ndata=1000)
+    >>> print(trans)
+        [  9.89881739e-01   9.77062180e-01   9.64035135e-01   1.00051461e+00
+           9.96495927e-01   9.96135086e-01   9.97309832e-01   9.17222383e-01
+           8.20866597e-01   9.24702335e-01   9.97319517e-01   9.97450808e-01
+           8.98421113e-01   9.98372247e-01   9.60017183e-01   9.98449332e-01
+           9.94087424e-01   9.52683627e-01   9.87684348e-01   7.75109019e-01
+           9.76381023e-01   9.89867274e-01   8.71284143e-01   8.79453464e-01
+           8.85513893e-01   9.96684751e-01   9.89084643e-01   9.80117987e-01
+           9.85237657e-01   9.93525954e-01   9.95844421e-01   7.88396747e-01
+           9.82524939e-01   9.98155509e-01   9.96245824e-01   9.55002105e-01   ... 
+    >>> trans = spmdl.loadTelluric(wave_range=[1.3,1.5],ndata=1000,output='spectrum')
+    >>> trans.info()
+        Telluric transmission spectrum
+
+        If you use these data, please cite Livingston, W. & Wallace, L. (1991, UNKNOWN, , )
+        bibcode = 1991aass.book.....L
+    '''
+
+# prep inputs
+    if len(args)>0: wave = args[0]
+    else:
+        if (isinstance(wave_range,list) or isinstance(wave_range,numpy.ndarray)) and ndata > 2:
+            if len(wave_range) >= 2:
+                if linear == True:
+                    wave = numpy.linspace(wave_range[0],wave_range[1],ndata)
+                if log == True:
+                    wave = numpy.logspace(wave_range[0],wave_range[1],ndata)
+            else:
+                raise ValueError('\nCould not generate wavelength array with wave_range = {} and ndata = {}'.format(wave_range,ndata))
+        else:
+            raise ValueError('\nwave_range needs to be a list or numpy array')
+    if isinstance(wave,u.quantity.Quantity):
+        wave = wave.to(u.micron)
+        wave = wave.value
+    if not isinstance(wave,numpy.ndarray):
+        wave = numpy.array(wave)
+    if len(wave) < 2:
+        raise ValueError('\nWavelength parameter {} should be a list of wavelengths'.format(wave))
+    
+# prep files
+    tfiles = glob.glob(folder+'wn*')
+    tfiles.reverse()
+    tfiles = numpy.array(tfiles)
+    tfwv = numpy.array([1.e4/float(f[len(folder+'wn'):]) for f in tfiles])
+# select only those files in the range of wavelengths
+#    tfiles = tfiles[
+    w = numpy.where(numpy.logical_and(tfwv > numpy.min(wave),tfwv < numpy.max(wave)))
+    tfiles_use = tfiles[w]
+    if w[0][0] > 0: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][0]-1])
+    if w[0][0] < len(tfiles)-1: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][-1]+1])
+
+# generate raw wavelength and transmission list
+# warning: if wide wavelength range chosen, this could be large
+    if len(tfiles_use) > 30:
+        print('Warning: requesting a large transmission spectrum; this may take time')
+    twave = []
+    trans = []
+    for f in tfiles_use:
+        dp = pandas.read_csv(f,delimiter='\s+',names=['wavenum','flux','atm','total'])
+        twave.extend([1.e4/w for w in dp['wavenum']])
+        trans.extend([float(x) for x in dp['atm']])
+    [x for (y,x) in sorted(zip(trans,twave))]
+    trans = numpy.array(trans)
+    twave = numpy.array(sorted(twave))
+
+# resample onto desired wavelength scale via numerical integration
+    trans_sampled = integralResample(twave,trans,wave)
+
+# return data
+    if 'spec' in output.lower():
+        mkwargs = {
+        'wave': wave,
+        'flux': trans_sampled,
+        'name': 'Telluric transmission',
+        'funit': u.m/u.m,
+        'wunit': u.micron,
+        'bibcode': '1991aass.book.....L',
+        'istransmission': True
+        } 
+        return Spectrum(**mkwargs)
+    else: 
+        return numpy.array(trans_sampled)
+
 
 
 def blackbody(temperature,**kwargs):

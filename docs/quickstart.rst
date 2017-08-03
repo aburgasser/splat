@@ -8,6 +8,7 @@
 .. _`plotSpectrum()` : api.html#splat.plot.plotSpectrum
 .. _`fluxCalibrate()` : api.html#splat.core.Spectrum.fluxCalibrate
 .. _`plot()` : api.html#splat.core.Spectrum.plot
+.. _`getInfo()` : api.html#splat.core.Spectrum.getInfo
 .. _`Spectrum` : api.html#splat.core.Spectrum
 .. _`modelFitGrid()` : api.html#splat.model.modelFitGrid
 .. _`modelFitMCMC()` : api.html#splat.model.modelFitMCMC
@@ -41,10 +42,10 @@ Most routines also have help docstrings that can be accessed by appending a ques
 >>> splat.getSpectrum?
 
 
-Examples
-^^^^^^^^
+Accessing Spectra
+^^^^^^^^^^^^^^^^^
 
-* The best way to read in a spectrum from the SPLAT library is to use `getSpectrum()`_
+The best way to read in a spectrum from the SPLAT library is to use `getSpectrum()`_
 
 >>> import splat
 >>> splist = splat.getSpectrum(shortname='0415-0935')
@@ -53,14 +54,22 @@ Examples
 >>> splist = splat.getSpectrum(lucky=True)
 
 The last case returns a randome spectrum. 
-In each case, ``splist`` is a list of Spectrum objects, which is the container of various 
+In each case, ``splist`` is a list of `Spectrum`_ class objects, which is the container of various 
 aspects of the spectrum and its source properties. For example, selecting the first spectrum,
-
 
 >>> sp = splist[0]
 
-``sp.wave`` contains the wavelengths of this spectrum, ``sp.flux`` the flux values, and ``sp.noise`` the 
-flux uncertainties.
+will extract that object, which contains many parameters and intrinsic functions. 
+For example, ``sp.wave`` contains the wavelengths of this spectrum, ``sp.flux`` the flux values, and ``sp.noise`` the 
+flux uncertainties. `sp.info()`_ will print out a set of information about the spectrum either set by your
+or contained in the SPLAT database. Read more about the `Spectrum`_ on the `Spectrum class help page <spectrum.html>`_.
+
+You can also search more generally for sources in the SPLAT database using `searchLibrary()`_:
+
+>>> s = splat.searchLibrary(subdwarf=True)
+>>> print(s)
+
+This will print out a `pandas <http://pandas.pydata.org/>`_ dataFrame table with the relevant source and spectral information.
 
 You can also read in your own spectrum by passing a filename directly to the `Spectrum`_ class object:
 
@@ -74,12 +83,29 @@ flux uncertainty. You can preset the units for wavelength and flux density with 
 >>> import astropy.units as u
 >>> sp = splat.Spectrum(filename='PATH_TO/myspectrum.fits',wunit=u.Angstrom,funit=u.erg/u.cm/u.cm/u.sec/u.Angstrom)
 
-* To flux calibrate the spectrum, use the object's built in `fluxCalibrate()`_ method:
+
+Manipulating Spectral Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spectral data can be manipulated in many ways using routines intrinsic to the `Spectrum`_ class object. For example, you can normalize or scale the spectrum using these respective functions:
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
->>> sp.fluxCalibrate('2MASS J',14.0)
+>>> sp.normalize()						# normalizes the spectral flux by dividing out overall maximum
+>>> sp.normalize(range=[1.1,1.3])		# divide by maximum in wavelength range 1.1-1.4 micron 
+>>> sp.scale(5.0)						# scale the spectral flux by a factor of 5.0
 
-* To display the spectrum, use the Spectrum object's `plot()`_ function or `plotSpectrum()`_
+To flux calibrate the spectrum, use the object's built in `fluxCalibrate()`_ method:
+
+>>> sp.fluxCalibrate(14.0, '2MASS J')	# flux calibrate to 2MASS J = 14.0
+
+Spectra can be added and subtracted from each other with simple addition and subtraction
+
+>>> sp1 = splat.getSpectrum(shortname='0415-0935')[0]
+>>> sp2 = splat.getSpectrum(shortname='0559-1404')[0]
+>>> sp3 = sp1+sp2   	# sum
+>>> sp4 = sp1-sp2 		# difference
+
+To display the spectrum, use the Spectrum object's `plot()`_ function or `plotSpectrum()`_
 
 >>> sp.plot()
 >>> from splat.plot import plotSpectrum

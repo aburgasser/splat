@@ -17,6 +17,7 @@ import requests
 
 # imports: external
 from astropy import units as u
+import astropy.constants as constants
 from astropy.cosmology import Planck15, z_at_value
 from astropy.io import ascii
 import pandas
@@ -1365,8 +1366,58 @@ def simulateBinaryOrbits(**kwargs):
 def simulateGalacticOrbits(**kwargs):
     pass    
 
-def simulateKinematics(**kwargs):
-    pass    
+def simulateUVW(ages,**kwargs):
+    '''
+    :Purpose: Generates a distribution of U, V and W velocities for a population of stars with given ages
+    Currently this only includes the velocity dispersions of Aumer et al. 2009
+
+    Required Inputs:
+
+    :param: ages: array of ages in units of Gyr
+
+    Optional Inputs:
+    
+    :param: verbose: Give feedback (default = False)
+
+    Output: 
+
+    Three arrays of U, V and W in units of km/s, defined on a right-hand coordinate system centered on the Sun
+    Note that these are defined in the model's local standard of rest
+
+    :Example:
+    >>> import splat.evolve as spev
+    >>> import numpy
+    >>> ages = spev.simulateAges(1000,distribution='cosmic')
+    >>> u,v,w = spev.simulateKinematics(ages)
+    >>> print('sU = {:.2f}, sV = {:.2f}, sW = {:.2f}, mV = {:.2f}'.format(numpy.std(u),numpy.std(v),numpy.std(w),numpy.mean(v)))
+        sU = 39.15 km / s, sV = 27.47 km / s, sW = 21.01 km / s, mV = -20.46 km / s
+    '''
+
+# u velocity
+    v10 = 41.899
+    tau1 = 0.001
+    beta = 0.307
+    sig = v10*((numpy.array(ages)+tau1)/(10.+tau1))**beta
+    uvel = numpy.random.normal(numpy.zeros(len(ages)),sig)
+
+# v velocity - firs offset
+    k = 74.
+    voff = -1.*(sig**2)/k
+# now compute scatter    
+    v10 = 28.823
+    tau1 = 0.715
+    beta = 0.430
+    sig = v10*((numpy.array(ages)+tau1)/(10.+tau1))**beta
+    vvel = numpy.random.normal(voff,sig)
+
+# w velocity
+    v10 = 23.381
+    tau1 = 0.001
+    beta = 0.445
+    sig = v10*((numpy.array(ages)+tau1)/(10.+tau1))**beta
+    wvel = numpy.random.normal(numpy.zeros(len(ages)),sig)
+
+    return uvel*u.km/u.s, vvel*u.km/u.s, wvel*u.km/u.s
 
 def simulatePhotometry(**kwargs):
     pass    
@@ -1439,4 +1490,232 @@ def simulatePopulation(**kwargs):
 
     return parameters
 
+
+def UVWpopulation(uvw,e_uvw=[0.,0.,0.],nsamp=1000,verbose=False):
+    '''
+    :Purpose: Computes the probabilities of a source being within the thin disk, thick disk or halo populations
+    using the analysis of Bensby et al. 2003
+
+    Required Inputs:
+
+    :param: uvw: array containing the UVW velocities in km/s in right-hand coordinate system
+
+    Optional Inputs:
+
+    :param: e_uvw: uarray containing the uncertainties of UVW in km/s (default = [0.,0.,0.])
+    :param: nsamp: number of Monte Carlo samples for error propogation (default = 1000)
+    :param: verbose: Give feedback (default = False)
+
+    Output: 
+
+    Three value specifying the probability of being in the thin disk, thick disk, or halo (sums to 1)
+
+    :Example:
+    >>> import splat.evolve as spev
+    >>> pt,pth,ph = spev.UVWpopulation([20.,-80.,10.],verbose=True)
+        P(thin) = 0.418
+        P(thick) = 0.581
+        P(halo) = 0.000
+        Borderline thin/thick disk star
+    '''
+
+# parameters 
+    thin_sig = numpy.array([35.,20.,16.])
+    thin_asym = -15.
+    thin_f = 0.94
+
+    thick_sig = numpy.array([67.,38.,35.])
+    thick_asym = -46.
+    thick_f = 0.06
+
+    halo_sig = numpy.array([160.,90.,90.])
+    halo_asym = -220.
+    halo_f = 0.0015
+
+    k_thin = 1./(((2.*numpy.pi)**1.5)*numpy.product(numpy.array(thin_sig)))
+    k_thick = 1./(((2.*numpy.pi)**1.5)*numpy.product(numpy.array(thick_sig)))
+    k_halo = 1./(((2.*numpy.pi)**1.5)*numpy.product(numpy.array(halo_sig)))
+
+    if e_uvw[0] != 0.:
+        us = numpy.random.normal(uvw[0],e_uvw[0],nsamp)
+        vs = numpy.random.normal(uvw[1],e_uvw[1],nsamp)
+        ws = numpy.random.normal(uvw[2],e_uvw[2],nsamp)
+    else:
+        us = numpy.array(uvw[0])
+        vs = numpy.array(uvw[1])
+        ws = numpy.array(uvw[2])
+        
+    us_thin_exp = (us**2)/(2.*thin_sig[0]**2)
+    us_thick_exp = (us**2)/(2.*thick_sig[0]**2)
+    us_halo_exp = (us**2)/(2.*halo_sig[0]**2)
+    vs_thin_exp = ((vs-thin_asym)**2)/(2.*thin_sig[1]**2)
+    vs_thick_exp = ((vs-thick_asym)**2)/(2.*thick_sig[1]**2)
+    vs_halo_exp = ((vs-halo_asym)**2)/(2.*halo_sig[1]**2)
+    ws_thin_exp = (ws**2)/(2.*thin_sig[2]**2)
+    ws_thick_exp = (ws**2)/(2.*thick_sig[2]**2)
+    ws_halo_exp = (ws**2)/(2.*halo_sig[2]**2)
+
+    td_d = (thick_f/thin_f)*(k_thick/k_thin)*numpy.exp(us_thin_exp+vs_thin_exp+ws_thin_exp-us_thick_exp-vs_thick_exp-ws_thick_exp)
+    h_td = (halo_f/thick_f)*(k_halo/k_thick)*numpy.exp(-1.*(us_halo_exp+vs_halo_exp+ws_halo_exp-us_thick_exp-vs_thick_exp-ws_thick_exp))
+
+    pd = 1./(1.+td_d*(1.+h_td))
+    ptd = pd*td_d
+    ph = ptd*h_td
+
+    if e_uvw[0] != 0.:
+        if verbose==True:
+            print('P(thin) = {:.3f}+/-{:.3f}'.format(numpy.mean(pd),numpy.std(pd)))
+            print('P(thick) = {:.3f}+/-{:.3f}'.format(numpy.mean(ptd),numpy.std(ptd)))
+            print('P(halo) = {:.3f}+/-{:.3f}'.format(numpy.mean(ph),numpy.std(ph)))
+            if numpy.mean(td_d) > 10.: print('Likely thick disk star')
+            elif numpy.mean(td_d) < 0.1: print('Likely thin disk star')
+            else: print('Borderline thin/thick disk star')
+        return numpy.mean(pd),numpy.mean(ptd),numpy.mean(ph)
+    else:
+        if verbose==True:
+            print('P(thin) = {:.3f}'.format(pd))
+            print('P(thick) = {:.3f}'.format(ptd))
+            print('P(halo) = {:.3f}'.format(ph))
+            if td_d > 10.: print('Likely thick disk star')
+            elif td_d < 0.1: print('Likely thin disk star')
+            else: print('Borderline thin/thick disk star')
+        return pd,ptd,ph
+
+
+def galacticPotential(r,z,verbose=False,report='all'):
+    '''
+    :Purpose: Computes the specific gravitational potential (energy per mass) at a particular radius r and 
+    scaleheight z in the Milky Way Galaxy based on the cylindrically symmetric models of Barros et al. (2016, AandA, 593A, 108)
+
+    Required Inputs:
+
+    :param: r: radial coordinate from center of Galaxy in units of kpc
+    :param: r: vertical coordinate in plane of Galaxy in units of kpc
+
+    Optional Inputs:
+
+    :param: report: set to the following to return specific values:
+        * `all`: return total potential (default) 
+        * `disk`: return only potential from the disk
+        * `halo`: return only potential from the halo
+        * `bulge`: return only potential from the bulge
+    :param: verbose: Give feedback (default = False)
+
+    Output: 
+
+    Specific potential in units of km2/s2
+
+    :Example:
+    >>> import splat.evolve as spev
+    >>> pot = spev.galacticPotential(8.5,2.0,verbose=True)
+        Thin disk potential = -16164.669941534123 km2 / s2
+        Thick disk potential = -2805.8541251994084 km2 / s2
+        H I disk potential = -4961.194452965543 km2 / s2
+        H II disk potential = -1320.2381374715114 km2 / s2
+        Total disk potential = -25251.956657170587 km2 / s2
+        Bulge potential = -12195.097166319883 km2 / s2
+        Halo potential = 64175.96074890407 km2 / s2    
+    '''
+
+# convert inputs into proper units
+    rval = r*u.kpc
+    zval = z*u.kpc
+    fmass = 1.0
+# bulge
+    mb = 2.6e10*u.solMass
+    ab = 0.44*u.kpc
+    phib = -1.*constants.G*mb/((rval**2+zval**2)**0.5+ab)
+    phib = phib.to((u.km**2)/(u.s**2))
+# halo
+    vh = 166*u.km/u.s
+    rh = 5.4*u.kpc
+    qphi = 1.
+    phih = 0.5*(vh**2)*numpy.log((rval/u.kpc)**2+(zval/qphi/u.kpc)**2+(rh/u.kpc)**2)
+    phih = phih.to((u.km**2)/(u.s**2))
+# thin disk
+    b = 0.243*u.kpc
+    xi = (zval**2+b**2)**0.5
+    md = 2.106e10*u.solMass
+    ad = 3.859*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    x2 = rval**2-2.*(ad+xi)**2
+    phid1 = -1.*constants.G*(fmass*md/x)*(1.+(ad*(ad+xi)/x**2)-(1./3.)*(ad**2)*x2/(x**4))
+    md = 2.162e10*u.solMass
+    ad = 9.052*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    x2 = rval**2-2.*(ad+xi)**2
+    phid2 = -1.*constants.G*(fmass*md/x)*(1.+(ad*(ad+xi)/x**2)-(1./3.)*(ad**2)*x2/(x**4))
+    md = -1.074e10*u.solMass
+    ad = 3.107*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    x2 = rval**2-2.*(ad+xi)**2
+    phid3 = -1.*constants.G*(fmass*md/x)*(1.+(ad*(ad+xi)/x**2)-(1./3.)*(ad**2)*x2/(x**4))
+    phid = phid1.to(u.km**2/u.s**2)+phid2.to(u.km**2/u.s**2)+phid3.to(u.km**2/u.s**2)
+# thick disk
+    b = 0.776*u.kpc
+    xi = (zval**2+b**2)**0.5
+    md = 0.056e10*u.solMass
+    ad = 0.993*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    phitd1 = -1.*constants.G*(fmass*md/x)
+    md = 3.766e10*u.solMass
+    ad = 6.555*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    phitd2 = -1.*constants.G*(fmass*md/x)
+    md = -3.250e10*u.solMass
+    ad = 7.651*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    phitd3 = -1.*constants.G*(fmass*md/x)
+    phitd = phitd1.to(u.km**2/u.s**2)+phitd2.to(u.km**2/u.s**2)+phitd3.to(u.km**2/u.s**2)
+# h1 disk
+    b = 0.168*u.kpc
+    xi = (zval**2+b**2)**0.5
+    md = 2.046e10*u.solMass
+    ad = 9.021*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    phih11 = -1.*constants.G*(fmass*md/x)*(1.+(ad*(ad+xi)/x**2))
+    md = 2.169e10*u.solMass
+    ad = 9.143*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    phih12 = -1.*constants.G*(fmass*md/x)*(1.+(ad*(ad+xi)/x**2))
+    md = -3.049e10*u.solMass
+    ad = 7.758*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    phih13 = -1.*constants.G*(fmass*md/x)*(1.+(ad*(ad+xi)/x**2))
+    phih1 = phih11.to(u.km**2/u.s**2)+phih12.to(u.km**2/u.s**2)+phih13.to(u.km**2/u.s**2)
+# h2 disk
+    b = 0.128*u.kpc
+    xi = (zval**2+b**2)**0.5
+    md = 0.928e10*u.solMass
+    ad = 6.062*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    x2 = rval**2-2.*(ad+xi)**2
+    phih21 = -1.*constants.G*(fmass*md/x)*(1.+(ad*(ad+xi)/x**2)-(1./3.)*(ad**2)*x2/(x**4))
+    md = 0.163e10*u.solMass
+    ad = 3.141*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    x2 = rval**2-2.*(ad+xi)**2
+    phih22 = -1.*constants.G*(fmass*md/x)*(1.+(ad*(ad+xi)/x**2)-(1./3.)*(ad**2)*x2/(x**4))
+    md = -0.837e10*u.solMass
+    ad = 4.485*u.kpc
+    x = (rval**2+(ad+xi)**2)**0.5
+    x2 = rval**2-2.*(ad+xi)**2
+    phih23 = -1.*constants.G*(fmass*md/x)*(1.+(ad*(ad+xi)/x**2)-(1./3.)*(ad**2)*x2/(x**4))
+    phih2 = phih21.to(u.km**2/u.s**2)+phih22.to(u.km**2/u.s**2)+phih23.to(u.km**2/u.s**2)
+
+    phidisk = phid+phitd+phih1+phih2    
+
+    if verbose==True: 
+        print('Thin disk potential = {}'.format(phid))
+        print('Thick disk potential = {}'.format(phitd))
+        print('H I disk potential = {}'.format(phih1))
+        print('H II disk potential = {}'.format(phih2))
+        print('Total disk potential = {}'.format(phidisk))
+        print('Bulge potential = {}'.format(phib))
+        print('Halo potential = {}'.format(phih))
+
+    if report=='halo': return phih
+    elif report=='bulge': return phib
+    elif report=='disk': return phidisk
+    else: return phib+phih+phidisk
 

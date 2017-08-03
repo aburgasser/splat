@@ -101,7 +101,7 @@ In each case, splist is a list of `Spectrum`_ objects, each a container of vario
 >>> sp = splist[0]
 
 ``sp.wave`` gives the wavelengths of this spectrum, ``sp.flux`` the flux values, and ``sp.noise`` the 
-flux uncertainty. A summary of the Spectrum_ object can be accessed using ``sp.info()``.
+flux uncertainty. A summary of the `Spectrum`_ object can be accessed using ``sp.info()``.
 
 You can also read in your own spectrum by passing a filename
 
@@ -129,7 +129,7 @@ or the splat.plot routine `plotSpectrum()`_ :
 
 You can save your spectrum by adding a filename:
 
->>> splot.plotSpectrum(sp,file='spectrum.png')
+>>> splot.plotSpectrum(sp,file='spectrum.pdf')
 
 You can also compare multiple spectra:
 
@@ -137,13 +137,13 @@ You can also compare multiple spectra:
 >>> sp2 = splat.getSpectrum(shortname='1217-0311')[0]
 >>> splot.plotSpectrum(sp1,sp2,colors=['black','red'])
 
-`plotSpectrum()`_ has many extras to label features, plot uncertainties, 
+`plotSpectrum()`_ and related routines have many extras to label features, plot uncertainties, 
 indicate telluric absorption regions, make multi-panel and multi-page plots
-of lists of spectra, etc. Be sure to look through the plotting 
+of lists of spectra, plot batches of spectra, etc. Be sure to look through the `splat.plot`_ 
 subpackage for more details.
 
 
-SPLAT can analyze and compare an arbitrary number of spectra.
+SPLAT's primary purpose is to allow the analysis of ultracool dwarf spectra.
 
 * To measure spectral indices, use `measureIndex()`_ or `measureIndexSet()`_:
 
@@ -154,12 +154,12 @@ SPLAT can analyze and compare an arbitrary number of spectra.
 The last line returns a dictionary, whose value,error pair can be accessed by the name 
 of the index:
 
->>> print indices['sH2O-J']		# returns value, error
+>>> print(indices['sH2O-J'])		# returns value, error
 
-* You can also determine the gravity classification of a source via `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ using `classifyGravity()`_:
+* You can also determine the gravity classification of a source following `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ using `classifyGravity()`_:
 
 >>> sp = splat.getSpectrum(young=True, lucky=True)[0]
->>> print splat.classifyGravity(sp)   # returned 'VL-G'
+>>> print(splat.classifyGravity(sp))   # returned 'VL-G'
 
 * To classify a spectrum, use the various `classifyByXXX`_ methods:
 
@@ -172,19 +172,29 @@ The last line returns a dictionary containing the best 5 template matches to the
 
 * To compare a spectrum to another spectrum or a model, use `compareSpectra()`_ :
 
+>>> import splat.model as spmod
+>>> mdl = spmod.loadModel(teff=720,logg=4.8,set='btsettl')      # loads a BTSettl08 model 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
->>> mdl = splat.loadModel(teff=700,logg=5.0)			# loads a BTSettl08 model by default
 >>> chi,scale = splat.compareSpectra(sp,mdl)
 >>> mdl.scale(scale)
 >>> splat.plotSpectrum(sp,mdl,colors=['black','red'],legend=[sp.name,mdl.name])
 
+You can shortcut the last three lines using the ``plot`` keyword:
 
-# There is also a basic Markov Chain Monte Carlo code to compare models to spectra called `modelFitMCMC()`_:
+>>> chi,scale = splat.compareSpectra(sp,mdl,plot=True)
 
+
+# There are also codes to fit models directly to spectra: `modelFitGrid()`_, `modelFitMCMC()`_, and `modelFitEMCEE()`_:
+
+>>> import splat.model as spmod
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> sp.fluxCalibrate('2MASS J',14.49,absolute=True)
->>> table = splat.modelFitMCMC(sp,initial_guess=[800,5.0,0.],nsamples=300,step_sizes=[50.,0.5,0.])
+>>> nbest = 5
+>>> result1 = splat.modelFitGrid(sp,set='btsettl')
+>>> result2 = splat.modelFitMCMC(sp,set='btsettl',initial_guess=[800,5.0,0.],nsamples=300,step_sizes=[50.,0.5,0.])
+>>> result3 = splat.modelFitEMCEE(sp,set='btsettl',initial_guess=[800,5.0,0.],nwalkers=12,nsamples=500)
 
+The outputs of all of these fitting functions is a dictionary or list of dictionaries containing the parameters of the best-fitting models; there are also several diagnostic plots produced depending on the routine. View the model fitting page for more details.
 
 All of these routines have many options worth exploring, and which are (increasingly) documented on this website. If there are capabilities
 you need, please suggest them to aburgasser@ucsd.edu, or note it in the "Issues" link on our `github site <https://github.com/aburgasser/splat>`_.

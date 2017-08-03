@@ -287,18 +287,82 @@ VEGAFILE = 'vega_kurucz.txt'
 # some data formats (for future expansion)
 INSTRUMENTS = {
 #	'SPEX': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
-    'SED': {'instrument_name': 'SED', 'pixelscale': 0.*u.arcsec, 'waverange': [0.1,100.]*u.micron, 'slitwidth': 0.*u.arcsec, 'resolution': 100, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['SPECTRAL_ENERGY_DISTRIBUTION']},
-    'SPEX_PRISM': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SPEX']},
-    'SPEX_SXD': {'instrument_name': 'SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
-    'SPEX_LXD1.9': {'instrument_name': 'SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
-    'SPEX_LXD2.1': {'instrument_name': 'SpeX LXD 2.1 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
-    'SPEX_LXD2.3': {'instrument_name': 'SpeX LXD 2.3 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
+    'UNKNOWN': {'instrument_name': 'UNKNOWN', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altnames': ['RAW','UNK']},
+    'SED': {'instrument_name': 'SED', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altnames': ['SPECTRAL_ENERGY_DISTRIBUTION']},
+    'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'waverange': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['APO']},
+    'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'waverange': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS']},
+    'FIRE': {'instrument_name': 'Magellan FIRE', 'pixelscale': 0.18*u.arcsec, 'waverange': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 6000, 'norders': 21, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS']},
+    'LDSS-3': {'instrument_name': 'Magellan LDSS-3 VPH-RED', 'pixelscale': 0.189*u.arcsec, 'waverange': [6000,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1810, 'norders': 1, 'readnoise': 4.07, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS']},
+    'MAGE': {'instrument_name': 'Magellan MAGE', 'pixelscale': 0.3*u.arcsec, 'waverange': [3100,10000]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 4100, 'norders': 13, 'readnoise': 2.9, 'darkcurrent': 1.0, 'gain': 1.02, 'altnames': ['MagE']},
+    'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'waverange': [0.95,5.5]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altnames': ['NIRSPAO']},
+    'SPEX_PRISM': {'instrument_name': 'IRTF SpeX prism', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SPEX','PRISM']},
+    'SPEX_SXD': {'instrument_name': 'IRTF SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SXD']},
+    'SPEX_LXD1.9': {'instrument_name': 'IRTF SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['LXD']},
+    'SPEX_LXD2.1': {'instrument_name': 'IRTF SpeX LXD 2.1 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
+    'SPEX_LXD2.3': {'instrument_name': 'IRTF SpeX LXD 2.3 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
 #	'USPEX': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
-	'USPEX_PRISM': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['USPEX']},
-    'USPEX_SXD': {'instrument_name': 'Updated SpeX SXD', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.55]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
-    'USPEX_LXD_SHORT': {'instrument_name': 'Updated SpeX LXD short', 'pixelscale': 0.10*u.arcsec, 'waverange': [1.67,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 8, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
-    'USPEX_LXD_LONG': {'instrument_name': 'Updated SpeX LXD long', 'pixelscale': 0.10*u.arcsec, 'waverange': [1.98,5.3]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
+	'USPEX_PRISM': {'instrument_name': 'IRTF Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['USPEX','UPRISM']},
+    'USPEX_SXD': {'instrument_name': 'IRTF Updated SpeX SXD', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.55]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['USXD']},
+    'USPEX_LXD_SHORT': {'instrument_name': 'IRTF Updated SpeX LXD short', 'pixelscale': 0.10*u.arcsec, 'waverange': [1.67,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 8, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['ULXD','LXD_SHORT','LXDS']},
+    'USPEX_LXD_LONG': {'instrument_name': 'IRTF Updated SpeX LXD long', 'pixelscale': 0.10*u.arcsec, 'waverange': [1.98,5.3]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['LXD_LONG','LXDL']},
 }
+
+# experimental
+# INSTRUMENTS_ALT = {
+#     'SPEX': {'instrument_name': 'IRTF SpeX', 'pixelscale': 0.15*u.arcsec, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SPEX','PRISM'], 'modes': {
+#         'PRISM': {'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'default' = True},
+#         'SXD': {'waverange': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'default' = False},
+#         'LXD1.9': {'waverange': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default' = False},
+#         'LXD2.1': {'waverange': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default' = False},
+#         'LXD2.3': {'waverange': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default' = False}
+#     },
+#     'SED': {'instrument_name': 'SED', 'pixelscale': 0.*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['SPECTRAL_ENERGY_DISTRIBUTION'], 'modes': {
+#         'DEFAULT': {'waverange': [0.1,100.]*u.micron, 'slitwidth': 0.*u.arcsec, 'resolution': 100, 'norders': 1, 'default' = True} 
+#     },
+#     'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['APO'], 'modes': {
+#         'DEFAULT': {'waverange': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'default' = True} 
+#     },
+#     'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS'], 'modes': {
+#         'DEFAULT': {'waverange': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'default' = True}
+#     },
+#     'FIRE': {'instrument_name': 'Magellan FIRE', 'pixelscale': 0.18*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS']}, 'modes': {
+#         'ECHELLE': {'waverange': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 6000, 'norders': 21, , 'default' = True},
+#         'PRISM': {'waverange': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 450, 'norders': 1, , 'default' = False}
+#     },
+#     'LDSS-3': {'instrument_name': 'Magellan LDSS-3', 'pixelscale': 0.189*u.arcsec, 'readnoise': 4.07, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS'], 'modes': {
+#         'VPH-RED': {'waverange': [6000,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1810, 'norders': 1, 'default' = True},
+#         'VPH-BLUE': {'waverange': [3800,6200]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1900, 'norders': 1, 'default' = False},
+#         'VPH-ALL': {'waverange': [4250,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 860, 'norders': 1, 'default' = False}
+#     },
+#     'MAGE': {'instrument_name': 'Magellan MAGE', 'pixelscale': 0.3*u.arcsec, 'readnoise': 2.9, 'darkcurrent': 1.0., 'gain': 1.02, 'altnames': ['MagE'], 'modes': {
+#         'DEFAULT': {'waverange': [3100,10000]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 4100, 'norders': 13, 'default' = True},
+#     },
+#     'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altnames': ['NIRSPAO'], 'modes': {
+#         'LOWRES_N1': {'waverange': [0.947,1.121]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
+#         'LOWRES_N2': {'waverange': [1.089,1.293]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
+#         'LOWRES_N3': {'waverange': [1.143,1.375]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
+#         'LOWRES_N4': {'waverange': [1.241,1.593]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
+#         'LOWRES_N5': {'waverange': [1.431,1.808]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
+#         'LOWRES_N6A': {'waverange': [1.558,2.000]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
+#         'LOWRES_N6B': {'waverange': [1.937,2.315]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
+#         'LOWRES_N7': {'waverange': [1.997,2.428]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
+#         'HIGHRES_N3': {'waverange': [1.18,1.30]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'default'=True},
+#     },
+#     'USPEX': {'instrument_name': 'IRTF SpeX (upgraded)', 'pixelscale': 0.10*u.arcsec, 'readnoise': 5., 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['SPEX','PRISM'], 'modes': {
+#         'PRISM': {'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'default' = True},
+#         'SXD': {'waverange': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'default' = False},
+#         'LXD_SHORT': {'waverange': [1.67,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 8, 'default' = False},
+#         'LXD_LONG': {'waverange': [1.98,5.3]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default' = False}
+#     },
+#     'WFC3-UVIS': {'instrument_name': 'HST WFC3 UVIS', 'pixelscale': 0.0395*u.arcsec, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altnames': ['SPEX','PRISM'], 'modes': {
+#         'DEFAULT': {'waverange': [1900,4500]*u.Angstrom, 'slitwidth': 0.3*u.arcsec, 'resolution': 70, 'norders': 1, 'default' = True},
+#     },
+#     'WFC3-IR': {'instrument_name': 'HST WFC3 IR', 'pixelscale': 0.128*u.arcsec, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altnames': ['SPEX','PRISM'], 'modes': {
+#         'G102': {'waverange': [0.8,1.15]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 210, 'norders': 1, 'default' = False},
+#         'G141': {'waverange': [1.075,1.70]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 130, 'norders': 1, 'default' = True},
+#     },
+# }
+
 
 # spectral model information
 #MODEL_PARAMETER_NAMES = ['teff','logg','z','fsed','cld','kzz','slit']

@@ -22,6 +22,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects
 import numpy
 from scipy import stats
+from scipy.interpolate import interp1d
+from scipy.integrate import trapz
+
 
 # code constants
 from .initialize import *
@@ -193,7 +196,7 @@ def checkInstrument(instrument):
     if not isinstance(instrument,str):
         return output
     for k in list(INSTRUMENTS.keys()):
-        if instrument.lower()==k.lower() or instrument.lower() in INSTRUMENTS[k]['altnames']:
+        if instrument.lower()==k.lower() or instrument.lower().replace(' ','_')==k.lower() or instrument.upper() in INSTRUMENTS[k]['altnames']:
             output = k
     return output
 
@@ -836,6 +839,28 @@ def typeToNum(inp, **kwargs):
         return output
 
 
+def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.):
+    '''
+    THIS FUNCTION NEEDS CLEANING
+    '''
+    try:
+        from uvwxyz.uvwxyz import uvw as uvwcalc
+    except:
+        raise ValueError('\nMust have installed package uvwxyz to run this module')
+    try:
+        c = properCoordinates(coord)
+    except:
+        raise ValueError('\nCoordinate input {} is in incorrect format'.format(coord))
+
+    if not isinstance(mu,list) and not isinstance(mu,numpy.ndarray): 
+        raise ValueError('\nProper motion input {} must be a 2-element list'.format(mu))
+    if not isinstance(e_mu,list) and not isinstance(e_mu,numpy.ndarray): 
+        raise ValueError('\nProper motion uncertainty input {} must be a 2-element list'.format(e_mu))
+
+    return uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance),numpy.random.normal(mu[0],e_mu[0]),numpy.random.normal(mu[1],e_mu[1]),numpy.random.normal(rv,e_rv))
+
+
+
 #####################################################
 ############   STATISTICAL FUNCTIONS   ##############
 #####################################################
@@ -870,6 +895,55 @@ def distributionStats(x, q=[0.16,0.5,0.84], weights=None, sigma=None, **kwargs):
         cdff = [float(c) for c in cdf]
         cdfn = [c/cdff[-1] for c in cdff]
         return numpy.interp(q, cdfn, xsorted).tolist()
+
+
+def integralResample(xh, yh, xl, nsamp=100):
+    '''
+    :Purpose: A 1D integral smoothing and resampling function that attempts to preserve total flux. Usese
+    scipy.interpolate.interp1d and scipy.integrate.trapz to perform piece-wise integration
+
+    Required Inputs:
+
+    :param xh: x-axis values for "high resolution" data
+    :param yh: y-axis values for "high resolution" data
+    :param xl: x-axis values for resulting "low resolution" data, must be contained within high resolution and have fewer values
+
+    Optional Inputs:
+
+    :param nsamp: Number of samples for stepwise integration
+
+    Output:
+
+    y-axis values for resulting "low resolution" data
+
+    :Example:
+    >>> # a coarse way of downsampling spectrum
+    >>> import splat, numpy
+    >>> sp = splat.Spectrum(file='high_resolution_spectrum.fits')
+    >>> w_low = numpy.linspace(numpy.min(sp.wave.value),numpy.max(sp.wave.value),len(sp.wave.value)/10.)
+    >>> f_low = splat.integralResample(sp.wave.value,sp.flux.value,w_low)
+    >>> n_low = splat.integralResample(sp.wave.value,sp.noise.value,w_low)
+    >>> sp.wave = w_low*sp.wave.unit
+    >>> sp.flux = f_low*sp.flux.unit
+    >>> sp.noise = n_low*sp.noise.unit
+    '''
+# check inputs
+    if xl[0] < xh[0] or xl[-1] > xh[-1]: raise ValueError('\nLow resolution x range {} to {} must be within high resolution x range {} to {}'.format(xl[0],xl[-1],xh[0],xh[-1]))
+    if len(xl) > len(xh): raise ValueError('\nTarget x-axis must be lower resolution than original x-axis')
+
+# set up samples
+    xs = [numpy.max([xh[0],xl[0]-0.5*(xl[1]-xl[0])])]
+    for i in range(len(xl)-1): xs.append(xl[i]+0.5*(xl[i+1]-xl[i]))
+    xs.append(numpy.min([xl[-1]+0.5*(xl[-1]-xl[-2]),xh[-1]]))
+
+    f = interp1d(xh,yh)
+
+# integral loop
+    ys = []
+    for i in range(len(xl)):
+        dx = numpy.linspace(xs[i],xs[i+1],nsamp)
+        ys.append(trapz(f(dx),x=dx)/(xs[i+1]-xs[i]))
+    return ys
 
 
 def isNumber(s):

@@ -490,7 +490,7 @@ def plotSpectrum(*args, **kwargs):
         except:
             xlabel = kwargs.get('xlabel','Wavelength (unknown units)')
             ylabel = kwargs.get('ylabel','Flux (unknown units)')
-        xrange = kwargs.get('xrange',[0.85,2.42])
+        xrange = kwargs.get('xrange',[numpy.nanmin(sp[0].wave.value),numpy.nanmax(sp[0].wave.value)])
         bound = xrange
         ymax = [s.fluxMax().value for s in sp]
         yrng = kwargs.get('yrange',map(lambda x: x*numpy.nanmax(ymax)+numpy.nanmax(zeropoint),[-0.02,1.2]))
