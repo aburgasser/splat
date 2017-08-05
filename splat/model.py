@@ -1006,7 +1006,7 @@ def _loadModelParameters(*args,**kwargs):
 
 
 
-def loadTelluric(*args,wave_range=None,ndata=100,linear=True,log=False,output='transmission',folder=splat.SPLAT_PATH+'/reference/SolAtlas/'):
+def loadTelluric(*args,wave_range=None,ndata=None,linear=True,log=False,output='transmission',folder=splat.SPLAT_PATH+'/reference/SolAtlas/'):
     '''
     Purpose: 
 
@@ -1056,21 +1056,28 @@ def loadTelluric(*args,wave_range=None,ndata=100,linear=True,log=False,output='t
     '''
 
 # prep inputs
-    if len(args)>0: wave = args[0]
+    if len(args)>0: 
+        wave = args[0]
+        ndata = len(wave)
+        wave_range = [numpy.min(wave),numpy.max(wave)]
     else:
-        if (isinstance(wave_range,list) or isinstance(wave_range,numpy.ndarray)) and ndata > 2:
-            if len(wave_range) >= 2:
-                if linear == True:
-                    wave = numpy.linspace(wave_range[0],wave_range[1],ndata)
-                if log == True:
-                    wave = numpy.logspace(wave_range[0],wave_range[1],ndata)
+        if (isinstance(wave_range,list) or isinstance(wave_range,numpy.ndarray)):
+            if ndata==None:
+                wave = wave_range
             else:
-                raise ValueError('\nCould not generate wavelength array with wave_range = {} and ndata = {}'.format(wave_range,ndata))
+                if len(wave_range) >= 2:
+                    if linear == True:
+                        wave = numpy.linspace(wave_range[0],wave_range[1],ndata)
+                    if log == True:
+                        wave = numpy.logspace(wave_range[0],wave_range[1],ndata)
+                else:
+                    raise ValueError('\nCould not generate wavelength array with wave_range = {} and ndata = {}'.format(wave_range,ndata))
         else:
             raise ValueError('\nwave_range needs to be a list or numpy array')
     if isinstance(wave,u.quantity.Quantity):
         wave = wave.to(u.micron)
         wave = wave.value
+        wave_range = [numpy.min(wave),numpy.max(wave)]
     if not isinstance(wave,numpy.ndarray):
         wave = numpy.array(wave)
     if len(wave) < 2:
@@ -1089,21 +1096,27 @@ def loadTelluric(*args,wave_range=None,ndata=100,linear=True,log=False,output='t
     if w[0][0] < len(tfiles)-1: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][-1]+1])
 
 # generate raw wavelength and transmission list
-# warning: if wide wavelength range chosen, this could be large
-    if len(tfiles_use) > 30:
-        print('Warning: requesting a large transmission spectrum; this may take time')
     twave = []
     trans = []
     for f in tfiles_use:
         dp = pandas.read_csv(f,delimiter='\s+',names=['wavenum','flux','atm','total'])
         twave.extend([1.e4/w for w in dp['wavenum']])
         trans.extend([float(x) for x in dp['atm']])
-    [x for (y,x) in sorted(zip(trans,twave))]
-    trans = numpy.array(trans)
+    trans = numpy.array([x for (y,x) in sorted(zip(twave,trans))])
+#    trans = numpy.array(trans)
     twave = numpy.array(sorted(twave))
+#    plt.plot(twave,trans)
+#    plt.xlim([2.292,2.33])
 
 # resample onto desired wavelength scale via numerical integration
-    trans_sampled = integralResample(twave,trans,wave)
+    if ndata == None:
+        trans_sampled = trans[numpy.where(numpy.logical_and(twave >= numpy.min(wave_range),twave <= numpy.max(wave_range)))]
+        wave = twave[numpy.where(numpy.logical_and(twave >= numpy.min(wave_range),twave <= numpy.max(wave_range)))]
+# something bad is happening at this step
+    else:
+        wave = numpy.array(sorted(wave))
+        trans_sampled = integralResample(twave,trans,wave)
+    trans_sampled*=(u.m/u.m)
 
 # return data
     if 'spec' in output.lower():

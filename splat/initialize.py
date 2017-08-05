@@ -15,6 +15,9 @@ from astropy import units as u
 VERSION = '0.31'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
+DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
+GITHUB_URL = 'https://github.com/aburgasser/splat/'
+BIBCODE = '2017arXiv170700062B'
 SPLAT_EMAIL = 'aburgasser@gmail.com'
 DB_SOURCES_FILE = 'source_data.txt'
 DB_SPECTRA_FILE = 'spectral_data.txt'
@@ -31,6 +34,34 @@ DOCS_FOLDER = '/docs/'
 DOCS_INDEX_HTML = '/docs/_build/html/index.html'
 WEB_HTML_BASE = '/docs/_templates/'
 DB_FOLDER = '/db/'
+
+# SPLAT authors
+AUTHORS = ['Christian Aganze',
+    'Daniella Bardalez Gagliuffi',
+    'Jessica Birky',
+    'Adam Burgasser (PI)',
+    'Caleb Choban',
+    'Andrew Davis',
+    'Ivanna Escala',
+    'Joshua Hazlett',
+    'Carolina Herrara Hernandez',
+    'Aishwarya Iyer',
+    'Yuhui Jin',
+    'Michael Lopez',
+    'Dorsa Majidi',
+    'Diego Octavio Talavera Maya',
+    'Alex Mendez',
+    'Gretel Mercado',
+    'Niana Mohammed',
+    'Elizabeth Hilario Moreno',
+    'Jonathan Parra',
+    'Maitrayee Sahi',
+    'Adrian Suarez',
+    'Melisa Tallis',
+    'Chris Theissen',
+    'Tomoki Tamiya',
+    'Steven Truong',
+    'Russell van Linge']
 
 #set the SPLAT PATH, either from set environment variable or from sys.path
 SPLAT_PATH = './'

@@ -861,6 +861,7 @@ def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.):
 
 
 
+
 #####################################################
 ############   STATISTICAL FUNCTIONS   ##############
 #####################################################
@@ -942,7 +943,10 @@ def integralResample(xh, yh, xl, nsamp=100):
     ys = []
     for i in range(len(xl)):
         dx = numpy.linspace(xs[i],xs[i+1],nsamp)
-        ys.append(trapz(f(dx),x=dx)/(xs[i+1]-xs[i]))
+        ys.append(trapz(f(dx),x=dx)/trapz(numpy.ones(nsamp),x=dx))
+    plt.plot(xh,yh,color='k')
+    plt.plot(xl,ys,color='r')
+
     return ys
 
 
@@ -974,29 +978,84 @@ def isNumber(s):
         return False
 
 
-def weightedMeanVar(vals, winp, *args, **kwargs):
+def numberList(numstr,sort=False):
     '''
-    :Purpose: Computes weighted mean of an array of values through various methods. Returns weighted mean and weighted uncertainty.
-    :param vals: array of values
-    :param winp: array of weights associated with ``vals``
-    :param method: input type of weights. Default is where ``winp`` is the actual weights of ``vals``. Options include:
+    :Purpose: 
 
-        - *uncertainty*: uncertainty weighting, where ``winp`` is the uncertainties of ``vals``
-        - *ftest*: ftest weighting, where ``winp`` is the chi squared values of ``vals``
+        Convert a string listing of numbers into an array of numbers
 
-    :type method: optional, default = ''
-    :param weight_minimum: minimum possible weight value
-    :type weight_minimum: optional, default = 0.
-    :param dof: effective degrees of freedom
-    :type dof: optional, default = len(vals) - 1
+    :Required Input:
 
-    .. note:: When using ``ftest`` method, extra ``dof`` value is required
+        :param **numstr**: string indicating number list, e.g., '45,50-67,69,72-90'
+
+    :Optional Input:
+
+        :param **sort**: set to True to sort output list (default = False)
+
+    :Output:
+
+        list of integers specified by string
 
     :Example:
         >>> import splat
-        >>> print splat.weightedMeanVar([3.52, 5.88, 9.03], [0.65, 0.23, 0.19])
+        >>> a = splat.numberList('45,50-67,69,72-90')
+        >>> print(a)
+            [45, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 69, 
+            72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90]
+    '''
+# check inputs
+    if not isinstance(numstr,str): raise ValueError('\nInput to numberList {} must be a string'.format(numstr))
+
+    numlist = []
+    tmp1 = numstr.replace(' ','')
+    tmp2 = tmp1.split(',')
+    for a in tmp2:
+        tmp3 = a.split(';')
+        for b in tmp3:
+            tmp4 = b.split('-')
+            if len(tmp4) > 1:
+                numlist.extend(list(range(int(tmp4[0]),int(tmp4[1])+1)))
+            else:
+                numlist.append(int(tmp4[0]))
+    
+    if sort==True: numlist = sorted(numlist)
+    return numlist
+
+
+
+def weightedMeanVar(vals, winp, *args, **kwargs):
+    '''
+    :Purpose: 
+
+        Computes weighted mean of an array of values through various methods. Returns weighted mean and weighted uncertainty.
+
+    :Required Inputs:
+
+        :param **vals**: array of values
+        :param **winp**: array of weights associated with ``vals``
+
+    :Optional Inputs:
+
+        :param **method**: type of weighting to be used. Options include:
+
+            - *default*: (default) ``winp`` is taken to be actual weighting values
+            - *uncertainty*: uncertainty weighting, where ``winp`` is the uncertainties of ``vals``
+            - *ftest*: ftest weighting, where ``winp`` is the chi squared values of ``vals``
+
+        :param **weight_minimum**: minimum possible weight value (default = 0.)
+        :param **dof**: effective degrees of freedom (default = len(vals) - 1)
+
+        .. note:: When using ``ftest`` method, extra ``dof`` value is required
+
+    :Output:
+
+        Weighted mean and uncertainty
+
+    :Example:
+        >>> import splat
+        >>> splat.weightedMeanVar([3.52, 5.88, 9.03], [0.65, 0.23, 0.19])
             (5.0057009345794379, 4.3809422657000594)
-        >>> print splat.weightedMeanVar([3.52, 5.88, 9.03], [1.24, 2.09, 2.29], method = 'uncertainty')
+        >>> splat.weightedMeanVar([3.52, 5.88, 9.03], [1.24, 2.09, 2.29], method = 'uncertainty')
             (5.0069199363443841, 4.3914329968409946)
     '''
 
@@ -1358,5 +1417,24 @@ def codeStats():
         shadow=True, startangle=90, pctdistance = 0.7)
     ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
     fig.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/object_othertypes.png')
+
+
+def about():
+    '''
+    Gives basic information about SPLAT code
+    '''
+    print('\nSPLAT (SpeX Prism Library and Analysis Toolkit)')
+    print('\nSPLAT was created by members of the Cool Star Lab:')
+    for a in splat.AUTHORS: print('\t'+a)
+    print('\nFunding for SPLAT was provided by the National Aeronautics and Space Administration under grant NNX15AI75G')
+    print('\nSPLAT can be downloaded at '+splat.GITHUB_URL)
+    print('Documentation can be found at '+splat.DOCUMENTATION_URL)
+    print('\nIf you use SPLAT, please cite the software paper '+splat.citations.shortRef(splat.BIBCODE))
+    print('\nIf you use any of the data or models in SPLAT, you must cite the original references for these')
+
+    return
+
+
+
 
 

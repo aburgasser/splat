@@ -490,10 +490,14 @@ def plotSpectrum(*args, **kwargs):
         except:
             xlabel = kwargs.get('xlabel','Wavelength (unknown units)')
             ylabel = kwargs.get('ylabel','Flux (unknown units)')
-        xrange = kwargs.get('xrange',[numpy.nanmin(sp[0].wave.value),numpy.nanmax(sp[0].wave.value)])
-        bound = xrange
+        xrng = kwargs.get('xrange',[numpy.nanmin(sp[0].wave.value),numpy.nanmax(sp[0].wave.value)])
+        if isinstance(xrng[0],u.quantity.Quantity):
+            xrng = [x.value for x in xrng]
+        bound = xrng
         ymax = [s.fluxMax().value for s in sp]
-        yrng = kwargs.get('yrange',map(lambda x: x*numpy.nanmax(ymax)+numpy.nanmax(zeropoint),[-0.02,1.2]))
+        yrng = kwargs.get('yrange',numpy.array([-0.02,1.2])*numpy.nanmax(ymax)+numpy.nanmax(zeropoint))
+        if isinstance(yrng[0],u.quantity.Quantity):
+            yrng = [x.value for x in yrng]
         bound.extend(yrng)
         linestyle = kwargs.get('linestyle',['steps-mid' for x in numpy.arange(len(sp))])
         linestyle = kwargs.get('linestyles',linestyle)

@@ -10,18 +10,24 @@ from __future__ import print_function
 #    Caleb Choban
 #    Andrew Davis
 #    Ivanna Escala
+#    Joshua Hazlett
+#    Carolina Herrara Hernandez
 #    Aishwarya Iyer
 #    Yuhui Jin
 #    Michael Lopez
+#    Dorsa Majidi
+#    Diego Octavio Talavera Maya
 #    Alex Mendez
 #    Gretel Mercado
-#    Elizabeth Moreno
+#    Niana Mohammed
+#    Elizabeth Hilario Moreno
 #    Jonathan Parra
 #    Maitrayee Sahi
 #    Adrian Suarez
 #    Melisa Tallis
 #    Chris Theissen
 #    Tomoki Tamiya
+#    Steven Truong
 #    Russell van Linge
 
 # imports - internal
@@ -130,7 +136,7 @@ class Spectrum(object):
         if kwargs.get('apparent',False) == True: self.fscale = 'Apparent'
         if kwargs.get('absolute',False) == True: self.fscale = 'Absolute'
         self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.micron))
-        self.funit_label = kwargs.get('funit_label',r'erg~cm$^{-2}$~s$^{-1}$~$\mu$m$^{-1}$')
+        self.funit_label = kwargs.get('funit_label',self.funit)
 #        self.header = kwargs.get('header',fits.PrimaryHDU())
         self.header = kwargs.get('header',{})
         self.filename = kwargs.get('file','')
@@ -205,10 +211,10 @@ class Spectrum(object):
             else:
                 self.noise = numpy.array([numpy.nan for i in self.wave])
 # some extras
-            if len(kwargs.get('pixel','')) > 0:
-                self.pixel = kwargs['pixel']
-            if len(kwargs.get('mask','')) > 0:
-                self.mask = kwargs['mask']
+            others = ['pixel','mask','flag','flags','model']
+            for o in others:
+                if len(kwargs.get(o,'')) > 0:
+                    setattr(self,o,kwargs[o])
 
 # read in file (NOTE: this overrules passing wave, flux, noise arrays)
         elif self.filename != '':
@@ -266,13 +272,13 @@ class Spectrum(object):
             if (numpy.nanmax(self.flux/self.noise) > max_snr):
                 self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
 # convert to astropy quantities with units
-# assuming input is flam in erg/s/cm2/micron
             if not isinstance(self.wave,u.quantity.Quantity):
                 self.wave = numpy.array(self.wave)*self.wunit
             if not isinstance(self.flux,u.quantity.Quantity):
                 self.flux = numpy.array(self.flux)*self.funit
             if not isinstance(self.noise,u.quantity.Quantity):
                 self.noise = numpy.array(self.noise)*self.funit
+
 # some conversions
             self.flam = self.flux
             try:
@@ -483,13 +489,29 @@ class Spectrum(object):
            >>> sp3
             Spectrum of 2MASS J17373467+5953434 + WISE J174928.57-380401.6
         '''
+# convert wavelength and flux units
+        other.waveUnit(self.wunit)
+        other.fluxUnit(self.funit)
+
+# make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
-        f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
-        n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
-        sp.flux = numpy.add(self.flux,f(self.wave)*other.funit)
-        sp.variance = sp.variance+n(self.wave)*(other.funit**2)
+        sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
+        sp.wave*=self.wunit
+
+# generate interpolated axes
+        f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+        f2 = interp1d(other.wave.value,other.flux.value,bounds_error=False,fill_value=0.)
+        n1 = interp1d(self.wave.value,self.variance.value,bounds_error=False,fill_value=0.)
+        n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
+
+# add
+        sp.flux = (f1(sp.wave.value)+f2(sp.wave.value))*self.funit
+
+# uncertainty
+        sp.variance = (n1(sp.wave.value)+n2(sp.wave.value))*(self.funit**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
+
 # update information
         sp.name = self.name+' + '+other.name
 # remove these attributes
@@ -524,13 +546,29 @@ class Spectrum(object):
            >>> sp3
             Spectrum of 2MASS J17373467+5953434 - WISE J174928.57-380401.6
         '''
+# convert wavelength and flux units
+        other.waveUnit(self.wunit)
+        other.fluxUnit(self.funit)
+
+# make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
-        f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
-        n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
-        sp.flux = numpy.subtract(self.flux,f(self.wave)*other.funit)
-        sp.variance = sp.variance+n(self.wave)*(other.funit**2)
+        sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
+        sp.wave*=self.wunit
+
+# generate interpolated axes
+        f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+        f2 = interp1d(other.wave.value,other.flux.value,bounds_error=False,fill_value=0.)
+        n1 = interp1d(self.wave.value,self.variance.value,bounds_error=False,fill_value=0.)
+        n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
+
+# subtract
+        sp.flux = (f1(sp.wave.value)-f2(sp.wave.value))*self.funit
+
+# uncertainty
+        sp.variance = (n1(sp.wave.value)+n2(sp.wave.value))*(self.funit**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
+
 # update information
         sp.name = self.name+' - '+other.name
         ref = ['date','observer','airmass','designation']
@@ -559,19 +597,29 @@ class Spectrum(object):
            >>> sp3
             Spectrum of 2MASS J17373467+5953434 x WISE J174928.57-380401.6
         '''
+# convert wavelength units
+        other.waveUnit(self.wunit)
+
+# make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
-        f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
-        n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
-        sp.flux = numpy.multiply(self.flux,f(self.wave)*other.funit)
-        sp.variance = numpy.multiply(sp.flux**2,(\
-            numpy.divide(self.variance.value,sp.flux.value**2)+numpy.divide(n(self.wave),f(self.wave)**2)))
+        sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
+        sp.wave*=self.wunit
+
+# generate interpolated axes
+        f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+        f2 = interp1d(other.wave.value,other.flux.value,bounds_error=False,fill_value=0.)
+        n1 = interp1d(self.wave.value,self.variance.value,bounds_error=False,fill_value=0.)
+        n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
+
+# multiply
+        sp.flux = numpy.multiply(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*self.funit*other.funit
+
+# uncertainty
+        sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
+        sp.variance*=((self.funit*other.funit)**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
-# reset originals
-#        sp.flux_original=sp.flux
-#        sp.noise_original=sp.noise
-#        sp.variance_original=sp.variance
-#        sp.funit = sp.flux.unit
+
 # update information
         sp.name = self.name+' x '+other.name
         ref = ['date','observer','airmass','designation']
@@ -601,17 +649,34 @@ class Spectrum(object):
            >>> sp3
             Spectrum of 2MASS J17373467+5953434 + WISE J174928.57-380401.6
         '''
+# convert wavelength units
+        other.waveUnit(self.wunit)
+
+# make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
-        f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
-        n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
-        sp.flux = numpy.divide(self.flux,f(self.wave)*other.funit)
-        sp.variance = numpy.multiply(sp.flux**2,(\
-            numpy.divide(self.variance.value,sp.flux.value**2)+numpy.divide(n(self.wave),f(self.wave)**2)))
+        sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
+        sp.wave*=self.wunit
+
+# generate interpolated axes
+        f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+        f2 = interp1d(other.wave.value,other.flux.value,bounds_error=False,fill_value=0.)
+        n1 = interp1d(self.wave.value,self.variance.value,bounds_error=False,fill_value=0.)
+        n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
+
+# divide
+        sp.flux = numpy.divide(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*self.funit/other.funit
+
+# uncertainty
+        sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
+        sp.variance*=((self.funit/other.funit)**2)
         sp.noise = sp.variance**0.5
+        sp.snr = sp.computeSN()
+
 # clean up infinities
-        sp.flux = numpy.where(numpy.absolute(sp.flux) == numpy.inf, numpy.nan, sp.flux)*u.erg/u.erg
-        sp.noise = numpy.where(numpy.absolute(sp.noise) == numpy.inf, numpy.nan, sp.noise)*u.erg/u.erg
-        sp.variance = numpy.where(numpy.absolute(sp.variance) == numpy.inf, numpy.nan, sp.variance)*u.erg/u.erg
+        sp.flux = numpy.where(numpy.absolute(sp.flux) == numpy.inf, numpy.nan*self.funit/other.funit, sp.flux)
+        sp.noise = numpy.where(numpy.absolute(sp.noise) == numpy.inf, numpy.nan*self.funit/other.funit, sp.noise)
+        sp.variance = numpy.where(numpy.absolute(sp.variance) == numpy.inf, numpy.nan*self.funit/other.funit, sp.variance)
+
 # update information
         sp.name = self.name+' / '+other.name
         ref = ['date','observer','airmass','designation']
@@ -640,17 +705,34 @@ class Spectrum(object):
            >>> sp3
             Spectrum of 2MASS J17373467+5953434 + WISE J174928.57-380401.6
         '''
+# convert wavelength units
+        other.waveUnit(self.wunit)
+
+# make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
-        f = interp1d(other.wave,other.flux,bounds_error=False,fill_value=0.)
-        n = interp1d(other.wave,other.variance,bounds_error=False,fill_value=numpy.nan)
-        sp.flux = numpy.divide(self.flux,f(self.wave)*other.funit)
-        sp.variance = numpy.multiply(sp.flux**2,(\
-            numpy.divide(self.variance.value,sp.flux.value**2)+numpy.divide(n(self.wave),f(self.wave)**2)))
+        sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
+        sp.wave*=self.wunit
+
+# generate interpolated axes
+        f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+        f2 = interp1d(other.wave.value,other.flux.value,bounds_error=False,fill_value=0.)
+        n1 = interp1d(self.wave.value,self.variance.value,bounds_error=False,fill_value=0.)
+        n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
+
+# divide
+        sp.flux = numpy.divide(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*self.funit/other.funit
+
+# uncertainty
+        sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
+        sp.variance*=((self.funit/other.funit)**2)
         sp.noise = sp.variance**0.5
+        sp.snr = sp.computeSN()
+
 # clean up infinities
-        sp.flux = numpy.where(numpy.absolute(sp.flux) == numpy.inf, numpy.nan, sp.flux)*u.erg/u.erg
-        sp.noise = numpy.where(numpy.absolute(sp.noise) == numpy.inf, numpy.nan, sp.noise)*u.erg/u.erg
-        sp.variance = numpy.where(numpy.absolute(sp.variance) == numpy.inf, numpy.nan, sp.variance)*u.erg/u.erg
+        sp.flux = numpy.where(numpy.absolute(sp.flux) == numpy.inf, numpy.nan*self.funit/other.funit, sp.flux)
+        sp.noise = numpy.where(numpy.absolute(sp.noise) == numpy.inf, numpy.nan*self.funit/other.funit, sp.noise)
+        sp.variance = numpy.where(numpy.absolute(sp.variance) == numpy.inf, numpy.nan*self.funit/other.funit, sp.variance)
+
 # update information
         sp.name = self.name+' / '+other.name
         ref = ['date','observer','airmass','designation']
@@ -712,21 +794,11 @@ class Spectrum(object):
 #            f+='\nSmoothed to slit width {} {}'.format(self.slit,SPECTRAL_MODEL_PARAMETERS['slit']['unit'])
             f+='\n\nIf you use this model, please cite {}'.format(spbib.shortRef(SPECTRAL_MODELS[self.modelset]['bibcode']))
             f+='\nbibcode = {}\n'.format(SPECTRAL_MODELS[self.modelset]['bibcode'])
-            if kwargs.get('printout',True):
-                print(f)
-                return
-            else:
-                return f
         elif self.istransmission == True:
             f = '\n{} spectrum'.format(self.name)
 #            f+='\nSmoothed to slit width {} {}'.format(self.slit,SPECTRAL_MODEL_PARAMETERS['slit']['unit'])
             f+='\n\nIf you use these data, please cite {}'.format(spbib.shortRef(self.bibcode))
             f+='\nbibcode = {}\n'.format(self.bibcode)
-            if kwargs.get('printout',True):
-                print(f)
-                return
-            else:
-                return f
         else:
             f = '\n'
             if hasattr(self,'instrument_name'): f+='{} '.format(self.instrument_name)
@@ -764,14 +836,15 @@ class Spectrum(object):
                     f+='\n\tbibcode: {}'.format(self.bibcode)
             else:
                 f+='\n\nUNPUBLISHED DATA'
-            f+='\n\nHistory:'
-            for h in self.history:
-                f+='\n\t{}'.format(h)
-            if kwargs.get('printout',True):
-                print(f)
-                return
-            else:
-                return f
+
+        f+='\n\nHistory:'
+        for h in self.history:
+            f+='\n\t{}'.format(h)
+        if kwargs.get('printout',True):
+            print(f)
+            return
+        else:
+            return f
 
     def export(self,*args,**kwargs):
         '''
@@ -1015,11 +1088,11 @@ class Spectrum(object):
         '''
         try:
             self.flux = self.flux.to(funit,equivalencies=u.spectral_density(self.wave))
+            self.history.append('Converted to flux units of {}'.format(self.funit))
             self.noise = self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
             self.variance = self.noise**2
             self.snr = self.computeSN()
             self.funit = funit
-            self.history.append('Converted to flux units of {}'.format(self.funit))
         except:
             print('Warning! failed to convert to flux unit {}'.format(funit))
         return
@@ -1042,7 +1115,102 @@ class Spectrum(object):
             rv=rv*(u.km/u.s)
         rv.to(u.km/u.s)
         self.wave = self.wave*(1.+(rv/const.c).to(u.m/u.m))
+        self.history.append('Shifted spectrum by radial velocity {}'.format(rv))
+
         return
+
+    def broaden(self,vbroad,kern=None,epsilon=0.6,method='rotation',verbose=False):
+        '''
+        :Purpose: Broadens a spectrum in velocity space using a line spread function (LSF) either based on rotation or gaussian. 
+        This routine changes the underlying Spectrum object.
+
+        Required Inputs:
+
+            :param: **vbroad** broadening width, nominally in km/s
+            
+        Optional Inputs:
+
+            :param: **method** method of broadening, should be one of:
+
+                - ``gaussian``: (default) Gaussian broadening, with vbroad equal to Gaussian sigma
+                - ``rotation``: rotational broadening using splat.lsfRotation()
+                - ``delta``: Delta function (no broadening)
+
+            :param: **kern** input kernel, must be at least three elements wide (default = None)
+            :param: **epsilon** epsilon parameter for limb darkening in rotational broadening (default = 0.6)
+            :param: **verbose** provide extra feedback (default = False)
+
+        Outputs:
+
+            Spectral flux is smoothed using the desired line spread function. No change is made to noise or other axes
+            
+        :Example:
+           >>> import splat
+           >>> sp = splat.Spectrum(10001)
+           >>> sp.broaden(30.,method='rotation')
+           >>> sp.info()
+            History:
+                SPEX_PRISM spectrum successfully loaded
+                Rotationally broadened spectrum by 30.0 km/s
+        '''
+        report = ''
+        if isinstance(vbroad,u.quantity.Quantity):
+            vbroad.to(u.km/u.s)
+        else:
+            vbroad*=(u.km/u.s)
+
+# determine velocity sampling
+        samp = numpy.nanmedian(numpy.absolute(self.wave.value-numpy.roll(self.wave.value,1)) / self.wave.value)
+#        samp = numpy.abs((self.wave.value[numpy.floor(0.5*len(self.wave))+1]-self.wave.value[numpy.floor(0.5*len(self.wave))])/self.wave.value[numpy.floor(0.5*len(self.wave))])
+        vsamp = (samp*const.c).to(u.km/u.s)
+
+# velocity resolution is too low - use a delta function
+        if kern != None:
+            if len(kern) < 3:
+                if verbose: print('\nWarning: input kernel {} must be at least three elements; setting to delta function'.format(kern))
+                kern = None
+                method = 'delta'
+
+        if kern == None:
+            if vsamp > vbroad:
+                if verbose: print('\nWarning: velocity resolution {} is smaller than velocity broadening {}; setting to delta function'.format(vsamp,vbroad))
+                method = 'delta'
+
+# rotational broadening
+            if 'rot' in method.lower():
+                kern = lsfRotation(vbroad.value,vsamp.value,epsilon=epsilon)
+                report = 'Rotationally broadened spectrum by {}'.format(vbroad)
+
+# gaussian ±10 sigma
+            elif 'gauss' in method.lower():
+                n = numpy.ceil(20.*vbroad.value/vsamp.value)
+                if n%2==0: n+=1
+                x = numpy.arange(n)-0.5*(n-1.)
+                kern = numpy.exp(-0.5*(x**2))
+                report = 'Broadened spectrum using a Gaussian with velocity width {}'.format(vbroad)
+
+# delta function (no smoothing)
+            elif 'delta' in method.lower():
+                kern = numpy.zeros(5)
+                kern[2] = 1.
+                report = 'Applying delta line spread function (no broadening)'
+
+        else:
+                report = 'Broadened spectrum using a input line spread function'
+
+# normalize kernel
+        kern = kern/numpy.nansum(kern)
+
+        a = (numpy.nanmax(self.wave.value)/numpy.nanmin(self.wave.value))**(1./len(self.wave))
+        nwave = numpy.nanmin(self.wave)*(a**numpy.arange(len(self.wave)))
+        nflux = self.flux*nwave
+        ncflux = numpy.convolve(nflux, kern, 'same')
+        self.flux = ncflux/nwave
+        self.history.append(report)
+
+        return
+
+
 
     def fluxCalibrate(self,filt,mag,**kwargs):
         '''
@@ -1205,6 +1373,62 @@ class Spectrum(object):
         from .plot import plotSpectrum
         f = plotSpectrum(self,**kwargs)
         return f
+
+    def remove(self,mask,others=[]):
+        '''
+        :Purpose: 
+
+            Removes elements of wave, flux, noise specified by the True/False array
+
+        :Required Input:
+
+            :param **mask**: An array of booleans, ints or floats, where True or 1 means remove the element 
+        
+        :Optional Input:
+
+            :param **others**: list of other attributes that mask should be applied (e.g., 'pixel') (default = [])
+
+        :Output:
+
+            Spectrum object has the flagged pixels removed from  wave, flux, noise arrays
+
+        :Example:
+           >>> import splat,numpy
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> num = splat.numberList('1-10,18,30-50')
+           >>> mask = [not(p in num) for p in numpy.arange(len(sp.wave))]
+           >>> sp.remove(mask)
+           >>> sp.showHistory()
+                SPEX_PRISM spectrum successfully loaded
+                Mask applied to remove 32 pixels
+        '''
+        msk = copy.deepcopy(mask)
+        if len(msk) != len(self.flux):
+            print('\nWarning: mask must be same length ({}) as wave/flux arrays ({}); not removing any pixels'.format(len(msk),len(self.wave)))
+            return
+        if isinstance(msk[0],float): msk = [int(x) for x in msk]
+        if isinstance(msk[0],int): msk = [True if x==1 else False for x in msk]
+        if not isinstance(msk[0],bool): print('\nWarning: cannot interpret mask {}; not removing any pixels'.format(mask))
+
+# invert mask
+        msk = [not x for x in msk]
+        self.wave = self.wave[msk]
+        self.flux = self.flux[msk]
+        self.noise = self.noise[msk]
+        self.variance = self.noise**2
+        self.snr = self.computeSN()
+
+        if len(others) > 0:
+            for k in others:
+                if k in self.original.__dict__.keys():
+                    try:
+                        setattr(self,k,getattr(self,k)[msk])
+                    except:
+                        pass
+
+        cnt = numpy.sum([1 if x == False else 0 for x in msk])
+        self.history.append('Mask applied to remove {} pixels'.format(cnt))
+        return
 
 
     def reset(self):
@@ -3797,7 +4021,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     statistic = kwargs.get('statistic','chisqr')
     minreturn = 1.e-60
 # THERE IS A MAJOR FLAW HERE
-    if ~isinstance(fit_ranges[0],u.quantity.Quantity):
+    if not isinstance(fit_ranges[0],u.quantity.Quantity):
         fit_ranges=fit_ranges*u.micron
 #    if ~isinstance(fit_ranges[0],list) or ~isinstance(fit_ranges[0],'numpy.ndarray'):
 #        print(type(fit_ranges[0]))
@@ -4383,6 +4607,58 @@ def metallicity(sp,**kwargs):
         (numpy.random.normal(cai,cai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[2]
 
     return mh, numpy.sqrt(numpy.nanstd(mhsim)**2+mh_unc**2)
+
+
+def lsfRotation(vsini,vsamp,epsilon=0.6):
+    '''
+    Purpose: 
+
+        Generates a line spread function for rotational broadening, based on Gray (1992) 
+        Ported over by Chris Theissen and Adam Burgasser from the IDL routine 
+        `lsf_rotate <https://idlastro.gsfc.nasa.gov/ftp/pro/astro/lsf_rotate.pro>`_ writting by W. Landsman
+
+    Required Inputs:  
+
+        :param: **vsini**: vsini of rotation, assumed in units of km/s
+        :param: **vsamp**: sampling velocity, assumed in unit of km/s. vsamp must be smaller than vsini or else a delta function is returned
+
+    Optional Inputs:
+
+        :param: **epsilon**: limb darkening parameter based on Gray (1992)
+
+    Output:
+
+        Line spread function kernel with length 2*vsini/vsamp (forced to be odd)
+
+    :Example:
+        >>> import splat
+        >>> kern = lsfRotation(30.,3.)
+        >>> print(kern)
+            array([ 0.        ,  0.29053574,  0.44558751,  0.55691445,  0.63343877,
+            0.67844111,  0.69330989,  0.67844111,  0.63343877,  0.55691445,
+            0.44558751,  0.29053574,  0.        ])
+    '''
+# limb darkening parameters
+    e1 = 2. * (1. - epsilon)
+    e2 = numpy.pi * epsilon/2.
+    e3 = numpy.pi * (1. - epsilon/3.)
+
+# vsini must be > vsamp - if not, return a delta function
+    if vsini <= vsamp:
+        print('\nWarning: velocity sampling {} is broader than vsini {}; returning delta function')  
+        lsf = numpy.zeros(5)  
+        lsf[2] = 1.
+        return lsf
+
+# generate LSF
+    nsamp = numpy.ceil(2.*vsini/vsamp)
+    if nsamp % 2 == 0:
+        nsamp+=1
+    x = numpy.arange(nsamp)-(nsamp-1.)/2.
+    x*=vsamp/vsini
+    x2 = numpy.absolute(1.-x**2)
+
+    return (e1*numpy.sqrt(x2) + e2*x2)/e3
 
 
 
