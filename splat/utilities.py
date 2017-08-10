@@ -16,8 +16,10 @@ import string
 import sys
 
 # imports - external
-from astropy.coordinates import Angle,SkyCoord      # coordinate conversion
+import astropy
+from astropy.coordinates import Angle,SkyCoord,EarthLocation      # coordinate conversion
 from astropy import units as u            # standard units
+from astropy.time import Time            # standard units
 import matplotlib.pyplot as plt
 import matplotlib.patheffects
 import numpy
@@ -861,6 +863,86 @@ def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.):
 
 
 
+def baryVel(coord,obstime,location='keck',correction='barycenter'):
+    '''
+    :Purpose: 
+
+        Computes the barycentric or heliocentric velocity in a direction and from a specific Earth location
+
+    :Required Inputs:
+
+        - :param coord: Coordinate of source; should be astropy.coordinates.SkyCoord, but can also be converted from splat.propoCoordinates
+        - :param obstime: A date/time, preferred in astropy.time.Time format but can be converted from splat.properDate
+
+    :Optional Inputs:
+
+        - :param location: location on Earth, specified by astropy.coordinates.EarthLocation; string of location; 
+        dictionary containing 'ra', 'dec', and 'height'; or array of [ra,dec,height] (default = 'keck')
+        - :param correction: type of correction, can be either 'barycentric' or 'heliocentric' (default = 'heliocentric')
+
+    :Output:
+
+        The velocity correction in km/s
+
+    :Example:
+        >>> import splat
+        >>> coord = splat.properCoordinates('J15104786-2818174')
+        >>> print(splat.baryVel(coord,'2017-07-31',location='keck')
+            -27.552554878923033 km / s
+    '''
+# check coordinate
+    if not isinstance(coord,SkyCoord):
+        try:
+            c = properCoordinates(coord)
+        except:
+            raise ValueError('\nCould not convert coordinate input {} to a SkyCoord'.format(coord))
+    else: c = copy.deepcopy(coord)
+
+# check time
+    if not isinstance(obstime,Time):
+        try:
+            t = Time(obstime)
+        except:
+            raise ValueError('\nCould not convert time input {} into a Time variable'.format(obstime))
+    else: t = copy.deepcopy(obstime)
+
+# check location
+    if not isinstance(location,EarthLocation):
+        if isinstance(location,str):
+            if 'keck' in location.lower():
+                l = EarthLocation.from_geodetic(lat=19.8283*u.deg, lon=-155.4783*u.deg, height=4160*u.m)
+            else:
+                try:
+                    l =  EarthLocation.of_site(location)
+                except:
+                    raise ValueError('\nCould not convert location input {} into an EarthLocation; may be offline'.format(location))
+        elif isinstance(location,list) or isinstance(location,float):
+            try:
+                if len(l) == 2:
+                    l = EarthLocation.from_geodetic(lat=location[0]*u.deg, lon=location[1]*u.deg)
+                elif len(l) == 3:
+                    l = EarthLocation.from_geodetic(lat=location[0]*u.deg, lon=location[1]*u.deg, height=location[2]*u.m)
+                else:
+                    raise ValueError('\nCould not convert location input {} into an EarthLocation'.format(location))
+            except:
+                raise ValueError('\nCould not convert location input {} into an EarthLocation'.format(location))
+        elif isinstance(location,dict):
+            try:
+                l = EarthLocation.from_geodetic(**location)
+            except:
+                raise ValueError('\nCould not convert location input {} into an EarthLocation'.format(location))
+        else:
+            raise ValueError('\nCould not convert location input {} into an EarthLocation'.format(location))
+    else: l = copy.deepcopy(location)
+
+# make correction
+    if 'bary' in correction.lower():
+        return c.radial_velocity_correction(obstime=t, location=l).to(u.km/u.s)  
+    elif 'helio' in correction.lower():
+        return c.radial_velocity_correction('heliocentric',obstime=t, location=l).to(u.km/u.s)  
+    else:
+        raise ValueError('\n Could not interpret preferred correction {} '.format(correction))
+
 
 #####################################################
 ############   STATISTICAL FUNCTIONS   ##############
@@ -944,8 +1026,8 @@ def integralResample(xh, yh, xl, nsamp=100):
     for i in range(len(xl)):
         dx = numpy.linspace(xs[i],xs[i+1],nsamp)
         ys.append(trapz(f(dx),x=dx)/trapz(numpy.ones(nsamp),x=dx))
-    plt.plot(xh,yh,color='k')
-    plt.plot(xl,ys,color='r')
+#    plt.plot(xh,yh,color='k')
+#    plt.plot(xl,ys,color='r')
 
     return ys
 

@@ -14,6 +14,7 @@ import sys
 import time
 
 # imports: external
+import corner
 from matplotlib import cm
 import matplotlib.pyplot as plt
 import numpy
@@ -55,10 +56,14 @@ def _readBurrows06(file):
     if not os.access(file, os.R_OK):
         raise ValueError('Could not find model file {}'.format(file))
     data = ascii.read(os.path.normpath(file),data_start=2)
-    wave = numpy.array([float(l.replace('D','e')) for l in data['LAMBDA(mic)']])*u.micron
-    fnu = numpy.array([float(l.replace('D','e')) for l in data['FNU']])*(u.erg/u.s/u.cm/u.cm/u.Hz)
+    if isinstance(data['LAMBDA(mic)'][0],str):
+        wave = numpy.array([float(l.replace('D','e')) for l in data['LAMBDA(mic)']])*u.micron
+        fnu = numpy.array([float(l.replace('D','e')) for l in data['FNU']])*(u.erg/u.s/u.cm/u.cm/u.Hz)
+    else:
+        wave = numpy.array(data['LAMBDA(mic)'])*u.micron
+        fnu = numpy.array(data['FNU'])*(u.erg/u.s/u.cm/u.cm/u.Hz)
     flux = fnu.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
-    print(wave[50],fnu[50],flux[50])
+#    print(wave[50],fnu[50],flux[50])
     return wave, flux
 
 def _readBtsettl08(file):
@@ -329,14 +334,16 @@ def _processModels(*args,**kwargs):
 
 def loadOriginalModel(model='btsettl08',instrument='UNKNOWN',file='',**kwargs):
     '''
-    Purpose: 
+    :Purpose: 
+
         Loads up an original model spectrum at full resolution/spectral range, based on filename or model parameters. 
 
-    Required Inputs:
+    :Required Inputs:
 
         None
 
-    Optional Inputs:
+    :Optional Inputs:
+
         :param: **model**: The model set to use; may be one of the following:
 
             - *btsettl08*: (default) model set from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  with effective temperatures of 400 to 2900 K (steps of 100 K); surface gravities of 3.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity of -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.3, and 0.5 for temperatures greater than 2000 K only; cloud opacity is fixed in this model, and equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `btsettled`, `btsettl`, `allard`, `allard12`)
@@ -358,10 +365,11 @@ def loadOriginalModel(model='btsettl08',instrument='UNKNOWN',file='',**kwargs):
         :param: **folder**: folder containing file (default = '' or default folder for model set)
         :param: **verbose**: give lots of feedback
 
-    Output:
+    :Output:
+
         A SPLAT Spectrum object of the model with wavelength in microns and surface fluxes in F_lambda units of erg/cm^2/s/micron.
 
-    Example:
+    :Example:
 
     >>> import splat
     >>> mdl = splat.loadOriginalModel(model='btsettl',teff=2600,logg=4.5)
@@ -394,15 +402,22 @@ def loadOriginalModel(model='btsettl08',instrument='UNKNOWN',file='',**kwargs):
         if mset == 'btsettl08':
             readfxn = _readBtsettl08
             file = SPECTRAL_MODELS[mset]['rawfolder']+'lte{:s}-{:.1f}{:.1f}a+0.0.BT-Settl.spec.7.gz'.format(str((float(mkwargs['teff'])+0.01)/1.e5)[2:5],mkwargs['logg'],mkwargs['z']-0.0001)
+        elif mset == 'madhusudhan11':
+            readfxn = _readBurrows06
+            file = SPECTRAL_MODELS[mset]['rawfolder']+'{:s}_t{:.0f}_g{:.2f}_z{:.0f}_{:s}_{:s}'.format(mkwargs['cld'].upper(),int(mkwargs['teff']),float(mkwargs['logg']),10.**float(mkwargs['z']),mkwargs['kzz'].lower(),mkwargs['fsed'].lower())
+        elif mset == 'saumon12':
+            readfxn = _readSaumon12
+            file = SPECTRAL_MODELS[mset]['rawfolder']+'sp_t{:.0f}g{:.0f}{:s}'.format(int(mkwargs['teff']),10.**(float(mkwargs['logg'])-2.),mkwargs['cld'].lower())
         else:
-            raise ValueError('\nOnly have btsettl08 at this point')
+            raise ValueError('\nDo not yet have {} models in loadOriginalModel'.format(mset))
+
 
 # check file name
     if not os.access(file, os.R_OK):
-        filetmp = SPECTRAL_MODELS[mset]['rawfolder']
-        if not os.access(filetmp, os.R_OK):
-            raise ValueError('Could not find model file {}'.format(file))
-        else: file=filetmp
+#        filetmp = SPECTRAL_MODELS[mset]['rawfolder']+file
+#        if not os.access(filetmp, os.R_OK):
+        raise ValueError('Could not find model file {}'.format(file))
+#        else: file=filetmp
     mkwargs['filename'] = os.path.basename(file)
 
 # read in data            
@@ -414,6 +429,448 @@ def loadOriginalModel(model='btsettl08',instrument='UNKNOWN',file='',**kwargs):
     mkwargs['instrument'] = instrument
 
     return Spectrum(**mkwargs)
+
+
+def loadOriginalInterpolatedModel(model='btsettl08',teff=2000,logg=5.0,**kwargs):
+    '''
+    :Purpose: 
+
+        Loads up an original model spectrum at full resolution/spectral range, interpolated by temperature and surface gravity
+
+    :Required Inputs:
+
+        None
+
+    :Optional Inputs:
+
+        same as .. _`loadOriginalModel()` : api.html#splat.model.loadOriginalModel
+
+    .. _`loadOriginalModel()` : api.html#splat.model.loadOriginalModel
+
+    :Output:
+
+        A SPLAT Spectrum object of the model with wavelength in microns and surface fluxes in F_lambda units of erg/cm^2/s/micron.
+
+    :Example:
+
+    >>> import splat
+    >>> mdl = splat.loadOriginalInterpolatedModel(model='btsettl',teff=2632,logg=4.6)
+    >>> mdl.info()
+        BT-Settl (2008) Teff=2632 logg=4.6 atmosphere model with the following parmeters:
+        Teff = 2632 K
+        logg = 4.6 dex
+        z = 0.0 dex
+        fsed = nc
+        cld = nc
+        kzz = eq
+
+        If you use this model, please cite Allard, F. et al. (2012, Philosophical Transactions of the Royal Society A, 370, 2765-2777)
+        bibcode = 2012RSPTA.370.2765A
+    '''
+    teffs = [100*numpy.floor(teff/100.),100*numpy.ceil(teff/100.)]
+    loggs = [0.5*numpy.floor(logg*2.),0.5*numpy.ceil(logg*2.)]
+
+    wt = numpy.log10(teffs[1]/teff)/numpy.log10(teffs[1]/teffs[0])
+    wg = (loggs[1]-logg)/(loggs[1]-loggs[0])
+    weights = numpy.array([wt*wg,(1.-wt)*wg,wt*(1.-wg),(1.-wt)*(1.-wg)])
+    weights/=numpy.sum(weights)
+
+    models = []
+    models.append(loadOriginalModel(model=model,teff=teffs[0],logg=loggs[0],**kwargs))
+    if teffs[1]==teffs[0]:
+        models.append(models[-1])
+    else:
+        models.append(loadOriginalModel(model=model,teff=teffs[1],logg=loggs[0],**kwargs))
+    if loggs[1]==loggs[0]:
+        models.extend(models[0:1])
+    else:
+        models.append(loadOriginalModel(model=model,teff=teffs[0],logg=loggs[1],**kwargs))
+        models.append(loadOriginalModel(model=model,teff=teffs[1],logg=loggs[1],**kwargs))
+                                                            
+    flx = []
+    for i in range(len(models[0].flux)):
+        val = numpy.array([numpy.log10(m.flux.value[i]) for m in models])
+        flx.append(10.**(numpy.sum(val*weights)))
+
+    mdl_return = models[0]
+    mdl_return.flux = flx*models[0].flux.unit
+    mdl_return.teff = teff
+    mdl_return.logg = logg
+    mdl_return.name = '{} Teff={} logg={}'.format(splat.SPECTRAL_MODELS[checkSpectralModelName(model)]['name'],teff,logg)
+    
+    return mdl_return
+
+# make model function
+def makeForwardModel(parameters,data,atmodel=None,binary=False,model=None,model1=None,model2=None,instkern=None,contfitdeg=5,return_nontelluric=False,checkplots=False,checkprefix='tmp',verbose=True):
+    '''
+    parameters may contain any of the following:
+        - **modelparam** or **modelparam1**: dictionary of model parameters for primary if model not provided in model or model1: {modelset,teff,logg,z,fsed,kzz,cld}
+        - **modelparam2**: dictionary of model parameters for secondary if model not provided in model2: {modelset,teff,logg,z,fsed,kzz,cld}
+        - **rv** or **rv1**: radial velocity of primary
+        - **rv2**: radial velocity of secondary
+        - **vsini** or **vsini1**: rotational velocity of primary
+        - **vsini2**: rotational velocity of secondary
+        - **f21**: relative brightness of secondary to primary (f21 <= 1)
+        - **alpha**: exponent to scale telluric absorption 
+        - **vinst**: instrument velocity broadening profile if instrkern not provided
+        - **vshift**: instrument velocity shift
+        - **continuum**: polynomial coefficients for continuum correction; if not provided, a smooth continuum will be fit out
+    '''
+# check inputs
+
+    if data != None:
+        if isinstance(data,splat.Spectrum) == False:
+            raise ValueError('\nData {} must be a Spectrum object'.format(data))
+    if model != None or model1 != None:
+        if model != None and isinstance(model,splat.Spectrum) == False:
+            raise ValueError('\nModel for primary source {} must be a Spectrum object'.format(model))
+        if model1 != None and isinstance(model1,splat.Spectrum) == False:
+            raise ValueError('\nModel for primary source {} must be a Spectrum object'.format(model1))
+    else:
+        if 'modelparam' not in list(parameters.keys()) or 'modelparam1' not in list(parameters.keys()):
+            raise ValueError('\nMust provide model parameter dictionary for primary')
+    if model2 != None:
+        if isinstance(model2,splat.Spectrum) == False:
+            raise ValueError('\nModel for secondary source {} must be a Spectrum object'.format(model2))
+    elif model1 == None and model == None:
+        if 'modelparam2' not in list(parameters.keys()):
+            raise ValueError('\nMust provide model parameter dictionary for secondary')
+
+    if atmodel != None:
+        if isinstance(atmodel,splat.Spectrum) == False:
+            raise ValueError('\nModel for atmosphere {} must be a Spectrum object'.format(atmodel))
+    if model2 != None or 'modelparam2' in list(parameters.keys()):
+        binary == True
+
+# establish model spectrum
+    if model == None and model1 == None:
+# code to read in new model - TBD
+        raise ValueError('\nHave not added in model read yet')
+    elif model != None:
+        mdl1 = copy.deepcopy(model)
+    else:
+        mdl1 = copy.deepcopy(model1)
+    if binary==True:
+        if model2 == None:
+            if 'modelparam2' not in list(parameters.keys()):
+                mdl2 = copy.deepcopy(mdl1)
+            else:
+# code to read in new model - TBD
+                raise ValueError('\nHave not added in model read yet')
+        else:
+            mdl2 = copy.deepcopy(model2)
+        if checkplots==True:
+            splot.plotSpectrum(mdl1,mdl2,colors=['k','r'],legend=['Model 1','Model 2'],file=checkprefix+'_model.pdf')
+    else:
+        if checkplots==True:
+            splot.plotSpectrum(mdl1,colors=['k'],legend=['Model 1'],file=checkprefix+'_model.pdf')
+
+# apply rv shift and vsini broadening the model spectrum
+    if 'rv' in list(parameters.keys()):
+        mdl1.rvShift(parameters['rv'])
+    elif 'rv1' in list(parameters.keys()):
+        mdl1.rvShift(parameters['rv1'])
+    if 'vsini' in list(parameters.keys()):
+        mdl1.broaden(parameters['vsini'],method='rotation')
+    elif 'vsini1' in list(parameters.keys()):
+        mdl1.broaden(parameters['vsini1'],method='rotation')
+    if binary==True:
+        if 'f2' in list(parameters.keys()):
+            mdl2.scale(parameters['f2'])
+        if 'rv2' in list(parameters.keys()):
+            mdl2.rvShift(parameters['rv2'])
+        if 'vsini2' in list(parameters.keys()):
+            mdl2.broaden(parameters['vsini2'],method='rotation')
+
+# add primary and secondary back together
+        mdl = mdl1+mdl2
+    else:
+        mdl = mdl1
+
+# read in telluric, scale & apply
+    atm = copy.deepcopy(atmodel)
+    if atm == None:
+        atm = loadTelluric(mdl.wave.value,output='spec')
+    else:
+# integral resample telluric profile onto mdl flux range
+        if len(atm.flux) != len(mdl.flux):
+            funit = atm.flux.unit
+            atm.flux = splat.integralResample(atm.wave.value,atm.flux.value,mdl.wave.value)
+            atm.flux*=funit
+            atm.wave = mdl.wave
+            atm.noise = [numpy.nan for f in atm.flux]*funit
+            atm.variance = [numpy.nan for f in atm.flux]*(funit**2)
+    if 'alpha' in list(parameters.keys()):
+        atm.flux = [t**parameters['alpha'] for t in atm.flux.value]*atm.funit
+    mdlt = mdl*atm 
+    if checkplots==True:
+        splot.plotSpectrum(mdlt,mdl,colors=['r','k'],legend=['Model x Atmosphere','Model'],file=checkprefix+'_modelatm.pdf')
+
+# resample original and telluric corrected models onto data wavelength range
+    funit = mdlt.flux.unit
+    mdlsamp = copy.deepcopy(mdl)
+    mdlsamp.flux = splat.integralResample(mdl.wave.value,mdl.flux.value,data.wave.value)
+    mdlsamp.flux*=funit
+    mdlsamp.wave = data.wave
+    mdlsamp.noise = [numpy.nan for f in mdlsamp.flux]*funit
+    mdlsamp.variance = [numpy.nan for f in mdlsamp.flux]*funit
+    mdltsamp = copy.deepcopy(mdlt)
+    mdltsamp.flux = splat.integralResample(mdlt.wave.value,mdlt.flux.value,data.wave.value)
+    mdltsamp.flux*=funit
+    mdltsamp.wave = data.wave
+    mdltsamp.noise = [numpy.nan for f in mdltsamp.flux]*funit
+    mdltsamp.variance = [numpy.nan for f in mdltsamp.flux]*funit
+    if checkplots==True:
+        splot.plotSpectrum(mdltsamp,mdlsamp,colors=['r','k'],legend=['Model x Atmosphere','Model'],file=checkprefix+'_modelatmsamp.pdf')
+
+# broaden by instrumental profile
+    if instkern != None:
+        mdlsamp.broaden(parameters['vinst'],kern=instkern)
+        mdltsamp.broaden(parameters['vinst'],kern=instkern)        
+    elif 'vinst' in list(parameters.keys()):
+        mdlsamp.broaden(parameters['vinst'],method='gaussian')
+        mdltsamp.broaden(parameters['vinst'],method='gaussian')
+    if checkplots==True:
+        splot.plotSpectrum(mdltsamp,mdlsamp,colors=['r','k'],legend=['Model x Atmosphere','Model'],file=checkprefix+'_modelatmsampbroad.pdf')
+
+# correct for continuum
+    mdlcont = copy.deepcopy(mdlsamp)
+    mdltcont = copy.deepcopy(mdltsamp)
+    if 'continuum' in list(parameters.keys()):
+        mdlcont.flux*=numpy.polyval(parameters['continuum'],mdlcont.wave.value)
+        mdltcont.flux*=numpy.polyval(parameters['continuum'],mdltcont.wave.value)
+    else:
+        mdldiv = data/mdltsamp
+        mdldiv.smooth(pixels=20)
+# note: this fails if there are any nans around        
+        pcont = numpy.polyfit(mdldiv.wave.value,mdldiv.flux.value,contfitdeg)
+#        f = interp1d(data.wave.value,data.flux.value)
+#        pcont = numpy.polyfit(mdltfinal.wave.value,f(mdltfinal.wave.value)/mdltfinal.flux.value,contfitdeg)
+        mdlcont.flux*=numpy.polyval(pcont,mdlcont.wave.value)
+        mdltcont.flux*=numpy.polyval(pcont,mdltcont.wave.value)
+    if checkplots==True:
+        mdltmp = copy.deepcopy(mdlsamp)
+        mdldiv = data/mdltsamp
+        mdltmp.scale(numpy.nanmedian(mdldiv.flux.value))
+        splot.plotSpectrum(mdltcont,mdlcont,data,colors=['r','k','b'],legend=['Model x Atmosphere x Continuum','Model','Data'],file=checkprefix+'_modelatmsampbroadcont.pdf')
+
+# correct for velocity shift (wavelength calibration error)
+    mdlfinal = copy.deepcopy(mdlcont)
+    mdltfinal = copy.deepcopy(mdltcont)
+    if 'vshift' in list(parameters.keys()):
+        mdlfinal.rvShift(parameters['vshift'])
+        mdltfinal.rvShift(parameters['vshift'])
+
+# return model
+    if return_nontelluric == True:
+        return mdltfinal,mdlfinal
+    else:
+        return mdltfinal
+        
+
+# MCMC loop
+def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=100,dof=0.,binary=False,atmodel=None,interimReport=True,report_index=10,file='tmp',output='all',verbose=True):
+    
+# generate first fit
+    if dof == 0.: dof = int(len(data.wave)-len(list(param0.keys())))
+    mdl = makeForwardModel(param0,data,binary=binary,atmodel=atmodel,model=model)
+    chi0,scale = splat.compareSpectra(data,mdl)
+    parameters = [param0]
+    chis = [chi0]
+    for i in range(nsteps):
+        for k in list(param0.keys()):
+            param = copy.deepcopy(param0)
+            param[k] = numpy.random.normal(param[k],param_var[k])
+# force positivity            
+            if k in list(limits.keys()):
+                if param[k] < numpy.min(limits[k]): param[k] = 2.*numpy.min(limits[k])-param[k]
+                if param[k] > numpy.max(limits[k]): param[k] = 2.*numpy.max(limits[k])-param[k]
+            mdl = makeForwardModel(param,data,binary=binary,atmodel=atmodel,model=model)
+            chi,scale = splat.compareSpectra(data,mdl)            
+#            if stats.f.cdf(chi/chi0, dof, dof) < numpy.random.uniform(0,1):
+            if stats.f.cdf(chi/numpy.nanmin(chis), dof, dof) < numpy.random.uniform(0,1):
+                param0 = copy.deepcopy(param)
+                chi0 = chi
+            parameters.append(param0)
+            chis.append(chi0)
+
+# report where we are            
+        if interimReport == True and i % int(report_index) == 0 and i > 0:
+            l = 'i={}, chi={:.0f}, dof={}'.format(i,chis[-1],dof)
+            for k in list(param0.keys()): l+=' , {}={:.2f}'.format(k,parameters[-1][k])
+            print(l)
+            mdl,mdlnt = makeForwardModel(parameters[-1],data,binary=binary,atmodel=atmodel,model=model,return_nontelluric=True)
+            chi,scale = splat.compareSpectra(data,mdl)            
+            mdl.scale(scale)
+            mdlnt.scale(scale)
+            splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model','Model+Telluric','Difference\nChi2={:.0f}'.format(chi)],figsize=[15,5],file=file+'_interimComparison.pdf')
+
+# identify best model
+#    print(type(chis),type(parameters))
+    i = numpy.argmin(chis)
+    best_chi = chis[i]
+    best_parameters = parameters[i]
+
+    if interimReport == True:
+        l = 'Best chi={:.0f}'.format(best_chi)
+        for k in list(param0.keys()): l+=' , {}={:.2f}'.format(k,best_parameters[k])
+        print(l)
+        mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atmodel=atmodel,model=model,return_nontelluric=True)
+        chi0,scale = splat.compareSpectra(data,mdl)
+        mdl.scale(scale)
+        mdlnt.scale(scale)
+        splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model-Telluric','Best Model\nChi2={:.0f}'.format(best_chi),'Difference'],figsize=[15,5],file=file+'_BestModel.pdf')
+    
+# burn off beginning of chain            
+#    burned_parameters = parameters[int(burn*len(parameters)):]
+#    burned_chis = chis[int(burn*len(chis)):]
+
+#    if 'burn' in output.lower():
+#        parameters = burned_parameters
+#        chis = burned_chis
+
+# reformat parameters
+    final_parameters = {}
+    for k in list(param0.keys()):
+        vals = []
+        for i in range(len(parameters)): vals.append(parameters[i][k])
+        final_parameters[k] = vals
+
+# correct for barycentric motion
+#    if isinstance(vbary,u.quantity.Quantity):
+#        vb = vbary.to(u.km/u.s).value
+#    else:
+#        vb = copy.deepcopy(vbary)
+#    if 'rv' in list(param0.keys()):
+#        final_parameters['rv'] = [r+vb for r in final_parameters['rv']]
+#        best_parameters['rv']+=vb
+#    if 'rv1' in list(param0.keys()):
+#        final_parameters['rv1'] = [r+vb for r in final_parameters['rv1']]
+#        best_parameters['rv1']+=vb
+#    if 'rv2' in list(param0.keys()):
+#        final_parameters['rv2'] = [r+vb for r in final_parameters['rv2']]
+#        best_parameters['rv2']+=vb
+        
+# return values        
+    if 'best' in output.lower():
+        return best_parameters, best_chi
+    else:
+        return final_parameters, chis
+
+
+def mcmcForwardModelReport(data,model,parameters,chis,burn=0.1,dof=0,plotChains=True,plotBest=True,plotMean=True,plotCorner=True,plotParameters=None,writeReport=True,vbary=0.,file='tmp',atmodel=None,chiweights=False,binary=False,verbose=True):
+
+    par = copy.deepcopy(parameters)
+    chi = copy.deepcopy(chis)
+    nval = len(chis)
+
+# burn first X% of chains
+    if burn != 0. and burn < 1.:
+        for k in list(par.keys()): par[k] = par[k][int(nval*burn):]
+        chi = chi[int(nval*burn):]
+        nval = len(chi)
+
+# apply weighting function
+    weights = numpy.ones(nval)
+    if chiweights==True:
+        if dof == 0: dof = int(len(data.wave)-len(list(par.keys())))
+        weights = [stats.f.sf(c/numpy.nanmin(chi),dof,dof) for c in chi]
+    weights = numpy.array(weights)
+    weights=weights/numpy.nansum(weights)
+
+# correct velocities for barycentric motion
+    if isinstance(vbary,u.quantity.Quantity):
+        vb = vbary.to(u.km/u.s).value
+    else:
+        vb = copy.deepcopy(vbary)
+    if 'rv' in list(par.keys()): par['rv'] = [r+vb for r in par['rv']]
+    if 'rv1' in list(par.keys()): par['rv1'] = [r+vb for r in par['rv1']]
+    if 'rv2' in list(par.keys()): par['rv2'] = [r+vb for r in par['rv2']]
+        
+# best parameters
+    i = numpy.argmin(chi)
+    best_parameters = {}
+    for k in list(par.keys()): best_parameters[k] = par[k][i]
+    if verbose == True:
+        print('\nBest Parameter Values:')
+        for k in list(par.keys()): print('\t{} = {}'.format(k,best_parameters[k]))
+        print('\tMinimum chi^2 = {}'.format(numpy.nanmin(chi)))
+        
+# mean parameters
+    mean_parameters = {}
+    mean_parameters_unc = {}
+    for k in list(par.keys()): 
+        mean_parameters[k] = numpy.nansum(numpy.array(par[k])*weights)
+        mean_parameters_unc[k] = numpy.sqrt(numpy.nansum((numpy.array(par[k])**2)*weights)-mean_parameters[k]**2)
+    if verbose == True:
+        print('\nMean Parameter Values:')
+        for k in list(par.keys()): print('\t{} = {}+/-{}'.format(k,mean_parameters[k],mean_parameters_unc[k]))
+
+# prep plotting
+    if plotParameters == None:
+        plotParameters = list(par.keys())
+    toplot = {}
+    for k in plotParameters: 
+        if k in list(par.keys()): 
+            toplot[k] = par[k]
+        else:
+            print('\nWarning: parameter {} not in MCMC parameter list; ignoring'.format(k))
+
+# plot chains
+    if plotChains==True:
+        plt.clf()
+        plt.figure(figsize=(6,3*(len(plotParameters)+1)))
+        for i,k in enumerate(plotParameters):
+            plt.subplot(len(plotParameters)+1,1,i+1)
+            plt.plot(range(len(toplot[k])),toplot[k],'k-')
+            plt.plot([0,len(toplot[k])],[best_parameters[k],best_parameters[k]],'b-')
+            plt.plot([0,len(toplot[k])],[mean_parameters[k],mean_parameters[k]],'g--')
+            plt.ylabel(str(k))  
+            plt.xlim([0,len(toplot[k])])
+        plt.subplot(len(plotParameters)+1,1,i+2)
+        plt.plot(range(len(toplot[k])),chi)
+        plt.ylabel(r'$\chi^2$')    
+        plt.xlim([0,len(toplot[k])])
+        plt.savefig(file+'_chains.pdf')
+
+# plot corner
+    if plotCorner==True:
+        plt.clf()
+        pd = pandas.DataFrame(toplot)
+        fig = corner.corner(pd, quantiles=[0.16, 0.5, 0.84], \
+            labels=list(pd.columns), show_titles=True, weights=weights, \
+            title_kwargs={"fontsize": 12})
+        plt.savefig(file+'_corner.pdf')
+
+# plot best model
+    if plotBest==True:
+        plt.clf()
+        mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atmodel=atmodel,model=model,return_nontelluric=True)
+        chi0,scale = splat.compareSpectra(data,mdl)
+        mdl.scale(scale)
+        mdlnt.scale(scale)
+        splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model-Telluric','Best Model','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_bestModel.pdf')
+
+# plot mean model
+    if plotMean==True:
+        plt.clf()
+        mdl,mdlnt = makeForwardModel(mean_parameters,data,binary=binary,atmodel=atmodel,model=model,return_nontelluric=True)
+        chi0,scale = splat.compareSpectra(data,mdl)
+        mdl.scale(scale)
+        mdlnt.scale(scale)
+        splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model-Telluric','Mean Model','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_meanModel.pdf')
+
+# summarize results to a text file
+    if writeReport==True:
+        f = open(file+'_report.txt','w')
+        f.write('Best Parameter Values:')
+        for k in list(par.keys()): f.write('\n\t{} = {}'.format(k,best_parameters[k]))
+        f.write('\n\tchi^2 = {}'.format(numpy.nanmin(chi)))
+        f.write('\n\nMean Parameter Values:')
+        for k in list(par.keys()): f.write('\n\t{} = {}+/-{}'.format(k,mean_parameters[k],mean_parameters_unc[k]))
+        f.close()        
+
+    return        
 
 
 def _smooth2resolution(wave,flux,resolution,**kwargs):
@@ -1123,6 +1580,7 @@ def loadTelluric(*args,wave_range=None,ndata=None,linear=True,log=False,output='
         mkwargs = {
         'wave': wave,
         'flux': trans_sampled,
+        'noise': [numpy.nan for t in trans_sampled],
         'name': 'Telluric transmission',
         'funit': u.m/u.m,
         'wunit': u.micron,
@@ -1329,7 +1787,7 @@ def modelFitGrid(spec, **kwargs):
     :Example:
     >>> import splat
     >>> import splat.model as spmod
-    >>> sp = splat.Spectrum(shortname='1507-1627')[0]
+    >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
     >>> sp.fluxCalibrate('2MASS J',12.32,absolute=True)
     >>> p = spmod.modelFitGrid(sp,teff_range=[1200,2500],model='Saumon',file='fit1507')
         Best Parameters to fit to BT-Settl (2008) models:

@@ -493,7 +493,8 @@ def plotSpectrum(*args, **kwargs):
         xrng = kwargs.get('xrange',[numpy.nanmin(sp[0].wave.value),numpy.nanmax(sp[0].wave.value)])
         if isinstance(xrng[0],u.quantity.Quantity):
             xrng = [x.value for x in xrng]
-        bound = xrng
+        bound = []
+        bound.extend(xrng)
         ymax = [s.fluxMax().value for s in sp]
         yrng = kwargs.get('yrange',numpy.array([-0.02,1.2])*numpy.nanmax(ymax)+numpy.nanmax(zeropoint))
         if isinstance(yrng[0],u.quantity.Quantity):
@@ -643,7 +644,6 @@ def plotSpectrum(*args, **kwargs):
             lg_n = lg_n + 1 # Increment lg_n
 
 
-
 # label features
 # THIS NEEDS TO BE FIXED WITH GRETEL'S STUFF
         yoff = 0.02*(bound[3]-bound[2])
@@ -671,8 +671,7 @@ def plotSpectrum(*args, **kwargs):
 # update offset
                         foff = [y+3*yoff if (w >= waveRng[0] and w <= waveRng[1]) else 0 for w in wvmax]
                         flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
-        bound[3] = numpy.max([numpy.max(flxmax)+1.*yoff,bound[3]])
-        ax.axis(bound)
+        bound[3] = numpy.nanmax([numpy.nanmax(flxmax)+1.*yoff,bound[3]])
 
 
 # grid
@@ -703,7 +702,6 @@ def plotSpectrum(*args, **kwargs):
             else:
                 ax.legend(loc=legendLocation, prop={'size':legendfontsize})
                 bound[3] = bound[3]+0.1*(bound[3]-bound[2])     # extend axis for in-plot legends
-            ax.axis(bound)
 
 # overplot telluric absorption
         if (kwargs.get('telluric',False) == True):
@@ -808,6 +806,16 @@ def plotSpectrum(*args, **kwargs):
                                 flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
                 bound2[3] = numpy.max([bound2[3],numpy.max(flxmax)+5.*yoff])
                 ax_inset.axis(bound2)
+
+# finalize bounding
+        if kwargs.get('xrange',None) != None:
+            bound[0:2] = kwargs['xrange']
+        if kwargs.get('yrange',None) != None:
+            bound[2:4] = kwargs['yrange']
+        for i,b in enumerate(bound):
+            if isinstance(b,u.quantity.Quantity):
+                bound[i]=b.value
+        ax.axis(bound)
 
     
 # save to file or display

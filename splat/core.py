@@ -129,7 +129,7 @@ class Spectrum(object):
         self.istransmission = kwargs.get('istransmission',False)
         self.wlabel = kwargs.get('wlabel',r'Wavelength')
         self.wunit = kwargs.get('wunit',u.micron)
-        self.wunit_label = kwargs.get('wunit_label',r'$\mu$m')
+        self.wunit_label = kwargs.get('wunit_label',self.wunit)
         self.flabel = kwargs.get('flabel',r'F$_{\lambda}$')
         self.fscale = kwargs.get('fscale','Arbitrary')
         if kwargs.get('surface',False) == True: self.fscale = 'Surface'
@@ -622,6 +622,8 @@ class Spectrum(object):
 
 # update information
         sp.name = self.name+' x '+other.name
+        sp.funit = self.funit*other.funit
+        sp.funit_label = self.funit*other.funit
         ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
@@ -664,7 +666,7 @@ class Spectrum(object):
         n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
 
 # divide
-        sp.flux = numpy.divide(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*self.funit/other.funit
+        sp.flux = numpy.divide(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*(self.funit/other.funit)
 
 # uncertainty
         sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
@@ -673,12 +675,14 @@ class Spectrum(object):
         sp.snr = sp.computeSN()
 
 # clean up infinities
-        sp.flux = numpy.where(numpy.absolute(sp.flux) == numpy.inf, numpy.nan*self.funit/other.funit, sp.flux)
-        sp.noise = numpy.where(numpy.absolute(sp.noise) == numpy.inf, numpy.nan*self.funit/other.funit, sp.noise)
-        sp.variance = numpy.where(numpy.absolute(sp.variance) == numpy.inf, numpy.nan*self.funit/other.funit, sp.variance)
+        sp.flux = (numpy.where(numpy.absolute(sp.flux.value) == numpy.inf, numpy.nan, sp.flux.value))*self.funit/other.funit
+        sp.noise = (numpy.where(numpy.absolute(sp.noise.value) == numpy.inf, numpy.nan, sp.noise.value))*self.funit/other.funit
+        sp.variance = (numpy.where(numpy.absolute(sp.variance.value) == numpy.inf, numpy.nan, sp.variance.value))*(self.funit/other.funit)**2
 
 # update information
         sp.name = self.name+' / '+other.name
+        sp.funit = self.funit/other.funit
+        sp.funit_label = self.funit/other.funit
         ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
@@ -729,12 +733,14 @@ class Spectrum(object):
         sp.snr = sp.computeSN()
 
 # clean up infinities
-        sp.flux = numpy.where(numpy.absolute(sp.flux) == numpy.inf, numpy.nan*self.funit/other.funit, sp.flux)
-        sp.noise = numpy.where(numpy.absolute(sp.noise) == numpy.inf, numpy.nan*self.funit/other.funit, sp.noise)
-        sp.variance = numpy.where(numpy.absolute(sp.variance) == numpy.inf, numpy.nan*self.funit/other.funit, sp.variance)
+        sp.flux = (numpy.where(numpy.absolute(sp.flux.value) == numpy.inf, numpy.nan, sp.flux.value))*self.funit/other.funit
+        sp.noise = (numpy.where(numpy.absolute(sp.noise.value) == numpy.inf, numpy.nan, sp.noise.value))*self.funit/other.funit
+        sp.variance = (numpy.where(numpy.absolute(sp.variance.value) == numpy.inf, numpy.nan, sp.variance.value))*(self.funit/other.funit)**2
 
 # update information
         sp.name = self.name+' / '+other.name
+        sp.funit = self.funit/other.funit
+        sp.funit_label = self.funit/other.funit
         ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
@@ -1086,15 +1092,15 @@ class Spectrum(object):
            >>> sp.wave.unit
             Unit("micron")
         '''
-        try:
-            self.flux = self.flux.to(funit,equivalencies=u.spectral_density(self.wave))
-            self.history.append('Converted to flux units of {}'.format(self.funit))
-            self.noise = self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
-            self.variance = self.noise**2
-            self.snr = self.computeSN()
-            self.funit = funit
-        except:
-            print('Warning! failed to convert to flux unit {}'.format(funit))
+#        try:
+        self.flux = self.flux.to(funit,equivalencies=u.spectral_density(self.wave))
+        self.history.append('Converted to flux units of {}'.format(self.funit))
+        self.noise = self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
+        self.variance = self.noise**2
+        self.snr = self.computeSN()
+        self.funit = funit
+#        except:
+#        print('Warning! failed to convert to flux unit {}'.format(funit))
         return
 
     def rvShift(self,rv):
@@ -1190,7 +1196,7 @@ class Spectrum(object):
                 report = 'Broadened spectrum using a Gaussian with velocity width {}'.format(vbroad)
 
 # delta function (no smoothing)
-            elif 'delta' in method.lower():
+            else:
                 kern = numpy.zeros(5)
                 kern[2] = 1.
                 report = 'Applying delta line spread function (no broadening)'
@@ -1201,11 +1207,12 @@ class Spectrum(object):
 # normalize kernel
         kern = kern/numpy.nansum(kern)
 
+        funit = self.flux.unit
         a = (numpy.nanmax(self.wave.value)/numpy.nanmin(self.wave.value))**(1./len(self.wave))
-        nwave = numpy.nanmin(self.wave)*(a**numpy.arange(len(self.wave)))
-        nflux = self.flux*nwave
+        nwave = numpy.nanmin(self.wave.value)*(a**numpy.arange(len(self.wave)))
+        nflux = self.flux.value*nwave
         ncflux = numpy.convolve(nflux, kern, 'same')
-        self.flux = ncflux/nwave
+        self.flux = ncflux/nwave*funit
         self.history.append(report)
 
         return
@@ -1431,6 +1438,59 @@ class Spectrum(object):
         return
 
 
+    def maskFlux(self,mask,others=[]):
+        '''
+        :Purpose: 
+
+            Masks elements of flux (set to NaN) as specified by the True/False array
+
+        :Required Input:
+
+            :param **mask**: An array of booleans, ints or floats, where True or 1 means remove the element 
+        
+        :Optional Input:
+
+            :param **others**: list of other attributes that mask should be applied (e.g., 'pixel') (default = [])
+
+        :Output:
+
+            Spectrum object has the flagged pixels set to nan in flux arrays
+
+        :Example:
+           >>> import splat,numpy
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> num = splat.numberList('1-10,18,30-50')
+           >>> mask = [not(p in num) for p in numpy.arange(len(sp.wave))]
+           >>> sp.remove(mask)
+           >>> sp.showHistory()
+                SPEX_PRISM spectrum successfully loaded
+                Mask applied to remove 32 pixels
+        '''
+        msk = copy.deepcopy(mask)
+        if len(msk) != len(self.flux):
+            print('\nWarning: mask must be same length ({}) as flux arrays ({}); not removing any pixels'.format(len(msk),len(self.flux)))
+            return
+        if isinstance(msk[0],float): msk = [int(x) for x in msk]
+        if isinstance(msk[0],int): msk = [True if x==1 else False for x in msk]
+        if not isinstance(msk[0],bool): print('\nWarning: cannot interpret mask {}; not removing any pixels'.format(mask))
+
+# mask pixels
+        self.flux[msk] = numpy.nan
+
+        if len(others) > 0:
+            for k in others:
+                if k in self.original.__dict__.keys():
+                    try:
+                        x = getattr(self,k)
+                        x[msk] = numpy.nan
+                        setattr(self,k,x)
+                    except:
+                        pass
+
+        cnt = numpy.sum([1 if x == False else 0 for x in msk])
+        self.history.append('Masking applied to {} pixels'.format(cnt))
+        return
+
     def reset(self):
         '''
         :Purpose: Restores a Spectrum to its original read-in state, removing scaling and smoothing. This routine changes the Spectrum object directly and there is no output.
@@ -1466,6 +1526,39 @@ class Spectrum(object):
         self.original = copy.deepcopy(self)
         return
 
+
+    def res(self,npixel=1.,method='median'):
+        '''
+        :Purpose: 
+
+            Estimate the resolution of the data from the wavelength array
+
+        :Required Inputs: 
+
+            None
+
+        :Optional Inputs: 
+
+            :param: npixel = 1: number of pixels per resolution element
+            :param: method = 'median': what statistic to report back; can be mean, average, median, min, or max
+
+        :Outputs: 
+
+            The resolution of the spectrum (single number)
+        
+        :Example:
+           >>> import splat
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> sp.resolution()
+        '''
+
+        res = numpy.absolute(numpy.array([0.5*(self.wave[i+1]+self.wave[i])/(self.wave[i+1]-self.wave[i]) for i in range(len(self.wave)-1)])/float(npixel))
+
+        if method=='median': return numpy.nanmedian(res)
+        elif method=='mean' or method=='average': return numpy.nanmean(res)
+        elif method=='min': return numpy.nanmin(res)
+        elif method=='max': return numpy.nanmax(res)
+        else: raise ValueError('\nCould not interpret method = {}'.format(method))
 
 
     def scale(self,factor,**kwargs):
@@ -1524,7 +1617,7 @@ class Spectrum(object):
 
         :param method: the type of smoothing window to use. See http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html for more details.
         :type method: optional, default = Hanning
-        :param resolution: Constant resolution to smooth toe(see smoothToResolution_)
+        :param resolution: Constant resolution to smooth to (see smoothToResolution_)
         :type resolution: optional, default = None
         :param slitPixelWidth: Number of pixels to smooth in pixel space (see smoothToSlitPixelWidth_)
         :type slitPixelWidth: optional, default = None
