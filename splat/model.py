@@ -14,7 +14,7 @@ import sys
 import time
 
 # imports: external
-import corner
+#import corner
 from matplotlib import cm
 import matplotlib.pyplot as plt
 import numpy
@@ -835,12 +835,17 @@ def mcmcForwardModelReport(data,model,parameters,chis,burn=0.1,dof=0,plotChains=
 
 # plot corner
     if plotCorner==True:
-        plt.clf()
-        pd = pandas.DataFrame(toplot)
-        fig = corner.corner(pd, quantiles=[0.16, 0.5, 0.84], \
-            labels=list(pd.columns), show_titles=True, weights=weights, \
-            title_kwargs={"fontsize": 12})
-        plt.savefig(file+'_corner.pdf')
+        try:
+            import corner
+        except:
+            print('\nYou must install corner to make corner plots: https://github.com/dfm/corner.py')
+        else:
+            plt.clf()
+            pd = pandas.DataFrame(toplot)
+            fig = corner.corner(pd, quantiles=[0.16, 0.5, 0.84], \
+                labels=list(pd.columns), show_titles=True, weights=weights, \
+                title_kwargs={"fontsize": 12})
+            plt.savefig(file+'_corner.pdf')
 
 # plot best model
     if plotBest==True:

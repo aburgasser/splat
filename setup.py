@@ -27,6 +27,7 @@ setup(
     'astropy',
     'astroquery',
     'bokeh',
+    'corner'
     'flask',
     'matplotlib',
     'numpy',
