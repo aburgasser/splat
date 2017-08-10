@@ -225,7 +225,6 @@ class Spectrum(object):
 
         # breakouts for specific instruments
             if (kwargs.get('APOGEE') == True or kwargs.get('apogee') == True or kwargs.get('instrument','SPEX_PRISM').upper() == 'APOGEE') and self.filename != '':
-                print(kwargs)
                 rs = _readAPOGEE(self.filename,**kwargs)
                 self.instrument = 'APOGEE'
 #                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
@@ -555,9 +554,6 @@ class Spectrum(object):
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
 # this fudge is for astropy 1.*
-        print(sp.wave)
-        print(self.wunit)
-        print(type(self.wunit))
         if not isinstance(sp.wave,u.quantity.Quantity):
             sp.wave=sp.wave*self.wunit
 
