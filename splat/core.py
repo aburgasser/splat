@@ -497,7 +497,7 @@ class Spectrum(object):
 # make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
-        sp.wave*=self.wunit
+        sp.wave=sp.wave*self.wunit
 
 # generate interpolated axes
         f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
@@ -554,7 +554,12 @@ class Spectrum(object):
 # make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
-        sp.wave*=self.wunit
+# this fudge is for astropy 1.*
+        print(sp.wave)
+        print(self.wunit)
+        print(type(self.wunit))
+        if not isinstance(sp.wave,u.quantity.Quantity):
+            sp.wave=sp.wave*self.wunit
 
 # generate interpolated axes
         f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
@@ -604,7 +609,7 @@ class Spectrum(object):
 # make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
-        sp.wave*=self.wunit
+        sp.wave=sp.wave*self.wunit
 
 # generate interpolated axes
         f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
@@ -617,7 +622,7 @@ class Spectrum(object):
 
 # uncertainty
         sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
-        sp.variance*=((self.funit*other.funit)**2)
+        sp.variance=sp.variance*((self.funit*other.funit)**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
 
@@ -658,7 +663,7 @@ class Spectrum(object):
 # make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
-        sp.wave*=self.wunit
+        sp.wave=sp.wave*self.wunit
 
 # generate interpolated axes
         f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
@@ -671,7 +676,7 @@ class Spectrum(object):
 
 # uncertainty
         sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
-        sp.variance*=((self.funit/other.funit)**2)
+        sp.variance=sp.variance*((self.funit/other.funit)**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
 
@@ -716,7 +721,7 @@ class Spectrum(object):
 # make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
-        sp.wave*=self.wunit
+        sp.wave=sp.wave*self.wunit
 
 # generate interpolated axes
         f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
@@ -729,7 +734,7 @@ class Spectrum(object):
 
 # uncertainty
         sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
-        sp.variance*=((self.funit/other.funit)**2)
+        sp.variance=sp.variance*((self.funit/other.funit)**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
 
@@ -1164,7 +1169,7 @@ class Spectrum(object):
         if isinstance(vbroad,u.quantity.Quantity):
             vbroad.to(u.km/u.s)
         else:
-            vbroad*=(u.km/u.s)
+            vbroad=vbroad*(u.km/u.s)
 
 # determine velocity sampling
         samp = numpy.nanmedian(numpy.absolute(self.wave.value-numpy.roll(self.wave.value,1)) / self.wave.value)
@@ -2959,7 +2964,6 @@ def readSpectrum(*args,**kwargs):
 #    flux[w] = 0.
 
 # remove all parts of spectrum that are nans
-    print(len(output['wave']),len(output['flux']),len(output['noise']))
     w = numpy.where(numpy.logical_and(numpy.isnan(output['wave']) == False,numpy.isnan(output['flux']) == False))
     output['wave'] = output['wave'][w]
     output['flux'] = output['flux'][w]
@@ -4810,7 +4814,7 @@ def lsfRotation(vsini,vsamp,epsilon=0.6):
     if nsamp % 2 == 0:
         nsamp+=1
     x = numpy.arange(nsamp)-(nsamp-1.)/2.
-    x*=vsamp/vsini
+    x = x*vsamp/vsini
     x2 = numpy.absolute(1.-x**2)
 
     return (e1*numpy.sqrt(x2) + e2*x2)/e3
