@@ -155,28 +155,6 @@ class Spectrum(object):
         self.flux = []
         self.noise = []
 
-# breakouts for specific instruments
-        if (kwargs.get('APOGEE') == True or kwargs.get('apogee') == True or kwargs.get('instrument','SPEX_PRISM').upper() == 'APOGEE') and kwargs.get('file',False) != False:
-            rs = _readAPOGEE(kwargs['file'],**kwargs)
-            self.instrument = 'APOGEE'
-            for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
-            self.wunit = kwargs.get('wunit',u.Angstrom)
-            self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.Angstrom))
-            self.history.append('Spectrum successfully loaded')
-    # create a copy to store as the original
-            self.original = copy.deepcopy(self)
-            return
-
-        if (kwargs.get('BOSS',False) == True or kwargs.get('boss',False) == True or kwargs.get('eboss',False) == True or kwargs.get('EBOSS',False) == True or kwargs.get('instrument','SPEX_PRISM').upper() == 'BOSS' or kwargs.get('instrument','SPEX_PRISM').upper() == 'EBOSS') and kwargs.get('file',False) != False:
-            rs = _readBOSS(kwargs['file'])
-            for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
-            self.wunit = kwargs.get('wunit',u.Angstrom)
-            self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.Angstrom))
-            self.history.append('Spectrum successfully loaded')
-    # create a copy to store as the original
-            self.original = copy.deepcopy(self)
-            return
-
 
 # process arguments
 # option 1: a filename is given
@@ -244,7 +222,30 @@ class Spectrum(object):
 #                return
 
 #            try:
-            rs = readSpectrum(self.filename,**mkwargs)
+
+        # breakouts for specific instruments
+            if (kwargs.get('APOGEE') == True or kwargs.get('apogee') == True or kwargs.get('instrument','SPEX_PRISM').upper() == 'APOGEE') and self.filename != '':
+                print(kwargs)
+                rs = _readAPOGEE(self.filename,**kwargs)
+                self.instrument = 'APOGEE'
+#                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
+                self.history.append('Spectrum successfully loaded')
+        # create a copy to store as the original
+                self.original = copy.deepcopy(self)
+
+            elif (kwargs.get('BOSS',False) == True or kwargs.get('boss',False) == True or kwargs.get('eboss',False) == True or kwargs.get('EBOSS',False) == True or kwargs.get('instrument','SPEX_PRISM').upper() == 'BOSS' or kwargs.get('instrument','SPEX_PRISM').upper() == 'EBOSS') and self.filename != '':
+                rs = _readBOSS(self.filename)
+#                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
+                self.wunit = kwargs.get('wunit',u.Angstrom)
+                self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.Angstrom))
+                self.history.append('Spectrum successfully loaded')
+        # create a copy to store as the original
+                self.original = copy.deepcopy(self)
+
+
+            else:
+                rs = readSpectrum(self.filename,**mkwargs)
+
             for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
 
 
@@ -2958,6 +2959,7 @@ def readSpectrum(*args,**kwargs):
 #    flux[w] = 0.
 
 # remove all parts of spectrum that are nans
+    print(len(output['wave']),len(output['flux']),len(output['noise']))
     w = numpy.where(numpy.logical_and(numpy.isnan(output['wave']) == False,numpy.isnan(output['flux']) == False))
     output['wave'] = output['wave'][w]
     output['flux'] = output['flux'][w]
@@ -2992,20 +2994,80 @@ def _readAPOGEE(file,**kwargs):
     if not os.path.exists(file):
         raise NameError('\nCould not find APOGEE file {}'.format(file))
 
+# assess data model to use:
+    model = kwargs.get('datamodel','apstar').lower()
+    print(kwargs,model)
+    if kwargs.get('apstar',False) == True: model='apstar'
+    if kwargs.get('apvisit',False) == True: model='apvisit'
+    if kwargs.get('aspcap',False) == True: model='aspcap'
+
     hdulist = fits.open(file)
     header = hdulist[0].header
-    wave = 10.**(numpy.linspace(hdulist[0].header['CRVAL1'],hdulist[0].header['CRVAL1']+hdulist[0].header['NAXIS1']*hdulist[0].header['CDELT1'],num=hdulist[0].header['NAXIS1'],endpoint=False))
-    flux = numpy.array(hdulist[1].data)*1.e-17*u.Angstrom
-    noise = numpy.array(hdulist[2].data)*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
-    model = numpy.array(hdulist[3].data)*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+    output = {'wunit': u.Angstrom,'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom,'header': header}
+# apstar data - combined fluxes and individual visits
+# https://data.sdss.org/datamodel/files/APOGEE_REDUX/APRED_VERS/APSTAR_VERS/TELESCOPE/LOCATION_ID/apStar.html
+    if model=='apstar':
+        output['wave'] = 10.**(numpy.linspace(hdulist[1].header['CRVAL1'],hdulist[1].header['CRVAL1']+hdulist[1].header['NAXIS1']*hdulist[1].header['CDELT1'],num=hdulist[1].header['NAXIS1'],endpoint=False))*u.Angstrom
+        output['flux'] = numpy.array(hdulist[1].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['noise'] = numpy.array(hdulist[2].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['mask'] = numpy.array(hdulist[3].data[0])
+        output['sky'] = numpy.array(hdulist[4].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['skynoise'] = numpy.array(hdulist[5].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['telluric'] = numpy.array(hdulist[6].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['telluricnoise'] = numpy.array(hdulist[7].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        if header['NVISITS'] > 1:
+            output['flux_visits'] = [numpy.array(hdulist[1].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+            output['noise_visits'] = [numpy.array(hdulist[2].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+            output['mask_visits'] = [numpy.array(hdulist[3].data[i]) for i in range(2,header['NVISITS']+2,1)]
+            output['sky_visits'] = [numpy.array(hdulist[4].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+            output['skynoise_visits'] = [numpy.array(hdulist[5].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+            output['telluric_visits'] = [numpy.array(hdulist[6].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+            output['telluricnoise_visits'] = [numpy.array(hdulist[7].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
 
-    return {'wave': wave,
-          'flux': flux,
-          'noise': noise,
-          'header': header,
-          'model': model,
-          'wunit': u.Angstrom,
-          'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
+# apvisit data - combined fluxes and individual visits
+# https://data.sdss.org/datamodel/files/APOGEE_REDUX/APRED_VERS/TELESCOPE/PLATE_ID/MJD5/apVisit.html 
+    elif model=='apvisit':
+        output['wave'] = numpy.array(hdulist[4].data[0])*u.Angstrom
+        output['flux'] = numpy.array(hdulist[1].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['noise'] = numpy.array(hdulist[2].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['mask'] = numpy.array(hdulist[3].data[0])
+        output['sky'] = numpy.array(hdulist[5].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['skynoise'] = numpy.array(hdulist[6].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['telluric'] = numpy.array(hdulist[7].data[0])
+        output['telluricnoise'] = numpy.array(hdulist[8].data[0])
+        if len(hdulist[1].data) > 1:
+            output['wave_visits'] = [numpy.array(hdulist[4].data[i])*u.Angstrom for i in range(len(hdulist[1].data))]
+            output['flux_visits'] = [numpy.array(hdulist[1].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(len(hdulist[1].data))]
+            output['noise_visits'] = [numpy.array(hdulist[2].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(len(hdulist[1].data))]
+            output['mask_visits'] = [numpy.array(hdulist[3].data[i]) for i in range(len(hdulist[1].data))]
+            output['sky_visits'] = [numpy.array(hdulist[5].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(len(hdulist[1].data))]
+            output['skynoise_visits'] = [numpy.array(hdulist[6].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(len(hdulist[1].data))]
+            output['telluric_visits'] = [numpy.array(hdulist[7].data[i]) for i in range(len(hdulist[1].data))]
+            output['telluricnoise_visits'] = [numpy.array(hdulist[8].data[i]) for i in range(len(hdulist[1].data))]
+
+# aspcap data -  fluxes and individual visits
+# https://data.sdss.org/datamodel/files/APOGEE_REDUX/APRED_VERS/APSTAR_VERS/ASPCAP_VERS/RESULTS_VERS/LOCATION_ID/aspcapStar.html
+    elif model=='aspcap':
+        output['wave'] = 10.**(numpy.linspace(hdulist[1].header['CRVAL1'],hdulist[1].header['CRVAL1']+hdulist[1].header['NAXIS1']*hdulist[1].header['CDELT1'],num=hdulist[1].header['NAXIS1'],endpoint=False))*u.Angstrom
+        output['flux'] = numpy.array(hdulist[1].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['noise'] = numpy.array(hdulist[2].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['mask'] = numpy.array(hdulist[3].data[0])
+        output['sky'] = numpy.array(hdulist[4].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['skynoise'] = numpy.array(hdulist[5].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['telluric'] = numpy.array(hdulist[6].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        output['telluricnoise'] = numpy.array(hdulist[7].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom)
+        if header['NVISITS'] > 1:
+            output['flux_visits'] = [numpy.array(hdulist[1].data[i])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+            output['noise_visits'] = [numpy.array(hdulist[2].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+            output['mask_visits'] = [numpy.array(hdulist[3].data[0]) for i in range(2,header['NVISITS']+2,1)]
+            output['sky_visits'] = [numpy.array(hdulist[4].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+            output['skynoise_visits'] = [numpy.array(hdulist[5].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+            output['telluric_visits'] = [numpy.array(hdulist[6].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+            output['telluricnoise_visits'] = [numpy.array(hdulist[7].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+    else:
+        raise ValueError('\nNeed to specify which APOGEE data model you are using (apstar, apvisits)')
+
+    return output
 
 
 def _readBOSS(file,**kwargs):

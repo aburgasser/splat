@@ -1440,7 +1440,7 @@ def _loadModelParameters(*args,**kwargs):
     if len(mfiles) == 0:
         raise ValueError('\nCould not find any model files in {}'.format(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+mset))
     for mf in mfiles:
-        sp = mf.replace('.txt','').split('_')[1:]
+        sp = os.path.basename(mf).replace('.txt','').split('_')[1:]
         if len(sp) >= len(SPECTRAL_MODEL_PARAMETERS_INORDER):
             p = {'model': mset}
             for i,ms in enumerate(SPECTRAL_MODEL_PARAMETERS_INORDER):
