@@ -252,10 +252,13 @@ def getPhotometry(coordinate,**kwargs):
 # search Vizier, sort by separation        
     v = Vizier(columns=["*", "+_r"], catalog=catalog)
     t_vizier = v.query_region(c,radius=radius)
+    tv = Table()
     if len(t_vizier) > 0:
-        tv=t_vizier[0]
+        for k in list(t_vizier.keys()):
+            if catalog in k:
+                tv = t_vizier[k]
     else:
-        tv = t_vizier
+        tv = Table()
 
 # sorting
     if len(tv) > 1:
@@ -750,8 +753,8 @@ def importSpectra(*args,**kwargs):
         if 'MODENAME' in list(s.header.keys()):
             instrument+=' {}'.format(s.header['MODENAME'].replace(' ','').upper())
 
-    if instrument.upper() in list(splat.INSTRUMENTS.keys()):
-        instrument_info = splat.INSTRUMENTS[instrument.upper()]
+    if instrument.upper().replace(' ','_') in list(splat.INSTRUMENTS.keys()):
+        instrument_info = splat.INSTRUMENTS[instrument.upper().replace(' ','_')]
     else:
         instrument_info = {'instrument_name': instrument, 'resolution': 0.*u.arcsec, 'slitwidth': 0.}
 
