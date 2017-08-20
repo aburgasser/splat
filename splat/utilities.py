@@ -795,7 +795,44 @@ def typeToNum(inp, **kwargs):
 
             sptype = re.findall('[{}]'.format(spletter),v.upper())
             outval = 0.
-            if (len(sptype) == 1):
+            if (len(sptype) >= 1):
+# specialty classes                
+                sptype = sptype[0]
+                ytype = re.findall('[abcd]',v.split('p')[-1])
+                if (len(ytype) == 1):
+                    ageclass[i] = ytype[0]
+                if (v.find('p') != -1):
+                     peculiar = True
+                     v.replace('p','')
+                if (v.find('alpha') != -1):
+                     ageclass[i] = 'alpha'
+                     v.replace('alpha','')
+                if (v.find('beta') != -1):
+                     ageclass[i] = 'beta'
+                     v.replace('beta','')
+                if (v.find('gamma') != -1):
+                     ageclass[i] = 'gamma'
+                     v.replace('gamma','')
+                if (v.find('esd') != -1):
+                     subclass[i] = 'esd'
+                     v.replace('esd','')
+                if (v.find('usd') != -1):
+                     subclass[i] = 'usd'
+                     v.replace('usd','')
+                if (v.find('sd') != -1):
+                     subclass[i] = 'sd'
+                     v.replace('sd','')
+                if (v.count('I') > 0):
+                     lumclass[i] = ''.join(re.findall('I',v))
+                     v.replace('I','')
+                if (v.count(':') > 0):
+                     error[i] = ''.join(re.findall(':',v))
+                     v.replace(':','')
+                if (v[0] == 'b' or v[0] == 'r'):
+                     colorclass[i] = v[0]
+                     v.replace('b','')
+                     v.replace('r','')
+
                 outval = spletter.find(sptype[0])*10.
                 spind = v.find(sptype[0])+1
                 if (spind < len(v)):
@@ -809,24 +846,8 @@ def typeToNum(inp, **kwargs):
                         except:
                             if verbose: print('\nProblem converting input type {} to a numeric type'.format(v))
                             outval = numpy.nan
-                ytype = re.findall('[abcd]',v.split('p')[-1])
-                if (len(ytype) == 1):
-                    ageclass[i] = ytype[0]
-                if (v.find('p') != -1):
-                     peculiar = True
-                if (v.find('sd') != -1):
-                     subclass[i] = 'sd'
-                if (v.find('esd') != -1):
-                     subclass[i] = 'esd'
-                if (v.find('usd') != -1):
-                     subclass[i] = 'usd'
-                if (v.count('I') > 0):
-                     lumclass[i] = ''.join(re.findall('I',v))
-                if (v.count(':') > 0):
-                     error[i] = ''.join(re.findall(':',v))
-                if (v[0] == 'b' or v[0] == 'r'):
-                     colorclass[i] = v[0]
-            if (len(sptype) != 1):
+
+            else:
                 if verbose: print('\nOnly spectral classes {} are handled by typeToNum'.format(spletter))
                 outval = numpy.nan
             output.append(outval)
@@ -848,7 +869,7 @@ def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.):
     try:
         from uvwxyz.uvwxyz import uvw as uvwcalc
     except:
-        raise ValueError('\nMust have installed package uvwxyz to run this module')
+        raise ValueError('\nMust have installed package uvwxyz to run this module: https://github.com/dr-rodriguez/uvwxyz')
     try:
         c = properCoordinates(coord)
     except:

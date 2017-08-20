@@ -71,7 +71,7 @@ def filterProfile(filt,**kwargs):
     filt = f0
 
 # read in filter
-    fwave,ftrans = numpy.genfromtxt(filterFolder+FILTERS[filt]['file'], comments='#', unpack=True, missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+    fwave,ftrans = numpy.genfromtxt(os.path.normpath(filterFolder+FILTERS[filt]['file']), comments='#', unpack=True, missing_values = ('NaN','nan'), filling_values = (numpy.nan))
 #    print(type(fwave),type(ftrans),isinstance(fwave,numpy.ndarray),isinstance(ftrans,numpy.ndarray),not isinstance(fwave,numpy.ndarray) or not isinstance(ftrans,numpy.ndarray))
     if not isinstance(fwave,numpy.ndarray) or not isinstance(ftrans,numpy.ndarray):
         raise ValueError('\nProblem reading in {}'.format(filterFolder+FILTERS[filt]['file']))
@@ -211,7 +211,7 @@ def filterMag(sp,filt,*args,**kwargs):
     result = []
     if (vega):
 # Read in Vega spectrum
-        vwave,vflux = numpy.genfromtxt(filterFolder+vegaFile, comments='#', unpack=True, \
+        vwave,vflux = numpy.genfromtxt(os.path.normpath(filterFolder+vegaFile), comments='#', unpack=True, \
             missing_values = ('NaN','nan'), filling_values = (numpy.nan))
         vwave = vwave[~numpy.isnan(vflux)]*u.micron
         vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))
@@ -465,7 +465,7 @@ def magToFlux(mag,filt,**kwargs):
         
         if vega:
     # Read in Vega spectrum
-            vwave,vflux = numpy.genfromtxt(filterFolder+vegaFile, comments='#', unpack=True, \
+            vwave,vflux = numpy.genfromtxt(os.path.normpath(filterFolder+vegaFile), comments='#', unpack=True, \
                 missing_values = ('NaN','nan'), filling_values = (numpy.nan))
             vwave = vwave[~numpy.isnan(vflux)]*u.micron
             vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))

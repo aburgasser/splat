@@ -1107,17 +1107,12 @@ class Spectrum(object):
 
     def rvShift(self,rv):
         '''
-        :Purpose: Shifts the wavelength scale by a radial velocity factor. This routine changes the underlying Spectrum object.
+        :Purpose: Shifts the wavelength scale by a given radial velocity. This routine changes the underlying Spectrum object.
         
         :Example:
            >>> import splat
            >>> import astropy.units as u
-           >>> sp = splat.Spectrum(file='somespectrum',wunit=u.Angstrom)
-           >>> sp.wave.unit
-            Unit("Angstrom")
-           >>> sp.toMicron()
-           >>> sp.wave.unit
-            Unit("micron")
+           >>> sp.rvShift(15*u.km/u.s)
         '''
         if not isinstance(rv,u.quantity.Quantity):
             rv=rv*(u.km/u.s)
@@ -1820,7 +1815,7 @@ class Spectrum(object):
         self.fscale = 'Surface'
         return
 
-    def brightnessTemperature(self):
+    def brightnessTemperature(self,limbdarkening=False,limbdarkeningcoeff = 0.7):
         '''
         :Purpose: Convert to surface fluxes given a radius, assuming at absolute fluxes
         .. note: UNTESTED
@@ -2401,8 +2396,8 @@ def searchLibrary(*args, **kwargs):
         count+=1.
 
 # search by reference list
-    if kwargs.get('reference',False) != False:
-        refer = kwargs['reference']
+    if kwargs.get('discovery_reference',False) != False:
+        refer = kwargs['discovery_reference']
         if isinstance(refer,str):
             refer = [refer]
         for r in refer:
@@ -2726,8 +2721,10 @@ def searchLibrary(*args, **kwargs):
         count+=1.
 
 # search by reference list
-    if kwargs.get('bibcode',False) != False:
-        drefer = kwargs['bibcode']
+    drefer = kwargs.get('bibcode',False)
+    drefer = kwargs.get('reference',drefer)
+    drefer = kwargs.get('ref',drefer)
+    if drefer != False:
         if isinstance(drefer,str):
             drefer = [drefer]
         for r in drefer:
@@ -3000,6 +2997,7 @@ def _readAPOGEE(file,**kwargs):
     if kwargs.get('apstar',False) == True: model='apstar'
     if kwargs.get('apvisit',False) == True: model='apvisit'
     if kwargs.get('aspcap',False) == True: model='aspcap'
+    if kwargs.get('ap1d',False) == True: model='ap1d'
 
     hdulist = fits.open(file)
     header = hdulist[0].header
@@ -3064,8 +3062,12 @@ def _readAPOGEE(file,**kwargs):
             output['skynoise_visits'] = [numpy.array(hdulist[5].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
             output['telluric_visits'] = [numpy.array(hdulist[6].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
             output['telluricnoise_visits'] = [numpy.array(hdulist[7].data[0])*1.e-17*(u.erg/u.s/u.cm/u.cm/u.Angstrom) for i in range(2,header['NVISITS']+2,1)]
+
+    elif model=='ap1d':
+        raise ValueError('\nHave not implemented ap1d yet')
+
     else:
-        raise ValueError('\nNeed to specify which APOGEE data model you are using (apstar, apvisits)')
+        raise ValueError('\nNeed to specify which APOGEE data model you are using (apstar, apvisit, aspcap, ap1d)')
 
     return output
 
@@ -3525,34 +3527,49 @@ def classifyByStandard(sp, *args, **kwargs):
         return classifyByStandard(sp,**mkwargs)
 
 # assign subclasses
-    if kwargs.get('sd',False):
+    if kwargs.get('sd',False) == True:
+        initiateStandards(sd=True)
         stds = STDS_SD_SPEX
         subclass = 'sd'
         stdtype = 'Subdwarf'
-        initiateStandards(sd=True)
         if verbose:
             print('Using subdwarf standards')
-    elif kwargs.get('esd',False):
+    elif kwargs.get('esd',False) == True:
+        initiateStandards(esd=True)
         stds = STDS_ESD_SPEX
         subclass = 'esd'
         stdtype = 'Extreme Subdwarf'
-        initiateStandards(esd=True)
         if verbose:
             print('Using extreme subdwarf standards')
-    elif kwargs.get('vlg',False) or kwargs.get('lowg',False):
+    elif kwargs.get('vlg',False) == True or kwargs.get('lowg',False) == True:
+        initiateStandards(vlg=True)
         stds = STDS_VLG_SPEX
         subclass = ''
         stdtype = 'Very Low Gravity'
-        initiateStandards(vlg=True)
         if verbose:
             print('Using very low gravity standards')
-    elif kwargs.get('intg',False):
+    elif kwargs.get('intg',False) == True:
+        initiateStandards(intg=True)
         stds = STDS_INTG_SPEX
         subclass = ''
         stdtype = 'Intermediate Gravity'
-        initiateStandards(intg=True)
         if verbose:
             print('Using intermediate low gravity standards')
+    elif kwargs.get('all',False) == True:
+        initiateStandards()
+        initiateStandards(sd=True)
+        initiateStandards(esd=True)
+        initiateStandards(vlg=True)
+        initiateStandards(intg=True)
+        stds = STDS_DWARF_SPEX.copy()
+        stds.update(STDS_VLG_SPEX)
+        stds.update(STDS_INTG_SPEX)
+        stds.update(STDS_SD_SPEX)
+        stds.update(STDS_ESD_SPEX)
+        subclass = ''
+        stdtype = 'Mixed'
+        if verbose:
+            print('Using all of the standards')
     else:
         stds = STDS_DWARF_SPEX
         initiateStandards()
@@ -3562,9 +3579,13 @@ def classifyByStandard(sp, *args, **kwargs):
             print('Using dwarf standards')
 
 # select desired spectral range
-    spt_allowed = numpy.array([typeToNum(s) for s in stds.keys()])
-    spt_sample = spt_allowed[numpy.where(spt_allowed >= sptrange[0])]
-    spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
+    std_spt = numpy.array(list(stds.keys()))
+    std_sptn = numpy.array([typeToNum(s) for s in list(stds.keys())])
+    spt_sample = std_spt[numpy.where(numpy.logical_and(std_sptn >= sptrange[0],std_sptn<=sptrange[1]))]
+    spt_sample_n = std_sptn[numpy.where(numpy.logical_and(std_sptn >= sptrange[0],std_sptn<=sptrange[1]))]
+#    spt_allowed = numpy.array([typeToNum(s) for s in stds.keys()])
+#    spt_sample = spt_allowed[numpy.where(spt_allowed >= sptrange[0])]
+#    spt_sample = spt_sample[numpy.where(spt_sample <= sptrange[1])]
 
 # determine comparison range based on method
     if (kwargs.get('method','').lower() == 'kirkpatrick'):
@@ -3587,57 +3608,60 @@ def classifyByStandard(sp, *args, **kwargs):
     sspt = []
 
     for t in spt_sample:
-        chisq,scale = compareSpectra(sp,stds[typeToNum(t,subclass=subclass)],fit_ranges=fit_ranges,statistic=statistic,novar2=True)
+#        chisq,scale = compareSpectra(sp,stds[typeToNum(t,subclass=subclass)],fit_ranges=fit_ranges,statistic=statistic,novar2=True)
+        chisq,scale = compareSpectra(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True)
         stat.append(chisq)
         sspt.append(t)
         if (verbose):
-            print('Type {}: statistic = {}, scale = {}'.format(typeToNum(t,subclass=subclass), chisq, scale))
+            print('Type {}: statistic = {}, scale = {}'.format(t, chisq, scale))
 
 # list of sorted standard files and spectral types
     sorted_stdsptnum = [x for (y,x) in sorted(zip(stat,sspt))]
 
 # select either best match or an ftest-weighted average
-# note that these are NUMBERS
     if (best_flag or len(stat) == 1):
-        sptn = sorted_stdsptnum[0]
+        spt = sorted_stdsptnum[0]
+        sptn = typeToNum(spt)
         sptn_e = unc_sys
     else:
+        ssptn = [typeToNum(s) for s in sspt]
         try:
             st = stat.value
         except:
             st = stat
         if numpy.isnan(numpy.median(sp.noise)):
-            mean,var = weightedMeanVar(sspt,st)
+            mean,var = weightedMeanVar(ssptn,st)
         else:
-            mean,var = weightedMeanVar(sspt,st,method='ftest',dof=sp.dof)
+            mean,var = weightedMeanVar(ssptn,st,method='ftest',dof=sp.dof)
         if (var**0.5 < 1.):
             sptn = numpy.round(mean*2)*0.5
         else:
             sptn = numpy.round(mean)
         sptn_e = (unc_sys**2+var)**0.5
+        spt = typeToNum(sptn,uncertainty=sptn_e,subclass=subclass)
 
 # string or not?
     if (kwargs.get('string', True) == True):
-        output_spt = typeToNum(sptn,uncertainty=sptn_e,subclass=subclass)
+        output_spt = str(spt)
     else:
         output_spt = sptn
 
     if verbose:
-        print('\nBest match to {} {} standard'.format(typeToNum(sorted_stdsptnum[0],subclass=subclass),stdtype))
+        print('\nBest match to {} standard'.format(sorted_stdsptnum[0]))
         print('Best spectral type = {}+/-{}'.format(output_spt,sptn_e))
 
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
 #        spstd = Spectrum(file=sorted_stdfiles[0])
 #        print(typeToNum(sorted_stdsptnum[0],subclass=subclass))
-        spstd = stds[typeToNum(sorted_stdsptnum[0],subclass=subclass)]
+        spstd = stds[sorted_stdsptnum[0]]
 #        getStandard(typeToNum(sorted_stdsptnum[0],subclass=subclass))
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
         spstd.scale(scale)
         if kwargs.get('colors',False) == False:
             kwargs['colors'] = ['k','r','b']
         if kwargs.get('labels',False) == False:
-            kwargs['labels'] = [sp.name,'{} {} Standard'.format(typeToNum(sorted_stdsptnum[0],subclass=subclass),stdtype),'Difference']
+            kwargs['labels'] = [sp.name,'{} Standard'.format(sorted_stdsptnum[0]),'Difference']
         from .plot import plotSpectrum
         if kwargs.get('difference',True):
             kwargs['labels'].append('Difference')
@@ -3646,7 +3670,7 @@ def classifyByStandard(sp, *args, **kwargs):
             pl = plotSpectrum(sp,spstd,**kwargs)
 
     if kwargs.get('return_standard',False) == True: 
-        spstd = stds[typeToNum(sorted_stdsptnum[0],subclass=subclass)]
+        spstd = stds[sorted_stdsptnum]
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
         spstd.scale(scale)
         return spstd
