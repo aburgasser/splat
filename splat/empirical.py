@@ -21,6 +21,7 @@ from splat.initialize import *
 from splat.utilities import *
 from splat.photometry import filterMag
 from splat.core import classifyByIndex, Spectrum
+from splat.citations import shortRef
 
 # Python 2->3 fix for input
 try: input=raw_input
@@ -265,7 +266,7 @@ def typeToColor(spt,color, **kwargs):
 
 
 
-def typeToMag(spt, filt, **kwargs):
+def typeToMag_old(spt, filt, **kwargs):
     """
     :Purpose: Takes a spectral type and a filter, and returns absolute magnitude
     :param spt: string or integer of the spectral type
@@ -395,6 +396,84 @@ def typeToMag(spt, filt, **kwargs):
         if verbose: sys.stderr.write('\nSpectral Type {} is out of range for {}\n'.format(typeToNum(spt),reference))
         return numpy.nan, numpy.nan
 
+
+def typeToMag(spt, filt, unc=0.,ref='faherty16',verbose=False,nsamples=100,**kwargs):
+    """
+    :Purpose: Takes a spectral type and a filter, and returns absolute magnitude
+    :param spt: string or integer of the spectral type
+    :param filter: filter of the absolute magnitude. Options are MKO K, MKO H, MKO J, MKO Y, MKO LP, 2MASS J, 2MASS K, or 2MASS H
+    :param nsamples: number of Monte Carlo samples for error computation
+    :type nsamples: optional, default = 100
+    :param unc: uncertainty of ``spt``
+    :type unc: optional, default = 0.
+    :param ref: Abs Mag/SpT relation used to compute the absolute magnitude. Options are:
+
+        - *burgasser*: Abs Mag/SpT relation from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_.
+          Allowed spectral type range is L0 to T8, and allowed filters are MKO K.
+        - *faherty*: Abs Mag/SpT relation from `Faherty et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...752...56F>`_.
+          Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K.
+        - *dupuy*: Abs Mag/SpT relation from `Dupuy & Liu (2012) <http://adsabs.harvard.edu/abs/2012ApJS..201...19D>`_.
+          Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS K.
+        - *filippazzo*: Abs Mag/SpT relation from Filippazzo et al. (2015). Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J and WISE W2.
+
+
+    :type ref: optional, default = 'dupuy'
+    :Example:
+        >>> import splat
+        >>> print splat.typeToMag('L3', '2MASS J')
+            (12.730064813273996, 0.4)
+        >>> print splat.typeToMag(21, 'MKO K', ref = 'burgasser')
+            (10.705292820099999, 0.26)
+        >>> print splat.typeToMag(24, '2MASS J', ref = 'faherty')
+            Invalid filter given for Abs Mag/SpT relation from Faherty et al. (2012)
+            (nan, nan)
+        >>> print splat.typeToMag('M0', '2MASS H', ref = 'dupuy')
+            Spectral Type is out of range for Abs Mag/SpT relation from Dupuy & Liu (2012) Abs Mag/SpT relation
+            (nan, nan)
+    """
+
+#Keywords alternatives
+    ref = kwargs.get('reference', ref)
+    ref = kwargs.get('set', ref)
+    unc = kwargs.get('uncertainty', unc)
+    unc = kwargs.get('error', unc)
+
+#Convert spectral type string to number
+    if isinstance(spt,str):
+        sptn = typeToNum(spt, uncertainty=unc)
+    elif isinstance(spt,int) or isinstance(spt,float):
+        sptn = copy.deepcopy(spt)
+    else:
+        raise ValueError('\nInput spectral type {} must be a string, float or int'.format(spt))
+
+# check that you can use the proscribed relation and filter
+    filtcheck = checkFilterName(filt,verbose=verbose)
+    if filtcheck == False: return numpy.nan,numpy.nan
+    else: filt=filtcheck
+
+    refcheck = checkAbsMag(ref,filt=filt,verbose=verbose)
+    if refcheck == False: return numpy.nan,numpy.nan
+    else: ref=refcheck
+
+    sptoffset = ABSMAG_SETS[ref]['sptoffset']
+    coeff = ABSMAG_SETS[ref]['filters'][filt]['coeff']
+    rng = ABSMAG_SETS[ref]['filters'][filt]['range']
+    fitunc = ABSMAG_SETS[ref]['filters'][filt]['fitunc']
+    refstring = 'Absolute {}/SpT relation from {}'.format(filt,shortRef(ABSMAG_SETS[ref]['bibcode']))
+    if verbose: print('\nUsing {}'.format(refstring))
+
+# compute magnitude if its in the right spectral type range
+    if (rng[0] <= sptn <= rng[1]):
+        abs_mag = numpy.polyval(coeff, sptn-sptoffset)
+        abs_mag_error = fitunc
+        if unc > 0.:
+            vals = numpy.polyval(coeff, numpy.random.normal(sptn - sptoffset, unc, nsamples))
+#            abs_mag = numpy.nanmean(vals)
+            abs_mag_error = (numpy.nanstd(vals)**2+fitunc**2)**0.5
+        return abs_mag, abs_mag_error
+    else:
+        if verbose: sys.stderr.write('\nSpectral Type {} is out of range for {}\n'.format(typeToNum(sptn),refstring))
+        return numpy.nan, numpy.nan
 
 
 

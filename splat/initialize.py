@@ -201,7 +201,8 @@ FILTERS = { \
     '2MASS_KS': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega', 'rsr': True, 'altnames': ['2MASS_K']}, \
 #    '2MASS_K': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
 #    '2MASS_Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
-    'BESSEL_I': {'file': 'bessel_i.txt', 'description': 'Bessel I-band', 'zeropoint': 2405.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'BESSEL_I': {'file': 'bessel_i.txt', 'description': 'Bessel I-band', 'zeropoint': 2405.3, 'method': 'vega', 'rsr': False, 'altnames': ['I']}, \
+    'COUSINS_I': {'file': 'i_cousins.txt', 'description': 'Cousins I-band', 'zeropoint': 2405.3, 'method': 'vega', 'rsr': False, 'altnames': ['IC']}, \
     'FOURSTAR_J': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR J-band', 'zeropoint': 1581.2, 'method': 'vega', 'rsr': False, 'altnames': ['4star j']}, \
     'FOURSTAR_J1': {'file': 'fourstar-j1.txt', 'description': 'FOURSTAR J1-band', 'zeropoint': 1978.7, 'method': 'vega', 'rsr': False, 'altnames': ['4star j1']}, \
     'FOURSTAR_J2': {'file': 'fourstar-j2.txt', 'description': 'FOURSTAR J2-band', 'zeropoint': 1774.5, 'method': 'vega', 'rsr': False, 'altnames': ['4star j2']}, \
@@ -582,57 +583,75 @@ INDICES_SETS = {
 }    
 
 ABSMAG_SETS = {
-    'faherty2012': {'altname': ['faherty12'],'bibcode': '2012ApJ...752...56F', 'sptoffset': 10, 'filters': {
-        'MKO J': {'fitunc' : 0.30, 'range' : [20., 38.], 'coeff': [.000203252, -.0129143, .275734, -1.99967, 14.8948]}, 
-        'MKO H': {'fitunc' : 0.27, 'range' : [20., 38.], 'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, 
-        'MKO K': {'fitunc' : 0.28, 'range' : [20., 38.], 'coeff' : [.0000816516, -.00469032, .0940816, -.485519, 9.76100]}}},
-    'burgasser2007': {'altname': ['burgasser','burgasser07'], 'bibcode': '2007ApJ...659..655B', 'sptoffset': 20, 'filters': {
-        'MKO J': {'fitunc' : 0.30, 'range' : [20., 38.], 'coeff': [.000203252, -.0129143, .275734, -1.99967, 14.8948]}, 
-        'MKO H': {'fitunc' : 0.27, 'range' : [20., 38.], 'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, 
-        'MKO K': {'fitunc' : 0.26, 'range' : [20., 38.], 'coeff': [.0000001051, -.000006985, .0001807, -.002271, .01414, -.04024, .05129, .2322, 10.45]}}},
-    'dupuy2012': {'altname': ['dupuy','dupuy12'], 'bibcode': '2012ApJS..201...19D', 'sptoffset': 10, 'filters': {
-        'MKO J': {'fitunc' : 0.39, 'range' : [16., 39.], 'coeff' : [-.00000194920, .000227641, -.0103332, .232771, -2.74405, 16.3986, -28.3129]}, 
-        'MKO Y': {'fitunc': 0.40, 'range' : [16., 39.], 'coeff': [-.00000252638, .000285027, -.0126151, .279438, -3.26895, 19.5444, -35.1560]}, 
-        'MKO H': {'fitunc': 0.38, 'range' : [16., 39.], 'coeff': [-.00000224083, .000251601, -.0110960, .245209, -2.85705, 16.9138, -29.7306]}, 
-        'MKO K': {'fitunc': 0.40, 'range' : [16., 39.], 'coeff': [-.00000104935, .000125731, -.00584342, .135177, -1.63930, 10.1248, -15.2200]}, 
-        'MKO LP': {'fitunc': 0.28, 'range': [16., 39.], 'coeff': [0.00000, 0.00000, .0000546366, -.00293191, .0530581,  -.196584, 8.89928]}, 
-        '2MASS J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [-.000000784614, .000100820, -.00482973, .111715, -1.33053, 8.16362, -9.67994]}, 
-        '2MASS H': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [-.00000111499, .000129363, -.00580847, .129202, -1.50370, 9.00279, -11.7526]}, 
-        '2MASS KS': {'fitunc': 0.43, 'range':[16., 39.], 'coeff': [1.06693e-4, -6.42118e-3, 1.34163e-1, -8.67471e-1, 1.10114e1]}, 
-        'WISE W1': {'fitunc': 0.39, 'range':[16., 39.], 'coeff': [1.58040e-5, -3.33944e-4, -4.38105e-3, 3.55395e-1, 7.14765]}, 
-        'WISE W2': {'fitunc': 0.35, 'range':[16., 39.], 'coeff': [1.78555e-5, -8.81973e-4, 1.14325e-2, 1.92354e-1, 7.46564]}}},
-    'filippazzo2015': {'altname': ['filippazzo','filippazzo15'],'bibcode': '2015ApJ...810..158F', 'sptoffset': 10, 'filters': {
-        '2MASS J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [3.478e-5, -2.684e-3, 7.771e-2, -1.058e0, 7.157e0, -8.350e0]}, 
-        'WISE W2': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [8.190e-6, -6.938e-4, 2.283e-2, -3.655e-1, 3.032e0, -5.043e-1]}}},
-    'faherty2016': {'altname': ['faherty','faherty2016,faherty-field'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'filters': {
-        '2MASS J': {'fitunc' : 0.402, 'range' : [16., 39.], 'coeff': [3.478e-5,-2.684e-3,7.771e-2,-1.058e0,7.157e0,-8.350e0]},
-        '2MASS H': {'fitunc' : 0.389, 'range' : [16., 39.], 'coeff' : [2.841e-5,-2.217e-3,6.551e-2,-9.174e-1,6.406e0,-7.496e0]},
-        '2MASS KS': {'fitunc' : 0.537, 'range' : [16., 39.], 'coeff' : [2.540e-05,-1.997e-03,5.978e-02,-8.481e-01,5.970e+00,-6.704e+00]}}}
+    'dahn2002': {'altname': ['dahn','dahn02'], 'bibcode': '2002AJ....124.1170D', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc' : 0.25, 'range' : [17.,28.], 'coeff': [0.341,8.38]}}},
+    'cruz2003': {'altname': ['cruz','cruz03'], 'bibcode': '2003AJ....126.2421C', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc' : 0.30, 'range' : [16.,28.], 'coeff': [-6.892e-4,3.453e-2,-6.193e-1,5.043,-4.410]}}},
+    'burgasser2007': {'altname': ['burgasser','burgasser07'], 'bibcode': '2007ApJ...659..655B', 'sptoffset': 20, 'method': 'polynomial', 'filters': {
+        'MKO_J': {'fitunc' : 0.30, 'range' : [20., 38.], 'coeff': [.000203252, -.0129143, .275734, -1.99967, 14.8948]}, 
+        'MKO_H': {'fitunc' : 0.27, 'range' : [20., 38.], 'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, 
+        'MKO_K': {'fitunc' : 0.26, 'range' : [20., 38.], 'coeff': [.0000001051, -.000006985, .0001807, -.002271, .01414, -.04024, .05129, .2322, 10.45]}}},
+    'looper2008': {'altname': ['looper','looper08'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 20, 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc' : 0.29, 'range' : [20., 38.], 'coeff': [-5.462e-6,2.595e-4,-3.915e-3,1.663e-2,3.690e-2,1.255e-1,11.817]},
+        '2MASS_H': {'fitunc' : 0.29, 'range' : [20., 38.], 'coeff' : [-4.218e-6,1.987e-4,-2.970e-3,1.261e-2,3.032e-2,1.125e-1,11.010]},
+        '2MASS_KS': {'fitunc' : 0.33, 'range' : [20., 38.], 'coeff' : [-4.104e-6,1.911e-4,-2.864e-3,1.299e-2,2.565e-2,7.369e-2,10.521]}}},
+    'faherty2012': {'altname': ['faherty12'],'bibcode': '2012ApJ...752...56F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        'MKO_J': {'fitunc' : 0.30, 'range' : [20., 38.], 'coeff': [.000203252, -.0129143, .275734, -1.99967, 14.8948]}, 
+        'MKO_H': {'fitunc' : 0.27, 'range' : [20., 38.], 'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, 
+        'MKO_K': {'fitunc' : 0.28, 'range' : [20., 38.], 'coeff' : [.0000816516, -.00469032, .0940816, -.485519, 9.76100]}}},
+    'dupuy2012': {'altname': ['dupuy','dupuy12'], 'bibcode': '2012ApJS..201...19D', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        'MKO_J': {'fitunc' : 0.39, 'range' : [16., 39.], 'coeff' : [-.00000194920, .000227641, -.0103332, .232771, -2.74405, 16.3986, -28.3129]}, 
+        'MKO_Y': {'fitunc': 0.40, 'range' : [16., 39.], 'coeff': [-.00000252638, .000285027, -.0126151, .279438, -3.26895, 19.5444, -35.1560]}, 
+        'MKO_H': {'fitunc': 0.38, 'range' : [16., 39.], 'coeff': [-.00000224083, .000251601, -.0110960, .245209, -2.85705, 16.9138, -29.7306]}, 
+        'MKO_K': {'fitunc': 0.40, 'range' : [16., 39.], 'coeff': [-.00000104935, .000125731, -.00584342, .135177, -1.63930, 10.1248, -15.2200]}, 
+        'MKO_LP': {'fitunc': 0.28, 'range': [16., 39.], 'coeff': [0.00000, 0.00000, .0000546366, -.00293191, .0530581,  -.196584, 8.89928]}, 
+        '2MASS_J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [-.000000784614, .000100820, -.00482973, .111715, -1.33053, 8.16362, -9.67994]}, 
+        '2MASS_H': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [-.00000111499, .000129363, -.00580847, .129202, -1.50370, 9.00279, -11.7526]}, 
+        '2MASS_KS': {'fitunc': 0.43, 'range':[16., 39.], 'coeff': [1.06693e-4, -6.42118e-3, 1.34163e-1, -8.67471e-1, 1.10114e1]}, 
+        'WISE_W1': {'fitunc': 0.39, 'range':[16., 39.], 'coeff': [1.58040e-5, -3.33944e-4, -4.38105e-3, 3.55395e-1, 7.14765]}, 
+        'WISE_W2': {'fitunc': 0.35, 'range':[16., 39.], 'coeff': [1.78555e-5, -8.81973e-4, 1.14325e-2, 1.92354e-1, 7.46564]}}},
+    'tinney2013': {'altname': ['tinney','tinney03'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        'COUSINS_I': {'fitunc' : 0.37, 'range' : [20., 37.5], 'coeff': [-2.49821e-6,1.04398e-3,-6.49719e-2,1.56038,-1.58296e1,7.22089e1]},
+        '2MASS_J': {'fitunc' : 0.38, 'range' : [20., 37.5], 'coeff': [-1.25074e-5,1.63124e-3,-7.42418e-2,1.54509,-1.47407e1,6.27861e1]},
+        '2MASS_KS': {'fitunc' : 0.36, 'range' : [20., 37.5], 'coeff': [-2.80824e-6,3.41146e-4,-1.73848e-2,4.82120e-1,-7.86911,7.57222e1,-3.98105e2,8.94012e2]}}},
+    'tinney2014': {'altname': ['tinney15'],'bibcode': '2014ApJ...796...39T', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
+        'MKO_J': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'absmag': [15.22,15.49,16.39,16.66,17.9,18.35,19.08,20.32,22.39,22.18,25.76], 'rms': [0.31,0.37,0.72,0.36,0.46,0.9,0.97,1.25,1.,0.76,3.52]}, 
+        'WISE_W2': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'absmag': [12.86,13.28,13.39,13.44,13.75,13.92,14.28,14.65,15.2,14.78,15.76], 'rms': [0.17,0.48,0.27,0.23,0.22,0.24,0.46,0.35,1.,0.77,2.15]}}}, 
+    'filippazzo2015': {'altname': ['filippazzo','filippazzo15'],'bibcode': '2015ApJ...810..158F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [3.478e-5, -2.684e-3, 7.771e-2, -1.058, 7.157, -8.350]}, 
+        'WISE_W2': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [8.190e-6, -6.938e-4, 2.283e-2, -3.655e-1, 3.032, -5.043e-1]}}},
+    'faherty2016': {'altname': ['faherty','faherty2016,faherty-field'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc' : 0.402, 'range' : [16., 39.], 'coeff': [3.478e-5,-2.684e-3,7.771e-2,-1.058,7.157,-8.350]},
+        '2MASS_H': {'fitunc' : 0.389, 'range' : [16., 39.], 'coeff' : [2.841e-5,-2.217e-3,6.551e-2,-9.174e-1,6.406,-7.496]},
+        '2MASS_KS': {'fitunc' : 0.537, 'range' : [16., 39.], 'coeff' : [2.540e-5,-1.997e-3,5.978e-2,-8.481e-1,5.970,-6.704]},
+        'WISE_W1': {'fitunc' : 0.365, 'range' : [16., 39.], 'coeff' : [8.337e-6,-6.897e-4,2.258e-2,-3.603e-1,2.991,-1.664e-1]},
+        'WISE_W2': {'fitunc' : 0.398, 'range' : [16., 39.], 'coeff' : [8.190e-6,-6.938e-4,2.283e-2,-3.655e-1,3.032,-5.043e-1]},
+        'WISE_W3': {'fitunc' : 0.446, 'range' : [16., 39.], 'coeff' : [-1.024e-6,9.477e-5,-2.573e-3,1.520e-2,3.365e-1,6.462]}}},
+    'faherty2016-young': {'altname': ['faherty-young'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc' : 0.647, 'range' : [17., 27.], 'coeff': [4.032e-3,-1.416e-1,2.097,8.478e-1]},
+        '2MASS_H': {'fitunc' : 0.634, 'range' : [17., 27.], 'coeff' : [2.642e-3,-1.049e-1,1.753,1.207]},
+        '2MASS_KS': {'fitunc' : 0.640, 'range' : [17., 27.], 'coeff' : [-1.585e-2,7.338e-1,4.537]},
+        'WISE_W1': {'fitunc' : 0.648, 'range' : [17., 27.], 'coeff' : [-1.397e-2,5.955e-1,5.247]},
+        'WISE_W2': {'fitunc' : 0.694, 'range' : [17., 27.], 'coeff' : [-1.507e-2,5.944e-1,5.061]},
+        'WISE_W3': {'fitunc' : 0.717, 'range' : [17., 27.], 'coeff' : [-1.003e-4,-1.670e-3,2.023e-1,7.529]}}},
+    'faherty2016-group': {'altname': ['faherty-group'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc' : 0.660, 'range' : [17., 27.], 'coeff': [-3.825e-3,1.370e-1,-9.279e-1,10.141]},
+        '2MASS_H': {'fitunc' : 0.603, 'range' : [17., 27.], 'coeff' : [-3.909e-3,1.346e-1,-9.347e-1,9.728]},
+        '2MASS_KS': {'fitunc' : 0.556, 'range' : [17., 27.], 'coeff' : [-4.006e-3,1.378e-1,-1.031,9.916]},
+        'WISE_W1': {'fitunc' : 0.551, 'range' : [17., 27.], 'coeff' : [-4.483e-3,1.505e-1,-1.208,10.403]},
+        'WISE_W2': {'fitunc' : 0.616, 'range' : [17., 27.], 'coeff' : [-6.821e-3,2.322e-1,-2.133,13.322]},
+        'WISE_W3': {'fitunc' : 0.427, 'range' : [17., 27.], 'coeff' : [-5.684e-3,1.993e-1,-1.987,13.972]}}},
 }
 
 
-#    7.0 < SpT < 17.0    0.647   4.032e-03   -1.416e-01  2.097e+00   8.478e-01   cdots   cdots   cdots   
-#    7.0 < SpT < 17.0    0.660   -3.825e-03  1.370e-01   -9.279e-01  10.141e+00  cdots   cdots   cdots   
-#   7.0 < SpT < 17.0    0.634   2.642e-03   -1.049e-01  1.753e+00   1.207e+00   cdots   cdots   cdots   
-#   7.0 < SpT < 17.0    0.603   -3.909e-03  1.346e-01   -9.347e-01  9.728e+00   cdots   cdots   cdots   
-#   7.0 < SpT < 17.0    0.640   -1.585e-02  7.338e-01   4.537e+00   cdots   cdots   cdots   cdots   
-#   7.0 < SpT < 17.0    0.556   -4.006e-03  1.378e-01   -1.031e+00  9.916e+00   cdots   cdots   cdots   
-#   6.0 < SpT < 29.0    0.365   -1.664e-01  2.991e+00   -3.603e-01  2.258e-02   -6.897e-04  8.337e-06   cdots   
-#   7.0 < SpT < 17.0    0.648   -1.397e-02  5.955e-01   5.247e+00   cdots   cdots   cdots   cdots   
-#   7.0 < SpT < 17.0    0.551   -4.483e-03  1.505e-01   -1.208e+00  10.403e+00  cdots   cdots   cdots   
-#   6.0 < SpT < 29.0    0.398   -5.043e-01  3.032e+00   -3.655e-01  2.283e-02   -6.938e-04  8.190e-06   cdots   
-#   7.0 < SpT < 17.0    0.694   -1.507e-02  5.944e-01   5.061e+00   cdots   cdots   cdots   cdots   
-#   7.0 < SpT < 17.0    0.616   -6.821e-03  2.322e-01   -2.133e+00  13.322e+00  cdots   cdots   cdots   
-#   6.0 < SpT < 29.0    0.446   6.462e+00   3.365e-01   1.520e-02   -2.573e-03  9.477e-05   -1.024e-06  cdots   
-#   7.0 < SpT < 17.0    0.717   -1.003e-04  -1.670e-03  2.023e-01   7.529e+00   cdots   cdots   cdots   
-#   7.0 < SpT < 17.0    0.427   -5.684e-03  1.993e-01   -1.987e+00  13.972e+00  cdots   cdots   cdots   
-#   6.0 < SpT < 29.0    113.431 4.747e+03   -7.005e+02  1.155e+02   -1.191e+01  6.318e-01   -1.606e-02  1.546e-04   
-#   7.0 < SpT < 17.0    180.457 1.330e+00   -66.8637    1235.42 -10068.8    32766.4 cdots   cdots   
-#   7.0 < SpT < 28.0    197.737 2.795e+04   -9.183e+03  1.360e+03   -1.066e+02  4.578e+00   -1.016e-01  9.106e-04   
-#   7.0 < SpT < 17.0    172.215 7.383e+00   -344.522    4879.86 cdots   cdots   cdots   cdots   
-#   7.0 < SpT < 28.0    0.133   2.787e+00   -2.310e+00  3.727e-01   -3.207e-02  1.449e-03   -3.220e-05  2.736e-07   
-#   7.0 < SpT < 17.0    0.335   -6.514e-03  2.448e-01   -3.113e+00  9.492e+00   cdots   cdots   cdots   
-#   7.0 < SpT < 28.0    0.206   2.059e-01   9.585   -3.985  4.923e-01   -3.048e-02  9.134e-04   -1.056e-05  
-#   7.0 < SpT < 17.0    0.221   6.194e-03   -3.757e-01  2.728e-02   cdots   cdots   cdots   cdots   
-#   7.0 < SpT < 28.0        -3.46623e-01    3.40366e-02 -3.072e-03  
+
+# more faherty2016 relations
+#Teff FLD 6.0<SpT <29.0 113.431 4.747e+03 -7.005e+02 1.155e+02 -1.191e+01 6.318e-01 -1.606e-02 1.546e-04
+#Teff YNG 7.0<SpT <17.0 180.457 1.330e+00 -66.8637 1235.42 -10068.8 32766.4 · · · · · ·
+#Teff YNG2 7.0<SpT <28.0 197.737 2.795e+04 -9.183e+03 1.360e+03 -1.066e+02 4.578e+00 -1.016e-01 9.106e-04
+#Teff GRP 7.0<SpT <17.0 172.215 7.383e+00 -344.522 4879.86 · · · · · · · · · · · ·
+#Lbol FLD 7.0<SpT <28.0 0.133 2.787e+00 -2.310e+00 3.727e-01 -3.207e-02 1.449e-03 -3.220e-05 2.736e-07
+#Lbol YNG 7.0<SpT <17.0 0.335 -6.514e-03 2.448e-01 -3.113e+00 9.492e+00 · · · · · · · · ·
+#Lbol YNG2 7.0<SpT <28.0 0.206 2.059e-01 9.585 -3.985 4.923e-01 -3.048e-02 9.134e-04 -1.056e-05
+#Lbol GRP 7.0<SpT <17.0 0.221 6.194e-03 -3.757e-01 2.728e-02 · · · · · · · · · · · ·
 

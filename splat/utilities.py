@@ -202,7 +202,7 @@ def checkInstrument(instrument):
             output = k
     return output
 
-def checkFilterName(f):
+def checkFilterName(f,verbose=False):
     '''
 
     Purpose: 
@@ -233,6 +233,8 @@ def checkFilterName(f):
     for k in list(FILTERS.keys()):
         if f.lower().replace(' ','_') == k.lower().replace(' ','_') or f.lower().replace(' ','_') in [x.lower().replace(' ','_') for x in FILTERS[k]['altnames']]:
             output = k
+    if verbose==True and output==False:
+        print('\nSPLAT does not contain the filter {}'.format(f))
     return output
 
 
@@ -303,6 +305,57 @@ def checkEvolutionaryModelName(model):
             output = k
     return output
 
+
+def checkAbsMag(ref,filt='',verbose=False):
+    '''
+
+    Purpose: 
+        Checks that an input reference name and filter are among the available sets for `typeToMag()`_, 
+        including a check of alternate names
+
+    .. _`typeToMag()` : TMP
+
+    Required Inputs:
+        :param ref: A string containing the reference for absolute magnitude relation, 
+        among the keys and alternate names in splat.ABSMAG_SETS
+
+    Optional Inputs:
+        :param filt: A string containing the filter name, to optionally check if this filter is among those defined in the reference set
+
+    Output:
+        A string containing SPLAT's default name for a given reference set, or False if that reference is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat.checkEvolutionaryModelName('burrows'))
+        burrows01
+    >>> print(splat.checkEvolutionaryModelName('allard'))
+        False
+    '''
+    output = False
+
+# check reference    
+    if not isinstance(ref,str):
+        return output
+    for k in list(ABSMAG_SETS.keys()):
+        if ref.lower()==k.lower() or ref.lower() in ABSMAG_SETS[k]['altname']:
+            output = k
+    if output == False:
+        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(ABSMAG_SETS.keys())))
+        return output
+
+# check filter
+    if filt != '':
+        filt = checkFilterName(filt)
+        if filt == False:
+            if verbose: print('\nFilter {} is not among the filters used in SPLAT; try: {}'.format(filt,list(FILTERS.keys())))
+            return False
+        if filt not in list(ABSMAG_SETS[output]['filters'].keys()):
+            if verbose: print('\nFilter {} is not among the filters defined for the {} absolutel magnitude relation; try: {}'.format(filt,output,list(ABSMAG_SETS[output]['filters'].keys())))
+            return False
+
+    return output
 
 
 #####################################################
