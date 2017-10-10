@@ -114,7 +114,6 @@ def plotMap(*args,**kwargs):
             pcoords = [pcoords]
         if isinstance(pcoords[0],str):
             pcoords = [splat.properCoordinates(c) for c in pcoords]
-            print(pcoords)
         if isinstance(pcoords[0],list):
             if isinstance(pcoords[0][0],float):
                 pcoords = [splat.properCoordinates(c) for c in pcoords]
@@ -887,6 +886,8 @@ def plotBatch(*args, **kwargs):
         print('\nNeed to provide a list of spectra or filenames, or a file search string, to use plotBatch')
         return
     kwargs['output'] = kwargs.get('output','spectra_plot.pdf')
+    kwargs['output'] = kwargs.get('file',kwargs['output'])
+    kwargs['output'] = kwargs.get('filename',kwargs['output'])
 #    from .splat import Spectrum
 # break out a list
     if isinstance(args[0],list):
@@ -1002,14 +1003,63 @@ def plotBatch(*args, **kwargs):
     return fig
 
 
-def plotIndices(*args, **kwargs):
+def visualizeIndices(sp,indices,**kwargs):
     '''
     :Purpose: ``Plot index-index plots.``
 
+    indices should be a dictionary of {'index_name': {'ranges': [[],[]], 'value': #, 'unc': #}, ...}
     Not currently implemented
     '''
-    pass
-    return
+
+# check inputs
+    if not isinstance(sp,splat.Spectrum): raise ValueError('\nFirst argument in visualizeIndices must be a Spectrum object')
+    if not isinstance(indices, dict): raise ValueError("\nSecond argument in visualizeIndices must be a dictionary of the form {'index_name': {'ranges': [[],[]], 'value': #, 'unc': #}, ...}")
+    file = kwargs.get('output',None)
+    file = kwargs.get('file',file)
+    file = kwargs.get('filename',file)
+
+    mkwargs = copy.deepcopy(kwargs)
+    spc = copy.deepcopy(sp)
+    spc.normalize()
+
+    if mkwargs.get('filename', False) != False: del mkwargs['filename']
+    if mkwargs.get('file', False) != False: del mkwargs['file']
+    if mkwargs.get('output', False) != False: del mkwargs['output']
+
+    fig = plotSpectrum(sp,**mkwargs)
+    for iname in list(indices.keys()):
+        if isinstance(indices[iname],list):
+            ranges = indices[iname]
+        elif isinstance(indices[iname],dict):
+            if 'ranges' in list(indices[iname].keys()):
+                ranges = indices[iname]['ranges']
+            else: raise ValueError('\nCannot find index wavelength ranges in indices variable: {}'.format(indices))
+        else: raise ValueError('\nCannot find index wavelength ranges in indices variable: {}'.format(indices))
+        if not isinstance(ranges[0],list):
+            ranges = [ranges]
+        vals = []
+        for r in ranges:
+            v,u = splat.measureIndex(sp,[r],method='single',sample='median')
+            rect = patches.Rectangle((r[0],v-u),r[1]-r[0],2.*u,facecolor='0.95',alpha=0.2,color='0.95')
+            ax.add_patch(rect)
+            vals.append(v+u)
+        if len(ranges) == 1: 
+            ax.text(numpy.mean(ranges[0]),vals[0],r'{}\n'.format(iname),horizontalalignment='center')
+        else:
+            rflat = [x for y in ranges for x in y]
+            rconn = []
+            for i,r in enumerate(ranges):
+                rconn.append(numpy.mean(r))
+                plt.plot([rconn[-1]]*2,[vals[i],numpy.max(vals)+0.05*sp.fluxMax().value])
+            plt.plot([numpy.min(rconn),numpy.max(rconn)],[numpy.max(vals)+0.05*sp.fluxMax().value]*2)
+            plt.plot([numpy.mean(rconn)]*2,[numpy.max(vals)+0.05*sp.fluxMax().value,numpy.max(vals)+0.07*sp.fluxMax().value])
+            ax.text(numpy.mean(rconn),numpy.max(vals)+0.07*sp.fluxMax().value,r'{}\n'.format(iname),horizontalalignment='center')
+
+    if file != None:
+        plt.savefig(file)
+
+    return fig
+    
 
 def plotSED(*args, **kwargs):
     '''

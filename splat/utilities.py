@@ -202,6 +202,39 @@ def checkInstrument(instrument):
             output = k
     return output
 
+def checkFilterName(f):
+    '''
+
+    Purpose: 
+        Checks that an input filter name is one of the available filters, including a check of alternate names
+
+    Required Inputs:
+        :param: filter: A string containing the filter name to be checked. This should be one of the names listed in `splat.FILTERS.keys()` or name alternates
+        
+    Optional Inputs:
+        None
+
+    Output:
+        A string containing SPLAT's default name for a given filter, or False if that filter is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat.checkFilterName('2MASS_KS'))
+        2MASS_KS
+    >>> print(splat.checkFilterName('2mass k'))
+        2MASS_KS
+    >>> print(splat.checkFilterName('somethingelse'))
+        False
+    '''
+    output = False
+    if not isinstance(f,str):
+        return output
+    for k in list(FILTERS.keys()):
+        if f.lower().replace(' ','_') == k.lower().replace(' ','_') or f.lower().replace(' ','_') in [x.lower().replace(' ','_') for x in FILTERS[k]['altnames']]:
+            output = k
+    return output
+
 
 def checkSpectralModelName(model):
     '''
@@ -555,7 +588,7 @@ def coordinateToDesignation(c):
     '''
 # input is ICRS
     if isinstance(c,SkyCoord):
-        cc = c
+        cc = copy.deepcopy(c)
     else:
         cc = properCoordinates(c)
 # input is [RA,Dec] pair in degrees
@@ -784,17 +817,14 @@ def typeToNum(inp, **kwargs):
         output = []
         for i,v in enumerate(var):
             if (sys.version_info.major == 2):
-                v = string.split(v,sep='+')[0]    # remove +/- sides
-                v = string.split(v,sep='-')[0]    # remove +/- sides
-                v = string.split(v,sep='/')[0]    # remove / in spectral types
+                v = string.split(v,sep='+/-')[0]    # remove +/- sides
             else:
-                v = v.split('+')[0]    # remove +/- sides
-                v = v.split('-')[0]    # remove +/- sides
-                v = v.split('/')[0]    # remove / in spectral types
+                v = v.split('+/-')[0]    # remove +/- sides
             v = v.replace('...','').replace(' ','')
 
             sptype = re.findall('[{}]'.format(spletter),v.upper())
             outval = 0.
+
             if (len(sptype) >= 1):
 # specialty classes                
                 sptype = sptype[0]
@@ -813,13 +843,19 @@ def typeToNum(inp, **kwargs):
                 if (v.find('gamma') != -1):
                      ageclass[i] = 'gamma'
                      v.replace('gamma','')
+                if (v.find('delta') != -1):
+                     ageclass[i] = 'delta'
+                     v.replace('delta','')
                 if (v.find('esd') != -1):
                      subclass[i] = 'esd'
                      v.replace('esd','')
-                if (v.find('usd') != -1):
+                elif (v.find('usd') != -1):
                      subclass[i] = 'usd'
                      v.replace('usd','')
-                if (v.find('sd') != -1):
+                elif (v.find('d/sd') != -1):
+                     subclass[i] = 'd/sd'
+                     v.replace('d/sd','')
+                elif (v.find('sd') != -1):
                      subclass[i] = 'sd'
                      v.replace('sd','')
                 if (v.count('I') > 0):
@@ -1000,10 +1036,18 @@ def distributionStats(x, q=[0.16,0.5,0.84], weights=None, sigma=None, **kwargs):
         cdfn = [c/cdff[-1] for c in cdff]
         return numpy.interp(q, cdfn, xsorted).tolist()
 
+def gauss(x,*p):
+    '''
+    Simple gaussian function for curve fit analysis
+    '''
+
+    A,mu,sig,c = p
+    return c+A*numpy.exp(-(x-mu)**2/(2*sig**2))
+
 
 def integralResample(xh, yh, xl, nsamp=100):
     '''
-    :Purpose: A 1D integral smoothing and resampling function that attempts to preserve total flux. Usese
+    :Purpose: A 1D integral smoothing and resampling function that attempts to preserve total flux. Uses
     scipy.interpolate.interp1d and scipy.integrate.trapz to perform piece-wise integration
 
     Required Inputs:

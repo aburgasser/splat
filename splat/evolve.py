@@ -362,7 +362,7 @@ def _modelParametersSingle(*args, **kwargs):
                 raise ValueError('\nProblem with one_param interpolation\n')
 
         for i,age in enumerate(lmodel['age']):
-            if min(lmodel['mass'][i]) <= numpy.log10(params['mass']) <= max(lmodel['mass'][i]):
+            if numpy.nanmin(lmodel['mass'][i]) <= numpy.log10(params['mass']) <= numpy.nanmax(lmodel['mass'][i]):
                 Ag.append(age)
                 f = interp1d(lmodel['mass'][i], lmodel[P[0][0]][i])
                 Ge.append(f(numpy.log10(params['mass'])))
@@ -414,7 +414,7 @@ def _modelParametersSingle(*args, **kwargs):
             adiff = [numpy.log10(params['age'])-a for a in lmodel['age']]
             ai = numpy.argmin(numpy.abs(adiff))
             if adiff[ai] < 0:
-                ai-=1
+                ai=ai-1
             for i,m in enumerate(lmodel['mass'][ai]):
                 if m in lmodel['mass'][ai+1]:
                     Ma.append(m)
@@ -444,46 +444,47 @@ def _modelParametersSingle(*args, **kwargs):
         if kwargs.get('debug',False) == True: print(params)
 
         for i,age in enumerate(lmodel['age']):
-            if min(lmodel['mass'][i]) <= numpy.log10(params['mass']) \
-                                              <= max(lmodel['mass'][i]):
+            if numpy.nanmin(lmodel['mass'][i]) <= numpy.log10(params['mass']) \
+                                              <= numpy.nanmax(lmodel['mass'][i]):
                 Ag.append(age)
                 f =interp1d(lmodel['mass'][i],lmodel['temperature'][i])
-                Te.append(f(numpy.log10(params['mass'])))
+                Te.append(float(f(numpy.log10(params['mass']))))
                 f = interp1d(lmodel['mass'][i],lmodel['luminosity'][i])
-                Le.append(f(numpy.log10(params['mass'])))
+                Le.append(float(f(numpy.log10(params['mass']))))
                 f = interp1d(lmodel['mass'][i],lmodel['gravity'][i])
-                Ge.append(f(numpy.log10(params['mass'])))
+                Ge.append(float(f(numpy.log10(params['mass']))))
                 f = interp1d(lmodel['mass'][i],lmodel['radius'][i])
-                Re.append(f(numpy.log10(params['mass'])))
+                Re.append(float(f(numpy.log10(params['mass']))))
   
         if params['temperature'] == 0.:
             try:
                 f = interp1d(Ag, Te)
-                params['temperature'] = 10.**f(numpy.log10(params['age']))
+                params['temperature'] = 10.**float(f(numpy.log10(params['age'])))
             except: 
                 params['temperature'] = numpy.nan
         if params['luminosity'] == 0.:
             try: 
                 f = interp1d(Ag, Le)
-                params['luminosity'] = f(numpy.log10(params['age'])).item(0)
+                params['luminosity'] = float(f(numpy.log10(params['age'])).item(0))
             except: 
                 params['luminosity'] = numpy.nan
         if params['gravity'] == 0.:
             try: 
                 f = interp1d(Ag, Ge) 
-                params['gravity'] = f(numpy.log10(params['age'])).item(0)        
+                params['gravity'] = float(f(numpy.log10(params['age'])).item(0))      
             except: 
                 params['gravity'] = numpy.nan
         if params['radius'] == 0.:
             try: 
                 f = interp1d(Ag, Re)
-                params['radius'] = 10.**f(numpy.log10(params['age']))
+                params['radius'] = 10.**float(f(numpy.log10(params['age'])))
             except: 
                 params['radius'] = numpy.nan
   
         if kwargs.get('debug',False) == True: print('\nDetermined parameters: {}'.format(params))
 
         return params
+
 
 # something failed	  
     else:
@@ -507,12 +508,12 @@ def modelParameters(*model,**kwargs):
     
     and two (2) of the following:
 
-    :param: mass: input value of list of values for mass (can also be `masses` or `m`)
-    :param: age: input value of list of values for age (can also be `ages`, `time` or `a`)
-    :param: temperature: input value of list of values for temperature (can also be `temperatures`, `teff`, `temp` or `t`)
-    :param: gravity: input value of list of values for gravity (can also be `gravities`, `grav`, `logg` or `g`)
-    :param: luminosity: input value of list of values for luminosity (can also be `luminosities`, `lum`, `lbol` or `l`)
-    :param: radius: input value of list of values for radius (can also be `radii`, `rad` and `r`)
+    :param: mass: input value or list of values for mass (can also be `masses` or `m`)
+    :param: age: input value or list of values for age (can also be `ages`, `time` or `a`)
+    :param: temperature: input value or list of values for temperature (can also be `temperatures`, `teff`, `temp` or `t`)
+    :param: gravity: input value or list of values for gravity (can also be `gravities`, `grav`, `logg` or `g`)
+    :param: luminosity: input value or list of values for luminosity (can also be `luminosities`, `lum`, `lbol` or `l`)
+    :param: radius: input value or list of values for radius (can also be `radii`, `rad` and `r`)
 
     .. _`loadEvolModel()` : api.html#splat_evolve.loadEvolModel
 
@@ -561,6 +562,8 @@ def modelParameters(*model,**kwargs):
             mkwargs['temperature'] = kwargs['teff']
         if 'temp' in keywords:
             mkwargs['temperature'] = kwargs['temp']
+        if 'temperatures' in keywords:
+            mkwargs['temperature'] = kwargs['temperatures']
     if 'gravity' not in keywords:
         if 'g' in keywords:
             mkwargs['gravity'] = kwargs['g']
@@ -568,19 +571,29 @@ def modelParameters(*model,**kwargs):
             mkwargs['gravity'] = kwargs['logg']
         if 'grav' in keywords:
             mkwargs['gravity'] = kwargs['grav']
+        if 'gravities' in keywords:
+            mkwargs['gravity'] = kwargs['gravities']
     if 'mass' not in keywords:
         if 'm' in keywords:
             mkwargs['mass'] = kwargs['m']
+        if 'masses' in keywords:
+            mkwargs['mass'] = kwargs['masses']
     if 'age' not in keywords:
         if 'time' in keywords:
             mkwargs['age'] = kwargs['time']
         if 'a' in keywords:
             mkwargs['age'] = kwargs['a']
+        if 'ages' in keywords:
+            mkwargs['age'] = kwargs['ages']
     if 'radius' not in keywords:
         if 'r' in keywords:
             mkwargs['radius'] = kwargs['r']
         if 'rad' in keywords:
             mkwargs['radius'] = kwargs['rad']
+        if 'radii' in keywords:
+            mkwargs['radius'] = kwargs['radii']
+        if 'radiuses' in keywords:
+            mkwargs['radius'] = kwargs['radiuses']
     if 'luminosity' not in keywords:
         if 'l' in keywords:
             mkwargs['luminosity'] = kwargs['l']
@@ -588,6 +601,8 @@ def modelParameters(*model,**kwargs):
             mkwargs['luminosity'] = kwargs['lum']
         if 'lbol' in keywords:
             mkwargs['luminosity'] = kwargs['lbol']
+        if 'luminosities' in keywords:
+            mkwargs['luminosity'] = kwargs['luminosities']
 
 
 # determine length of input arrays and assert they must be pure numbers 
@@ -597,6 +612,8 @@ def modelParameters(*model,**kwargs):
     inparams['verbose'] = kwargs.get('verbose',False)
     outparams = {}
     pkeys = list(mkwargs.keys())
+    if len(pkeys) < 2:
+        raise ValueError('\nNeed at least two parameters provided; only {} given: {}'.format(len(pkeys),pkeys))
     for p in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         outparams[p] = []
         if p in pkeys:
@@ -608,7 +625,6 @@ def modelParameters(*model,**kwargs):
             if isinstance(mkwargs[p][0],u.quantity.Quantity):
                 mkwargs[p] = [x*value for x in mkwargs[p]]
             numberValues = len(mkwargs[p])
-
 
 # now loop through each parameter set to determine remaining parameters
     for i in range(numberValues):
@@ -1376,7 +1392,7 @@ def simulateUVW(ages,**kwargs):
     :param: ages: array of ages in units of Gyr
 
     Optional Inputs:
-    
+
     :param: verbose: Give feedback (default = False)
 
     Output: 

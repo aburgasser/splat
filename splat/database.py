@@ -19,6 +19,7 @@ from shutil import copyfile
 # imports: external
 import astropy
 import numpy
+import pandas
 from astropy.io import ascii, fits            # for reading in spreadsheet
 from astropy.table import Column, Table, join, vstack           # for reading in table files
 from astropy.time import Time            # for reading in table files
@@ -26,6 +27,8 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u            # standard units
 from astroquery.simbad import Simbad
 from astroquery.vizier import Vizier
+from astroquery.nist import Nist
+from astroquery.xmatch import XMatch
 
 # splat requirements
 import splat
@@ -40,6 +43,10 @@ from splat.empirical import estimateDistance, typeToColor
 try: input=raw_input
 except NameError: pass
 
+# set timeout limits to 1 minute
+Simbad.TIMEOUT = 60
+Vizier.TIMEOUT = 60
+Nist.TIMEOUT = 60
 
 
 #####################################################
@@ -140,12 +147,21 @@ def fetchDatabase(*args, **kwargs):
 
 
 def queryVizier(coordinate,**kwargs):
+    '''
+    see `splat.database.getPhotometry()`_
+
+    .. _`splat.database.getPhotometry()` : api.html#splat.database.getPhotometry
+    '''
     return getPhotometry(coordinate,**kwargs)
 
-def getPhotometry(coordinate,**kwargs):
+
+def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arcsec,sort='sep',nearest=False,verbose=False,**kwargs):
     '''
     Purpose
-        Downloads photometry for a source by coordinate using astroquery
+        Downloads photometry for a single source coordinate using astroquery.
+        If you are getting data on multiple sources, it is preferable to use `splat.database.queryXMatch()`_
+
+    .. _`splat.database.queryXMatch()` : api.html#splat.database.queryXMatch
 
     Required Inputs:
         :param: coordinate: Either an astropy SkyCoord or a variable that can be converted into a SkyCoord using `properCoordinates()`_
@@ -155,6 +171,7 @@ def getPhotometry(coordinate,**kwargs):
     Optional Inputs:
         :param radius: Search radius, nominally in arcseconds although this can be changed by passing an astropy.unit quantity (default = 30 arcseconds)
         :param catalog: Catalog to query, which can be set to the Vizier catalog identifier code or to one of the following preset catalogs:
+
             * '2MASS' (or set ``2MASS``=True): the 2MASS All-Sky Catalog of Point Sources (`Cutri et al. 2003 <http://adsabs.harvard.edu/abs/2003yCat.2246....0C>`_), Vizier id II/246
             * 'SDSS' (or set ``SDSS``=True): the The SDSS Photometric Catalog, Release 9 (`Adelman-McCarthy et al. 2012 <http://adsabs.harvard.edu/abs/2012ApJS..203...21A>`_), Vizier id V/139
             * 'WISE' (or set ``WISE``=True): the WISE All-Sky Data Release (`Cutri et al. 2012 <http://adsabs.harvard.edu/abs/2012yCat.2311....0C>`_), Vizier id II/311
@@ -169,20 +186,22 @@ def getPhotometry(coordinate,**kwargs):
             * 'USNOB' (or set ``USNO``=True): the USNO-B1.0 Catalog (`Monet et al. 2003 <http://adsabs.harvard.edu/abs/2003AJ....125..984M>`_), Vizier id I/284
             * 'LSPM' (or set ``LSPM``=True): the LSPM-North Catalog (`Lepine et al. 2005 <http://adsabs.harvard.edu/abs/2005AJ....129.1483L>`_), Vizier id I/298
             * 'GAIA' (or set ``GAIA``=True): the GAIA DR1 Catalog (`Gaia Collaboration et al. 2016 <http://adsabs.harvard.edu/abs/2016yCat.1337....0G>`_), Vizier id I/337
+
         :param: sort: String specifying the parameter to sort the returned SIMBAD table by; by default this is the offset from the input coordinate (default = 'sep')
         :param: nearest: Set to True to return on the single nearest source to coordinate (default = False)
+        :param: return_pandas: Return a pandas table as opposed to an astropy Table (default = True)
         :param: verbose: Give feedback (default = False)
 
     Output:
-        An astropy Table instance that contains data from the Vizier query, or a blank Table if no sources are found
+        An astropy or pandas Table that contains data from the Vizier query, or a blank Table if no sources are found
 
     Example:
 
     >>> import splat
-    >>> import splat.database as spd
+    >>> import splat.database as spdb
     >>> from astropy import units as u
     >>> c = splat.properCoordinates('J053625-064302')
-    >>> v = spd.querySimbad(c,catalog='SDSS',radius=15.*u.arcsec)
+    >>> v = spdb.querySimbad(c,catalog='SDSS',radius=15.*u.arcsec)
     >>> print(v)
       _r    _RAJ2000   _DEJ2000  mode q_mode  cl ... r_E_ g_J_ r_F_ i_N_  sep  
      arcs     deg        deg                     ... mag  mag  mag  mag   arcs 
@@ -203,40 +222,37 @@ def getPhotometry(coordinate,**kwargs):
         return Table()
 
 # parameters
-    radius = kwargs.get('radius',30.*u.arcsec)
     if not isinstance(radius,u.quantity.Quantity):
         radius*=u.arcsec
-    verbose = kwargs.get('verbose',False)
 
 # sort out what catalog to query
-    catalog = kwargs.get('catalog','2MASS')
-    if kwargs.get('2MASS',False) or kwargs.get('2mass',False) or catalog == '2MASS' or catalog == '2mass':
+    if kwargs.get('2MASS',False) or kwargs.get('2mass',False) or catalog.upper() == '2MASS':
         catalog = u'II/246'
-    if kwargs.get('SDSS',False) or kwargs.get('sdss',False) or catalog == 'SDSS' or catalog == 'sdss':
-        catalog = u'V/139'
-    if kwargs.get('WISE',False) or kwargs.get('wise',False) or catalog == 'WISE' or catalog == 'wise':
+    if kwargs.get('SDSS',False) or kwargs.get('sdss',False) or catalog.upper() == 'SDSS':
+        catalog = u'V/147'
+    if kwargs.get('WISE',False) or kwargs.get('wise',False) or catalog.upper() == 'WISE':
         catalog = u'II/311'
-    if kwargs.get('ALLWISE',False) or kwargs.get('allwise',False) or catalog == 'ALLWISE' or catalog == 'allwise':
+    if kwargs.get('ALLWISE',False) or kwargs.get('allwise',False) or catalog.upper() == 'ALLWISE':
         catalog = u'II/328'
-    if kwargs.get('VISTA',False) or kwargs.get('vista',False) or catalog == 'VISTA' or catalog == 'vista':
+    if kwargs.get('VISTA',False) or kwargs.get('vista',False) or catalog.upper() == 'VISTA':
         catalog = u'II/329'
-    if kwargs.get('CFHT',False) or kwargs.get('cfht',False) or kwargs.get('CFHTLAS',False) or kwargs.get('cfhtlas',False) or catalog == 'CFHT' or catalog == 'cfht':
+    if kwargs.get('CFHT',False) or kwargs.get('cfht',False) or kwargs.get('CFHTLAS',False) or kwargs.get('cfhtlas',False) or catalog.upper() == 'CFHT':
         catalog = u'II/317'
-    if kwargs.get('DENIS',False) or kwargs.get('denis',False) or catalog == 'DENIS' or catalog == 'denis':
+    if kwargs.get('DENIS',False) or kwargs.get('denis',False) or catalog.upper() == 'DENIS':
         catalog = u'B/denis'
-    if kwargs.get('UKIDSS',False) or kwargs.get('ukidss',False) or catalog == 'UKIDSS' or catalog == 'ukidss':
+    if kwargs.get('UKIDSS',False) or kwargs.get('ukidss',False) or catalog.upper() == 'UKIDSS':
         catalog = u'II/314'
-    if kwargs.get('LEHPM',False) or kwargs.get('lehpm',False) or catalog == 'LEHPM' or catalog == 'lehpm':
+    if kwargs.get('LEHPM',False) or kwargs.get('lehpm',False) or catalog.upper() == 'LEHPM':
         catalog = u'J/A+A/421/763'
-    if kwargs.get('SIPS',False) or kwargs.get('sips',False) or catalog == 'SIPS' or catalog == 'sips':
+    if kwargs.get('SIPS',False) or kwargs.get('sips',False) or catalog.upper() == 'SIPS':
         catalog = u'J/A+A/435/363'
-    if kwargs.get('UCAC',False) or kwargs.get('ucac',False) or kwargs.get('UCAC4',False) or kwargs.get('ucac4',False) or catalog == 'UCAC' or catalog == 'ucac':
+    if kwargs.get('UCAC',False) or kwargs.get('ucac',False) or kwargs.get('UCAC4',False) or kwargs.get('ucac4',False) or catalog.upper() == 'UCAC' or catalog.upper() == 'UCAC4':
         catalog = u'I/322A'
-    if kwargs.get('USNO',False) or kwargs.get('usno',False) or kwargs.get('USNOB',False) or kwargs.get('usnob',False) or kwargs.get('USNOB1.0',False) or kwargs.get('usnob1.0',False) or catalog == 'USNO' or catalog == 'usno':
+    if kwargs.get('USNO',False) or kwargs.get('usno',False) or kwargs.get('USNOB',False) or kwargs.get('usnob',False) or kwargs.get('USNOB1.0',False) or kwargs.get('usnob1.0',False) or catalog.upper() == 'USNO' or catalog.upper() == 'USNOB':
         catalog = u'I/284'
-    if kwargs.get('LSPM',False) or kwargs.get('lspm',False) or kwargs.get('LSPM-NORTH',False) or kwargs.get('lspm-north',False) or kwargs.get('LSPM-N',False) or kwargs.get('lspm-n',False) or catalog == 'LSPM' or catalog == 'lspm':
+    if kwargs.get('LSPM',False) or kwargs.get('lspm',False) or kwargs.get('LSPM-NORTH',False) or kwargs.get('lspm-north',False) or kwargs.get('LSPM-N',False) or kwargs.get('lspm-n',False) or catalog.upper() == 'LSPM' or catalog.upper() == 'LSPMN' or catalog.upper() == 'LSPM-N':
         catalog = u'I/298'
-    if kwargs.get('GAIA',False) or kwargs.get('gaia',False) or kwargs.get('GAIA-DR1',False):
+    if kwargs.get('GAIA',False) or kwargs.get('gaia',False) or kwargs.get('GAIA-DR1',False) or catalog.upper() == 'GAIA':
         catalog = u'I/337'
 
 # convert coordinate if necessary
@@ -250,7 +266,7 @@ def getPhotometry(coordinate,**kwargs):
         c = copy.deepcopy(coordinate)
 
 # search Vizier, sort by separation        
-    v = Vizier(columns=["*", "+_r"], catalog=catalog)
+    v = Vizier(columns=["**", "+_r"], catalog=catalog)
     t_vizier = v.query_region(c,radius=radius)
     tv = Table()
     if len(t_vizier) > 0:
@@ -282,14 +298,25 @@ def getPhotometry(coordinate,**kwargs):
             tv.remove_column(s)
             tv[s] = tmp
 
+# convert to pandas if desired
+    if return_pandas==True:
+        tv = tv.to_pandas()
+        fix = list(tv.dtypes[tv.dtypes=='object'].keys())
+        if len(fix) > 0: 
+            for f in fix:
+                tv[f] = tv[f].str.decode('utf8')
+
     return tv
 
 
 
-def querySimbad(variable,**kwargs):
+def querySimbad(variable,radius=30.*u.arcsec,sort='sep',reject_type=None,nearest=False,iscoordinate=False,isname=False,clean=True,return_pandas=True,verbose=False,**kwargs):
     '''
     Purpose
-        Queries Simbad using astroquery to grab information about a source
+        Queries SIMBAD using astroquery for a single source
+        If you are getting data on multiple sources, it is preferable to use `splat.database.queryXMatch()`_
+
+    .. _`splat.database.queryXMatch()` : api.html#splat.database.queryXMatch
 
     Required Inputs:
         :param: variable: Either an astropy SkyCoord object containing position of a source, a variable that can be converted into a SkyCoord using `spl.properCoordinates()`_, or a string name for a source.
@@ -304,17 +331,19 @@ def querySimbad(variable,**kwargs):
         :param: iscoordinate: Specifies that input is a coordinate of some kind (default = False)
         :param: isname: Specifies that input is a name of some kind (default = False)
         :param: clean: Set to True to clean the SIMBAD output and reassign to a predefined set of parameters (default = True)
+        :param: return_pandas: Return a pandas table as opposed to an astropy Table (default = True)
         :param: verbose: Give lots of feedback (default = False)
 
     Output:
-        An astropy Table instance that contains data from the SIMBAD search, or a blank Table if no sources found
+        An astropy or pandas Table that contains data from the SIMBAD search, or a blank Table if no sources found
 
     Example:
 
     >>> import splat
+    >>> import splat.database as spdb
     >>> from astropy import units as u
-    >>> c = spl.properCoordinates('J053625-064302')
-    >>> q = spl.querySimbad(c,radius=15.*u.arcsec,reject_type='**')
+    >>> c = splat.properCoordinates('J053625-064302')
+    >>> q = spdb.querySimbad(c,radius=15.*u.arcsec,reject_type='**')
     >>> print(q)
               NAME          OBJECT_TYPE     OFFSET    ... K_2MASS K_2MASS_E
     ----------------------- ----------- ------------- ... ------- ---------
@@ -333,24 +362,20 @@ def querySimbad(variable,**kwargs):
         return Table()
 
 # parameters 
-    radius = kwargs.get('radius',30.*u.arcsec)
     if not isinstance(radius,u.quantity.Quantity):
         radius*=u.arcsec
-    verbose = kwargs.get('verbose',False)
-    coordFlag = kwargs.get('iscoordinate',False)
-    nameFlag = kwargs.get('isname',False)
 
 # check if this is a coordinate query
     if isinstance(variable,SkyCoord):
         c = copy.deepcopy(variable)
-        coordFlag = True
-    elif not nameFlag:
+        iscoordinate = True
+    elif not isname:
         try:
             c = properCoordinates(variable)
-            coordFlag = True
+            iscoordinate = True
 # this is probably a name
         except:
-            nameFlag = True
+            isname = True
     else:
         if isinstance(variable,bytes):
             c = variable.decode()
@@ -366,7 +391,7 @@ def querySimbad(variable,**kwargs):
         sb.add_votable_fields(v)
 
 # search SIMBAD by coordinate
-    if coordFlag:
+    if iscoordinate:
         t_sim = sb.query_region(c,radius=radius)
         if not isinstance(t_sim,Table):
             if verbose:
@@ -378,8 +403,12 @@ def querySimbad(variable,**kwargs):
         t_sim['sep'] = sep
 
 # search SIMBAD by name
-    elif nameFlag:
-        t_sim = sb.query_object(c,radius=radius)
+    elif isname:
+        t_sim = sb.query_object(c)
+        if not isinstance(t_sim,Table):
+            if verbose:
+                print('\nNo sources found; returning empty Table\n')
+            return Table()
         t_sim['sep'] = numpy.zeros(len(t_sim['RA']))
 
     else:
@@ -404,7 +433,7 @@ def querySimbad(variable,**kwargs):
                 t_sim = t_sim[w]
 
 # trim to single source if nearest flag is set
-    if coordFlag and kwargs.get('nearest',False):
+    if iscoordinate and kwargs.get('nearest',False):
         while len(t_sim)>1:
             t_sim.remove_row(1) 
 
@@ -481,6 +510,14 @@ def querySimbad(variable,**kwargs):
     else:
         t_src = t_sim.copy()
 
+# convert to pandas if desired
+    if return_pandas==True:
+        t_src = t_src.to_pandas()
+#        fix = list(t_src.dtypes[t_src.dtypes=='object'].keys())
+#        if len(fix) > 0: 
+#            for f in fix:
+#                t_src[f] = t_src[f].str.decode('utf8')
+
     return t_src
 
 
@@ -501,6 +538,7 @@ def _querySimbad2(t_src,**kwargs):
         :param export = '': filename to which to export resulting table to; if equal to a null string then no expoer is made. Note that a populated table is returned in either case
         :param closest = False: return only the closest source to given coordinate
     '''    
+
 # parameters 
     simbad_radius = kwargs.get('simbad_radius',30.*u.arcsec)
     verbose = kwargs.get('verbose',True)
@@ -623,6 +661,178 @@ def _querySimbad2(t_src,**kwargs):
                 t_src['KS_2MASS_E'][i] = t_sim['FLUX_ERROR_K'][0]
 
     return
+
+
+# query the NIST database
+
+def queryNist(element,wave_range,clean=['Observed'],noclean=False,verbose=True,wavelength_type='vacuum'):
+# check inputs
+    if not isinstance(element,str):
+        raise ValueError('\nElement input must be a string like "K I", not {}'.format(element))
+    if len(element.strip().split(' ')) == 1:
+        element = element+' I'
+    if len(element.strip().split(' ')) != 1:
+        raise ValueError('\nElement input must be a string like "K I", not {}'.format(element))
+    if not isinstance(wave_range[0],u.quantity.Quantity): wave_range = [w*u.micron for w in wave_range]  
+
+    t = Nist.query(wave_range[0],wave_range[1],linename=element,energy_level_unit='eV',wavelength_type=wavelength_type)
+    if noclean == False:
+        for m in clean:
+            t = t[~t[m].mask]
+    if len(t) == 0 and verbose == True: print('\nNo lines found; check element, wavelength range, or set noclean=True')
+    return(t)
+
+
+
+def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNATION',raCol='RA',decCol='DEC',verbose=False,clean=True,drop_repeats=True,use_select_columns=True,select_columns=[],prefix=None):
+    '''
+    Purpose
+        Queries databases in the XXX XMatch service (REF), including SIMBAD
+        This is the preferred manner for extracting data for large numbers of sources
+
+    Required Inputs:
+        :param: db: a pandas Dataframe (FUTURE: astropy Table, dict, or file name for csv, txt or xls file). 
+        This must contain column(s) for designation (specified in `desigCol`) and/or RA (specified in `raCol`) and DEC (specified in `decCol`)
+
+    .. _`spl.properCoordinates()` : api.html#spl.properCoordinates
+        
+    Optional Inputs:
+        :param radius: Search radius, nominally in arcseconds although can be set by assigning and astropy.unit value (default = 30 arcseconds)
+        :param desigCol: column in db that specifies source designations ('Jhhmmss[.]s±ddmmss[.]s')
+        :param raCol: column in db that specifies source RAs (in degrees)
+        :param decCol: column in db that specifies source DECs (in degrees)
+        :param catalog: Database to query, which can be set one of the follow presets or any catalog listed in astroquery.xmatch.XMatch.XXXX:
+
+            * 'SIMBAD' (or set ``SIMBAD``=True): query SIMBAD (coordinate search only)
+            * '2MASS' (or set ``2MASS``=True): query the 2MASS All-Sky Catalog of Point Sources (`Cutri et al. 2003 <http://adsabs.harvard.edu/abs/2003yCat.2246....0C>`_), Vizier id II/246
+            * 'SDSS' (or set ``SDSS``=True): query the SDSS Photometric Catalog, Release 12 (NEED REF), Vizier id V/147
+            * 'SDSS9' (or set ``SDSS``=True): query the SDSS Photometric Catalog, Release 9 (`Adelman-McCarthy et al. 2012 <http://adsabs.harvard.edu/abs/2012ApJS..203...21A>`_), Vizier id V/147
+            * 'ALLWISE' (or set ``ALLWISE``=True): the AllWISE Data Release (`Cutri et al. 2014 <http://adsabs.harvard.edu/abs/2014yCat.2328....0C>`_), Vizier id II/328
+            * 'DENIS' (or set ``DENIS``=True): the DENIS DR3 (DENIS Consortium 2005), Vizier id B/denis/denis
+            * 'GAIA' (or set ``GAIA``=True): the GAIA DR1 Catalog (`Gaia Collaboration et al. 2016 <http://adsabs.harvard.edu/abs/2016yCat.1337....0G>`_), Vizier id I/337
+
+        :param nearest: Set to True to return only the single nearest source to each coordinate (default = True)
+        :param clean: Set to True to clean the SIMBAD output and reassign to a predefined set of parameters (default = True)
+        :param file: Write the output to a csv or xlsx file (default = '' or not saved)
+        :param verbose: Give lots of feedback (default = False)
+
+        :param sort: String specifying the parameter to sort the returned SIMBAD table by; by default this is the offset from the input coordinate (default = 'sep')
+        :param return_pandas: Return a pandas table as opposed to an astropy Table (default = True)
+        :param reject_type: Set to string or list of strings to filter out object types not desired. Useful for crowded fields (default = None)
+
+    Output:
+        A pandas Dataframe that contains data from the search, or a blank frame if no sources found
+
+    Example:
+
+    >>> import splat
+    >>> from astropy import units as u
+    >>> c = spl.properCoordinates('J053625-064302')
+    >>> q = spl.querySimbad(c,radius=15.*u.arcsec,reject_type='**')
+    >>> print(q)
+              NAME          OBJECT_TYPE     OFFSET    ... K_2MASS K_2MASS_E
+    ----------------------- ----------- ------------- ... ------- ---------
+               BD-06  1253B        Star  4.8443894429 ...                  
+                [SST2010] 3        Star 5.74624887682 ...   18.36       0.1
+                BD-06  1253         Ae* 7.74205447776 ...   5.947     0.024
+               BD-06  1253A          ** 7.75783861347 ...                  
+    2MASS J05362590-0643020     brownD* 13.4818185612 ...  12.772     0.026
+    2MASS J05362577-0642541        Star  13.983717577 ...                  
+
+    '''
+    callloop = 5
+
+# check db has DESIGNATION and fill in columns
+    if 'DESIGNATION' not in list(db.columns):
+        db = prepDB(db)
+    if 'DESIGNATION' not in list(db.columns):
+        raise ValueError('\nInput database must have at least a DESIGNATION column; this one has {}'.format(db.columns))
+
+# add RA and DEC if needed
+    if raCol not in list(db.columns) or decCol not in list(db.columns):
+        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db['DESIGNATION']]
+        db[raCol] = [c.ra.degree for c in db['COORDINATES']]
+        db[decCol] = [c.dec.degree for c in db['COORDINATES']]
+    basecols = ['DESIGNATION',raCol,decCol]
+    if not isinstance(radius,u.quantity.Quantity): radius = radius*u.arcsec
+        
+# assign entries to save
+    xmatch_catalogs = {
+        'SIMBAD': {'vref': u'simbad', 'select_columns': ['main_id','ra','dec','main_type','sp_type','plx','pmra','pmdec','radvel','B', 'V', 'R', 'J', 'H', 'K', 'u', 'g', 'r', 'i', 'z']},\
+        '2MASS': {'vref': u'vizier:II/246/out', 'select_columns': ['2MASS','RAJ2000','DEJ2000','Jmag','e_Jmag','Hmag','e_Hmag','Kmag','e_Kmag','MeasureJD']},\
+        'DENIS': {'vref': u'vizier:B/denis/denis', 'select_columns': ['DENIS','RAJ2000','DEJ2000','Imag','e_Imag','Jmag','e_Jmag','Kmag','e_Kmag','Obs.JD']},\
+        'SDSS': {'vref': u'vizier:V/147/sdss12', 'select_columns': ['SDSS12','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
+        'SDSS9': {'vref': u'vizier:V/139/sdss9', 'select_columns': ['SDSS9','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
+        'ALLWISE': {'vref': u'vizier:II/328/allwise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+        'GAIA': {'vref': u'vizier:I/337/gaia', 'select_columns': ['source_id','ra','dec','ref_epoch','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
+#        'WISE': {'vref': u'II/311', 'select_columns': 
+#        'VISTA': {'vref': u'II/329', 'select_columns': 
+#        'CFHT': {'vref': u'II/317', 'select_columns': 
+#        'UKIDSS': {'vref': u'II/314', 'select_columns': 
+#        'LEHPM': {'vref': u'J/A+A/421/763', 'select_columns': 
+#        'SIPS': {'vref': u'J/A+A/435/363', 'select_columns': 
+#        'UCAC': {'vref': u'I/340/ucac5', 'select_columns': 
+#        'USNO': {'vref': u'I/284', 'select_columns': 
+#        'LSPM': {'vref': u'I/298', 'select_columns': 
+        }
+    if catalog.upper() in list(xmatch_catalogs.keys()):
+        cat = catalog.upper()
+        vref = xmatch_catalogs[cat]['vref']
+        if use_select_columns == True: select_columns = xmatch_catalogs[cat]['select_columns']
+    else:
+        if XMatch.is_table_available(catalog) == False:
+            print('\n{} is not one of the catalogs in astroquery.xmatch; try using queryVizer()'.format(catalog))
+            return db
+        cat = catalog.upper()
+        vref = 'vizier:'+catalog
+    if prefix == None: prefix = cat
+
+    if use_select_columns == False: select_columns = []
+
+# use XMatch
+    t = Table()
+    t = t.from_pandas(db[basecols])
+    t_match = XMatch.query(t,vref,radius,colRA1=raCol,colDec1=decCol)
+    db_match = t_match.to_pandas()
+
+# reject repeats if desired
+    if drop_repeats == True:
+        db_match.drop_duplicates(subset='DESIGNATION',keep='first',inplace=True)
+        db_match.reset_index(drop=True,inplace=True)
+            
+# constrain columns and rename
+    if use_select_columns == True:
+        if len(select_columns) == 0: 
+            newcols = list(db_match.columns)
+        else:
+            newcols = copy.deepcopy(basecols)
+            newcols.append('angDist')
+            newcols.extend(select_columns)
+        db_match = db_match[newcols]
+
+# rename columns
+    if prefix != None:
+        rename = {}
+        for c in list(db_match.columns): rename[c] = prefix+'_'+c
+        for c in list(basecols): rename[c] = c
+        db_match = db_match.rename(index=str,columns=rename)
+
+# merge and drop redundant columns
+    db_merge = pandas.merge(db,db_match,how='left',on='DESIGNATION',suffixes=('','_DROP'))
+    for c in list(db_merge.columns):
+        if '_DROP' in c: del db_merge[c]
+
+# save out
+    if file != '':
+        if file.split('.')[-1] == 'csv' or file.split('.')[-1] == 'txt':   
+            db_merge.to_csv(file,index=False)
+        elif file.split('.')[-1] == 'xls' or file.split('.')[-1] == 'xlsx': 
+            db_merge.to_excel(file,index=False)
+        else:
+            print('\nWarning: did not know how to save to {}; not saving'.format(file))
+                
+    return db_merge
+
 
 
 
@@ -945,7 +1155,7 @@ def importSpectra(*args,**kwargs):
 
         # multiple sources; choose the closest
                     if len(t_vizier) > 0:
-                        t_vizier.sort('_r')
+                        t_vizier.sort_values('_r')
         #                print(len(t_vizier),t_vizier.keys())
         #                while len(t_vizier)>1:
         #                    t_vizier.remove_row(1) 

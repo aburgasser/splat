@@ -20,7 +20,7 @@ from scipy.interpolate import interp1d
 from splat.initialize import *
 from splat.utilities import *
 from splat.photometry import filterMag
-from splat.core import classifyByIndex
+from splat.core import classifyByIndex, Spectrum
 
 # Python 2->3 fix for input
 try: input=raw_input

@@ -34,6 +34,9 @@ DOCS_FOLDER = '/docs/'
 DOCS_INDEX_HTML = '/docs/_build/html/index.html'
 WEB_HTML_BASE = '/docs/_templates/'
 DB_FOLDER = '/db/'
+DEFAULT_WAVE_UNIT = u.micron
+DEFAULT_FLUX_UNIT = u.erg/u.s/u.cm/u.cm/u.micron
+MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 # SPLAT authors
 AUTHORS = ['Christian Aganze',
@@ -79,8 +82,18 @@ if SPLAT_PATH == './':
     if max(checkpath):
         SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
 
+#set user SPLAT model path from environmental variable
+SPLAT_USER_MODELS = './'
+if os.environ.get('SPLAT_MODELS') != None:
+    SPLAT_USER_MODELS = os.environ['SPLAT_MODELS']
 
-MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+#set user SPLAT model path from environmental variable
+SPLAT_USER_DATA = './'
+if os.environ.get('SPLAT_DATA') != None:
+    SPLAT_USER_DATA = os.environ['SPLAT_DATA']
+
+
+
 
 # dwarf spectral standards
 STDS_DWARF_SPEX_KEYS = { \
@@ -114,25 +127,41 @@ STDS_DWARF_SPEX_KEYS = { \
     'T7.0': 10159, #'10159_10513.fits',\
     'T8.0': 10126, #'10126_10349.fits',\
     'T9.0': 11536} #'11536_10509.fits'}
-# EMPTY DICTIONARY
 
 # subdwarf spectral standards
+STDS_DSD_SPEX_KEYS = { \
+    'd/sdM4.0': 10523, #'11670_11134.fits',\  10501
+    'd/sdM5.0': 10232, #'10265_10045.fits',\  11498
+    'd/sdM6.0': 10198, #'10265_10045.fits',\  11208
+    'd/sdM7.0': 10863, #'10197_11074.fits',\  11704
+    'd/sdM8.0': 10040, #'10197_11074.fits',\  11190
+    'd/sdM9.0': 10367, #'10197_11074.fits',\  11086
+    'd/sdL0.0': 10146, #'11972_10248.fits',\
+    'd/sdL1.0': 10506, #'11972_10248.fits',\
+    'd/sdL7.0': 10552, #'11972_10248.fits',\
+    }
+
 STDS_SD_SPEX_KEYS = { \
+    'sdM2.0': 10223, #'11670_11134.fits',\
+    'sdM4.0': 10528, #'11670_11134.fits',\
+    'sdM5.0': 10221, #'11670_11134.fits',\
     'sdM5.5': 11670, #'11670_11134.fits',\
     'sdM6.0': 10265, #'10265_10045.fits',\
     'sdM7.0': 10197, #'10197_11074.fits',\
     'sdM8.0': 10123, #'10123_10145.fits',\
     'sdM9.5': 10188, #'10188_10700.fits',\
-    'sdL0.0': 11972, #'11972_10248.fits',\
+    'sdL0.0': 11973, #'11972_10248.fits',\
     'sdL3.5': 10364, #'10364_10946.fits',\
     'sdL4.0': 10203} #'10203_11241.fits'}
-# EMPTY DICTIONARY
 
 # extreme subdwarf spectral standards
 STDS_ESD_SPEX_KEYS = { \
+    'esdM0.0': 10763, #'10229_10163.fits',\
+    'esdM4.0': 10366, #'10229_10163.fits',\
     'esdM5.0': 10229, #'10229_10163.fits',\
 #    'esdM6.5': '_10579.fits',\
-    'esdM7.0': 10521, #'10521_10458.fits',\
+    'esdM6.5': 10359, #'10521_10458.fits',\
+    'esdM7.5': 10521, #'10521_10458.fits',\
     'esdM8.5': 10278} #'10278_10400.fits'}
 # EMPTY DICTIONARY
 
@@ -167,232 +196,289 @@ STDS_INTG_SPEX_KEYS = { \
 # filters
 # this information is from the SVO filter profile service: http://svo2.cab.inta-csic.es/svo/theory/fps/
 FILTERS = { \
-    '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band', 'zeropoint': 1594.0, 'method': 'vega', 'rsr': True}, \
-    '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band', 'zeropoint': 1024.0, 'method': 'vega', 'rsr': True}, \
-    '2MASS_KS': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega', 'rsr': True}, \
+    '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band', 'zeropoint': 1594.0, 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band', 'zeropoint': 1024.0, 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    '2MASS_KS': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega', 'rsr': True, 'altnames': ['2MASS_K']}, \
 #    '2MASS_K': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
 #    '2MASS_Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
-    'BESSEL_I': {'file': 'bessel_i.txt', 'description': 'Bessel I-band', 'zeropoint': 2405.3, 'method': 'vega', 'rsr': False}, \
-    'HAWK_Y': {'file': 'hawk-y.txt', 'description': 'HAWK Y-band', 'zeropoint': 2092.9, 'method': 'vega', 'rsr': False}, \
-    'HAWK_J': {'file': 'hawk-j.txt', 'description': 'HAWK J-band', 'zeropoint': 1543.5, 'method': 'vega', 'rsr': False}, \
-    'HAWK_H': {'file': 'hawk-h.txt', 'description': 'HAWK H-band', 'zeropoint': 1053.6, 'method': 'vega', 'rsr': False}, \
-    'HAWK_H2': {'file': 'hawk-h2.txt', 'description': 'HAWK H2-band', 'zeropoint': 688.8, 'method': 'vega', 'rsr': False}, \
-    'HAWK_CH4': {'file': 'hawk-ch4.txt', 'description': 'HAWK CH4-band', 'zeropoint': 1093.4, 'method': 'vega', 'rsr': False}, \
-    'HAWK_KS': {'file': 'hawk-ks.txt', 'description': 'HAWK Ks-band', 'zeropoint': 675.3, 'method': 'vega', 'rsr': False}, \
-    'HAWK_BRG': {'file': 'hawk-brg.txt', 'description': 'HAWK Brackett Gamma', 'zeropoint': 638.9, 'method': 'vega', 'rsr': False}, \
-    'HAWK_NB1060': {'file': 'hawk-nb1060.txt', 'description': 'HAWK Narrow Band 1060', 'zeropoint': 2003.27, 'method': 'vega', 'rsr': False}, \
-    'HAWK_NB1190': {'file': 'hawk-nb1190.txt', 'description': 'HAWK Narrow Band 1190', 'zeropoint': 1697.50, 'method': 'vega', 'rsr': False}, \
-    'HAWK_NB2090': {'file': 'hawk-nb2090.txt', 'description': 'HAWK Narrow Band 2090', 'zeropoint': 706.68, 'method': 'vega', 'rsr': False}, \
-    'FOURSTAR_J': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR J-band', 'zeropoint': 1581.2, 'method': 'vega', 'rsr': False}, \
-    'FOURSTAR_J1': {'file': 'fourstar-j1.txt', 'description': 'FOURSTAR J1-band', 'zeropoint': 1978.7, 'method': 'vega', 'rsr': False}, \
-    'FOURSTAR_J2': {'file': 'fourstar-j2.txt', 'description': 'FOURSTAR J2-band', 'zeropoint': 1774.5, 'method': 'vega', 'rsr': False}, \
-    'FOURSTAR_J3': {'file': 'fourstar-j3.txt', 'description': 'FOURSTAR J3-band', 'zeropoint': 1488.8, 'method': 'vega', 'rsr': False}, \
-    'FOURSTAR_H': {'file': 'fourstar-h.txt', 'description': 'FOURSTAR H-band', 'zeropoint': 1054.9, 'method': 'vega', 'rsr': False}, \
-    'FOURSTAR_H_SHORT': {'file': 'fourstar-hshort.txt', 'description': 'FOURSTAR H short', 'zeropoint': 1119.1, 'method': 'vega', 'rsr': False}, \
-    'FOURSTAR_H_LONG': {'file': 'fourstar-hlong.txt', 'description': 'FOURSTAR H long', 'zeropoint': 980.7, 'method': 'vega', 'rsr': False}, \
-    'FOURSTAR_K': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR Ks-band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False}, \
-    'FOURSTAR_KS': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR Ks-band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False}, \
-    'IRAC_CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9, 'method': 'vega', 'rsr': True}, \
-    'IRAC_CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7, 'method': 'vega', 'rsr': True}, \
-    'IRAC_CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0, 'method': 'vega', 'rsr': True}, \
-    'IRAC_CH4': {'file': 'irac4.txt', 'description': 'IRAC Channel 4 (8.0 micron)', 'zeropoint': 64.13, 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F070W': {'file': 'jwst-nircam-F070W.txt', 'description': 'JWST NIRCAM F070W (wide 0.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F090W': {'file': 'jwst-nircam-F090W.txt', 'description': 'JWST NIRCAM F090W (wide 0.90 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F115W': {'file': 'jwst-nircam-F115W.txt', 'description': 'JWST NIRCAM F115W (wide 1.15 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F140M': {'file': 'jwst-nircam-F140M.txt', 'description': 'JWST NIRCAM F140M (medium 1.40 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F150W': {'file': 'jwst-nircam-F150W.txt', 'description': 'JWST NIRCAM F150W (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F150W2': {'file': 'jwst-nircam-F150W2.txt', 'description': 'JWST NIRCAM F150W2 (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F162M': {'file': 'jwst-nircam-F162M.txt', 'description': 'JWST NIRCAM F162M (medium 1.62 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F164N': {'file': 'jwst-nircam-F164N.txt', 'description': 'JWST NIRCAM F164N (narrow 1.64 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F182M': {'file': 'jwst-nircam-F182M.txt', 'description': 'JWST NIRCAM F182M (medium 1.82 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F187N': {'file': 'jwst-nircam-F187N.txt', 'description': 'JWST NIRCAM F187N (narrow 1.87 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F200W': {'file': 'jwst-nircam-F200W.txt', 'description': 'JWST NIRCAM F200W (wide 2.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F210W': {'file': 'jwst-nircam-F210M.txt', 'description': 'JWST NIRCAM F210M (medium 2.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F212N': {'file': 'jwst-nircam-F212N.txt', 'description': 'JWST NIRCAM F212N (narrow 2.12 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F250M': {'file': 'jwst-nircam-F250M.txt', 'description': 'JWST NIRCAM F250M (medium 2.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F277W': {'file': 'jwst-nircam-F277W.txt', 'description': 'JWST NIRCAM F277W (wide 2.77 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F300M': {'file': 'jwst-nircam-F300M.txt', 'description': 'JWST NIRCAM F300M (medium 3.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F322W2': {'file': 'jwst-nircam-F322W2.txt', 'description': 'JWST NIRCAM F322W2 (wide 3.22 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F323N': {'file': 'jwst-nircam-F323N.txt', 'description': 'JWST NIRCAM F323N (narrow 3.23 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F335M': {'file': 'jwst-nircam-F335M.txt', 'description': 'JWST NIRCAM F335M (medium 3.35 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F356W': {'file': 'jwst-nircam-F356W.txt', 'description': 'JWST NIRCAM F356W (wide 3.56 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F360M': {'file': 'jwst-nircam-F360M.txt', 'description': 'JWST NIRCAM F360M (medium 3.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F405N': {'file': 'jwst-nircam-F405N.txt', 'description': 'JWST NIRCAM F405N (narrow 4.05 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F410M': {'file': 'jwst-nircam-F410M.txt', 'description': 'JWST NIRCAM F410M (medium 4.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F430M': {'file': 'jwst-nircam-F430M.txt', 'description': 'JWST NIRCAM F430M (medium 4.30 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F444W': {'file': 'jwst-nircam-F444W.txt', 'description': 'JWST NIRCAM F444W (wide 4.44 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F460M': {'file': 'jwst-nircam-F460M.txt', 'description': 'JWST NIRCAM F460M (medium 4.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F466N': {'file': 'jwst-nircam-F466N.txt', 'description': 'JWST NIRCAM F466N (narrow 4.66 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F470N': {'file': 'jwst-nircam-F470N.txt', 'description': 'JWST NIRCAM F470N (narrow 4.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'NIRCAM_F480M': {'file': 'jwst-nircam-F480M.txt', 'description': 'JWST NIRCAM F480M (medium 4.80 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True}, \
-    'MKO_J_ATM': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False}, \
-    'MKO_H_ATM': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False}, \
-    'MKO_K_ATM': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False}, \
-    'MKO_J': {'file': 'mko_j.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False}, \
-    'MKO_H': {'file': 'mko_h.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False}, \
-    'MKO_K': {'file': 'mko_ks.txt', 'description': 'MKO K-band', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False}, \
-    'MKO_KP': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band', 'zeropoint': 693.7, 'method': 'vega', 'rsr': False}, \
-    'MKO_LP': {'file': 'mko_lp.txt', 'description': 'MKO Lp-band', 'zeropoint': 248.3, 'method': 'vega', 'rsr': False}, \
-    'MKO_MP': {'file': 'mko_mp.txt', 'description': 'MKO Mp-band', 'zeropoint': 164.7, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M', 'zeropoint': 2255.0, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N', 'zeropoint': 2044.6, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N', 'zeropoint': 2275.4, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N', 'zeropoint': 1937.3, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M', 'zeropoint': 1871.8, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W', 'zeropoint': 1768.5, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N', 'zeropoint': 1821.0, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W', 'zeropoint': 1277.1, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M', 'zeropoint': 1242.0, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W', 'zeropoint': 1071.7, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N', 'zeropoint': 1003.0, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M', 'zeropoint': 1023.6, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N', 'zeropoint': 1047.7, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M', 'zeropoint': 979.1, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F187N': {'file': 'nic1_f187n.txt', 'description': 'NICMOS F187N', 'zeropoint': 803.7, 'method': 'vega', 'rsr': False}, \
-    'NICMOS_F190N': {'file': 'nic1_f190n.txt', 'description': 'NICMOS F190N', 'zeropoint': 836.5, 'method': 'vega', 'rsr': False}, \
-    'NIRC2_J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band', 'zeropoint': 1562.7, 'method': 'vega', 'rsr': False}, \
-    'NIRC2_H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band', 'zeropoint': 1075.5, 'method': 'vega', 'rsr': False}, \
-    'NIRC2_HCONT': {'file': 'nirc2-hcont.txt', 'description': 'NIRC2 H-continuum band', 'zeropoint': 1044.5, 'method': 'vega', 'rsr': False}, \
-    'NIRC2_K': {'file': 'nirc2-k.txt', 'description': 'NIRC2 K-band', 'zeropoint': 648.9, 'method': 'vega', 'rsr': False}, \
-    'NIRC2_KP': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band', 'zeropoint': 689.3, 'method': 'vega', 'rsr': False}, \
-    'NIRC2_KS': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band', 'zeropoint': 676.2, 'method': 'vega', 'rsr': False}, \
-    'NIRC2_KCONT': {'file': 'nirc2-kcont.txt', 'description': 'NIRC2 K continuum-band', 'zeropoint': 605.9, 'method': 'vega', 'rsr': False}, \
-    'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'NIRC2 Fe II', 'zeropoint': 1019.7, 'method': 'vega', 'rsr': False}, \
-    'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'NIRC2 LP', 'zeropoint': 248.0, 'method': 'vega', 'rsr': False}, \
-    'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'NIRC2 M', 'zeropoint': 165.8, 'method': 'vega', 'rsr': False}, \
-    'PANSTARRS_G': {'file': 'panstarrs-g.txt', 'description': 'PANSTARRS g-band', 'zeropoint': 3909.11, 'method': 'ab', 'rsr': False}, \
-    'PANSTARRS_R': {'file': 'panstarrs-r.txt', 'description': 'PANSTARRS r-band', 'zeropoint': 3151.44, 'method': 'ab', 'rsr': False}, \
-    'PANSTARRS_W': {'file': 'panstarrs-w.txt', 'description': 'PANSTARRS w-band', 'zeropoint': 3024.76, 'method': 'ab', 'rsr': False}, \
-    'PANSTARRS_I': {'file': 'panstarrs-i.txt', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6, 'method': 'ab', 'rsr': False}, \
-    'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2273.09, 'method': 'ab', 'rsr': False}, \
-    'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2205.95, 'method': 'ab', 'rsr': False}, \
-    'SDSS_U': {'file': 'sdss-u.txt', 'description': 'SDSS u-band', 'zeropoint': 1568.5, 'method': 'ab', 'rsr': False}, \
-    'SDSS_G': {'file': 'sdss-g.txt', 'description': 'SDSS g-band', 'zeropoint': 3965.9, 'method': 'ab', 'rsr': False}, \
-    'SDSS_R': {'file': 'sdss-r.txt', 'description': 'SDSS r-band', 'zeropoint': 3162.0, 'method': 'ab', 'rsr': False}, \
-    'SDSS_I': {'file': 'sdss-i.txt', 'description': 'SDSS i-band', 'zeropoint': 2602.0, 'method': 'ab', 'rsr': False}, \
-    'SDSS_Z': {'file': 'sdss-z.txt', 'description': 'SDSS z-band', 'zeropoint': 2244.7, 'method': 'ab', 'rsr': False}, \
-    'UKIDSS_Z': {'file': 'ukidss-z.txt', 'description': 'UKIDSS Z-band', 'zeropoint': 2261.4, 'method': 'vega', 'rsr': False}, \
-    'UKIDSS_Y': {'file': 'ukidss-y.txt', 'description': 'UKIDSS Y-band', 'zeropoint': 2057.2, 'method': 'vega', 'rsr': False}, \
-    'UKIDSS_J': {'file': 'ukidss-j.txt', 'description': 'UKIDSS J-band', 'zeropoint': 1556.8, 'method': 'vega', 'rsr': False}, \
-    'UKIDSS_H': {'file': 'ukidss-h.txt', 'description': 'UKIDSS H-band', 'zeropoint': 1038.3, 'method': 'vega', 'rsr': False}, \
-    'UKIDSS_K': {'file': 'ukidss-k.txt', 'description': 'UKIDSS K-band', 'zeropoint': 644.1, 'method': 'vega', 'rsr': False}, \
-    'VISTA_Z': {'file': 'vista_z.txt', 'description': 'VISTA Z-band', 'zeropoint': 2263.81, 'method': 'vega', 'rsr': False}, \
-    'VISTA_Y': {'file': 'vista_y.txt', 'description': 'VISTA Y-band', 'zeropoint': 2087.32, 'method': 'vega', 'rsr': False}, \
-    'VISTA_J': {'file': 'vista_j.txt', 'description': 'VISTA J-band', 'zeropoint': 1554.03, 'method': 'vega', 'rsr': False}, \
-    'VISTA_H': {'file': 'vista_h.txt', 'description': 'VISTA H-band', 'zeropoint': 1030.40, 'method': 'vega', 'rsr': False}, \
-    'VISTA_KS': {'file': 'vista_ks.txt', 'description': 'VISTA Ks-band', 'zeropoint': 674.83, 'method': 'vega', 'rsr': False}, \
-    'WFC3_F127M': {'file': 'wfc3_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False}, \
-    'WFC3_F139M': {'file': 'wfc3_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False}, \
-    'WFC3_F164N': {'file': 'wfc3_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False}, \
-    'WFC3_F167N': {'file': 'wfc3_F167N.txt', 'description': 'WFC3 F167N', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False}, \
-    'WFCAM_Z': {'file': 'wfcam-z.txt', 'description': 'UKIRT WFCAM Z', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False}, \
-    'WFCAM_Y': {'file': 'wfcam-y.txt', 'description': 'UKIRT WFCAM Y', 'zeropoint': 2040.9, 'method': 'vega', 'rsr': False}, \
-    'WFCAM_J': {'file': 'wfcam-j.txt', 'description': 'UKIRT WFCAM J', 'zeropoint': 1548.7, 'method': 'vega', 'rsr': False}, \
-    'WFCAM_H': {'file': 'wfcam-h.txt', 'description': 'UKIRT WFCAM H', 'zeropoint': 1027.1, 'method': 'vega', 'rsr': False}, \
-    'WFCAM_H2': {'file': 'wfcam-h2.txt', 'description': 'UKIRT WFCAM H2', 'zeropoint': 677.1, 'method': 'vega', 'rsr': False}, \
-    'WFCAM_BRG': {'file': 'wfcam-brg.txt', 'description': 'UKIRT WFCAM Brackett Gamma', 'zeropoint': 645.5, 'method': 'vega', 'rsr': False}, \
-    'WFCAM_K': {'file': 'wfcam-k.txt', 'description': 'UKIRT WFCAM K', 'zeropoint': 630.0, 'method': 'vega', 'rsr': False}, \
-    'WIRCAM_Y': {'file': 'wircam-cfht-y.txt', 'description': 'CFHT WIRCAM Y', 'zeropoint': 2073.32, 'method': 'vega', 'rsr': False}, \
-    'WIRCAM_J': {'file': 'wircam-cfht-j.txt', 'description': 'CFHT WIRCAM J', 'zeropoint': 1551.01, 'method': 'vega', 'rsr': False}, \
-    'WIRCAM_H': {'file': 'wircam-cfht-h.txt', 'description': 'CFHT WIRCAM H', 'zeropoint': 1044.35, 'method': 'vega', 'rsr': False}, \
-    'WIRCAM_KS': {'file': 'wircam-cfht-ks.txt', 'description': 'CFHT WIRCAM Ks', 'zeropoint': 674.62, 'method': 'vega', 'rsr': False}, \
-    'WIRCAM_KCONT': {'file': 'wircam-cfht-kcont.txt', 'description': 'CFHT WIRCAM K-cont', 'zeropoint': 636.17, 'method': 'vega', 'rsr': False}, \
-    'WIRCAM_CH4_OFF': {'file': 'wircam-cfht-ch4s.txt', 'description': 'CFHT WIRCAM CH4-off', 'zeropoint': 987.39, 'method': 'vega', 'rsr': False}, \
-    'WIRCAM_CH4_ON': {'file': 'wircam-cfht-ch4l.txt', 'description': 'CFHT WIRCAM CH4-on', 'zeropoint': 1076.31, 'method': 'vega', 'rsr': False}, \
-    'WIRC_J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False}, \
-    'WIRC_H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False}, \
-    'WIRC_K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False}, \
-    'WIRC_CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO', 'zeropoint': 0., 'method': 'vega', 'rsr': False}, \
-    'WIRC_CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S', 'zeropoint': 0., 'method': 'vega', 'rsr': False}, \
-    'WIRC_CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L', 'zeropoint': 0., 'method': 'vega', 'rsr': False}, \
-    'WIRC_FE2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II', 'zeropoint': 0., 'method': 'vega', 'rsr': False}, \
-    'WIRC_BRGAMMA': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma', 'zeropoint': 0., 'method': 'vega', 'rsr': False}, \
-    'WIRC_PABETA': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta', 'zeropoint': 0., 'method': 'vega', 'rsr': False}, \
-    'WISE_W1': {'file': 'wise_w1.txt', 'description': 'WISE W1 (3.5 micron)', 'zeropoint': 309.54, 'method': 'vega', 'rsr': True}, \
-    'WISE_W2': {'file': 'wise_w2.txt', 'description': 'WISE W2 (4.6 micron)', 'zeropoint': 171.79, 'method': 'vega', 'rsr': True}, \
-    'WISE_W3': {'file': 'wise_w3.txt', 'description': 'WISE W3 (13 micron)', 'zeropoint': 31.67, 'method': 'vega', 'rsr': True}, \
-    'WISE_W4': {'file': 'wise_w4.txt', 'description': 'WISE W4 (22 micron)', 'zeropoint': 8.363, 'method': 'vega', 'rsr': True} \
+    'BESSEL_I': {'file': 'bessel_i.txt', 'description': 'Bessel I-band', 'zeropoint': 2405.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'FOURSTAR_J': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR J-band', 'zeropoint': 1581.2, 'method': 'vega', 'rsr': False, 'altnames': ['4star j']}, \
+    'FOURSTAR_J1': {'file': 'fourstar-j1.txt', 'description': 'FOURSTAR J1-band', 'zeropoint': 1978.7, 'method': 'vega', 'rsr': False, 'altnames': ['4star j1']}, \
+    'FOURSTAR_J2': {'file': 'fourstar-j2.txt', 'description': 'FOURSTAR J2-band', 'zeropoint': 1774.5, 'method': 'vega', 'rsr': False, 'altnames': ['4star j2']}, \
+    'FOURSTAR_J3': {'file': 'fourstar-j3.txt', 'description': 'FOURSTAR J3-band', 'zeropoint': 1488.8, 'method': 'vega', 'rsr': False, 'altnames': ['4star j3']}, \
+    'FOURSTAR_H': {'file': 'fourstar-h.txt', 'description': 'FOURSTAR H-band', 'zeropoint': 1054.9, 'method': 'vega', 'rsr': False, 'altnames': ['4star h']}, \
+    'FOURSTAR_H_SHORT': {'file': 'fourstar-hshort.txt', 'description': 'FOURSTAR H short', 'zeropoint': 1119.1, 'method': 'vega', 'rsr': False, 'altnames': ['4star h short','4star h-short','4star hs','fourstar hs']}, \
+    'FOURSTAR_H_LONG': {'file': 'fourstar-hlong.txt', 'description': 'FOURSTAR H long', 'zeropoint': 980.7, 'method': 'vega', 'rsr': False, 'altnames': ['4star h long','4star h-long','4star hl','fourstar hl']}, \
+    'FOURSTAR_KS': {'file': 'fourstar-ks.txt', 'description': 'FOURSTAR Ks-band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False, 'altnames': ['4star k','4star ks','fourstar k']}, \
+    'HAWK_Y': {'file': 'hawk-y.txt', 'description': 'HAWK Y-band', 'zeropoint': 2092.9, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'HAWK_J': {'file': 'hawk-j.txt', 'description': 'HAWK J-band', 'zeropoint': 1543.5, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'HAWK_H': {'file': 'hawk-h.txt', 'description': 'HAWK H-band', 'zeropoint': 1053.6, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'HAWK_H2': {'file': 'hawk-h2.txt', 'description': 'HAWK H2-band', 'zeropoint': 688.8, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'HAWK_CH4': {'file': 'hawk-ch4.txt', 'description': 'HAWK CH4-band', 'zeropoint': 1093.4, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'HAWK_KS': {'file': 'hawk-ks.txt', 'description': 'HAWK Ks-band', 'zeropoint': 675.3, 'method': 'vega', 'rsr': False, 'altnames': ['hawk k']}, \
+    'HAWK_BRG': {'file': 'hawk-brg.txt', 'description': 'HAWK Brackett Gamma', 'zeropoint': 638.9, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'HAWK_NB1060': {'file': 'hawk-nb1060.txt', 'description': 'HAWK Narrow Band 1060', 'zeropoint': 2003.27, 'method': 'vega', 'rsr': False, 'altnames': ['hawk 1060']}, \
+    'HAWK_NB1190': {'file': 'hawk-nb1190.txt', 'description': 'HAWK Narrow Band 1190', 'zeropoint': 1697.50, 'method': 'vega', 'rsr': False, 'altnames': ['hawk 1190']}, \
+    'HAWK_NB2090': {'file': 'hawk-nb2090.txt', 'description': 'HAWK Narrow Band 2090', 'zeropoint': 706.68, 'method': 'vega', 'rsr': False, 'altnames': ['hawk 2090']}, \
+    'IRAC_CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9, 'method': 'vega', 'rsr': True, 'altnames': ['irac 1','irac 3.6']}, \
+    'IRAC_CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7, 'method': 'vega', 'rsr': True, 'altnames': ['irac 2','irac 4.5']}, \
+    'IRAC_CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0, 'method': 'vega', 'rsr': True, 'altnames': ['irac 3','irac 5.8']}, \
+    'IRAC_CH4': {'file': 'irac4.txt', 'description': 'IRAC Channel 4 (8.0 micron)', 'zeropoint': 64.13, 'method': 'vega', 'rsr': True, 'altnames': ['irac 4','irac 8.0']}, \
+    'KEPLER': {'file': 'Kepler.txt', 'description': 'Kepler bandpass', 'zeropoint': 3033.1, 'method': 'vega', 'rsr': False, 'altnames': ['kep','kepler k','kp']}, \
+    'MKO_J_ATM': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'MKO_H_ATM': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'MKO_K_ATM': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'MKO_J': {'file': 'mko_j.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'MKO_H': {'file': 'mko_h.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'MKO_K': {'file': 'mko_ks.txt', 'description': 'MKO K-band', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'MKO_KP': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band', 'zeropoint': 693.7, 'method': 'vega', 'rsr': False, 'altnames': ['mko k prime']}, \
+    'MKO_LP': {'file': 'mko_lp.txt', 'description': 'MKO Lp-band', 'zeropoint': 248.3, 'method': 'vega', 'rsr': False, 'altnames': ['mko l','mko l prime']}, \
+    'MKO_MP': {'file': 'mko_mp.txt', 'description': 'MKO Mp-band', 'zeropoint': 164.7, 'method': 'vega', 'rsr': False, 'altnames': ['mko m','mko m prime']}, \
+    'NICMOS_F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M', 'zeropoint': 2255.0, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N', 'zeropoint': 2044.6, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N', 'zeropoint': 2275.4, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N', 'zeropoint': 1937.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M', 'zeropoint': 1871.8, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W', 'zeropoint': 1768.5, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N', 'zeropoint': 1821.0, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W', 'zeropoint': 1277.1, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M', 'zeropoint': 1242.0, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W', 'zeropoint': 1071.7, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N', 'zeropoint': 1003.0, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M', 'zeropoint': 1023.6, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N', 'zeropoint': 1047.7, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M', 'zeropoint': 979.1, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F187N': {'file': 'nic1_f187n.txt', 'description': 'NICMOS F187N', 'zeropoint': 803.7, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NICMOS_F190N': {'file': 'nic1_f190n.txt', 'description': 'NICMOS F190N', 'zeropoint': 836.5, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NIRC2_J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band', 'zeropoint': 1562.7, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NIRC2_H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band', 'zeropoint': 1075.5, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NIRC2_HCONT': {'file': 'nirc2-hcont.txt', 'description': 'NIRC2 H-continuum band', 'zeropoint': 1044.5, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NIRC2_K': {'file': 'nirc2-k.txt', 'description': 'NIRC2 K-band', 'zeropoint': 648.9, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NIRC2_KP': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band', 'zeropoint': 689.3, 'method': 'vega', 'rsr': False, 'altnames': ['nirc2 k prime']}, \
+    'NIRC2_KS': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band', 'zeropoint': 676.2, 'method': 'vega', 'rsr': False, 'altnames': ['nirc2 k short']}, \
+    'NIRC2_KCONT': {'file': 'nirc2-kcont.txt', 'description': 'NIRC2 K continuum-band', 'zeropoint': 605.9, 'method': 'vega', 'rsr': False, 'altnames': ['nirc2 k continuum']}, \
+    'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'NIRC2 Fe II', 'zeropoint': 1019.7, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'NIRC2 LP', 'zeropoint': 248.0, 'method': 'vega', 'rsr': False, 'altnames': ['nirc2 l prime','nirc2 l']}, \
+    'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'NIRC2 M', 'zeropoint': 165.8, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'NIRCAM_F070W': {'file': 'jwst-nircam-F070W.txt', 'description': 'JWST NIRCAM F070W (wide 0.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F090W': {'file': 'jwst-nircam-F090W.txt', 'description': 'JWST NIRCAM F090W (wide 0.90 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F115W': {'file': 'jwst-nircam-F115W.txt', 'description': 'JWST NIRCAM F115W (wide 1.15 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F140M': {'file': 'jwst-nircam-F140M.txt', 'description': 'JWST NIRCAM F140M (medium 1.40 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F150W': {'file': 'jwst-nircam-F150W.txt', 'description': 'JWST NIRCAM F150W (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F150W2': {'file': 'jwst-nircam-F150W2.txt', 'description': 'JWST NIRCAM F150W2 (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F162M': {'file': 'jwst-nircam-F162M.txt', 'description': 'JWST NIRCAM F162M (medium 1.62 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F164N': {'file': 'jwst-nircam-F164N.txt', 'description': 'JWST NIRCAM F164N (narrow 1.64 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F182M': {'file': 'jwst-nircam-F182M.txt', 'description': 'JWST NIRCAM F182M (medium 1.82 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F187N': {'file': 'jwst-nircam-F187N.txt', 'description': 'JWST NIRCAM F187N (narrow 1.87 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F200W': {'file': 'jwst-nircam-F200W.txt', 'description': 'JWST NIRCAM F200W (wide 2.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F210W': {'file': 'jwst-nircam-F210M.txt', 'description': 'JWST NIRCAM F210M (medium 2.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F212N': {'file': 'jwst-nircam-F212N.txt', 'description': 'JWST NIRCAM F212N (narrow 2.12 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F250M': {'file': 'jwst-nircam-F250M.txt', 'description': 'JWST NIRCAM F250M (medium 2.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F277W': {'file': 'jwst-nircam-F277W.txt', 'description': 'JWST NIRCAM F277W (wide 2.77 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F300M': {'file': 'jwst-nircam-F300M.txt', 'description': 'JWST NIRCAM F300M (medium 3.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F322W2': {'file': 'jwst-nircam-F322W2.txt', 'description': 'JWST NIRCAM F322W2 (wide 3.22 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F323N': {'file': 'jwst-nircam-F323N.txt', 'description': 'JWST NIRCAM F323N (narrow 3.23 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F335M': {'file': 'jwst-nircam-F335M.txt', 'description': 'JWST NIRCAM F335M (medium 3.35 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F356W': {'file': 'jwst-nircam-F356W.txt', 'description': 'JWST NIRCAM F356W (wide 3.56 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F360M': {'file': 'jwst-nircam-F360M.txt', 'description': 'JWST NIRCAM F360M (medium 3.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F405N': {'file': 'jwst-nircam-F405N.txt', 'description': 'JWST NIRCAM F405N (narrow 4.05 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F410M': {'file': 'jwst-nircam-F410M.txt', 'description': 'JWST NIRCAM F410M (medium 4.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F430M': {'file': 'jwst-nircam-F430M.txt', 'description': 'JWST NIRCAM F430M (medium 4.30 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F444W': {'file': 'jwst-nircam-F444W.txt', 'description': 'JWST NIRCAM F444W (wide 4.44 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F460M': {'file': 'jwst-nircam-F460M.txt', 'description': 'JWST NIRCAM F460M (medium 4.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F466N': {'file': 'jwst-nircam-F466N.txt', 'description': 'JWST NIRCAM F466N (narrow 4.66 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F470N': {'file': 'jwst-nircam-F470N.txt', 'description': 'JWST NIRCAM F470N (narrow 4.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'NIRCAM_F480M': {'file': 'jwst-nircam-F480M.txt', 'description': 'JWST NIRCAM F480M (medium 4.80 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'PANSTARRS_G': {'file': 'panstarrs-g.txt', 'description': 'PANSTARRS g-band', 'zeropoint': 3909.11, 'method': 'ab', 'rsr': False, 'altnames': []}, \
+    'PANSTARRS_R': {'file': 'panstarrs-r.txt', 'description': 'PANSTARRS r-band', 'zeropoint': 3151.44, 'method': 'ab', 'rsr': False, 'altnames': []}, \
+    'PANSTARRS_W': {'file': 'panstarrs-w.txt', 'description': 'PANSTARRS w-band', 'zeropoint': 3024.76, 'method': 'ab', 'rsr': False, 'altnames': []}, \
+    'PANSTARRS_I': {'file': 'panstarrs-i.txt', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6, 'method': 'ab', 'rsr': False, 'altnames': []}, \
+    'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2273.09, 'method': 'ab', 'rsr': False, 'altnames': []}, \
+    'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2205.95, 'method': 'ab', 'rsr': False, 'altnames': []}, \
+    'SDSS_U': {'file': 'sdss-u.txt', 'description': 'SDSS u-band', 'zeropoint': 1568.5, 'method': 'ab', 'rsr': False, 'altnames': ['u']}, \
+    'SDSS_G': {'file': 'sdss-g.txt', 'description': 'SDSS g-band', 'zeropoint': 3965.9, 'method': 'ab', 'rsr': False, 'altnames': ['g']}, \
+    'SDSS_R': {'file': 'sdss-r.txt', 'description': 'SDSS r-band', 'zeropoint': 3162.0, 'method': 'ab', 'rsr': False, 'altnames': ['r']}, \
+    'SDSS_I': {'file': 'sdss-i.txt', 'description': 'SDSS i-band', 'zeropoint': 2602.0, 'method': 'ab', 'rsr': False, 'altnames': ['i']}, \
+    'SDSS_Z': {'file': 'sdss-z.txt', 'description': 'SDSS z-band', 'zeropoint': 2244.7, 'method': 'ab', 'rsr': False, 'altnames': ['z']}, \
+    'TESS': {'file': 'TESS.txt', 'description': 'TESS bandpass', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'UKIDSS_Z': {'file': 'ukidss-z.txt', 'description': 'UKIDSS Z-band', 'zeropoint': 2261.4, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'UKIDSS_Y': {'file': 'ukidss-y.txt', 'description': 'UKIDSS Y-band', 'zeropoint': 2057.2, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'UKIDSS_J': {'file': 'ukidss-j.txt', 'description': 'UKIDSS J-band', 'zeropoint': 1556.8, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'UKIDSS_H': {'file': 'ukidss-h.txt', 'description': 'UKIDSS H-band', 'zeropoint': 1038.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'UKIDSS_K': {'file': 'ukidss-k.txt', 'description': 'UKIDSS K-band', 'zeropoint': 644.1, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'VISTA_Z': {'file': 'vista_z.txt', 'description': 'VISTA Z-band', 'zeropoint': 2263.81, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'VISTA_Y': {'file': 'vista_y.txt', 'description': 'VISTA Y-band', 'zeropoint': 2087.32, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'VISTA_J': {'file': 'vista_j.txt', 'description': 'VISTA J-band', 'zeropoint': 1554.03, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'VISTA_H': {'file': 'vista_h.txt', 'description': 'VISTA H-band', 'zeropoint': 1030.40, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'VISTA_KS': {'file': 'vista_ks.txt', 'description': 'VISTA Ks-band', 'zeropoint': 674.83, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F098M': {'file': 'HST-WFC3_IR_F098M.txt', 'description': 'WFC3 F098M', 'zeropoint': 2154.5, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F105W': {'file': 'HST-WFC3_IR_F105W.txt', 'description': 'WFC3 F105W', 'zeropoint': 1975.2, 'method': 'vega', 'rsr': False, 'altnames': ['wfc3 y']}, \
+    'WFC3_F110W': {'file': 'HST-WFC3_IR_F110W.txt', 'description': 'WFC3 F110W', 'zeropoint': 1738.4, 'method': 'vega', 'rsr': False, 'altnames': ['wfc3 yj']}, \
+    'WFC3_F125W': {'file': 'HST-WFC3_IR_F125W.txt', 'description': 'WFC3 F125W', 'zeropoint': 1564.3, 'method': 'vega', 'rsr': False, 'altnames': ['wfc3 j']}, \
+    'WFC3_F126N': {'file': 'HST-WFC3_IR_F126N.txt', 'description': 'WFC3 F126N', 'zeropoint': 1552.5, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F127M': {'file': 'HST-WFC3_IR_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 1496.5, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F128N': {'file': 'HST-WFC3_IR_F128N.txt', 'description': 'WFC3 F128N', 'zeropoint': 1392.6, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F130N': {'file': 'HST-WFC3_IR_F130N.txt', 'description': 'WFC3 F130N', 'zeropoint': 1475.9, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F132N': {'file': 'HST-WFC3_IR_F132N.txt', 'description': 'WFC3 F132N', 'zeropoint': 1466.6, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F139M': {'file': 'HST-WFC3_IR_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 1342.8, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F140W': {'file': 'HST-WFC3_IR_F140W.txt', 'description': 'WFC3 F140W', 'zeropoint': 1324.8, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F153M': {'file': 'HST-WFC3_IR_F153M.txt', 'description': 'WFC3 F153M', 'zeropoint': 1142.0, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F160W': {'file': 'HST-WFC3_IR_F160W.txt', 'description': 'WFC3 F160W', 'zeropoint': 1138.1, 'method': 'vega', 'rsr': False, 'altnames': ['wfc3 h']}, \
+    'WFC3_F164N': {'file': 'HST-WFC3_IR_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 1005.5, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFC3_F167N': {'file': 'HST-WFC3_IR_F167N.txt', 'description': 'WFC3 F167N', 'zeropoint': 1030.0, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+#    'WFC3_F127M': {'file': 'wfc3_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+#    'WFC3_F139M': {'file': 'wfc3_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+#    'WFC3_F164N': {'file': 'wfc3_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+#    'WFC3_F167N': {'file': 'wfc3_F167N.txt', 'description': 'WFC3 F167N', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFCAM_Z': {'file': 'wfcam-z.txt', 'description': 'UKIRT WFCAM Z', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFCAM_Y': {'file': 'wfcam-y.txt', 'description': 'UKIRT WFCAM Y', 'zeropoint': 2040.9, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFCAM_J': {'file': 'wfcam-j.txt', 'description': 'UKIRT WFCAM J', 'zeropoint': 1548.7, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFCAM_H': {'file': 'wfcam-h.txt', 'description': 'UKIRT WFCAM H', 'zeropoint': 1027.1, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFCAM_H2': {'file': 'wfcam-h2.txt', 'description': 'UKIRT WFCAM H2', 'zeropoint': 677.1, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WFCAM_BRG': {'file': 'wfcam-brg.txt', 'description': 'UKIRT WFCAM Brackett Gamma', 'zeropoint': 645.5, 'method': 'vega', 'rsr': False, 'altnames': ['wfcam brackett gamma']}, \
+    'WFCAM_K': {'file': 'wfcam-k.txt', 'description': 'UKIRT WFCAM K', 'zeropoint': 630.0, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRC_J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRC_H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRC_K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRC_CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRC_CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRC_CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRC_FE2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRC_BRGAMMA': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altnames': ['wirc brackett gamma']}, \
+    'WIRC_PABETA': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altnames': ['wirc paschen beta']}, \
+    'WIRCAM_Y': {'file': 'wircam-cfht-y.txt', 'description': 'CFHT WIRCAM Y', 'zeropoint': 2073.32, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRCAM_J': {'file': 'wircam-cfht-j.txt', 'description': 'CFHT WIRCAM J', 'zeropoint': 1551.01, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRCAM_H': {'file': 'wircam-cfht-h.txt', 'description': 'CFHT WIRCAM H', 'zeropoint': 1044.35, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRCAM_KS': {'file': 'wircam-cfht-ks.txt', 'description': 'CFHT WIRCAM Ks', 'zeropoint': 674.62, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRCAM_KCONT': {'file': 'wircam-cfht-kcont.txt', 'description': 'CFHT WIRCAM K-cont', 'zeropoint': 636.17, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRCAM_CH4_OFF': {'file': 'wircam-cfht-ch4s.txt', 'description': 'CFHT WIRCAM CH4-off', 'zeropoint': 987.39, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WIRCAM_CH4_ON': {'file': 'wircam-cfht-ch4l.txt', 'description': 'CFHT WIRCAM CH4-on', 'zeropoint': 1076.31, 'method': 'vega', 'rsr': False, 'altnames': []}, \
+    'WISE_W1': {'file': 'wise_w1.txt', 'description': 'WISE W1 (3.5 micron)', 'zeropoint': 309.54, 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'WISE_W2': {'file': 'wise_w2.txt', 'description': 'WISE W2 (4.6 micron)', 'zeropoint': 171.79, 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'WISE_W3': {'file': 'wise_w3.txt', 'description': 'WISE W3 (13 micron)', 'zeropoint': 31.67, 'method': 'vega', 'rsr': True, 'altnames': []}, \
+    'WISE_W4': {'file': 'wise_w4.txt', 'description': 'WISE W4 (22 micron)', 'zeropoint': 8.363, 'method': 'vega', 'rsr': True, 'altnames': []} \
     }
 VEGAFILE = 'vega_kurucz.txt'
 
 # some data formats (for future expansion)
 INSTRUMENTS = {
-#	'SPEX': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
-    'UNKNOWN': {'instrument_name': 'UNKNOWN', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altnames': ['RAW','UNK']},
-    'SED': {'instrument_name': 'SED', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altnames': ['SPECTRAL_ENERGY_DISTRIBUTION']},
-    'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'waverange': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['APO']},
-    'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'waverange': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS']},
-    'FIRE': {'instrument_name': 'Magellan FIRE', 'pixelscale': 0.18*u.arcsec, 'waverange': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 6000, 'norders': 21, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS']},
-    'LDSS-3': {'instrument_name': 'Magellan LDSS-3 VPH-RED', 'pixelscale': 0.189*u.arcsec, 'waverange': [6000,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1810, 'norders': 1, 'readnoise': 4.07, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS']},
-    'MAGE': {'instrument_name': 'Magellan MAGE', 'pixelscale': 0.3*u.arcsec, 'waverange': [3100,10000]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 4100, 'norders': 13, 'readnoise': 2.9, 'darkcurrent': 1.0, 'gain': 1.02, 'altnames': ['MagE']},
-    'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'waverange': [0.95,5.5]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altnames': ['NIRSPAO']},
-    'SPEX_PRISM': {'instrument_name': 'IRTF SpeX prism', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SPEX','PRISM']},
-    'SPEX_SXD': {'instrument_name': 'IRTF SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'waverange': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SXD']},
-    'SPEX_LXD1.9': {'instrument_name': 'IRTF SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['LXD']},
-    'SPEX_LXD2.1': {'instrument_name': 'IRTF SpeX LXD 2.1 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
-    'SPEX_LXD2.3': {'instrument_name': 'IRTF SpeX LXD 2.3 micron', 'pixelscale': 0.15*u.arcsec, 'waverange': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
-#	'USPEX': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
-	'USPEX_PRISM': {'instrument_name': 'IRTF Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['USPEX','UPRISM']},
-    'USPEX_SXD': {'instrument_name': 'IRTF Updated SpeX SXD', 'pixelscale': 0.10*u.arcsec, 'waverange': [0.7,2.55]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['USXD']},
-    'USPEX_LXD_SHORT': {'instrument_name': 'IRTF Updated SpeX LXD short', 'pixelscale': 0.10*u.arcsec, 'waverange': [1.67,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 8, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['ULXD','LXD_SHORT','LXDS']},
-    'USPEX_LXD_LONG': {'instrument_name': 'IRTF Updated SpeX LXD long', 'pixelscale': 0.10*u.arcsec, 'waverange': [1.98,5.3]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['LXD_LONG','LXDL']},
+#	'SPEX': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
+    'UNKNOWN': {'instrument_name': 'UNKNOWN', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altnames': ['UNK'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'RAW': {'instrument_name': 'RAW', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altnames': ['ORIGINAL'], 'wunit': u.micron},
+    'SED': {'instrument_name': 'SED', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altnames': ['SPECTRAL_ENERGY_DISTRIBUTION'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['APO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['SDSS','BOSS','EBOSS'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'DEIMOS': {'instrument_name': 'Keck DEIMOS', 'pixelscale': 0.1185*u.arcsec, 'wave_range': [5000,9700]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'disperser': '600 l/mm', 'resolution': 2000, 'norders': 1, 'readnoise': 2.5, 'darkcurrent': 0., 'gain': 1.2, 'altnames': ['DEIMOS'], 'instrument_reference': '2003spie.4841.1657F', 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'FIRE': {'instrument_name': 'Magellan FIRE', 'pixelscale': 0.18*u.arcsec, 'wave_range': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 6000, 'norders': 21, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['FIRE'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'IRS-SL': {'instrument_name': 'Spitzer IRS Short-Low', 'pixelscale': 1.8*u.arcsec, 'wave_range': [5.2,14.5]*u.micron, 'slitwidth': 1.8*u.arcsec, 'resolution': 100, 'norders': 1, 'readnoise': 30., 'darkcurrent': 10., 'gain': 4.6, 'altnames': ['IRS','IRS Short Low'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'IRS-LL': {'instrument_name': 'Spitzer IRS Short-Low', 'pixelscale': 5.1*u.arcsec, 'wave_range': [14,38.]*u.micron, 'slitwidth': 5.1*u.arcsec, 'resolution': 90, 'norders': 1, 'readnoise': 30., 'darkcurrent': 40., 'gain': 4.6, 'altnames': ['IRS Long Low'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'KAST-RED': {'instrument_name': 'Lick KAST Red Channel', 'pixelscale': 0.43*u.arcsec, 'disperser': '600/7500', 'wave_range': [5700,9200]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 1200, 'norders': 1, 'readnoise': 3.8, 'darkcurrent': 0., 'gain': 1.9, 'altnames': ['KAST','KAST-R'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'KAST-BLUE': {'instrument_name': 'Lick KAST Blue Channel', 'pixelscale': 0.43*u.arcsec, 'disperser': '600/4310', 'wave_range': [3300,5520]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 950, 'norders': 1, 'readnoise': 3.7, 'darkcurrent': 0., 'gain': 1.2, 'altnames': ['KAST-B'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'LDSS-3': {'instrument_name': 'Magellan LDSS-3', 'pixelscale': 0.189*u.arcsec, 'disperser': 'VPH-RED', 'wave_range': [6000,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1810, 'norders': 1, 'readnoise': 4.07, 'darkcurrent': 0., 'gain': 1, 'altnames': ['LDSS3'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'LRIS-RED': {'altnames': ['LRIS','LRISR'], 'instrument_name': 'Keck LRIS red channel longslit', 'instrument_reference': '1995PASP..107..375O', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4.6, 'darkcurrent': 0., 'gain': 1.2, 'disperser': '400/8500', 'wave_range': [6300,10100]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 1200, 'norders': 1, 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'LRIS-BLUE': {'altnames': ['LRISB'], 'instrument_name': 'Keck LRIS blue channel longslit', 'instrument_reference': '1998SPIE.3355...81M', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4., 'darkcurrent': 0., 'gain': 1.6, 'disperser': '400/3400', 'wave_range': [1270,5740]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 530, 'norders': 1, 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'MAGE': {'instrument_name': 'Magellan MAGE', 'pixelscale': 0.3*u.arcsec, 'wave_range': [3100,10000]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 4100, 'norders': 13, 'readnoise': 2.9, 'darkcurrent': 1.0, 'gain': 1.02, 'altnames': ['MagE'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'NIRI-J': {'instrument_name': 'Gemini NIRI J-band (G5202)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.05,1.41]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 610, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altnames': ['NIRI','NIRI G5202'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'NIRI-H': {'instrument_name': 'Gemini NIRI J-band (G5203)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.43,1.96]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 825, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altnames': ['NIRI G5203'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'NIRI-K': {'instrument_name': 'Gemini NIRI J-band (G5204)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.90,2.49]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 780, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altnames': ['NIRI G5204'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'NIRI-L': {'instrument_name': 'Gemini NIRI J-band (G5205)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [2.99,4.15]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 690, 'norders': 1, 'readnoise': 50., 'darkcurrent': 0.25, 'gain': 12.3, 'altnames': ['NIRI G5205'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'wave_range': [0.95,5.5]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altnames': ['NIRSPAO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'SPEX_PRISM': {'instrument_name': 'IRTF SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SPEX','PRISM'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'SPEX_SXD': {'instrument_name': 'IRTF SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'SPEX_LXD1.9': {'instrument_name': 'IRTF SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['LXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'SPEX_LXD2.1': {'instrument_name': 'IRTF SpeX LXD 2.1 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'SPEX_LXD2.3': {'instrument_name': 'IRTF SpeX LXD 2.3 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+#	'USPEX': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
+#	'USPEX_PRISM': {'instrument_name': 'IRTF Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['USPEX','UPRISM'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+#    'USPEX_SXD': {'instrument_name': 'IRTF Updated SpeX SXD', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.55]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['USXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+#    'USPEX_LXD_SHORT': {'instrument_name': 'IRTF Updated SpeX LXD short', 'pixelscale': 0.10*u.arcsec, 'wave_range': [1.67,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500., 'norders': 8, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['ULXD','LXD_SHORT','LXDS'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+#    'USPEX_LXD_LONG': {'instrument_name': 'IRTF Updated SpeX LXD long', 'pixelscale': 0.10*u.arcsec, 'wave_range': [1.98,5.3]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500., 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['LXD_LONG','LXDL'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'WFC3_G102': {'instrument_name': 'HST WFC3 IR G102', 'pixelscale': 0.128*u.arcsec, 'wave_range': [0.8,1.15]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 210., 'norders': 7, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altnames': ['G102'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'WFC3_G141': {'instrument_name': 'HST WFC3 IR G141', 'pixelscale': 0.128*u.arcsec, 'wave_range': [1.075,1.70]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 130., 'norders': 7, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altnames': ['WFC3','HST WFC3','HST WFC3 IR','WFC3 IR','G141'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
 }
 
-# experimental
-# INSTRUMENTS_ALT = {
-#     'SPEX': {'instrument_name': 'IRTF SpeX', 'pixelscale': 0.15*u.arcsec, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SPEX','PRISM'], 'modes': {
-#         'PRISM': {'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'default' = True},
-#         'SXD': {'waverange': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'default' = False},
-#         'LXD1.9': {'waverange': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default' = False},
-#         'LXD2.1': {'waverange': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default' = False},
-#         'LXD2.3': {'waverange': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default' = False}
-#     },
-#     'SED': {'instrument_name': 'SED', 'pixelscale': 0.*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['SPECTRAL_ENERGY_DISTRIBUTION'], 'modes': {
-#         'DEFAULT': {'waverange': [0.1,100.]*u.micron, 'slitwidth': 0.*u.arcsec, 'resolution': 100, 'norders': 1, 'default' = True} 
-#     },
-#     'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['APO'], 'modes': {
-#         'DEFAULT': {'waverange': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'default' = True} 
-#     },
-#     'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS'], 'modes': {
-#         'DEFAULT': {'waverange': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'default' = True}
-#     },
-#     'FIRE': {'instrument_name': 'Magellan FIRE', 'pixelscale': 0.18*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS']}, 'modes': {
-#         'ECHELLE': {'waverange': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 6000, 'norders': 21, , 'default' = True},
-#         'PRISM': {'waverange': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 450, 'norders': 1, , 'default' = False}
-#     },
-#     'LDSS-3': {'instrument_name': 'Magellan LDSS-3', 'pixelscale': 0.189*u.arcsec, 'readnoise': 4.07, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS'], 'modes': {
-#         'VPH-RED': {'waverange': [6000,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1810, 'norders': 1, 'default' = True},
-#         'VPH-BLUE': {'waverange': [3800,6200]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1900, 'norders': 1, 'default' = False},
-#         'VPH-ALL': {'waverange': [4250,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 860, 'norders': 1, 'default' = False}
-#     },
-#     'MAGE': {'instrument_name': 'Magellan MAGE', 'pixelscale': 0.3*u.arcsec, 'readnoise': 2.9, 'darkcurrent': 1.0., 'gain': 1.02, 'altnames': ['MagE'], 'modes': {
-#         'DEFAULT': {'waverange': [3100,10000]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 4100, 'norders': 13, 'default' = True},
-#     },
-#     'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altnames': ['NIRSPAO'], 'modes': {
-#         'LOWRES_N1': {'waverange': [0.947,1.121]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
-#         'LOWRES_N2': {'waverange': [1.089,1.293]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
-#         'LOWRES_N3': {'waverange': [1.143,1.375]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
-#         'LOWRES_N4': {'waverange': [1.241,1.593]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
-#         'LOWRES_N5': {'waverange': [1.431,1.808]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
-#         'LOWRES_N6A': {'waverange': [1.558,2.000]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
-#         'LOWRES_N6B': {'waverange': [1.937,2.315]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
-#         'LOWRES_N7': {'waverange': [1.997,2.428]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default'=False},
-#         'HIGHRES_N3': {'waverange': [1.18,1.30]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'default'=True},
-#     },
-#     'USPEX': {'instrument_name': 'IRTF SpeX (upgraded)', 'pixelscale': 0.10*u.arcsec, 'readnoise': 5., 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['SPEX','PRISM'], 'modes': {
-#         'PRISM': {'waverange': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'default' = True},
-#         'SXD': {'waverange': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'default' = False},
-#         'LXD_SHORT': {'waverange': [1.67,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 8, 'default' = False},
-#         'LXD_LONG': {'waverange': [1.98,5.3]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default' = False}
-#     },
-#     'WFC3-UVIS': {'instrument_name': 'HST WFC3 UVIS', 'pixelscale': 0.0395*u.arcsec, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altnames': ['SPEX','PRISM'], 'modes': {
-#         'DEFAULT': {'waverange': [1900,4500]*u.Angstrom, 'slitwidth': 0.3*u.arcsec, 'resolution': 70, 'norders': 1, 'default' = True},
-#     },
-#     'WFC3-IR': {'instrument_name': 'HST WFC3 IR', 'pixelscale': 0.128*u.arcsec, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altnames': ['SPEX','PRISM'], 'modes': {
-#         'G102': {'waverange': [0.8,1.15]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 210, 'norders': 1, 'default' = False},
-#         'G141': {'waverange': [1.075,1.70]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 130, 'norders': 1, 'default' = True},
-#     },
-# }
+#experimental
+INSTRUMENTS_ALT = { 
+    'SED': {'instrument_name': 'SED', 'pixelscale': 0.*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['SPECTRAL_ENERGY_DISTRIBUTION'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'modes': { 
+        'DEFAULT': {'wave_range': [0.1,100.]*u.micron, 'slitwidth': 0.*u.arcsec, 'resolution': 100, 'norders': 1, 'default': True}, 
+    }}, 
+    'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['APO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'modes': { 
+        'DEFAULT': {'wave_range': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'default': True}, 
+    }}, 
+    'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['BOSS','EBOSS'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'modes': { 
+        'DEFAULT': {'wave_range': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'default': True}, 
+    }}, 
+    'FIRE': {'instrument_name': 'Magellan FIRE', 'pixelscale': 0.18*u.arcsec, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['FIRE'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'modes': {
+        'ECHELLE': {'wave_range': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 6000, 'norders': 21, 'default': True},
+        'PRISM': {'wave_range': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 450, 'norders': 1, 'default': False},
+    }},
+    'IRS': {'instrument_name': 'Spitzer IRS', 'readnoise': 30., 'gain': 4.6, 'altnames': ['IRS'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'modes': {
+        'SL': {'wave_range': [5.2,14.5]*u.micron, 'slitwidth': 1.8*u.arcsec, 'pixelscale': 1.8*u.arcsec, 'darkcurrent': 10., 'resolution': 100, 'norders': 1, 'default': True},
+        'SH': {'wave_range': [9.9,19.6]*u.micron, 'slitwidth': 2.3*u.arcsec, 'pixelscale': 2.3*u.arcsec, 'darkcurrent': 10., 'resolution': 600, 'norders': 1, 'default': False},
+        'LL': {'wave_range': [14,38.]*u.micron, 'slitwidth': 5.1*u.arcsec, 'pixelscale': 5.1*u.arcsec, 'darkcurrent': 40., 'resolution': 90, 'norders': 1, 'default': False},
+        'LH': {'wave_range': [18.7,37.2]*u.micron, 'slitwidth': 4.5*u.arcsec, 'pixelscale': 4.5*u.arcsec, 'darkcurrent': 40., 'resolution': 90, 'norders': 1, 'default': False},
+    }}, 
+    'LDSS-3': {'instrument_name': 'Magellan LDSS-3', 'pixelscale': 0.189*u.arcsec, 'readnoise': 4.07, 'darkcurrent': 0., 'gain': 1, 'altnames': ['LDSS3'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'modes': {
+        'VPH-RED': {'wave_range': [6000,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1810, 'norders': 1, 'default': True}, 
+        'VPH-BLUE': {'wave_range': [3800,6200]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1900, 'norders': 1, 'default': False}, 
+        'VPH-ALL': {'wave_range': [4250,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 860, 'norders': 1, 'default': False}, 
+    }}, 
+    'LRIS-BLUE': {'instrument_name': 'Keck LRIS blue channel longslit', 'altnames': ['LRISB'], 'instrument_reference': '1998SPIE.3355...81M', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4., 'darkcurrent': 0., 'gain': 1.6, 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'modes': { 
+        '300/5000': {'default': False, 'wave_range': [1570,7420]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 570, 'norders': 1}, 
+        '400/3400': {'default': True, 'wave_range': [1270,5740]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 500, 'norders': 1}, 
+        '600/4000': {'default': False, 'wave_range': [3010,5600]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 1000, 'norders': 1}, 
+        '1200/3400': {'default': False, 'wave_range': [2910,3890]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 2200, 'norders': 1}, 
+    }}, 
+    'LRIS-RED': {'instrument_name': 'Keck LRIS red channel longslit', 'altnames': ['LRIS','LRISR'], 'instrument_reference': '1995PASP..107..375O', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4.6, 'darkcurrent': 0., 'gain': 1.2, 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'modes': { 
+        '300/5000': {'default': False, 'wave_range': [3700,8270]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 540, 'norders': 1}, 
+        '400/8500': {'default': True, 'wave_range': [6200,10900]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 1200, 'norders': 1}, 
+        '600/5000': {'default': False, 'wave_range': [3700,6640]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 1050, 'norders': 1}, 
+        '600/7500': {'default': False, 'wave_range': [6200,9140]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 1600, 'norders': 1}, 
+        '600/10000': {'default': False, 'wave_range': [8700,10900]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 2130, 'norders': 1}, 
+    }}, 
+    'MAGE': {'instrument_name': 'Magellan MAGE', 'pixelscale': 0.3*u.arcsec, 'readnoise': 2.9, 'darkcurrent': 1.0, 'gain': 1.02, 'altnames': ['MagE'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'modes': { 
+        'DEFAULT': {'wave_range': [3100,10000]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 4100, 'norders': 13, 'default': True}, 
+    }}, 
+    'NIRI': {'instrument_name': 'Gemini NIRI', 'pixelscale': 0.47/4.*u.arcsec, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altnames': ['GEMINI NIRI'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'modes': {
+        'J': {'default': True, 'wave_range': [1.05,1.41]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 610, 'norders': 1},
+        'H': {'default': False, 'wave_range': [1.43,1.96]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 825, 'norders': 1},
+        'K': {'default': False, 'wave_range': [1.90,2.49]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 780, 'norders': 1},
+        'L': {'default': False, 'wave_range': [2.99,4.15]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 690, 'norders': 1},
+        'M': {'default': False, 'wave_range': [4.45,5.45]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 770, 'norders': 1},
+    }}, 
+    'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altnames': ['NIRSPAO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'modes': { 
+        'LOWRES_N1': {'wave_range': [0.947,1.121]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default': False}, 
+        'LOWRES_N2': {'wave_range': [1.089,1.293]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default': False}, 
+        'LOWRES_N3': {'wave_range': [1.143,1.375]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default': False}, 
+        'LOWRES_N4': {'wave_range': [1.241,1.593]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default': False}, 
+        'LOWRES_N5': {'wave_range': [1.431,1.808]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default': False}, 
+        'LOWRES_N6A': {'wave_range': [1.558,2.000]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default': False}, 
+        'LOWRES_N6B': {'wave_range': [1.937,2.315]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default': False}, 
+        'LOWRES_N7': {'wave_range': [1.997,2.428]*u.micron, 'slitwidth': 0.38*u.arcsec, 'resolution': 2000, 'norders': 1, 'default': False}, \
+        'HIGHRES_N3': {'wave_range': [1.18,1.30]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'default': True}, 
+    }}, 
+    'SPEX': {'instrument_name': 'IRTF SpeX', 'pixelscale': 0.15*u.arcsec, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['OLD SPEX'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'modes': { 
+        'PRISM': {'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'default': True}, 
+        'SXD': {'wave_range': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'default': False}, 
+        'LXD1.9': {'wave_range': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default': False}, 
+        'LXD2.1': {'wave_range': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default': False}, 
+        'LXD2.3': {'wave_range': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default': False}, 
+    }}, 
+    'USPEX': {'instrument_name': 'IRTF SpeX (upgraded)', 'pixelscale': 0.10*u.arcsec, 'readnoise': 5., 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['SPEX'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'modes': { 
+        'PRISM': {'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'default': True}, 
+        'SXD': {'wave_range': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'default': False}, 
+        'LXD_SHORT': {'wave_range': [1.67,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 8, 'default': False}, 
+        'LXD_LONG': {'wave_range': [1.98,5.3]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'default': False}, 
+    }}, 
+    'WFC3-UVIS': {'instrument_name': 'HST WFC3 UVIS', 'pixelscale': 0.0395*u.arcsec, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altnames': ['WFC3-OPT','WFC3-VIS','WFC3-UV'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'modes': { 
+        'DEFAULT': {'wave_range': [1900,4500]*u.Angstrom, 'slitwidth': 0.3*u.arcsec, 'resolution': 70, 'norders': 1, 'default': True}, 
+    }}, 
+    'WFC3-IR': {'instrument_name': 'HST WFC3 IR', 'pixelscale': 0.128*u.arcsec, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altnames': ['WFC3'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'modes': { 
+        'G102': {'wave_range': [0.8,1.15]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 210, 'norders': 1, 'default': False}, 
+        'G141': {'wave_range': [1.075,1.70]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 130, 'norders': 1, 'default': True}, 
+    }}, 
+    }
+
 
 
 # spectral model information
@@ -425,22 +511,35 @@ INSTRUMENTS = {
 #    'saumon12': 'Saumon et al. (2012)',\
 #    'drift': 'Witte et al. (2011)'}
 SPECTRAL_MODELS = {\
-    'burrows06': {'name': 'Burrows et al. (2006)', 'bibcode': '2006ApJ...640.1063B', 'altnames': ['burrows','burrows2006'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows06/'}, \
-    'btsettl08': {'name': 'BT-Settl (2008)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['allard','allard12','allard2012','btsettl','btsettled','btsettl08','btsettl2008','BTSettl2008'], 'rawfolder': HOME_FOLDER+'/models/allard/cifist2011/'}, \
-    'btsettl15': {'name': 'BT-Settl (2015)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['allard15','allard2015','btsettl015','btsettl2015','BTSettl2015'], 'rawfolder': HOME_FOLDER+'/models/allard/cifist2015/BT-Settl_M-0.0a+0.0/'}, \
-    'madhusudhan11': {'name': 'Madhusudhan et al. (2011)', 'bibcode': '2011ApJ...737...34M', 'altnames': ['madhu','madhusudhan','madhu11','madhu2011','madhusudhan2011'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows11/all/'}, \
-    'morley12': {'name': 'Morley et al. (2012)', 'bibcode': '2012ApJ...756..172M', 'altnames': ['morley','morley2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley12/'}, \
-    'morley14': {'name': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altnames': ['morley2014'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley14/'}, \
-    'saumon12': {'name': 'Saumon et al. (2012)', 'bibcode': '2012ApJ...750...74S', 'altnames': ['saumon','saumon2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Saumon12/'}, \
-    'drift': {'name': 'Witte et al. (2011)', 'bibcode': '2011A&A...529A..44W', 'altnames': ['witte','witte11','witte2011','helling'], 'rawfolder': HOME_FOLDER+'/models/drift/v1.2/'}}
-SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','fsed','cld','kzz']
+    'atmos-cond': {'name': 'ATMOS-COND', 'citation': 'Phillips et al. (in prep)', 'bibcode': 'TBD', 'altnames': ['atmos'], 'rawfolder': HOME_FOLDER+'/models/atmos/cond/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
+    'atmos-rain': {'name': 'ATMOS-RAINOUT', 'citation': 'Phillips et al. (in prep)', 'bibcode': 'TBD', 'altnames': ['atmos-rainout'], 'rawfolder': HOME_FOLDER+'/models/atmos/rain/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
+    'nextgen99': {'name': 'AMES NextGen', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altnames': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'rawfolder': HOME_FOLDER+'/models/phoenix/nextgen/fullres/', 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
+    'gaia': {'name': 'AMES GAIA', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altnames': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'rawfolder': HOME_FOLDER+'/models/phoenix/nextgen/fullres/', 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
+    'cond01': {'name': 'AMES Cond', 'citation': 'Allard et al. (2001)', 'bibcode': '2001ApJ...556..357A', 'altnames': ['cond','cond-ames','amescond'], 'rawfolder': HOME_FOLDER+'/models/allard/cond01/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
+    'dusty01': {'name': 'AMES Dusty', 'citation': 'Allard et al. (2001)', 'bibcode': '2001ApJ...556..357A', 'altnames': ['dusty','dusty-ames','amesdusty'], 'rawfolder': HOME_FOLDER+'/models/allard/bddusty01/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
+    'btcond': {'name': 'BT Cond', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['cond-bt','btcond'], 'rawfolder': HOME_FOLDER+'/models/allard/cond01/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
+    'btdusty': {'name': 'BT Dusty', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['dusty-bt','btdusty'], 'rawfolder': HOME_FOLDER+'/models/allard/bddusty01/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
+    'btnextgen': {'name': 'BT NextGen', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['nextgen-bt','btnextgen'], 'rawfolder': HOME_FOLDER+'/models/allard/btnextgen/forsplat/', 'default': {'teff': 3000., 'logg': 5.0, 'z': 0.0, 'enrich': 0.}}, \
+    'burrows06': {'name': 'Burrows 2006', 'citation': 'Burrows et al. (2006)', 'bibcode': '2006ApJ...640.1063B', 'altnames': ['burrows','burrows2006'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows06/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
+    'btsettl08': {'name': 'BTSettl08', 'citation': 'BT-Settl (2008)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['allard','allard12','allard2012','btsettl','btsettled','btsettl08','btsettl2008','BTSettl2008'], 'rawfolder': HOME_FOLDER+'/models/allard/cifist2011/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'enrich': 0.}}, \
+    'btsettl15': {'name': 'BTSettl15', 'citation': 'BT-Settl (2015)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['allard15','allard2015','btsettl015','btsettl2015','BTSettl2015'], 'rawfolder': HOME_FOLDER+'/models/allard/cifist2015/BT-Settl_M-0.0a+0.0/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.}}, \
+    'madhusudhan11': {'name': 'Madhusudhan 2011', 'citation': 'Madhusudhan et al. (2011)', 'bibcode': '2011ApJ...737...34M', 'altnames': ['madhu','madhusudhan','madhu11','madhu2011','madhusudhan2011'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows11/all/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.,'cld': 'ae60', 'kzz': 'eq','fsed': 'eq'}}, \
+    'morley12': {'name': 'Morley 2012', 'citation': 'Morley et al. (2012)', 'bibcode': '2012ApJ...756..172M', 'altnames': ['morley','morley2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley12/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'fsed': 'f5'}}, \
+    'morley14': {'name': 'Morley 2014', 'citation': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altnames': ['morley2014'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley14/', 'default': {'teff': 300., 'logg': 5.0, 'z': 0., 'fsed': 'f5', 'cld': 'h50'}}, \
+    'saumon12': {'name': 'Saumon 2012', 'citation': 'Saumon et al. (2012)', 'bibcode': '2012ApJ...750...74S', 'altnames': ['saumon','saumon2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Saumon12/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
+    'tremblin16': {'name': 'Tremblin 2016 (test)', 'citation': 'Tremblin et al. (2016)', 'bibcode': '2016ApJ...817L..19T', 'altnames': ['tremblin'], 'rawfolder': HOME_FOLDER+'/models/tremblin/20161120/', 'default': {'teff': 1300., 'logg': 5.0, 'z': 0.,'kzz': '6.0', 'ad': 1.05}}, \
+    'drift': {'name': 'Drift', 'citation': 'Witte et al. (2011)', 'bibcode': '2011A&A...529A..44W', 'altnames': ['witte','witte11','witte2011','helling'], 'rawfolder': HOME_FOLDER+'/models/drift/v1.2/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}}
+SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','fsed','cld','kzz','ad','enrich']
 SPECTRAL_MODEL_PARAMETERS = {\
-    'teff': {'prefix': 't', 'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$', 'type': 'continuous'}, \
-    'logg': {'prefix': 'g', 'unit': u.dex, 'default': 5.0, 'title': '$\log{g}$', 'type': 'continuous'}, \
-    'z': {'prefix': 'z', 'unit': u.dex, 'default': 0., 'title': '$[M/H]$', 'type': 'continuous'}, \
-    'fsed': {'prefix': 'f', 'unit': u.m/u.m, 'default': 'eq', 'title': '$f_{sed}$', 'type': 'discrete'}, \
-    'cld': {'prefix': 'c', 'unit': u.m/u.m, 'default': 'nc', 'title': '$cld$', 'type': 'discrete'}, \
-    'kzz': {'prefix': 'k', 'unit': u.m/u.m, 'default': 'eq', 'title': '$log\ \kappa_{zz}$', 'type': 'discrete'}}
+    'teff': {'name': 'temperature', 'prefix': 't', 'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$ (K)', 'type': 'continuous'}, \
+    'logg': {'name': 'gravity', 'prefix': 'g', 'unit': u.dex, 'default': 5.0, 'title': '$\log{g}$ (cgs)', 'type': 'continuous'}, \
+    'z': {'name': 'metallicity', 'prefix': 'z', 'unit': u.dex, 'default': 0., 'title': '$[M/H]$', 'type': 'continuous'}, \
+    'fsed': {'name': 'rainout', 'prefix': 'f', 'unit': u.m/u.m, 'default': 'nc', 'title': '$f_{sed}$', 'type': 'discrete'}, \
+    'cld': {'name': 'cloud', 'prefix': 'c', 'unit': u.m/u.m, 'default': 'nc', 'title': 'Cloud Treatment', 'type': 'discrete'}, \
+    'kzz': {'name': 'mixing', 'prefix': 'k', 'unit': u.m/u.m, 'default': 'eq', 'title': '$log\ \kappa_{zz}$ (cgs)', 'type': 'discrete'},\
+    'ad': {'name': 'adiabat', 'prefix': 'a', 'unit': u.m/u.m, 'default': 1., 'title': 'Adiabatic Index', 'type': 'continuous'},\
+    'enrich': {'name': 'enrichment', 'prefix': 'e', 'unit': u.dex, 'default': 0., 'title': 'Alpha Element Enrichment', 'type': 'continuous'},\
+    'radius': {'name': 'radius', 'prefix': 'r', 'unit': u.Rsun, 'default': 0., 'title': 'Radius (R$_{\odot}$)', 'type': 'continuous'}}
 #    'kzz': u.dex(u.cm*u.cm/u.s), \
 #    'slit': {'unit': u.arcsec, 'default': 0.5, 'title': 'slit'}}
 SPECTRAL_MODEL_FLUX_UNIT = u.erg/(u.s*u.micron*(u.cm**2))
@@ -456,10 +555,10 @@ SPECTRAL_MODEL_WAVE_UNIT = u.micron
 
 # evolutionary model information
 EVOLUTIONARY_MODELS = {\
-    'baraffe03': {'name': 'Baraffe et al. (2003)', 'bibcode': '2003A&A...402..701B', 'altnames': ['bar03','baraffe2003']},\
-    'baraffe15': {'name': 'Baraffe et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['baraffe','bar15','baraffe2015']},\
-    'burrows01': {'name': 'Burrows et al. (2001)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['burrows','bur01','burrows2001']},\
-    'saumon08': {'name': 'Saumon et al. (2008)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['saumon','sau08','saumon2008']}}
+    'baraffe03': {'name': 'Barraffe 2003','citation': 'Baraffe et al. (2003)', 'bibcode': '2003A&A...402..701B', 'altnames': ['bar03','baraffe2003']},\
+    'baraffe15': {'name': 'Barraffe 2015','citation': 'Baraffe et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['baraffe','bar15','baraffe2015']},\
+    'burrows01': {'name': 'Burrows 2001','citation': 'Burrows et al. (2001)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['burrows','bur01','burrows2001']},\
+    'saumon08': {'name': 'Saumon 2008','citation': 'Saumon et al. (2008)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['saumon','sau08','saumon2008']}}
 
 EVOLUTIONARY_MODEL_PARAMETERS = {\
     'mass': {'unit': u.solMass, 'default': 0.05, 'title': '$M$'},\

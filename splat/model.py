@@ -5,11 +5,13 @@ from __future__ import print_function, division
          These are the spectral modeling functions for SPLAT 
 """
 # imports: internal
+import bz2
 import copy
 import glob
 import gzip
 import os
 import requests
+import shutil
 import sys
 import time
 
@@ -36,7 +38,7 @@ from splat.utilities import *
 import splat.plot as splot
 import splat.photometry as spphot
 import splat.empirical as spemp
-from .core import Spectrum, classifyByIndex, compareSpectra, _generateMask
+from .core import Spectrum, classifyByIndex, compareSpectra, generateMask
 
 # structure to store models that have been read in
 MODELS_READIN = {}
@@ -64,24 +66,48 @@ def _readBurrows06(file):
         fnu = numpy.array(data['FNU'])*(u.erg/u.s/u.cm/u.cm/u.Hz)
     flux = fnu.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
 #    print(wave[50],fnu[50],flux[50])
-    return wave, flux
+    fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
+    wavesort = sorted(wave.value)
+    return wavesort*u.micron, fluxsort*SPECTRAL_MODEL_FLUX_UNIT
 
-def _readBtsettl08(file):
+def _readBtsettl08(file,expon=-8.):
     if not os.access(file, os.R_OK):
         raise ValueError('Could not find model file {}'.format(file))
     data = []
     if file[-3:] == '.gz':
         with gzip.open(os.path.normpath(file),'rt') as f:
             for line in f:
-                data.append(line.replace('-',' -').replace('D -','D-'))
+                data.append(line.replace('- ','-').replace('-',' -').replace('D -','D-'))
+    elif file[-4:] == '.bz2':
+        with bz2.open(os.path.normpath(file),'rt') as f:
+            for line in f:
+                data.append(line.replace('- ','-').replace('-',' -').replace('D -','D-'))
     else:
         with open(os.path.normpath(file),'rt') as f:
             for line in f:
                 data.append(line)
     wave = numpy.array([float((d.split()[0]).replace('D','e'))/1.e4 for d in data])*u.micron
-    flux = numpy.array([10.**(float(d.split()[1].replace('D','e'))-8.) for d in data])*u.erg/(u.s*u.Angstrom*u.cm**2)
+    flux = numpy.array([10.**(float(d.split()[1].replace('D','e'))+expon) for d in data])*u.erg/(u.s*u.Angstrom*u.cm**2)
     flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
-    return wave, flux
+    fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
+    wavesort = sorted(wave.value)
+    return wavesort*u.micron, fluxsort*SPECTRAL_MODEL_FLUX_UNIT
+
+def _readAtmos(file):
+    try:
+        from netCDF4 import Dataset
+    except:
+        raise ValueError('\nYou must have the netCDF4 package installed, which is part of the Anaconda installation')
+    if not os.access(file, os.R_OK):
+        raise ValueError('Could not find model file {}'.format(file))
+    d = Dataset(file)
+    nu = d.variables['nu'][:]/u.cm
+    fnu = d.variables['fnu'][:]*u.erg/u.s/u.cm
+    wave = (1./nu).to(u.micron)
+    flux = (fnu*nu**2).to(splat.SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
+    wavesort = sorted(wave.value)
+    return wavesort*u.micron, fluxsort*SPECTRAL_MODEL_FLUX_UNIT
 
 def _readMorley14(file):
     if not os.access(file, os.R_OK):
@@ -91,7 +117,9 @@ def _readMorley14(file):
     wave = freq.to(SPECTRAL_MODEL_WAVE_UNIT,equivalencies=u.spectral())
     flux = numpy.array(data['col2'])*u.erg/(u.s*u.Hz*u.cm**2)
     flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
-    return wave, flux
+    fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
+    wavesort = sorted(wave.value)
+    return wavesort*u.micron, fluxsort*SPECTRAL_MODEL_FLUX_UNIT
 
 # this also reads in Morley et al. 2012 models
 def _readSaumon12(file):
@@ -101,7 +129,23 @@ def _readSaumon12(file):
     wave = numpy.array(data['col1'])*u.micron
     flux = numpy.array(data['col2'])*u.erg/(u.s*u.Hz*u.cm**2)
     flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
-    return wave, flux
+    fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
+    wavesort = sorted(wave.value)
+    return wavesort*u.micron, fluxsort*SPECTRAL_MODEL_FLUX_UNIT
+
+# Tremblin
+def _readTremblin16(file):
+    if not os.access(file, os.R_OK):
+        raise ValueError('Could not find model file {}'.format(file))
+    data = ascii.read(os.path.normpath(file),data_start=2)
+    nu = numpy.array(data['col1'])/u.cm
+    fnu = numpy.array(data['col2'])*u.erg/(u.s*u.cm)
+    wave = (1./nu).to(u.micron)
+    flux = (fnu*nu**2).to(splat.SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    flux = flux*((((10.*u.pc)/(0.1*u.Rsun)).to(u.m/u.m))**2)  # scale to surface flux
+    fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
+    wavesort = sorted(wave.value)
+    return wavesort*u.micron, fluxsort*SPECTRAL_MODEL_FLUX_UNIT
 
 # this also reads in old Drift models
 def _readDrift(file):
@@ -111,7 +155,9 @@ def _readDrift(file):
     wave = numpy.array(data['col1'])*u.micron
     flux = numpy.array(data['col2'])*u.erg/(u.s*u.cm**3)
     flux = flux.to(SPECTRAL_MODEL_FLUX_UNIT,equivalencies=u.spectral_density(wave))
-    return wave, flux
+    fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
+    wavesort = sorted(wave.value)
+    return wavesort*u.micron, fluxsort*SPECTRAL_MODEL_FLUX_UNIT
 
 def _modelToInstrument(model,instrument,*args,**kwargs):
     '''
@@ -124,7 +170,6 @@ def _modelToInstrument(model,instrument,*args,**kwargs):
     mdl.waveUnit(u.micron)
 
     instr = checkInstrument(instrument)
-    print(instrument,instr)
     if instr == False: 
         raise ValueError('\nInvalid instrument {}'.format(instrument))
 
@@ -154,20 +199,37 @@ def _modelToInstrument(model,instrument,*args,**kwargs):
 # reset original
     return mdl
 
-def _processModels(*args,**kwargs):
-    method = kwargs.get('method','hamming')
-    overscale = kwargs.get('overscale',11)
+def _modelName(modelset,modeltype,param):
+# check modelset name
+    mset = checkSpectralModelName(modelset)
+    if mset == False: raise ValueError('\nInvalid model name {} passed to splat.model._modelName()'.format(modelset))
+
+# set defaults for parameters not included in param
+
+    filename = mset
+    for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
+        if k in list(SPECTRAL_MODELS[mset]['default'].keys()):
+            if k in list(param.keys()): val = param[k] 
+            else: val = SPECTRAL_MODELS[mset]['default'][k]
+            kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],val)
+            if k == 'teff': kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],int(val))
+            elif k == 'logg': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],val)
+            elif k == 'z': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],val-0.0001)
+            filename=filename+kstr
+    if modeltype != '': filename=filename+'_{}.txt'.format(modeltype)
+    return filename
+
+
+def _processOriginalModels(*args,**kwargs):
     sedres = kwargs.get('sedres',100)
 
     if len(args) >= 1: mset = args[0]
     else: mset = kwargs.get('set',False)
     modelset = checkSpectralModelName(mset)
     if modelset == False:
-        raise ValueError('\nInvalid model set {}'.format(kwargs.get('set','saumon12')))
+        raise ValueError('\nInvalid model set {}'.format(mset))
 
-    instrument_set = kwargs.get('instrument_set',list(INSTRUMENTS.keys()))
-    instrument_set = kwargs.get('instrument_set',['SPEX_PRISM','USPEX_PRISM','SPEX_SXD','USPEX_SXD'])
-
+# presets for various models - these are based on how they are downloaded
     if modelset == 'burrows06':
         readfxn = _readBurrows06
         files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.txt'))
@@ -175,9 +237,7 @@ def _processModels(*args,**kwargs):
         mparam['teff'] = [float(f.split('_')[0].split('T')[-1]) for f in files]
         mparam['logg'] = [float(f.split('_')[1][1:]) for f in files]
         mparam['z'] = [numpy.round(numpy.log10(float(f.split('_')[-1][:3]))*10.)/10. for f in files]
-        mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
         mparam['cld'] = [f.split('_')[2].replace('cf','nc') for f in files]
-        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
     elif modelset == 'madhusudhan11':
         readfxn = _readBurrows06
         files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*'))
@@ -188,7 +248,13 @@ def _processModels(*args,**kwargs):
         mparam['fsed'] = [f.split('_')[-1].lower() for f in files]
         mparam['cld'] = [(f.split('/')[-1]).split('_')[0].lower() for f in files]
         mparam['kzz'] = [f.split('_')[-2].lower() for f in files]
-# BT Settl 2008 CIFIST 2011: no fsed, kzz or clouds
+    elif modelset == 'atmos-cond' or modelset == 'atmos-rain':
+        readfxn = _readAtmos
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.ncdf'))
+        mparam = {}
+        mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:-1]) for f in files]
+        mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][2:]) for f in files]
+        mparam['z'] = [0. for f in files]
     elif modelset == 'btsettl08':
         readfxn = _readBtsettl08
         files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz'))
@@ -196,9 +262,36 @@ def _processModels(*args,**kwargs):
         mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
         mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
         mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
-        mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
-        mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
-        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
+        mparam['enrich'] = [float(((f.split('/'))[-1].split('a+'))[-1][0:3]) for f in files]
+    elif modelset == 'nextgen99':
+        readfxn = _readBtsettl08
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte*.gz'))
+        mparam = {}
+        mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
+        mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
+        mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
+    elif modelset == 'btnextgen':
+        readfxn = _readBtsettl08
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte*.bz2'))
+        mparam = {}
+        mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
+        mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
+        mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
+        mparam['enrich'] = [float(((f.split('/'))[-1].split('a+'))[-1][0:3]) for f in files]
+    elif modelset == 'cond01':
+        readfxn = _readBtsettl08
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*7.gz'))
+        mparam = {}
+        mparam['teff'] = [float((f.split('/'))[-1][3:5])*100. for f in files]
+        mparam['logg'] = [float((f.split('/'))[-1][6:9]) for f in files]
+        mparam['z'] = [float((f.split('/'))[-1][10:13]) for f in files]
+    elif modelset == 'dusty01':
+        readfxn = _readBtsettl08
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*7.gz'))
+        mparam = {}
+        mparam['teff'] = [float((f.split('/'))[-1][3:5])*100. for f in files]
+        mparam['logg'] = [float((f.split('/'))[-1][6:9]) for f in files]
+        mparam['z'] = [float((f.split('/'))[-1][10:13]) for f in files]
     elif modelset == 'btsettl15':
         readfxn = _readBtsettl08
         files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz'))
@@ -206,9 +299,6 @@ def _processModels(*args,**kwargs):
         mparam['teff'] = [float((f.split('/'))[-1][3:8])*100. for f in files]
         mparam['logg'] = [float((f.split('/'))[-1][9:12]) for f in files]
         mparam['z'] = [float((f.split('/'))[-1][12:16]) for f in files]
-        mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
-        mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
-        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
 # Morley et al. 2012: no metallicity, fsed, kzz or clouds
     elif modelset == 'morley12':
         readfxn = _readSaumon12
@@ -216,10 +306,8 @@ def _processModels(*args,**kwargs):
         mparam = {}
         mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
         mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
-        mparam['z'] = [SPECTRAL_MODEL_PARAMETERS['z']['default'] for f in files]
+        mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
         mparam['fsed'] = ['f'+((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1] for f in files]
-        mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
-        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
 # Morley et al. 2014: no metallicity, fsed, kzz or clouds
     elif modelset == 'morley14':
         readfxn = _readMorley14
@@ -227,10 +315,9 @@ def _processModels(*args,**kwargs):
         mparam = {}
         mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
         mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
-        mparam['z'] = [SPECTRAL_MODEL_PARAMETERS['z']['default'] for f in files]
+        mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
         mparam['fsed'] = ['f'+(((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1]).split('h')[0] for f in files]
         mparam['cld'] = ['h'+(((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1]).split('h')[-1] for f in files]
-        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
 # Saumon & Marley 2012: no metallicity, fsed, kzz or clouds
     elif modelset == 'saumon12':
         readfxn = _readSaumon12
@@ -238,97 +325,254 @@ def _processModels(*args,**kwargs):
         mparam = {}
         mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-1].split('g'))[0][1:]) for f in files]
         mparam['logg'] = [2.+numpy.log10(float((((f.split('/'))[-1].split('_'))[-1].split('g'))[1].split('nc')[0])) for f in files]
-        mparam['z'] = [SPECTRAL_MODEL_PARAMETERS['z']['default'] for f in files]
-        mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
-        mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
-        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
+        mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
     elif modelset == 'drift':
         readfxn = _readBtsettl08
         files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte_*'))
-        mparam = {}
         mparam['teff'] = [float((f.split('/')[-1]).split('_')[1]) for f in files]
         mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][:3]) for f in files]
         mparam['z'] = [float((f.split('/')[-1]).split('_')[2][3:7]) for f in files]
-        mparam['fsed'] = [SPECTRAL_MODEL_PARAMETERS['fsed']['default'] for f in files]
-        mparam['cld'] = [SPECTRAL_MODEL_PARAMETERS['cld']['default'] for f in files]
-        mparam['kzz'] = [SPECTRAL_MODEL_PARAMETERS['kzz']['default'] for f in files]
+        mparam = {}
+    elif modelset == 'tremblin16':
+        readfxn = _readTremblin16
+        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.dat'))
+        mparam = {}
+        mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:]) for f in files]
+        mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][1:]) for f in files]
+        mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
+        mparam['kzz'] = [float((f.split('/')[-1]).split('_')[3][1:]) for f in files]
+        mparam['ad'] = [float((f.split('/')[-1]).split('_')[5][1:5]) for f in files]
     else:
         raise ValueError('\nHave not yet gotten model set {} into _processModels'.format(modelset))
 
-    outputfolder = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+modelset+'/'
     if len(files) == 0: 
         raise ValueError('Could not find spectral model files in {}'.format(SPECTRAL_MODELS[modelset]['rawfolder']))        
 
-    if kwargs.get('make_photometry',False) == True: 
-        phot_data = {}
-        for p in SPECTRAL_MODEL_PARAMETERS_INORDER: phot_data[p] = [] 
-        for f in list(FILTERS.keys()): phot_data[f] = []
+    outputfolder = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+modelset+'/'
+# create folders if they don't exist
+    if not os.path.exists(outputfolder):
+        os.makedirs(outputfolder)
+    if not os.path.exists(outputfolder+'RAW/'):
+        os.makedirs(outputfolder+'RAW/')
+    if not os.path.exists(outputfolder+'SED/'):
+        os.makedirs(outputfolder+'SED/')
+
+# generate photometry - skipping for now since this takes a while
+#    if kwargs.get('make_photometry',False) == True: 
+#        phot_data = {}
+#        for p in SPECTRAL_MODEL_PARAMETERS_INORDER: phot_data[p] = [] 
+#        for f in list(FILTERS.keys()): phot_data[f] = []
 
 # read in files
+    if kwargs.get('verbose',True) == True: print('\nIntegrating {} models into SPLAT'.format(modelset))
     for i,f in enumerate(files):
-        wv,flx = readfxn(f)
-        spmodel = Spectrum(wave=wv,flux=flx)
-        if kwargs.get('verbose',True) == True: print('Processing [{} {:.1f} {:.1f} {} {} {}] for model {}'.format(int(mparam['teff'][i]),mparam['logg'][i],mparam['z'][i],mparam['fsed'][i],mparam['cld'][i],mparam['kzz'][i],modelset))
+        try:
+            wv,flx = readfxn(f)
+#        spmodel = Spectrum(wave=wv,flux=flx)
 
-# generate models at instrumental resolutions
-        if kwargs.get('make_instruments',True) == True:
-            for instr in instrument_set:
-                outputfile = outputfolder+modelset+'_{}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.format(int(mparam['teff'][i]),mparam['logg'][i],mparam['z'][i]-0.0001,mparam['fsed'][i],mparam['cld'][i],mparam['kzz'][i],instr)
-# first smooth relevant piece of spectrum            
-                w = numpy.where(numpy.logical_and(wv.value >= (INSTRUMENTS[instr]['waverange'].value[0]-0.1),wv.value <= (INSTRUMENTS[instr]['waverange'].value[1]+0.1)))
-                flxsm = _smooth2resolution(wv.value[w],flx.value[w],INSTRUMENTS[instr]['resolution'])
-# interpolate onto instrumental (or observed) wavelength grid
-                if instr == 'SPEX_PRISM':
-                    spref = Spectrum(10001)
-                    sw = numpy.where(numpy.logical_and(spref.wave.value >= (INSTRUMENTS[instr]['waverange'].value[0]-0.1),spref.wave.value <= (INSTRUMENTS[instr]['waverange'].value[1]+0.1)))
-                    wvref = spref.wave.value[sw]
-                elif instr == 'USPEX_PRISM':
-                    spref = Spectrum(12279)   # wavelength range direct from observed data
-                    sw = numpy.where(numpy.logical_and(spref.wave.value >= (INSTRUMENTS[instr]['waverange'].value[0]-0.1),spref.wave.value <= (INSTRUMENTS[instr]['waverange'].value[1]+0.1)))
-                    wvref = spref.wave.value[sw]
-                else:
-                    effres = INSTRUMENTS[instr]['resolution']*INSTRUMENTS[instr]['slitwidth'].value/INSTRUMENTS[instr]['pixelscale'].value
-                    npix = numpy.floor(numpy.log(INSTRUMENTS[instr]['waverange'].value[1]/INSTRUMENTS[instr]['waverange'].value[0])/numpy.log(1.+1./effres))
-#                    print(instr,npix)
-                    wvref = [INSTRUMENTS[instr]['waverange'].value[0]*(1.+1./effres)**i for i in numpy.arange(npix)]
-                f = interp1d(wv.value[w],flxsm,bounds_error=False,fill_value=0.)
-                flxout = f(wvref)
-                t = Table([wvref,flxout],names=['#wavelength','surface flux'])
-                t.write(outputfile,format='ascii.tab')        
+        except:
+            print('\nError reading in file {}; skipping'.format(f))
 
-# generate models for SEDs
-        if kwargs.get('make_sed',True) == True:
-            outputfile = outputfolder+modelset+'_{}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.format(int(mparam['teff'][i]),mparam['logg'][i],mparam['z'][i]-0.0001,mparam['fsed'][i],mparam['cld'][i],mparam['kzz'][i],'SED')
-# first smooth relevant piece of spectrum            
-            flxsm = _smooth2resolution(wv.value,flx.value,sedres)
-# interpret onto observed wavelength grid
-            npix = numpy.floor(numpy.log(numpy.nanmax(wv.value)/numpy.nanmin(wv.value))/numpy.log(1.+1./sedres))
-            wvref = [numpy.nanmin(wv.value)*(1.+1./sedres)**i for i in numpy.arange(npix)]
-            f = interp1d(wv.value,flxsm,bounds_error=False,fill_value=0.)
-            flxout = f(wvref)
-            t = Table([wvref,flxout],names=['#wavelength','surface flux'])
+        else:
+            if kwargs.get('verbose',True) == True: 
+                line = ''
+                for k in list(mparam.keys()): line=line+'{}: {}, '.format(k,mparam[k][i])
+                print('Processing {} for model {}'.format(line,modelset))
+
+# generate raw model
+            outputfile = outputfolder+'RAW/'+modelset
+            for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
+                if k in list(mparam.keys()): 
+                    kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i])
+                    if k == 'teff': kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],int(mparam[k][i]))
+                    elif k == 'logg': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i])
+                    elif k == 'z': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i]-0.0001)
+                    outputfile=outputfile+kstr
+            outputfile=outputfile+'_RAW.txt'    
+# old way - make table and output it
+            t = Table([wv,flx],names=['#wavelength','surface_flux'])
             t.write(outputfile,format='ascii.tab')        
+# now gzip it
+            with open(outputfile, 'rb') as f_in, gzip.open(outputfile+'.gz', 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+            os.remove(outputfile)
+# tried this - too slow
+#            out = '#wavelength\tsurface flux\n'
+#            for i in range(len(wv)): out=out+str(wv[i])+'\t'+str(flx[i])+'\n'
+#            with gzip.open(outputfile+'.gz', 'wb') as f:
+#                f.write(out)
+
+
+# generate SED model
+            if kwargs.get('make_sed',True) == True:
+                noutputfile = outputfile.replace('RAW','SED')
+# first smooth relevant piece of spectrum            
+# interpret onto observed wavelength grid
+                npix = numpy.floor(numpy.log(numpy.nanmax(wv.value)/numpy.nanmin(wv.value))/numpy.log(1.+1./sedres))
+                wvref = [numpy.nanmin(wv.value)*(1.+1./sedres)**i for i in numpy.arange(npix)]
+# either smooth and remap if SED is higher res than original data, 
+# or integral resample if original data is higher resolution than SED
+                if len(wv) <= len(wvref):
+                    flxsm = _smooth2resolution(wv.value,flx.value,sedres)
+                    f = interp1d(wv.value,flxsm,bounds_error=False,fill_value=0.)
+                    flxout = f(wvref)
+                else:
+                    flxout = integralResample(wv.value,flx.value,wvref)
+                t = Table([wvref,flxout],names=['#wavelength','surface_flux'])
+                t.write(noutputfile,format='ascii.tab')
+
+
+# generate SpeX Prism model
+    if kwargs.get('make_spex',True) == True:
+        spref = Spectrum(10001)
+        _processModelsToInstrument(modelset=modelset,wave=spref.wave.value,instrument='SPEX_PRISM')
+
+# generate USpeX Prism model
+#    if kwargs.get('make_spex',False) == True:
+#        spref = Spectrum(12279)
+#        _processModelsToInstrument(modelset=modelset,wave=spref.wave.value,instrument='USPEX_PRISM')      
+
 
 # generate photometry
-        if kwargs.get('make_photometry',True) == True:
-            outnames = ['teff','logg','z','fsed','cld']
-            for p in SPECTRAL_MODEL_PARAMETERS_INORDER: phot_data[p].append(mparam[p][i])
-            for f in list(FILTERS.keys()):
-                phot_data[f].append(spphot.filterMag(spmodel,f,verbose=False)[0])
-                outnames.append(f) 
+#        if kwargs.get('make_photometry',True) == True:
+#            outnames = ['teff','logg','z','fsed','cld']
+#            for p in SPECTRAL_MODEL_PARAMETERS_INORDER: phot_data[p].append(mparam[p][i])
+#            for f in list(FILTERS.keys()):
+#                phot_data[f].append(spphot.filterMag(spmodel,f,verbose=False)[0])
+#                outnames.append(f) 
 # generate an output table with the correct order
-            t = pandas.DataFrame(phot_data)
-            t = t[outnames]
-            t.to_csv(outputfolder+modelset+'_photometry.txt',index=False,sep='\t')
-#            t = Table(phot_data)
-#            t.write(outputfolder+modelset+'_photometry.txt',format='ascii.tab',include_names=outnames)
-#                print('{}: {}'.format(f,phot_data[f]))
+#            t = pandas.DataFrame(phot_data)
+#            t = t[outnames]
+#            t.to_csv(outputfolder+modelset+'_photometry.txt',index=False,sep='\t')
 
-# save photometry to file
-#    if kwargs.get('make_photometry',True) == True:
 
-    return True
+    return
 
+
+def _processModelsToInstrument(*args,modelset='btsettl08',instrument='UNKNOWN',instrument_parameters={},pixel_resolution=4.,**kwargs):
+    '''
+    Program that converts raw spectral models into instrument-specific model sets
+
+    If a predefined instrument is not used, user must supply one of the following combinations either as keywords or in the `instrument_parameters` dictionary parameter:
+
+        * `wave`: an array containing the wavelengths to sample to; resolution is assumed 2 pixels per resolution element
+        * `wave_range` and `resolution`: the first is a two-element array (assumed in microns if not specified), the second the effective resolution, assuming 2 pixels per resolution element
+        * `template`: a template spectrum object, from which the `wave` array is selected
+
+    :Optional Parameters:
+
+        * pixel_resolution = 2: the number of pixels per resolution element
+
+    '''
+    method = kwargs.get('method','hamming')
+    oversample = kwargs.get('oversample',5.)
+    overscan = kwargs.get('overscan',0.05)
+
+    if len(args) >= 1: modelset = args[0]
+    else: modelset = kwargs.get('set',modelset)
+    mset = checkSpectralModelName(modelset)
+    if mset == False:
+        raise ValueError('\nInvalid model set {}'.format(modelset))
+
+    if len(args) >= 2: instrument = args[1]
+    else: instrument = kwargs.get('instr',instrument)
+    instr = checkInstrument(instrument)
+
+# set up parameters for making model
+# strip out units of wavelength after converting to micron
+    if instr != False:
+        instrument_parameters['resolution'] = INSTRUMENTS[instr]['resolution']
+        instrument_parameters['wave_range'] = INSTRUMENTS[instr]['wave_range']
+    else:
+        instr = instrument.upper()
+        instr = instr.replace(' ','_')
+
+    kys = list(instrument_parameters.keys())
+    if 'wave' not in kys:
+        instrument_parameters['wave'] = kwargs.get('wave',[])
+    if len(instrument_parameters['wave']) > 1:
+        if isinstance(instrument_parameters['wave'],u.quantity.Quantity):
+            instrument_parameters['wave'] = instrument_parameters['wave'].to(u.micron).value
+        if isinstance(instrument_parameters['wave'][0],u.quantity.Quantity):
+            instrument_parameters['wave'] = [w.to(u.micron).value for w in instrument_parameters['wave']]
+        instrument_parameters['wave_range'] = [numpy.nanmin(instrument_parameters['wave']),numpy.nanmax(instrument_parameters['wave'])]
+    if 'wave_range' not in kys:
+        instrument_parameters['wave_range'] = kwargs.get('wave_range',[])
+    if len(instrument_parameters['wave_range']) > 1:
+        if isinstance(instrument_parameters['wave_range'],u.quantity.Quantity):
+            instrument_parameters['wave_range'] = instrument_parameters['wave_range'].to(u.micron).value
+        if isinstance(instrument_parameters['wave_range'][0],u.quantity.Quantity):
+            instrument_parameters['wave_range'] = [w.to(u.micron).value for w in instrument_parameters['wave_range']]
+    if 'resolution' not in kys:
+        instrument_parameters['resolution'] = kwargs.get('resolution',None)
+
+# generate wavelength vector if just range and resolution given
+    if len(instrument_parameters['wave']) <= 1 and instrument_parameters['resolution'] != None and len(instrument_parameters['wave_range']) <= 1:
+        effres = instrument_parameters['resolution']*pixel_resolution
+        npix = numpy.floor(numpy.log(numpy.nanmax(instrument_parameters['wave_range'])/numpy.nanmin(instrument_parameters['wave_range']))/numpy.log(1.+1./effres))
+    #                    print(instr,npix)
+        instrument_parameters['wave'] = [numpy.nanmin(instrument_parameters['wave_range'])*(1.+1./effres)**i for i in numpy.arange(npix)]
+# final error check
+    if len(instrument_parameters['wave']) <= 1:
+        raise ValueError('\nCould not set up instrument parameters {}'.format(instrument_parameters))
+
+# generate smoothing wavelength vector
+    a = numpy.linspace(0.,len(instrument_parameters['wave'])-1,len(instrument_parameters['wave']))
+    b = numpy.linspace(0.,len(instrument_parameters['wave'])-1.,oversample*len(instrument_parameters['wave']))
+    f = interp1d(a,instrument_parameters['wave'])
+    wave_oversample = f(b)
+
+# set and create folder if it don't exist
+    outputfolder = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+mset+'/'+instr+'/'
+    if not os.path.exists(outputfolder):
+        try:
+            os.makedirs(outputfolder)
+        except:
+            raise OSError('\nCould not create folder {}'.format(outputfolder))
+
+# grab the raw files
+    inputfolder = kwargs.get('inputfolder',SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+mset+'/RAW/')
+    files = glob.glob(os.path.normpath(inputfolder+'*.gz'))
+    if len(files) == 0:
+        raise ValueError('\nCould not find model files in {}'.format(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+mset+'/RAW/'))
+
+    if kwargs.get('verbose',True) == True: print('Processing model set {} to instrument {}'.format(mset,instr))
+
+    for i,f in enumerate(files):
+        if kwargs.get('verbose',True) == True: print('Processing model {}'.format(f))
+        noutputfile = f.replace('RAW',instr).replace('.gz','')
+
+# read in the model
+        spmodel = Spectrum(f)
+
+# trim relevant piece of spectrum 
+        dw = overscan*(numpy.nanmax(instrument_parameters['wave'])-numpy.nanmin(instrument_parameters['wave']))
+        wrng = [numpy.nanmax([numpy.nanmin(instrument_parameters['wave']-dw),numpy.nanmin(spmodel.wave.value)])*u.micron,\
+                numpy.nanmin([numpy.nanmax(instrument_parameters['wave']+dw),numpy.nanmax(spmodel.wave.value)])*u.micron]
+        spmodel.trim(wrng)
+
+# map onto oversampled grid and smooth; if model is lower resolution, interpolate; otherwise integrate & resample
+        if len(spmodel.wave) <= len(wave_oversample):
+            f = interp1d(spmodel.wave.value,spmodel.flux.value,bounds_error=False,fill_value=0.)
+            flux_oversample = f(wave_oversample)
+        else:
+            flux_oversample = integralResample(spmodel.wave.value,spmodel.flux.value,wave_oversample)
+        spmodel.wave = wave_oversample*u.micron
+        spmodel.flux = flux_oversample*spmodel.funit
+        spmodel.noise = [numpy.nan for x in spmodel.wave]*spmodel.funit
+        spmodel.variance = [numpy.nan for x in spmodel.wave]*(spmodel.funit**2)
+
+# smooth this in pixel space including oversample       
+        spmodel._smoothToSlitPixelWidth(pixel_resolution*oversample,method=method)
+
+# resample down to final wavelength scale
+        fluxsm = integralResample(spmodel.wave.value,spmodel.flux.value,instrument_parameters['wave'])
+
+# output
+        t = Table([instrument_parameters['wave'],fluxsm],names=['#wavelength','surface_flux'])
+        t.write(noutputfile,format='ascii.tab')
+
+    return   
 
 
 
@@ -443,7 +687,7 @@ def loadOriginalInterpolatedModel(model='btsettl08',teff=2000,logg=5.0,**kwargs)
 
     :Optional Inputs:
 
-        same as .. _`loadOriginalModel()` : api.html#splat.model.loadOriginalModel
+        same as .. `loadOriginalModel()`_
 
     .. _`loadOriginalModel()` : api.html#splat.model.loadOriginalModel
 
@@ -898,20 +1142,24 @@ def _smooth2resolution(wave,flux,resolution,**kwargs):
 def loadModel(*args, **kwargs):
     '''
     Purpose: 
-        Loads up a model spectrum based on a set of input parameters. The models may be any one of the following listed below. For parameters between the model grid points, loadModel calls the function `loadInterpolatedModel()`_.
+        Loads up a model spectrum based on a set of input parameters. The models may be any one of the following listed below. For parameters between the model grid points, loadModel calls the function `_loadInterpolatedModel()`_.
 
-    .. _`loadInterpolatedModel()` : api.html#splat_model.loadInterpolatedModel
+    .. _`_loadInterpolatedModel()` : api.html#splat_model._loadInterpolatedModel
 
     Required Inputs:
         :param: **model**: The model set to use; may be one of the following:
 
-            - *BTSettl2008*: (default) model set from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  with effective temperatures of 400 to 2900 K (steps of 100 K); surface gravities of 3.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity of -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.3, and 0.5 for temperatures greater than 2000 K only; cloud opacity is fixed in this model, and equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `btsettled`, `btsettl`, `allard`, `allard12`)
+            - *nextgen99*: model set from `Allard et al. (1999) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  with effective temperatures of 900 to 1600 K (steps of 100 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicity fixed to solar (alternate designations: `nextgen`)
+            - *cond01*: model set from `Allard et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...556..357A>`_  with effective temperatures of 100 to 4000 K (steps of 100 K); surface gravities of 4.0 to 6.0 in units of cm/s^2 (steps of 0.5 dex); and metallicity fixed to solar; with condensate species removed from the photosphere (alternate designation: `cond`)
+            - *dusty01*: model set from `Allard et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...556..357A>`_  with effective temperatures of 500 to 3000 K (steps of 100 K); surface gravities of 3.5 to 6.0 in units of cm/s^2 (steps of 0.5 dex); and metallicity fixed to solar; with condensate species left in situ (alternate designation: `dusty`)
             - *burrows06*: model set from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_ with effective temperatures of 700 to 2000 K (steps of 50 K); surface gravities of 4.5 to 5.5 in units of cm/s^2 (steps of 0.1 dex); metallicity of -0.5, 0.0 and 0.5; and either no clouds or grain size 100 microns (fsed = 'nc' or 'f100'). equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `burrows`, `burrows2006`)
+            - *btsettl08*: (default) model set from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  with effective temperatures of 400 to 2900 K (steps of 100 K); surface gravities of 3.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity of -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.3, and 0.5 for temperatures greater than 2000 K only; cloud opacity is fixed in this model, and equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `btsettled`, `btsettl`, `allard`, `allard12`)
+            - *btsettl15*: model set from `Allard et al. (2015) <http://adsabs.harvard.edu/abs/2015A&A...577A..42B>`_  with effective temperatures of 1200 to 6300 K (steps of 100 K); surface gravities of 2.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity fixed to solar (alternate designations: 'allard15','allard2015','btsettl015','btsettl2015','BTSettl2015')
             - *morley12*: model set from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_ with effective temperatures of 400 to 1300 K (steps of 50 K); surface gravities of 4.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and sedimentation efficiency (fsed) of 2, 3, 4 or 5; metallicity is fixed to solar, equilibrium chemistry is assumed, and there are no clouds associated with this model (alternate designations: `morley2012`)
             - *morley14*: model set from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, sedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: `morley2014`)
             - *saumon12*: model set from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_ with effective temperatures of 400 to 1500 K (steps of 50 K); and surface gravities of 3.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, and no clouds are associated with these models (alternate designations: `saumon`, `saumon2012`)
             - *drift*: model set from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_ with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex); cloud opacity is fixed in this model, equilibrium chemistry is assumed (alternate designations: `witte`, `witte2011`, `helling`)
-            - *madhusudhan*: model set from `Madhusudhan et al. (2011) <http://adsabs.harvard.edu/abs/2011ApJ...737...34M>`_ with effective temperatures of 600 K to 1700 K (steps of 50-100 K); surface gravities of 3.5 and 5.0 in units of cm/s^2; and metallicities of 0.0 to 1.0 (in steps of 0.5 dex); there are multiple cloud prescriptions for this model, equilibrium chemistry is assumed (alternate designations: `madhusudhan`)
+            - *madhusudhan11*: model set from `Madhusudhan et al. (2011) <http://adsabs.harvard.edu/abs/2011ApJ...737...34M>`_ with effective temperatures of 600 K to 1700 K (steps of 50-100 K); surface gravities of 3.5 and 5.0 in units of cm/s^2; and metallicities of 0.0 to 1.0 (in steps of 0.5 dex); there are multiple cloud prescriptions for this model, equilibrium chemistry is assumed (alternate designations: `madhusudhan`)
         
     Optional Inputs:
         :param: **teff**: effective temperature of the model in K (e.g. `teff` = 1000)
@@ -960,10 +1208,9 @@ def loadModel(*args, **kwargs):
     local = not online
     kwargs['local'] = local
     kwargs['online'] = online
-    kwargs['folder'] = kwargs.get('folder','')
     kwargs['ismodel'] = True
     kwargs['force'] = kwargs.get('force',False)
-    url = kwargs.get('url',SPLAT_URL)
+    kwargs['url']  = kwargs.get('url',SPLAT_URL)
     runfast = kwargs.get('runfast',False)
     verbose = kwargs.get('verbose',False)
 
@@ -989,45 +1236,46 @@ def loadModel(*args, **kwargs):
 
 # set up the model set
     modelset = kwargs.get('model','BTSettl2008')
+    modelset = kwargs.get('modelset',modelset)
     modelset = kwargs.get('set',modelset)
-    tmp = checkSpectralModelName(modelset)
-    if tmp == False: raise ValueError('Could not find model set {}'.format(modelset))
-    kwargs['model'] = tmp
+    mset = checkSpectralModelName(modelset)
+    if mset == False: raise ValueError('Could not find model set {}'.format(modelset))
+    kwargs['model'] = mset
 
     kwargs['instrument'] = kwargs.get('instrument','SPEX_PRISM')
-    kwargs['instrument'] = checkInstrument(kwargs['instrument'])
-    kwargs['name'] = kwargs['model']
+    kwargs['instrument'] = kwargs.get('instr',kwargs['instrument'])
+    instr = checkInstrument(kwargs['instrument'])
+    if instr == False: instr = 'SPEX_PRISM'
+    kwargs['instrument'] = instr
+    if kwargs.get('raw',False) == True: kwargs['instrument'] = 'RAW'
+    if kwargs.get('sed',False) == True: kwargs['instrument'] = 'SED'
+    kwargs['name'] = kwargs['model']+' ('+kwargs['instrument']+')'
 
-    if kwargs.get('sed',False):
-        kwargs['instrument'] = 'SED'
-        kwargs['name'] = kwargs['model']+' SED'
 
-
-# set replacements
-    kwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
+# check that folder is correct
+    kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'+kwargs['instrument']+'/')
+    if not os.path.exists(kwargs['folder']):
+        kwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'
+        if not os.path.exists(kwargs['folder']):
+            raise ValueError('\nCould not locate folder for model; make sure it has been saved')
 
 # preset defaults
+    mparam = {}
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        kwargs[ms] = kwargs.get(ms,SPECTRAL_MODEL_PARAMETERS[ms]['default'])
-
-# some special defaults
-    if kwargs['model'] == 'morley12':
-        if kwargs['fsed'] == 'nc':
-            kwargs['fsed'] = 'f3'
-    if kwargs['model'] == 'morley14':
-        if kwargs['fsed'] == 'nc':
-            kwargs['fsed'] = 'f5'
-        if kwargs['cld'] == 'nc':
-            kwargs['cld'] = 'f50'
-
-# convert model parameters to unitless numbers
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        if isinstance(kwargs[ms],u.quantity.Quantity):
-            kwargs[ms] = kwargs[ms].value
+        if ms in list(SPECTRAL_MODELS[kwargs['model']]['default'].keys()):
+            mparam[ms] = kwargs.get(ms,SPECTRAL_MODELS[kwargs['model']]['default'][ms])
+            if isinstance(mparam[ms],u.quantity.Quantity):
+                mparam[ms] = (mparam[ms].to(SPECTRAL_MODEL_PARAMETERS[ms]['unit'])).value
+    if len(mparam.keys()) == 0:
+        raise ValueError('\nDid not have any parameters to set; this is a error in the program')
+    for ms in mparam.keys(): kwargs[ms] = mparam[ms]
 
 # generate model filename
-    kwargs['filename'] = os.path.normpath(kwargs['folder']+'{}_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.\
-        format(kwargs['model'],float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],kwargs['instrument']))
+    kwargs['filename'] = os.path.normpath(kwargs['folder'])+'/'+_modelName(kwargs['model'],kwargs['instrument'],mparam)
+
+#    kwargs['filename'] = os.path.normpath(kwargs['folder'])+'{}_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.\
+#        format(kwargs['model'],float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],kwargs['instrument']))
+
 #    if kwargs.get('sed',False):
 #        kwargs['filename'] = kwargs['folder']+kwargs['model']+'_{:.0f}_{:.1f}_{:.1f}_nc_nc_eq_sed.txt'.\
 #            format(float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001)
@@ -1055,53 +1303,58 @@ def loadModel(*args, **kwargs):
 # check that folder/set is present either locally or online
 # if not present locally but present online, switch to this mode
 # if not present at either raise error
-    folder = checkLocal(kwargs['folder'])
-    if folder=='':
-        folder = checkOnline(kwargs['folder'])
-        if folder=='':
-            print('\nCould not find '+kwargs['folder']+' locally or on SPLAT website')
-            print('\nAvailable model set options are:')
-            for s in DEFINED_MODEL_SET:
-                print('\t{}'.format(s))
-            raise NameError()
-        else:
-            kwargs['folder'] = folder
-            kwargs['local'] = False
-            kwargs['online'] = True
-    else:
-        kwargs['folder'] = folder
+
+# REMOVED THIS 8/30/2017
+
+#    folder = checkLocal(kwargs['folder'])
+#    if folder=='':
+#        folder = checkOnline(kwargs['folder'])
+#        if folder=='':
+#            print('\nCould not find '+kwargs['folder']+' locally or on SPLAT website')
+#            print('\nAvailable model set options are:')
+#            for s in DEFINED_MODEL_SET:
+#                print('\t{}'.format(s))
+#            raise NameError()
+#        else:
+#            kwargs['folder'] = folder
+#            kwargs['local'] = False
+#            kwargs['online'] = True
+#    else:
+#        kwargs['folder'] = folder
 
 # check if file is present; if so, read it in, otherwise go to interpolated
 # locally:
     if kwargs.get('local',True) == True:
         file = checkLocal(kwargs['filename'])
         if file=='':
-            if kwargs['force']:
-                raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
-            else:
-                sp = loadInterpolatedModel(**kwargs)
+            file = checkLocal(kwargs['filename']+'.gz')
+            if file=='':
+                if kwargs['force']: raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
+                else: sp = _loadInterpolatedModel(**kwargs)
+            else: kwargs['filename'] = kwargs['filename']+'.gz'
 #                kwargs['local']=False
 #                kwargs['online']=True
-        else:
-            MODELS_READIN[kwargs['filename']] = Spectrum(**kwargs)
-            sp = MODELS_READIN[kwargs['filename']]
+#        else:
+        sp = Spectrum(**kwargs)
 
 # online:
     if kwargs['online'] == True:
         file = checkOnline(kwargs['filename'])
         if file=='':
-            if kwargs['force']:
-                raise NameError('\nCould not find '+kwargs['filename']+' online\n\n')
-            else:
-                sp = loadInterpolatedModel(**kwargs)
-        else:
-            ftype = kwargs['filename'].split('.')[-1]
-            tmp = TMPFILENAME+'.'+ftype
-            open(os.path.basename(tmp), 'wb').write(requests.get(url+kwargs['filename']).content) 
-            mkwargs = copy.deepcopy(kwargs)
-            mkwargs['filename'] = os.path.basename(tmp)
-            sp = Spectrum(**mkwargs)
-            os.remove(os.path.basename(tmp))
+            file = checkLocal(kwargs['filename']+'.gz')
+            if file=='':
+                if kwargs['force']: raise NameError('\nCould not find '+kwargs['filename']+' online\n\n')
+                else: sp = _loadInterpolatedModel(**kwargs)
+            else: kwargs['filename'] = kwargs['filename']+'.gz'
+
+        ftype = kwargs['filename'].split('.')[-1]
+        if ftype == '.gz': ftype = kwargs['filename'].split('.')[-2]+'.gz'
+        tmp = TMPFILENAME+'.'+ftype
+        open(os.path.basename(tmp), 'wb').write(requests.get(url+kwargs['filename']).content) 
+        mkwargs = copy.deepcopy(kwargs)
+        mkwargs['filename'] = os.path.basename(tmp)
+        sp = Spectrum(**mkwargs)
+        os.remove(os.path.basename(tmp))
 #            sp = MODELS_READIN[kwargs['filename']]
 #                except:
 #                    raise NameError('\nProblem reading in '+kwargs['filename']+' from SPLAT website\n\n')
@@ -1146,7 +1399,7 @@ def _checkModelParametersInRange(mparam):
     return flag
 
 
-def loadInterpolatedModel(*args,**kwargs):
+def _loadInterpolatedModel(*args,**kwargs):
     '''
     Purpose: 
         Generates as spectral model with is interpolated between model parameter grid points. This routine is called by `loadModel()`_, or it can be called on its own.
@@ -1181,35 +1434,32 @@ def loadInterpolatedModel(*args,**kwargs):
 # attempt to generalize models to extra dimensions
     mkwargs = kwargs.copy()
     mkwargs['force'] = True
-    mkwargs['ismodel'] = True
-    mkwargs['url'] = kwargs.get('url',SPLAT_URL+'/Models/')
-    mkwargs['local'] = kwargs.get('local',False)
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        mkwargs[ms] = kwargs.get(ms,SPECTRAL_MODEL_PARAMETERS[ms]['default'])
+#    mkwargs['local'] = kwargs.get('local',True)
 
 # set up the model set
-    mkwargs['model'] = mkwargs.get('model','BTSettl2008')
-    mkwargs['model'] = mkwargs.get('set',mkwargs['model'])
-    mkwargs['model'] = checkSpectralModelName(mkwargs['model'])
-    mkwargs['instrument'] = mkwargs.get('instrument','SPEX_PRISM')
-    mkwargs['instrument'] = checkInstrument(mkwargs['instrument'])
-    mkwargs['name'] = mkwargs['model']
+#    mkwargs['model'] = mkwargs.get('model','BTSettl2008')
+#    mkwargs['model'] = mkwargs.get('modelset',mkwargs['model'])
+#    mkwargs['model'] = mkwargs.get('set',mkwargs['model'])
+#    mkwargs['model'] = checkSpectralModelName(mkwargs['model'])
+#    mkwargs['instrument'] = mkwargs.get('instrument','SPEX_PRISM')
+#    mkwargs['instrument'] = checkInstrument(mkwargs['instrument'])
+#    mkwargs['name'] = mkwargs['model']
+    
+#    mkwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mkwargs['model']+'/'
 
-    if mkwargs.get('sed',False):
-        mkwargs['instrument'] = 'SED'
-        mkwargs['name'] = mkwargs['model']+' SED'
 
-    mkwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mkwargs['model']+'/'
+#    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+#        mkwargs[ms] = kwargs.get(ms,SPECTRAL_MODEL_PARAMETERS[ms]['default'])
 
 # some special defaults
-    if mkwargs['model'] == 'morley12':
-        if mkwargs['fsed'] == 'nc':
-            mkwargs['fsed'] = 'f2'
-    if mkwargs['model'] == 'morley14':
-        if mkwargs['fsed'] == 'nc':
-            mkwargs['fsed'] = 'f5'
-        if mkwargs['cld'] == 'nc':
-            mkwargs['cld'] = 'f50'
+#    if mkwargs['model'] == 'morley12':
+#        if mkwargs['fsed'] == 'nc':
+#            mkwargs['fsed'] = 'f2'
+#    if mkwargs['model'] == 'morley14':
+#        if mkwargs['fsed'] == 'nc':
+#            mkwargs['fsed'] = 'f5'
+#        if mkwargs['cld'] == 'nc':
+#            mkwargs['cld'] = 'f50'
 
 # first get model parameters
     if _checkModelParametersInRange(mkwargs) == False:
@@ -1236,24 +1486,25 @@ def loadInterpolatedModel(*args,**kwargs):
         pgrid = []
         plin = []
         for ms in list(SPECTRAL_MODEL_PARAMETERS.keys()):
-            if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'discrete': 
-                mparams[ms] = mkwargs[ms]
-                mweights[ms] = 1.
-                plin.append(ms)
-            else:                
-                l = parameters[parameters[ms] <= mkwargs[ms]].sort_values(ms)[ms].iloc[-1]
-                h = parameters[parameters[ms] >= mkwargs[ms]].sort_values(ms)[ms].iloc[0]
-                if ms == 'teff':
-                    d = numpy.log10(h)-numpy.log10(l)
-                    w = (numpy.log10(h)-numpy.log10(mkwargs[ms]))/d
-                else:
-                    d = h-l
-                    w = (h-mkwargs[ms])/d
-                if d == 0.: w = 0.5
-                mparams[ms] = [l,h]
-                mweights[ms] = w
-                mgrid.append([l,h])
-                pgrid.append(ms)
+            if ms in list(parameters.keys()):
+                if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'discrete': 
+                    mparams[ms] = mkwargs[ms]
+                    mweights[ms] = 1.
+                    plin.append(ms)
+                else:                
+                    l = parameters[parameters[ms] <= mkwargs[ms]].sort_values(ms)[ms].iloc[-1]
+                    h = parameters[parameters[ms] >= mkwargs[ms]].sort_values(ms)[ms].iloc[0]
+                    if ms == 'teff':
+                        d = numpy.log10(h)-numpy.log10(l)
+                        w = (numpy.log10(h)-numpy.log10(mkwargs[ms]))/d
+                    else:
+                        d = h-l
+                        w = (h-mkwargs[ms])/d
+                    if d == 0.: w = 0.5
+                    mparams[ms] = [l,h]
+                    mweights[ms] = w
+                    mgrid.append([l,h])
+                    pgrid.append(ms)
 
 # generate all possible combinations - doing this tediously due to concerns over ordering
         x = numpy.meshgrid(*mgrid)
@@ -1272,10 +1523,11 @@ def loadInterpolatedModel(*args,**kwargs):
         for i in numpy.arange(len(weights)):
             mparam = copy.deepcopy(mkwargs)
             for ms in list(SPECTRAL_MODEL_PARAMETERS.keys()):
-                if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'discrete': 
-                    mparam[ms] = mkwargs[ms]
-                else:
-                    mparam[ms] = a[ms][i]
+                if ms in list(parameters.keys()):
+                    if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'discrete': 
+                        mparam[ms] = mkwargs[ms]
+                    else:
+                        mparam[ms] = a[ms][i]
             models.append(loadModel(**mparam))
 
 # create interpolation
@@ -1382,7 +1634,7 @@ def loadInterpolatedModel(*args,**kwargs):
 #    for i,m in enumerate(mparam_names):
 #        models.append(bmodels[numpy.where(bmodel_names==m)][0])
 
-        if kwargs.get('verbose',False):
+        if kwargs.get('debug',False):
             print(mx.flatten())
             print([m.teff for m in models])
             print(my.flatten())
@@ -1405,7 +1657,7 @@ def loadInterpolatedModel(*args,**kwargs):
 
 
 
-def _loadModelParameters(*args,**kwargs):
+def _loadModelParameters(*args,modelset='UNKNOWN',instrument='RAW',**kwargs):
     '''
     Purpose: 
         Assistant routine for `loadModel()`_ that loads in the spectral model grid points.
@@ -1416,7 +1668,9 @@ def _loadModelParameters(*args,**kwargs):
         :param: model: set of models to use; see options in `loadModel()`_ (default = 'BTSettl2008')
     
     Optional Inputs:
-        :param: pandas: return a pandas Dataframe
+        **instrument = 'RAW'**: search specifically for an instrument-designed model 
+        **pandas = False**: return a pandas Dataframe
+
 
     The parameters for `loadModel()`_ can also be used here.
 
@@ -1425,43 +1679,70 @@ def _loadModelParameters(*args,**kwargs):
     '''
 
 # model set
-    if len(args) == 0:
-        if kwargs.get('model',False) == False:
-            raise ValueError('\n\nYou must give a model name as either a variable or as keyword `model`')
-        mset = kwargs['model']
-    else: mset = args[0]
+    modelset = kwargs.get('model',modelset)
+    modelset = kwargs.get('set',modelset)
+    if len(args) > 0:
+        modelset = args[0]
+    mset = checkSpectralModelName(modelset)
+    if mset == False:
+        raise NameError('\nInput model set {} not in defined set of models:\n{}\n'.format(modelset,list(SPECTRAL_MODELS.keys())))
 
-    if checkSpectralModelName(mset) == False:
-        raise NameError('\n\nInput model set {} not in defined set of models:\n{}\n'.format(mset,DEFINED_MODEL_SET))
-    mset = checkSpectralModelName(mset)
+# instrument
+    instrument = kwargs.get('instr',instrument)
+    if len(args) > 1:
+        instrument = args[1]
+    instr = checkInstrument(instrument)
+    if instr == False:
+        raise NameError('\nInstrument setting {} is not defined for model set {}\n'.format(instrument,mset))
 
-    parameters = {'model': mset, 'parameter_sets': []}
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+# folder for models
+    mfolder = os.path.normpath(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+mset+'/'+instr)
+    if not os.access(mfolder, os.R_OK):
+        mfolder = os.path.normpath(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+mset)
+        if not os.access(mfolder, os.R_OK):
+            raise OSError('\nCould not find model folder {}\n'.format(mfolder))
+
+    parameters = {'model': mset, 'instrument': instr, 'parameter_sets': []}
+    for ms in list(SPECTRAL_MODELS[mset]['default'].keys()):
         parameters[ms] = []
 
 # establish parameters from list of filenames
 #    if kwargs.get('old',False) == False:
-    mfiles = glob.glob(os.path.normpath(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+mset+'*.txt'))
+    mfiles = glob.glob(mfolder+'/*.txt')
+    if instr == 'RAW': mfiles = glob.glob(mfolder+'/*.gz')
     if len(mfiles) == 0:
-        raise ValueError('\nCould not find any model files in {}'.format(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mset+'/'+mset))
+        raise ValueError('\nCould not find any model files in {}'.format(mfolder))
     for mf in mfiles:
-        sp = os.path.basename(mf).replace('.txt','').split('_')[1:]
-        if len(sp) >= len(SPECTRAL_MODEL_PARAMETERS_INORDER):
-            p = {'model': mset}
-            for i,ms in enumerate(SPECTRAL_MODEL_PARAMETERS_INORDER):
-                if sp[i] not in parameters[ms]:
-                    parameters[ms].append(sp[i])
-                p[ms] = sp[i]
-            parameters['parameter_sets'].append(p)
+        p = {'model': mset, 'instrument': instr}
+        sp = numpy.array(os.path.basename(mf).replace('.txt','').replace('.gz','').replace(mset,'').replace('_'+instr,'').split('_'))
+        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+            if ms in list(parameters.keys()):
+#                print(ms,sp)
+                val = sp[numpy.where([SPECTRAL_MODEL_PARAMETERS[ms]['prefix'] in l for l in sp])][0][1:]
+                if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous': val = float(val)
+                parameters[ms].append(val)
+                p[ms] = val
+        parameters['parameter_sets'].append(p)
+
+#        if len(sp) >= len(SPECTRAL_MODEL_PARAMETERS_INORDER):
+#            p = {'model': mset}
+#            for i,ms in enumerate(SPECTRAL_MODEL_PARAMETERS_INORDER):
+#                if sp[i] not in parameters[ms]:
+#                    parameters[ms].append(sp[i])
+#                p[ms] = sp[i]
+#            parameters['parameter_sets'].append(p)
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        if ms=='teff' or ms =='logg' or ms=='z':
-            parameters[ms] = [float(x) for x in parameters[ms]]
-        parameters[ms].sort()
-        parameters[ms] = numpy.array(parameters[ms])
+#        if ms=='teff' or ms =='logg' or ms=='z':
+#            parameters[ms] = [float(x) for x in parameters[ms]]
+        if ms in list(parameters.keys()):
+            parameters[ms].sort()
+            parameters[ms] = numpy.array(parameters[ms])
+
+#    print(parameters.keys(),parameters)
 
     if kwargs.get('pandas',False) == True:
         dp = pandas.DataFrame(parameters['parameter_sets'])
-        for ms in ['teff','logg','z']: dp[ms] = [float(t) for t in dp[ms]]
+ #       for ms in ['teff','logg','z']: dp[ms] = [float(t) for t in dp[ms]]
         return dp
     else:
         return parameters
@@ -1730,7 +2011,7 @@ def _modelFitPlotComparison(spec,model,**kwargs):
 
 
 
-def modelFitGrid(spec, **kwargs):
+def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX_PRISM', **kwargs):
     '''
     :Purpose: Fits a spectrum to a grid of atmosphere models, reports the best-fit and weighted average parameters, and returns either a dictionary with the best-fit model parameters or the model itself scaled to the optimal scaling factor.
 
@@ -1812,22 +2093,34 @@ def modelFitGrid(spec, **kwargs):
     '''
 
 # model parameters
-    model_set = kwargs.get('model', 'BTSettl2008')
-    model_set = kwargs.get('set', model_set)
-    model_set = kwargs.get('model_set', model_set)
-    model_set = checkSpectralModelName(model_set)
-    if model_set == False:
-        raise ValueError('\n{} is not in the SPLAT model suite; try {}'.format(kwargs['set'],' '.join(list(DEFINED_MODEL_NAMES.keys()))))
+    modelset = kwargs.get('model', modelset)
+    model_set = kwargs.get('set', modelset)
+    model_set = kwargs.get('model_set', modelset)
+    mset = checkSpectralModelName(modelset)
+    if mset == False:
+        raise ValueError('\n{} is not in the SPLAT model suite; try {}'.format(modelset,' '.join(list(DEFINED_MODEL_NAMES.keys()))))
     if kwargs.get('verbose',False) == True:
-        print('\nmodelFitGrid is using {} model set'.format(model_set))
+        print('\nmodelFitGrid is using {} model set'.format(mset))
         kwargs['summary'] = True
+
+# instrument parameters - identify from data or by default use SPEX_PRISM
+    try:
+        instrument = spec.instrument
+    except:
+        pass
+    instrument = kwargs.get('instr',instrument)
+    instr = checkInstrument(instrument)
+    if instr == False:
+        print('\nWARNING! {} is not a recognized instrument; assuming SpeX prism'.format(instrument))
+        instr = 'SPEX_PRISM'
 
 # fitting parameters
     stat = kwargs.get('stat','chisqr')
     stat = kwargs.get('statistic',stat)
     nbest = kwargs.get('nbest',1)
-    mask = kwargs.get('mask',_generateMask(spec.wave,**kwargs))
-    weights = kwargs.get('weights',numpy.ones(len(spec.wave)))
+#    mask = kwargs.get('mask',generateMask(spec.wave,**kwargs))
+#    fit_range = kwargs.get(fit_range,[numpy.nanmin(spec.wave),numpy.nanmax(spec.wave)])
+#    weights = kwargs.get('weights',numpy.ones(len(spec.wave)))
 
 # plotting and reporting keywords
     compute_radius = kwargs.get('compute_radius', spec.fscale == 'Absolute')
@@ -1837,6 +2130,7 @@ def modelFitGrid(spec, **kwargs):
     plot_format = kwargs.get('plot_format','pdf')
     file_best_comparison = kwargs.get('file_best_comparison',os.path.splitext(filebase)[0]+'_best_comparison.'+plot_format)
     file_mean_comparison = kwargs.get('file_mean_comparison',os.path.splitext(filebase)[0]+'_mean_comparison.'+plot_format)
+    file_corner = kwargs.get('file_corner',os.path.splitext(filebase)[0]+'_corner.'+plot_format)
 
 #    file_iterative = kwargs.get('file_iterative',os.path.splitext(filebase)[0]+'_iterative.dat')
 #    file_chains = kwargs.get('file_chains',os.path.splitext(filebase)[0]+'_chains.'+plot_format)
@@ -1847,76 +2141,56 @@ def modelFitGrid(spec, **kwargs):
 #        f.close()
 
 # read in available model grid points
-    gridparam = _loadModelParameters(model_set) # Range parameters can fall in
+    gridparam = _loadModelParameters(mset,instr) 
+# Range parameters can fall in
 #    tvals = numpy.arange(mlimits['teff'][0],mlimits['teff'][1]+mlimits['teff'][-1],mlimits['teff'][-1])
 #    gvals = numpy.arange(mlimits['logg'][0],mlimits['logg'][1]+mlimits['logg'][-1],mlimits['logg'][-1])
 #    zvals = numpy.arange(mlimits['z'][0],mlimits['z'][1]+mlimits['z'][-1],mlimits['z'][-1])
 
-# set points based on input ranges
-    rng = kwargs.get('teff_range',[numpy.min(gridparam['teff']),numpy.max(gridparam['teff'])])
-    rng = kwargs.get('temperature_range',rng)
-    rng = kwargs.get('t_range',rng)
-    if numpy.max(rng) < numpy.min(gridparam['teff']) or numpy.min(rng) > numpy.max(gridparam['teff']):
-        print('\nWarning: input temperature range {}-{} is outside limits of models {}-{}; defaulting to model range'.format(numpy.min(rng),numpy.max(rng),numpy.min(gridparam['teff']),numpy.max(gridparam['teff'])))
-    if numpy.max(rng) < numpy.max(gridparam['teff']) or numpy.min(rng) > numpy.min(gridparam['teff']):
-        gridparam['teff'] = gridparam['teff'][numpy.where(numpy.logical_and(gridparam['teff'] >= numpy.min(rng),gridparam['teff'] <= numpy.max(rng)))]
-
-    rng = kwargs.get('logg_range',[numpy.min(gridparam['logg']),numpy.max(gridparam['logg'])])
-    rng = kwargs.get('gravity_range',rng)
-    rng = kwargs.get('g_range',rng)
-    if numpy.max(rng) < numpy.min(gridparam['logg']) or numpy.min(rng) > numpy.max(gridparam['logg']):
-        print('\nWarning: input gravity range {}-{} is outside limits of models {}-{}; defaulting to model range'.format(numpy.min(rng),numpy.max(rng),numpy.min(gridparam['logg']),numpy.max(gridparam['logg'])))
-    if numpy.max(rng) < numpy.max(gridparam['logg']) or numpy.min(rng) > numpy.min(gridparam['logg']):
-        gridparam['logg'] = gridparam['logg'][numpy.where(numpy.logical_and(gridparam['logg'] >= numpy.min(rng),gridparam['logg'] <= numpy.max(rng)))]
-
-    rng = kwargs.get('z_range',[numpy.min(gridparam['z']),numpy.max(gridparam['z'])])
-    rng = kwargs.get('metallicity_range',rng)
-    if kwargs.get('nometallicity',False) == True: rng = [0,0]
-    if numpy.max(rng) < numpy.min(gridparam['z']) or numpy.min(rng) > numpy.max(gridparam['z']):
-        print('\nWarning: input metallicity range {}-{} is outside limits of models {}-{}; defaulting to model range'.format(numpy.min(rng),numpy.max(rng),numpy.min(gridparam['z']),numpy.max(gridparam['z'])))
-    if numpy.max(rng) < numpy.max(gridparam['z']) or numpy.min(rng) > numpy.min(gridparam['z']):
-        gridparam['z'] = gridparam['z'][numpy.where(numpy.logical_and(gridparam['z'] >= numpy.min(rng),gridparam['z'] <= numpy.max(rng)))]
+# populate ranges
+    ranges = {}
+    for ms in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+        if ms in list(gridparam.keys()):
+            if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
+                rng = kwargs.get('{}_range'.format(ms),[numpy.min(gridparam[ms]),numpy.max(gridparam[ms])])
+            else:
+                rng = numpy.unique(gridparam[ms])
+            rng = kwargs.get('{}_range'.format(SPECTRAL_MODEL_PARAMETERS[ms]['name']),rng)
+            rng = kwargs.get('{}_range'.format(SPECTRAL_MODEL_PARAMETERS[ms]['prefix']),rng)
+            ranges[ms] = rng
+            if ms == 'z' and kwargs.get('nometallicity',False) == True: ranges[ms] = [0,0]
 
 
-#    fit_parameters = {\
-#        'teff': tvals,'logg': gvals, 'z': zvals}
-#    for i,m in enumerate(MODEL_PARAMETER_NAMES[3:-1]):
-#        fit_parameters[m] = kwargs.get(m,mlimits[m])
-#        if isinstance(fit_parameters[m],list) == False:
-#            fit_parameters[m] = [fit_parameters[m]]
-
-
-# start a fitting loop
+# select models to fit by checking ranges
     parameters = []
-    stats = []
-    mparam = {'set': model_set,'force': True}
-    for t in gridparam['teff']:
-        mparam['teff'] = t
-        for g in gridparam['logg']:
-            mparam['logg'] = g
-            for z in gridparam['z']:
-                mparam['z'] = z
-                for f in gridparam['fsed']:
-                    mparam['fsed'] = f
-                    for k in gridparam['kzz']:
-                        mparam['kzz'] = k
-                        for c in gridparam['cld']:
-                            mparam['cld'] = c
-                            try:
-                                model = loadModel(**mparam)
-                                chi,scl = compareSpectra(spec, model, mask=mask, weights=weights, stat=stat)
-                                mparam['stat'] = chi
-                                mparam['scale'] = scl
-                                mparam['radius'] = ((scl*(10.*u.pc)**2)**0.5).to(u.Rsun)
-                                parameters.append(copy.deepcopy(mparam))
-                                stats.append(chi)
-                                if kwargs.get('verbose',False) == True: print('{}: T={},g={},z={},stat={},scale={},radius={}'.format(len(stats)-1,mparam['teff'],mparam['logg'],mparam['z'],numpy.round(mparam['stat']),mparam['scale'],mparam['radius']))
-                            except:
-                                if kwargs.get('verbose',False) == True: print('\nNo model for {}'.format(mparam))
+    for p in gridparam['parameter_sets']:
+        test = True
+        for ms in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+            if ms in list(p.keys()):
+                if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
+                    if float(p[ms]) < numpy.nanmin(ranges[ms]) or float(p[ms]) > numpy.nanmax(ranges[ms]): test = (test and False)
+                else:
+                    if p[ms] not in ranges[ms]: test = (test and False)
+        if test == True: parameters.append(p)
+    parameters = numpy.array(parameters)
+# test away    
+#    stats = []
+    for p in parameters:
+        model = loadModel(**p,force=True)
+        mkwargs = copy.deepcopy(kwargs)
+        mkwargs['plot'] = False
+        chi,scl = compareSpectra(spec, model, stat=stat, **mkwargs)
+        p['stat'] = chi
+        p['scale'] = scl
+        p['radius'] = ((scl*(10.*u.pc)**2)**0.5).to(u.Rsun)
+        if kwargs.get('verbose',False) == True: print(p)
+
 
 # report best parameters
-    parameters = [p for (c,p) in sorted(zip(stats,parameters))]
-    stats.sort()
+    stats = numpy.array([(p['stat']*u.m/u.m).value for p in parameters])
+#    parameters = [x for (y,x) in sorted(zip(stats,parameters))]
+    parameters = parameters[numpy.argsort(stats)]
+    stats = numpy.sort(stats)
 #    print('\n\n')
 #    for i,s in enumerate(stats):
 #        line = '{}: chi={}'.format(i,s)
@@ -1930,21 +2204,22 @@ def modelFitGrid(spec, **kwargs):
     bmodel.scale(parameters[0]['scale'])
 
     if kwargs.get('summary',True) == True: 
-        print('\nBest Parameters to fit to {} models:'.format(SPECTRAL_MODELS[model_set]['name']))
+        print('\nBest Parameters to fit to {} models:'.format(SPECTRAL_MODELS[mset]['name']))
         for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-            print('\t{} = {} {}'.format(SPECTRAL_MODEL_PARAMETERS[ms]['title'],parameters[0][ms],SPECTRAL_MODEL_PARAMETERS[ms]['unit']))
+            if ms in list(parameters[0].keys()):
+                print('\t{} = {} {}'.format(SPECTRAL_MODEL_PARAMETERS[ms]['title'],parameters[0][ms],SPECTRAL_MODEL_PARAMETERS[ms]['unit']))
         if compute_radius == True:
             print('\tRadius = {} {}'.format(parameters[0]['radius'].value,parameters[0]['radius'].unit))
-        print('\tchi={}'.format(stats[0]))
+        print('\tchi={}'.format(parameters[0]['stat']))
 
     if kwargs.get('plot',True) == True:
         _modelFitPlotComparison(spec,bmodel,stat=stats[0],file=file_best_comparison)
 
 # weighted means/uncertainties
-    fitweights = numpy.exp(-0.5*(numpy.array(stats)-numpy.min(stats)))
+    fitweights = numpy.exp(-0.5*(numpy.array(stats)-numpy.nanmin(stats))/len(spec.wave))
     fparam = copy.deepcopy(parameters[0])
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        if ms=='teff' or ms=='logg' or ms=='z':
+        if ms in list(parameters[0].keys()) and SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
             vals = [(p[ms]*(u.m/u.m)).value for p in parameters]
             fparam[ms],fparam[ms+'_unc'] = weightedMeanVar(vals,fitweights)
             fparam[ms]*=SPECTRAL_MODEL_PARAMETERS[ms]['unit']
@@ -1957,18 +2232,55 @@ def modelFitGrid(spec, **kwargs):
 
     if kwargs.get('summary',True) == True:
         print('\nStatistic-weighted Mean Parameters:')
-        for k in list(fparam.keys()):
-            if k in SPECTRAL_MODEL_PARAMETERS_INORDER:
-                if ms=='teff' or ms=='logg' or ms=='z':
-                    print('\t{}: {}+/-{} {}'.format(SPECTRAL_MODEL_PARAMETERS[ms]['title'],fparam[k].value,fparam[k+'_unc'].value,fparam[k].unit))
+        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+            if ms in list(fparam.keys()) and SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
+                print('\t{}: {}+/-{} {}'.format(SPECTRAL_MODEL_PARAMETERS[ms]['title'],fparam[ms].value,fparam[ms+'_unc'].value,fparam[ms].unit))
+        if compute_radius == True:
+            print('\tRadius = {}+/-{} {}'.format(fparam['radius'].value,fparam['radius_unc'].value,fparam['radius'].unit))
 #        if k == 'radius':
 #            print('\tRadius: {}+/-{} {}'.format(fparam[k].value,fparam[k+'_unc'].value,fparam[k].unit))
 
     if kwargs.get('plot',True) == True:
-        mmodel = loadModel(**fparam)
-        chi,scl = compareSpectra(spec, mmodel, mask=mask, weights=weights, stat=stat)
-        mmodel.scale(scl)
-        _modelFitPlotComparison(spec,mmodel,stat=stats[0],file=file_mean_comparison)
+        try:
+            mmodel = loadModel(**fparam)
+        except:
+            print('\nWarning! Could not load model {} for parameters {}'.format(mset,fparam))
+        else:
+            chi,scl = compareSpectra(spec, mmodel, stat=stat, **kwargs)
+            mmodel.scale(scl)
+            _modelFitPlotComparison(spec,mmodel,stat=chi,file=file_mean_comparison)
+
+
+# generate corner plot for Teff, logg, z
+    if kwargs.get('plot',True) == True:
+        try:
+            import corner
+        except:
+            print('\nWarning! Must install corner to make a corner plot: https://github.com/dfm/corner.py')
+        else:
+            pvar = []
+            for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+                if splat.SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous' and ms in list(parameters[0].keys()): pvar.append(ms)
+            if compute_radius == True: pvar.append('radius')
+            plotp = {}
+            for ms in pvar: plotp[ms] = []
+            for p in parameters:
+                for ms in pvar:
+                    plotp[ms].append((p[ms]*(u.m/u.m)).value)
+            pd = pandas.DataFrame(plotp)
+            pd = pd[pvar]
+            prange = []
+            for ms in pvar:
+                if ms == 'radius':
+                    d = 0.
+                else:
+                    d = numpy.nanmax(pd[ms])-numpy.nanmin(pd[ms])
+                    d = numpy.nanmax([d,0.05*(numpy.nanmax(gridparam[ms])-numpy.nanmin(gridparam[ms]))])
+                prange.append((numpy.nanmin(pd[ms])-d,numpy.nanmax(pd[ms])+d))
+            fig = corner.corner(pd,weights=fitweights,labels=[SPECTRAL_MODEL_PARAMETERS[ms]['title'] for ms in pvar],range=prange,truths=[(fparam[ms]*u.m/u.m).value for ms in pvar],show_titles=True)
+            fig.savefig(file_corner)
+
+
 
 # return parameters; otherwise return 
     if kwargs.get('return_model',False) == True:
@@ -2078,7 +2390,7 @@ def modelFitMCMC(spec, **kwargs):
 
 # set mask   
     mask_ranges = kwargs.get('mask_ranges',None)
-    mask = kwargs.get('mask',_generateMask(spec.wave,**kwargs))
+    mask = kwargs.get('mask',generateMask(spec.wave,**kwargs))
     
 # set the degrees of freedom    
     try:
@@ -2106,6 +2418,7 @@ def modelFitMCMC(spec, **kwargs):
     param0 = {}
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: param0[ms] = SPECTRAL_MODEL_PARAMETERS[ms]['default']
     p = kwargs.get('initial_guess',[param0['teff'],param0['logg'],param0['z']])
+    if len(p) < 3: p.append(0.)
     param0['teff'] = kwargs.get('initial_temperature',p[0])
     param0['teff'] = kwargs.get('initial_teff',param0['teff'])
     param0['logg'] = kwargs.get('initial_gravity',p[1])
@@ -2178,7 +2491,9 @@ def modelFitMCMC(spec, **kwargs):
 #        if param0[2] == 0.:
 #            param_step[2] = 0.
 
-    chisqr0,alpha0 = compareSpectra(spec, model, **kwargs)
+    mkwargs = copy.deepcopy(kwargs)
+    mkwargs['plot'] = False
+    chisqr0,alpha0 = compareSpectra(spec, model, **mkwargs)
     chisqrs = [chisqr0]    
     params = [param0]
     radii = [(10.*u.pc*numpy.sqrt(alpha0)).to(u.Rsun)]
@@ -2861,7 +3176,7 @@ def modelFitEMCEE(spec, **kwargs):
     limits = kwargs.get('limits', [teff_range,logg_range,z_range])
 
 # create a mask
-    mask = kwargs.get('mask',_generateMask(spec.wave,**kwargs))
+    mask = kwargs.get('mask',generateMask(spec.wave,**kwargs))
 
 # set initial parameters
     parameters0 = kwargs.get('initial_guess',[\

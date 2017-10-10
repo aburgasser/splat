@@ -29,15 +29,17 @@ from .utilities import *
 ###############   SPECTROPHOTOMETRY   ###############
 #####################################################
 
-def checkFilter(filt,verbose=True,info=True):
-    f = filt
-    if f not in FILTERS.keys(): f = filt.replace(' ','_')
-    if f not in FILTERS.keys(): f.upper()
-    if f not in FILTERS.keys(): 
-        if verbose: print('\nFilter '+filt+' not currently available for SPLAT; contact '+SPLAT_EMAIL+'\n')
-        if info: filterInfo()
-        return False
-    return f
+def checkFilter(filt,verbose=True):
+    output = False
+    f = copy.deepcopy(filt)
+    f = f.replace(' ','_').upper()
+    for k in list(FILTERS.keys()):
+        if f==k.upper() or f.lower() in FILTERS[k]['altnames']:
+            output = k
+    if output == False and verbose == True: 
+        print('\nFilter '+filt+' not currently available for SPLAT; contact '+SPLAT_EMAIL+'\n')
+        filterInfo()
+    return output
 
 
 def filterProfile(filt,**kwargs):
@@ -62,12 +64,8 @@ def filterProfile(filt,**kwargs):
         filterFolder = SPLAT_URL+FILTER_FOLDER
 
 # check that requested filter is in list
-    f0 = copy.deepcopy(filt)
-    f0 = checkFilter(f0)
-    if f0 == False: 
-        print('\nFilter {} is not specified in SPLAT'.format(filt))
-        filterInfo()
-        raise ValueError
+    f0 = checkFilter(filt, verbose=True)
+    if f0 == False: raise ValueError
     filt = f0
 
 # read in filter
@@ -83,39 +81,32 @@ def filterProfile(filt,**kwargs):
 
 def filterMag(sp,filt,*args,**kwargs):
     '''
-    :Purpose: Determine the photometric magnitude of a source based on its
-                spectrum. Spectral fluxes are convolved with the filter profile specified by
-                the ``filter`` input.  By default this filter is also
-                convolved with a model of Vega to extract Vega magnitudes,
-                but the user can also specify AB magnitudes, photon flux or
-                energy flux.
+    :Purpose: 
 
-    :param sp: Spectrum class object, which should contain wave, flux and
-                 noise array elements.
-    :type sp: required
-    :param filter: String giving name of filter, which can either be one of the predefined filters listed in splat.FILTERS.keys() or a custom filter name
-    :type filter: required
+    Determine the photometric magnitude of a source based on its
+    spectrum. Spectral fluxes are convolved with the filter profile specified by
+    the ``filter`` input.  By default this filter is also
+    convolved with a model of Vega to extract Vega magnitudes,
+    but the user can also specify AB magnitudes, photon flux or energy flux.
+
+    :Required Parameters:
+
+        **sp**: Spectrum class object, which should contain wave, flux and noise array elements.
+        **filter**: String giving name of filter, which can either be one of the predefined filters listed in splat.FILTERS.keys() or a custom filter name
+
+    :Optional Parameters:
     
-    :param custom: A 2 x N vector array specifying the wavelengths and transmissions for a custom filter
-    :type custom: optional, default = None
-    :param notch: A 2 element array that specifies the lower and upper wavelengths for a notch filter (100% transmission within, 0% transmission without)
-    :type notch: optional, default = None
-    :param vega: compute Vega magnitudes
-    :type vega: optional, default = True
-    :param ab: compute AB magnitudes
-    :type ab: optional, default = False
-    :param energy: compute energy flux
-    :type energy: optional, default = False
-    :param photon: compute photon flux
-    :type photon: optional, default = False
-    :param filterFolder: folder containing the filter transmission files
-    :type filterFolder: optional, default = splat.FILTER_FOLDER
-    :param vegaFile: name of file containing Vega flux file, must be within ``filterFolder``
-    :type vegaFile: optional, default = vega_kurucz.txt
-    :param nsamples: number of samples to use in Monte Carlo error estimation
-    :type nsamples: optional, default = 100
-    :param info: List the predefined filter names available
-    :type info: optional, default = False
+        **custom** = None: A 2 x N vector array specifying the wavelengths and transmissions for a custom filter
+        **notch** = None: A 2 element array that specifies the lower and upper wavelengths for a notch filter (100% transmission within, 0% transmission without)
+        **vega** = True: compute Vega magnitudes (may be set by filter)
+        **ab** = False: compute AB magnitudes (may be set by filter)
+        **energy** = False: compute energy flux
+        **photon** = False: compute photon flux
+        **filterFolder** = splat.FILTER_FOLDER: folder containing the filter transmission files
+        **vegaFile** = 'vega_kurucz.txt': name of file containing Vega flux file, must be within ``filterFolder``
+        **nsamples** = 100: number of samples to use in Monte Carlo error estimation
+        **info** = False: List the predefined filter names available
+        **verbose** = True: List the predefined filter names available
 
     :Example:
     >>> import splat
@@ -141,11 +132,8 @@ def filterMag(sp,filt,*args,**kwargs):
 
 # check that requested filter is in list
     if isinstance(custom,bool) and isinstance(notch,bool):
-        f0 = copy.deepcopy(filt)
-        f0 = checkFilter(f0)
+        f0 = checkFilter(filt,verbose=True)
         if f0 == False: 
-            print('\nFilter {} is not specified in SPLAT'.format(filt))
-            filterInfo()
             return numpy.nan, numpy.nan
         filt = f0
         
