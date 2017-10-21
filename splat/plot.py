@@ -337,7 +337,7 @@ def plotSpectrum(*args, **kwargs):
         comparison = False
     residual = kwargs.get('residual',False)
     inset = kwargs.get('inset',False)
-    inset_xrange = kwargs.get('inset_xrange',False)
+    inset_xrange = kwargs.get('inset_xrange',[])
     inset_position = kwargs.get('inset_position',[.65, .6, .2, .2])
 #    inset_color = kwargs.get('inset_color','k')
     inset_features = kwargs.get('inset_features',False)
@@ -490,14 +490,12 @@ def plotSpectrum(*args, **kwargs):
             xlabel = kwargs.get('xlabel','Wavelength (unknown units)')
             ylabel = kwargs.get('ylabel','Flux (unknown units)')
         xrng = kwargs.get('xrange',[numpy.nanmin(sp[0].wave.value),numpy.nanmax(sp[0].wave.value)])
-        if isinstance(xrng[0],u.quantity.Quantity):
-            xrng = [x.value for x in xrng]
+        if isUnit(xrng[0]): xrng = [x.value for x in xrng]
         bound = []
         bound.extend(xrng)
         ymax = [s.fluxMax().value for s in sp]
         yrng = kwargs.get('yrange',numpy.array([-0.02,1.2])*numpy.nanmax(ymax)+numpy.nanmax(zeropoint))
-        if isinstance(yrng[0],u.quantity.Quantity):
-            yrng = [x.value for x in yrng]
+        if isUnit(yrng[0]): yrng = [x.value for x in yrng]
         bound.extend(yrng)
         linestyle = kwargs.get('linestyle',['steps-mid' for x in numpy.arange(len(sp))])
         linestyle = kwargs.get('linestyles',linestyle)
@@ -753,7 +751,7 @@ def plotSpectrum(*args, **kwargs):
                     ax.text(numpy.mean(b),bound[2]+3*yoff,bandlabels[i],horizontalalignment='center',fontsize=fontsize)
 
 # place inset - RIGHT NOW ONLY SETTING LIMITS WITH FIRST SPECTRUM IN LIST
-        if inset == True and inset_xrange != False:
+        if inset == True and len(inset_xrange) != 0:
             ax_inset = fig[pg_n-1].add_axes(inset_position) #, axisbg='white')
             bound2 = inset_xrange
             b0 = numpy.argmax(sp[0].wave.value > bound2[0])
@@ -807,13 +805,12 @@ def plotSpectrum(*args, **kwargs):
                 ax_inset.axis(bound2)
 
 # finalize bounding
-        if kwargs.get('xrange',None) != None:
-            bound[0:2] = kwargs['xrange']
-        if kwargs.get('yrange',None) != None:
-            bound[2:4] = kwargs['yrange']
+#        if kwargs.get('xrange',None) != None:
+        bound[0:2] = xrng
+#        if kwargs.get('yrange',None) != None:
+        bound[2:4] = yrng
         for i,b in enumerate(bound):
-            if isinstance(b,u.quantity.Quantity):
-                bound[i]=b.value
+            if isUnit(b): bound[i]=b.value
         ax.axis(bound)
 
     

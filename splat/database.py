@@ -222,8 +222,7 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
         return Table()
 
 # parameters
-    if not isinstance(radius,u.quantity.Quantity):
-        radius*=u.arcsec
+    if not isUnit(radius): radius = radius*u.arcsec
 
 # sort out what catalog to query
     if kwargs.get('2MASS',False) or kwargs.get('2mass',False) or catalog.upper() == '2MASS':
@@ -362,8 +361,7 @@ def querySimbad(variable,radius=30.*u.arcsec,sort='sep',reject_type=None,nearest
         return Table()
 
 # parameters 
-    if not isinstance(radius,u.quantity.Quantity):
-        radius*=u.arcsec
+    if not isUnit(radius): radius=radius*u.arcsec
 
 # check if this is a coordinate query
     if isinstance(variable,SkyCoord):
@@ -673,7 +671,7 @@ def queryNist(element,wave_range,clean=['Observed'],noclean=False,verbose=True,w
         element = element+' I'
     if len(element.strip().split(' ')) != 1:
         raise ValueError('\nElement input must be a string like "K I", not {}'.format(element))
-    if not isinstance(wave_range[0],u.quantity.Quantity): wave_range = [w*u.micron for w in wave_range]  
+    if not isUnit(wave_range[0]): wave_range = [w*u.micron for w in wave_range]  
 
     t = Nist.query(wave_range[0],wave_range[1],linename=element,energy_level_unit='eV',wavelength_type=wavelength_type)
     if noclean == False:
@@ -754,7 +752,7 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
         db[raCol] = [c.ra.degree for c in db['COORDINATES']]
         db[decCol] = [c.dec.degree for c in db['COORDINATES']]
     basecols = ['DESIGNATION',raCol,decCol]
-    if not isinstance(radius,u.quantity.Quantity): radius = radius*u.arcsec
+    if not isUnit(radius): radius = radius*u.arcsec
         
 # assign entries to save
     xmatch_catalogs = {
@@ -882,12 +880,10 @@ def importSpectra(*args,**kwargs):
 
 # set up optional inputs
     simbad_radius = kwargs.get('simbad_radius',60.*u.arcsec)
-    if isinstance(simbad_radius,u.quantity.Quantity) == False:
-        simbad_radius*=u.arcsec
+    if not isUnit(simbad_radius): simbad_radius=simbad_radius*u.arcsec
 
     vizier_radius = kwargs.get('vizier_radius',30.*u.arcsec)
-    if isinstance(vizier_radius,u.quantity.Quantity) == False:
-        vizier_radius*=u.arcsec
+    if not isUnit(vizier_radius): vizier_radius=vizier_radius*u.arcsec
 
     data_folder = kwargs.get('data_folder','./')
     data_folder = kwargs.get('dfolder',data_folder)

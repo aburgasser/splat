@@ -130,17 +130,27 @@ def checkOnline(*args):
        >>> spl.checkOnline('SpectralModels/BTSettl08/parameters.txt')
        '' # Could not find this online file.
     '''
-    if (len(args) != 0):
+    output = False
+
+    if len(args) != 0:
         if 'http://' in args[0]:
-            if requests.get(args[0]).status_code == requests.codes.ok:
-                return args[0]
-            return False
+            try:
+                if requests.get(args[0]).status_code == requests.codes.ok:
+                    output = args[0]
+            except:
+                pass
         else:
-            if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
-                return SPLAT_URL+args[0]
-            return False
+            try:
+                if requests.get(SPLAT_URL+args[0]).status_code == requests.codes.ok:
+                    output = SPLAT_URL+args[0]
+            except:
+                pass
     else:
-        return requests.get(SPLAT_URL).status_code == requests.codes.ok
+        try:
+            output = requests.get(SPLAT_URL).status_code == requests.codes.ok
+        except:
+            pass
+    return output
 
 
 
@@ -198,9 +208,10 @@ def checkInstrument(instrument):
     if not isinstance(instrument,str):
         return output
     for k in list(INSTRUMENTS.keys()):
-        if instrument.lower()==k.lower() or instrument.lower().replace(' ','_')==k.lower() or instrument.upper() in INSTRUMENTS[k]['altnames']:
+        if instrument.upper()==k.upper() or instrument.upper().replace(' ','_').replace('-','_')==k.upper() or instrument.upper() in [a.upper() for a in INSTRUMENTS[k]['altnames']]:
             output = k
     return output
+
 
 def checkFilterName(f,verbose=False):
     '''
@@ -357,6 +368,48 @@ def checkAbsMag(ref,filt='',verbose=False):
 
     return output
 
+
+def checkTelescope(location):
+    '''
+
+    Purpose: 
+        Checks that a location name is one of the telecopes listed in splat.initialize.TELESCOPES, including a check of alternate names
+
+    Required Inputs:
+        :param: location: A string containing the telescope/site name to be checked. This should be one of the locations in the global parameter splat.initialize.TELESCOPES
+        
+    Optional Inputs:
+        None
+
+    Output:
+        A string containing SPLAT's default name for a given telescope, or False if that telecope is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat.checkTelescope('keck'))
+        KECK
+    >>> print(splat.checkTelescope('mauna kea'))
+        KECK
+    >>> print(splat.checkTelescope('somethingelse'))
+        False
+    '''
+    output = False
+    if not isinstance(location,str):
+        return output
+    for k in list(TELESCOPES.keys()):
+        if location.upper().replace(' ','_').replace('-','_')==k.upper() or location.upper().replace(' ','_').replace('-','_') in [a.upper() for a in TELESCOPES[k]['altname']]:
+            output = k
+    return output
+
+def checkLocation(location):
+    '''
+
+    Purpose: 
+        Duplicate of checkTelescope()
+
+    '''
+    return checkTelescope(location)
 
 #####################################################
 ##############   SIMPLE CONVERSIONS   ###############
@@ -1019,8 +1072,9 @@ def baryVel(coord,obstime,location='keck',correction='barycenter'):
 # check location
     if not isinstance(location,EarthLocation):
         if isinstance(location,str):
-            if 'keck' in location.lower():
-                l = EarthLocation.from_geodetic(lat=19.8283*u.deg, lon=-155.4783*u.deg, height=4160*u.m)
+            loc = checkTelescope(location)
+            if loc != False:
+                l = EarthLocation.from_geodetic(lat=TELESCOPES[loc]['lat'], lon=TELESCOPES[loc]['lon'], height=TELESCOPES[loc]['height'])
             else:
                 try:
                     l =  EarthLocation.of_site(location)
@@ -1045,9 +1099,14 @@ def baryVel(coord,obstime,location='keck',correction='barycenter'):
             raise ValueError('\nCould not convert location input {} into an EarthLocation'.format(location))
     else: l = copy.deepcopy(location)
 
+# flag if we're not online
+    auto_max_age = 14.*u.day
+    if checkOnline() == False: auto_max_age = None
+
 # make correction
     if 'bary' in correction.lower():
         return c.radial_velocity_correction(obstime=t, location=l).to(u.km/u.s)  
+
     elif 'helio' in correction.lower():
         return c.radial_velocity_correction('heliocentric',obstime=t, location=l).to(u.km/u.s)  
     else:
@@ -1176,6 +1235,40 @@ def isNumber(s):
         return (True and not numpy.isnan(s1))
     except ValueError:
         return False
+
+def isUnit(s):
+    '''
+    :Purpose: 
+        Checks if something is an astropy unit quantity; written in response to the 
+        many ways that astropy now codes unit quantities
+
+    :Required Inputs: 
+        :param s: quantity to be checked
+
+    :Optional Inputs: 
+        None
+
+    :Output: 
+        True or False
+
+    :Example:
+    >>> import splat
+    >>> import astropy.units as u
+    >>> print splat.isUnit(3)
+        False
+    >>> print splat.isUnit(3.*u.s)
+        True
+    >>> print splat.isUnit(3.*u.s/u.s)
+        True
+    >>> print splat.isUnit((3.*u.s/u.s).value)
+        False
+    '''
+    return isinstance(s,u.quantity.Quantity) or \
+        isinstance(s,u.core.Unit) or \
+        isinstance(s,u.core.CompositeUnit) or \
+        isinstance(s,u.core.IrreducibleUnit) or \
+        isinstance(s,u.core.NamedUnit) or \
+        isinstance(s,u.core.PrefixUnit)
 
 
 def numberList(numstr,sort=False):

@@ -397,7 +397,7 @@ def typeToMag_old(spt, filt, **kwargs):
         return numpy.nan, numpy.nan
 
 
-def typeToMag(spt, filt, unc=0.,ref='faherty16',verbose=False,nsamples=100,**kwargs):
+def typeToMag(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,**kwargs):
     """
     :Purpose: Takes a spectral type and a filter, and returns absolute magnitude
     :param spt: string or integer of the spectral type

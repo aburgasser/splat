@@ -619,10 +619,10 @@ def modelParameters(*model,**kwargs):
         if p in pkeys:
             if isinstance(mkwargs[p],float) or isinstance(mkwargs[p],int):
                 mkwargs[p] = [mkwargs[p]]
-            if isinstance(mkwargs[p],u.quantity.Quantity):
+            if isUnit(mkwargs[p]):
                 unit = mkwargs[p].unit
                 mkwargs[p] = mkwargs[p].value
-            if isinstance(mkwargs[p][0],u.quantity.Quantity):
+            if isUnit(mkwargs[p][0]):
                 mkwargs[p] = [x*value for x in mkwargs[p]]
             numberValues = len(mkwargs[p])
 

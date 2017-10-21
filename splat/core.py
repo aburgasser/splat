@@ -109,7 +109,7 @@ class Spectrum(object):
     :param fscale: string describing how flux density is scaled (default = '')
     :param funit: unit in which flux density is measured (default = u.erg/(u.cm**2 * u.s * u.micron)
     :param funit_label: label of the unit of flux density (default = 'erg cm\^-2 s\^-1 micron\^-1')
-    :param resolution: Resolution of spectrum (default = 150)
+    :param resolution: Resolution of spectrum (default = median lam/lam step/2.)
     :param slitpixelwidth: Width of the slit measured in subpixel values (default = 3.33)
     :param slitwidth: Actual width of the slit, measured in arcseconds. Default value is the ``slitpixelwidth`` multiplied an assumed (for SpeX) spectrograph pixel scale of 0.15 arcseconds 
     :param header: header info of the spectrum (default = Table())
@@ -131,14 +131,14 @@ class Spectrum(object):
         self.ismodel = kwargs.get('ismodel',False)
         self.istransmission = kwargs.get('istransmission',False)
         self.wlabel = kwargs.get('wlabel',r'Wavelength')
-        self.wunit = kwargs.get('wunit',u.micron)
+        self.wunit = kwargs.get('wunit',BASE_WAVE_UNIT)
         self.wunit_label = kwargs.get('wunit_label',self.wunit)
         self.flabel = kwargs.get('flabel',r'F$_{\lambda}$')
         self.fscale = kwargs.get('fscale','Arbitrary')
         if kwargs.get('surface',False) == True: self.fscale = 'Surface'
         if kwargs.get('apparent',False) == True: self.fscale = 'Apparent'
         if kwargs.get('absolute',False) == True: self.fscale = 'Absolute'
-        self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.micron))
+        self.funit = kwargs.get('funit',BASE_FLUX_UNIT)
         self.funit_label = kwargs.get('funit_label',self.funit)
 #        self.header = kwargs.get('header',fits.PrimaryHDU())
         self.header = kwargs.get('header',{})
@@ -146,9 +146,12 @@ class Spectrum(object):
         self.filename = kwargs.get('filename',self.filename)
         self.name = kwargs.get('name','')
         self.idkey = kwargs.get('idkey',False)
+# instrument
         self.instrument = kwargs.get('instrument','')
         inst = checkInstrument(self.instrument) 
-        if inst != False: self.instrument = inst
+        if inst != False: 
+            self.instrument = inst
+            for k in list(INSTRUMENTS[inst].keys()): setattr(self,k,kwargs.get(k,INSTRUMENTS[inst][k]))
         self.instrument_mode = kwargs.get('instrument_mode','')
 #        self.runfast = kwargs.get('runfast',True)
         self.published = kwargs.get('published','N')
@@ -205,7 +208,7 @@ class Spectrum(object):
             mkwargs['instrument_mode']=self.instrument_mode
             mkwargs['filename']=self.filename
             self.simplefilename = os.path.basename(self.filename)
-            self.file = self.filename
+#            self.file = self.filename
             self.name = kwargs.get('name',self.simplefilename)
 # folder is by default the current directory
             mkwargs['folder'] = kwargs.get('folder','./')
@@ -275,11 +278,11 @@ class Spectrum(object):
             if (numpy.nanmax(self.flux/self.noise) > max_snr):
                 self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
 # convert to astropy quantities with units
-            if not isinstance(self.wave,u.quantity.Quantity):
+            if not isUnit(self.wave):
                 self.wave = numpy.array(self.wave)*self.wunit
-            if not isinstance(self.flux,u.quantity.Quantity):
+            if not isUnit(self.flux):
                 self.flux = numpy.array(self.flux)*self.funit
-            if not isinstance(self.noise,u.quantity.Quantity):
+            if not isUnit(self.noise):
                 self.noise = numpy.array(self.noise)*self.funit
 
 # some conversions
@@ -302,6 +305,9 @@ class Spectrum(object):
             self.variance = self.noise**2
             self.snr = self.computeSN()
 
+# estimate resolution - be default central lam/lam spacing/3
+            i = int(0.5*len(self.wave))
+            self.resolution = kwargs.get('resolution',self.wave.value[i]/numpy.absolute(self.wave.value[i+1]-self.wave.value[i])/2.)
 
 # populate information on source and spectrum from database
 #        print(sdb)
@@ -378,12 +384,13 @@ class Spectrum(object):
                 self.resolution = kwargs['resolution']
         if kwargs.get('slitwidth',False) != False:
             sl = kwargs['slitwidth']
-            if isinstance(sl,u.quantity.Quantity): sl = sl.value
+            if isUnit(sl): sl = sl.value
             if s1 > 0.:
                 self.resolution = self.resolution*(self.slitwidth.value)/sl
                 self.slitpixelwidth = self.slitpixelwidth*s1/(self.slitwidth.value)
                 self.slitwidth = kwargs['slitwidth']
-                if not isinstance(self.slitwidth,u.quantity.Quantity): self.slitwidth = self.slitwidth*u.arcsec
+                if not isUnit(self.slitwidth):
+                    self.slitwidth = self.slitwidth*u.arcsec
         if kwargs.get('slitpixelwidth',False) != False:
             if kwargs['slitpixelwidth'] > 0.:
                 self.resolution = self.resolution*self.slitpixelwidth/kwargs['slitpixelwidth']
@@ -550,15 +557,15 @@ class Spectrum(object):
             Spectrum of 2MASS J17373467+5953434 - WISE J174928.57-380401.6
         '''
 # convert wavelength and flux units
-        other.toWaveUnit(self.wunit)
-        other.toFluxUnit(self.funit)
+        other.toWaveUnit(self.wave.unit)
+        other.toFluxUnit(self.flux.unit)
 
 # make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
 # this fudge is for astropy 1.*
-        if not isinstance(sp.wave,u.quantity.Quantity):
-            sp.wave=sp.wave*self.wunit
+        if not isUnit(sp.wave):
+            sp.wave=sp.wave*self.wave.unit
 
 # generate interpolated axes
         f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
@@ -567,10 +574,10 @@ class Spectrum(object):
         n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
 
 # subtract
-        sp.flux = (f1(sp.wave.value)-f2(sp.wave.value))*self.funit
+        sp.flux = (f1(sp.wave.value)-f2(sp.wave.value))*self.flux.unit
 
 # uncertainty
-        sp.variance = (n1(sp.wave.value)+n2(sp.wave.value))*(self.funit**2)
+        sp.variance = (n1(sp.wave.value)+n2(sp.wave.value))*(self.flux.unit**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
 
@@ -947,6 +954,10 @@ class Spectrum(object):
             print('\nWarning! no filename provided, data were not saved')
             return
 
+# update source information
+        self.filename = os.path.basename(filename)
+        self.simplefilename = self.filename
+
 # determine which type of file
         ftype = filename.split('.')[-1]
 
@@ -1061,7 +1072,7 @@ class Spectrum(object):
         '''
         if self.fscale == 'Temperature' or self.flabel == r'${\lambda}F_{\lambda}$':
             self.reset()
-        self.funit = u.erg/(u.cm**2 * u.s * u.micron)
+        self.funit = BASE_FLUX_UNIT
         self.flabel = r'$F_{\lambda}$'
         self.flux = self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
         self.noise = self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
@@ -1237,6 +1248,53 @@ class Spectrum(object):
             print('Warning! failed to convert flux unit from {} to {}; no change made'.format(self.flux.unit,funit))
         return
 
+
+    def toWavelengths(self,wave):
+        '''
+        :Purpose: 
+            Maps a spectrum onto a new wavelength grid via interpolation or integral resampling
+
+        :Required Inputs:
+            :param wave: wavelengths to map to
+
+        :Optional Inputs:
+            None
+        
+        :Outputs:
+            None; Spectrum object is changed
+
+        :Example:
+           TBD
+        '''
+        
+        if not isUnit(wave):
+            wave = wave*self.wave.unit
+
+        if numpy.nanmin(((self.wave).to(wave.unit)).value) > numpy.nanmin(wave.value) or \
+            numpy.nanmax(((self.wave).to(wave.unit)).value) < numpy.nanmax(wave.value):
+            print('\nWarning: input wavelength range {} to {} outside spectrum wavelength range {} to {}'.format(numpy.nanmin(wave.value),numpy.nanmax(wave.value),numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value)))
+        else:
+            self.toWaveUnit(wave.unit)
+            self.trim([numpy.nanmin(wave),numpy.nanmax(wave)])
+
+# map onto wavelength grid; if spectrum has lower resolution, interpolate; otherwise integrate & resample
+            funit = self.flux.unit
+            if len(self.wave) <= len(wave):
+                f = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+                n = interp1d(self.wave.value,self.noise.value,bounds_error=False,fill_value=0.)
+                self.flux = f(wave.value)*funit
+                self.noise = n(wave.value)*funit
+            else:
+                self.flux = integralResample(self.wave.value,self.flux.value,wave.value)*funit
+                self.noise = integralResample(self.wave.value,self.noise.value,wave.value)*funit
+            self.wave = wave
+            self.variance = self.noise**2
+            self.history.append('Resampled to new wavelength grid')
+            self.snr = self.computeSN()
+
+        return
+
+
     def toInstrument(self,instrument,pixel_resolution=3.,**kwargs):
         '''
         :Purpose: 
@@ -1278,7 +1336,7 @@ class Spectrum(object):
             wave_range = INSTRUMENTS[instr]['wave_range']
             resolution = INSTRUMENTS[instr]['resolution']
             for k in list(INSTRUMENTS[instr].keys()): self.__setattr__(k,INSTRUMENTS[instr][k])
-        if not isinstance(wave_range,u.quantity.Quantity):
+        if not isUnit(wave_range):
             wave_range = wave_range*wunit
         wave_range.to(self.wave.unit)
         wave_range = wave_range.value
@@ -1341,7 +1399,7 @@ class Spectrum(object):
            >>> import astropy.units as u
            >>> sp.rvShift(15*u.km/u.s)
         '''
-        if not isinstance(rv,u.quantity.Quantity):
+        if not isUnit(rv):
             rv=rv*(u.km/u.s)
         rv.to(u.km/u.s)
         self.wave = self.wave*(1.+(rv/const.c).to(u.m/u.m))
@@ -1386,7 +1444,7 @@ class Spectrum(object):
                 Rotationally broadened spectrum by 30.0 km/s
         '''
         report = ''
-        if isinstance(vbroad,u.quantity.Quantity):
+        if isUnit(vbroad):
             vbroad.to(u.km/u.s)
         else:
             vbroad=vbroad*(u.km/u.s)
@@ -1512,7 +1570,7 @@ class Spectrum(object):
 
         if self.fscale == 'Temperature' or self.fscale == 'SED':
             self.reset()
-        if self.funit != u.erg/(u.cm**2 * u.s * u.micron):
+        if self.funit != BASE_FLUX_UNIT:
             self.toFlam()
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',not absolute)
@@ -1587,19 +1645,17 @@ class Spectrum(object):
         if kwargs.get('maskTelluric',True):            
             try:
                 fl = self.flux[numpy.where(numpy.logical_or(\
-                    numpy.logical_and(self.wave > 0.9*u.micron,self.wave < 1.35*u.micron),
-                    numpy.logical_and(self.wave > 1.42*u.micron,self.wave < 1.8*u.micron),
-                    numpy.logical_and(self.wave > 1.92*u.micron,self.wave < 2.3*u.micron)))]
-                if isinstance(fl[0],u.quantity.Quantity):
-                    fl = [f.value for f in fl]
+                    numpy.logical_and(self.wave.to(u.micron) > 0.9*u.micron,self.wave.to(u.micron) < 1.35*u.micron),
+                    numpy.logical_and(self.wave.to(u.micron) > 1.42*u.micron,self.wave.to(u.micron) < 1.8*u.micron),
+                    numpy.logical_and(self.wave.to(u.micron) > 1.92*u.micron,self.wave.to(u.micron) < 2.3*u.micron)))]
+                if isUnit(fl[0]): fl = [f.value for f in fl]
                 return numpy.nanmax(fl)*self.funit
             except:
                 pass
         
         fl = self.flux[numpy.where(\
                 numpy.logical_and(self.wave > numpy.nanmin(self.wave)+0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave)),self.wave < numpy.nanmax(self.wave)-0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave))))]
-        if isinstance(fl[0],u.quantity.Quantity):
-            fl = [f.value for f in fl]
+        if isUnit(fl[0]): fl = [f.value for f in fl]
         return numpy.nanmax(fl)*self.funit
 
 
@@ -1640,8 +1696,8 @@ class Spectrum(object):
         if rng != False:
             if not isinstance(rng,list) and not isinstance(rng,numpy.ndarray):
                 rng = [rng]
-            if isinstance(rng[0],u.quantity.Quantity): rng = [r.to(self.wave.unit).value for r in rng]
-            if isinstance(rng,u.quantity.Quantity): rng = rng.to(self.wave.unit).value
+            if isUnit(rng[0]): rng = [r.to(self.wave.unit).value for r in rng]
+            if isUnit(rng): rng = rng.to(self.wave.unit).value
             if numpy.nanmax(rng) > numpy.nanmax(self.wave.value) or numpy.nanmin(rng) < numpy.nanmin(self.wave.value):
                 print('\nWarning: normalization range {} is outside range of spectrum wave array: {}'.format(rng,[numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value)]))
             if len(rng) == 1:
@@ -1651,7 +1707,7 @@ class Spectrum(object):
                 scalefactor = numpy.nanmax(self.flux.value[numpy.where(numpy.logical_and(self.wave.value > rng[0],self.wave.value < rng[1]))])
         else:
             scalefactor = self.fluxMax(**kwargs)
-        if isinstance(scalefactor,u.quantity.Quantity): scalefactor = scalefactor.value
+        if isUnit(scalefactor): scalefactor = scalefactor.value
         if scalefactor == 0.: print('\nWarning: normalize is attempting to divide by zero; ignoring')
         elif numpy.isnan(scalefactor) == True: print('\nWarning: normalize is attempting to divide by nan; ignoring')
         else: 
@@ -1716,7 +1772,7 @@ class Spectrum(object):
           This routine is still in beta form; only the CCM89 currently works
 
         '''
-        w = self.wave.to(u.micron).value                           # assuming in microns!
+        w = self.wave.to(BASE_WAVE_UNIT).value                           # assuming in microns!
 
         if kwargs.get('mie',False) == True:                 # NOT CURRENTLY FUNCTIONING
             x = 2*numpy.pi*a/w
@@ -2247,8 +2303,7 @@ class Spectrum(object):
         '''
         method = kwargs.get('method','hanning')
         kwargs['method'] = method
-        if not isinstance(width,u.quantity.Quantity):
-            width=width*u.arcsec
+        if not isUnit(width): width=width*u.arcsec
         pwidth = self.slitpixelwidth*(width/self.slitwidth).value
         self._smoothToSlitPixelWidth(pwidth,**kwargs)
         return
@@ -2265,8 +2320,7 @@ class Spectrum(object):
             print('To convert to surface fluxes you must first scale spectrum to absolute (10 pc) flux units')
             return
         r = copy.deepcopy(radius)
-        if not isinstance(r,u.quantity.Quantity):
-            r=r*const.R_sun
+        if not isUnit(r): r=r*const.R_sun
         self.scale((((10.*u.pc/r).to(u.m/u.m)).value)**2)
         self.history.append('Converted to surface fluxes assuming a radius of {} solar radii'.format((r/const.R_sun).to(u.m/u.m)))
         self.fscale = 'Surface'
@@ -2283,8 +2337,7 @@ class Spectrum(object):
         if self.fscale != 'Surface':
             print('To convert to brightness temperature you must first scale spectrum to surface flux units')
             return
-        if self.funit != u.erg/(u.cm**2 * u.s * u.micron):
-            self.toFlam()
+        if self.funit != BASE_FLUX_UNIT: self.toFlam()
         fs = copy.deepcopy(self.flux).to(u.erg/u.s/u.cm**3)
         fse = copy.deepcopy(self.noise).to(u.erg/u.s/u.cm**3)
         w = copy.deepcopy(self.wave).to(u.cm)
@@ -2307,13 +2360,18 @@ class Spectrum(object):
 
     def trim(self,rng,**kwargs):
         '''
-        :Purpose: Trims a spectrum to be within a certain wavelength range or set of ranges. Data outside of these ranges are excised from the wave, flux and noise arrays. The full spectrum can be restored with the reset() procedure.
+        :Purpose: 
+            Trims a spectrum to be within a certain wavelength range or set of ranges. 
+            Data outside of these ranges are excised from the wave, flux and noise arrays. 
+            The full spectrum can be restored with the reset() procedure.
 
-        :param range: the range(s) over which the spectrum is retained - a series of nested 2-element arrays
+        :Required Inputs: 
 
-        .. _smoothToResolution : api.html#splat.Spectrum.smoothToResolution
-        .. _smoothToPixelWidth : api.html#splat.Spectrum.smoothToPixelWidth
-        .. _smoothToSlitPixelWidth : api.html#splat.Spectrum.smoothToSlitPixelWidth
+            :param range: the range(s) over which the spectrum is retained - a series of nested 2-element arrays
+
+        :Optional Inputs: 
+
+            None
 
         :Example:
            >>> import splat
@@ -2329,20 +2387,24 @@ class Spectrum(object):
            124.51981
         '''
 
+        mask = numpy.zeros(len(self.wave))
+
         if isinstance(rng,float):
             rng = [rng-0.1,rng+0.1]
-        if ~isinstance(rng[0],list):
+        if not isinstance(rng[0],list):
             rng = [rng]
-        mask = numpy.zeros(len(self.wave))
+
         for r in rng:
-            if ~isinstance(r[0],u.quantity.Quantity):
-                r=r*u.micron
-            mask[numpy.where(((self.wave.value >= r[0].value) & (self.wave.value <= r[1].value)))] = 1
-        w = numpy.where(mask == 1)
-        self.wave = self.wave[w]
-        self.flux = self.flux[w]
-        self.noise = self.noise[w]
-        self.variance = self.variance[w]
+            if isUnit(r):
+                r=[(x*r.unit).to(self.wave.unit) for x in r]
+            if not isUnit(r[0]):
+                r = [x*self.wave.unit for x in r]
+            mask[numpy.where(numpy.logical_and(self.wave.value >= r[0].value,self.wave.value <= r[1].value))] = 1
+#        w = numpy.where(mask == 1)
+        self.wave = self.wave[mask == 1]
+        self.flux = self.flux[mask == 1]
+        self.noise = self.noise[mask == 1]
+        self.variance = self.variance[mask == 1]
         self.flam = self.flux
         self.nu = self.wave.to('Hz',equivalencies=u.spectral())
         self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
@@ -3421,14 +3483,14 @@ def readSpectrum(*args,**kwargs):
 # keyword parameters
     folder = kwargs.get('folder','')
     catchSN = kwargs.get('catchSN',True)
-    local = kwargs.get('local',True)
-    online = kwargs.get('online',not local and checkOnline())
-    local = not online
-    url = kwargs.get('url',SPLAT_URL+DATA_FOLDER)
     kwargs['model'] = False
     instrument = kwargs.get('instrument','')
     inst = checkInstrument(instrument)
     if inst != False: instrument = inst
+#    local = kwargs.get('local',True)
+#    online = kwargs.get('online',not local and checkOnline())
+#    local = not online
+#    url = kwargs.get('url',SPLAT_URL+DATA_FOLDER)
 
 # filename
     file = kwargs.get('file','')
@@ -3443,37 +3505,32 @@ def readSpectrum(*args,**kwargs):
         raise NameError('\nNo filename passed to readSpectrum')
 
 # first pass: check if file is local
-    if online == False:
-        if not os.path.exists(os.path.normpath(file)):
-            file = folder+os.path.basename(kwargs['filename'])
-            if not os.path.exists(os.path.normpath(file)):
+#    if online == False:
+    if not os.path.exists(os.path.normpath(file)):
+        nfile = folder+os.path.basename(kwargs['filename'])
+        if not os.path.exists(os.path.normpath(nfile)):
+            raise ValueError('\nCannot find files {} or {}'.format(file,nfile))
+        file=nfile
 #                print('Cannot find '+kwargs['filename']+' locally, trying online\n\n')
-                local = False
-                file = kwargs['filename']
+#                local = False
+#                file = kwargs['filename']
 
 # second pass: download file if necessary
-    online = not local
-    if online == True:
-        if checkOnline(url+file) == '':
-            file = folder+os.path.basename(kwargs['filename'])
-            if checkOnline(url+file) == '':
-                raise NameError('\nCannot find file '+kwargs['filename']+' on SPLAT website\n\n')
+# REMOVED 10/19/2017
+#    online = not local
+#    if online == True:
+#        if checkOnline(url+file) == '':
+#            file = folder+os.path.basename(kwargs['filename'])
+#            if checkOnline(url+file) == '':
+#                raise NameError('\nCannot find file '+kwargs['filename']+' on SPLAT website\n\n')
 # read in online file
 #            file = kwargs['filename']
-        try:
-#                file = TMPFILENAME+'.'+ftype
-            if os.path.exists(os.path.normpath(os.path.basename(kwargs['filename']))):
-                os.remove(os.path.normpath(os.path.basename(kwargs['filename'])))
-#                open(os.path.basename(file), 'wb').write(urllib2.urlopen(url+file).read())
-            open(os.path.normpath(os.path.basename(kwargs['filename'])), 'wb').write(requests.get(url+file).content)
-            file = kwargs['filename']
-#                print(file)
-#                kwargs['filename'] = os.path.basename(file)
-#               sp = Spectrum(**kwargs)
-#                os.remove(os.path.basename(tmp))
-#                return sp
-        except:
-            raise NameError('\nProblem reading in {} from SPLAT website'.format(kwargs['filename']))
+#        try:
+#            if os.path.exists(os.path.normpath(os.path.basename(kwargs['filename']))):
+#                os.remove(os.path.normpath(os.path.basename(kwargs['filename'])))
+#            open(os.path.normpath(os.path.basename(kwargs['filename'])), 'wb').write(requests.get(url+file).content)
+#        except:
+#            raise NameError('\nProblem reading in {} from SPLAT website'.format(kwargs['filename']))
 
 # instrument specific reads
     if instrument.upper()=='APOGEE': output = _readAPOGEE(file,**kwargs)
@@ -3526,8 +3583,8 @@ def readSpectrum(*args,**kwargs):
             header = fits.Header()      # blank header
 
 # delete file if this was an online read
-        if online and not local and os.path.exists(os.path.basename(file)):
-            os.remove(os.path.normpath(os.path.basename(file)))
+#        if online and not local and os.path.exists(os.path.basename(file)):
+#            os.remove(os.path.normpath(os.path.basename(file)))
 
 # remove file if this was a zipped file
         if zipflag != '':
@@ -3607,8 +3664,8 @@ def readSpectrum(*args,**kwargs):
 # clean up
 #    if url != '' and not local:
 #        os.remove(os.path.basename(TMPFILENAME))
-    if 'wunit' not in list(output.keys()): output['wunit'] = kwargs.get('wunit',u.micron)
-    if 'funit' not in list(output.keys()): output['funit'] = kwargs.get('funit',u.erg/u.s/u.cm/u.cm/u.micron)
+    if 'wunit' not in list(output.keys()): output['wunit'] = kwargs.get('wunit',BASE_WAVE_UNIT)
+    if 'funit' not in list(output.keys()): output['funit'] = kwargs.get('funit',BASE_FLUX_UNIT)
     return output
 
 
@@ -4925,7 +4982,7 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     if len(fit_ranges) == 0: fit_ranges = [[numpy.nanmin(sp1.wave),numpy.nanmax(sp1.wave)]]
     if len(fit_ranges) == 2 and not isinstance(fit_ranges[0],list): fit_ranges = [fit_ranges]
     for i,m in enumerate(fit_ranges):
-        if not isinstance(m,u.quantity.Quantity):
+        if not isUnit(m):
             fit_ranges[i] = (m*u.micron).to(sp1.wave.unit)
     fit_mask = kwargs.get('fit_mask',1.-generateMask(sp1.wave,mask_ranges=fit_ranges))
 
@@ -5019,7 +5076,7 @@ def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_stan
 # parameter check
     wave = copy.deepcopy(wv)
     if isinstance(wv,splat.Spectrum): wave = wv.wave
-    if not isinstance(wv,u.quantity.Quantity): wave = wave*u.micron
+    if not isUnit(wv): wave = wave*BASE_WAVE_UNIT
     if not isinstance(wave.value,list) and not isinstance(wave.value,numpy.ndarray):
         raise ValueError('\nInput parameter should be an array of wavelengths; you passed {}'.format(wv))
 
@@ -5035,18 +5092,18 @@ def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_stan
     mask_ranges = kwargs.get('mask_ranges',[mask_range])
     if mask_standard == True:
         mask_telluric = True
-        mask_ranges.append([0.,0.8]*u.micron)        # standard short cut
+        mask_ranges.append([0.,0.8]*BASE_WAVE_UNIT)        # standard short cut
 
 # mask telluric bands
     if mask_telluric == True:
-        mask_ranges.append([0.,0.65]*u.micron)        # meant to clear out short wavelengths
-        mask_ranges.append([1.35,1.42]*u.micron)
-        mask_ranges.append([1.8,1.92]*u.micron)
-        mask_ranges.append([2.45,99.]*u.micron)        # meant to clear out long wavelengths
+#        mask_ranges.append([0.,0.65]*BASE_WAVE_UNIT)        # meant to clear out short wavelengths
+        mask_ranges.append([1.35,1.42]*BASE_WAVE_UNIT)
+        mask_ranges.append([1.8,1.92]*BASE_WAVE_UNIT)
+        mask_ranges.append([2.45,99.]*BASE_WAVE_UNIT)        # meant to clear out long wavelengths
 
 # make sure quantities are all correct
     for i,m in enumerate(mask_ranges):
-        if not isinstance(m,u.quantity.Quantity): m = m*u.micron
+        if not isUnit(m): m = m*BASE_WAVE_UNIT
         m.to(wave.unit)
         mask_ranges[i] = m
 
@@ -5061,7 +5118,7 @@ def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_stan
 def measureEW(sp,line,width=[0.,0.],continuum=[0.,0.],plot=False,file='',output_unit=u.Angstrom,nsamp=100,verbose=True,recenter=True,absorption=True,name=''):
 
 # input checks
-    if isinstance(line,u.quantity.Quantity):
+    if isUnit(line):
         line_center = line.to(sp.wave.unit).value
     else: line_center = copy.deepcopy(line)
     if numpy.nanmin(sp.wave.value) > line_center or numpy.nanmax(sp.wave.value) < line_center:
@@ -5174,13 +5231,13 @@ def measureEW(sp,line,width=[0.,0.],continuum=[0.,0.],plot=False,file='',output_
 
 def measureEWElement(sp,element,wave_range=[0.,0.],getNist=False,**kwargs):
     if wave_range[0] == 0.: wave_range = [numpy.nanmin(sp.wave),numpy.nanmax(sp.wave)]
-    if not isinstance(wave_range[0],u.quantity.Quantity): wave_range = [w*sp.wave.unit for w in wave_range]  
+    if not isUnit(wave_range[0]): wave_range = [w*sp.wave.unit for w in wave_range]  
 
     if getNist==True:
         from .database import queryNist
         t = queryNist(element,wave_range,**kwargs)
         if len(t) == 0: return {}
-        lines = [(a*u.Angstrom).to(u.micron) for a in list(t['Observed'])]
+        lines = [(a*u.Angstrom).to(BASE_WAVE_UNIT) for a in list(t['Observed'])]
 
     else:
         el = element.lower().strip()
@@ -5201,7 +5258,7 @@ def measureEWElement(sp,element,wave_range=[0.,0.],getNist=False,**kwargs):
         else:
             print('\nHave not curated lines set for {}'.format(element))
             return {}
-        lines = [l*u.micron for l in lines]
+        lines = [l*BASE_WAVE_UNIT for l in lines]
             
 # measure lines and output to dictionary        
     output = {}
