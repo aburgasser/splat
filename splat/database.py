@@ -682,7 +682,7 @@ def queryNist(element,wave_range,clean=['Observed'],noclean=False,verbose=True,w
 
 
 
-def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNATION',raCol='RA',decCol='DEC',verbose=False,clean=True,drop_repeats=True,use_select_columns=True,select_columns=[],prefix=None):
+def queryXMatch(db,*args,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNATION',raCol='RA',decCol='DEC',verbose=False,clean=True,drop_repeats=True,use_select_columns=True,select_columns=[],prefix=None):
     '''
     Purpose
         Queries databases in the XXX XMatch service (REF), including SIMBAD
@@ -773,6 +773,8 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
 #        'USNO': {'vref': u'I/284', 'select_columns': 
 #        'LSPM': {'vref': u'I/298', 'select_columns': 
         }
+    if len(args) > 0:
+        catalog = args[0]
     if catalog.upper() in list(xmatch_catalogs.keys()):
         cat = catalog.upper()
         vref = xmatch_catalogs[cat]['vref']

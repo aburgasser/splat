@@ -967,11 +967,19 @@ class Spectrum(object):
             data = numpy.vstack((self.wave.value,self.flux.value,self.noise.value))
             hdu = fits.PrimaryHDU(data)
             for k in list(self.header.keys()):
-                if k.upper() not in ['HISTORY','COMMENT'] and k.replace('#','') != '':
-                    hdu.header[k] = self.header[k]
+                if k.upper() not in ['HISTORY','COMMENT','BITPIX','NAXIS','NAXIS1','NAXIS2','EXTEND'] and k.replace('#','') != '': # and k not in list(hdu.header.keys()):
+# stupidy because of astropy's ridiculous unit issues
+#                    if isUnit(self.header[k]):
+#                        try:
+ #                           hdu.header[k] = self.header[k].value
+ #                       except:
+ #                           hdu.header[k] = self.header[k].scale
+ #                   else:
+                    hdu.header[k] = str(self.header[k])
             for k in list(self.__dict__.keys()):
                 if isinstance(self.__getattribute__(k),str) == True or (isinstance(self.__getattribute__(k),float) == True and numpy.isnan(self.__getattribute__(k)) == False) or isinstance(self.__getattribute__(k),int) == True or isinstance(self.__getattribute__(k),bool) == True:
-                    hdu.header[k.upper()] = self.__getattribute__(k)
+                    hdu.header[k.upper()] = str(self.__getattribute__(k))
+#            print(hdu.header)
             hdu.writeto(filename,clobber=clobber)
 #            except:
 #                raise NameError('Problem saving spectrum object to file {}'.format(filename))
@@ -1502,7 +1510,7 @@ class Spectrum(object):
         return
 
 
-    def vsini(self,vsini,epsilon=0.6,verbose=False):
+    def rotate(self,vsini,epsilon=0.6,verbose=False):
         '''
         :Purpose:
 
@@ -1693,7 +1701,7 @@ class Spectrum(object):
         rng = kwargs.get('range',rng)
         if len(args) > 0:
             rng = args[0]
-        if rng != False:
+        if rng is not False:
             if not isinstance(rng,list) and not isinstance(rng,numpy.ndarray):
                 rng = [rng]
             if isUnit(rng[0]): rng = [r.to(self.wave.unit).value for r in rng]
@@ -2027,6 +2035,53 @@ class Spectrum(object):
         self.variance = self.noise**2
         self.fscale = 'Scaled'
         self.history.append('Spectrum scaled by a factor of {}'.format(factor))
+        return
+
+    def setNoise(self,rng=[],floor=0.):
+        '''
+        :Purpose: 
+
+            Sets the noise and variance array of the spectrum based on rough counting statistics; 
+            this routine is useful if the input spectrum has no input noise array
+
+        :Required Inputs:
+
+            One of the following must be provided:
+
+            * *rng*: 2-element list specifying the range
+            * *floor* = 0.: floor of uncertainty in spectrum flux units
+
+        :Optional Inputs:
+
+            None
+
+        :Output: 
+
+            Updates the noise and variance elements of Spectrum class
+
+        :Example:
+           >>> import splat, numpy
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> sp.normalize()
+           >>> sp.computeSN()  # reports 25.9118
+           >>> sp.noise = [numpy.nan for n in sp.noise]*sp.noise.unit
+           >>> sp.computeSN()  # reports nan
+           >>> sp.setNoise([floor=1.e-3) 
+           >>> sp.computeSN()  # reports 25.5425
+        '''
+        if len(rng) != 2 and floor == 0.:
+            print('\nMust specify a noise sampling range as a 2-element list or the floor flux density')
+            return
+        if floor == 0.:
+            if not isUnit(rng):
+                rng = rng*self.wave.unit
+            rng = (rng.to(self.wave.unit)).value
+            if rng[0] < numpy.nanmin(self.wave.value[1:]): rng[0] = numpy.nanmin(self.wave.value[1:])
+            if rng[1] > numpy.nanmax(self.wave.value[:-1]): rng[1] = numpy.nanmax(self.wave.value[:-1])
+            floor = numpy.nanmedian(numpy.array(self.flux.value)[numpy.where(numpy.logical_and(self.wave.value>rng[0],self.wave.value<rng[1]))])
+        self.noise = (((self.flux.value/floor)+1.)**0.5)*floor*self.flux.unit
+        self.variance = self.noise**2
+
         return
 
     def showHistory(self):
@@ -2523,7 +2578,7 @@ class Spectrum(object):
 
 
 # stitch spectrum
-def stitch(s1,s2,rng = [0.8,0.9],**kwargs):
+def stitch(s1,s2,rng = [],trim=[],**kwargs):
     '''
     :Purpose: Stitches together two spectra covering different wavelength scales.
 
@@ -2541,44 +2596,97 @@ def stitch(s1,s2,rng = [0.8,0.9],**kwargs):
     sp2 = copy.deepcopy(s2)
     
 # assert common units
-    wunit = kwargs.get('wunit',SPECTRAL_MODEL_WAVE_UNIT)
+    wunit = kwargs.get('wunit',sp1.wave.unit)
     sp1.toWaveUnit(wunit)
     sp2.toWaveUnit(wunit)
-    funit = kwargs.get('funit',SPECTRAL_MODEL_FLUX_UNIT)
+    funit = kwargs.get('funit',sp1.flux.unit)
     sp1.toFluxUnit(funit)
     sp2.toFluxUnit(funit)
 
-# scale to overlap region - this assumes full overlap over the stitch region
-# for now doing simple normalization - better to do uncertainty-weighted scaling
-    if numpy.max(sp1.wave.value) >= rng[1] and numpy.min(sp2.wave.value) <= rng[0]:
-        sp1.normalize(rng)  
-        sp2.normalize(rng)
-    else:
+# reorder to shortest wavelength spectrum first?
+
+# check range 
+    if len(rng) == 0:
+        rng = [numpy.nanmax([numpy.nanmin(sp1.wave.value),numpy.nanmin(sp2.wave.value)]),\
+            numpy.nanmin([numpy.nanmax(sp1.wave.value),numpy.nanmax(sp2.wave.value)])]*wunit
+    if not isUnit(rng):
+        rng=rng*wunit
+    rng = (rng.to(wunit)).value
+    if rng[0] < numpy.nanmin(sp1.wave.value[1:]): rng[0] = numpy.nanmin(sp1.wave.value[1:])
+    if rng[0] < numpy.nanmin(sp2.wave.value[1:]): rng[0] = numpy.nanmin(sp2.wave.value[1:])
+    if rng[1] > numpy.nanmax(sp1.wave.value[:-1]): rng[1] = numpy.nanmax(sp1.wave.value[:-1])
+    if rng[1] > numpy.nanmax(sp2.wave.value[:-1]): rng[1] = numpy.nanmax(sp2.wave.value[:-1])
+    if rng[0] >= rng[1]:
         raise ValueError('Stich region {} to {} does not overlap both spectra'.format(rng[0],rng[1]))
+#    print(rng,numpy.nanmin(sp1.wave.value),numpy.nanmax(sp1.wave.value),numpy.nanmin(sp2.wave.value),numpy.nanmax(sp2.wave.value))
 
 # interpolation of second spectrum
     f2r = interp1d(sp2.wave.value,sp2.flux.value)
     v2r = interp1d(sp2.wave.value,sp2.variance.value)
 
-# start with first spectrum
-    wave = sp1.wave.value[numpy.where(sp1.wave.value < rng[0])]
-    flux = sp1.flux.value[numpy.where(sp1.wave.value < rng[0])]
-    variance = sp1.variance.value[numpy.where(sp1.wave.value < rng[0])]
+# scale to overlap region, assuming first spectrum sets the flux scale standard
+# assume this minimizes chi^2 residuals
+    w12 = numpy.where(numpy.logical_and(numpy.array(sp1.wave.value)>=rng[0],numpy.array(sp1.wave.value)<=rng[1]))
+    wv12 = numpy.array(sp1.wave.value)[w12]
+    flx12 = numpy.array(sp1.flux.value)[w12]
+    var12 = numpy.array(sp1.variance.value)[w12]
+    sp1mid = Spectrum(wave=wv12*wunit,flux=flx12*funit,noise=(var12**0.5)*funit)
+    sp2mid = Spectrum(wave=wv12*wunit,flux=f2r(sp1mid.wave.value)*funit,noise=(v2r(sp1mid.wave.value)**0.5)*funit)
+
+    chi,scl = compareSpectra(sp1mid,sp2mid)
+
+#    w21 = numpy.where(numpy.logical_and(numpy.array(sp2.wave.value)>=rng[0],numpy.array(sp2.wave.value)<=rng[1]))
+    vtot = numpy.zeros(len(wv12))
+    vflag = 0
+    if not numpy.isnan(numpy.nanmedian(var12)): vtot=var12
+    if not numpy.isnan(numpy.nanmedian(v2r(wv12))): vtot=vtot+v2r(wv12)
+# no variance
+    if numpy.nanmedian(vtot) == 0.: vflag = 1
+    if vflag == 0:
+        scl = numpy.nansum(flx12*f2r(wv12)/vtot)/numpy.nansum(f2r(wv12)**2/vtot)
+    else:
+        scl = numpy.nansum(flx12*f2r(wv12))/numpy.nansum(f2r(wv12)**2)
+    sp2.scale(scl)
+    f2r = interp1d(sp2.wave.value,sp2.flux.value)
+    v2r = interp1d(sp2.wave.value,sp2.variance.value)
+
+# piece back together, starting with segments with minimum wavelength
+    if numpy.nanmin(sp1.wave.value) < numpy.nanmin(sp2.wave.value):
+        w1 = numpy.where(numpy.array(sp1.wave.value)<rng[0])
+        wave = numpy.array(sp1.wave.value)[w1]
+        flux = numpy.array(sp1.flux.value)[w1]
+        variance = numpy.array(sp1.variance.value)[w1]
+    else:
+        w1 = numpy.where(numpy.array(sp2.wave.value)<rng[0])
+        wave = numpy.array(sp2.wave.value)[w1]
+        flux = numpy.array(sp2.flux.value)[w1]
+        variance = numpy.array(sp2.variance.value)[w1]
 
 # mixed region
-    w1 = sp1.wave.value[numpy.where(numpy.logical_and(sp1.wave.value >= rng[0],sp1.wave.value < rng[1]))]
-    f1 = sp1.flux.value[numpy.where(numpy.logical_and(sp1.wave.value >= rng[0],sp1.wave.value < rng[1]))]
-    v1 = sp1.variance.value[numpy.where(numpy.logical_and(sp1.wave.value >= rng[0],sp1.wave.value < rng[1]))]
-    f12 = numpy.array([((f1[i]/v1[i])+(f2r(w1[i])/v2r(w1[i])))/(1./v1[i]+1./v2r(w1[i])) for i in range(len(w1))])
-    v12 = numpy.array([(1./(1./v1[i]+1./v2r(w1[i]))) for i in range(len(w1))])
-    wave = numpy.append(wave,w1)
-    flux = numpy.append(flux,f12)
-    variance = numpy.append(variance,v12)
+    v1 = var12
+    v2 = v2r(wv12)
+    if numpy.isnan(numpy.nanmedian(v1)): v1 = v2
+    if numpy.isnan(numpy.nanmedian(v2)): v2 = v1
+    if vflag == 0:
+        flxmid = (flx12/v1+f2r(wv12)/v2)/(1./v1+1./v2)
+    else:
+        flxmid = 0.5*(flx12+f2r(wv12))
+    varmid = 1./(1./v1+1./v2)
+    wave = numpy.append(wave,wv12)
+    flux = numpy.append(flux,flxmid)
+    variance = numpy.append(variance,varmid)
 
 # tail of second spectrum
-    wave = numpy.append(wave,sp2.wave.value[numpy.where(sp2.wave.value >= rng[1])])
-    flux = numpy.append(flux,sp2.flux.value[numpy.where(sp2.wave.value >= rng[1])])
-    variance = numpy.append(variance,sp2.variance.value[numpy.where(sp2.wave.value >= rng[1])])
+    if numpy.nanmin(sp1.wave.value) < numpy.nanmin(sp2.wave.value):
+        w2 = numpy.where(numpy.array(sp2.wave.value)>rng[1])
+        wave = numpy.append(wave,numpy.array(sp2.wave.value)[w2])
+        flux = numpy.append(flux,numpy.array(sp2.flux.value)[w2])
+        variance = numpy.append(variance,numpy.array(sp2.variance.value)[w2])
+    else:
+        w2 = numpy.where(numpy.array(sp1.wave.value)>rng[1])
+        wave = numpy.append(wave,numpy.array(sp1.wave.value)[w2])
+        flux = numpy.append(flux,numpy.array(sp1.flux.value)[w2])
+        variance = numpy.append(variance,numpy.array(sp1.variance.value)[w2])
 
 # put back units
     wave = wave*wunit
@@ -2586,17 +2694,20 @@ def stitch(s1,s2,rng = [0.8,0.9],**kwargs):
     variance = variance*(funit**2)
 
 # create new spectrum object containing combined spectrum
-    sp = copy.deepcopy(sp1)
-    sp.wave = wave
-    sp.flux = flux
-    sp.variance = variance
-    sp.noise = sp.variance**0.5
-    sp.snr = sp.computeSN()
+    sp = splat.Spectrum(wave=wave,flux=flux,noise=variance**0.5)
+#    sp.wave = wave
+#    sp.flux = flux
+#    sp.variance = variance
+#    sp.noise = sp.variance**0.5
+#    sp.snr = sp.computeSN()
     sp.name = 'Stitched spectrum of {} and {}'.format(sp1.name,sp2.name)
 
 # trim if desired
-    if kwargs.get('trim',False) != False:
-        sp.trim(kwargs['trim'])
+    if len(trim) == 2:
+        if not isUnit(trim):
+            trim=trim*sp.wave.unit
+        trim.to(sp.wave.unit).value
+        sp.trim(trim)
         
     return sp
 
@@ -2608,11 +2719,15 @@ def stitch(s1,s2,rng = [0.8,0.9],**kwargs):
 
 def getSpectrum(*args, **kwargs):
     '''
-    :Purpose: Gets a spectrum from the SPLAT library using various selection criteria. Calls searchLibrary_ to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. 
+    :Purpose: 
+
+        Gets a spectrum from the SPLAT library using various selection criteria. Calls searchLibrary_ to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. 
 
     .. _searchLibrary : api.html#splat_db.searchLibrary
 
-    :Output: An array of Spectrum objects that satisfy the search criteria
+    :Output: 
+
+        An array of Spectrum objects that satisfy the search criteria
 
     :Example:
     >>> import splat
@@ -3457,7 +3572,7 @@ def searchLibrary(*args, radius=10., instrument='SPEX_PRISM',**kwargs):
         sortkey = kwargs.get('sort','DESIGNATION')
         if sortkey.upper() == 'SNR': sortkey='MEDIAN_SNR'
         if sortkey.upper() in list(db.columns):
-            db.sort_values(sortkey.upper(),ascending=(not kwargs.get('reverse',False)))
+            db.sort_values(sortkey.upper(),ascending=(not kwargs.get('reverse',False)),inplace=True)
 
 # select what to return
         if ref != 'all' and ref in list(db.columns):
@@ -3476,7 +3591,7 @@ def searchLibrary(*args, radius=10., instrument='SPEX_PRISM',**kwargs):
 
 
 
-def readSpectrum(*args,**kwargs):
+def readSpectrum(*args,verbose=False,**kwargs):
     '''
     .. DOCS: will come back to this one
     '''
@@ -3488,9 +3603,9 @@ def readSpectrum(*args,**kwargs):
     inst = checkInstrument(instrument)
     if inst != False: instrument = inst
 #    local = kwargs.get('local',True)
-#    online = kwargs.get('online',not local and checkOnline())
+    online = False
 #    local = not online
-#    url = kwargs.get('url',SPLAT_URL+DATA_FOLDER)
+    url = kwargs.get('url',SPLAT_URL+DATA_FOLDER)
 
 # filename
     file = kwargs.get('file','')
@@ -3509,28 +3624,29 @@ def readSpectrum(*args,**kwargs):
     if not os.path.exists(os.path.normpath(file)):
         nfile = folder+os.path.basename(kwargs['filename'])
         if not os.path.exists(os.path.normpath(nfile)):
-            raise ValueError('\nCannot find files {} or {}'.format(file,nfile))
-        file=nfile
-#                print('Cannot find '+kwargs['filename']+' locally, trying online\n\n')
-#                local = False
-#                file = kwargs['filename']
+            if verbose==True: print('Cannot find '+kwargs['filename']+' locally, trying online\n\n')
+            online = checkAccess()
+            if online == False:
+                raise ValueError('\nCannot find files {} or {} locally, and you do not have remote access'.format(file,nfile))
+        else:
+            file=nfile
+            kwargs['filename'] = file
 
 # second pass: download file if necessary
-# REMOVED 10/19/2017
 #    online = not local
-#    if online == True:
-#        if checkOnline(url+file) == '':
-#            file = folder+os.path.basename(kwargs['filename'])
-#            if checkOnline(url+file) == '':
-#                raise NameError('\nCannot find file '+kwargs['filename']+' on SPLAT website\n\n')
+    if online == True:
+       if checkOnline(url+file) == '':
+           file = folder+os.path.basename(file)
+           if checkOnline(url+file) == '':
+               raise ValueError('\nCannot find file '+kwargs['filename']+' on SPLAT website\n\n')
 # read in online file
-#            file = kwargs['filename']
-#        try:
-#            if os.path.exists(os.path.normpath(os.path.basename(kwargs['filename']))):
-#                os.remove(os.path.normpath(os.path.basename(kwargs['filename'])))
-#            open(os.path.normpath(os.path.basename(kwargs['filename'])), 'wb').write(requests.get(url+file).content)
-#        except:
-#            raise NameError('\nProblem reading in {} from SPLAT website'.format(kwargs['filename']))
+#           file = kwargs['filename']
+       try:
+           if os.path.exists(os.path.normpath(os.path.basename(kwargs['filename']))):
+               os.remove(os.path.normpath(os.path.basename(kwargs['filename'])))
+           open(os.path.normpath(os.path.basename(kwargs['filename'])), 'wb').write(requests.get(url+file).content)
+       except:
+           raise NameError('\nProblem reading in {} from SPLAT website'.format(kwargs['filename']))
 
 # instrument specific reads
     if instrument.upper()=='APOGEE': output = _readAPOGEE(file,**kwargs)
@@ -3996,10 +4112,9 @@ def classifyByIndex(sp, *args, **kwargs):
     set = kwargs.get('set','burgasser')
     set = kwargs.get('ref',set)
     kwargs['set'] = set
-    allowed_sets = ['burgasser','reid','testi','allers']
-    if (set.lower() not in allowed_sets):
-        print('\nWarning: index classification method {} not present; returning nan\n\n'.format(set))
-        return numpy.nan, numpy.nan
+#    if (set.lower() not in allowed_sets):
+#        print('\nWarning: index classification method {} not present; returning nan\n\n'.format(set))
+#        return numpy.nan, numpy.nan
 
 # measure indices if necessary
     if (len(args) != 0):
@@ -4015,6 +4130,7 @@ def classifyByIndex(sp, *args, **kwargs):
             'coeff': [-32.1, 23.4]}, \
             'H2O-B': {'fitunc': 1.02, 'range': [18,28], 'spt': 0., 'sptunc': 99., 'mask': 1., \
             'coeff': [-24.9, 20.7]}}
+        method='polynomial'
 
 # Testi et al. (2001, ApJ, 522, L147)
     elif (set.lower() == 'testi'):
@@ -4034,6 +4150,7 @@ def classifyByIndex(sp, *args, **kwargs):
             'coeff': [2.11, 0.29]}, \
             'sH2O_K': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
             'coeff': [2.36, 0.60]}}
+        method='polynomial'
 
 # Burgasser (2007, ApJ, 659, 655) calibration
     elif (set.lower() == 'burgasser'):
@@ -4051,6 +4168,29 @@ def classifyByIndex(sp, *args, **kwargs):
             'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
             'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
             'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
+        method='polynomial'
+
+# Geballe et al. (2002, ApJ, 564, 466) calibration
+    elif set.lower() == 'geballe':
+        if (rem_flag or len(args) == 0):
+            kwargs['set'] = 'geballe'
+            i1 = measureIndexSet(sp, **kwargs)
+            kwargs['set'] = 'martin'
+            i2 = measureIndexSet(sp, **kwargs)
+            if sys.version_info.major == 2:
+                indices = dict(i1.items() + i2.items())
+            else:
+                indices = dict(i1.items() | i2.items())
+        spttypes = numpy.arange(20.,39.,1.)
+        ranges = { \
+            'PC3': [[2.4,2.6,20.],[2.6,2.86,21.],[2.85,3.25,22.],[3.25,4.25,23.],[4.25,6,24.]],\
+            'Color-d2': [[4.5,5.5,20.],[5.5,6.5,21.],[6.5,7.5,22.],[7.5,10.,23.],[10,17,24.],[17.,23.,25.],[23.,25.,26.]],\
+            'H2O-1.2': [[1.5,1.7,30.],[1.7,1.9,31.],[1.9,2.15,32.],[2.15,2.5,33.],[2.5,3.0,34.],[3.0,4.5,35.],[4.5,6.5,36.],[6.5,10.,37.],[10.,15.,38.]],\
+            'H2O-1.5': [[1.2,1.27,20.],[1.27,1.35,21.],[1.35,1.43,22.],[1.43,1.5,23.],[1.5,1.55,24.],[1.55,1.6,25.],[1.6,1.65,26.],[1.65,1.7,27.],[1.7,1.8,28.],[1.8,1.95,29.],[1.95,2.2,30.],[2.2,2.5,31.],[2.5,3.0,32.],[3.0,3.5,33.],[3.5,4.5,34.],[4.5,5.5,35.],[5.5,7.,36.],[7.,9.,37.],[9.,12.,38.]],\
+            'CH4-1.6': [[1.02,1.07,30.],[1.07,1.15,31.],[1.15,1.3,32.],[1.3,1.5,33.],[1.5,1.8,34.],[1.8,2.5,35.],[2.5,4,36.],[4.,6.,37.],[6.,9.,38.]],\
+            'CH4-2.2': [[0.91,0.94,23.],[0.94,0.98,24.],[0.98,1.025,25.],[1.025,1.075,26.],[1.075,1.125,27.],[1.125,1.175,28.],[1.175,1.25,29.],[1.25,1.4,30.],[1.4,1.6,31.],[1.6,1.95,32.],[1.95,2.75,33.],[2.75,3.8,34.],[3.8,5.5,35.],[5.5,8.5,36.],[8.5,12.,37],[12.,18.,38.]],\
+        }
+        method='ranges'
 
 # Allers et al. (2013, ApJ, 657, 511)
     elif (set.lower() == 'allers'):
@@ -4075,6 +4215,7 @@ def classifyByIndex(sp, *args, **kwargs):
             'coeff': [-97.230, 229.884, -202.245, 79.4477]}, \
             'H2O-2': {'fitunc': 0.501, 'range': [14,22], 'spt': 0., 'sptunc': 99., 'mask': 1., \
             'coeff': [37.5013, -97.8144, 55.4580, 10.8822]}}
+        method='polynomial'
 
 # Aganze et al. 2015 (in preparation)
 #    elif (set.lower() == 'aganze'):
@@ -4121,45 +4262,65 @@ def classifyByIndex(sp, *args, **kwargs):
         sys.stderr.write('\nWarning: '+set.lower()+' SpT-index relation not in classifyByIndex code\n\n')
         return numpy.nan, numpy.nan
 
-    for index in coeffs.keys():
-        if indices[index][1] > 0.:
-            vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))
-            coeffs[index]['spt'] = numpy.polyval(coeffs[index]['coeff'],indices[index][0])+sptoffset
-            if (set.lower() == 'testi'):
-                vals = (vals-10.)*10.+10.
-                coeffs[index]['spt'] = (coeffs[index]['spt']-10.)*10.+10.
-            coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
-        else:
-            coeffs[index]['spt'] = numpy.nan
-            coeffs[index]['sptunc'] = numpy.nan
-# fix testi spectral types
-
-        if (coeffs[index]['spt'] < coeffs[index]['range'][0] or coeffs[index]['spt'] > coeffs[index]['range'][1] or numpy.isnan(coeffs[index]['spt'])):
-            coeffs[index]['mask'] = 0.
-        else:
-            coeffs[index]['mask'] = 1.
-
-    for i in numpy.arange(nloop):
-        wts = [coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in coeffs.keys()]
-        if (numpy.nansum(wts) == 0.):
-            sys.stderr.write('\nIndices do not fit within allowed ranges\n\n')
-            return numpy.nan, numpy.nan
-        vals = [coeffs[index]['mask']*coeffs[index]['spt']/coeffs[index]['sptunc']**2 \
-            for index in coeffs.keys()]
-        sptn = numpy.nansum(vals)/numpy.nansum(wts)
-        sptn_e = 1./numpy.nansum(wts)**0.5
+# polynomial method
+    if method=='polynomial':
         for index in coeffs.keys():
-            if (sptn < coeffs[index]['range'][0] or sptn > coeffs[index]['range'][1]):
-                coeffs[index]['mask'] = 0
+            if indices[index][1] > 0.:
+                vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))
+                coeffs[index]['spt'] = numpy.polyval(coeffs[index]['coeff'],indices[index][0])+sptoffset
+                if (set.lower() == 'testi'):
+                    vals = (vals-10.)*10.+10.
+                    coeffs[index]['spt'] = (coeffs[index]['spt']-10.)*10.+10.
+                coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
+            else:
+                coeffs[index]['spt'] = numpy.nan
+                coeffs[index]['sptunc'] = numpy.nan
+    # fix testi spectral types
 
+            if (coeffs[index]['spt'] < coeffs[index]['range'][0] or coeffs[index]['spt'] > coeffs[index]['range'][1] or numpy.isnan(coeffs[index]['spt'])):
+                coeffs[index]['mask'] = 0.
+            else:
+                coeffs[index]['mask'] = 1.
+
+        for i in numpy.arange(nloop):
+            wts = [coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in coeffs.keys()]
+            if (numpy.nansum(wts) == 0.):
+                sys.stderr.write('\nIndices do not fit within allowed ranges\n\n')
+                return numpy.nan, numpy.nan
+            vals = [coeffs[index]['mask']*coeffs[index]['spt']/coeffs[index]['sptunc']**2 \
+                for index in coeffs.keys()]
+            sptn = numpy.nansum(vals)/numpy.nansum(wts)
+            sptn_e = 1./numpy.nansum(wts)**0.5
+            for index in coeffs.keys():
+                if (sptn < coeffs[index]['range'][0] or sptn > coeffs[index]['range'][1]):
+                    coeffs[index]['mask'] = 0
 
 # report individual subtypes
-    if verbose:
-        for i in coeffs.keys():
-            flg = '*'
-            if coeffs[i]['mask'] == 0:
+        if verbose == True:
+            for i in coeffs.keys():
+                flg = '*'
+                if coeffs[i]['mask'] == 0: flg = ''
+                print('{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc']))
+
+# ranges method - NOTE NOT CURRENTLY INCLUDING UNCERTAINTIES IN INDEX
+    if method=='ranges':
+        spts = []
+        spts_unc = []
+        for index in list(ranges.keys()):
+            spts.append(numpy.nan)
+            spts_unc.append(numpy.nan)
+            if indices[index][1] > 0.:
+                for r in ranges[index]: 
+                    if r[0] < indices[index][0] <= r[1]: spts[-1] = r[-1]
+# PLACEHOLDER FOR UNCERTAINTY INCLUSION
+            if verbose == True:
                 flg = ''
-            print('{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc']))
+                if numpy.isnan(spts[-1]): flg='*'
+                print('{}{}: {:.3f}+/-{:.3f} => SpT = {}'.format(flg,index,indices[index][0],indices[index][1],typeToNum(spts[-1])))
+
+        spts = numpy.array(spts)
+        sptn = numpy.nanmean(spts)
+        sptn_e = numpy.nanstd(spts)
 
 # round off to nearest 0.5 subtypes if desired
     if (rnd_flag):
@@ -4171,7 +4332,7 @@ def classifyByIndex(sp, *args, **kwargs):
     else:
         spt = sptn
 
-    if kwargs.get('allmeasures',False):
+    if kwargs.get('allmeasures',False) == True and method == 'polynomial':
         output = {}
         for k in coeffs.keys():
             output[k] = {'spt': coeffs[k]['spt'], 'spt_e': coeffs[k]['sptunc'], 'index': indices[k][0], 'index_e': indices[k][0]}
@@ -4897,7 +5058,7 @@ def classifyGravity(sp, *args, **kwargs):
 
 
 
-def compareSpectra(sp1, sp2, *args, **kwargs):
+def compareSpectra(s1, s2, *args, **kwargs):
     '''
     :Purpose: Compare two spectra against each other using a pre-selected statistic. Returns the value of the desired statistic as well as the optimal scale factor. Minimum possible value for statistic is 1.e-9.
 
@@ -4965,6 +5126,9 @@ def compareSpectra(sp1, sp2, *args, **kwargs):
     statistic = kwargs.get('statistic',statistic)
     minreturn = 1.e-60
 
+    sp1 = copy.deepcopy(s1)
+    sp2 = copy.deepcopy(s2)
+    
 # make sure spectra are on the same wavelength and flux unit scales
     sp2.toWaveUnit(sp1.wave.unit)
     sp2.toFluxUnit(sp1.flux.unit)
@@ -5317,7 +5481,7 @@ def measureEWSet(sp,*args,**kwargs):
     return result
 
 
-def measureIndex(sp,*args,method='ratio',sample='integrate',nsamples=100,noiseFlag='True',**kwargs):
+def measureIndex(sp,*args,method='ratio',sample='integrate',nsamples=100,noiseFlag=True,**kwargs):
     '''
     :Purpose: Measure an index on a spectrum based on defined methodology
                 measure method can be mean, median, integrate
@@ -5354,7 +5518,7 @@ def measureIndex(sp,*args,method='ratio',sample='integrate',nsamples=100,noiseFl
     if (len(args) < 2 and (method == 'ratio' or method == 'change')):
         print('\nIndex method {} needs at least 2 sample regions'.format(method))
         return numpy.nan, numpy.nan
-    if (len(args) < 3 and (method == 'line' or method == 'allers' or method == 'inverse_line')):
+    if (len(args) < 3 and (method == 'line' or method == 'allers' or method == 'inverse_line'  or method == 'sumnum' or method == 'sumdenom')):
         print('\n Index method {} needs at least 3 sample regions'.format(method))
         return numpy.nan, numpy.nan
 
@@ -5374,6 +5538,8 @@ def measureIndex(sp,*args,method='ratio',sample='integrate',nsamples=100,noiseFl
             value[i] = trapz(yNum,xNum)
         elif (sample == 'average'):
             value[i] = numpy.nanmean(yNum)
+        elif (sample == 'sum'):
+            value[i,j] = numpy.nansum(yNum)
         elif (sample == 'median'):
             value[i] = numpy.median(yNum)
         elif (sample == 'maximum'):
@@ -5401,6 +5567,8 @@ def measureIndex(sp,*args,method='ratio',sample='integrate',nsamples=100,noiseFl
                 value_sim[i,j] = trapz(yVar,xNum)
             elif (sample == 'average'):
                 value_sim[i,j] = numpy.nanmean(yVar)
+            elif (sample == 'sum'):
+                value_sim[i,j] = numpy.nansum(yVar)
             elif (sample == 'median'):
                 value_sim[i,j] = numpy.median(yVar)
             elif (sample == 'maximum'):
@@ -5427,6 +5595,12 @@ def measureIndex(sp,*args,method='ratio',sample='integrate',nsamples=100,noiseFl
     elif (method == 'change'):
         val = 2.*(value[0]-value[1])/(value[0]+value[1])
         vals = 2.*(value_sim[0,:]-value_sim[1,:])/(value_sim[0,:]+value_sim[1,:])
+    elif (method == 'sumnum'):
+        val = (value[0]+value[1])/value[2]
+        vals = (value_sim[0,:]+value_sim[1,:])/value_sim[2,:]
+    elif (method == 'sumdenom'):
+        val = value[0]/(value[1]+value[2])
+        vals = value_sim[0,:]/(value_sim[1,:]+value_sim[2,:])
     elif (method == 'allers'):
         val = (((numpy.mean(args[0])-numpy.mean(args[1]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value[2] \
             + ((numpy.mean(args[2])-numpy.mean(args[0]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value[1]) \
@@ -5456,7 +5630,7 @@ def measureIndex(sp,*args,method='ratio',sample='integrate',nsamples=100,noiseFl
 
 # wrapper function for measuring specific sets of indices
 
-def measureIndexSet(sp,**kwargs):
+def measureIndexSet(sp,set='burgasser',**kwargs):
     '''
     :Purpose: Measures indices of ``sp`` from specified sets. Returns dictionary of indices.
     :param sp: Spectrum class object, which should contain wave, flux and noise array elements
@@ -5466,7 +5640,7 @@ def measureIndexSet(sp,**kwargs):
             - *burgasser*: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J from `Burgasser et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...637.1067B>`_
             - *tokunaga*: K1, K2 from `Tokunaga & Kobayashi (1999) <http://adsabs.harvard.edu/abs/1999AJ....117.1010T>`_
             - *reid*: H2O-A, H2O-B from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_
-            - *geballe*: H2O-1.2, H2O-1.5, CH4-2.2 from `Geballe et al. (2002) <http://adsabs.harvard.edu/abs/2002ApJ...564..466G>`_
+            - *geballe*: H2O-1.2, H2O-1.5, CH4-2.2, Color-d2 from `Geballe et al. (2002) <http://adsabs.harvard.edu/abs/2002ApJ...564..466G>`_
             - *allers*: H2O, FeH-z, VO-z, FeH-J, KI-J, H-cont from `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_, `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_
             - *testi*: sHJ, sKJ, sH2O-J, sH2O-H1, sH2O-H2, sH2O-K from `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_
             - *slesnick*: H2O-1, H2O-2, FeH from `Slesnick et al. (2004) <http://adsabs.harvard.edu/abs/2004ApJ...610.1045S>`_
@@ -5482,7 +5656,6 @@ def measureIndexSet(sp,**kwargs):
         {'H2O-B': (1.0531856077273236, 0.0045092074790538221), 'H2O-A': (0.89673318593633422, 0.0031278302105038594)}
     '''
 # keyword parameters
-    set = kwargs.get('set','burgasser')
 
     if ('allers' in set.lower()):
         reference = 'Indices from Allers et al. (2007), Allers & Liu (2013)'
@@ -5531,10 +5704,61 @@ def measureIndexSet(sp,**kwargs):
     elif ('geballe' in set.lower()):
         reference = 'Indices from Geballe et al. (2002)'
         refcode = '2002ApJ...564..466G'
-        names = ['H2O-1.2','H2O-1.5','CH4-2.2']
-        ranges = [([1.26,1.29],[1.13,1.16]),\
+        names = ['Color-d2','Cont-1.0','H2O-1.2','H2O-1.5','H2O-2.2','CH4-1.6','CH4-2.2']
+        ranges = [\
+            ([0.96,0.98],[0.735,0.755]),\
+            ([1.04,1.05],[0.875,0.885]),\
+            ([1.26,1.29],[1.13,1.16]),\
             ([1.57,1.59],[1.46,1.48]),\
-            ([2.08,2.12],[2.215,2.255])]
+            ([2.09,2.11],[1.975,1.995]),\
+            ([1.56,1.6],[1.635,1.675]),\
+            ([2.08,2.12],[2.215,2.255]),\
+            ]
+        methods = ['ratio']*len(names)
+        samples = ['integrate']*len(names)
+    elif ('kirkpatrick' in set.lower()):
+        reference = 'Indices from Kirkpatrick et al. (1999)'
+        refcode = '1999ApJ...519..802K'
+        names = ['Rb-a','Rb-b','Na-a','Na-b','Cs-a','Cs-b','TiO-a','TiO-b','VO-a','VO-b','CrH-a','CrH-b','FeH-a','FeH-b','Color-a','Color-b','Color-c','Color-d']
+        ranges = [\
+            ([.77752,.77852],[.78152,.78252],[.77952,.78052]),\
+            ([.79226,.79326],[.79626,.79726],[.79426,.79526]),\
+            ([.81533,.81633],[.81783,.81883]),\
+            ([.81533,.81633],[.81898,.81998]),\
+            ([.84961,.85061],[.85361,.85461],[.85161,.85261]),\
+            ([.89185,.89285],[.89583,.89683],[.89385,.89485]),\
+            ([.7033,.7048],[.7058,.7073]),\
+            ([.8400,.8415],[.8435,.8470]),\
+            ([.7350,.7370],[.7550,.7570],[.7430,.7470]),\
+            ([.7860,.7880],[.8080,.8100],[.7960,.8000]),\
+            ([.8580,.8600],[.8621,.8641]),\
+            ([.9940,.9960],[.9970,.9990]),\
+            ([.8660,.8680],[.8700,.8720]),\
+            ([.9863,.9883],[.9908,.9928]),\
+            ([.9800,.9850],[.7300,.7350]),\
+            ([.9800,.9850],[.7000,.7050]),\
+            ([.9800,.9850],[.8100,.8150]),\
+            ([.9675,.9850],[.7350,.7550]),\
+        ]
+        methods = ['line','line','ratio','ratio','line','line','ratio','ratio','sumnum','sumnum','ratio','ratio','ratio','ratio','ratio','ratio','ratio','ratio']
+        samples = ['sum']*len(names)
+    elif ('martin' in set.lower()):
+        reference = 'Indices from Martin et al. (1999)'
+        refcode = '1999AJ....118.2466M'
+        names = ['PC3','PC6','CrH1','CrH2','FeH1','FeH2','H2O1','TiO1','TiO2','VO1','VO2']
+        ranges = [\
+            ([.823,.827],[.754,.758]),\
+            ([.909,.913],[.650,.654]),\
+            ([.856,.860],[.861,.865]),\
+            ([.984,.988],[.997,1.001]),\
+            ([.856,.860],[.8685,.8725]),\
+            ([.984,.988],[.990,.994]),\
+            ([.919,.923],[.928,.932]),\
+            ([.700,.704],[.706,.710]),\
+            ([.838,.842],[.844,.848]),\
+            ([.754,.758],[.742,.746]),\
+            ([.799,.803],[.790,.794]),\
+        ]
         methods = ['ratio']*len(names)
         samples = ['integrate']*len(names)
     elif ('mclean' in set.lower()):
@@ -5712,6 +5936,81 @@ def lsfRotation(vsini,vsamp,epsilon=0.6):
     x2 = numpy.absolute(1.-x**2)
 
     return (e1*numpy.sqrt(x2) + e2*x2)/e3
+
+
+def addUserData(folders=[],default_info={},verbose=True):
+    '''
+    :Purpose:
+
+        Reads in list of folders with properly processed model sets, checks them, and adds them to the SPECTRAL_MODELS global variable
+
+    :Required Inputs:
+
+        None
+
+    :Optional Inputs:
+
+        * :param folders = []: By default model folders are set in the .splat_spectral_models file; 
+        alternately (or in addition) folders of models can be included as an input list.
+        * :param default_info = {}: default parameter set to use for models; superceded by 'info.txt' file if present in model folder 
+        * :param verbose = False: provide verbose feedback
+
+    :Outputs:
+        
+        None, simply adds new model sets to SPECTRAL_MODELS global variable
+
+    '''
+# default information dictionary
+    if len(default_info.keys()) == 0:
+        default_info = {'folder': '', 'name': '', 'citation': '', 'bibcode': '', 'altnames': [], 'rawfolder': '', 'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
+
+# read in folders specified in .splat_spectral_models
+    if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
+        with open(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
+        folders.extend(x.split('\n'))
+        if '' in folders: folders.remove('')
+
+# check and read in the new folders in the SPECTRAL_MODELS dictionary
+    if len(folders) > 0:
+        for i,f in enumerate(folders):
+            flag = 0
+            minfo = copy.deepcopy(default_info)
+            if minfo['folder'] == '': minfo['folder'] = f
+            if minfo['name'] == '': minfo['name'] = os.path.normpath(f).split('/')[-1]
+            subfiles = os.listdir(minfo['folder'])
+# no duplicate models (for now)
+            if minfo['name'] in list(SPECTRAL_MODELS.keys()):
+                print('\nWarning: spectral model set {} already exists in SPECTRAL_MODELS library; ignoring this one'.format(minfo['name']))
+                flag = 1
+# make sure RAW directory exists (indicates models have been processed)
+            if 'RAW' not in subfiles:
+                print('\nWarning: did not find a RAW directory in {}; please process this model set using splat.model._processModels()'.format(minfo['folder']))
+                flag = 1
+# check for additional information file
+            if 'info.txt' not in subfiles:
+                print('\nWarning: did not find info.txt file in {}; using default values for model information'.format(minfo['folder']))
+            else:
+#                try:
+                f = minfo['folder']
+                with open(f+'/info.txt', 'r') as frd: x = frd.read()
+                lines = x.split('\n')
+                if '' in lines: lines.remove('')
+                lines = [x.split('\t') for x in lines]
+                minfo = dict(lines)
+                minfo['folder'] = f
+                for k in list(default_info.keys()):
+                    if k not in list(minfo.keys()): minfo[k] = default_info[k]
+                for k in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+                    if k in list(minfo.keys()): minfo['default'][k] = minfo[k]
+                    if 'default_'+k in list(minfo.keys()): minfo['default'][k] = minfo['default_'+k]
+                minfo['altnames'] = minfo['altnames'].split(',')
+#                except:
+#                    print('\nWarning: problem reading info.txt file in {}; using default values for model information'.format(minfo['folder']))
+            if flag == 0:
+                if verbose == True: print('\nAdding {} models to SPLAT model set'.format(minfo['name']))
+                SPECTRAL_MODELS[minfo['name']] = copy.deepcopy(minfo)
+                del minfo
+    return
 
 
 
