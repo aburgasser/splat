@@ -138,6 +138,152 @@ def fetchDatabase(*args, **kwargs):
     return data
 
 
+#####################################################
+###########  ADDING NEW SPECTRA TO SPLAT   ##########
+#####################################################
+
+def addUserSpectra(*args,folder='./',instrument='SPEX_PRISM',mode='update',repeat='retain',radius_repeat=10.*u.arcsec,input_file='input.txt',search_str='*.fits',sources_data_file='sources_data.txt',spectra_data_file='spectra_data.txt',verbose=True):
+    '''
+    :Purpose:
+
+        Adds in local spectral data to the underlying SPLAT library
+        This program is currently UNDER DEVELOPMENT
+
+    '''
+# program constants
+    optional_spectra_columns = ['PUBLISHED','DATA_BIBCODE','PROGRAM_PI','OBSERVATION_DATE','OBSERVATION_MJD','OBSERVATION_TIME','OBSERVER','AIRMASS']
+    optional_sources_columns = ['NAME','DESIGNATION','RA','DEC','COORDINATES','DISCOVERY_REF','SPT','SPT_REF','SPT_OPT','SPT_OPT_REF','SPT_NIR','SPT_NIR_REF','SPT_LIT','SPT_LIT_REF','LUMINOSITY_CLASS','METALLICITY_CLASS','GRAVITY_CLASS_OPTICAL','GRAVITY_CLASS_OPTICAL_REF','GRAVITY_CLASS_NIR','GRAVITY_CLASS_NIR_REF','CLUSTER','CLUSTER_REF','BINARY','BINARY_TYPE','BINARY_REF','SBINARY','SBINARY_REF','COMPANION_NAME','COMPANION_REF']
+    header_spectra_columns = {
+        'OBSERVATION_DATE': ['OBS_DATE','OBS-DATE','UT-DATE'],
+        'OBSERVATION_TIME': ['OBS_TIME','OBS-TIME','UT-TIME'],
+        'OBSERVER': [],
+        'AIRMASS': ['Z'],
+        'SLIT': ['APERTURE'],
+        'DISPERSER': ['GRATING','GRISM','DISPERSE'],
+        }
+    header_sources_columns = {
+        'NAME': ['OBJECT','SOURCE','TARGET'],
+        'RA': ['RA-D','RADEG'],
+        'DEC': ['DEC-D','DECDEG'],
+        }
+    dataset_number_factor = 1e6
+    now = time.localtime()
+    nowstr = str(now.tm_year)+str(now.tm_mon)+str(now.tm_mday)
+
+    if len(args) > 0:
+        folder = args[0]
+    if len(args) > 1:
+        instrument = args[1]
+
+# check instrument
+    inst = splat.checkInstrument(instrument)
+    if inst != False: instrument = inst
+
+# check mode and repeat
+    mode_labels = ['new','append','refresh','update']
+    if mode.lower() not in mode_labels:
+        if verbose==True: print('\nDo not recognize mode = {}; should be one of {}; reverting to update'.format(mode,mode_labels))
+        mode = 'update'
+    repeat_labels = ['replace','assert','retain','keep']
+    if repeat.lower() not in repeat_labels:
+        if verbose==True: print('\nDo not recognize repeat = {};  should be one of {}; reverting to retain'.format(repeat,repeat_labels))
+        repeat = 'retain'
+
+# check the folder is corretly specified
+    if not os.path.exists(folder):
+        print('\nCould not find folder {} in local directory structure; skipping')
+        return
+
+# check if spectra data file is present; if not, you'll need to generate a new one
+    if spectra_data_file not in os.listdir(folder):
+        if verbose == True: print('\nCannot find spectral data file {}; generating a new one from input files'.format(spectra_data_file))
+        mode = 'new'
+
+# STAGE 1: SET UP A NEW FOLDER OF DATA
+    if mode.lower() == 'new':
+
+# check if input file is in place; if not, make one
+        if input_file not in os.listdir(folder):
+            files = glob.glob(folder+'/'+search_str)
+            files = [os.path.basename(f) for f in files]
+            for f in [input_file,sources_data_file,spectra_data_file]:
+                if f in files: files.remove(f)
+
+            # turn into preliminary input.txt file
+            input_db = pandas.DataFrame()
+            input_db['DATA_FILE'] = files
+            input_db['INSTRUMENT'] = [instrument]*len(files)
+            if '.txt' in input_file: input_db.to_csv(folder+'/'+input_file,sep='\t',index=False)
+            elif '.csv' in input_file: input_db.to_csv(folder+'/'+input_file,sep=',',index=False)
+            elif '.xls' in input_file: input_db.to_csv(folder+'/'+input_file,sep=',',index=False)
+
+# prompt to continue?
+
+# read in input file and start building spectral database
+        if '.txt' in input_file: input_db = pandas.read_csv(folder+'/'+input_file,delimiter='\t')
+        elif '.csv' in input_file: input_db = pandas.read_csv(folder+'/'+input_file,delimiter=',')
+        elif '.xls' in input_file: input_db = pandas.read_excel(folder+'/'+input_file)
+        else:
+            raise ValueError('\nDo not recognize file format for input file {}'.format(input_file))
+
+#### STOPPED HERE
+
+# capitalize all columns
+        for c in list(input_db.columns):
+            if c.upper() not in list(input_db.columns):
+                input_db[c.upper()] = input_db[c]
+                del input_db[c]
+
+        # adjust instrument
+        syn = ['INST']
+        if 'INSTRUMENT' not in list(input_db.columns): 
+            for s in syn:
+                if s in list(input_db.columns): 
+                    input_db['INSTRUMENT'] = input_db[s]
+                    del input_db[s]
+        if 'INSTRUMENT' not in list(input_db.columns): 
+            input_db['INSTRUMENT'] = [instrument]*len(input_db)
+        for i,inst in enumerate(input_db['INSTRUMENT']):
+            inst = splat.checkInstrument(inst)
+            if inst != False: input_db['INSTRUMENT'].iloc[i] = inst
+
+        # adjust filename
+        syn = ['FILE','FILENAME','FILE_NAME']
+        if 'DATA_FILE' not in list(input_db.columns):
+            for s in syn:
+                if s in list(input_db.columns): 
+                    input_db['DATA_FILE'] = input_db[s]
+                    del input_db[s]
+
+        # establish source and spectra data frames
+        sources_db = pandas.DataFrame()
+        spectra_db = pandas.DataFrame()
+
+        # keys
+        keys = numpy.arange(len(input_db))+n*1.e6+1.
+        sources_db['SOURCE_KEY'] = [int(k) for k in keys]
+        spectra_db['DATA_KEY'] = sources_db['SOURCE_KEY']
+        spectra_db['SOURCE_KEY'] = sources_db['SOURCE_KEY']
+
+        # required spectral information
+        spectra_db['DATA_FILE'] = input_db['DATA_FILE']
+        spectra_db['DATA_FOLDER'] = [folder]*len(input_db)
+        spectra_db['INSTRUMENT'] = input_db['INSTRUMENT']
+        spectra_db['DATA_ENTRY'] = [nowstr]*len(input_db)
+
+        # add in optional columns from input 
+        for c in optional_spectra_columns:
+            if c in list(input_db.columns): spectra_db[c] = input_db[c]
+        for c in optional_sources_columns:
+            if c in list(input_db.columns): sources_db[c] = input_db[c]
+        for c in list(input_db.columns):
+            if c not in optional_spectra_columns and c not in optional_sources_columns and c not in list(spectra_db.columns): spectra_db[c] = input_db[c]
+
+# STAGE 1: SET UP A NEW FOLDER OF DATA
+    if mode.lower() == 'new' or mode.lower() == 'append':
+        pass
+
+    return
 
 
 

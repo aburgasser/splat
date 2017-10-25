@@ -118,7 +118,7 @@ def addUserModels(folders=[],default_info={},verbose=True):
 #                except:
 #                    print('\nWarning: problem reading info.txt file in {}; using default values for model information'.format(minfo['folder']))
             if flag == 0:
-                if verbose == True: print('\nAdding {} models to SPLAT model set'.format(minfo['name']))
+                if verbose == True: print('Adding {} models to SPLAT model set'.format(minfo['name']))
                 SPECTRAL_MODELS[minfo['name']] = copy.deepcopy(minfo)
                 del minfo
     return
@@ -262,8 +262,7 @@ def _modelName(modelset,instrument,param):
     return filename
 
 
-def _processOriginalModels(*args,**kwargs):
-    sedres = kwargs.get('sedres',100)
+def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],verbose=True,skipraw=True,**kwargs):
 
     if len(args) >= 1: mset = args[0]
     else: mset = kwargs.get('set',False)
@@ -271,133 +270,152 @@ def _processOriginalModels(*args,**kwargs):
     if modelset == False:
         raise ValueError('\nInvalid model set {}'.format(mset))
 
-# presets for various models - these are based on how they are downloaded
-    if modelset == 'burrows06':
-        readfxn = _readBurrows06
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.txt'))
-        mparam = {}
-        mparam['teff'] = [float(f.split('_')[0].split('T')[-1]) for f in files]
-        mparam['logg'] = [float(f.split('_')[1][1:]) for f in files]
-        mparam['z'] = [numpy.round(numpy.log10(float(f.split('_')[-1][:3]))*10.)/10. for f in files]
-        mparam['cld'] = [f.split('_')[2].replace('cf','nc') for f in files]
-    elif modelset == 'madhusudhan11':
-        readfxn = _readBurrows06
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*'))
-        mparam = {}
-        mparam['teff'] = [float(f.split('_')[1].split('t')[-1]) for f in files]
-        mparam['logg'] = [float(f.split('_')[2].split('g')[-1]) for f in files]
-        mparam['z'] = [numpy.round(numpy.log10(float(f.split('_')[3].split('z')[-1]))*10.)/10. for f in files]
-        mparam['fsed'] = [f.split('_')[-1].lower() for f in files]
-        mparam['cld'] = [(f.split('/')[-1]).split('_')[0].lower() for f in files]
-        mparam['kzz'] = [f.split('_')[-2].lower() for f in files]
-    elif modelset == 'atmos-cond' or modelset == 'atmos-rain':
-        readfxn = _readAtmos
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.ncdf'))
-        mparam = {}
-        mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:-1]) for f in files]
-        mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][2:]) for f in files]
-        mparam['z'] = [0. for f in files]
-    elif modelset == 'btsettl08':
-        readfxn = _readBtsettl08
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz'))
-        mparam = {}
-        mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
-        mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
-        mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
-        mparam['enrich'] = [float(((f.split('/'))[-1].split('a+'))[-1][0:3]) for f in files]
-    elif modelset == 'nextgen99':
-        readfxn = _readBtsettl08
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte*.gz'))
-        mparam = {}
-        mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
-        mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
-        mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
-    elif modelset == 'btnextgen':
-        readfxn = _readBtsettl08
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte*.bz2'))
-        mparam = {}
-        mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
-        mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
-        mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
-        mparam['enrich'] = [float(((f.split('/'))[-1].split('a+'))[-1][0:3]) for f in files]
-    elif modelset == 'cond01':
-        readfxn = _readBtsettl08
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*7.gz'))
-        mparam = {}
-        mparam['teff'] = [float((f.split('/'))[-1][3:5])*100. for f in files]
-        mparam['logg'] = [float((f.split('/'))[-1][6:9]) for f in files]
-        mparam['z'] = [float((f.split('/'))[-1][10:13]) for f in files]
-    elif modelset == 'dusty01':
-        readfxn = _readBtsettl08
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*7.gz'))
-        mparam = {}
-        mparam['teff'] = [float((f.split('/'))[-1][3:5])*100. for f in files]
-        mparam['logg'] = [float((f.split('/'))[-1][6:9]) for f in files]
-        mparam['z'] = [float((f.split('/'))[-1][10:13]) for f in files]
-    elif modelset == 'btsettl15':
-        readfxn = _readBtsettl08
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz'))
-        mparam = {}
-        mparam['teff'] = [float((f.split('/'))[-1][3:8])*100. for f in files]
-        mparam['logg'] = [float((f.split('/'))[-1][9:12]) for f in files]
-        mparam['z'] = [float((f.split('/'))[-1][12:16]) for f in files]
-# Morley et al. 2012: no metallicity, fsed, kzz or clouds
-    elif modelset == 'morley12':
-        readfxn = _readSaumon12
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
-        mparam = {}
-        mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
-        mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
-        mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
-        mparam['fsed'] = ['f'+((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1] for f in files]
-# Morley et al. 2014: no metallicity, fsed, kzz or clouds
-    elif modelset == 'morley14':
-        readfxn = _readMorley14
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
-        mparam = {}
-        mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
-        mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
-        mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
-        mparam['fsed'] = ['f'+(((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1]).split('h')[0] for f in files]
-        mparam['cld'] = ['h'+(((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1]).split('h')[-1] for f in files]
-# Saumon & Marley 2012: no metallicity, fsed, kzz or clouds
-    elif modelset == 'saumon12':
-        readfxn = _readSaumon12
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
-        mparam = {}
-        mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-1].split('g'))[0][1:]) for f in files]
-        mparam['logg'] = [2.+numpy.log10(float((((f.split('/'))[-1].split('_'))[-1].split('g'))[1].split('nc')[0])) for f in files]
-        mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
-    elif modelset == 'drift':
-        readfxn = _readBtsettl08
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte_*'))
-        mparam['teff'] = [float((f.split('/')[-1]).split('_')[1]) for f in files]
-        mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][:3]) for f in files]
-        mparam['z'] = [float((f.split('/')[-1]).split('_')[2][3:7]) for f in files]
-        mparam = {}
-    elif modelset == 'tremblin16':
-        readfxn = _readTremblin16
-        files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.dat'))
-        mparam = {}
-        mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:]) for f in files]
-        mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][1:]) for f in files]
-        mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
-        mparam['kzz'] = [float((f.split('/')[-1]).split('_')[3][1:]) for f in files]
-        mparam['ad'] = [float((f.split('/')[-1]).split('_')[5][1:5]) for f in files]
-    else:
-        raise ValueError('\nHave not yet gotten model set {} into _processModels'.format(modelset))
-
-    if len(files) == 0: 
-        raise ValueError('Could not find spectral model files in {}'.format(SPECTRAL_MODELS[modelset]['rawfolder']))        
-
-    outputfolder = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+modelset+'/'
-# create folders if they don't exist
+#    outputfolder = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+modelset+'/'
+    outputfolder = SPECTRAL_MODELS[modelset]['folder']
     if not os.path.exists(outputfolder):
         os.makedirs(outputfolder)
-    if not os.path.exists(outputfolder+'RAW/'):
-        os.makedirs(outputfolder+'RAW/')
-    if not os.path.exists(outputfolder+'SED/'):
-        os.makedirs(outputfolder+'SED/')
+
+# only do instruments if RAW models already exist
+    skipraw = skipraw and os.path.exists(outputfolder+'/RAW/')
+    try:
+        skipraw = skipraw and len(os.listdir(outputfolder+'/RAW/')) > 0
+    except:
+        skipraw = skipraw and False
+    if skipraw == False:
+
+# presets for various models - these are based on how they are downloaded
+        if modelset == 'burrows06':
+            readfxn = _readBurrows06
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.txt'))
+            mparam = {}
+            mparam['teff'] = [float(f.split('_')[0].split('T')[-1]) for f in files]
+            mparam['logg'] = [float(f.split('_')[1][1:]) for f in files]
+            mparam['z'] = [numpy.round(numpy.log10(float(f.split('_')[-1][:3]))*10.)/10. for f in files]
+            mparam['cld'] = [f.split('_')[2].replace('cf','nc') for f in files]
+        elif modelset == 'madhusudhan11':
+            readfxn = _readBurrows06
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*'))
+            mparam = {}
+            mparam['teff'] = [float(f.split('_')[1].split('t')[-1]) for f in files]
+            mparam['logg'] = [float(f.split('_')[2].split('g')[-1]) for f in files]
+            mparam['z'] = [numpy.round(numpy.log10(float(f.split('_')[3].split('z')[-1]))*10.)/10. for f in files]
+            mparam['fsed'] = [f.split('_')[-1].lower() for f in files]
+            mparam['cld'] = [(f.split('/')[-1]).split('_')[0].lower() for f in files]
+            mparam['kzz'] = [f.split('_')[-2].lower() for f in files]
+        elif modelset == 'atmos-cond' or modelset == 'atmos-rain':
+            readfxn = _readAtmos
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.ncdf'))
+            mparam = {}
+            mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:-1]) for f in files]
+            mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][2:]) for f in files]
+            mparam['z'] = [0. for f in files]
+        elif modelset == 'btsettl08':
+            readfxn = _readBtsettl08
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz'))
+            mparam = {}
+            mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
+            mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
+            mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
+            mparam['enrich'] = [float(((f.split('/'))[-1].split('a+'))[-1][0:3]) for f in files]
+        elif modelset == 'nextgen99':
+            readfxn = _readBtsettl08
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte*.gz'))
+            mparam = {}
+            mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
+            mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
+            mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
+        elif modelset == 'btcond':
+            readfxn = _readBtsettl08
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte*.bz2'))
+            mparam = {}
+            mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
+            mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
+            mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
+            mparam['enrich'] = [float(((f.split('/'))[-1].split('a+'))[-1][0:3]) for f in files]
+        elif modelset == 'btnextgen' or modelset == 'btcond' or modelset == 'btdusty':
+            readfxn = _readBtsettl08
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte*.bz2'))
+            mparam = {}
+            mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
+            mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
+            mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
+            if 'enrich' in list(SPECTRAL_MODELS[modelset]['default'].keys()):
+                mparam['enrich'] = [float(((f.split('/'))[-1].split('a+'))[-1][0:3]) for f in files]
+        elif modelset == 'cond01':
+            readfxn = _readBtsettl08
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*7.gz'))
+            mparam = {}
+            mparam['teff'] = [float((f.split('/'))[-1][3:5])*100. for f in files]
+            mparam['logg'] = [float((f.split('/'))[-1][6:9]) for f in files]
+            mparam['z'] = [float((f.split('/'))[-1][10:13]) for f in files]
+        elif modelset == 'dusty01':
+            readfxn = _readBtsettl08
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*7.gz'))
+            mparam = {}
+            mparam['teff'] = [float((f.split('/'))[-1][3:5])*100. for f in files]
+            mparam['logg'] = [float((f.split('/'))[-1][6:9]) for f in files]
+            mparam['z'] = [float((f.split('/'))[-1][10:13]) for f in files]
+        elif modelset == 'btsettl15':
+            readfxn = _readBtsettl08
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz'))
+            mparam = {}
+            mparam['teff'] = [float((f.split('/'))[-1][3:8])*100. for f in files]
+            mparam['logg'] = [float((f.split('/'))[-1][9:12]) for f in files]
+            mparam['z'] = [float((f.split('/'))[-1][12:16]) for f in files]
+    # Morley et al. 2012: no metallicity, fsed, kzz or clouds
+        elif modelset == 'morley12':
+            readfxn = _readSaumon12
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
+            mparam = {}
+            mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
+            mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
+            mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
+            mparam['fsed'] = ['f'+((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1] for f in files]
+    # Morley et al. 2014: no metallicity, fsed, kzz or clouds
+        elif modelset == 'morley14':
+            readfxn = _readMorley14
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
+            mparam = {}
+            mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
+            mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
+            mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
+            mparam['fsed'] = ['f'+(((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1]).split('h')[0] for f in files]
+            mparam['cld'] = ['h'+(((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f')[-1]).split('h')[-1] for f in files]
+    # Saumon & Marley 2012: no metallicity, fsed, kzz or clouds
+        elif modelset == 'saumon12':
+            readfxn = _readSaumon12
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
+            mparam = {}
+            mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-1].split('g'))[0][1:]) for f in files]
+            mparam['logg'] = [2.+numpy.log10(float((((f.split('/'))[-1].split('_'))[-1].split('g'))[1].split('nc')[0])) for f in files]
+            mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
+        elif modelset == 'drift':
+            readfxn = _readBtsettl08
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte_*'))
+            mparam['teff'] = [float((f.split('/')[-1]).split('_')[1]) for f in files]
+            mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][:3]) for f in files]
+            mparam['z'] = [float((f.split('/')[-1]).split('_')[2][3:7]) for f in files]
+            mparam = {}
+        elif modelset == 'tremblin16':
+            readfxn = _readTremblin16
+            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.dat'))
+            mparam = {}
+            mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:]) for f in files]
+            mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][1:]) for f in files]
+            mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
+            mparam['kzz'] = [float((f.split('/')[-1]).split('_')[3][1:]) for f in files]
+            mparam['ad'] = [float((f.split('/')[-1]).split('_')[5][1:5]) for f in files]
+        else:
+            raise ValueError('\nHave not yet gotten model set {} into _processModels'.format(modelset))
+
+        if len(files) == 0: 
+            raise ValueError('Could not find spectral model files in {}'.format(SPECTRAL_MODELS[modelset]['rawfolder']))        
+
+# create folders if they don't exist
+        if not os.path.exists(outputfolder+'/RAW/'):
+            os.makedirs(outputfolder+'/RAW/')
+#    if not os.path.exists(outputfolder+'/SED/'):
+#        os.makedirs(outputfolder+'/SED/')
 
 # generate photometry - skipping for now since this takes a while
 #    if kwargs.get('make_photometry',False) == True: 
@@ -406,68 +424,85 @@ def _processOriginalModels(*args,**kwargs):
 #        for f in list(FILTERS.keys()): phot_data[f] = []
 
 # read in files
-    if kwargs.get('verbose',True) == True: print('\nIntegrating {} models into SPLAT'.format(modelset))
-    for i,f in enumerate(files):
-        try:
-            wv,flx = readfxn(f)
-#        spmodel = Spectrum(wave=wv,flux=flx)
+        if verbose == True: print('\nIntegrating {} models into SPLAT'.format(modelset))
+        for i,f in enumerate(files):
+            try:
+                wv,flx = readfxn(f)
+    #        spmodel = Spectrum(wave=wv,flux=flx)
 
-        except:
-            print('\nError reading in file {}; skipping'.format(f))
+            except:
+                print('\nError reading in file {}; skipping'.format(f))
 
-        else:
-            if kwargs.get('verbose',True) == True: 
-                line = ''
-                for k in list(mparam.keys()): line=line+'{}: {}, '.format(k,mparam[k][i])
-                print('Processing {} for model {}'.format(line,modelset))
+            else:
+                if verbose == True: 
+                    line = ''
+                    for k in list(mparam.keys()): line=line+'{}: {}, '.format(k,mparam[k][i])
+                    print('Processing {}for model {}'.format(line,modelset))
 
-# generate raw model
-            outputfile = outputfolder+'RAW/'+modelset
-            for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
-                if k in list(mparam.keys()): 
-                    kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i])
-                    if k == 'teff': kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],int(mparam[k][i]))
-                    elif k == 'logg': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i])
-                    elif k == 'z': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i]-0.0001)
-                    outputfile=outputfile+kstr
-            outputfile=outputfile+'_RAW.txt'    
-# old way - make table and output it
-            t = Table([wv,flx],names=['#wavelength','surface_flux'])
-            t.write(outputfile,format='ascii.tab')        
-# now gzip it
-            with open(outputfile, 'rb') as f_in, gzip.open(outputfile+'.gz', 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
-            os.remove(outputfile)
-# tried this - too slow
-#            out = '#wavelength\tsurface flux\n'
-#            for i in range(len(wv)): out=out+str(wv[i])+'\t'+str(flx[i])+'\n'
-#            with gzip.open(outputfile+'.gz', 'wb') as f:
-#                f.write(out)
+    # generate raw model
+                outputfile = outputfolder+'/RAW/'+modelset
+                for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
+                    if k in list(mparam.keys()): 
+                        kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i])
+                        if k == 'teff': kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],int(mparam[k][i]))
+                        elif k == 'logg': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i])
+                        elif k == 'z': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i]-0.0001)
+                        outputfile=outputfile+kstr
+                outputfile=outputfile+'_RAW.txt'    
+    # old way - make table and output it
+                t = Table([wv,flx],names=['#wavelength','surface_flux'])
+                t.write(outputfile,format='ascii.tab')        
+    # now gzip it
+                with open(outputfile, 'rb') as f_in, gzip.open(outputfile+'.gz', 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+                os.remove(outputfile)
 
 
 # generate SED model
-            if kwargs.get('make_sed',True) == True:
-                noutputfile = outputfile.replace('RAW','SED')
-# first smooth relevant piece of spectrum            
-# interpret onto observed wavelength grid
-                npix = numpy.floor(numpy.log(numpy.nanmax(wv.value)/numpy.nanmin(wv.value))/numpy.log(1.+1./sedres))
-                wvref = [numpy.nanmin(wv.value)*(1.+1./sedres)**i for i in numpy.arange(npix)]
-# either smooth and remap if SED is higher res than original data, 
-# or integral resample if original data is higher resolution than SED
-                if len(wv) <= len(wvref):
-                    flxsm = _smooth2resolution(wv.value,flx.value,sedres)
-                    f = interp1d(wv.value,flxsm,bounds_error=False,fill_value=0.)
-                    flxout = f(wvref)
-                else:
-                    flxout = integralResample(wv.value,flx.value,wvref)
-                t = Table([wvref,flxout],names=['#wavelength','surface_flux'])
-                t.write(noutputfile,format='ascii.tab')
+#             if make_sed == True:
+#                 noutputfile = outputfile.replace('RAW','SED')
+# # first smooth relevant piece of spectrum            
+# # interpret onto observed wavelength grid
+#                 npix = numpy.floor(numpy.log(numpy.nanmax(wv.value)/numpy.nanmin(wv.value))/numpy.log(1.+1./sedres))
+#                 wvref = [numpy.nanmin(wv.value)*(1.+1./sedres)**i for i in numpy.arange(npix)]
+# # either smooth and remap if SED is higher res than original data, 
+# # or integral resample if original data is higher resolution than SED
+#                 if len(wv) <= len(wvref):
+#                     flxsm = _smooth2resolution(wv.value,flx.value,sedres)
+#                     f = interp1d(wv.value,flxsm,bounds_error=False,fill_value=0.)
+#                     flxout = f(wvref)
+#                 else:
+#                     flxout = integralResample(wv.value,flx.value,wvref)
+#                 t = Table([wvref,flxout],names=['#wavelength','surface_flux'])
+#                 t.write(noutputfile,format='ascii.tab')
+
+# generate instruments
+    if len(instruments) > 0:
+        wv = getModel(set=modelset,instrument='RAW').wave
+        for inst in instruments:
+            ins = checkInstrument(inst)
+            if ins != False: inst = ins
+            if not os.path.exists(outputfolder+'/{}/'.format(inst)): os.makedirs(outputfolder+'/{}/'.format(inst))
+            if verbose == True: print('Processing models for instrument {}'.format(inst))
+
+            if inst=='SPEX-PRISM':
+                spref = Spectrum(10001)
+                processModelsToInstrument(modelset=modelset,wave=spref.wave.value,instrument=inst)
+            elif inst=='SED':
+                INSTRUMENTS['SED']['wave_range'] = [numpy.nanmin(wv),numpy.nanmax(wv)]
+                INSTRUMENTS['SED']['resolution'] = sedre
+                processModelsToInstrument(modelset=modelset,instrument=inst)
+            elif ins != False:
+                processModelsToInstrument(modelset=modelset,instrument=inst)
+            else:
+                print('\nDo not have enough information to generate model set for instrument {}; run this separate with processModelsToInstrument()'.format(inst))
 
 
 # generate SpeX Prism model
-    if kwargs.get('make_spex',True) == True:
-        spref = Spectrum(10001)
-        processModelsToInstrument(modelset=modelset,wave=spref.wave.value,instrument='SPEX_PRISM')
+    # if make_spex == True:
+    #     if not os.path.exists(outputfolder+'/SPEX-PRISM/'): os.makedirs(outputfolder+'/SPEX-PRISM/')
+    #     spref = Spectrum(10001)
+    #     processModelsToInstrument(modelset=modelset,wave=spref.wave.value,instrument='SPEX-PRISM')
 
 # generate USpeX Prism model
 #    if kwargs.get('make_spex',False) == True:
@@ -491,7 +526,7 @@ def _processOriginalModels(*args,**kwargs):
     return
 
 
-def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX_PRISM',instrument_parameters={},wunit=BASE_WAVE_UNIT,funit=BASE_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,**kwargs):
+def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX-PRISM',instrument_parameters={},wunit=BASE_WAVE_UNIT,funit=BASE_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,**kwargs):
     '''
     :Purpose:
 
@@ -1218,7 +1253,7 @@ def _smooth2resolution(wave,flux,resolution,**kwargs):
 
 
 
-def loadModel(*args, **kwargs):
+def loadModel(*args, modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,**kwargs):
     '''
     Purpose: 
         Loads up a model spectrum based on a set of input parameters. The models may be any one of the following listed below. For parameters between the model grid points, loadModel calls the function `_loadInterpolatedModel()`_.
@@ -1314,20 +1349,20 @@ def loadModel(*args, **kwargs):
 
 
 # set up the model set
-    modelset = kwargs.get('model','BTSettl2008')
-    modelset = kwargs.get('modelset',modelset)
+#    modelset = kwargs.get('model','BTSettl2008')
+    modelset = kwargs.get('model',modelset)
     modelset = kwargs.get('set',modelset)
     mset = checkSpectralModelName(modelset)
     if mset == False: raise ValueError('Could not find model set {}'.format(modelset))
     kwargs['model'] = mset
 
-    kwargs['instrument'] = kwargs.get('instrument','SPEX_PRISM')
-    kwargs['instrument'] = kwargs.get('instr',kwargs['instrument'])
-    instr = checkInstrument(kwargs['instrument'])
-    if instr == False: instr = 'SPEX_PRISM'
-    kwargs['instrument'] = instr
-    if kwargs.get('raw',False) == True: kwargs['instrument'] = 'RAW'
-    if kwargs.get('sed',False) == True: kwargs['instrument'] = 'SED'
+#    kwargs['instrument'] = kwargs.get('instrument','SPEX-PRISM')
+    instrument = kwargs.get('instr',instrument)
+    instrument = checkInstrument(instrument)
+    if instrument == False: instrument = 'SPEX-PRISM'
+    if raw == True: instrument = 'RAW'
+    if sed == True: instrument = 'SED'
+    kwargs['instrument'] = instrument
     kwargs['name'] = kwargs['model']+' ('+kwargs['instrument']+')'
 
 
@@ -1353,6 +1388,7 @@ def loadModel(*args, **kwargs):
 # generate model filename
     
     filename = os.path.normpath(SPECTRAL_MODELS[kwargs['model']]['folder']+'/'+kwargs['instrument']+'/'+kwargs['model'])
+
 
     for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
         if k in list(SPECTRAL_MODELS[kwargs['model']]['default'].keys()):
@@ -1425,7 +1461,8 @@ def loadModel(*args, **kwargs):
 #                kwargs['local']=False
 #                kwargs['online']=True
 #        else:
-    else:
+#    else:
+    if file != '':
         sp = Spectrum(**kwargs)
         MODELS_READIN[kwargs['filename']] = sp
 
@@ -1472,7 +1509,7 @@ def _checkModelParametersInRange(mparam):
     if 'model' not in mp:
         mparam['model'] = 'BTSettl2008'
     if 'instrument' not in mp:
-        mparam['instrument'] = 'SPEX_PRISM'
+        mparam['instrument'] = 'SPEX-PRISM'
     parameters = _loadModelParameters(**mparam)
     flag = True
 
@@ -2103,7 +2140,7 @@ def _modelFitPlotComparison(spec,model,**kwargs):
 
 
 
-def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX_PRISM', nbest=1, plot=True, statistic='chisqr', verbose=False, output='fit', **kwargs):
+def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX-PRISM', nbest=1, plot=True, statistic='chisqr', verbose=False, output='fit', **kwargs):
     '''
     :Purpose: Fits a spectrum to a grid of atmosphere models, reports the best-fit and weighted average parameters, and returns either a dictionary with the best-fit model parameters or the model itself scaled to the optimal scaling factor.
 
@@ -2204,7 +2241,7 @@ def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX_PRISM', nbest=1, p
     instr = checkInstrument(instrument)
     if instr == False:
         print('\nWARNING! {} is not a recognized instrument; assuming SpeX prism'.format(instrument))
-        instr = 'SPEX_PRISM'
+        instr = 'SPEX-PRISM'
 
 # fitting parameters
     statistic = kwargs.get('stat',statistic)
@@ -2460,7 +2497,7 @@ def modelFitMCMC(spec, mset='BTSettl2008', verbose=False, **kwargs):
     try:
         instrument = spec.instrument
     except:
-        instrument = kwargs.get('instr', 'SPEX_PRISM')
+        instrument = kwargs.get('instr', 'SPEX-PRISM')
         instrument = kwargs.get('instr', instrument)
     tmp = checkInstrument(instrument)
     if tmp == False: raise ValueError('\nSPLAT does not recognize instrument {}'.format(instrument))
@@ -3136,7 +3173,7 @@ def _modelFitMCMC_reportResults(spec,dp,*arg,**kwargs):
 
 
 
-def modelFitEMCEE(spec, mset='BTSettl2008', instrument='SPEX_PRISM',**kwargs):
+def modelFitEMCEE(spec, mset='BTSettl2008', instrument='SPEX-PRISM',**kwargs):
     '''
     :Purpose: Uses the ``emcee`` package by Dan Foreman-Mackey et al. to perform 
         Goodman & Weare's Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler
