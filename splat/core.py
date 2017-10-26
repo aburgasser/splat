@@ -131,14 +131,14 @@ class Spectrum(object):
         self.ismodel = kwargs.get('ismodel',False)
         self.istransmission = kwargs.get('istransmission',False)
         self.wlabel = kwargs.get('wlabel',r'Wavelength')
-        self.wunit = kwargs.get('wunit',BASE_WAVE_UNIT)
+        self.wunit = kwargs.get('wunit',DEFAULT_WAVE_UNIT)
         self.wunit_label = kwargs.get('wunit_label',self.wunit)
         self.flabel = kwargs.get('flabel',r'F$_{\lambda}$')
         self.fscale = kwargs.get('fscale','Arbitrary')
         if kwargs.get('surface',False) == True: self.fscale = 'Surface'
         if kwargs.get('apparent',False) == True: self.fscale = 'Apparent'
         if kwargs.get('absolute',False) == True: self.fscale = 'Absolute'
-        self.funit = kwargs.get('funit',BASE_FLUX_UNIT)
+        self.funit = kwargs.get('funit',DEFAULT_FLUX_UNIT)
         self.funit_label = kwargs.get('funit_label',self.funit)
 #        self.header = kwargs.get('header',fits.PrimaryHDU())
         self.header = kwargs.get('header',{})
@@ -231,7 +231,7 @@ class Spectrum(object):
 #            try:
 
         # breakouts for specific instruments
-            if (kwargs.get('APOGEE') == True or kwargs.get('apogee') == True or kwargs.get('instrument','SPEX_PRISM').upper() == 'APOGEE') and self.filename != '':
+            if (kwargs.get('APOGEE') == True or kwargs.get('apogee') == True or kwargs.get('instrument','SPEX-PRISM').upper() == 'APOGEE') and self.filename != '':
                 rs = _readAPOGEE(self.filename,**kwargs)
                 self.instrument = 'APOGEE'
 #                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
@@ -239,7 +239,7 @@ class Spectrum(object):
         # create a copy to store as the original
                 self.original = copy.deepcopy(self)
 
-            elif (kwargs.get('BOSS',False) == True or kwargs.get('boss',False) == True or kwargs.get('eboss',False) == True or kwargs.get('EBOSS',False) == True or kwargs.get('instrument','SPEX_PRISM').upper() == 'BOSS' or kwargs.get('instrument','SPEX_PRISM').upper() == 'EBOSS') and self.filename != '':
+            elif (kwargs.get('BOSS',False) == True or kwargs.get('boss',False) == True or kwargs.get('eboss',False) == True or kwargs.get('EBOSS',False) == True or kwargs.get('instrument','SPEX-PRISM').upper() == 'BOSS' or kwargs.get('instrument','SPEX-PRISM').upper() == 'EBOSS') and self.filename != '':
                 rs = _readBOSS(self.filename)
 #                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
                 self.wunit = kwargs.get('wunit',u.Angstrom)
@@ -355,12 +355,12 @@ class Spectrum(object):
 # automated stuff for spex data
         if 'INSTRUME' in hkys:
             if 'spex' in self.header['INSTRUME'].lower() and 'GRAT' in hkys:
-                if 'lowres15' in self.header['GRAT'].lower() or 'prism' in self.header['GRAT'].lower(): self.instrument = 'SPEX_PRISM'
-                if 'shortxd' in self.header['GRAT'].lower() or 'sxd' in self.header['GRAT'].lower(): self.instrument = 'SPEX_SXD'
+                if 'lowres15' in self.header['GRAT'].lower() or 'prism' in self.header['GRAT'].lower(): self.instrument = 'SPEX-PRISM'
+                if 'shortxd' in self.header['GRAT'].lower() or 'sxd' in self.header['GRAT'].lower(): self.instrument = 'SPEX-SXD'
         if 'INSTR' in hkys:
             if 'spex' in self.header['INSTR'].lower() and 'GRAT' in hkys:
-                if 'lowres15' in self.header['GRAT'].lower() or 'prism' in self.header['GRAT'].lower(): self.instrument = 'SPEX_PRISM'
-                if 'shortxd' in self.header['GRAT'].lower() or 'sxd' in self.header['GRAT'].lower(): self.instrument = 'SPEX_SXD'
+                if 'lowres15' in self.header['GRAT'].lower() or 'prism' in self.header['GRAT'].lower(): self.instrument = 'SPEX-PRISM'
+                if 'shortxd' in self.header['GRAT'].lower() or 'sxd' in self.header['GRAT'].lower(): self.instrument = 'SPEX-SXD'
         if 'spex' in self.instrument.lower():
             if 'observation_date' in list(self.__dict__.keys()): dt = self.observation_date
             elif 'OBS-DATE' in hkys: dt = self.header['OBS-DATE'].replace('-','')
@@ -368,12 +368,14 @@ class Spectrum(object):
             elif 'DATE_OBS' in hkys: dt = self.header['DATE_OBS'].replace('-','')
             elif 'DATE-OBS' in hkys: dt = self.header['DATE-OBS'].replace('-','')
             else: dt = '20000101'
-            if int(dt) > 20140800:
-                self.instrument = self.instrument.replace('SPEX','USPEX')
+#            if int(dt) > 20140800:
+#                self.instrument = self.instrument.replace('SPEX','USPEX')
 
 # populate defaults
         inst = checkInstrument(self.instrument)
-        if inst == False: inst = 'UNKNOWN'
+        if inst == False: 
+#            print(self.instrument)
+            inst = 'UNKNOWN'
         self.instrument = inst
         for k in list(INSTRUMENTS[self.instrument].keys()): setattr(self,k,INSTRUMENTS[self.instrument][k])
         self.slitpixelwidth = (self.slitwidth/self.pixelscale).value
@@ -1080,7 +1082,7 @@ class Spectrum(object):
         '''
         if self.fscale == 'Temperature' or self.flabel == r'${\lambda}F_{\lambda}$':
             self.reset()
-        self.funit = BASE_FLUX_UNIT
+        self.funit = DEFAULT_FLUX_UNIT
         self.flabel = r'$F_{\lambda}$'
         self.flux = self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
         self.noise = self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
@@ -1116,11 +1118,11 @@ class Spectrum(object):
         self.toFlam()
 # now convert to SED
         un = self.wave.unit*self.flux.unit
-        self.flux = (self.wave*self.flux).to(SPECTRAL_MODEL_SED_UNIT)
-        self.noise = (self.wave*self.noise).to(SPECTRAL_MODEL_SED_UNIT)
+        self.flux = (self.wave*self.flux).to(DEFAULT_SED_UNIT)
+        self.noise = (self.wave*self.noise).to(DEFAULT_SED_UNIT)
         self.variance = self.noise**2
         self.snr = self.computeSN()
-        self.funit = SPECTRAL_MODEL_SED_UNIT
+        self.funit = DEFAULT_SED_UNIT
         self.flabel = r'${\lambda}F_{\lambda}$'
         self.history.append('Converted to SED units of {}'.format(self.funit))
         return
@@ -1578,7 +1580,7 @@ class Spectrum(object):
 
         if self.fscale == 'Temperature' or self.fscale == 'SED':
             self.reset()
-        if self.funit != BASE_FLUX_UNIT:
+        if self.funit != DEFAULT_FLUX_UNIT:
             self.toFlam()
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',not absolute)
@@ -1780,7 +1782,7 @@ class Spectrum(object):
           This routine is still in beta form; only the CCM89 currently works
 
         '''
-        w = self.wave.to(BASE_WAVE_UNIT).value                           # assuming in microns!
+        w = self.wave.to(DEFAULT_WAVE_UNIT).value                           # assuming in microns!
 
         if kwargs.get('mie',False) == True:                 # NOT CURRENTLY FUNCTIONING
             x = 2*numpy.pi*a/w
@@ -2177,7 +2179,7 @@ class Spectrum(object):
             return
         return
 
-    def _smoothToResolution(self,res,**kwargs):
+    def _smoothToResolution(self,res,oversample=10.,method='hamming',**kwargs):
         '''
         :Purpose: 
 
@@ -2213,7 +2215,6 @@ class Spectrum(object):
            49.459522314460855
         '''
 
-        overscale = kwargs.get('overscale',10.)
         method = kwargs.get('method','hamming')
         kwargs['method'] = method
 
@@ -2223,20 +2224,29 @@ class Spectrum(object):
             self.resolution = self.wave.value[i]/numpy.abs(self.wave.value[i]-self.wave.value[i+1])
 
 # do nothing if requested resolution is higher than current resolution
-        if (res <= self.resolution):
+        if res <= self.resolution:
 # sample onto a constant resolution grid at 5x current resolution
-            r = res*overscale
-            waveRng = self.waveRange()
-            npix = numpy.floor(numpy.log(waveRng[1]/waveRng[0])/numpy.log(1.+1./r))
-            wave_sample = [waveRng[0].value*(1.+1./r)**i for i in numpy.arange(npix)]
-            flx_sample = integralResample(self.wave.value,self.flux.value,wave_sample)
-            var_sample = integralResample(self.wave.value,self.variance.value,wave_sample)
-#            f = interp1d(self.wave,self.flux,bounds_error=False,fill_value=0.)
-#            v = interp1d(self.wave,self.variance,bounds_error=False,fill_value=numpy.nan)
-#            flx_sample = f(wave_sample)*self.funit
- #           var_sample = v(wave_sample)*self.funit**2
+            r = res*oversample
+            wave_range = self.waveRange()
+            wave_range = [w.value for w in wave_range]
+            npix = numpy.floor(numpy.log(numpy.nanmax(wave_range)/numpy.nanmin(wave_range))/numpy.log(1.+1./res))
+            wave_out = numpy.array([numpy.nanmin(wave_range)*(1.+1./res)**i for i in numpy.arange(npix)])
+            a = numpy.linspace(0.,len(wave_out)-1,len(wave_out))
+            b = numpy.linspace(0.,len(wave_out)-1,int(oversample*len(wave_out)))
+            f = interp1d(a,wave_out)
+            wave_sample = f(b)
+
+            if len(self.wave) <= len(wave_sample):
+                f = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+                v = interp1d(self.wave.value,self.variance.value,bounds_error=False,fill_value=0.)
+                flx_sample = f(wave_sample)
+                var_sample = v(wave_sample)
+            else:
+                flx_sample = integralResample(self.wave.value,self.flux.value,wave_sample)
+                var_sample = integralResample(self.wave.value,self.variance.value,wave_sample)
+
 # now convolve a function to smooth resampled spectrum
-            window = signal.get_window(method,2.*numpy.round(overscale))
+            window = signal.get_window(method,2.*numpy.round(oversample))
             neff = numpy.sum(window)/numpy.nanmax(window)        # effective number of pixels
             flx_smooth = signal.convolve(flx_sample, window/numpy.sum(window), mode='same')
             var_smooth = signal.convolve(var_sample, window/numpy.sum(window), mode='same')/neff
@@ -2244,16 +2254,23 @@ class Spectrum(object):
             wave_final = numpy.array(self.wave.value)
             wave_final = wave_final[wave_final <= numpy.max(wave_sample)]
             wave_final = wave_final[wave_final >= numpy.min(wave_sample)]
-            flx_final = integralResample(wave_sample,flx_smooth,wave_final)
-            var_final = integralResample(wave_sample,var_smooth,wave_final)
+            if len(wave_final) >= len(wave_sample):
+                f = interp1d(wave_sample,flx_smooth,bounds_error=False,fill_value=0.)
+                v = interp1d(wave_sample,var_smooth,bounds_error=False,fill_value=0.)
+                flx_final = f(wave_final)
+                var_final = v(wave_final)
+            else:
+                flx_final = integralResample(wave_sample,flx_smooth,wave_final)
+                var_final = integralResample(wave_sample,var_smooth,wave_final)
+
 #            f = interp1d(wave_sample,flx_smooth,bounds_error=False,fill_value=0.)
 #            v = interp1d(wave_sample,var_smooth,bounds_error=False,fill_value=0.)
 #            self.flux = f(self.wave.value)*self.funit
 #            self.variance = v(self.wave.value)*self.funit**2
-            self.wave = wave_final*self.wunit
-            self.flux = flx_final*self.funit
-            self.variance = var_final*(self.funit**2)
-            self.noise = numpy.array([ns**0.5 for ns in self.variance.value])*self.funit
+            self.wave = wave_final*self.wave.unit
+            self.flux = flx_final*self.flux.unit
+            self.variance = var_final*(self.flux.unit**2)
+            self.noise = numpy.array([ns**0.5 for ns in self.variance.value])*self.flux.unit
             self.snr = self.computeSN()
 #            self.slitpixelwidth = self.slitpixelwidth*self.resolution/res
 #            self.slitwidth = self.slitwidth*self.resolution/res
@@ -2392,7 +2409,7 @@ class Spectrum(object):
         if self.fscale != 'Surface':
             print('To convert to brightness temperature you must first scale spectrum to surface flux units')
             return
-        if self.funit != BASE_FLUX_UNIT: self.toFlam()
+        if self.funit != DEFAULT_FLUX_UNIT: self.toFlam()
         fs = copy.deepcopy(self.flux).to(u.erg/u.s/u.cm**3)
         fse = copy.deepcopy(self.noise).to(u.erg/u.s/u.cm**3)
         w = copy.deepcopy(self.wave).to(u.cm)
@@ -2717,7 +2734,7 @@ def stitch(s1,s2,rng = [],trim=[],**kwargs):
 #####################################################
 
 
-def getSpectrum(*args, **kwargs):
+def getSpectrum(*args, getList=False, limit=0, **kwargs):
     '''
     :Purpose: 
 
@@ -2739,8 +2756,7 @@ def getSpectrum(*args, **kwargs):
         No files match search criteria
     '''
 
-    if kwargs.get('lucky',False) == True:
-        kwargs['published'] = True
+    if kwargs.get('lucky',False) == True: kwargs['published'] = True
     result = []
     kwargs['output'] = 'all'
     search = searchLibrary(*args, **kwargs)
@@ -2755,7 +2771,7 @@ def getSpectrum(*args, **kwargs):
 
 
 # return just the filenames
-        if (kwargs.get('list',False) != False):
+        if getList == True:
             return files
 
         if len(files) == 1:
@@ -2772,6 +2788,9 @@ def getSpectrum(*args, **kwargs):
 #                print(x)
 #                result.append(Spectrum(files[ind],header=search[ind]))
 #            else:
+            if limit != 0 and limit < len(files):
+                files = files[:limit]
+                search = search.iloc[:limit]
             print('\nRetrieving {} files\n'.format(len(files)))
             for i,x in enumerate(files):
                 skwargs = search.iloc[i].to_dict()
@@ -2991,7 +3010,7 @@ def keySpectrum(keys, **kwargs):
         return sdb
 
 
-def searchLibrary(*args, radius=10., instrument='SPEX_PRISM',**kwargs):
+def searchLibrary(*args, radius=10., instrument='SPEX-PRISM',**kwargs):
     '''
     :Purpose: 
 
@@ -3780,8 +3799,8 @@ def readSpectrum(*args,verbose=False,**kwargs):
 # clean up
 #    if url != '' and not local:
 #        os.remove(os.path.basename(TMPFILENAME))
-    if 'wunit' not in list(output.keys()): output['wunit'] = kwargs.get('wunit',BASE_WAVE_UNIT)
-    if 'funit' not in list(output.keys()): output['funit'] = kwargs.get('funit',BASE_FLUX_UNIT)
+    if 'wunit' not in list(output.keys()): output['wunit'] = kwargs.get('wunit',DEFAULT_WAVE_UNIT)
+    if 'funit' not in list(output.keys()): output['funit'] = kwargs.get('funit',DEFAULT_FLUX_UNIT)
     return output
 
 
@@ -5111,6 +5130,14 @@ def compareSpectra(s1, s2, *args, **kwargs):
     >>> splat.compareSpectra(sp1, sp2, statistic='chisqr', novar2=False)
         (<Quantity 17071.690727945213>, 0.94029474635786015)
     '''
+
+    sp1 = copy.deepcopy(s1)
+    sp2 = copy.deepcopy(s2)
+    
+# make sure spectra are on the same wavelength and flux unit scales
+    sp2.toWaveUnit(sp1.wave.unit)
+    sp2.toFluxUnit(sp1.flux.unit)
+
     fit_ranges = kwargs.get('fit_ranges',[[numpy.nanmin(sp1.wave),numpy.nanmax(sp1.wave)]])
     fit_ranges = kwargs.get('fit_range',fit_ranges)
     fit_ranges = kwargs.get('fitrange',fit_ranges)
@@ -5126,12 +5153,6 @@ def compareSpectra(s1, s2, *args, **kwargs):
     statistic = kwargs.get('statistic',statistic)
     minreturn = 1.e-60
 
-    sp1 = copy.deepcopy(s1)
-    sp2 = copy.deepcopy(s2)
-    
-# make sure spectra are on the same wavelength and flux unit scales
-    sp2.toWaveUnit(sp1.wave.unit)
-    sp2.toFluxUnit(sp1.flux.unit)
 
 # create interpolation function for second spectrum
     f = interp1d(sp2.wave.value,sp2.flux.value,bounds_error=False,fill_value=0.)
@@ -5240,7 +5261,7 @@ def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_stan
 # parameter check
     wave = copy.deepcopy(wv)
     if isinstance(wv,splat.Spectrum): wave = wv.wave
-    if not isUnit(wv): wave = wave*BASE_WAVE_UNIT
+    if not isUnit(wv): wave = wave*DEFAULT_WAVE_UNIT
     if not isinstance(wave.value,list) and not isinstance(wave.value,numpy.ndarray):
         raise ValueError('\nInput parameter should be an array of wavelengths; you passed {}'.format(wv))
 
@@ -5256,18 +5277,18 @@ def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_stan
     mask_ranges = kwargs.get('mask_ranges',[mask_range])
     if mask_standard == True:
         mask_telluric = True
-        mask_ranges.append([0.,0.8]*BASE_WAVE_UNIT)        # standard short cut
+        mask_ranges.append([0.,0.8]*DEFAULT_WAVE_UNIT)        # standard short cut
 
 # mask telluric bands
     if mask_telluric == True:
-#        mask_ranges.append([0.,0.65]*BASE_WAVE_UNIT)        # meant to clear out short wavelengths
-        mask_ranges.append([1.35,1.42]*BASE_WAVE_UNIT)
-        mask_ranges.append([1.8,1.92]*BASE_WAVE_UNIT)
-        mask_ranges.append([2.45,99.]*BASE_WAVE_UNIT)        # meant to clear out long wavelengths
+#        mask_ranges.append([0.,0.65]*DEFAULT_WAVE_UNIT)        # meant to clear out short wavelengths
+        mask_ranges.append([1.35,1.42]*DEFAULT_WAVE_UNIT)
+        mask_ranges.append([1.8,1.92]*DEFAULT_WAVE_UNIT)
+        mask_ranges.append([2.45,99.]*DEFAULT_WAVE_UNIT)        # meant to clear out long wavelengths
 
 # make sure quantities are all correct
     for i,m in enumerate(mask_ranges):
-        if not isUnit(m): m = m*BASE_WAVE_UNIT
+        if not isUnit(m): m = m*DEFAULT_WAVE_UNIT
         m.to(wave.unit)
         mask_ranges[i] = m
 
@@ -5401,7 +5422,7 @@ def measureEWElement(sp,element,wave_range=[0.,0.],getNist=False,**kwargs):
         from .database import queryNist
         t = queryNist(element,wave_range,**kwargs)
         if len(t) == 0: return {}
-        lines = [(a*u.Angstrom).to(BASE_WAVE_UNIT) for a in list(t['Observed'])]
+        lines = [(a*u.Angstrom).to(DEFAULT_WAVE_UNIT) for a in list(t['Observed'])]
 
     else:
         el = element.lower().strip()
@@ -5422,7 +5443,7 @@ def measureEWElement(sp,element,wave_range=[0.,0.],getNist=False,**kwargs):
         else:
             print('\nHave not curated lines set for {}'.format(element))
             return {}
-        lines = [l*BASE_WAVE_UNIT for l in lines]
+        lines = [l*DEFAULT_WAVE_UNIT for l in lines]
             
 # measure lines and output to dictionary        
     output = {}

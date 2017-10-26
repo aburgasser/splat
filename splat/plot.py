@@ -245,6 +245,8 @@ def plotSpectrum(*args, **kwargs):
         place an inset panel showing a close up region of the spectral data
     inset_xrange = False:
         wavelength range for inset panel
+    inset_yrange = False:
+        flux range for inset panel (otherwise set by flux)
     inset_position = [0.65,0.60,0.20,0.20]
         position of inset planet in normalized units, in order left, bottom, width, height
     inset_features = False
@@ -338,6 +340,7 @@ def plotSpectrum(*args, **kwargs):
     residual = kwargs.get('residual',False)
     inset = kwargs.get('inset',False)
     inset_xrange = kwargs.get('inset_xrange',[])
+    inset_yrange = kwargs.get('inset_yrange',[])
     inset_position = kwargs.get('inset_position',[.65, .6, .2, .2])
 #    inset_color = kwargs.get('inset_color','k')
     inset_features = kwargs.get('inset_features',False)
@@ -751,12 +754,17 @@ def plotSpectrum(*args, **kwargs):
                     ax.text(numpy.mean(b),bound[2]+3*yoff,bandlabels[i],horizontalalignment='center',fontsize=fontsize)
 
 # place inset - RIGHT NOW ONLY SETTING LIMITS WITH FIRST SPECTRUM IN LIST
-        if inset == True and len(inset_xrange) != 0:
+        if not isinstance(inset,bool):
+            inset_xrange = kwargs.get('inset_xrange',inset)
+            inset = True
+        if inset == True and len(inset_xrange) == 2:
             ax_inset = fig[pg_n-1].add_axes(inset_position) #, axisbg='white')
             bound2 = inset_xrange
-            b0 = numpy.argmax(sp[0].wave.value > bound2[0])
-            b1 = numpy.argmin(sp[0].wave.value < bound2[1])
-            bound2.extend([min(sp[0].flux.value[b0:b1]),max(sp[0].flux.value[b0:b1])])
+            if len(inset_yrange) == 0:
+                b0 = numpy.argmax(sp[0].wave.value > bound2[0])
+                b1 = numpy.argmin(sp[0].wave.value < bound2[1])
+                inset_yrange = [min(sp[0].flux.value[b0:b1]),max(sp[0].flux.value[b0:b1])]
+            bound2.extend(inset_yrange)
             db = (bound2[3]-bound2[2])
             bound2[2] = bound2[2]-0.05*db
             bound2[3] = bound2[3]+0.05*db

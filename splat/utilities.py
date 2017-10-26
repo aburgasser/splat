@@ -208,7 +208,7 @@ def checkInstrument(instrument):
     if not isinstance(instrument,str):
         return output
     for k in list(INSTRUMENTS.keys()):
-        if instrument.upper()==k.upper() or instrument.upper().replace(' ','_').replace('-','_')==k.upper() or instrument.upper() in [a.upper() for a in INSTRUMENTS[k]['altnames']]:
+        if instrument.upper()==k.upper() or instrument.upper().replace(' ','_').replace('_','-')==k.upper() or instrument.upper() in [a.upper() for a in INSTRUMENTS[k]['altnames']]:
             output = k
     return output
 

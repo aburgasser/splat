@@ -815,7 +815,7 @@ def queryNist(element,wave_range,clean=['Observed'],noclean=False,verbose=True,w
         raise ValueError('\nElement input must be a string like "K I", not {}'.format(element))
     if len(element.strip().split(' ')) == 1:
         element = element+' I'
-    if len(element.strip().split(' ')) != 1:
+    if len(element.strip().split(' ')) != 2:
         raise ValueError('\nElement input must be a string like "K I", not {}'.format(element))
     if not isUnit(wave_range[0]): wave_range = [w*u.micron for w in wave_range]  
 

@@ -38,8 +38,6 @@ ACCESS_FILE = '.splat_access'
 EXTERNAL_SPECTRAL_MODELS_FILE = '.splat_spectral_models'
 EXTERNAL_EVOLUTIONARY_MODELS_FILE = '.splat_evolutionary_models'
 EXTERNAL_DATA_FILE = '.splat_data'
-DEFAULT_WAVE_UNIT = u.micron
-DEFAULT_FLUX_UNIT = u.erg/u.s/u.cm/u.cm/u.micron
 MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 # SPLAT authors
@@ -100,9 +98,9 @@ if os.environ.get('SPLAT_DATA') != None:
     SPLAT_USER_DATA = os.environ['SPLAT_DATA']
 
 # Unit standards
-BASE_WAVE_UNIT = u.micron
-BASE_FLUX_UNIT = u.erg/u.s/u.cm/u.cm/u.micron
-BASE_SED_UNIT = u.erg/u.s/u.cm/u.cm
+DEFAULT_WAVE_UNIT = u.micron
+DEFAULT_FLUX_UNIT = u.erg/u.s/u.cm/u.cm/u.micron
+DEFAULT_SED_UNIT = u.erg/u.s/u.cm/u.cm
 
 
 # dwarf spectral standards

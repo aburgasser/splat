@@ -140,12 +140,12 @@ def _readBurrows06(file):
     else:
         wave = numpy.array(data['LAMBDA(mic)'])*u.micron
         fnu = numpy.array(data['FNU'])*(u.erg/u.s/u.cm/u.cm/u.Hz)
-    wave = wave.to(BASE_WAVE_UNIT)
-    flux = fnu.to(BASE_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    wave = wave.to(DEFAULT_WAVE_UNIT)
+    flux = fnu.to(DEFAULT_FLUX_UNIT,equivalencies=u.spectral_density(wave))
 #    print(wave[50],fnu[50],flux[50])
     fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
     wavesort = sorted(wave.value)
-    return wavesort*BASE_WAVE_UNIT, fluxsort*BASE_FLUX_UNIT
+    return wavesort*DEFAULT_WAVE_UNIT, fluxsort*DEFAULT_FLUX_UNIT
 
 def _readBtsettl08(file,expon=-8.):
     if not os.access(file, os.R_OK):
@@ -164,12 +164,12 @@ def _readBtsettl08(file,expon=-8.):
             for line in f:
                 data.append(line)
     wave = numpy.array([float((d.split()[0]).replace('D','e'))/1.e4 for d in data])*u.micron
-    wave = wave.to(BASE_WAVE_UNIT)
+    wave = wave.to(DEFAULT_WAVE_UNIT)
     flux = numpy.array([10.**(float(d.split()[1].replace('D','e'))+expon) for d in data])*u.erg/(u.s*u.Angstrom*u.cm**2)
-    flux = flux.to(BASE_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    flux = flux.to(DEFAULT_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
     wavesort = sorted(wave.value)
-    return wavesort*BASE_WAVE_UNIT, fluxsort*BASE_FLUX_UNIT
+    return wavesort*DEFAULT_WAVE_UNIT, fluxsort*DEFAULT_FLUX_UNIT
 
 def _readAtmos(file):
     try:
@@ -181,23 +181,23 @@ def _readAtmos(file):
     d = Dataset(file)
     nu = d.variables['nu'][:]/u.cm
     fnu = d.variables['fnu'][:]*u.erg/u.s/u.cm
-    wave = (1./nu).to(BASE_WAVE_UNIT)
-    flux = (fnu*nu**2).to(BASE_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    wave = (1./nu).to(DEFAULT_WAVE_UNIT)
+    flux = (fnu*nu**2).to(DEFAULT_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
     wavesort = sorted(wave.value)
-    return wavesort*BASE_WAVE_UNIT, fluxsort*BASE_FLUX_UNIT
+    return wavesort*DEFAULT_WAVE_UNIT, fluxsort*DEFAULT_FLUX_UNIT
 
 def _readMorley14(file):
     if not os.access(file, os.R_OK):
         raise ValueError('Could not find model file {}'.format(file))
     data = ascii.read(os.path.normpath(file),data_start=4)
     freq = numpy.array(data['col1'])*u.Hz
-    wave = freq.to(BASE_WAVE_UNIT,equivalencies=u.spectral())
+    wave = freq.to(DEFAULT_WAVE_UNIT,equivalencies=u.spectral())
     flux = numpy.array(data['col2'])*u.erg/(u.s*u.Hz*u.cm**2)
-    flux = flux.to(BASE_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    flux = flux.to(DEFAULT_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
     wavesort = sorted(wave.value)
-    return wavesort*BASE_WAVE_UNIT, fluxsort*BASE_FLUX_UNIT
+    return wavesort*DEFAULT_WAVE_UNIT, fluxsort*DEFAULT_FLUX_UNIT
 
 # this also reads in Morley et al. 2012 models
 def _readSaumon12(file):
@@ -205,12 +205,12 @@ def _readSaumon12(file):
         raise ValueError('Could not find model file {}'.format(file))
     data = ascii.read(os.path.normpath(file),data_start=2)
     wave = numpy.array(data['col1'])*u.micron
-    wave = wave.to(BASE_WAVE_UNIT)
+    wave = wave.to(DEFAULT_WAVE_UNIT)
     flux = numpy.array(data['col2'])*u.erg/(u.s*u.Hz*u.cm**2)
-    flux = flux.to(BASE_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    flux = flux.to(DEFAULT_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
     wavesort = sorted(wave.value)
-    return wavesort*BASE_WAVE_UNIT, fluxsort*BASE_FLUX_UNIT
+    return wavesort*DEFAULT_WAVE_UNIT, fluxsort*DEFAULT_FLUX_UNIT
 
 # Tremblin
 def _readTremblin16(file):
@@ -219,12 +219,12 @@ def _readTremblin16(file):
     data = ascii.read(os.path.normpath(file),data_start=2)
     nu = numpy.array(data['col1'])/u.cm
     fnu = numpy.array(data['col2'])*u.erg/(u.s*u.cm)
-    wave = (1./nu).to(u.BASE_WAVE_UNIT)
-    flux = (fnu*nu**2).to(splat.BASE_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    wave = (1./nu).to(u.DEFAULT_WAVE_UNIT)
+    flux = (fnu*nu**2).to(splat.DEFAULT_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     flux = flux*((((10.*u.pc)/(0.1*u.Rsun)).to(u.m/u.m))**2)  # scale to surface flux
     fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
     wavesort = sorted(wave.value)
-    return wavesort*BASE_WAVE_UNIT, fluxsort*BASE_FLUX_UNIT
+    return wavesort*DEFAULT_WAVE_UNIT, fluxsort*DEFAULT_FLUX_UNIT
 
 # this also reads in old Drift models
 def _readDrift(file):
@@ -232,12 +232,12 @@ def _readDrift(file):
         raise ValueError('Could not find model file {}'.format(file))
     data = ascii.read(os.path.normpath(file))
     wave = numpy.array(data['col1'])*u.micron
-    wave = wave.to(BASE_WAVE_UNIT)
+    wave = wave.to(DEFAULT_WAVE_UNIT)
     flux = numpy.array(data['col2'])*u.erg/(u.s*u.cm**3)
-    flux = flux.to(BASE_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    flux = flux.to(DEFAULT_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
     wavesort = sorted(wave.value)
-    return wavesort*BASE_WAVE_UNIT, fluxsort*BASE_FLUX_UNIT
+    return wavesort*DEFAULT_WAVE_UNIT, fluxsort*DEFAULT_FLUX_UNIT
 
 
 # NOTE: THIS FUNCTION IS NO LONGER IN USE
@@ -526,7 +526,7 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
     return
 
 
-def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX-PRISM',instrument_parameters={},wunit=BASE_WAVE_UNIT,funit=BASE_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,**kwargs):
+def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX-PRISM',instrument_parameters={},wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,**kwargs):
     '''
     :Purpose:
 
@@ -583,13 +583,13 @@ def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX-PRISM'
 # set wavelength unit
     if 'wunit' not in list(instrument_parameters.keys()): instrument_parameters['wunit'] = wunit
     if not isUnit(instrument_parameters['wunit']): 
-        if verbose == True: print('\nWarning: could not interpet unit {} which is type {}; setting wavelength unit to {}'.format(instrument_parameters['wunit'],type(instrument_parameters['wunit'],BASE_WAVE_UNIT)))
-        instrument_parameters['wunit'] = BASE_WAVE_UNIT
+        if verbose == True: print('\nWarning: could not interpet unit {} which is type {}; setting wavelength unit to {}'.format(instrument_parameters['wunit'],type(instrument_parameters['wunit'],DEFAULT_WAVE_UNIT)))
+        instrument_parameters['wunit'] = DEFAULT_WAVE_UNIT
 
 # set wavelength unit
     if 'funit' not in list(instrument_parameters.keys()): instrument_parameters['funit'] = funit
     if not isUnit(instrument_parameters['funit']): 
-        instrument_parameters['funit'] = BASE_FLUX_UNIT
+        instrument_parameters['funit'] = DEFAULT_FLUX_UNIT
 
 # set wave scale
     if 'wave' not in list(instrument_parameters.keys()): instrument_parameters['wave'] = wave
@@ -1947,7 +1947,7 @@ def loadTelluric(*args,wave_range=None,ndata=None,linear=True,log=False,output='
         else:
             raise ValueError('\nwave_range needs to be a list or numpy array')
     if isUnit(wave):
-        wave = wave.to(BASE_WAVE_UNIT)
+        wave = wave.to(DEFAULT_WAVE_UNIT)
         wave = wave.value
         wave_range = [numpy.min(wave),numpy.max(wave)]
     if not isinstance(wave,numpy.ndarray):
@@ -1998,7 +1998,7 @@ def loadTelluric(*args,wave_range=None,ndata=None,linear=True,log=False,output='
         'noise': [numpy.nan for t in trans_sampled],
         'name': 'Telluric transmission',
         'funit': u.m/u.m,
-        'wunit': BASE_WAVE_UNIT,
+        'wunit': DEFAULT_WAVE_UNIT,
         'bibcode': '1991aass.book.....L',
         'istransmission': True
         } 
@@ -2015,11 +2015,11 @@ def blackbody(temperature,**kwargs):
 
     nsamp = kwargs.get('samples',1000)
     nsamp = kwargs.get('nsamp',nsamp)
-    wunit = kwargs.get('wunit',BASE_WAVE_UNIT)
+    wunit = kwargs.get('wunit',DEFAULT_WAVE_UNIT)
     wunit = kwargs.get('wave_unit',wunit)
-    w0 = kwargs.get('w0',0.1*BASE_WAVE_UNIT)
+    w0 = kwargs.get('w0',0.1*DEFAULT_WAVE_UNIT)
     w0 = kwargs.get('lam0',w0)
-    w1 = kwargs.get('w1',100.*BASE_WAVE_UNIT)
+    w1 = kwargs.get('w1',100.*DEFAULT_WAVE_UNIT)
     w1 = kwargs.get('lam1',w1)
     wrng = kwargs.get('wave_range',[w0,w1])
     wrng = kwargs.get('range',wrng)
@@ -2038,7 +2038,7 @@ def blackbody(temperature,**kwargs):
     if not isUnit(wave):
         wave*=wunit
 
-    flux = numpy.pi*((2.*const.h*const.c**2)/(wave**5)).to(BASE_FLUX_UNIT)/(numpy.exp((const.h*const.c/(const.k_B*wave*temperature)).to(u.m/u.m))-1.)
+    flux = numpy.pi*((2.*const.h*const.c**2)/(wave**5)).to(DEFAULT_FLUX_UNIT)/(numpy.exp((const.h*const.c/(const.k_B*wave*temperature)).to(u.m/u.m))-1.)
     return splat.Spectrum(wave=wave,flux=flux,name='Blackbody T = {} K'.format(temperature.value),surface=True)
 
 
@@ -2050,7 +2050,7 @@ def blackbody(temperature,**kwargs):
 
 
 
-def _modelFitPlotComparison(spec,model,**kwargs):
+def _modelFitPlotComparison(spec,model,display=True,**kwargs):
     '''
     Routine to compare spectrum to a model or models
     '''
@@ -2140,7 +2140,7 @@ def _modelFitPlotComparison(spec,model,**kwargs):
 
 
 
-def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX-PRISM', nbest=1, plot=True, statistic='chisqr', verbose=False, output='fit', **kwargs):
+def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX-PRISM', nbest=1, plot=True, display=True, statistic='chisqr', verbose=False, output='fit', **kwargs):
     '''
     :Purpose: Fits a spectrum to a grid of atmosphere models, reports the best-fit and weighted average parameters, and returns either a dictionary with the best-fit model parameters or the model itself scaled to the optimal scaling factor.
 
@@ -2339,7 +2339,9 @@ def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX-PRISM', nbest=1, p
         print('\tchi={}'.format(parameters[0]['stat']))
 
     if plot == True:
-        _modelFitPlotComparison(spec,bmodel,stat=stats[0],file=file_best_comparison)
+        best_plot = _modelFitPlotComparison(spec,bmodel,stat=stats[0],file=file_best_comparison)
+        if display == True:
+            splot.plotSpectrum(spec,bmodel,spec-bmodel,color=['k','b','grey'],legend=[spec.name,bmodel.name,'Difference'],**kwargs)
 
 # weighted means/uncertainties - REMOVED THIS
 #     fitweights = numpy.exp(-0.5*(numpy.array(stats)-numpy.nanmin(stats))/len(spec.wave))
@@ -2424,7 +2426,7 @@ def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX-PRISM', nbest=1, p
 
 
 
-def modelFitMCMC(spec, mset='BTSettl2008', verbose=False, **kwargs):
+def modelFitMCMC(spec, modelset='BTSettl2008', verbose=False, **kwargs):
     '''
     :Purpose: Uses Metropolis-Hastings Markov Chain Monte Carlo method to compare a spectrum to
                 atmosphere models. Returns the best estimate of whatever parameters are allowed to
@@ -2487,11 +2489,10 @@ def modelFitMCMC(spec, mset='BTSettl2008', verbose=False, **kwargs):
     if burn > 1.: burn /= 100.
 
 # check model set
-    mset = kwargs.get('set', mset)
-    mset = kwargs.get('model', mset)
-    tmp = checkSpectralModelName(mset)
-    if tmp == False: raise ValueError('\nSPLAT does not have model set {}'.format(mset))
-    mset = tmp
+    modelset = kwargs.get('set', modelset)
+    modelset = kwargs.get('model', modelset)
+    mset = checkSpectralModelName(modelset)
+    if mset == False: raise ValueError('\nSPLAT does not have model set {}'.format(mset))
 
 # check instrument
     try:
@@ -2545,7 +2546,7 @@ def modelFitMCMC(spec, mset='BTSettl2008', verbose=False, **kwargs):
 # set ranges for models - input or set by model itself
     param_range = {}
     modelgrid = _loadModelParameters(mset,instrument) # Range parameters can fall in
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: 
+    for ms in list(SPECTRAL_MODELS[mset]['default'].keys()): 
         if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
             param_range[ms] = [numpy.min(modelgrid[ms]),numpy.max(modelgrid[ms])]
         else:
@@ -2559,7 +2560,7 @@ def modelFitMCMC(spec, mset='BTSettl2008', verbose=False, **kwargs):
 
 # set initial parameters
     param0 = {}
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: param0[ms] = SPECTRAL_MODEL_PARAMETERS[ms]['default']
+    for ms in list(param_range.keys()): param0[ms] = SPECTRAL_MODELS[mset]['default'][ms]
     p = kwargs.get('initial_guess',[param0['teff'],param0['logg'],param0['z']])
     if len(p) < 3: p.append(0.)
     param0['teff'] = kwargs.get('initial_temperature',p[0])
@@ -2578,7 +2579,7 @@ def modelFitMCMC(spec, mset='BTSettl2008', verbose=False, **kwargs):
         
 # set parameter steps for continuous variables
     param_step = {}
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: param_step[ms] = 0.
+    for ms in list(param0.keys()): param_step[ms] = 0.
     p = kwargs.get('step_sizes',[50,0.1,0.1])
     param_step['teff'] = kwargs.get('teff_step',p[0])
     param_step['teff'] = kwargs.get('temperature_step',param_step['teff'])
