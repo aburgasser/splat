@@ -3119,9 +3119,12 @@ def searchLibrary(*args, radius=10., instrument='SPEX-PRISM',**kwargs):
         nm = kwargs['name']
         if isinstance(nm,str):
             nm = [nm]
-        for n in nm:
-            source_db['SELECT'][source_db['NAME'] == n] += 1
-        count+=1.
+        if len(nm) > 0:
+            source_db['NAMEGEN'] = [n.lower().replace(' ','') for n in source_db['NAME']]
+            for n in nm:
+                source_db['SELECT'][source_db['NAMEGEN'] == n.lower().replace(' ','')] += 1
+            count+=1.
+            del source_db['NAMEGEN']
 
 # search by shortname
     if kwargs.get('shortname',False) != False:

@@ -29,6 +29,7 @@ from .utilities import *
 ###############   SPECTROPHOTOMETRY   ###############
 #####################################################
 
+# this function has been obseleted
 def checkFilter(filt,verbose=True):
     output = False
     f = copy.deepcopy(filt)
@@ -37,7 +38,7 @@ def checkFilter(filt,verbose=True):
         if f==k.upper() or f.lower() in FILTERS[k]['altnames']:
             output = k
     if output == False and verbose == True: 
-        print('\nFilter '+filt+' not currently available for SPLAT; contact '+SPLAT_EMAIL+'\n')
+        print('\nFilter '+filt+' not currently available for SPLAT; contact '+EMAIL+'\n')
         filterInfo()
     return output
 
@@ -64,7 +65,7 @@ def filterProfile(filt,**kwargs):
         filterFolder = SPLAT_URL+FILTER_FOLDER
 
 # check that requested filter is in list
-    f0 = checkFilter(filt, verbose=True)
+    f0 = checkFilterName(filt, verbose=True)
     if f0 == False: raise ValueError
     filt = f0
 
@@ -132,7 +133,7 @@ def filterMag(sp,filt,*args,**kwargs):
 
 # check that requested filter is in list
     if isinstance(custom,bool) and isinstance(notch,bool):
-        f0 = checkFilter(filt,verbose=True)
+        f0 = checkFilterName(filt,verbose=True)
         if f0 == False: 
             return numpy.nan, numpy.nan
         filt = f0
@@ -283,7 +284,7 @@ def filterInfo(*args,**kwargs):
         fname = [fname]
 
     for k in fname:
-        f = checkFilter(k)
+        f = checkFilterName(k)
         if f != False:
             print(f.replace('_',' ')+': '+FILTERS[f]['description'])
             if kwargs.get('verbose',False) == True or kwargs.get('long',False) == True:
@@ -345,7 +346,7 @@ def filterProperties(filt,**kwargs):
         filterFolder = SPLAT_URL+FILTER_FOLDER
 
 # check that requested filter is in list
-    filt = checkFilter(filt)
+    filt = checkFilterName(filt)
     if filt == False: return None
 
     report = {}
@@ -417,7 +418,7 @@ def magToFlux(mag,filt,**kwargs):
     if not isinstance(e_mag,u.quantity.Quantity): e_mag=e_mag*mag.unit
 
 # check that requested filter is in list
-    filt = checkFilter(filt)
+    filt = checkFilterName(filt)
     if filt == False: return numpy.nan, numpy.nan
 
 # reset filter calculation methods based on filter design
@@ -508,16 +509,25 @@ def magToFlux(mag,filt,**kwargs):
 #            raise ValueError('\nInput quantity unit {} is not a flux unit'.format(mag.unit))
 
 
-def visualizeFilter(filt,**kwargs):
+def visualizeFilter(filt,verbose=True,**kwargs):
     '''
     :Purpose: Plots a filter profile or set of filter profiles, optionally on top of a spectrum
 
-    FUTURE CODE, THIS IS A PLACEHOLDER
+    WARNING: THIS CODE IS CURRENTLY UNDER DEVELOPMENT, BUGS MAY BE COMMON
+
     '''
     if isinstance(filt,str):
-        filt = checkFilter(filt)
-        if filt == False: return None
-        fwave,ftrans = filterProfile(filt,**kwargs)
+        filt = [filt]
+    if isinstance(filt,list):
+        if isinstance(filt[0],str):
+            for f in filt:
+                fc = checkFilterName(f)
+                if fc == False: filt.remove(f)
+            if len(filt) == 0:
+                if verbose==True: print('Did not recognize any of the input filters')
+# STOPPED HERE
+
+        fwave,ftrans = filterProfile(filt[0],**kwargs)
     elif isinstance(filt,list):
         if kwargs.get('notch',False) == True:
             fwave,ftrans = numpy.linspace(filt[0],filt[1],1000),numpy.ones(1000)

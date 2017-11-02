@@ -2140,7 +2140,7 @@ def _modelFitPlotComparison(spec,model,display=True,**kwargs):
 
 
 
-def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX-PRISM', nbest=1, plot=True, display=True, statistic='chisqr', verbose=False, output='fit', **kwargs):
+def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX-PRISM', nbest=1, plot=True, statistic='chisqr', verbose=False, output='fit', **kwargs):
     '''
     :Purpose: Fits a spectrum to a grid of atmosphere models, reports the best-fit and weighted average parameters, and returns either a dictionary with the best-fit model parameters or the model itself scaled to the optimal scaling factor.
 
@@ -2340,8 +2340,6 @@ def modelFitGrid(spec, modelset='btsettl08', instrument='SPEX-PRISM', nbest=1, p
 
     if plot == True:
         best_plot = _modelFitPlotComparison(spec,bmodel,stat=stats[0],file=file_best_comparison)
-        if display == True:
-            splot.plotSpectrum(spec,bmodel,spec-bmodel,color=['k','b','grey'],legend=[spec.name,bmodel.name,'Difference'],**kwargs)
 
 # weighted means/uncertainties - REMOVED THIS
 #     fitweights = numpy.exp(-0.5*(numpy.array(stats)-numpy.nanmin(stats))/len(spec.wave))
