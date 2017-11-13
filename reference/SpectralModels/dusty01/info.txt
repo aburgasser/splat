@@ -1,0 +1,7 @@
+name	AMES Dusty
+citation	Allard et al. (2001)
+bibcode	2001ApJ...556..357A
+altnames	dusty,dusty-ames,amesdusty
+teff	1000
+logg	5.0
+z	0.0

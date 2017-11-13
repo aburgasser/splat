@@ -1,0 +1,7 @@
+name	Drift
+citation	Witte et al. (2011)
+bibcode	2011A&A...529A..44W
+altnames	witte,witte11,witte2011,helling
+teff	1000
+logg	5.0
+z	0.0

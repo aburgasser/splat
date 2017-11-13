@@ -1,0 +1,8 @@
+name	Burrows 2006
+citation	Burrows et al. (2015)
+bibcode	2006ApJ...640.1063B
+altnames	burrows,burrows2006
+teff	1000
+logg	5.0
+z	0.0
+cld	nc

@@ -841,13 +841,9 @@ class Spectrum(object):
                     SPEX_PRISM spectrum successfully loaded
         '''
         if self.ismodel == True:
-            f = '\n{} atmosphere model with the following parmeters:'.format(self.name)
-            f+='\nTeff = {} {}'.format(self.teff,SPECTRAL_MODEL_PARAMETERS['teff']['unit'])
-            f+='\nlogg = {} {}'.format(self.logg,SPECTRAL_MODEL_PARAMETERS['logg']['unit'])
-            f+='\nz = {} {}'.format(self.z,SPECTRAL_MODEL_PARAMETERS['z']['unit'])
-            f+='\nfsed = {}'.format(self.fsed)
-            f+='\ncld = {}'.format(self.cld)
-            f+='\nkzz = {}'.format(self.kzz)
+            f = '\n{} atmosphere model for instrument {} with the following parmeters:'.format(self.model,self.instrument)
+            for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+                if hasattr(self,ms): f+='\n\t{} = {} {}'.format(ms,getattr(self,ms),SPECTRAL_MODEL_PARAMETERS[ms]['unit'])
 #            f+='\nSmoothed to slit width {} {}'.format(self.slit,SPECTRAL_MODEL_PARAMETERS['slit']['unit'])
             f+='\n\nIf you use this model, please cite {}'.format(spbib.shortRef(SPECTRAL_MODELS[self.modelset]['bibcode']))
             f+='\nbibcode = {}\n'.format(SPECTRAL_MODELS[self.modelset]['bibcode'])

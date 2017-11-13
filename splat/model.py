@@ -35,6 +35,7 @@ import astropy.constants as const
 import splat.triangle as triangle             # will want to move this to corner
 from splat.initialize import *
 from splat.utilities import *
+from splat.citations import shortRef
 import splat.plot as splot
 import splat.photometry as spphot
 import splat.empirical as spemp
@@ -48,6 +49,38 @@ MODELS_READIN = {}
 ##################   MODEL LOADING  ###################
 #######################################################
 #######################################################
+
+def info(model=None):
+    if model == None:
+        model = list(SPECTRAL_MODELS.keys())
+    elif isinstance(model,str):
+        model = [model]
+    for m in model:
+        mdl = checkSpectralModelName(m)
+        if mdl == False: print('\nNew model named {} is currently loaded'.format(m))
+        print('\nModel {}:'.format(mdl))
+        if SPECTRAL_MODELS[mdl]['bibcode'] != '':
+            print('\tReference: {}'.format(shortRef(SPECTRAL_MODELS[mdl]['bibcode'])))
+            print('\tBibcode: {}'.format(SPECTRAL_MODELS[mdl]['bibcode']))
+        instr = numpy.array(list(SPECTRAL_MODELS[mdl]['instruments'].keys()))
+        numpy.sort(instr)
+        f = instr[0]
+        for i in instr[1:]: f=f+', {}'.format(i)
+        print('\tComputed for instruments {}'.format(f))
+        print('\tParameters:')
+        p = _loadModelParameters(mdl)
+        for m in SPECTRAL_MODEL_PARAMETERS_INORDER:
+            if m in list(p.keys()):
+                if SPECTRAL_MODEL_PARAMETERS[m]['type'] == 'continuous':
+                    print('\t\t{}: {} {} to {} {}'.format(m,numpy.nanmin(p[m]),SPECTRAL_MODEL_PARAMETERS[m]['unit'],numpy.nanmax(p[m]),SPECTRAL_MODEL_PARAMETERS[m]['unit']))
+                else:
+                    pval = numpy.array(list(set(p[m])))
+                    numpy.sort(pval)
+                    f = pval[0]
+                    for i in pval[1:]: f=f+', {}'.format(i)
+                    print('\t\t{}: {} {}'.format(m,f,SPECTRAL_MODEL_PARAMETERS[m]['unit']))
+    return 
+
 
 def addUserModels(folders=[],default_info={},verbose=True):
     '''
@@ -73,7 +106,13 @@ def addUserModels(folders=[],default_info={},verbose=True):
     '''
 # default information dictionary
     if len(default_info.keys()) == 0:
-        default_info = {'folder': '', 'name': '', 'citation': '', 'bibcode': '', 'altnames': [], 'rawfolder': '', 'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
+        default_info = {
+            'folder': '', 
+            'name': '', 
+            'citation': '', 
+            'bibcode': '', 
+            'altnames': [], 
+            'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
 
 # read in folders specified in .splat_spectral_models
     if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
@@ -123,11 +162,135 @@ def addUserModels(folders=[],default_info={},verbose=True):
                 del minfo
     return
 
-addUserModels()
+def _initializeModels(verbose=False):
+    '''
+    :Purpose:
 
+        Initializes the spectral model set by adding folders to splat.SPECTRAL_MODELS global variable
 
-def _test():
-    _processModels('madhusudhan2011')
+    :Required Inputs:
+
+        None
+
+    :Optional Inputs:
+
+        * :param verbose = False: provide verbose feedback
+
+    :Outputs:
+        
+        None
+
+    '''
+# default information for a new model    
+#    if len(default_info.keys()) == 0:
+    default_info = {
+        'instruments': {},
+        'name': '', 
+        'citation': '', 
+        'bibcode': '', 
+        'altnames': [], 
+        'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
+
+# folders from which models are to be found
+    mfolders = [SPLAT_PATH+SPECTRAL_MODEL_FOLDER]
+
+# specified in .splat_spectral_models
+    if os.path.exists(EXTERNAL_SPECTRAL_MODELS_FILE):
+        with open(EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
+        mfolders.extend(x.split('\n'))
+    if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
+        with open(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
+        mfolders.extend(x.split('\n'))
+# specified in environmental variable SPLAT_SPECTRAL_MODELS
+    if os.environ.get('SPLAT_SPECTRAL_MODELS') != None:
+        mfolders.extend(str(os.environ['SPLAT_SPECTRAL_MODELS']).split(':'))
+# check the model folders
+    if '' in mfolders: mfolders.remove('')
+    rm = []
+    for m in mfolders:
+        if os.path.exists(m) == False: rm.append(m)
+    if len(rm) > 0:
+        for m in rm: mfolders.remove(m)
+    if len(mfolders) == 0:
+        print('\nNo folders containing spectral models were found to be present')
+        return
+    mfolders = list(set(mfolders))
+    if verbose == True:
+        print('Spectral model folders:')
+        for m in mfolders: print('\t{}'.format(m))
+
+# go through each model folder and check model names
+    for i,f in enumerate(mfolders):
+        mnames = os.listdir(f)
+        rm = []
+        for m in mnames:
+            if os.path.isdir(os.path.join(f,m))==False: rm.append(m)
+        if len(rm) > 0:
+            for m in rm: mnames.remove(m)
+        if len(mnames) > 0:
+            for nm in mnames: 
+                fnm = os.path.join(f,nm)
+                instruments = os.listdir(fnm)
+                name = checkSpectralModelName(nm)
+# new model name, add to global variable
+# using info.txt data if available                    
+                if name == False:
+                    name = nm
+                    adddict = {'name': name}
+                    definfo = copy.deepcopy(default_info)
+                    if 'info.txt' in instruments:
+                        with open(os.path.join(fnm,'info.txt'), 'r') as frd: x = frd.read()
+                        lines = x.split('\n')
+                        if '' in lines: lines.remove('')
+                        lines = [x.split('\t') for x in lines]
+                        adddict = dict(lines)
+                        if 'altnames' in list(adddict.keys()): adddict['altnames'] = adddict['altnames'].split(',')
+#                    for k in list(SPECTRAL_MODELS[list(SPECTRAL_MODELS.keys())[0]].keys()):
+#                        if k not in list(adddict.keys()):
+#                            if k in list(default_info.keys()): adddict[k] = definfo[k]
+#                            else: adddict[k] = ''
+#                    for k in list(default_info.keys()):
+#                        if k not in list(minfo.keys()): minfo[k] = default_info[k]
+
+#  this sets the default values - it would be better to just grab one file and set the defaults that way                    
+                    if 'default' not in list(adddict.keys()): adddict['default'] = {}
+                    for k in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+                        if k in list(adddict.keys()): adddict['default'][k] = adddict[k]
+                        if 'default_'+k in list(adddict.keys()): adddict['default'][k] = adddict['default_'+k]
+#                        if k in list(adddict['default'].keys()): print(k,adddict['default'][k])
+#                    print('\nWarning: did not find info.txt file in {}; using default values for model information'.format(minfo['folder']))
+#                    adddict['name'] = nm
+                    if 'name' not in list(adddict.keys()): adddict['name'] = name
+                    if 'instruments' not in list(adddict.keys()): adddict['instruments'] = {}
+                    if 'bibcode' not in list(adddict.keys()): adddict['bibcode'] = ''
+                    SPECTRAL_MODELS[name] = adddict
+                    if verbose==True: print('\nAdded a new model {} with parameters {}'.format(name,adddict))
+                    del adddict, definfo
+# go through instruments                
+                rm = []
+                for m in instruments:
+                    if os.path.isdir(os.path.join(fnm,m))==False: rm.append(m)
+                if len(rm) > 0:
+                    for m in rm: instruments.remove(m)
+                if len(instruments) > 0:
+                    for inst in instruments:
+# make sure there are files in this folder
+                        fnmi = os.path.join(fnm,inst)
+                        mfiles = os.listdir(fnmi)
+                        if len(mfiles) > 0:
+                            instrument = checkInstrument(inst)
+# unknown instrument; just add for now
+                            if instrument == False:
+                                instrument = (inst.replace(' ','-').replace('_','-')).upper()
+                            if instrument not in list(SPECTRAL_MODELS[name]['instruments'].keys()):
+                                SPECTRAL_MODELS[name]['instruments'][instrument] = fnmi
+                                if verbose == True: print('\nAdding model {} and instrument {} from {}'.format(name,instrument,fnmi))
+                            else:
+                                if verbose == True: print('\nModel {} and instrument {}: ignoring {} as these already exists in {}'.format(name,instrument,fnmi,SPECTRAL_MODELS[name]['instruments'][instrument]))
+    return
+
+_initializeModels()
+
 
 # helper functions to read in raw models
 def _readBurrows06(file):
@@ -146,6 +309,27 @@ def _readBurrows06(file):
     fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
     wavesort = sorted(wave.value)
     return wavesort*DEFAULT_WAVE_UNIT, fluxsort*DEFAULT_FLUX_UNIT
+
+
+def _readVeyette(file,skip=0):
+    if not os.access(file, os.R_OK):
+        raise ValueError('Could not find model file {}'.format(file))
+    data = []
+    if file[-3:] == '.gz':
+        with gzip.open(os.path.normpath(file),'rt') as f:
+            for line in f:
+                data.append(line.replace('\n',''))
+    else:
+        with open(os.path.normpath(file),'rt') as f:
+            for line in f:
+                data.append(line.replace('\n',''))
+    if skip > 0: data = data[skip:]
+
+    wave = numpy.array([float(d.split()[0]) for d in data])*u.Angstrom
+    wave = wave.to(DEFAULT_WAVE_UNIT)
+    flux = numpy.array([10.**(float(d.split()[1])) for d in data])*u.erg/u.s/u.Angstrom/u.cm/u.cm
+    flux = flux.to(DEFAULT_FLUX_UNIT)
+    return wave, flux
 
 def _readBtsettl08(file,expon=-8.):
     if not os.access(file, os.R_OK):
@@ -264,16 +448,71 @@ def _modelName(modelset,instrument,param):
 
 def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],verbose=True,skipraw=True,**kwargs):
 
-    if len(args) >= 1: mset = args[0]
-    else: mset = kwargs.get('set',False)
-    modelset = checkSpectralModelName(mset)
-    if modelset == False:
-        raise ValueError('\nInvalid model set {}'.format(mset))
+    default_info = {
+        'instruments': {},
+        'name': '', 
+        'bibcode': '', 
+        'altnames': [], 
+        'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
 
-#    outputfolder = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+modelset+'/'
-    outputfolder = SPECTRAL_MODELS[modelset]['folder']
+# name of model
+    mset = False
+    if len(args) >= 1: mset = args[0]
+    mset = kwargs.get('set',mset)
+    mset = kwargs.get('modelset',mset)
+    mset = kwargs.get('model',mset)
+
+# input folder
+    folder = './'
+    if len(args) >=2: folder = args[1]
+    folder = kwargs.get('folder',folder)
+    folder = kwargs.get('infolder',folder)
+    folder = kwargs.get('input_folder',folder)
+
+# output folder
+    outputfolder = ''
+    if len(args) >=3: outputfolder = args[2]
+    outputfolder = kwargs.get('outfolder',outputfolder)
+    outputfolder = kwargs.get('output_folder',outputfolder)
+    if outputfolder == '': outputfolder = folder
+
+# check folders
+    if not os.path.exists(folder):
+        raise ValueError('\nCould not find input folder {}'.format(folder))
     if not os.path.exists(outputfolder):
         os.makedirs(outputfolder)
+
+    modelset = checkSpectralModelName(mset)
+# generate a new modelset key in SPECTRAL_MODELS
+    if modelset == False:
+        modelset = mset
+        adddict = {'name': modelset,'instruments': {},'bibcode': '','altnames': [],'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
+        files = os.listdir(folder)
+        if 'info.txt' in files:
+            with open(os.path.join(folder,'info.txt'), 'r') as frd: x = frd.read()
+            lines = x.split('\n')
+            if '' in lines: lines.remove('')
+            lines = [x.split('\t') for x in lines]
+            adddict = dict(lines)
+            if 'altnames' in list(adddict.keys()): adddict['altnames'] = adddict['altnames'].split(',')
+        for k in list(SPECTRAL_MODELS[list(SPECTRAL_MODELS.keys())[0]].keys()):
+            if k not in list(adddict.keys()):
+                if k in list(default_info.keys()): adddict[k] = definfo[k]
+                else: adddict[k] = ''
+        for k in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+            if k in list(adddict.keys()): adddict['default'][k] = adddict[k]
+            if 'default_'+k in list(adddict.keys()): adddict['default'][k] = adddict['default_'+k]
+            files = os.listdir(outputfolder)
+            if 'info.txt' not in files:
+                shutil.copy(os.path.join(folder,'info.txt'),os.path.join(outputfolder,'info.txt'))
+        SPECTRAL_MODELS[modelset] = adddict
+        if verbose==True: print('\nAdded a new model {} with parameters {}'.format(modelset,adddict))
+        del adddict
+
+# special 'ORIGINAL' folder
+    files = os.listdir(folder)
+    if 'ORIGINAL' in files: folder = os.path.join(folder,'ORIGINAL')
+
 
 # only do instruments if RAW models already exist
     skipraw = skipraw and os.path.exists(outputfolder+'/RAW/')
@@ -284,17 +523,17 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
     if skipraw == False:
 
 # presets for various models - these are based on how they are downloaded
-        if modelset == 'burrows06':
+        if 'burrows' in modelset.lower():
             readfxn = _readBurrows06
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.txt'))
+            files = glob.glob(os.path.join(folder,'*.txt'))
             mparam = {}
             mparam['teff'] = [float(f.split('_')[0].split('T')[-1]) for f in files]
             mparam['logg'] = [float(f.split('_')[1][1:]) for f in files]
             mparam['z'] = [numpy.round(numpy.log10(float(f.split('_')[-1][:3]))*10.)/10. for f in files]
             mparam['cld'] = [f.split('_')[2].replace('cf','nc') for f in files]
-        elif modelset == 'madhusudhan11':
+        elif 'madhu' in modelset.lower():
             readfxn = _readBurrows06
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*'))
+            files = glob.glob(os.path.join(folder,'*'))
             mparam = {}
             mparam['teff'] = [float(f.split('_')[1].split('t')[-1]) for f in files]
             mparam['logg'] = [float(f.split('_')[2].split('g')[-1]) for f in files]
@@ -302,16 +541,21 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
             mparam['fsed'] = [f.split('_')[-1].lower() for f in files]
             mparam['cld'] = [(f.split('/')[-1]).split('_')[0].lower() for f in files]
             mparam['kzz'] = [f.split('_')[-2].lower() for f in files]
-        elif modelset == 'atmos-cond' or modelset == 'atmos-rain':
+        elif 'atmos' in modelset.lower():
             readfxn = _readAtmos
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.ncdf'))
+            files = glob.glob(os.path.join(folder,'*.ncdf'))
             mparam = {}
             mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:-1]) for f in files]
             mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][2:]) for f in files]
             mparam['z'] = [0. for f in files]
+            mparam['ad'] = [float((f.split('/')[-1]).split('_')[3][1:]) for f in files]
+            mparam['logpmin'] = [float((f.split('/')[-1]).split('_')[4][2:]) for f in files]
+            mparam['logpmax'] = [float((f.split('/')[-1]).split('_')[5][2:]) for f in files]
+            mparam['broad'] = [(f.split('/')[-1]).split('_')[7][2:] for f in files]
+            mparam['cld'] = [(f.split('/')[-1]).split('_')[8] for f in files]
         elif modelset == 'btsettl08':
             readfxn = _readBtsettl08
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz'))
+            files = glob.glob(os.path.join(folder,'*spec.7.gz'))
             mparam = {}
             mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
             mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
@@ -319,45 +563,30 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
             mparam['enrich'] = [float(((f.split('/'))[-1].split('a+'))[-1][0:3]) for f in files]
         elif modelset == 'nextgen99':
             readfxn = _readBtsettl08
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte*.gz'))
+            files = glob.glob(os.path.join(folder,'lte*.gz'))
             mparam = {}
             mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
             mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
             mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
-        elif modelset == 'btcond':
-            readfxn = _readBtsettl08
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte*.bz2'))
-            mparam = {}
-            mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
-            mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
-            mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
-            mparam['enrich'] = [float(((f.split('/'))[-1].split('a+'))[-1][0:3]) for f in files]
         elif modelset == 'btnextgen' or modelset == 'btcond' or modelset == 'btdusty':
             readfxn = _readBtsettl08
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte*.bz2'))
+            files = glob.glob(os.path.join(folder,'lte*.bz2'))
             mparam = {}
             mparam['teff'] = [float((f.split('/'))[-1][3:6])*100. for f in files]
             mparam['logg'] = [float((f.split('/'))[-1][7:10]) for f in files]
             mparam['z'] = [float((f.split('/'))[-1][10:14]) for f in files]
             if 'enrich' in list(SPECTRAL_MODELS[modelset]['default'].keys()):
                 mparam['enrich'] = [float(((f.split('/'))[-1].split('a+'))[-1][0:3]) for f in files]
-        elif modelset == 'cond01':
+        elif modelset == 'cond01' or modelset == 'dusty01':
             readfxn = _readBtsettl08
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*7.gz'))
-            mparam = {}
-            mparam['teff'] = [float((f.split('/'))[-1][3:5])*100. for f in files]
-            mparam['logg'] = [float((f.split('/'))[-1][6:9]) for f in files]
-            mparam['z'] = [float((f.split('/'))[-1][10:13]) for f in files]
-        elif modelset == 'dusty01':
-            readfxn = _readBtsettl08
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*7.gz'))
+            files = glob.glob(os.path.join(folder,'*7.gz'))
             mparam = {}
             mparam['teff'] = [float((f.split('/'))[-1][3:5])*100. for f in files]
             mparam['logg'] = [float((f.split('/'))[-1][6:9]) for f in files]
             mparam['z'] = [float((f.split('/'))[-1][10:13]) for f in files]
         elif modelset == 'btsettl15':
             readfxn = _readBtsettl08
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*spec.7.gz'))
+            files = glob.glob(os.path.join(folder,'*spec.7.gz'))
             mparam = {}
             mparam['teff'] = [float((f.split('/'))[-1][3:8])*100. for f in files]
             mparam['logg'] = [float((f.split('/'))[-1][9:12]) for f in files]
@@ -365,7 +594,7 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
     # Morley et al. 2012: no metallicity, fsed, kzz or clouds
         elif modelset == 'morley12':
             readfxn = _readSaumon12
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
+            files = glob.glob(os.path.join(folder,'sp*'))
             mparam = {}
             mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
             mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
@@ -374,7 +603,7 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
     # Morley et al. 2014: no metallicity, fsed, kzz or clouds
         elif modelset == 'morley14':
             readfxn = _readMorley14
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
+            files = glob.glob(os.path.join(folder,'sp*'))
             mparam = {}
             mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-2].split('g'))[0][1:]) for f in files]
             mparam['logg'] = [2.+numpy.log10(float((((((f.split('/'))[-1].split('_'))[-2].split('g'))[1]).split('f'))[0])) for f in files]
@@ -384,38 +613,53 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
     # Saumon & Marley 2012: no metallicity, fsed, kzz or clouds
         elif modelset == 'saumon12':
             readfxn = _readSaumon12
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/sp*'))
+            files = glob.glob(os.path.join(folder,'sp*'))
             mparam = {}
             mparam['teff'] = [float((((f.split('/'))[-1].split('_'))[-1].split('g'))[0][1:]) for f in files]
             mparam['logg'] = [2.+numpy.log10(float((((f.split('/'))[-1].split('_'))[-1].split('g'))[1].split('nc')[0])) for f in files]
             mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
         elif modelset == 'drift':
             readfxn = _readBtsettl08
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/lte_*'))
+            files = glob.glob(os.path.join(folder,'lte_*'))
             mparam['teff'] = [float((f.split('/')[-1]).split('_')[1]) for f in files]
             mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][:3]) for f in files]
             mparam['z'] = [float((f.split('/')[-1]).split('_')[2][3:7]) for f in files]
             mparam = {}
+        elif 'atmos' in modelset.lower():
+            readfxn = _readAtmos
+            files = glob.glob(os.path.join(folder,'*.ncdf'))
+            mparam = {}
+            mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:-1]) for f in files]
+            mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][2:]) for f in files]
+            mparam['z'] = [0. for f in files]
         elif modelset == 'tremblin16':
             readfxn = _readTremblin16
-            files = glob.glob(os.path.normpath(SPECTRAL_MODELS[modelset]['rawfolder']+'/*.dat'))
+            files = glob.glob(os.path.join(folder,'*.dat'))
             mparam = {}
             mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:]) for f in files]
             mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][1:]) for f in files]
             mparam['z'] = [SPECTRAL_MODELS[modelset]['default']['z'] for f in files]
             mparam['kzz'] = [float((f.split('/')[-1]).split('_')[3][1:]) for f in files]
             mparam['ad'] = [float((f.split('/')[-1]).split('_')[5][1:5]) for f in files]
+        elif 'veyette' in modelset.lower():
+            readfxn = _readVeyette
+            files = glob.glob(os.path.join(folder,'*.gz'))
+            mparam = {}
+            mparam['teff'] = [float((f.replace('.BT-Settl','').replace('.txt.gz','').split('/')[-1]).split('_')[0][3:]) for f in files]
+            mparam['logg'] = [float((f.replace('.BT-Settl','').replace('.txt.gz','').split('/')[-1]).split('_')[1]) for f in files]
+            mparam['z'] = [float((f.replace('.BT-Settl','').replace('.txt.gz','').split('/')[-1]).split('_')[2][1:].replace('+','')) for f in files]
+            mparam['enrich'] = [float((f.replace('.BT-Settl','').replace('.txt.gz','').split('/')[-1]).split('_')[3][1:].replace('+','')) for f in files]
+            mparam['carbon'] = [float((f.replace('.BT-Settl','').replace('.txt.gz','').split('/')[-1]).split('_')[4][1:].replace('+','')) for f in files]
+            mparam['oxygen'] = [float((f.replace('.BT-Settl','').replace('.txt.gz','').split('/')[-1]).split('_')[5][1:].replace('+','')) for f in files]
         else:
             raise ValueError('\nHave not yet gotten model set {} into _processModels'.format(modelset))
 
         if len(files) == 0: 
-            raise ValueError('Could not find spectral model files in {}'.format(SPECTRAL_MODELS[modelset]['rawfolder']))        
+            raise ValueError('Could not find spectral model files in {}'.format(folder))
 
 # create folders if they don't exist
         if not os.path.exists(outputfolder+'/RAW/'):
             os.makedirs(outputfolder+'/RAW/')
-#    if not os.path.exists(outputfolder+'/SED/'):
-#        os.makedirs(outputfolder+'/SED/')
 
 # generate photometry - skipping for now since this takes a while
 #    if kwargs.get('make_photometry',False) == True: 
@@ -457,6 +701,8 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
                     shutil.copyfileobj(f_in, f_out)
                 os.remove(outputfile)
 
+# if successful, add 'RAW' to instruments list in SPECTRAL_MODELS global variable
+        SPECTRAL_MODELS[modelset]['instruments']['RAW'] = outputfolder+'/RAW/'
 
 # generate SED model
 #             if make_sed == True:
@@ -482,7 +728,7 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
         for inst in instruments:
             ins = checkInstrument(inst)
             if ins != False: inst = ins
-            if not os.path.exists(outputfolder+'/{}/'.format(inst)): os.makedirs(outputfolder+'/{}/'.format(inst))
+#            if not os.path.exists(outputfolder+'/{}/'.format(inst)): os.makedirs(outputfolder+'/{}/'.format(inst))
             if verbose == True: print('Processing models for instrument {}'.format(inst))
 
             if inst=='SPEX-PRISM':
@@ -490,43 +736,17 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
                 processModelsToInstrument(modelset=modelset,wave=spref.wave.value,instrument=inst)
             elif inst=='SED':
                 INSTRUMENTS['SED']['wave_range'] = [numpy.nanmin(wv),numpy.nanmax(wv)]
-                INSTRUMENTS['SED']['resolution'] = sedre
+                INSTRUMENTS['SED']['resolution'] = sedres
                 processModelsToInstrument(modelset=modelset,instrument=inst)
             elif ins != False:
                 processModelsToInstrument(modelset=modelset,instrument=inst)
             else:
                 print('\nDo not have enough information to generate model set for instrument {}; run this separate with processModelsToInstrument()'.format(inst))
 
-
-# generate SpeX Prism model
-    # if make_spex == True:
-    #     if not os.path.exists(outputfolder+'/SPEX-PRISM/'): os.makedirs(outputfolder+'/SPEX-PRISM/')
-    #     spref = Spectrum(10001)
-    #     processModelsToInstrument(modelset=modelset,wave=spref.wave.value,instrument='SPEX-PRISM')
-
-# generate USpeX Prism model
-#    if kwargs.get('make_spex',False) == True:
-#        spref = Spectrum(12279)
-#        _processModelsToInstrument(modelset=modelset,wave=spref.wave.value,instrument='USPEX_PRISM')      
-
-
-# generate photometry
-#        if kwargs.get('make_photometry',True) == True:
-#            outnames = ['teff','logg','z','fsed','cld']
-#            for p in SPECTRAL_MODEL_PARAMETERS_INORDER: phot_data[p].append(mparam[p][i])
-#            for f in list(FILTERS.keys()):
-#                phot_data[f].append(spphot.filterMag(spmodel,f,verbose=False)[0])
-#                outnames.append(f) 
-# generate an output table with the correct order
-#            t = pandas.DataFrame(phot_data)
-#            t = t[outnames]
-#            t.to_csv(outputfolder+modelset+'_photometry.txt',index=False,sep='\t')
-
-
     return
 
 
-def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX-PRISM',instrument_parameters={},wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,**kwargs):
+def processModelsToInstrument(*args,instrument_parameters={},wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,**kwargs):
     '''
     :Purpose:
 
@@ -562,14 +782,21 @@ def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX-PRISM'
     oversample = kwargs.get('oversample',5.)
     overscan = kwargs.get('overscan',0.05)
 
+# model set
+    modelset = False
     if len(args) >= 1: modelset = args[0]
-    else: modelset = kwargs.get('set',modelset)
+    modelset = kwargs.get('modelset',modelset)
+    modelset = kwargs.get('model',modelset)
+    modelset = kwargs.get('set',modelset)
     mset = checkSpectralModelName(modelset)
     if mset == False:
         raise ValueError('\nInvalid model set {}'.format(modelset))
 
+# instrument
+    instrument = 'SPEX-PRISM'
     if len(args) >= 2: instrument = args[1]
-    else: instrument = kwargs.get('instr',instrument)
+    instrument = kwargs.get('instrument',instrument)
+    instrument = kwargs.get('instr',instrument)
     instr = checkInstrument(instrument)
 
 # set up parameters for making model
@@ -578,7 +805,7 @@ def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX-PRISM'
             instrument_parameters[r] = INSTRUMENTS[instr][r]
     else:
         instr = instrument.upper()
-        instr = instr.replace(' ','_')
+        instr = instr.replace(' ','-')
 
 # set wavelength unit
     if 'wunit' not in list(instrument_parameters.keys()): instrument_parameters['wunit'] = wunit
@@ -630,8 +857,8 @@ def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX-PRISM'
     wave_oversample = f(b)
 
 # grab the raw files
-    inputfolder = kwargs.get('inputfolder',os.path.normpath(SPECTRAL_MODELS[mset]['folder']+'/RAW/'))
-    files = glob.glob(os.path.normpath(inputfolder+'/*'))
+    inputfolder = kwargs.get('inputfolder',os.path.normpath(SPECTRAL_MODELS[mset]['instruments']['RAW']))
+    files = glob.glob(os.path.normpath(inputfolder+'/*.txt'))
     if len(files) == 0:
         files = glob.glob(os.path.normpath(inputfolder+'/*.gz'))
         if len(files) == 0:
@@ -639,6 +866,8 @@ def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX-PRISM'
 
 # set and create folder if it don't exist
     outputfolder = kwargs.get('outputfolder',inputfolder.replace('RAW',instr))
+    if os.path.exists(outputfolder) == True and overwrite==False:
+        raise ValueError('\nModel output folder {} already exists; set overwrite=True to overwrite'.format(outputfolder))
     if not os.path.exists(outputfolder):
         try:
             os.makedirs(outputfolder)
@@ -686,6 +915,8 @@ def processModelsToInstrument(*args,modelset='btsettl08',instrument='SPEX-PRISM'
         t = Table([instrument_parameters['wave'],fluxsm],names=['#wavelength ({})'.format(spmodel.wave.unit),'surface_flux ({})'.format(spmodel.flux.unit)])
         t.write(noutputfile,format='ascii.tab')
 
+# if successful, add this instrument to SPECTRAL_MODELS global variable
+    SPECTRAL_MODELS[mset]['instruments'][instr] = outputfolder
     return   
 
 
@@ -1332,7 +1563,7 @@ def loadModel(*args, modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=
 # a filename has been passed - assume this file is a local file
 # and check that the path is correct if its fully provided
 # otherwise assume path is inside model set folder
-    if (len(args) > 0):
+    if len(args) > 0:
         kwargs['filename'] = os.path.normpath(args[0])
         if not os.path.exists(kwargs['filename']):
             kwargs['filename'] = os.path.normpath(kwargs['folder']+os.path.basename(kwargs['filename']))
@@ -1366,13 +1597,14 @@ def loadModel(*args, modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=
     kwargs['name'] = kwargs['model']+' ('+kwargs['instrument']+')'
 
 
-# check that folder is correct
-    kwargs['folder'] = kwargs.get('folder',os.path.normpath(SPECTRAL_MODELS[kwargs['model']]['folder']+'/'+kwargs['instrument']+'/'))
+# check that model data is available
+#    kwargs['folder'] = kwargs.get('folder',os.path.normpath(SPECTRAL_MODELS[kwargs['model']]['folder']+'/'+kwargs['instrument']+'/'))
+    kwargs['folder'] = os.path.normpath(SPECTRAL_MODELS[kwargs['model']]['instruments'][kwargs['instrument']])
     if not os.path.exists(kwargs['folder']):
         finit = kwargs['folder']
         kwargs['folder'] = os.path.normpath(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'+kwargs['instrument']+'/')
         if not os.path.exists(kwargs['folder']):
-            raise ValueError('\nCould not locate folder {} for model {} and instrument {}; make sure models are properly located'.format(finit,kwargs['model'],kwargs['instrument']))
+            raise ValueError('\nCould not locate folder {} or {} for model {} and instrument {}; make sure models are properly located'.format(finit,kwargs['folder'],kwargs['model'],kwargs['instrument']))
 
 # preset defaults
     mparam = {}
@@ -1387,7 +1619,7 @@ def loadModel(*args, modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=
 
 # generate model filename
     
-    filename = os.path.normpath(SPECTRAL_MODELS[kwargs['model']]['folder']+'/'+kwargs['instrument']+'/'+kwargs['model'])
+    filename = os.path.join(SPECTRAL_MODELS[kwargs['model']]['instruments'][kwargs['instrument']],kwargs['model'])
 
 
     for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
@@ -1515,7 +1747,8 @@ def _checkModelParametersInRange(mparam):
 
 # check that given parameters are in model ranges
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        if ms=='teff' or ms=='logg' or ms=='z':
+        if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
+#            ms=='teff' or ms=='logg' or ms=='z':
             if ms in mp:
                 if (float(mparam[ms]) < numpy.min(parameters[ms]) or float(mparam[ms]) > numpy.max(parameters[ms])):
                     print('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,mparam[ms],mparam['model']))
@@ -1787,7 +2020,7 @@ def _loadInterpolatedModel(*args,**kwargs):
 
 
 
-def _loadModelParameters(*args,modelset='UNKNOWN',instrument='RAW',**kwargs):
+def _loadModelParameters(*args,**kwargs):
     '''
     Purpose: 
         Assistant routine for `loadModel()`_ that loads in the spectral model grid points.
@@ -1809,23 +2042,30 @@ def _loadModelParameters(*args,modelset='UNKNOWN',instrument='RAW',**kwargs):
     '''
 
 # model set
+    modelset = False
+    if len(args) > 0: modelset = args[0]
+    modelset = kwargs.get('modelset',modelset)
     modelset = kwargs.get('model',modelset)
     modelset = kwargs.get('set',modelset)
-    if len(args) > 0:
-        modelset = args[0]
     mset = checkSpectralModelName(modelset)
     if mset == False:
         raise NameError('\nInput model set {} not in defined set of models:\n{}\n'.format(modelset,list(SPECTRAL_MODELS.keys())))
 
 # instrument
+    instrument = ''
+    if len(args) > 1: instrument = args[1]
+    instrument = kwargs.get('instrument',instrument)
     instrument = kwargs.get('instr',instrument)
-    if len(args) > 1:
-        instrument = args[1]
     instr = checkInstrument(instrument)
     if instr != False: instrument = instr
+    if instrument not in list(SPECTRAL_MODELS[mset]['instruments'].keys()):
+        ins = list(SPECTRAL_MODELS[mset]['instruments'].keys())
+        if 'ORIGINAL' in ins: ins.remove('ORIGINAL')
+        if len(ins) == 0: raise ValueError('\nNo SPLAT-processed models for {}'.format(mset))
+        instrument = ins[0]
 
 # folder for models
-    mfolder = os.path.normpath(SPECTRAL_MODELS[mset]['folder']+'/'+instr)
+    mfolder = os.path.normpath(SPECTRAL_MODELS[mset]['instruments'][instrument])
     if not os.access(mfolder, os.R_OK):
 #        raise NameError('\nInstrument setting {} is not defined for model set {}\n'.format(instrument,mset))
 #        mfolder = os.path.normpath(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+mset)
@@ -1835,19 +2075,25 @@ def _loadModelParameters(*args,modelset='UNKNOWN',instrument='RAW',**kwargs):
     parameters = {'model': mset, 'instrument': instrument, 'parameter_sets': []}
     for ms in list(SPECTRAL_MODELS[mset]['default'].keys()):
         parameters[ms] = []
+#    print(parameters.keys())
 
 # establish parameters from list of filenames
 #    if kwargs.get('old',False) == False:
     mfiles = glob.glob(mfolder+'/*.txt')
-    if instr == 'RAW': mfiles = glob.glob(mfolder+'/*.gz')
+    if instr == 'RAW' or len(mfiles) == 0: mfiles = glob.glob(mfolder+'/*.gz')
     if len(mfiles) == 0:
         raise ValueError('\nCould not find any model files in {}'.format(mfolder))
     for mf in mfiles:
         p = {'model': mset, 'instrument': instr}
-        sp = numpy.array(os.path.basename(mf).replace('.txt','').replace('.gz','').replace(mset,'').replace('_'+instr,'').split('_'))
+        sp = numpy.array(os.path.basename(mf).replace('.txt','').replace('.gz','').replace(mset+'_','').replace('_'+instrument,'').split('_'))
+        if '' in sp: 
+            sp = list(sp)
+            sp.remove('')
+            sp = numpy.array(sp)
         for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
             if ms in list(parameters.keys()):
-                val = sp[numpy.where([SPECTRAL_MODEL_PARAMETERS[ms]['prefix'] in l for l in sp])][0][1:]
+#                print(mf,sp,ms)
+                val = sp[numpy.where([SPECTRAL_MODEL_PARAMETERS[ms]['prefix'] in l for l in sp])][0][len(SPECTRAL_MODEL_PARAMETERS[ms]['prefix']):]
                 if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous': val = float(val)
                 parameters[ms].append(val)
                 p[ms] = val

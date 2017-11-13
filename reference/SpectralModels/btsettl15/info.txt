@@ -1,0 +1,7 @@
+name	BT Settl (CIFIST 2015)
+citation	Allard et al. (2015)
+bibcode	2015A&A...577A..42B
+altnames	allard15,allard2015,btsettl015,btsettl2015,BTSettl2015
+teff	1500
+logg	5.0
+z	0.0

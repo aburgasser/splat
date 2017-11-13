@@ -1,0 +1,7 @@
+name	Phoenix NextGen
+citation	Hauschildt et al. (1999)
+bibcode	1999ApJ...525..871H
+altnames	nextgen,hauschildt,hauschildt99,hauschildt1999
+teff	2000
+logg	5.0
+z	0.0

@@ -1,0 +1,7 @@
+name	BT Dusty
+citation	Allard et al. (2012)
+bibcode	2012RSPTA.370.2765A
+altnames	dusty-bt,bt-dusty
+teff	2000
+logg	5.0
+z	0.0

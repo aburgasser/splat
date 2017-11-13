@@ -216,8 +216,8 @@ FILTERS = { \
     'FOURSTAR_J2': {'file': 'fourstar-j2.txt', 'description': 'FOURSTAR J2-band', 'zeropoint': 1774.5, 'method': 'vega', 'rsr': False, 'altnames': ['4star j2']}, \
     'FOURSTAR_J3': {'file': 'fourstar-j3.txt', 'description': 'FOURSTAR J3-band', 'zeropoint': 1488.8, 'method': 'vega', 'rsr': False, 'altnames': ['4star j3']}, \
     'FOURSTAR_H': {'file': 'fourstar-h.txt', 'description': 'FOURSTAR H-band', 'zeropoint': 1054.9, 'method': 'vega', 'rsr': False, 'altnames': ['4star h']}, \
-    'FOURSTAR_H_SHORT': {'file': 'fourstar-hshort.txt', 'description': 'FOURSTAR H short', 'zeropoint': 1119.1, 'method': 'vega', 'rsr': False, 'altnames': ['4star h short','4star h-short','4star hs','fourstar hs']}, \
-    'FOURSTAR_H_LONG': {'file': 'fourstar-hlong.txt', 'description': 'FOURSTAR H long', 'zeropoint': 980.7, 'method': 'vega', 'rsr': False, 'altnames': ['4star h long','4star h-long','4star hl','fourstar hl']}, \
+    'FOURSTAR_H_SHORT': {'file': 'fourstar-hshort.txt', 'description': 'FOURSTAR H short', 'zeropoint': 1119.1, 'method': 'vega', 'rsr': False, 'altnames': ['4star h short','4star h-short','4star hs','fourstar hs','fourstar h1']}, \
+    'FOURSTAR_H_LONG': {'file': 'fourstar-hlong.txt', 'description': 'FOURSTAR H long', 'zeropoint': 980.7, 'method': 'vega', 'rsr': False, 'altnames': ['4star h long','4star h-long','4star hl','fourstar hl','fourstar h2']}, \
     'FOURSTAR_KS': {'file': 'fourstar-ks.txt', 'description': 'FOURSTAR Ks-band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False, 'altnames': ['4star k','4star ks','fourstar k']}, \
     'FOURSTAR_1.18': {'file': 'fourstar-118.txt', 'description': 'FOURSTAR 1.18 micron narrow band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False, 'altnames': ['4star 1.18','4star 118','fourstar 118']}, \
     'FOURSTAR_2.09': {'file': 'fourstar-209.txt', 'description': 'FOURSTAR 2.09 micron narrow band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False, 'altnames': ['4star 2.09','4star 209','fourstar 209']}, \
@@ -375,7 +375,7 @@ VEGAFILE = 'vega_kurucz.txt'
 INSTRUMENTS = {
 #	'SPEX': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['']},
     'UNKNOWN': {'instrument_name': 'UNKNOWN', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altnames': ['UNK'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'RAW': {'instrument_name': 'RAW', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altnames': ['ORIGINAL'], 'wunit': u.micron},
+    'RAW': {'instrument_name': 'RAW', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altnames': [], 'wunit': u.micron},
     'SED': {'instrument_name': 'SED', 'pixelscale': 1.*u.arcsec, 'wave_range': [0.1,100]*u.micron, 'slitwidth': 1.*u.arcsec, 'altnames': ['SPECTRAL_ENERGY_DISTRIBUTION'], 'resolution': 100, 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
     'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['APO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
     'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altnames': ['SDSS','BOSS','EBOSS'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
@@ -522,37 +522,39 @@ INSTRUMENTS_ALT = {
 #    'saumon12': 'Saumon et al. (2012)',\
 #    'drift': 'Witte et al. (2011)'}
 SPECTRAL_MODELS = {\
-#    'atmos-cond': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/atmos-cond/', 'name': 'ATMOS-COND', 'citation': 'Phillips et al. (in prep)', 'bibcode': 'TBD', 'altnames': ['atmos'], 'rawfolder': HOME_FOLDER+'/models/atmos/cond/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
- #   'atmos-rain': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/atmos-rain/', 'name': 'ATMOS-RAINOUT', 'citation': 'Phillips et al. (in prep)', 'bibcode': 'TBD', 'altnames': ['atmos-rainout'], 'rawfolder': HOME_FOLDER+'/models/atmos/rain/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
-    'nextgen99': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/nextgen99/', 'name': 'AMES NextGen', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altnames': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'rawfolder': HOME_FOLDER+'/models/phoenix/nextgen/fullres/', 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
 #    'gaia': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/gaia/', 'name': 'AMES GAIA', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altnames': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'rawfolder': HOME_FOLDER+'/models/phoenix/nextgen/fullres/', 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
-    'cond01': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/cond01/', 'name': 'AMES Cond', 'citation': 'Allard et al. (2001)', 'bibcode': '2001ApJ...556..357A', 'altnames': ['cond','cond-ames','amescond'], 'rawfolder': HOME_FOLDER+'/models/allard/cond01/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
-    'dusty01': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/dusty01/', 'name': 'AMES Dusty', 'citation': 'Allard et al. (2001)', 'bibcode': '2001ApJ...556..357A', 'altnames': ['dusty','dusty-ames','amesdusty'], 'rawfolder': HOME_FOLDER+'/models/allard/bddusty01/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
-    'drift': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/drift/', 'name': 'Drift', 'citation': 'Witte et al. (2011)', 'bibcode': '2011A&A...529A..44W', 'altnames': ['witte','witte11','witte2011','helling'], 'rawfolder': HOME_FOLDER+'/models/drift/v1.2/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
-    'burrows06': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/burrows06/', 'name': 'Burrows 2006', 'citation': 'Burrows et al. (2006)', 'bibcode': '2006ApJ...640.1063B', 'altnames': ['burrows','burrows2006'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows06/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
-    'btcond': {'folder': '/Volumes/LaCie/models/btcond/', 'name': 'BT Cond', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['dusty-cond','bt-cond'], 'rawfolder': '/Volumes/LaCie/models/btcond/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0, 'enrich': 0.0}}, \
-    'btdusty': {'folder': '/Volumes/LaCie/models/btdusty/', 'name': 'BT Dusty', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['dusty-bt','bt-dusty'], 'rawfolder': '/Volumes/LaCie/models/btdusty/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0}}, \
-    'btnextgen': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/btnextgen/', 'name': 'BT NextGen', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['nextgen-bt','btnextgen'], 'rawfolder': HOME_FOLDER+'/models/allard/btnextgen/forsplat/', 'default': {'teff': 3000., 'logg': 5.0, 'z': 0.0, 'enrich': 0.}}, \
-    'btsettl08': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/btsettl08/', 'name': 'BTSettl08', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['allard','allard12','allard2012','btsettl','btsettled','btsettl08','btsettl2008','BTSettl2008'], 'rawfolder': HOME_FOLDER+'/models/allard/cifist2011/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'enrich': 0.}}, \
-    'btsettl15': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/btsettl15/', 'name': 'BTSettl15', 'citation': 'Allard et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['allard15','allard2015','btsettl015','btsettl2015','BTSettl2015'], 'rawfolder': HOME_FOLDER+'/models/allard/cifist2015/BT-Settl_M-0.0a+0.0/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.}}, \
-    'burrows06': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/burrows06/', 'name': 'Burrows 2006', 'citation': 'Burrows et al. (2006)', 'bibcode': '2006ApJ...640.1063B', 'altnames': ['burrows','burrows2006'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows06/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
-    'madhusudhan11': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/madhusudhan11/', 'name': 'Madhusudhan 2011', 'citation': 'Madhusudhan et al. (2011)', 'bibcode': '2011ApJ...737...34M', 'altnames': ['madhu','madhusudhan','madhu11','madhu2011','madhusudhan2011'], 'rawfolder': HOME_FOLDER+'/models/burrows/burrows11/all/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.,'cld': 'ae60', 'kzz': 'eq','fsed': 'eq'}}, \
-    'morley12': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/morley12/', 'name': 'Morley 2012', 'citation': 'Morley et al. (2012)', 'bibcode': '2012ApJ...756..172M', 'altnames': ['morley','morley2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley12/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'fsed': 'f5'}}, \
-    'morley14': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/morley14/', 'name': 'Morley 2014', 'citation': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altnames': ['morley2014'], 'rawfolder': HOME_FOLDER+'/models/ames/Morley14/', 'default': {'teff': 300., 'logg': 5.0, 'z': 0., 'fsed': 'f5', 'cld': 'h50'}}, \
-    'saumon12': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/saumon12/', 'name': 'Saumon 2012', 'citation': 'Saumon et al. (2012)', 'bibcode': '2012ApJ...750...74S', 'altnames': ['saumon','saumon2012'], 'rawfolder': HOME_FOLDER+'/models/ames/Saumon12/', 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
-#    'tremblin16': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/tremblin16/', 'name': 'Tremblin 2016 (test)', 'citation': 'Tremblin et al. (2016)', 'bibcode': '2016ApJ...817L..19T', 'altnames': ['tremblin'], 'rawfolder': HOME_FOLDER+'/models/tremblin/20161120/', 'default': {'teff': 1300., 'logg': 5.0, 'z': 0.,'kzz': '6.0', 'ad': 1.05}}, \
+    'btnextgen': {'instruments': {}, 'name': 'BT NextGen', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['nextgen-bt','btnextgen'], 'default': {'teff': 3000., 'logg': 5.0, 'z': 0.0, 'enrich': 0.}}, \
+    'btsettl08': {'instruments': {}, 'name': 'BTSettl08', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['allard','allard12','allard2012','btsettl','btsettled','btsettl08','btsettl2008','BTSettl2008'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'enrich': 0.}}, \
+    'btsettl15': {'instruments': {}, 'name': 'BTSettl15', 'citation': 'Allard et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altnames': ['allard15','allard2015','btsettl015','btsettl2015','BTSettl2015'],  'default': {'teff': 1500., 'logg': 5.0, 'z': 0.}}, \
+    'burrows06': {'instruments': {}, 'name': 'Burrows 2006', 'citation': 'Burrows et al. (2006)', 'bibcode': '2006ApJ...640.1063B', 'altnames': ['burrows','burrows2006'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
+    'cond01': {'instruments': {}, 'name': 'AMES Cond', 'citation': 'Allard et al. (2001)', 'bibcode': '2001ApJ...556..357A', 'altnames': ['cond','cond-ames','amescond'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
+    'drift': {'instruments': {}, 'name': 'Drift', 'citation': 'Witte et al. (2011)', 'bibcode': '2011A&A...529A..44W', 'altnames': ['witte','witte11','witte2011','helling'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
+    'dusty01': {'instruments': {}, 'name': 'AMES Dusty', 'citation': 'Allard et al. (2001)', 'bibcode': '2001ApJ...556..357A', 'altnames': ['dusty','dusty-ames','amesdusty'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
+    'madhusudhan11': {'instruments': {}, 'name': 'Madhusudhan 2011', 'citation': 'Madhusudhan et al. (2011)', 'bibcode': '2011ApJ...737...34M', 'altnames': ['madhu','madhusudhan','madhu11','madhu2011','madhusudhan2011'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.,'cld': 'ae60', 'kzz': 'eq','fsed': 'eq'}}, \
+    'morley12': {'instruments': {}, 'name': 'Morley 2012', 'citation': 'Morley et al. (2012)', 'bibcode': '2012ApJ...756..172M', 'altnames': ['morley','morley2012'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'fsed': 'f5'}}, \
+    'morley14': {'instruments': {}, 'name': 'Morley 2014', 'citation': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altnames': ['morley2014'], 'default': {'teff': 300., 'logg': 5.0, 'z': 0., 'fsed': 'f5', 'cld': 'h50'}}, \
+    'nextgen99': {'instruments': {}, 'name': 'Phoenix NextGen', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altnames': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
+    'saumon12': {'instruments': {}, 'name': 'Saumon 2012', 'citation': 'Saumon et al. (2012)', 'bibcode': '2012ApJ...750...74S', 'altnames': ['saumon','saumon2012'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
+#    'btcond': {'instruments': {}, 'name': 'BT Cond', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['dusty-cond','bt-cond'], 'rawfolder': '/Volumes/splat/models/btcond/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0, 'enrich': 0.0}}, \
+#    'btdusty': {'instruments': {}, 'name': 'BT Dusty', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altnames': ['dusty-bt','bt-dusty'], 'rawfolder': '/Volumes/splat/models/btdusty/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0}}, \
 }
-SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','fsed','cld','kzz','ad','enrich']
+SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','fsed','cld','kzz','ad','enrich','carbon','oxygen','broad','logpmin','logpmax']
 SPECTRAL_MODEL_PARAMETERS = {\
     'teff': {'name': 'temperature', 'prefix': 't', 'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$ (K)', 'type': 'continuous'}, \
     'logg': {'name': 'gravity', 'prefix': 'g', 'unit': u.dex, 'default': 5.0, 'title': '$\log{g}$ (cgs)', 'type': 'continuous'}, \
     'z': {'name': 'metallicity', 'prefix': 'z', 'unit': u.dex, 'default': 0., 'title': '$[M/H]$', 'type': 'continuous'}, \
     'fsed': {'name': 'rainout', 'prefix': 'f', 'unit': u.m/u.m, 'default': 'nc', 'title': '$f_{sed}$', 'type': 'discrete'}, \
-    'cld': {'name': 'cloud', 'prefix': 'c', 'unit': u.m/u.m, 'default': 'nc', 'title': 'Cloud Treatment', 'type': 'discrete'}, \
+    'cld': {'name': 'cloud', 'prefix': 'c', 'unit': u.m/u.m, 'default': 'nc', 'title': 'Cloud or Condensation Treatment', 'type': 'discrete'}, \
     'kzz': {'name': 'mixing', 'prefix': 'k', 'unit': u.m/u.m, 'default': 'eq', 'title': '$log\ \kappa_{zz}$ (cgs)', 'type': 'discrete'},\
     'ad': {'name': 'adiabat', 'prefix': 'a', 'unit': u.m/u.m, 'default': 1., 'title': 'Adiabatic Index', 'type': 'continuous'},\
-    'enrich': {'name': 'enrichment', 'prefix': 'e', 'unit': u.dex, 'default': 0., 'title': 'Alpha Element Enrichment', 'type': 'continuous'},\
-    'radius': {'name': 'radius', 'prefix': 'r', 'unit': u.Rsun, 'default': 0., 'title': 'Radius (R$_{\odot}$)', 'type': 'continuous'}}
+    'enrich': {'name': 'alpha enrichment', 'prefix': 'e', 'unit': u.dex, 'default': 0., 'title': 'Alpha Element Enrichment', 'type': 'continuous'},\
+    'carbon': {'name': 'carbon enrichment', 'prefix': 'ce', 'unit': u.dex, 'default': 0., 'title': 'Carbon Enrichment', 'type': 'continuous'},\
+    'oxygen': {'name': 'oxygen enrichment', 'prefix': 'oe', 'unit': u.dex, 'default': 0., 'title': 'Oxygen Enrichment', 'type': 'continuous'},\
+    'broad': {'name': 'broadening', 'prefix': 'b', 'unit': u.m/u.m, 'default': 'A', 'title': 'Alkali Line Broadening Prescription', 'type': 'discrete'},\
+    'logpmin': {'name': 'log pressure top', 'prefix': 'pt', 'unit': u.dex, 'default': -8., 'title': 'log Minimum Pressure (bar)', 'type': 'continuous'},\
+    'logpmax': {'name': 'log pressure bottom', 'prefix': 'pb', 'unit': u.dex, 'default': 4., 'title': 'log Maximum Pressure (bar)', 'type': 'continuous'},\
+    'radius': {'name': 'radius', 'prefix': 'r', 'unit': u.Rsun, 'default': 0., 'title': 'Radius (R$_{\odot}$)', 'type': 'continuous'},\
+    }
 
 
 # evolutionary model information
