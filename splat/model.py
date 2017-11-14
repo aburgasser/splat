@@ -545,13 +545,14 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
             readfxn = _readAtmos
             files = glob.glob(os.path.join(folder,'*.ncdf'))
             mparam = {}
-            mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:-1]) for f in files]
+            mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:]) for f in files]
             mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][2:]) for f in files]
             mparam['z'] = [0. for f in files]
             mparam['ad'] = [float((f.split('/')[-1]).split('_')[3][1:]) for f in files]
             mparam['logpmin'] = [float((f.split('/')[-1]).split('_')[4][2:]) for f in files]
             mparam['logpmax'] = [float((f.split('/')[-1]).split('_')[5][2:]) for f in files]
-            mparam['broad'] = [(f.split('/')[-1]).split('_')[7][2:] for f in files]
+            mparam['kzz'] = [(f.split('/')[-1]).split('_')[6][3:] for f in files]
+            mparam['broad'] = [(f.split('/')[-1]).split('_')[7] for f in files]
             mparam['cld'] = [(f.split('/')[-1]).split('_')[8] for f in files]
         elif modelset == 'btsettl08':
             readfxn = _readBtsettl08
@@ -625,13 +626,6 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
             mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][:3]) for f in files]
             mparam['z'] = [float((f.split('/')[-1]).split('_')[2][3:7]) for f in files]
             mparam = {}
-        elif 'atmos' in modelset.lower():
-            readfxn = _readAtmos
-            files = glob.glob(os.path.join(folder,'*.ncdf'))
-            mparam = {}
-            mparam['teff'] = [float((f.split('/')[-1]).split('_')[1][1:-1]) for f in files]
-            mparam['logg'] = [float((f.split('/')[-1]).split('_')[2][2:]) for f in files]
-            mparam['z'] = [0. for f in files]
         elif modelset == 'tremblin16':
             readfxn = _readTremblin16
             files = glob.glob(os.path.join(folder,'*.dat'))
@@ -687,10 +681,12 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
                 outputfile = outputfolder+'/RAW/'+modelset
                 for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
                     if k in list(mparam.keys()): 
-                        kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i])
+                        if SPECTRAL_MODEL_PARAMETERS[k]['type'] == 'continuous':
+                            kstr = '_{}{:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],float(mparam[k][i]))
+                        else:
+                            kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i])
                         if k == 'teff': kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],int(mparam[k][i]))
-                        elif k == 'logg': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i])
-                        elif k == 'z': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i]-0.0001)
+                        elif k == 'z': kstr = '_{}{:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],mparam[k][i]-0.0001)
                         outputfile=outputfile+kstr
                 outputfile=outputfile+'_RAW.txt'    
     # old way - make table and output it
@@ -733,7 +729,7 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
 
             if inst=='SPEX-PRISM':
                 spref = Spectrum(10001)
-                processModelsToInstrument(modelset=modelset,wave=spref.wave.value,instrument=inst)
+                processModelsToInstrument(modelset=modelset,wave=spref.wave,instrument=inst)
             elif inst=='SED':
                 INSTRUMENTS['SED']['wave_range'] = [numpy.nanmin(wv),numpy.nanmax(wv)]
                 INSTRUMENTS['SED']['resolution'] = sedres
@@ -866,8 +862,8 @@ def processModelsToInstrument(*args,instrument_parameters={},wunit=DEFAULT_WAVE_
 
 # set and create folder if it don't exist
     outputfolder = kwargs.get('outputfolder',inputfolder.replace('RAW',instr))
-    if os.path.exists(outputfolder) == True and overwrite==False:
-        raise ValueError('\nModel output folder {} already exists; set overwrite=True to overwrite'.format(outputfolder))
+#    if os.path.exists(outputfolder) == True and overwrite==False:
+ #       raise ValueError('\nModel output folder {} already exists; set overwrite=True to overwrite'.format(outputfolder))
     if not os.path.exists(outputfolder):
         try:
             os.makedirs(outputfolder)
@@ -877,43 +873,47 @@ def processModelsToInstrument(*args,instrument_parameters={},wunit=DEFAULT_WAVE_
     if verbose == True: print('Processing model set {} to instrument {}'.format(mset,instr))
 
     for i,f in enumerate(files):
-        if verbose == True: print('Processing model {}'.format(f))
+        if verbose == True: print('{}: Processing model {}'.format(i,f))
         noutputfile = f.replace('RAW',instr).replace('.gz','')
+        if not os.path.exists(noutputfile) or (os.path.exists(noutputfile) and overwrite==True):
 
 # read in the model
-        spmodel = Spectrum(f,ismodel=True)
+            spmodel = Spectrum(f,ismodel=True)
 
 # NOTE THAT THE FOLLOWING COULD BE REPLACED BY spmodel.toInstrument()
 
-        spmodel.toWaveUnit(instrument_parameters['wunit'])
-        spmodel.toFluxUnit(instrument_parameters['funit'])
+            spmodel.toWaveUnit(instrument_parameters['wunit'])
+            spmodel.toFluxUnit(instrument_parameters['funit'])
 
 # trim relevant piece of spectrum 
-        dw = overscan*(numpy.nanmax(instrument_parameters['wave'])-numpy.nanmin(instrument_parameters['wave']))
-        wrng = [numpy.nanmax([numpy.nanmin(instrument_parameters['wave']-dw),numpy.nanmin(spmodel.wave.value)])*instrument_parameters['wunit'],\
-                numpy.nanmin([numpy.nanmax(instrument_parameters['wave']+dw),numpy.nanmax(spmodel.wave.value)])*instrument_parameters['wunit']]
-        spmodel.trim(wrng)
+            dw = overscan*(numpy.nanmax(instrument_parameters['wave'])-numpy.nanmin(instrument_parameters['wave']))
+            wrng = [numpy.nanmax([numpy.nanmin(instrument_parameters['wave']-dw),numpy.nanmin(spmodel.wave.value)])*instrument_parameters['wunit'],\
+                    numpy.nanmin([numpy.nanmax(instrument_parameters['wave']+dw),numpy.nanmax(spmodel.wave.value)])*instrument_parameters['wunit']]
+            spmodel.trim(wrng)
+#            print(instrument_parameters['wave'])
 
 # map onto oversampled grid and smooth; if model is lower resolution, interpolate; otherwise integrate & resample
-        if len(spmodel.wave) <= len(wave_oversample):
-            f = interp1d(spmodel.wave.value,spmodel.flux.value,bounds_error=False,fill_value=0.)
-            flux_oversample = f(wave_oversample)
-        else:
-            flux_oversample = integralResample(spmodel.wave.value,spmodel.flux.value,wave_oversample)
-        spmodel.wave = wave_oversample*instrument_parameters['wunit']
-        spmodel.flux = flux_oversample*spmodel.funit
-        spmodel.noise = [numpy.nan for x in spmodel.wave]*spmodel.funit
-        spmodel.variance = [numpy.nan for x in spmodel.wave]*(spmodel.funit**2)
+            if len(spmodel.wave) <= len(wave_oversample):
+                fflux = interp1d(spmodel.wave.value,spmodel.flux.value,bounds_error=False,fill_value=0.)
+                flux_oversample = fflux(wave_oversample)
+            else:
+                flux_oversample = integralResample(spmodel.wave.value,spmodel.flux.value,wave_oversample)
+            spmodel.wave = wave_oversample*instrument_parameters['wunit']
+            spmodel.flux = flux_oversample*spmodel.funit
+            spmodel.noise = [numpy.nan for x in spmodel.wave]*spmodel.funit
+            spmodel.variance = [numpy.nan for x in spmodel.wave]*(spmodel.funit**2)
 
 # smooth this in pixel space including oversample       
-        spmodel._smoothToSlitPixelWidth(pixel_resolution*oversample,method=method)
+            spmodel._smoothToSlitPixelWidth(pixel_resolution*oversample,method=method)
 
 # resample down to final wavelength scale
-        fluxsm = integralResample(spmodel.wave.value,spmodel.flux.value,instrument_parameters['wave'])
+            fluxsm = integralResample(spmodel.wave.value,spmodel.flux.value,instrument_parameters['wave'])
 
 # output
-        t = Table([instrument_parameters['wave'],fluxsm],names=['#wavelength ({})'.format(spmodel.wave.unit),'surface_flux ({})'.format(spmodel.flux.unit)])
-        t.write(noutputfile,format='ascii.tab')
+            t = Table([instrument_parameters['wave'],fluxsm],names=['#wavelength ({})'.format(spmodel.wave.unit),'surface_flux ({})'.format(spmodel.flux.unit)])
+            t.write(noutputfile,format='ascii.tab')
+        else:
+            if verbose == True: print('\tfile {} already exists; skipping'.format(noutputfile))
 
 # if successful, add this instrument to SPECTRAL_MODELS global variable
     SPECTRAL_MODELS[mset]['instruments'][instr] = outputfolder
@@ -1484,7 +1484,7 @@ def _smooth2resolution(wave,flux,resolution,**kwargs):
 
 
 
-def loadModel(*args, modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,**kwargs):
+def loadModel(*args,modelset=False,instrument='SPEX-PRISM',raw=False,sed=False,**kwargs):
     '''
     Purpose: 
         Loads up a model spectrum based on a set of input parameters. The models may be any one of the following listed below. For parameters between the model grid points, loadModel calls the function `_loadInterpolatedModel()`_.
@@ -1584,15 +1584,17 @@ def loadModel(*args, modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=
     modelset = kwargs.get('model',modelset)
     modelset = kwargs.get('set',modelset)
     mset = checkSpectralModelName(modelset)
-    if mset == False: raise ValueError('Could not find model set {}'.format(modelset))
+    if mset == False: raise ValueError('Could not find model set {}; possible options are {}'.format(modelset,list(SPECTRAL_MODELS.keys())))
     kwargs['model'] = mset
 
 #    kwargs['instrument'] = kwargs.get('instrument','SPEX-PRISM')
     instrument = kwargs.get('instr',instrument)
-    instrument = checkInstrument(instrument)
-    if instrument == False: instrument = 'SPEX-PRISM'
     if raw == True: instrument = 'RAW'
     if sed == True: instrument = 'SED'
+    inst = checkInstrument(instrument)
+    if inst != False: instrument = inst
+    if instrument not in list(SPECTRAL_MODELS[mset]['instruments'].keys()):
+        raise ValueError('Models for set {} and instrument {} have not yet been computed; run processModelsToInstrument()'.format(mset,instrument))
     kwargs['instrument'] = instrument
     kwargs['name'] = kwargs['model']+' ('+kwargs['instrument']+')'
 
@@ -1626,10 +1628,12 @@ def loadModel(*args, modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=
         if k in list(SPECTRAL_MODELS[kwargs['model']]['default'].keys()):
             if k in list(mparam.keys()): val = mparam[k] 
             else: val = SPECTRAL_MODELS[mset]['default'][k]
-            kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],val)
+            if SPECTRAL_MODEL_PARAMETERS[k]['type'] == 'continuous':
+                kstr = '_{}{:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],float(val))
+            else:
+                kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],val)
             if k == 'teff': kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],int(val))
-            elif k == 'logg': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],float(val))
-            elif k == 'z': kstr = '_{}{:.1f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],float(val)-0.0001)
+            elif k == 'z': kstr = '_{}{:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],float(val)-0.0001)
             filename=filename+kstr
     kwargs['filename'] = filename+'_{}.txt'.format(kwargs['instrument'])
 
@@ -1697,6 +1701,12 @@ def loadModel(*args, modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=
     if file != '':
         sp = Spectrum(**kwargs)
         MODELS_READIN[kwargs['filename']] = sp
+
+# populate model parameters
+    setattr(sp,'model',mset)
+    for k in list(SPECTRAL_MODELS[kwargs['model']]['default'].keys()):
+        if k in list(mparam.keys()): setattr(sp,k,mparam[k])
+        else: setattr(sp,k,SPECTRAL_MODELS[mset]['default'][k])
 
 # online:
 #   REMOVED 10/19/2017

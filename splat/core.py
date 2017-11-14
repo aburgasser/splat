@@ -420,16 +420,14 @@ class Spectrum(object):
             self.cld = kwargs.get('cld',numpy.nan)
             self.kzz = kwargs.get('kzz',numpy.nan)
             self.slit = kwargs.get('slit',numpy.nan)
-            self.modelset = kwargs.get('model','')
-            mset = checkSpectralModelName(self.modelset)
+            self.model = kwargs.get('model','')
+            mset = checkSpectralModelName(self.model)
             if mset != False:
-                self.modelset = mset
-                for k in list(SPECTRAL_MODELS[self.modelset].keys()):
-                    setattr(self,k.lower(),SPECTRAL_MODELS[self.modelset][k])
-            else:
-                self.name = self.modelset
+                self.model = mset
+                for k in list(SPECTRAL_MODELS[mset].keys()):
+                    setattr(self,k.lower(),SPECTRAL_MODELS[mset][k])
+            self.name = self.model+' model'
             self.shortname = self.name
-            self.name = self.name+' Teff='+str(self.teff)+' logg='+str(self.logg)+' [M/H]='+str(self.z)
             self.fscale = 'Surface'
             self.published = 'Y'
 
@@ -841,7 +839,7 @@ class Spectrum(object):
                     SPEX_PRISM spectrum successfully loaded
         '''
         if self.ismodel == True:
-            f = '\n{} atmosphere model for instrument {} with the following parmeters:'.format(self.model,self.instrument)
+            f = '\n{} for instrument {} with the following parmeters:'.format(self.modelset,self.instrument)
             for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
                 if hasattr(self,ms): f+='\n\t{} = {} {}'.format(ms,getattr(self,ms),SPECTRAL_MODEL_PARAMETERS[ms]['unit'])
 #            f+='\nSmoothed to slit width {} {}'.format(self.slit,SPECTRAL_MODEL_PARAMETERS['slit']['unit'])
@@ -1341,7 +1339,7 @@ class Spectrum(object):
             instrument = instr
             wave_range = INSTRUMENTS[instr]['wave_range']
             resolution = INSTRUMENTS[instr]['resolution']
-            for k in list(INSTRUMENTS[instr].keys()): self.__setattr__(k,INSTRUMENTS[instr][k])
+            for k in list(INSTRUMENTS[instr].keys()): setattr(self,k,INSTRUMENTS[instr][k])
         if not isUnit(wave_range):
             wave_range = wave_range*wunit
         wave_range.to(self.wave.unit)
@@ -2569,7 +2567,7 @@ class Spectrum(object):
             if verbose: print('\nMatching to source {} designation {}'.format(s['NAME'].iloc[0],s['DESIGNATION'].iloc[0]))
             for k in list(DB_SOURCES.columns):
                 if k in list(s.columns):
-                    self.__setattr__(k.lower(),s[k].iloc[0])
+                    setattr(self,k.lower(),s[k].iloc[0])
         return
 
 
