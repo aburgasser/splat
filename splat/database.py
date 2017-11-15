@@ -53,6 +53,35 @@ Nist.TIMEOUT = 60
 ###########   DATABASE QUERY AND ACCESS   ###########
 #####################################################
 
+def prepDB(db_init,force=False):
+    '''
+    Prep a pandas database for DESIGNATION join
+    Populates RA, DEC, DESIGNATION and SHORTNAME columns if not present
+    Requires RA, DEC or DESIGNATION to be present
+    '''
+    db = copy.deepcopy(db_init)
+    if 'RA' not in list(db.columns) or 'DEC' not in list(db.columns): 
+        if 'DESIGNATION' not in list(db.columns):
+            raise ValueError('Database must have columns RA and DEC, or DESIGNATION')
+        else:
+            db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db['DESIGNATION']]
+            if not isinstance(db['RA'].iloc[0],float):
+                db['RA'] = [c.ra.degree for c in db['COORDINATES']]
+                db['DEC'] = [c.dec.degree for c in db['COORDINATES']]
+    if 'DESIGNATION' not in list(db.columns):
+        db['DESIGNATION'] = [splat.coordinateToDesignation([db['RA'].iloc[i],db['DEC'].iloc[i]]) for i in range(len(db))]
+    if 'COORDINATES' not in list(db.columns):
+        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db['DESIGNATION']]
+#    if 'SHORTNAME' not in list(db.columns):
+#        db['SHORTNAME'] = [splat.designationToShortName(d) for d in db['DESIGNATION']]
+
+# force COORDINATES, RA, DEC if desired
+    if force == True:
+        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db['DESIGNATION']]
+        db['RA'] = [c.ra.degree for c in db['COORDINATES']]
+        db['DEC'] = [c.dec.degree for c in db['COORDINATES']]
+#        db['SHORTNAME'] = [splat.designationToShortName(d) for d in db['DESIGNATION']]        
+    return db   
 
 def fetchDatabase(*args, **kwargs):
     '''
