@@ -2589,11 +2589,28 @@ class Spectrum(object):
 
 
 # stitch spectrum
-def stitch(s1,s2,rng = [],trim=[],**kwargs):
+def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
     '''
-    :Purpose: Stitches together two spectra covering different wavelength scales.
+    :Purpose: 
 
-    :Output: New spectrum object of stitched spectrum
+        Stitches together two spectra covering different wavelength scales.
+
+    :Required Inputs: 
+
+        :param s1: first spectrum object
+        :param s2: second spectrum object (not necessarily in order)
+
+    :Optional Inputs: 
+
+        :param rng: range over which spectra are relatively scaled and combined (if desired); if neither spectrum cover this range, then no relative scaling is done and spectra are combined whereever they overlap (default: [])
+        :param scale: set to True to relatively scale spectra over rng; if rng is not provided, or spectra to not overlap, this is automatially False (default: True)
+        :param wunit: wavelength unit of final spectrum (default: wavelength unit of s1)
+        :param funit: flux unit of final spectrum (default: flux unit of s1)
+        :param verbose: set to True to provide feedback (default: False)
+
+    :Output: 
+
+        New spectrum object of stitched spectrum
 
     :Example:
        >>> import splat
@@ -2601,6 +2618,9 @@ def stitch(s1,s2,rng = [],trim=[],**kwargs):
        >>> spnir = splat.Spectrum(file='myopticalspectrum.fits')
        >>> sp = splat.stitch(spopt,spnir,rng=[0.8,0.9],trim=[0.35,2.4])
     '''
+
+# parameters
+    scaleflag = kwargs.get('scaleflag',scale)
 
 # generate copies of spectrum objects
     sp1 = copy.deepcopy(s1)
@@ -2616,7 +2636,8 @@ def stitch(s1,s2,rng = [],trim=[],**kwargs):
 
 # reorder to shortest wavelength spectrum first?
 
-# check range 
+# check range
+    rngflag = True
     if len(rng) == 0:
         rng = [numpy.nanmax([numpy.nanmin(sp1.wave.value),numpy.nanmin(sp2.wave.value)]),\
             numpy.nanmin([numpy.nanmax(sp1.wave.value),numpy.nanmax(sp2.wave.value)])]*wunit
@@ -2628,38 +2649,44 @@ def stitch(s1,s2,rng = [],trim=[],**kwargs):
     if rng[1] > numpy.nanmax(sp1.wave.value[:-1]): rng[1] = numpy.nanmax(sp1.wave.value[:-1])
     if rng[1] > numpy.nanmax(sp2.wave.value[:-1]): rng[1] = numpy.nanmax(sp2.wave.value[:-1])
     if rng[0] >= rng[1]:
-        raise ValueError('Stich region {} to {} does not overlap both spectra'.format(rng[0],rng[1]))
+        if verbose== True: print('Stich region {} to {} does not overlap both spectra'.format(rng[0],rng[1]))
+        rngflag = False
+#        raise ValueError('Stich region {} to {} does not overlap both spectra'.format(rng[0],rng[1]))
 #    print(rng,numpy.nanmin(sp1.wave.value),numpy.nanmax(sp1.wave.value),numpy.nanmin(sp2.wave.value),numpy.nanmax(sp2.wave.value))
 
+# overlap and scaling
+    if rngflag==True:
+
 # interpolation of second spectrum
-    f2r = interp1d(sp2.wave.value,sp2.flux.value)
-    v2r = interp1d(sp2.wave.value,sp2.variance.value)
+        f2r = interp1d(sp2.wave.value,sp2.flux.value)
+        v2r = interp1d(sp2.wave.value,sp2.variance.value)
 
-# scale to overlap region, assuming first spectrum sets the flux scale standard
+# find overlap region, assuming first spectrum sets the flux scale standard
 # assume this minimizes chi^2 residuals
-    w12 = numpy.where(numpy.logical_and(numpy.array(sp1.wave.value)>=rng[0],numpy.array(sp1.wave.value)<=rng[1]))
-    wv12 = numpy.array(sp1.wave.value)[w12]
-    flx12 = numpy.array(sp1.flux.value)[w12]
-    var12 = numpy.array(sp1.variance.value)[w12]
-    sp1mid = Spectrum(wave=wv12*wunit,flux=flx12*funit,noise=(var12**0.5)*funit)
-    sp2mid = Spectrum(wave=wv12*wunit,flux=f2r(sp1mid.wave.value)*funit,noise=(v2r(sp1mid.wave.value)**0.5)*funit)
+        w12 = numpy.where(numpy.logical_and(numpy.array(sp1.wave.value)>=rng[0],numpy.array(sp1.wave.value)<=rng[1]))
+        wv12 = numpy.array(sp1.wave.value)[w12]
+        flx12 = numpy.array(sp1.flux.value)[w12]
+        var12 = numpy.array(sp1.variance.value)[w12]
+        sp1mid = Spectrum(wave=wv12*wunit,flux=flx12*funit,noise=(var12**0.5)*funit)
+        sp2mid = Spectrum(wave=wv12*wunit,flux=f2r(sp1mid.wave.value)*funit,noise=(v2r(sp1mid.wave.value)**0.5)*funit)
 
-    chi,scl = compareSpectra(sp1mid,sp2mid)
+        if scaleflag == True:
+            chi,scl = compareSpectra(sp1mid,sp2mid)
 
-#    w21 = numpy.where(numpy.logical_and(numpy.array(sp2.wave.value)>=rng[0],numpy.array(sp2.wave.value)<=rng[1]))
-    vtot = numpy.zeros(len(wv12))
-    vflag = 0
-    if not numpy.isnan(numpy.nanmedian(var12)): vtot=var12
-    if not numpy.isnan(numpy.nanmedian(v2r(wv12))): vtot=vtot+v2r(wv12)
-# no variance
-    if numpy.nanmedian(vtot) == 0.: vflag = 1
-    if vflag == 0:
-        scl = numpy.nansum(flx12*f2r(wv12)/vtot)/numpy.nansum(f2r(wv12)**2/vtot)
-    else:
-        scl = numpy.nansum(flx12*f2r(wv12))/numpy.nansum(f2r(wv12)**2)
-    sp2.scale(scl)
-    f2r = interp1d(sp2.wave.value,sp2.flux.value)
-    v2r = interp1d(sp2.wave.value,sp2.variance.value)
+            vtot = numpy.zeros(len(wv12))
+            vflag = True
+            if not numpy.isnan(numpy.nanmedian(var12)): vtot=var12
+            if not numpy.isnan(numpy.nanmedian(v2r(wv12))): vtot=vtot+v2r(wv12)
+
+            if numpy.nanmedian(vtot) == 0.: vflag = False
+            if vflag == True:
+                scl = numpy.nansum(flx12*f2r(wv12)/vtot)/numpy.nansum(f2r(wv12)**2/vtot)
+            else:
+                scl = numpy.nansum(flx12*f2r(wv12))/numpy.nansum(f2r(wv12)**2)
+            sp2.scale(scl)
+
+        f2r = interp1d(sp2.wave.value,sp2.flux.value)
+        v2r = interp1d(sp2.wave.value,sp2.variance.value)
 
 # piece back together, starting with segments with minimum wavelength
     if numpy.nanmin(sp1.wave.value) < numpy.nanmin(sp2.wave.value):
@@ -2674,20 +2701,21 @@ def stitch(s1,s2,rng = [],trim=[],**kwargs):
         variance = numpy.array(sp2.variance.value)[w1]
 
 # mixed region
-    v1 = var12
-    v2 = v2r(wv12)
-    if numpy.isnan(numpy.nanmedian(v1)): v1 = v2
-    if numpy.isnan(numpy.nanmedian(v2)): v2 = v1
-    if vflag == 0:
-        flxmid = (flx12/v1+f2r(wv12)/v2)/(1./v1+1./v2)
-    else:
-        flxmid = 0.5*(flx12+f2r(wv12))
-    varmid = 1./(1./v1+1./v2)
-    wave = numpy.append(wave,wv12)
-    flux = numpy.append(flux,flxmid)
-    variance = numpy.append(variance,varmid)
+    if rngflag == True:
+        v1 = var12
+        v2 = v2r(wv12)
+        if numpy.isnan(numpy.nanmedian(v1)): v1 = v2
+        if numpy.isnan(numpy.nanmedian(v2)): v2 = v1
+        if vflag == 0:
+            flxmid = (flx12/v1+f2r(wv12)/v2)/(1./v1+1./v2)
+        else:
+            flxmid = 0.5*(flx12+f2r(wv12))
+        varmid = 1./(1./v1+1./v2)
+        wave = numpy.append(wave,wv12)
+        flux = numpy.append(flux,flxmid)
+        variance = numpy.append(variance,varmid)
 
-# tail of second spectrum
+# second spectrum
     if numpy.nanmin(sp1.wave.value) < numpy.nanmin(sp2.wave.value):
         w2 = numpy.where(numpy.array(sp2.wave.value)>rng[1])
         wave = numpy.append(wave,numpy.array(sp2.wave.value)[w2])
@@ -2713,12 +2741,12 @@ def stitch(s1,s2,rng = [],trim=[],**kwargs):
 #    sp.snr = sp.computeSN()
     sp.name = 'Stitched spectrum of {} and {}'.format(sp1.name,sp2.name)
 
-# trim if desired
-    if len(trim) == 2:
-        if not isUnit(trim):
-            trim=trim*sp.wave.unit
-        trim.to(sp.wave.unit).value
-        sp.trim(trim)
+# trim if desired - REMOVED
+#    if len(trim) == 2:
+#        if not isUnit(trim):
+#            trim=trim*sp.wave.unit
+#        trim.to(sp.wave.unit).value
+#        sp.trim(trim)
         
     return sp
 
@@ -5074,58 +5102,58 @@ def classifyGravity(sp, *args, **kwargs):
 
 
 
-def compareSpectra(s1, s2, *args, **kwargs):
+def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=False, verbose=False, **kwargs):
     '''
-    :Purpose: Compare two spectra against each other using a pre-selected statistic. Returns the value of the desired statistic as well as the optimal scale factor. Minimum possible value for statistic is 1.e-9.
+    :Purpose: 
 
-    :param sp1: First spectrum class object, which sets the wavelength scale
-    :type sp1: required
-    :param sp2: Second spectrum class object, interpolated onto the wavelength scale of sp1
-    :type sp2: required
-    :param statistic: string defining which statistic to use in comparison; available options are:
+        Compare two spectra against each other using a pre-selected statistic. 
+        Returns the value of the desired statistic as well as the optimal scale factor. 
 
-            - *'chisqr'*: compare by computing chi squared value (requires spectra with noise values)
+    :Required Parameters: 
+
+        :param sp1: First spectrum class object, which sets the wavelength scale
+        :param sp2: Second spectrum class object, interpolated onto the wavelength scale of sp1
+
+    :Optional Parameters: 
+
+        :param: statistic = 'chisqr': string defining which statistic to use in comparison; available options are (also stat):
+
+            - *'chisqr'* or *'chi'*: compare by computing chi squared value (requires spectra with noise values)
             - *'stddev'*: compare by computing standard deviation
             - *'stddev_norm'*: compare by computing normalized standard deviation
             - *'absdev'*: compare by computing absolute deviation
 
-    :type statistic: optional, default = 'chisqr'
-    :param fit_ranges: 2-element array or nested array of 2-element arrays specifying the wavelength ranges to be used for the fit, assumed to be measured in microns. This is effectively the opposite of mask_ranges.
-    :type fit_ranges: optional, default = [0.65,2.45]
-    :param weights: Array specifying the weights for individual wavelengths; must be an array with length equal to the wavelength scale of ``sp1``; need not be normalized
-    :type weights: optional, default = [1, ..., 1] for len(sp1.wave)
-    :param mask_ranges: Multi-vector array setting wavelength boundaries for masking data, assumed to be in microns
-    :type mask_ranges: optional, default = None
-    :param mask: Array specifiying which wavelengths to mask; must be an array with length equal to the wavelength scale of ``sp1`` with only 0 (OK) or 1 (mask).
-    :type mask: optional, default = [0, ..., 0] for len(sp1.wave)
-    :param mask_telluric: Set to True to mask pre-defined telluric absorption regions
-    :type mask_telluric: optional, default = False
-    :param mask_standard: Like ``mask_telluric``, with a slightly tighter cut of 0.80-2.35 micron
-    :type mask_standard: optional, default = False
-    :param novar2: Set to True to compute statistic without considering variance of ``sp2``
-    :type novar2: optional, default = True
-    :param plot: Set to True to plot ``sp1`` with scaled ``sp2`` and difference spectrum overlaid
-    :type plot: optional, default = False
-    :param verbose: Set to True to report things as you're going along
-    :type verbose: optional, default = False
+        :param: scale = True: If True, finds the best scale factor to minimize the statistic
+        :param: fit_ranges = [range of first spectrum]: 2-element array or nested array of 2-element arrays specifying the wavelength ranges to be used for the fit, assumed to be measured in microns; this is effectively the opposite of mask_ranges (also fit_range, fitrange, fitrng, comprange, comprng)
+        :param: mask = numpy.zeros(): Array specifiying which wavelengths to mask; must be an array with length equal to the wavelength scale of ``sp1`` with only 0 (OK) or 1 (mask).
+        :param: mask_ranges = None: Multi-vector array setting wavelength boundaries for masking data, assumed to be in microns
+        :param: mask_telluric = False: Set to True to mask pre-defined telluric absorption regions
+        :param: mask_standard = False: Like ``mask_telluric``, with a slightly tighter cut of 0.80-2.35 micron
+        :param: weights = numpy.ones(): Array specifying the weights for individual wavelengths; must be an array with length equal to the wavelength scale of ``sp1``; need not be normalized
+        :param: novar2 = True: Set to True to compute statistic without considering variance of ``sp2``
+        :param: plot = False: Set to True to plot ``sp1`` with scaled ``sp2`` and difference spectrum overlaid
+        :param: verbose = False: Set to True to report things as you're going along
+
+    :Output: 
+        statistic and optimal scale factor for the comparison
 
     :Example:
-    >>> import splat
-    >>> import numpy
-    >>> sp1 = splat.getSpectrum(shortname = '2346-3153')[0]
-        Retrieving 1 file
-    >>> sp2 = splat.getSpectrum(shortname = '1421+1827')[0]
-        Retrieving 1 file
-    >>> sp1.normalize()
-    >>> sp2.normalize()    
-    >>> splat.compareSpectra(sp1, sp2, statistic='chisqr')
-        (<Quantity 19927.74527822856>, 0.94360732593223595)
-    >>> splat.compareSpectra(sp1, sp2, statistic='stddev')
-        (<Quantity 3.0237604611215705 erg2 / (cm4 micron2 s2)>, 0.98180983971456637)
-    >>> splat.compareSpectra(sp1, sp2, statistic='absdev')
-        (<Quantity 32.99816249949072 erg / (cm2 micron s)>, 0.98155779612333172)
-    >>> splat.compareSpectra(sp1, sp2, statistic='chisqr', novar2=False)
-        (<Quantity 17071.690727945213>, 0.94029474635786015)
+        >>> import splat
+        >>> import numpy
+        >>> sp1 = splat.getSpectrum(shortname = '2346-3153')[0]
+            Retrieving 1 file
+        >>> sp2 = splat.getSpectrum(shortname = '1421+1827')[0]
+            Retrieving 1 file
+        >>> sp1.normalize()
+        >>> sp2.normalize()    
+        >>> splat.compareSpectra(sp1, sp2, statistic='chisqr')
+            (<Quantity 19927.74527822856>, 0.94360732593223595)
+        >>> splat.compareSpectra(sp1, sp2, statistic='stddev')
+            (<Quantity 3.0237604611215705 erg2 / (cm4 micron2 s2)>, 0.98180983971456637)
+        >>> splat.compareSpectra(sp1, sp2, statistic='absdev')
+            (<Quantity 32.99816249949072 erg / (cm2 micron s)>, 0.98155779612333172)
+        >>> splat.compareSpectra(sp1, sp2, statistic='chisqr', novar2=False)
+            (<Quantity 17071.690727945213>, 0.94029474635786015)
     '''
 
     sp1 = copy.deepcopy(s1)
@@ -5144,12 +5172,11 @@ def compareSpectra(s1, s2, *args, **kwargs):
 #    mask_ranges = kwargs.get('mask_ranges',[])
 #    mask_standard = kwargs.get('mask_standard',False)
 #    mask_telluric = kwargs.get('mask_telluric',mask_standard)
-    var_flag = kwargs.get('novar2',True)
+    var_flag = novar2
     if numpy.isnan(numpy.nanmax(sp1.variance.value)): var_flag = False
-    statistic = kwargs.get('stat','chisqr')
-    statistic = kwargs.get('statistic',statistic)
+    statistic = kwargs.get('stat',statistic)
     minreturn = 1.e-60
-
+    scale_factor = 1.
 
 # create interpolation function for second spectrum
     f = interp1d(sp2.wave.value,sp2.flux.value,bounds_error=False,fill_value=0.)
@@ -5182,51 +5209,55 @@ def compareSpectra(s1, s2, *args, **kwargs):
 # switch to standard deviation if no uncertainty
     if numpy.isnan(numpy.nanmax(vtot)):
         statistic = 'stddev'
-        if kwargs.get('verbose',False):
+        if verbose==True:
             print('No uncertainties provided; using the {} statistic by default'.format(statistic))
     else:
-        if kwargs.get('verbose',False):
+        if verbose==True:
             print('Comparing spectra using the {} statistic'.format(statistic))
 
 # chi^2
     if (statistic == 'chisqr' or statistic == 'chisq' or statistic == 'chi'):
 # compute scale factor
-        scale = numpy.nansum(weights*sp1.flux.value*f(sp1.wave.value)/vtot)/ \
-            numpy.nansum(weights*f(sp1.wave.value)*f(sp1.wave.value)/vtot)
+        if scale == True:
+            scale_factor = numpy.nansum(weights*sp1.flux.value*f(sp1.wave.value)/vtot)/ \
+                numpy.nansum(weights*f(sp1.wave.value)*f(sp1.wave.value)/vtot)
 # correct variance
-        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale**2)],axis=0)
-        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale)**2/vtot)
+        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
+        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2/vtot)
         unit = sp1.funit/sp1.funit
 
 # normalized standard deviation
     elif (statistic == 'stddev_norm' or statistic == 'stdev_norm'):
 # compute scale factor
-        scale = numpy.nansum(weights*sp1.flux.value)/ \
-            numpy.nansum(weights*f(sp1.wave.value))
+        if scale == True:
+            scale_factor = numpy.nansum(weights*sp1.flux.value)/ \
+                numpy.nansum(weights*f(sp1.wave.value))
 # correct variance
-        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale**2)],axis=0)
-        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale)**2)/ \
+        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
+        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2)/ \
             numpy.median(sp1.flux.value)**2
         unit = sp1.funit/sp1.funit
 
 # standard deviation
     elif (statistic == 'stddev' or statistic == 'stdev'):
 # compute scale factor
-        scale = numpy.nansum(weights*sp1.flux.value*f(sp1.wave.value))/ \
-            numpy.nansum(weights*f(sp1.wave.value)*f(sp1.wave.value))
+        if scale == True:
+            scale_factor = numpy.nansum(weights*sp1.flux.value*f(sp1.wave.value))/ \
+                numpy.nansum(weights*f(sp1.wave.value)*f(sp1.wave.value))
 # correct variance
-        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale**2)],axis=0)
-        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale)**2)
+        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
+        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2)
         unit = sp1.funit**2
 
 # absolute deviation
     elif (statistic == 'absdev'):
 # compute scale factor
-        scale = numpy.nansum(weights*sp1.flux.value)/ \
-            numpy.nansum(weights*f(sp1.wave.value))
+        if scale == True:
+            scale_factor = numpy.nansum(weights*sp1.flux.value)/ \
+                numpy.nansum(weights*f(sp1.wave.value))
 # correct variance
-        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale**2)],axis=0)
-        stat = numpy.nansum(weights*abs(sp1.flux.value-f(sp1.wave.value)*scale))
+        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
+        stat = numpy.nansum(weights*abs(sp1.flux.value-f(sp1.wave.value)*scale_factor))
         unit = sp1.funit
 
 # error
@@ -5235,16 +5266,17 @@ def compareSpectra(s1, s2, *args, **kwargs):
         return numpy.nan, numpy.nan
 
 # plot spectrum compared to best spectrum
-    if kwargs.get('plot',False) != False:
+    if plot == True:
         spcomp = sp2.copy()
-        spcomp.scale(scale)
+        spcomp.scale(scale_factor)
         kwargs['colors'] = kwargs.get('colors',['k','r','b'])
         kwargs['title'] = kwargs.get('title',sp1.name+' vs '+sp2.name)
         from .plot import plotSpectrum
         plotSpectrum(sp1,spcomp,sp1-spcomp,**kwargs,labels=[sp1.name,sp2.name,'{} = {}'.format(statistic,stat)])
 
 
-    return numpy.nanmax([stat,minreturn])*unit, scale
+    return numpy.nanmax([stat,minreturn])*unit, scale_factor
+
 
 def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_standard=False,**kwargs):
     '''
@@ -5284,13 +5316,14 @@ def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_stan
         mask_ranges.append([2.45,99.]*DEFAULT_WAVE_UNIT)        # meant to clear out long wavelengths
 
 # make sure quantities are all correct
+    mask_ranges_apply = []
     for i,m in enumerate(mask_ranges):
-        if not isUnit(m): m = m*DEFAULT_WAVE_UNIT
+        if not isUnit(m): m = m*wave.unit
         m.to(wave.unit)
-        mask_ranges[i] = m
+        mask_ranges_apply.append(m)
 
 # apply to mask
-    for m in mask_ranges:
+    for m in mask_ranges_apply:
         mask[numpy.where(numpy.logical_and(wave.value >= numpy.nanmin(m.value),wave.value <= numpy.nanmax(m.value)))]= 1
 
     return mask

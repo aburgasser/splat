@@ -368,10 +368,139 @@ def checkAbsMag(ref,filt='',verbose=False):
 
     return output
 
+def checkBC(ref,filt='',verbose=False):
+    '''
+
+    Purpose: 
+        Checks that an input reference name and filter are among the available sets for `typeToBC()`_, 
+        including a check of alternate names
+
+    .. _`typeToBC()` : TMP
+
+    Required Inputs:
+        :param ref: A string containing the reference for absolute magnitude relation, 
+        among the keys and alternate names in splat.BC_SETS
+
+    Optional Inputs:
+        :param filt: A string containing the filter name, to optionally check if this filter is among those defined in the reference set
+
+    Output:
+        A string containing SPLAT's default name for a given reference set, or False if that reference is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat.checkBC('filippazzo','2MASS J'))
+        filippazzo2015
+    >>> print(splat.checkBC('dupuy','2MASS J'))
+        False
+    '''
+    output = False
+
+# check reference    
+    if not isinstance(ref,str):
+        return output
+    for k in list(BC_SETS.keys()):
+        if ref.lower()==k.lower() or ref.lower() in BC_SETS[k]['altname']:
+            output = k
+    if output == False:
+        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(BC_SETS.keys())))
+        return output
+
+# check filter
+    if filt != '':
+        filt = checkFilterName(filt)
+        if filt == False:
+            if verbose: print('\nFilter {} is not among the filters used in SPLAT; try: {}'.format(filt,list(FILTERS.keys())))
+            return False
+        if filt not in list(BC_SETS[output]['filters'].keys()):
+            if verbose: print('\nFilter {} is not among the filters defined for the {} absolutel magnitude relation; try: {}'.format(filt,output,list(BC_SETS[output]['filters'].keys())))
+            return False
+
+    return output
+
+def checkLbol(ref,verbose=False):
+    '''
+
+    Purpose: 
+        Checks that an input reference name are among the available sets for `typeToLuminosity()`_, 
+        including a check of alternate names
+
+    .. _`typeToLuminosity()` : TMP
+
+    Required Inputs:
+        :param ref: A string containing the reference for lumiosity/SpT relation, 
+        among the keys and alternate names in splat.LBOL_SETS
+
+    Optional Inputs:
+        None
+
+    Output:
+        A string containing SPLAT's default name for a given reference set, or False if that reference is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat.checkLbol('filippazzo'))
+        filippazzo2015
+    >>> print(splat.checkBC('burgasser'))
+        False
+    '''
+    output = False
+
+# check reference    
+    if not isinstance(ref,str):
+        return output
+    for k in list(LBOL_SETS.keys()):
+        if ref.lower()==k.lower() or ref.lower() in LBOL_SETS[k]['altname']:
+            output = k
+    if output == False:
+        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(LBOL_SETS.keys())))
+        return output
+
+    return output
+
+
+def checkEmpiricalRelation(ref,refdict,verbose=False):
+    '''
+    Purpose: 
+        General checking program for empirical relation dictionaries 
+
+    Required Inputs:
+        :param ref: A string containing the reference for lumiosity/SpT relation, should be among the keys and alternate names in refdict
+        :param refdict: dictionary containing empirical relation information
+
+    Optional Inputs:
+        None
+
+    Output:
+        A string containing SPLAT's default name for a given reference set, or False if that reference is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.LBOL_SETS))
+        filippazzo2015
+    >>> print(splat.checkEmpiricalRelation('burgasser',splat.BC_SETS))
+        False
+    '''
+    output = False
+
+# check reference    
+    if not isinstance(ref,str):
+        return output
+    for k in list(refdict.keys()):
+        if ref.lower()==k.lower() or ref.lower() in refdict[k]['altname']:
+            output = k
+    if output == False:
+        if verbose: print('\nReference {} is not among those present in the reference dictionary; try: {}'.format(ref,list(refdict.keys())))
+        return output
+
+    return output
+
 
 def checkTelescope(location):
     '''
-
     Purpose: 
         Checks that a location name is one of the telecopes listed in splat.initialize.TELESCOPES, including a check of alternate names
 
@@ -410,6 +539,7 @@ def checkLocation(location):
 
     '''
     return checkTelescope(location)
+
 
 #####################################################
 ##############   SIMPLE CONVERSIONS   ###############
@@ -783,7 +913,7 @@ def designationToShortName(value):
 
 
 
-def properCoordinates(c,**kwargs):
+def properCoordinates(c,frame='icrs',icrs=True,**kwargs):
     '''
     :Purpose: Converts various coordinate forms to the proper SkyCoord format. Convertible forms include lists and strings.
 
@@ -801,8 +931,9 @@ def properCoordinates(c,**kwargs):
     if isinstance(c,SkyCoord):
         output = c
     elif isinstance(c,list):
-        output = SkyCoord(c[0]*u.deg,c[1]*u.deg,frame='icrs')
-# input is sexigessimal string
+        output = SkyCoord(c[0]*u.deg,c[1]*u.deg,frame=frame)
+
+# input is sexigessimal string - assumed ICRS
     elif isinstance(c,str):
         if c[0] == 'J':
             output = designationToCoordinate(c,**kwargs)
@@ -811,17 +942,18 @@ def properCoordinates(c,**kwargs):
     else:
         raise ValueError('\nCould not parse input format\n\n')
 
+# add distance
     if kwargs.get('distance',False) != False:
         d = copy.deepcopy(kwargs['distance'])
-        if not isinstance(d,u.quantity.Quantity):
-            d*=u.pc
-#        try:
+        if not isUnit(d): d=d*u.pc
         d.to(u.pc)
         output = SkyCoord(output,distance = d)
 #        except:
 #            print('\nWarning: could not integrate distance {} into coordinate'.format(distance))
 
-    return output
+# convert to icrs by default
+    if icrs == True: return output.icrs
+    else: return output
 
 
 
@@ -1024,6 +1156,90 @@ def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.):
 
     return uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance),numpy.random.normal(mu[0],e_mu[0]),numpy.random.normal(mu[1],e_mu[1]),numpy.random.normal(rv,e_rv))
 
+
+def xyz(coordinate,center='sun',r0=8000*u.pc,z0=25*u.pc,unit=u.pc,**kwargs):
+    '''
+    :Purpose:
+
+        A "fast" method for converting a coordinate to heliocentric or galactocentric XYZ (cartesian) galaxy coordinates. 
+        This assumes a right handed orientation with X from Sun to Galactic center, Y from Sun to the direction of Galactic rotation, and Z from Sun toward Galactic North. 
+        Note that the astropy SkyCoord method also provides a way of producing `XYZ equatorial coordinates <http://docs.astropy.org/en/stable/api/astropy.coordinates.CartesianRepresentation.html>`_
+
+    :Required Inputs:
+
+        :param coordinate: A coordinate or list of coordinate variables, something that can be converted to astropy SkyCoord by `splat.properCoordinates()`_
+
+    :Optional Inputs:
+
+        :param distance: If not included in the coordinate variable, the distance to the source in pc (default: None)
+        :param center = 'sun': centering of coordinates; by default this is the Sun, but for full galacitic coordindates set to 'galactic'
+        :param r0 = 8000 pc: radial distance between Sun and Galactic center 
+        :param z0 = 25 pc: vertical distance between Sun and Galactic plane 
+        :param unit = astropy.units.pc: preferred unit
+
+    :Outputs:
+
+        A tuple (x,y,z), each of which is an array of x,y,z Galactic coordinates in preferred units
+
+    :Example:
+
+        >>> import splat
+        >>> c = splat.properCoordinates('J05591914-1404488',distance=10.2)
+        >>> splat.xyz(c)
+            (<Quantity -7.442377515807463 pc>, <Quantity -6.2399837133240235 pc>, <Quantity -3.116668119908577 pc>)
+        >>> splat.xyz(c,center='galactic')
+            (<Quantity 7992.5576224841925 pc>, <Quantity -6.2399837133240235 pc>, <Quantity 21.883331880091422 pc>)
+
+    .. _`splat.properCoordinates() <REF>`        
+    
+    '''
+# check inputs
+    if not splat.isUnit(unit): unit = u.pc
+
+    if not isinstance(coordinate,list): c = [coordinate]
+    else: c = coordinate
+    if not isinstance(c[0],SkyCoord):
+        try:
+            c = [splat.properCoordinates(cd,**kwargs) for cd in c]
+        except:
+            raise ValueError('{} is not a proper coordinate'.format(coordinate))
+
+    if not isinstance(kwargs.get('distance',False),bool): distance=kwargs['distance']
+    elif str(c[0].distance.unit) != '': distance = [cd.distance for cd in c]
+    else:
+        raise ValueError('No distance value provided')
+    if isinstance(distance,numpy.ndarray): distance = list(distance)
+    if not isinstance(distance,list): distance = [distance]
+    if splat.isUnit(distance[0]): distance = [float(d.to(unit).value) for d in distance]
+
+    if splat.isUnit(r0): r0 = r0.to(unit).value
+    if splat.isUnit(z0): z0 = z0.to(unit).value
+
+    l = [cd.galactic.l.radian for cd in c]
+    b = [cd.galactic.b.radian for cd in c]
+
+# make sure arrays are of the same length 
+    while len(distance) < len(l): distance.append(distance[-1])
+    while len(l) < len(distance): 
+        l.append(l[-1])
+        b.append(b[-1])
+
+# compute xyz        
+    distance = numpy.array(distance)
+    l = numpy.array(l)
+    b = numpy.array(b)
+    x = distance*numpy.cos(l)*numpy.cos(b)
+    y = distance*numpy.sin(l)*numpy.cos(b)
+    z = distance*numpy.sin(b)
+
+    if center.lower() == 'galactic':
+        x = x+r0
+        z = z+z0
+
+    if len(distance) == 1:
+        return x[0]*unit,y[0]*unit,z[0]*unit
+    else:
+        return x*unit,y*unit,z*unit
 
 
 def baryVel(coord,obstime,location='keck',correction='barycenter'):
@@ -1315,6 +1531,94 @@ def numberList(numstr,sort=False):
     return numlist
 
 
+def randomSphereAngles(num,longitude_range=[0,2*numpy.pi],latitude_range=[-0.5*numpy.pi,0.5*numpy.pi],exclude_longitude_range=[],exclude_latitude_range=[],degrees=False,**kwargs):
+    '''
+    :Purpose: 
+
+        Draw a set of angles from a uniform spherical distribution, with areal inclusion and exclusion constraints.
+        Note that latitude range is assumed to run from -pi/2 to +pi/2
+
+    :Required Input:
+
+        :param num: number of points to draw
+
+    :Optional Input:
+
+        :param: longitude_range = [0,2pi]: range over longitude to draw values
+        :param: latitude_range = [-pi,+pi]: range over latitude to draw values
+        :param: exclude_longitude_range = []: range of longitudes to exclude values
+        :param: exclude_latitude_range = []: range of latitudes to exclude values
+        :param: degrees = False: by default, radians are assumed; set to True to convert to degrees (also checks if inclusion/exclusion ranges are in degrees)
+
+    :Output:
+
+        2 arrays of longitudes and latitudes drawn uniformly over select area
+
+    :Example:
+        >>> import splat
+        >>> splat.randomSphereAngles(10)
+            (array([ 2.52679013,  0.85193769,  5.98514797,  0.89943465,  5.36310536,
+             5.34344768,  0.01743906,  4.93856229,  0.06508084,  0.5517308 ]),
+            array([-0.53399501,  0.04208564,  0.03089855, -0.60445954,  0.55800151,
+             0.80119146, -0.19318715,  0.76230148, -0.5935969 , -0.65839849]))
+        >>> splat.randomSphereAngles(10,latitude_range=[-10,10],degrees=True)
+            (array([  28.55709202,  297.34760719,  152.79525894,   71.08745583,
+                     153.56948338,   80.68486463,    7.75479896,  100.8408509 ,
+                     356.63091754,   66.16572906]),
+             array([ 0.6747939 , -1.00316889, -2.26239023,  9.27397372, -8.96797181,
+                     7.34796163, -1.93175289,  3.07888912,  0.69826684, -5.08428339]))
+    '''
+# check inputs - convert to radians if necessary   
+    if degrees==True and numpy.max(numpy.absolute(longitude_range)) > 2.*numpy.pi:
+        longitude_range = [l*numpy.pi/180. for l in longitude_range]
+    if degrees==True and numpy.max(numpy.absolute(latitude_range)) > numpy.pi:
+        latitude_range = [l*numpy.pi/180. for l in latitude_range]
+
+# longitude - uniformly distributed
+    longitude = numpy.random.uniform(0,1,num)*(longitude_range[1]-longitude_range[0])+longitude_range[0]
+
+# latitude - distributed by P(phi) = 1/2 cos(phi) for -pi/2 < phi < pi/2
+    x = numpy.linspace(latitude_range[0],latitude_range[1],num)
+    cdf = 0.5*(numpy.sin(x)+1.)
+    cdf = cdf-numpy.nanmin(cdf)
+    cdf = cdf/numpy.nanmax(cdf)
+    f = interp1d(cdf,x)
+    latitude = f(numpy.random.uniform(0,1,num))
+
+# exclude ranges specified
+    if len(exclude_longitude_range) > 0:
+        if degrees==True and numpy.max(numpy.absolute(exclude_longitude_range)) > 2.*numpy.pi:
+            exclude_longitude_range = [l*numpy.pi/180. for l in exclude_longitude_range]
+        longex = longitude[longitude<numpy.nanmin(exclude_longitude_range)]
+        longex = numpy.concatenate((longex,longitude[longitude>numpy.nanmax(exclude_longitude_range)]))
+        while len(longex) < num:
+            longitude = numpy.random.uniform(0,1,num)*(longitude_range[1]-longitude_range[0])+longitude_range[0]
+            longex = numpy.concatenate((longex,longitude[longitude<numpy.nanmin(exclude_longitude_range)]))
+            longex = numpy.concatenate((longex,longitude[longitude>numpy.nanmax(exclude_longitude_range)]))
+        longitude = longex[:num]
+
+    if len(exclude_latitude_range) > 0:
+        if degrees==True and numpy.max(numpy.absolute(exclude_latitude_range)) > numpy.pi:
+            exclude_latitude_range = [l*numpy.pi/180. for l in exclude_latitude_range]
+        latex = latitude[latitude<numpy.nanmin(exclude_latitude_range)]
+        latex = numpy.concatenate((latex,latitude[latitude>numpy.nanmax(exclude_latitude_range)]))
+        while len(latex) < num:
+            x = numpy.linspace(latitude_range[0],latitude_range[1],num)
+            cdf = 0.5*(numpy.sin(x)+1.)
+            cdf = cdf-numpy.nanmin(cdf)
+            cdf = cdf/numpy.nanmax(cdf)
+            f = interp1d(cdf,x)
+            latitude = f(numpy.random.uniform(0,1,num))
+            latex = numpy.concatenate((latex,latitude[latitude<numpy.nanmin(exclude_latitude_range)]))
+            latex = numpy.concatenate((latex,latitude[latitude>numpy.nanmax(exclude_latitude_range)]))
+        latitude = latex[:num]        
+
+# outputs; convert to degrees if desired    
+    if degrees==True:
+        latitude = latitude*180./numpy.pi
+        longitude = longitude*180./numpy.pi
+    return longitude, latitude
+        
 
 def weightedMeanVar(vals, winp, *args, **kwargs):
     '''

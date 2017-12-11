@@ -509,69 +509,101 @@ def magToFlux(mag,filt,**kwargs):
 #            raise ValueError('\nInput quantity unit {} is not a flux unit'.format(mag.unit))
 
 
-def visualizeFilter(filt,verbose=True,**kwargs):
+def visualizeFilter(filters,verbose=True,xra=[],yra=[0,1.2],**kwargs):
     '''
     :Purpose: Plots a filter profile or set of filter profiles, optionally on top of a spectrum
 
     WARNING: THIS CODE IS CURRENTLY UNDER DEVELOPMENT, BUGS MAY BE COMMON
 
     '''
+    filt = copy.deepcopy(filters)
+    wunit = kwargs.get('wunit',DEFAULT_WAVE_UNIT)
+
+# single filter name  
     if isinstance(filt,str):
         filt = [filt]
+
     if isinstance(filt,list):
+
+# list of filter names
         if isinstance(filt[0],str):
             for f in filt:
                 fc = checkFilterName(f)
-                if fc == False: filt.remove(f)
+                filt.remove(f)
+                if fc == False: 
+                    if verbose==True: print('Removed filter {}: not included in SPLAT'.format(f))
+                else:
+                    filt.insert(len(filt),fc)
             if len(filt) == 0:
-                if verbose==True: print('Did not recognize any of the input filters')
-# STOPPED HERE
+                raise ValueError('Did not recognize any of the input filters {}'.format(filters))
 
-        fwave,ftrans = filterProfile(filt[0],**kwargs)
-    elif isinstance(filt,list):
-        if kwargs.get('notch',False) == True:
-            fwave,ftrans = numpy.linspace(filt[0],filt[1],1000),numpy.ones(1000)
-        elif isinstance(filt[0],list) and len(filt) >= 2: 
-            fwave,ftrans = filt[0],filt[1]
-        else:
-            raise ValueError('Could not parse input {}'.format(filt))
+# prep parameters
+            fwave,ftrans = filterProfile(f,**kwargs)
+            if isUnit(fwave): wunit = kwargs.get('wunit',fwave.unit)
+
+            xl = kwargs.get('xlabel','Wavelength ({})'.format(wunit))
+            yl = kwargs.get('ylabel','Transmission Curve')
+            legend = []
+            fig = plt.figure(figsize=kwargs.get('figsize',[5,4]))
+            for i,f in enumerate(filt):
+                fwave,ftrans = filterProfile(f,**kwargs)
+                if isUnit(fwave): fwave.to(wunit)
+                else: fwave = fwave*wunit
+                if kwargs.get('normalize',False): ftrans = ftrans/numpy.nanmax(ftrans)
+                plt.plot(fwave,ftrans)
+                if len(xra) == 0: xra = [numpy.nanmin(fwave.value),numpy.nanmax(fwave.value)]
+                xra = [numpy.nanmin([xra[0],numpy.nanmin(fwave.value)]),numpy.nanmax([xra[1],numpy.nanmax(fwave.value)])]
+                yra = [yra[0],numpy.nanmax([yra[1],numpy.nanmax(ftrans)])]
+                legend.append(FILTERS[f]['description'])
+                if FILTERS[f]['rsr'] == True: yl = kwargs.get('ylabel','Transmission Curve')
+
+# list of notch ranges
+        if isinstance(filt[0],int) or isinstance(filt[0],float):
+            filt = [filt]
+
+# list of notch ranges
+        if isinstance(filt[0],list):
+            xl = kwargs.get('xlabel','Wavelength ({})'.format(wunit))
+            yl = kwargs.get('ylabel','Transmission Curve')
+            legend = []
+            fig = plt.figure(figsize=kwargs.get('figsize',[5,4]))
+            for i,f in enumerate(filt):
+                fwave,ftrans = numpy.linspace(f[0],f[1],1000)*wunit,numpy.ones(1000)
+                plt.plot(fwave,ftrans)
+                if len(xra) == 0: xra = [numpy.nanmin(fwave.value),numpy.nanmax(fwave.value)]
+                xra = [numpy.nanmin([xra[0],numpy.nanmin(fwave.value)]),numpy.nanmax([xra[1],numpy.nanmax(fwave.value)])]
+                yra = [yra[0],numpy.nanmax([yra[1],numpy.nanmax(ftrans)])]
+                legend.append('Filter {}'.format(i+1))
+
     else:
         raise ValueError('Could not parse input {}'.format(filt))
-    if isinstance(fwave,u.quantity.Quantity) == False: fwave=fwave*u.micron
         
-    if kwargs.get('normalize',False): ftrans = ftrans/numpy.nanmax(ftrans)
-    xra = [numpy.nanmin(fwave.value),numpy.nanmax(fwave.value)]
-    yra = [0,1.2*numpy.nanmax(ftrans)]
-
-    fig = plt.figure()
-    plt.plot(fwave,ftrans)
-    plt.xlabel(kwargs.get('xlabel','Wavelength ({})'.format(fwave.unit)))
-    if FILTERS[filt]['rsr'] == True:
-        plt.ylabel(kwargs.get('ylabel',r'Spectral Response Curve ($\lambda^{-1}$)'))
-    else:
-        plt.ylabel(kwargs.get('ylabel','Transmission Curve'))
-    legend = [FILTERS[filt]['description']]
 
 # add a comparison spectrum
     sp = kwargs.get('spectrum',None)
     sp = kwargs.get('comparison',sp)
 
-    print(isinstance(sp,splat.core.Spectrum))
     if isinstance(sp,splat.core.Spectrum) == True:
-        sp.normalize(range=xra)
+        print(xra)
+        sp.normalize(xra)
         sp.scale(numpy.nanmax(ftrans)*kwargs.get('comparison_scale',0.8))
         plt.plot(sp.wave,sp.flux,color=kwargs.get('comparison_color','k'),alpha=kwargs.get('comparison_alpha',0.5))
         legend.append(sp.name)
+        yra = [yra[0],yra[1]*1.1]
 
+# finish up
     plt.xlim(xra)
     plt.ylim(yra)
+    plt.xlabel(xl)
+    plt.ylabel(yl)
     plt.legend(legend)
 
-
+# save if desired
     file = kwargs.get('file','')
     file = kwargs.get('filename',file)
     file = kwargs.get('output',file)
     if file != '': plt.savefig(file)
+    
     return fig
 
 

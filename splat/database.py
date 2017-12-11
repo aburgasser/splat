@@ -15,6 +15,7 @@ import os
 import re
 import requests
 from shutil import copyfile
+import time
 
 # imports: external
 import astropy
@@ -171,7 +172,7 @@ def fetchDatabase(*args, **kwargs):
 ###########  ADDING NEW SPECTRA TO SPLAT   ##########
 #####################################################
 
-def addUserSpectra(*args,folder='./',instrument='SPEX_PRISM',mode='update',repeat='retain',radius_repeat=10.*u.arcsec,input_file='input.txt',search_str='*.fits',sources_data_file='sources_data.txt',spectra_data_file='spectra_data.txt',verbose=True):
+def addUserSpectra(*args,folder='./',instrument='SPEX-PRISM',mode='update',repeat='retain',radius_repeat=10.*u.arcsec,input_file='input.txt',search_str='*.fits',sources_data_file=DB_SOURCES_FILE,spectra_data_file=DB_SPECTRA_FILE,verbose=True):
     '''
     :Purpose:
 
@@ -218,7 +219,7 @@ def addUserSpectra(*args,folder='./',instrument='SPEX_PRISM',mode='update',repea
         if verbose==True: print('\nDo not recognize repeat = {};  should be one of {}; reverting to retain'.format(repeat,repeat_labels))
         repeat = 'retain'
 
-# check the folder is corretly specified
+# check the folder is correctly specified
     if not os.path.exists(folder):
         print('\nCould not find folder {} in local directory structure; skipping')
         return
@@ -244,7 +245,8 @@ def addUserSpectra(*args,folder='./',instrument='SPEX_PRISM',mode='update',repea
             input_db['INSTRUMENT'] = [instrument]*len(files)
             if '.txt' in input_file: input_db.to_csv(folder+'/'+input_file,sep='\t',index=False)
             elif '.csv' in input_file: input_db.to_csv(folder+'/'+input_file,sep=',',index=False)
-            elif '.xls' in input_file: input_db.to_csv(folder+'/'+input_file,sep=',',index=False)
+            elif '.xls' in input_file: input_db.to_excel(folder+'/'+input_file,index=False)
+            else: raise ValueError('\nDo not recognize file format for {}'.format(input_file))
 
 # prompt to continue?
 
@@ -252,10 +254,7 @@ def addUserSpectra(*args,folder='./',instrument='SPEX_PRISM',mode='update',repea
         if '.txt' in input_file: input_db = pandas.read_csv(folder+'/'+input_file,delimiter='\t')
         elif '.csv' in input_file: input_db = pandas.read_csv(folder+'/'+input_file,delimiter=',')
         elif '.xls' in input_file: input_db = pandas.read_excel(folder+'/'+input_file)
-        else:
-            raise ValueError('\nDo not recognize file format for input file {}'.format(input_file))
-
-#### STOPPED HERE
+        else: raise ValueError('\nDo not recognize file format for input file {}'.format(input_file))
 
 # capitalize all columns
         for c in list(input_db.columns):
@@ -264,7 +263,7 @@ def addUserSpectra(*args,folder='./',instrument='SPEX_PRISM',mode='update',repea
                 del input_db[c]
 
         # adjust instrument
-        syn = ['INST']
+        syn = ['INST','INSTR']
         if 'INSTRUMENT' not in list(input_db.columns): 
             for s in syn:
                 if s in list(input_db.columns): 
@@ -288,15 +287,15 @@ def addUserSpectra(*args,folder='./',instrument='SPEX_PRISM',mode='update',repea
         sources_db = pandas.DataFrame()
         spectra_db = pandas.DataFrame()
 
-        # keys
-        keys = numpy.arange(len(input_db))+n*1.e6+1.
+        # prep keys
+        n = len(DATA_FOLDERS)
+        keys = numpy.arange(len(input_db))+n*dataset_number_factor+1
         sources_db['SOURCE_KEY'] = [int(k) for k in keys]
         spectra_db['DATA_KEY'] = sources_db['SOURCE_KEY']
         spectra_db['SOURCE_KEY'] = sources_db['SOURCE_KEY']
 
         # required spectral information
         spectra_db['DATA_FILE'] = input_db['DATA_FILE']
-        spectra_db['DATA_FOLDER'] = [folder]*len(input_db)
         spectra_db['INSTRUMENT'] = input_db['INSTRUMENT']
         spectra_db['DATA_ENTRY'] = [nowstr]*len(input_db)
 
@@ -307,6 +306,17 @@ def addUserSpectra(*args,folder='./',instrument='SPEX_PRISM',mode='update',repea
             if c in list(input_db.columns): sources_db[c] = input_db[c]
         for c in list(input_db.columns):
             if c not in optional_spectra_columns and c not in optional_sources_columns and c not in list(spectra_db.columns): spectra_db[c] = input_db[c]
+
+# write out the source and spectra folders
+        if '.txt' in sources_data_file: sources_db.to_csv(folder+'/'+sources_data_file,sep='\t',index=False)
+        elif '.csv' in sources_data_file: sources_db.to_csv(folder+'/'+sources_data_file,sep=',',index=False)
+        elif '.xls' in sources_data_file: sources_db.to_excel(folder+'/'+sources_data_file,index=False)
+        else: raise ValueError('\nDo not recognize file format for {}'.format(sources_data_file))
+
+        if '.txt' in spectra_data_file: spectra_db.to_csv(folder+'/'+spectra_data_file,sep='\t',index=False)
+        elif '.csv' in spectra_data_file: spectra_db.to_csv(folder+'/'+spectra_data_file,sep=',',index=False)
+        elif '.xls' in spectra_data_file: spectra_db.to_excel(folder+'/'+spectra_data_file,index=False)
+        else: raise ValueError('\nDo not recognize file format for {}'.format(spectra_data_file))
 
 # STAGE 1: SET UP A NEW FOLDER OF DATA
     if mode.lower() == 'new' or mode.lower() == 'append':

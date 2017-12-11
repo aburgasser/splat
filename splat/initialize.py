@@ -231,10 +231,10 @@ FILTERS = { \
     'HAWK_NB1060': {'file': 'hawk-nb1060.txt', 'description': 'HAWK Narrow Band 1060', 'zeropoint': 2003.27, 'method': 'vega', 'rsr': False, 'altnames': ['hawk 1060']}, \
     'HAWK_NB1190': {'file': 'hawk-nb1190.txt', 'description': 'HAWK Narrow Band 1190', 'zeropoint': 1697.50, 'method': 'vega', 'rsr': False, 'altnames': ['hawk 1190']}, \
     'HAWK_NB2090': {'file': 'hawk-nb2090.txt', 'description': 'HAWK Narrow Band 2090', 'zeropoint': 706.68, 'method': 'vega', 'rsr': False, 'altnames': ['hawk 2090']}, \
-    'IRAC_CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9, 'method': 'vega', 'rsr': True, 'altnames': ['irac 1','irac 3.6']}, \
-    'IRAC_CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7, 'method': 'vega', 'rsr': True, 'altnames': ['irac 2','irac 4.5']}, \
-    'IRAC_CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0, 'method': 'vega', 'rsr': True, 'altnames': ['irac 3','irac 5.8']}, \
-    'IRAC_CH4': {'file': 'irac4.txt', 'description': 'IRAC Channel 4 (8.0 micron)', 'zeropoint': 64.13, 'method': 'vega', 'rsr': True, 'altnames': ['irac 4','irac 8.0']}, \
+    'IRAC_CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9, 'method': 'vega', 'rsr': True, 'altnames': ['irac 1','irac 3.6','[3.6]']}, \
+    'IRAC_CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7, 'method': 'vega', 'rsr': True, 'altnames': ['irac 2','irac 4.5','[4.5]']}, \
+    'IRAC_CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0, 'method': 'vega', 'rsr': True, 'altnames': ['irac 3','irac 5.8','[5.8]']}, \
+    'IRAC_CH4': {'file': 'irac4.txt', 'description': 'IRAC Channel 4 (8.0 micron)', 'zeropoint': 64.13, 'method': 'vega', 'rsr': True, 'altnames': ['irac 4','irac 8.0','[8.0]']}, \
     'KEPLER': {'file': 'Kepler.txt', 'description': 'Kepler bandpass', 'zeropoint': 3033.1, 'method': 'vega', 'rsr': False, 'altnames': ['kep','kepler k','kp']}, \
     'MKO_J_ATM': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altnames': []}, \
     'MKO_H_ATM': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altnames': []}, \
@@ -364,10 +364,10 @@ FILTERS = { \
     'WIRCAM_KCONT': {'file': 'wircam-cfht-kcont.txt', 'description': 'CFHT WIRCAM K-cont', 'zeropoint': 636.17, 'method': 'vega', 'rsr': False, 'altnames': []}, \
     'WIRCAM_CH4_OFF': {'file': 'wircam-cfht-ch4s.txt', 'description': 'CFHT WIRCAM CH4-off', 'zeropoint': 987.39, 'method': 'vega', 'rsr': False, 'altnames': []}, \
     'WIRCAM_CH4_ON': {'file': 'wircam-cfht-ch4l.txt', 'description': 'CFHT WIRCAM CH4-on', 'zeropoint': 1076.31, 'method': 'vega', 'rsr': False, 'altnames': []}, \
-    'WISE_W1': {'file': 'wise_w1.txt', 'description': 'WISE W1 (3.5 micron)', 'zeropoint': 309.54, 'method': 'vega', 'rsr': True, 'altnames': []}, \
-    'WISE_W2': {'file': 'wise_w2.txt', 'description': 'WISE W2 (4.6 micron)', 'zeropoint': 171.79, 'method': 'vega', 'rsr': True, 'altnames': []}, \
-    'WISE_W3': {'file': 'wise_w3.txt', 'description': 'WISE W3 (13 micron)', 'zeropoint': 31.67, 'method': 'vega', 'rsr': True, 'altnames': []}, \
-    'WISE_W4': {'file': 'wise_w4.txt', 'description': 'WISE W4 (22 micron)', 'zeropoint': 8.363, 'method': 'vega', 'rsr': True, 'altnames': []} \
+    'WISE_W1': {'file': 'wise_w1.txt', 'description': 'WISE W1 (3.5 micron)', 'zeropoint': 309.54, 'method': 'vega', 'rsr': True, 'altnames': ['W1']}, \
+    'WISE_W2': {'file': 'wise_w2.txt', 'description': 'WISE W2 (4.6 micron)', 'zeropoint': 171.79, 'method': 'vega', 'rsr': True, 'altnames': ['W2']}, \
+    'WISE_W3': {'file': 'wise_w3.txt', 'description': 'WISE W3 (13 micron)', 'zeropoint': 31.67, 'method': 'vega', 'rsr': True, 'altnames': ['W3']}, \
+    'WISE_W4': {'file': 'wise_w4.txt', 'description': 'WISE W4 (22 micron)', 'zeropoint': 8.363, 'method': 'vega', 'rsr': True, 'altnames': ['W4']} \
     }
 VEGAFILE = 'vega_kurucz.txt'
 
@@ -396,7 +396,7 @@ INSTRUMENTS = {
     'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'wave_range': [0.95,5.5]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altnames': ['NIRSPAO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
     'SPEX-PRISM': {'instrument_name': 'IRTF SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SPEX','PRISM'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
     'SPEX-SXD': {'instrument_name': 'IRTF SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'SPEX-LXD1.9': {'instrument_name': 'IRTF SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['LXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'SPEX-LXD1.9': {'instrument_name': 'IRTF SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': ['SPEX LXD','LXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
     'SPEX-LXD2.1': {'instrument_name': 'IRTF SpeX LXD 2.1 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
     'SPEX-LXD2.3': {'instrument_name': 'IRTF SpeX LXD 2.3 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altnames': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
 #	'USPEX': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altnames': ['']},
@@ -585,6 +585,35 @@ INDICES_SETS = {
     'tokunaga': {'bibcode': '1999AJ....117.1010T'},
 }    
 
+BC_SETS = {
+    'liu2010': {'altname': ['liu10','liu'], 'bibcode': '2010ApJ...722..311L', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        'MKO_J': {'fitunc' : 0.14, 'range' : [16,38.5], 'coeff': [1.462266e-6,-1.558986e-4,6.540717e-3,-1.367605e-1,1.491738e0,-8.053993e0,1.890448e1]},
+        'MKO_H': {'fitunc' : 0.07, 'range' : [16,38.5], 'coeff': [1.148133e-6,-1.171595e-4,4.733874e-3,-9.618535e-2,1.027185e0,-5.426683e0,1.366709e1]},
+        'MKO_K': {'fitunc' : 0.08, 'range' : [16,38.5], 'coeff': [3.159780e-7,-3.177629e-5,1.282657e-3,-2.647464e-2,2.868014e-1,-1.471358e0,5.795848e0]}}},
+    'dupuy2013': {'altname': ['dupuy13','dupuy'], 'bibcode': '2013Sci...341.1492D', 'sptoffset': 10, 'method': 'interpolate', 'filters': {
+        'MKO_Y': {'spt': [38,38.5,39,40.,40.5], 'bc': [1.6,1.1,1.0,0.8,-0.7], 'rms': [0.6,0.6,0.6,0.6,0.6]}, 
+        'MKO_J': {'spt': [38,38.5,39,39.5,40.,40.5], 'bc': [2.4,2.0,2.0,1.9,0.9,-0.4], 'rms': [0.6,0.6,0.6,0.6,0.6,0.6]}, 
+        'MKO_H': {'spt': [38,38.5,39,39.5,40.,40.5], 'bc': [2.1,1.6,1.7,1.5,0.4,-1.5], 'rms': [0.6,0.6,0.6,0.6,0.6,0.6]}}}, 
+    'filippazzo2015': {'altname': ['filippazzo','filippazzo-field','filippazzo15','filippazzo15-field','fillippazzo','fillippazzo-field','filipazo','filipazo-field','filippazo','filippazo-field'], 'bibcode': '2015ApJ...810..158F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc' : 0.163, 'range' : [16,39], 'coeff': [-1.555e-5,1.200e-3,-3.437e-2,4.566e-1,-2.862e0,8.842e0]},
+        '2MASS_KS': {'fitunc' : 0.243, 'range' : [16,38], 'coeff': [-5.474e-6,4.549e-4,-1.462e-2,2.204e-1,-1.508e0,6.815e0]}}},
+    'filippazzo2015-young': {'altname': ['filippazzo-young','filippazzo15-young','fillippazzo-young','filipazo-young','filippazo-young'], 'bibcode': '2015ApJ...810..158F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc' : 0.189, 'range' : [17,38], 'coeff': [-1.283e-6,-1.118e-4,1.165e-2,-3.020e-1,2.899e0,-7.352e0]},
+        '2MASS_KS': {'fitunc' : 0.126, 'range' : [17,38], 'coeff': [2.742e-6,-2.633e-4,9.711e-3,-1.759e-1,1.565e0,-2.174e0]}}},
+        }
+
+LBOL_SETS = {
+    'filippazzo2015': {'altname': ['filippazzo','filippazzo15','fillippazzo','filipazo','filippazo'], 'bibcode': '2015ApJ...810..158F', 'sptoffset': 10., 'method': 'polynomial', 'fitunc' : 0.133, 'range' : [16,39], 'coeff': [2.736e-7,-3.220e-5,1.449e-3,-3.207e-2,3.727e-1,-2.310e0,2.787e0]},
+        }
+
+ABSMAG_LBOL_SETS = {
+    'dupuy2017': {'altname': ['dupuy17','dupuy'], 'bibcode': '2017ApJS..231...15D',  'method': 'polynomial', 'filters': {
+        'MKO_H': {'fitunc' : 0.023, 'range' : [9.6,13.3], 'coeff': [1.06200e-2,-3.51721e-1,3.46876e1,-1.3282e1]},
+        'MKO_K': {'fitunc' : 0.05, 'range' : [9.1,17.8], 'coeff': [4.54547e-4,-3.068824e-2,8.162709e-1,-1.0671188e1,6.811147e1,-1.72188e2]},
+        '2MASS_H': {'fitunc' : 0.023, 'range' : [9.2,13.3], 'coeff': [8.9222e-3,-2.90797e-1,2.74259e0,-1.0426e1]},
+        '2MASS_KS': {'fitunc' : 0.05, 'range' : [8.8,16.6], 'coeff': [9.8821e-5,-7.85837e-3,2.357643e-1,-3.364101e0,2.258776e1,-5.9877e1]}}},
+        }
+
 ABSMAG_SETS = {
     'dahn2002': {'altname': ['dahn','dahn02'], 'bibcode': '2002AJ....124.1170D', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.25, 'range' : [17.,28.], 'coeff': [0.341,8.38]}}},
@@ -594,7 +623,7 @@ ABSMAG_SETS = {
         'MKO_J': {'fitunc' : 0.30, 'range' : [20., 38.], 'coeff': [.000203252, -.0129143, .275734, -1.99967, 14.8948]}, 
         'MKO_H': {'fitunc' : 0.27, 'range' : [20., 38.], 'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, 
         'MKO_K': {'fitunc' : 0.26, 'range' : [20., 38.], 'coeff': [.0000001051, -.000006985, .0001807, -.002271, .01414, -.04024, .05129, .2322, 10.45]}}},
-    'looper2008': {'altname': ['looper','looper08'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 20, 'method': 'polynomial', 'filters': {
+    'looper2008': {'altname': ['looper','looper08'],'bibcode': '2008ApJ...685.1183L', 'sptoffset': 20, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.29, 'range' : [20., 38.], 'coeff': [-5.462e-6,2.595e-4,-3.915e-3,1.663e-2,3.690e-2,1.255e-1,11.817]},
         '2MASS_H': {'fitunc' : 0.29, 'range' : [20., 38.], 'coeff' : [-4.218e-6,1.987e-4,-2.970e-3,1.261e-2,3.032e-2,1.125e-1,11.010]},
         '2MASS_KS': {'fitunc' : 0.33, 'range' : [20., 38.], 'coeff' : [-4.104e-6,1.911e-4,-2.864e-3,1.299e-2,2.565e-2,7.369e-2,10.521]}}},
@@ -603,27 +632,43 @@ ABSMAG_SETS = {
         'MKO_H': {'fitunc' : 0.27, 'range' : [20., 38.], 'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, 
         'MKO_K': {'fitunc' : 0.28, 'range' : [20., 38.], 'coeff' : [.0000816516, -.00469032, .0940816, -.485519, 9.76100]}}},
     'dupuy2012': {'altname': ['dupuy','dupuy12'], 'bibcode': '2012ApJS..201...19D', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
-        'MKO_J': {'fitunc' : 0.39, 'range' : [16., 39.], 'coeff' : [-.00000194920, .000227641, -.0103332, .232771, -2.74405, 16.3986, -28.3129]}, 
         'MKO_Y': {'fitunc': 0.40, 'range' : [16., 39.], 'coeff': [-.00000252638, .000285027, -.0126151, .279438, -3.26895, 19.5444, -35.1560]}, 
+        'MKO_J': {'fitunc' : 0.39, 'range' : [16., 39.], 'coeff' : [-.00000194920, .000227641, -.0103332, .232771, -2.74405, 16.3986, -28.3129]}, 
         'MKO_H': {'fitunc': 0.38, 'range' : [16., 39.], 'coeff': [-.00000224083, .000251601, -.0110960, .245209, -2.85705, 16.9138, -29.7306]}, 
         'MKO_K': {'fitunc': 0.40, 'range' : [16., 39.], 'coeff': [-.00000104935, .000125731, -.00584342, .135177, -1.63930, 10.1248, -15.2200]}, 
         'MKO_LP': {'fitunc': 0.28, 'range': [16., 39.], 'coeff': [0.00000, 0.00000, .0000546366, -.00293191, .0530581,  -.196584, 8.89928]}, 
         '2MASS_J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [-.000000784614, .000100820, -.00482973, .111715, -1.33053, 8.16362, -9.67994]}, 
         '2MASS_H': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [-.00000111499, .000129363, -.00580847, .129202, -1.50370, 9.00279, -11.7526]}, 
         '2MASS_KS': {'fitunc': 0.43, 'range':[16., 39.], 'coeff': [1.06693e-4, -6.42118e-3, 1.34163e-1, -8.67471e-1, 1.10114e1]}, 
+        'IRAC_CH1': {'fitunc': 0.29, 'range':[16., 39.], 'coeff': [6.50191e-5,-3.60108e-3,6.91081e-2,-3.35222e-1,9.34220e0]}, 
+        'IRAC_CH2': {'fitunc': 0.22, 'range':[16., 39.], 'coeff': [5.82107e-5,-3.63435e-3,7.65343e-2,-4.39968e-1,9.73946e0]}, 
+        'IRAC_CH3': {'fitunc': 0.32, 'range':[16., 39.], 'coeff': [1.03507e-4,-6.22795e-3,1.29019e-1,-9.01820e-1,1.10834e1]}, 
+        'IRAC_CH4': {'fitunc': 0.27, 'range':[16., 39.], 'coeff': [6.89733e-5,-4.12294e-3,8.43465e-2,-5.29595e-1,9.97853e0]}, 
         'WISE_W1': {'fitunc': 0.39, 'range':[16., 39.], 'coeff': [1.58040e-5, -3.33944e-4, -4.38105e-3, 3.55395e-1, 7.14765]}, 
-        'WISE_W2': {'fitunc': 0.35, 'range':[16., 39.], 'coeff': [1.78555e-5, -8.81973e-4, 1.14325e-2, 1.92354e-1, 7.46564]}}},
-    'tinney2013': {'altname': ['tinney','tinney03'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        'WISE_W2': {'fitunc': 0.35, 'range':[16., 39.], 'coeff': [1.78555e-5, -8.81973e-4, 1.14325e-2, 1.92354e-1, 7.46564]},
+        'WISE_W3': {'fitunc': 0.43, 'range':[16., 39.], 'coeff': [2.37656e-5,-1.28563e-3,2.01740e-2,6.64242e-2,7.81181e0]},
+        'WISE_W4': {'fitunc': 0.76, 'range':[16., 39.], 'coeff': [-2.16042e-3,1.14630e-1,7.78974e0]}}},
+    'dupuy2013': {'altname': ['dupuy13'], 'bibcode': '2013Sci...341.1492D', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
+        'MKO_Y': {'spt': [38,38.5,39,40.], 'absmag': [17.4,18.81,19.26,20.24], 'rms': [0.25,0.51,0.88,0.17]}, 
+        'MKO_J': {'spt': [38,38.5,39,39.5,40.], 'absmag': [16.43,17.87,18.39,17.68,20.09], 'rms': [0.46,0.44,0.95,0.37,0.25]}, 
+        'MKO_H': {'spt': [38,38.5,39,39.5,40.], 'absmag': [16.82,18.2,18.77,18.08,20.6], 'rms': [0.43,0.45,1.08,0.39,0.25]}, 
+        'MKO_K': {'spt': [38,38.5,39,40.], 'absmag': [16.93,18.27,18.89,20.7], 'rms': [0.8,0.4,0.57,0.18]}, 
+        'IRAC_CH1': {'spt': [38,38.5,39,39.5,40.], 'absmag': [15.11,15.83,16.17,15.58,16.99], 'rms': [0.15,0.22,0.23,0.41,0.21]}, 
+        'IRAC_CH2': {'spt': [38,38.5,39,39.5,40.], 'absmag': [13.4,13.79,14.09,13.51,14.66], 'rms': [0.21,0.12,0.2,0.43,0.28]}}}, 
+    'tinney2003': {'altname': ['tinney','tinney03'],'bibcode': '2003AJ....126..975T', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         'COUSINS_I': {'fitunc' : 0.37, 'range' : [20., 37.5], 'coeff': [-2.49821e-6,1.04398e-3,-6.49719e-2,1.56038,-1.58296e1,7.22089e1]},
-        '2MASS_J': {'fitunc' : 0.38, 'range' : [20., 37.5], 'coeff': [-1.25074e-5,1.63124e-3,-7.42418e-2,1.54509,-1.47407e1,6.27861e1]},
-        '2MASS_KS': {'fitunc' : 0.36, 'range' : [20., 37.5], 'coeff': [-2.80824e-6,3.41146e-4,-1.73848e-2,4.82120e-1,-7.86911,7.57222e1,-3.98105e2,8.94012e2]}}},
-    'tinney2014': {'altname': ['tinney15'],'bibcode': '2014ApJ...796...39T', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
+        'UKIRT_Z': {'fitunc' : 0.29, 'range' : [20., 37.5], 'coeff': [-9.97226e-7,1.05950e-4,-4.57019e-3,1.02898e-1,-1.29357e0,8.96822e0,-3.08010e1,4.99447e1]},
+        'UKIRT_K': {'fitunc' : 0.40, 'range' : [20., 37.5], 'coeff': [1.14139e-5,-8.86885e-4,2.68071e-2,-3.89554e-1,2.95440e0,8.14626e-1]},
+        '2MASS_KS': {'fitunc' : 0.38, 'range' : [20., 37.5], 'coeff': [-1.25074e-5,1.63124e-3,-7.42418e-2,1.54509,-1.47407e1,6.27861e1]},
+        'UKIRT_J': {'fitunc' : 0.30, 'range' : [20., 37.5], 'coeff': [-9.91110e-7,1.05811e-4,-4.58399e-3,1.03572e-1,-1.30526e0,9.06701e0,-3.13411e1,5.04642e1]},
+        '2MASS_J': {'fitunc' : 0.36, 'range' : [20., 37.5], 'coeff': [-2.80824e-6,3.41146e-4,-1.73848e-2,4.82120e-1,-7.86911,7.57222e1,-3.98105e2,8.94012e2]}}},
+    'tinney2014': {'altname': ['tinney14'],'bibcode': '2014ApJ...796...39T', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
         'MKO_J': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'absmag': [15.22,15.49,16.39,16.66,17.9,18.35,19.08,20.32,22.39,22.18,25.76], 'rms': [0.31,0.37,0.72,0.36,0.46,0.9,0.97,1.25,1.,0.76,3.52]}, 
         'WISE_W2': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'absmag': [12.86,13.28,13.39,13.44,13.75,13.92,14.28,14.65,15.2,14.78,15.76], 'rms': [0.17,0.48,0.27,0.23,0.22,0.24,0.46,0.35,1.,0.77,2.15]}}}, 
     'filippazzo2015': {'altname': ['filippazzo','filippazzo15','fillippazzo','filipazo','filippazo'],'bibcode': '2015ApJ...810..158F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [3.478e-5, -2.684e-3, 7.771e-2, -1.058, 7.157, -8.350]}, 
         'WISE_W2': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [8.190e-6, -6.938e-4, 2.283e-2, -3.655e-1, 3.032, -5.043e-1]}}},
-    'faherty2016': {'altname': ['faherty','faherty2016,faherty-field'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+    'faherty2016': {'altname': ['faherty','faherty2016','faherty-field'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.402, 'range' : [16., 39.], 'coeff': [3.478e-5,-2.684e-3,7.771e-2,-1.058,7.157,-8.350]},
         '2MASS_H': {'fitunc' : 0.389, 'range' : [16., 39.], 'coeff' : [2.841e-5,-2.217e-3,6.551e-2,-9.174e-1,6.406,-7.496]},
         '2MASS_KS': {'fitunc' : 0.537, 'range' : [16., 39.], 'coeff' : [2.540e-5,-1.997e-3,5.978e-2,-8.481e-1,5.970,-6.704]},
@@ -644,6 +689,46 @@ ABSMAG_SETS = {
         'WISE_W1': {'fitunc' : 0.551, 'range' : [17., 27.], 'coeff' : [-4.483e-3,1.505e-1,-1.208,10.403]},
         'WISE_W2': {'fitunc' : 0.616, 'range' : [17., 27.], 'coeff' : [-6.821e-3,2.322e-1,-2.133,13.322]},
         'WISE_W3': {'fitunc' : 0.427, 'range' : [17., 27.], 'coeff' : [-5.684e-3,1.993e-1,-1.987,13.972]}}},
+    'liu2016-ir': {'altname': ['liu','liu-ir','liu2016','liu2016-ir','liu16-ir','liu16-field','liu16-field-ir','liu-field','liu-field-ir'],'bibcode': '2016ApJ...833...96L', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
+        'MKO_Y': {'fitunc' : 0.35, 'range' : [16., 28.], 'coeff': [0.402,8.437]},
+        'MKO_J': {'fitunc' : 0.37, 'range' : [16., 28.], 'coeff': [0.368,8.062]},
+        'MKO_H': {'fitunc' : 0.33, 'range' : [16., 28.], 'coeff': [0.348,7.516]},
+        'MKO_K': {'fitunc' : 0.31, 'range' : [16., 28.], 'coeff': [0.319,7.258]},
+        '2MASS_J': {'fitunc' : 0.38, 'range' : [16., 28.], 'coeff': [0.391,7.848]},
+        '2MASS_H': {'fitunc' : 0.36, 'range' : [16., 28.], 'coeff': [0.340,7.555]},
+        '2MASS_KS': {'fitunc' : 0.33, 'range' : [16., 28.], 'coeff': [0.317,7.292]},
+        'WISE_W1': {'fitunc' : 0.26, 'range' : [16., 28.], 'coeff': [0.243,7.698]},
+        'WISE_W2': {'fitunc' : 0.24, 'range' : [16., 28.], 'coeff': [0.236,7.466]}}},
+    'liu2016-optical': {'altname': ['liu-optical','liu16-optical','liu16-field-optical','liu-field-optical'],'bibcode': '2016ApJ...833...96L', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
+        'MKO_Y': {'fitunc' : 0.29, 'range' : [16., 28.], 'coeff': [0.404,8.677]},
+        'MKO_J': {'fitunc' : 0.26, 'range' : [16., 28.], 'coeff': [0.364,8.131]},
+        'MKO_H': {'fitunc' : 0.24, 'range' : [16., 28.], 'coeff': [0.331,7.820]},
+        'MKO_K': {'fitunc' : 0.25, 'range' : [16., 28.], 'coeff': [0.312,7.433]},
+        '2MASS_J': {'fitunc' : 0.30, 'range' : [16., 28.], 'coeff': [0.380,8.021]},
+        '2MASS_H': {'fitunc' : 0.30, 'range' : [16., 28.], 'coeff': [0.332,7.723]},
+        '2MASS_KS': {'fitunc' : 0.29, 'range' : [16., 28.], 'coeff': [0.308,7.491]},
+        'WISE_W1': {'fitunc' : 0.29, 'range' : [16., 28.], 'coeff': [0.255,7.610]},
+        'WISE_W2': {'fitunc' : 0.29, 'range' : [16., 28.], 'coeff': [0.231,7.559]}}},
+    'liu2016-vlg': {'altname': ['liu-vlg','liu16-vlg'],'bibcode': '2016ApJ...833...96L', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
+        'MKO_Y': {'fitunc' : 0.77, 'range' : [16., 27.], 'coeff': [0.799,3.689]},
+        'MKO_J': {'fitunc' : 0.72, 'range' : [16., 27.], 'coeff': [0.731,3.475]},
+        'MKO_H': {'fitunc' : 0.64, 'range' : [16., 27.], 'coeff': [0.633,3.778]},
+        'MKO_K': {'fitunc' : 0.56, 'range' : [16., 27.], 'coeff': [0.553,3.898]},
+        '2MASS_J': {'fitunc' : 0.72, 'range' : [16., 27.], 'coeff': [0.745,3.406]},
+        '2MASS_H': {'fitunc' : 0.64, 'range' : [16., 27.], 'coeff': [0.632,3.734]},
+        '2MASS_KS': {'fitunc' : 0.55, 'range' : [16., 27.], 'coeff': [0.573,3.699]},
+        'WISE_W1': {'fitunc' : 0.46, 'range' : [16., 27.], 'coeff': [0.457,4.392]},
+        'WISE_W2': {'fitunc' : 0.48, 'range' : [16., 27.], 'coeff': [0.451,4.039]}}},
+    'liu2016-intg': {'altname': ['liu-intg','liu16-intg'],'bibcode': '2016ApJ...833...96L', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
+        'MKO_Y': {'fitunc' : 0.36, 'range' : [20., 27.], 'coeff': [0.562,6.778]},
+        'MKO_J': {'fitunc' : 0.50, 'range' : [20., 27.], 'coeff': [0.537,5.941]},
+        'MKO_H': {'fitunc' : 0.43, 'range' : [20., 27.], 'coeff': [0.415,6.557]},
+        'MKO_K': {'fitunc' : 0.39, 'range' : [20., 27.], 'coeff': [0.355,6.555]},
+        '2MASS_J': {'fitunc' : 0.50, 'range' : [20., 27.], 'coeff': [0.545,5.914]},
+        '2MASS_H': {'fitunc' : 0.47, 'range' : [20., 27.], 'coeff': [0.411,6.552]},
+        '2MASS_KS': {'fitunc' : 0.36, 'range' : [20., 27.], 'coeff': [0.356,6.573]},
+        'WISE_W1': {'fitunc' : 0.13, 'range' : [20., 27.], 'coeff': [0.237,7.436]},
+        'WISE_W2': {'fitunc' : 0.18, 'range' : [20., 27.], 'coeff': [0.193,7.561]}}},
 }
 
 # telscope locations

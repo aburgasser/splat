@@ -15,6 +15,7 @@ import numpy
 #from astropy import units as u            # standard units
 #from astropy import constants as const        # physical constants in SI units
 from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
 
 # splat functions
 from splat.initialize import *
@@ -218,7 +219,6 @@ def typeToColor(spt,color, **kwargs):
     else:
         spt = copy.deepcopy(spt)
 
-#Faherty
     if ref.lower() in list(empirical_sets.keys()):
         reference = empirical_sets[ref.lower()]['reference']
         rng = empirical_sets[ref.lower()]['rng']
@@ -233,11 +233,14 @@ def typeToColor(spt,color, **kwargs):
         print('\nUsing the SpT/color trends from {}\n'.format(reference))
 
 # spectral type array
-    tmpval = copy.deepcopy(values)
     if (rng[0] <= spt <= rng[1]):
 
 # fill in extra colors - a little inefficient right now  
         if color.lower() not in list(values.keys()):
+#            basecolors = 
+            c1 = (color.lower()).split('-')[0]
+
+
             for i in numpy.arange(len(list(tmpval.keys()))):
                 for a in list(tmpval.keys()):
                     for b in list(tmpval.keys()):
@@ -399,25 +402,52 @@ def typeToMag_old(spt, filt, **kwargs):
 
 def typeToMag(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,**kwargs):
     """
-    :Purpose: Takes a spectral type and a filter, and returns absolute magnitude
-    :param spt: string or integer of the spectral type
-    :param filter: filter of the absolute magnitude. Options are MKO K, MKO H, MKO J, MKO Y, MKO LP, 2MASS J, 2MASS K, or 2MASS H
-    :param nsamples: number of Monte Carlo samples for error computation
-    :type nsamples: optional, default = 100
-    :param unc: uncertainty of ``spt``
-    :type unc: optional, default = 0.
-    :param ref: Abs Mag/SpT relation used to compute the absolute magnitude. Options are:
+    :Purpose: 
 
-        - *burgasser*: Abs Mag/SpT relation from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_.
-          Allowed spectral type range is L0 to T8, and allowed filters are MKO K.
-        - *faherty*: Abs Mag/SpT relation from `Faherty et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...752...56F>`_.
-          Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K.
-        - *dupuy*: Abs Mag/SpT relation from `Dupuy & Liu (2012) <http://adsabs.harvard.edu/abs/2012ApJS..201...19D>`_.
-          Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS K.
-        - *filippazzo*: Abs Mag/SpT relation from Filippazzo et al. (2015). Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J and WISE W2.
+    Takes a spectral type and a filter, and returns the expected absolute magnitude based on empirical relations
 
+    :Required Inputs: 
 
-    :type ref: optional, default = 'dupuy'
+        :param spt: string or integer of the spectral type
+        :param filter: filter for which to retrieve absolute magnitude, which must be defined for the given reference set.
+        You can check what filters are available by printing splat.ABSMAG_SETS[reference]['filters'].keys(), where reference is, e.g., 'filippazzo2015'
+
+    :Optional Inputs: 
+
+        :param reference: Abs Mag/SpT relation used to compute the absolute magnitude (also 'ref' and 'set'). These are defined in splat.ABSMAG_SETS and are currently as follows:
+
+            - *dahn2002*: Abs Mag/SpT relation from `Dahn et al. (2002) <http://adsabs.harvard.edu/abs/2002AJ....124.1170D>`_
+              Allowed spectral type range is M7 to L8, and allowed filters are 2MASS J
+            - *cruz2003*: Abs Mag/SpT relation from `Cruz et al. (2003) <http://adsabs.harvard.edu/abs/2003AJ....126.2421C>`_
+              Allowed spectral type range is M6 to L8, and allowed filters are 2MASS J
+            - *tinney2003*: Abs Mag/SpT relation from `Tinney et al. (2003) <http://adsabs.harvard.edu/abs/2003AJ....126..975T>`_.
+              Allowed spectral type range is L0 to T7.5, and allowed filters are Cousins I, UKIRT Z, J, K and 2MASS J, Ks
+            - *burgasser2007*: Abs Mag/SpT relation from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_.
+              Allowed spectral type range is L0 to T8, and allowed filters are MKO K.
+            - *looper2008*: Abs Mag/SpT relation from `Looper et al. (2008) <http://adsabs.harvard.edu/abs/2008ApJ...685.1183L>`_.
+              Allowed spectral type range is L0 to T8, and allowed filters are 2MASS J, H, Ks.
+            - *dupuy2012*: Abs Mag/SpT relation from `Dupuy & Liu (2012) <http://adsabs.harvard.edu/abs/2012ApJS..201...19D>`_.
+              Allowed spectral type range is M6 to T9, and allowed filters are MKO Y, J, H,K, LP, 2MASS J, H, Ks, and WISE W1, W2.
+            - *faherty2012*: Abs Mag/SpT relation from `Faherty et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...752...56F>`_.
+              Allowed spectral type range is L0 to T8, and allowed filters are MKO J, H, K.
+            - *tinney2014*: Abs Mag/SpT relation from `Tinney et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...796...39T>`_.
+              Allowed spectral type range is T6.5 to Y2, and allowed filters are MKO J, WISE W2
+            - *filippazzo2015* (default): Abs Mag/SpT relation from Filippazzo et al. (2015). 
+              Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J and WISE W2.
+            - *faherty2016*: Abs Mag/SpT relation for field dwarfs from `Faherty et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJS..225...10F>`_.
+              Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J, H, Ks and WISE W1, W2, W3
+            - *faherty2016-group*: Abs Mag/SpT relation for "group" dwarfs from `Faherty et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJS..225...10F>`_.
+              Allowed spectral type range is M7 to L7, and allowed filters are 2MASS J, H, Ks and WISE W1, W2, W3
+            - *faherty2016-young*: Abs Mag/SpT relation for "young" dwarfs from `Faherty et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJS..225...10F>`_.
+              Allowed spectral type range is M7 to L7, and allowed filters are 2MASS J, H, Ks and WISE W1, W2, W3
+
+        :param unc: uncertainty of ``spt`` (default = 0)
+        :param nsamples: number of Monte Carlo samples for error computation (default = 100)
+
+    :Output: 
+    
+        2 element tuple providing the absolute magnitude and its uncertainty
+
     :Example:
         >>> import splat
         >>> print splat.typeToMag('L3', '2MASS J')
@@ -477,35 +507,39 @@ def typeToMag(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,
 
 
 
-def typeToTeff(inp, **kwargs):
+def typeToTeff(inp, uncertainty=0.001, ref='stephens',nsamples=100, reverse=False, **kwargs):
     '''
-    :Purpose: Returns an effective temperature (Teff) and its uncertainty for a given spectral type
-    :param input: Spectral type; can be a number or a string from 0 (K0) and 49.0 (Y9).
-    :param uncertainty: uncertainty of spectral type
-    :type uncertainty: optional, default = 0.001
-    :param unc: same as ``uncertainty``
-    :type unc: optional, default = 0.001
-    :param spt_e: same as ``uncertainty``
-    :type spt_e: optional, default = 0.001
-    :param ref: Teff/SpT relation used to compute the effective temperature. Options are:
+    :Purpose: 
 
+    Returns an effective temperature (Teff) and its uncertainty for a given spectral type (or vice versa) based on an empirical relation
+
+    :Required Inputs:
+
+        :param inp: either the spectral type or effective temperature. 
+        If a spectral type, this can be a number or a string from 0 (K0) and 49.0 (Y9).
+        If a temperature, this is assumed to be in Kelvin; you must set reverse=True for this option
+
+    :Optional Inputs:
+
+        :param uncertainty: uncertainty of spectral type/temperature (default = 0.001; also 'unc', 'spt_e')
+        :param ref: Teff/SpT relation used to compute the effective temperature (also 'set'). Options are:
+
+        - *stephens* (default): Teff/SpT relation from `Stephens et al. (2009) <http://adsabs.harvard.edu/abs/2009ApJ...702..154S>`_.
+          Allowed spectral type range is M6 to T8 and uses alternate coefficients for L3 to T8.
         - *golimowski*: Teff/SpT relation from `Golimowski et al. (2004) <http://adsabs.harvard.edu/abs/2004AJ....127.3516G>`_.
           Allowed spectral type range is M6 to T8.
         - *looper*: Teff/SpT relation from `Looper et al. (2008) <http://adsabs.harvard.edu/abs/2008ApJ...685.1183L>`_.
           Allowed spectral type range is L0 to T8.
-        - *stephens*: Teff/SpT relation from `Stephens et al. (2009) <http://adsabs.harvard.edu/abs/2009ApJ...702..154S>`_.
-          Allowed spectral type range is M6 to T8 and uses alternate coefficients for L3 to T8.
         - *marocco*: Teff/SpT relation from `Marocco et al. (2013) <http://adsabs.harvard.edu/abs/2013AJ....146..161M>`_.
           Allowed spectral type range is M7 to T8.
         - *filippazzo*: Teff/SpT relation from Filippazzo et al. (2015). Allowed spectral type range is M6 to T9.
 
-    :type ref: optional, default = 'stephens2009'
-    :param set: same as ``ref``
-    :type set: optional, default = 'stephens2009'
-    :param method: same as ``ref``
-    :type method: optional, default = 'stephens2009'
-    :param nsamples: number of samples to use in Monte Carlo error estimation
-    :type nsamples: optional, default = 100
+        :param reverse: set to True to convert effective temperature to spectral type (default=False)
+        :param nsamples: number of samples to use in Monte Carlo error estimation (default=100)
+
+    :Output:
+
+        A 2-element tuple containing the Teff/SpT and its uncertainty
 
     :Example:
         >>> import splat
@@ -601,11 +635,24 @@ def typeToTeff(inp, **kwargs):
             coeff = [1.546e-4,-1.606e-2,6.318e-1,-1.191e1,1.155e2,-7.005e2,4.747e3]
             fitunc = 113.
 
+    elif ('dupuy' in ref.lower()):
+        sptoffset = 10.
+        if kwargs.get('saumon',False) == True or kwargs.get('sm08',False) == True:
+            reference = 'Teff/SpT relation from Dupuy & Liu (2017) with Saumon & Marley (2008) models'
+            coeff = [6.001,-284.52,4544.3]
+            sptrange = [21.5, 35.]
+            fitunc = 80.
+        else:
+            reference = 'Teff/SpT relation from Dupuy & Liu (2017) with Lyon models'
+            coeff = [4.582,-238.03,4251.0]
+            sptrange = [17., 35.]
+            fitunc = 90.
+
     else:
         sys.stderr.write('\nInvalid Teff/SpT relation given ({})\n'.format(ref))
         return numpy.nan, numpy.nan
 
-    if kwargs.get('reverse',False) == True:
+    if reverse == True:
 
         teff = spt
         teff_e = unc
@@ -699,15 +746,285 @@ def redden(sp, **kwargs):
     return sp*spabs
 
 
+def typeToLbol(*args,**kwargs):
+    return typeToLuminosity(*args,**kwargs)
 
-def typeToLuminosity(spt, **kwargs):
-    print('typeToLuminosity() has not yet been implemented')
-    pass
+def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,reverse=False,**kwargs):
+    """
+    :Purpose: 
+
+    Takes a spectral type and returns the expected scaled log luminosity (log Lbol/Lsun) based on empirical relations
+
+    :Required Inputs: 
+
+        :param spt: string or integer of the spectral type
+
+    :Optional Inputs: 
+
+        :param reference: log Lbol/SpT relation reference (also 'ref' and 'set'). These are defined in splat.LBOL_SETS and are currently as follows:
+
+            - *filippazzo2015* (default): Lbol/SpT relation from `Filippazzo et al. (2015) <http://adsabs.harvard.edu/abs/2013Sci...341.1492D>`_
+              Allowed spectral type range is M6 to T9
+
+        :param unc: uncertainty of ``spt`` (default = 0)
+        :param reverse: apply reverse approach: given BC, infer spectral type
+        :param nsamples: number of Monte Carlo samples for error computation (default = 100)
+
+    :Output: 
+    
+        2 element tuple providing the absolute magnitude and its uncertainty
+
+    :Example:
+        >>> import splat
+        >>> print splat.typeToLuminosity('L3')
+    """
+
+#Keywords alternatives
+    ref = kwargs.get('reference', ref)
+    ref = kwargs.get('set', ref)
+    unc = kwargs.get('uncertainty', unc)
+    unc = kwargs.get('error', unc)
 
 
-def typeToBC(spt, filter, **kwargs):
-    print('typeToBC() has not yet been implemented')
-    pass
+# check that you can use the proscribed relation and filter
+    refcheck = checkEmpiricalRelation(ref,LBOL_SETS,verbose=verbose)
+    if refcheck == False: return numpy.nan,numpy.nan
+    else: ref=refcheck
+
+    refstring = 'Luminosity/SpT relation for from {}'.format(shortRef(LBOL_SETS[ref]['bibcode']))
+    if verbose: print('\nUsing {}'.format(refstring))
+
+# normal approach: SpT -> Lbol
+    if reverse == False:
+
+#Convert spectral type string to number
+        if isinstance(spt,str):
+            sptn = typeToNum(spt, uncertainty=unc)
+        elif isinstance(spt,int) or isinstance(spt,float):
+            sptn = copy.deepcopy(spt)
+        else:
+            raise ValueError('\nInput spectral type {} must be a string, float or int'.format(spt))
+
+# polynomial method
+        if LBOL_SETS[ref]['method'] == 'polynomial':
+            rng = LBOL_SETS[ref]['range']
+            if (rng[0] <= sptn <= rng[1]):
+                lbol = numpy.polyval(LBOL_SETS[ref]['coeff'], sptn-LBOL_SETS[ref]['sptoffset'])
+                lbol_error = LBOL_SETS[ref]['fitunc']
+                if unc > 0.:
+                    vals = numpy.polyval(LBOL_SETS[ref]['coeff'], numpy.random.normal(sptn - LBOL_SETS[ref]['sptoffset'], unc, nsamples))
+                    lbol_error = (numpy.nanstd(vals)**2+lbol_error**2)**0.5
+                return lbol, lbol_error
+            else:
+                if verbose: sys.stderr.write('\nSpectral type {} is out of range for {}'.format(typeToNum(sptn),refstring))
+                return numpy.nan, numpy.nan
+
+# interpolation method
+        elif LBOL_SETS[ref]['method'] == 'interpolate':
+            rng = [numpy.nanmin(LBOL_SETS[ref]['spt']),numpy.nanmax(LBOL_SETS[ref]['spt'])]
+            if (rng[0] <= sptn <= rng[1]):
+                f = interp1d(LBOL_SETS[ref]['spt'],LBOL_SETS[ref]['bc'])
+                fe = interp1d(LBOL_SETS[ref]['spt'],LBOL_SETS[ref]['rms'])
+                lbol = float(f(sptn))
+                lbol_error = float(fe(sptn))
+                if unc > 0.:
+                    vals = f(numpy.random.normal(sptn, unc, nsamples))
+                    lbol_error = (numpy.nanstd(vals)**2+bc_error**2)**0.5
+                return lbol, lbol_error
+            else:
+                if verbose: sys.stderr.write('\nSpectral type {} is out of range for {}'.format(typeToNum(sptn),refstring))
+                return numpy.nan, numpy.nan
+        else:
+            raise ValueError('Unknown method {} for {}'.format(LBOL_SETS[ref]['method'],refstring))
+
+# reverse approach: Lbol -> SpT
+    else:
+        if not isinstance(spt,float): raise ValueError('Running this in reverse you need to provide a log luminosity value instead of {}'.format(spt))
+        if LBOL_SETS[ref]['method'] == 'polynomial':
+            rng = LBOL_SETS[ref]['range']
+            x = numpy.linspace(rng[0],rng[1],nsamples)
+            y = numpy.polyval(LBOL_SETS[ref]['coeff'], x-LBOL_SETS[ref]['sptoffset'])
+            f = interp1d(y,x)
+            try:
+                lbol = float(f(spt))
+            except:
+                if verbose: print('\nlog luminosity value {} is outside the range expected for {}'.format(spt,refstring))
+                return numpy.nan, numpy.nan
+            vals = []
+            for i in range(nsamples):
+                ye = y+numpy.random.normal(0,LBOL_SETS[ref]['fitunc'])
+                f = interp1d(ye,x)
+                try:
+                    vals.append(f(numpy.random.normal(spt,unc)))
+                except:
+                    pass
+            lbol_error = numpy.nanstd(vals)
+            return lbol, lbol_error
+        elif BC_SETS[ref]['method'] == 'interpolate':
+            f = interp1d(LBOL_SETS[ref]['bc'],LBOL_SETS[ref]['spt'])
+            try:
+                lbol = f(spt)
+            except:
+                if verbose: print('\nlog luminosity value {} is outside the range expected for {}'.format(spt,refstring))
+                return numpy.nan, numpy.nan
+            vals = []
+            for i in range(nsamples):
+                y = numpy.random.normal(LBOL_SETS[ref]['bc'],LBOL_SETS[ref]['rms'])
+                f = interp1d(y,LBOL_SETS[ref]['spt'])
+                try:
+                    vals.append(f(numpy.random.normal(spt,unc)))
+                except:
+                    pass
+            lbol_error = numpy.nanstd(vals)
+            return lbol, lbol_error
+        else:
+            raise ValueError('Unknown method {} for {}'.format(LBOL_SETS[ref]['method'],refstring))
+
+
+
+def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,reverse=False,**kwargs):
+    """
+    :Purpose: 
+
+    Takes a spectral type and a filter, and returns the expected bolometric correction BC = M_bol - M_filter
+
+    :Required Inputs: 
+
+        :param spt: string or integer of the spectral type
+        :param filter: filter for which to retrieve absolute magnitude, which must be defined for the given reference set.
+        You can check what filters are available by printing splat.ABSMAG_SETS[reference]['filters'].keys(), where reference is, e.g., 'filippazzo2015'
+
+    :Optional Inputs: 
+
+        :param reference: Abs Mag/SpT relation used to compute the absolute magnitude (also 'ref' and 'set'). These are defined in splat.BC_SETS and are currently as follows:
+
+            - *liu2010*: BC/SpT relation from `Liu et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJ...722..311L>`_
+              Allowed spectral type range is M6 to T8.5, and allowed filters are MKO J, H, K
+            - *dupuy2013*: BC/SpT relation from `Dupuy & Kraus (2013) <http://adsabs.harvard.edu/abs/2013Sci...341.1492D>`_
+              Allowed spectral type range is T8 to Y0.5, and allowed filters are MKO Y, J, H
+            - *filippazzo2015* (default): BC/SpT relation from `Filippazzo et al. (2015) <http://adsabs.harvard.edu/abs/2013Sci...341.1492D>`_
+              Allowed spectral type range is M6 to T8/9, and allowed filters are 2MASS J, Ks
+            - *filippazzo2015-young*: BC/SpT relation for young sources from `Filippazzo et al. (2015) <http://adsabs.harvard.edu/abs/2013Sci...341.1492D>`_
+              Allowed spectral type range is M7 to T8, and allowed filters are 2MASS J, Ks
+
+        :param unc: uncertainty of ``spt`` (default = 0)
+        :param reverse: apply reverse approach: given BC, infer spectral type
+        :param nsamples: number of Monte Carlo samples for error computation (default = 100)
+
+    :Output: 
+    
+        2 element tuple providing the absolute magnitude and its uncertainty
+
+    :Example:
+        >>> import splat
+        >>> print splat.typeToBC('L3', '2MASS J')
+    """
+
+#Keywords alternatives
+    ref = kwargs.get('reference', ref)
+    ref = kwargs.get('set', ref)
+    unc = kwargs.get('uncertainty', unc)
+    unc = kwargs.get('error', unc)
+
+
+# check that you can use the proscribed relation and filter
+    filtcheck = checkFilterName(filt,verbose=verbose)
+    if filtcheck == False: return numpy.nan,numpy.nan
+    else: filt=filtcheck
+
+    refcheck = checkBC(ref,filt=filt,verbose=verbose)
+    if refcheck == False: return numpy.nan,numpy.nan
+    else: ref=refcheck
+
+    refstring = 'BC/SpT relation for filter {} from {}'.format(filt,shortRef(BC_SETS[ref]['bibcode']))
+    if verbose: print('\nUsing {}'.format(refstring))
+
+# normal approach: SpT -> BC
+    if reverse == False:
+
+#Convert spectral type string to number
+        if isinstance(spt,str):
+            sptn = typeToNum(spt, uncertainty=unc)
+        elif isinstance(spt,int) or isinstance(spt,float):
+            sptn = copy.deepcopy(spt)
+        else:
+            raise ValueError('\nInput spectral type {} must be a string, float or int'.format(spt))
+
+# polynomial method
+        if BC_SETS[ref]['method'] == 'polynomial':
+            rng = BC_SETS[ref]['filters'][filt]['range']
+            if (rng[0] <= sptn <= rng[1]):
+                bc = numpy.polyval(BC_SETS[ref]['filters'][filt]['coeff'], sptn-BC_SETS[ref]['sptoffset'])
+                bc_error = BC_SETS[ref]['filters'][filt]['fitunc']
+                if unc > 0.:
+                    vals = numpy.polyval(BC_SETS[ref]['filters'][filt]['coeff'], numpy.random.normal(sptn - BC_SETS[ref]['sptoffset'], unc, nsamples))
+                    bc_error = (numpy.nanstd(vals)**2+BC_SETS[ref]['filters'][filt]['fitunc']**2)**0.5
+                return bc, bc_error
+            else:
+                if verbose: sys.stderr.write('\nSpectral type {} is out of range for {}'.format(typeToNum(sptn),refstring))
+                return numpy.nan, numpy.nan
+
+# interpolation method
+        elif BC_SETS[ref]['method'] == 'interpolate':
+            rng = [numpy.nanmin(BC_SETS[ref]['filters'][filt]['spt']),numpy.nanmax(BC_SETS[ref]['filters'][filt]['spt'])]
+            if (rng[0] <= sptn <= rng[1]):
+                f = interp1d(BC_SETS[ref]['filters'][filt]['spt'],BC_SETS[ref]['filters'][filt]['bc'])
+                fe = interp1d(BC_SETS[ref]['filters'][filt]['spt'],BC_SETS[ref]['filters'][filt]['rms'])
+                bc = float(f(sptn))
+                bc_error = float(fe(sptn))
+                if unc > 0.:
+                    vals = f(numpy.random.normal(sptn, unc, nsamples))
+                    bc_error = (numpy.nanstd(vals)**2+bc_error**2)**0.5
+                return bc, bc_error
+            else:
+                if verbose: sys.stderr.write('\nSpectral type {} is out of range for {}'.format(typeToNum(sptn),refstring))
+                return numpy.nan, numpy.nan
+        else:
+            raise ValueError('Unknown method {} for {}'.format(BC_SETS[ref]['method'],refstring))
+
+# reverse approach: BC -> SpT
+    else:
+        if not isinstance(spt,float): raise ValueError('Running this in reverse you need to provide a BC value instead of {}'.format(spt))
+        if BC_SETS[ref]['method'] == 'polynomial':
+            rng = BC_SETS[ref]['filters'][filt]['range']
+            x = numpy.linspace(rng[0],rng[1],nsamples)
+            y = numpy.polyval(BC_SETS[ref]['filters'][filt]['coeff'], x-BC_SETS[ref]['sptoffset'])
+            f = interp1d(y,x)
+            try:
+                bc = float(f(spt))
+            except:
+                if verbose: print('\nBC value {} is outside the range expected for {}'.format(spt,refstring))
+                return numpy.nan, numpy.nan
+            vals = []
+            for i in range(nsamples):
+                ye = y+numpy.random.normal(0,BC_SETS[ref]['filters'][filt]['fitunc'])
+                f = interp1d(ye,x)
+                try:
+                    vals.append(f(numpy.random.normal(spt,unc)))
+                except:
+                    pass
+            bc_error = numpy.nanstd(vals)
+            return bc, bc_error
+        elif BC_SETS[ref]['method'] == 'interpolate':
+            f = interp1d(BC_SETS[ref]['filters'][filt]['bc'],BC_SETS[ref]['filters'][filt]['spt'])
+            try:
+                bc = f(spt)
+            except:
+                if verbose: print('\nBC value {} is outside the range expected for {}'.format(spt,refstring))
+                return numpy.nan, numpy.nan
+            vals = []
+            for i in range(nsamples):
+                y = numpy.random.normal(BC_SETS[ref]['filters'][filt]['bc'],BC_SETS[ref]['filters'][filt]['rms'])
+                f = interp1d(y,BC_SETS[ref]['filters'][filt]['spt'])
+                try:
+                    vals.append(f(numpy.random.normal(spt,unc)))
+                except:
+                    pass
+            bc_error = numpy.nanstd(vals)
+            return bc, bc_error
+        else:
+            raise ValueError('Unknown method {} for {}'.format(BC_SETS[ref]['method'],refstring))
+
 
 
 
