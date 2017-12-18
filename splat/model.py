@@ -447,7 +447,7 @@ def _modelName(modelset,instrument,param):
     return filename
 
 
-def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],verbose=True,skipraw=True,**kwargs):
+def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=True,skipraw=True,*args,**kwargs):
 
     default_info = {
         'instruments': {},
@@ -743,7 +743,7 @@ def _processOriginalModels(*args,sedres=100,instruments=['SED','SPEX-PRISM'],ver
     return
 
 
-def processModelsToInstrument(*args,instrument_parameters={},wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,**kwargs):
+def processModelsToInstrument(instrument_parameters={},wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,*args,**kwargs):
     '''
     :Purpose:
 
@@ -1497,7 +1497,7 @@ def _smooth2resolution(wave,flux,resolution,**kwargs):
 
 
 
-def loadModel(*args,modelset=False,instrument='SPEX-PRISM',raw=False,sed=False,**kwargs):
+def loadModel(modelset=False,instrument='SPEX-PRISM',raw=False,sed=False,*args,**kwargs):
     '''
     Purpose: 
         Loads up a model spectrum based on a set of input parameters. The models may be any one of the following listed below. For parameters between the model grid points, loadModel calls the function `_loadInterpolatedModel()`_.
@@ -2152,7 +2152,7 @@ def _loadModelParameters(*args,**kwargs):
 
 
 
-def loadTelluric(*args,wave_range=None,ndata=None,linear=True,log=False,output='transmission',folder=splat.SPLAT_PATH+'/reference/SolAtlas/'):
+def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transmission',folder=splat.SPLAT_PATH+'/reference/SolAtlas/',*args):
     '''
     Purpose: 
 

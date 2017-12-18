@@ -172,7 +172,7 @@ def fetchDatabase(*args, **kwargs):
 ###########  ADDING NEW SPECTRA TO SPLAT   ##########
 #####################################################
 
-def addUserSpectra(*args,folder='./',instrument='SPEX-PRISM',mode='update',repeat='retain',radius_repeat=10.*u.arcsec,input_file='input.txt',search_str='*.fits',sources_data_file=DB_SOURCES_FILE,spectra_data_file=DB_SPECTRA_FILE,verbose=True):
+def addUserSpectra(folder='./',instrument='SPEX-PRISM',mode='update',repeat='retain',radius_repeat=10.*u.arcsec,input_file='input.txt',search_str='*.fits',sources_data_file=DB_SOURCES_FILE,spectra_data_file=DB_SPECTRA_FILE,verbose=True,*args):
     '''
     :Purpose:
 
@@ -204,6 +204,12 @@ def addUserSpectra(*args,folder='./',instrument='SPEX-PRISM',mode='update',repea
         folder = args[0]
     if len(args) > 1:
         instrument = args[1]
+
+##### STOPPED HERE #####
+
+# check if this has already been read in
+#    if folder in DATA_FOLDERS:
+#        n = 
 
 # check instrument
     inst = splat.checkInstrument(instrument)
@@ -867,7 +873,7 @@ def queryNist(element,wave_range,clean=['Observed'],noclean=False,verbose=True,w
 
 
 
-def queryXMatch(db,*args,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNATION',raCol='RA',decCol='DEC',verbose=False,clean=True,drop_repeats=True,use_select_columns=True,select_columns=[],prefix=None):
+def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNATION',raCol='RA',decCol='DEC',verbose=False,clean=True,drop_repeats=True,use_select_columns=True,select_columns=[],prefix=None,*args):
     '''
     Purpose
         Queries databases in the XXX XMatch service (REF), including SIMBAD

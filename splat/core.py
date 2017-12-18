@@ -894,7 +894,7 @@ class Spectrum(object):
         print(f)
         return
 
-    def export(self,*args,filename='',clobber=True,csv=False,tab=True,delimiter='\t',header=True,comment='#',**kwargs):
+    def export(self,filename='',clobber=True,csv=False,tab=True,delimiter='\t',header=True,comment='#',*args,**kwargs):
         '''
         :Purpose: 
             Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  
@@ -2756,7 +2756,7 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
 #####################################################
 
 
-def getSpectrum(*args, getList=False, limit=0, **kwargs):
+def getSpectrum(getList=False, limit=0, *args, **kwargs):
     '''
     :Purpose: 
 
@@ -3032,7 +3032,7 @@ def keySpectrum(keys, **kwargs):
         return sdb
 
 
-def searchLibrary(*args, radius=10., instrument='SPEX-PRISM',**kwargs):
+def searchLibrary(radius=10., instrument='SPEX-PRISM', *args, **kwargs):
     '''
     :Purpose: 
 
@@ -3635,7 +3635,7 @@ def searchLibrary(*args, radius=10., instrument='SPEX-PRISM',**kwargs):
 
 
 
-def readSpectrum(*args,verbose=False,**kwargs):
+def readSpectrum(verbose=False,*args,**kwargs):
     '''
     .. DOCS: will come back to this one
     '''
