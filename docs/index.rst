@@ -32,7 +32,7 @@ SPLAT tools allow you to:
 Installation and Dependencies
 -----------------------------
 
-SPLAT is best forked from the github site http://github.org/aburgasser/splat, 
+SPLAT is best forked from the github site `https://github.com/aburgasser/splat <https://github.com/aburgasser/splat>`_.
 which is updated on a regular basis. You may also try to install splat using `pip`_, but this is not yet fully supported.
 
 Once you've downloaded the code and data, you will need to copy the file ``.splat_access`` into your home directory (this is your access key) and add the SPLAT top-level directory to the environment variables ``SPLAT_PATH``, ``PYTHONPATH`` or your system ``PATH``.  More detailed instructions are on the `installation <installation.html>`_ page. 
@@ -61,26 +61,27 @@ Using SPLAT
 .. _`getSpectrum()`: api.html#splat.getSpectrum
 .. _`fluxCalibrate()`: api.html#splat.Spectrum.fluxCalibrate
 .. _`plot()`: api.html#splat.Spectrum.plot
-.. _`plotSpectrum()`: api.html#splat_plot.plotSpectrum
+.. _`plotSpectrum()`: api.html#splat.plot.plotSpectrum
 .. _`measureIndex()`: api.html#splat.measureIndex
 .. _`measureIndexSet()`: api.html#splat.measureIndexSet
 .. _`classifyGravity()`: api.html#splat.classifyGravity
 .. _`classifyByXXX`: api.html#spectral-classification
 .. _`compareSpectra()`: api.html#splat.compareSpectra
-.. _`modelFitMCMC()`: api.html#splat_model.modelFitMCMC
+.. _`modelFitMCMC()`: api.html#splat.model.modelFitMCMC
 
 
 SPLAT is organized into a series of modules based on core functionalities:
-  * splat.core: core functionalities, including index measurement, database access and classification
-  * splat.citations: biblographic/bibtex routines
-  * splat.database: access the spectral and source databases, as well as online resources through astroquery
-  * splat.empirical: empirical conversion relations
-  * splat.evolve: access to evolutionary models and population synthesis routines
-  * splat.model: access to spectral models and model-fitting routines
-  * splat.photometry: spectrophotometry routines
-  * splat.plot: plotting and visualization routines
-  * splat.utilities: additional routines for general analysis
-  * splat.web: SPLAT's web interface
+  * `splat.core <splat.html>`_: core functionalities, including index measurement, database access and classification
+  * `splat.citations <splat_citations.html>`_: biblographic/bibtex routines
+  * `splat.database <splat_database.html>`_: access the spectral and source databases, as well as online resources through astroquery
+  * `splat.empirical <splat_empirical.html>`_: empirical conversion relations
+  * `splat.evolve <splat_evolve.html>`_: access to evolutionary models
+  * `splat.model <splat_model.html>`_: access to spectral models and model-fitting routines
+  * `splat.photometry <splat_photometry.html>`_: spectrophotometry routines and filter access
+  * `splat.plot <splat_plot.html>`_: plotting and visualization routines
+  * `splat.simulate <splat_simulate.html>`_: population simulation routines
+  * `splat.utilities <splat_utilities.html>`_: additional routines for general analysis
+  * `splat.web <splat_web.html>`_: SPLAT's web interface
 
 SPLAT has been tested on both Python 2.7 and 3.5, and is best used in the 
 **ipython** or **ipython notebook**; all of the necessary data is
@@ -184,7 +185,7 @@ You can shortcut the last three lines using the ``plot`` keyword:
 >>> chi,scale = splat.compareSpectra(sp,mdl,plot=True)
 
 
-# There are also codes to fit models directly to spectra: `modelFitGrid()`_, `modelFitMCMC()`_, and `modelFitEMCEE()`_:
+# There are also codes **still in development** to fit models directly to spectra: `modelFitGrid()`_, `modelFitMCMC()`_, and `modelFitEMCEE()`_:
 
 >>> import splat.model as spmod
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
@@ -202,8 +203,7 @@ you need, please suggest them to aburgasser@ucsd.edu, or note it in the "Issues"
 Acknowledgements
 ----------------
 
-SPLAT is an experimental, collaborative project of research students in `Adam Burgasser's
-UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at teaching students how to do research by building their own analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Alex Mendez, Gretel Mercado, Elizabeth Moreno Hilario, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen and Russell van Linge.
+SPLAT is an experimental, collaborative project of research students in the `UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at teaching students how to do research by building their own analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Joshua Hazlett, Carolina Herrara Hernandez, Elizabeth Moreno Hilario, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Dorsa Majidi, Diego Octavio Talavera Maya, Alex Mendez, Gretel Mercado, Niana Mohammed, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen, and Russell van Linge.
 
 This project is supported by the National Aeronautics and Space Administration under Grant No. NNX15AI75G.
 
@@ -215,9 +215,11 @@ This project is supported by the National Aeronautics and Space Administration u
    installation
    quickstart
    splat
+   splat_empirical
    splat_plot
    splat_model
    splat_evolve
+   splat_simulate
    api
    
 *Search*

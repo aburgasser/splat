@@ -4,30 +4,40 @@
    contain the root `toctree` directive.
 
 SPLAT Plotting Routines
-===============================================================
+=======================
 
 .. toctree
    :maxdepth: 3
 
-The SPLAT plotting routines are designed to visualize spectral data and comparisons to other templates and models. Additional routines to visualize indices on the spectral data and the index values themselves are currently under development.
+The SPLAT plotting routines are designed to visualize spectral data and comparisons to other templates and models. 
+These are all contained in the `splat.plot <splat_plot.html>`_ module, which should be imported separately:
+    
+    >>> import splat.plot as splot
 
-Basic plots
------------
+
+Basic spectral plots
+--------------------
 
 .. _`plot()`: api.html#splat.Spectrum.plot
-.. _`plotSpectrum()` : api.html#splat_plot.plotSpectrum
+.. _`plotSpectrum()` : api.html#splat.plot.plotSpectrum
+.. _`plotMap()` : api.html#splat.plot.plotMap
+.. _`plotBatch()` : api.html#splat.plot.plotBatch
+.. _`plotSequence()` : api.html#splat.plot.plotSequence
+.. _`vizualizeIndices()` : api.html#splat.plot.vizualizeIndices
 .. _matplotlib: http://matplotlib.org/
 .. _API: api.html
 .. _pyplot: http://matplotlib.org/api/pyplot_summary.html
 .. _matplotlib.figure.Figure: http://matplotlib.org/api/figure_api.html#matplotlib.figure.Figure
+.. _`properCoordinates()` : api.html#splat.utilities.properCoordinates
 
 The core plotting function is `plotSpectrum()`_, which allows flexible methods for displaying single or groups of spectra, and comparing spectra to each other. Nearly all of the functions described below are wrappers for `plotSpectrum()`_ with various options, described in more detail in the  API_. Plots are made using the pyplot_ package in matplotlib_.
 
 The simplest way to visualize a spectrum is to simply call `plotSpectrum()`_ with the Spectrum class object:
 
   >>> import splat
+  >>> import splat.plot as splot
   >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0] 
-  >>> splat.plotspectrum(spc)
+  >>> splot.plotspectrum(spc)
 
   .. image:: _images/plot_basic_example1.png
       :width: 400
@@ -44,7 +54,7 @@ You can also use the Spectrum class's built in `plot()`_ function:
 
 Note that this adds a legend with the name of the source, the uncertainty spectrum (if present) and the zeropoint. These can be called explicitly within `plotSpectrum()`_ as well:
 
-  >>> splat.plotspectrum(spc,legend=spc.name,showNoise=True,showZero=True)
+  >>> splot.plotspectrum(spc,legend=spc.name,showNoise=True,showZero=True)
 
 There are many options for adding details to your spectrum plot, listed below. In addition, the output of a call to `plotSpectrum()`_ is a matplotlib.figure.Figure_ class
 
@@ -62,7 +72,7 @@ Feature labels and legends
 Specific absorption features can be labeled on the plot by setting the ``features`` to a list of atoms and molecules. 
 
   >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0] 
-  >>> splat.plotSpectrum(spc,features=['h2o','ch4','h2'])
+  >>> splot.plotSpectrum(spc,features=['h2o','ch4','h2'])
 
   .. image:: _images/plot_basic_features_example1.png
       :width: 400
@@ -92,7 +102,7 @@ The features currently contained in the code include:
 You can also set groups of features based on the type of object; options include ``mdwarf``, ``ldwarf`` and ``tdwarf``
 
   >>> spc = splat.getSpectrum(spt = 'L5', lucky=True)[0] 
-  >>> splat.plotSpectrum(spc,ldwarf=True)
+  >>> splot.plotSpectrum(spc,ldwarf=True)
 
   .. image:: _images/plot_basic_features_example2.png
       :width: 400
@@ -100,7 +110,7 @@ You can also set groups of features based on the type of object; options include
 
 To label and shade regions of telluric absorption, set ``telluric`` = True
 
-  >>> splat.plotSpectrum(spc,telluric=True)
+  >>> splot.plotSpectrum(spc,telluric=True)
 
   .. image:: _images/plot_basic_features_example3.png
       :width: 400
@@ -110,7 +120,7 @@ To add a legend, use the ``legend`` or ``label`` keyword:
 
   >>> spc = splat.getSpectrum(lucky=True)[0]
   >>> spt,spt_e = splat.classifyByStandard(spc)
-  >>> splat.plotSpectrum(spc,legend=['{} SpT = {}'.format(spc.shortname,spt)])
+  >>> splot.plotSpectrum(spc,legend=['{} SpT = {}'.format(spc.shortname,spt)])
 
   .. image:: _images/plot_basic_features_example4.png
       :width: 400
@@ -126,7 +136,7 @@ You can place an inset in your plot to zoom in on a particular feature using the
 
   >>> spc = splat.getSpectrum(sbinary=True, lucky=True)[0]
   >>> spc.normalize()
-  >>> splat.plotSpectrum(spc,inset=True)
+  >>> splot.plotSpectrum(spc,inset=True)
 
   .. image:: _images/plot_basic_inset_example1.png
       :width: 400
@@ -134,7 +144,7 @@ You can place an inset in your plot to zoom in on a particular feature using the
 
 You can get some control over the positioning and sampled range using ``inset_position`` (left edge, bottom edge, width, height) and ``inset_xrange``:
 
-  >>> splat.plotSpectrum(spc,inset=True,inset_xrange=[1.52,1.72],inset_position=[0.6,0.55,0.28,0.32])
+  >>> splot.plotSpectrum(spc,inset=True,inset_xrange=[1.52,1.72],inset_position=[0.6,0.55,0.28,0.32])
 
   .. image:: _images/plot_basic_inset_example2.png
       :width: 400
@@ -152,7 +162,7 @@ Colors and line styles
 
 
   >>> spc = splat.getSpectrum(spt = 'M9', lucky=True)[0]
-  >>> splat.plotSpectrum(spc,color='red',linestyle=':')
+  >>> splot.plotSpectrum(spc,color='red',linestyle=':')
 
   .. image:: _images/plot_basic_color_example1.png
       :width: 400
@@ -166,7 +176,7 @@ You can adjust the plot ranges using the ``xrange`` and ``yrange`` keywords
 
   >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0] 
   >>> spc.normalize()
-  >>> splat.plotSpectrum(spc,xrange=[1.0,1.6],yrange=[0,2])
+  >>> splot.plotSpectrum(spc,xrange=[1.0,1.6],yrange=[0,2])
 
   .. image:: _images/plot_basic_manipulate_example1.png
       :width: 400
@@ -174,7 +184,7 @@ You can adjust the plot ranges using the ``xrange`` and ``yrange`` keywords
 
 Or change the labels of these axes using the ``xlabel`` and ``ylabel`` keywords
 
-  >>> splat.plotSpectrum(spc,xrange=[1.0,1.6],yrange=[0,2],xlabel='A Length Quantity',ylabel='A Flux Density Quantity')
+  >>> splot.plotSpectrum(spc,xrange=[1.0,1.6],yrange=[0,2],xlabel='A Length Quantity',ylabel='A Flux Density Quantity')
 
   .. image:: _images/plot_basic_manipulate_example3.png
       :width: 400
@@ -183,7 +193,7 @@ Or change the labels of these axes using the ``xlabel`` and ``ylabel`` keywords
 
 You can also adjust the plot size using the ``figsize`` keyword
 
-  >>> splat.plotSpectrum(spc,figsize=(12,4))
+  >>> splot.plotSpectrum(spc,figsize=(12,4))
 
   .. image:: _images/plot_basic_manipulate_example2.png
       :width: 600
@@ -195,7 +205,7 @@ Exporting the plot
 
 To export the plot to a file, simply set the ``file`` keyword:
 
-  >>> splat.plotSpectrum(spc,file='myplot.pdf')
+  >>> splot.plotSpectrum(spc,file='myplot.pdf')
 
 Note that matplotlib_ automatically figures out the file format based on the filename suffix.
 
@@ -209,9 +219,16 @@ Plotting multiple spectra
 Comparison plots
 ^^^^^^^^^^^^^^^^
 
-[EXAMPLE OF MULTIPLE SPECTRA]
+Spectra can be stacked on top of each other using the ``stack`` parameter, which is a numerical value that indicates the offset between sequential spectra. For example, the plot the sequence of NIR L dwarf standards:
 
-Spectra can be stacked on top of each other using the ``stack`` parameter, which is a numerical value that indicates the offset between 
+   >>> splat.initiateStandards()
+   >>> stdspt = [splat.typeToNum(i) for i in range(20,30)]
+   >>> sps = [splat.STDS_DWARF_SPEX[s] for s in stdspt]
+   >>>
+
+
+
+[EXAMPLE NEEDED MULTIPLE SPECTRA]
 
 [PLOTBATCH]
 
@@ -220,6 +237,35 @@ Spectra can be stacked on top of each other using the ``stack`` parameter, which
 
 Multi-page plots
 ^^^^^^^^^^^^^^^^
+
+
+Other Plotting Tools
+--------------------
+
+plotMap()
+^^^^^^^^^
+
+`plotMap()`_ plots coordinates onto a sky map, with options to plot groups of coordinates with different colors, symbols, and symbol sizes.  `plotMap()`_ takes as its primary input an array of astropy Skycoord objects, but will do conversions as necesssary with `properCoordinates()`_. 
+Map projections are those defined in the matplotlib `Basemap documentation <https://matplotlib.org/basemap/users/mapsetup.html>`_.
+
+For example, to plot all of the sources labeled "young" in the SPLAT library:
+
+   >>> s = splat.searchLibrary(young=True)
+   >>> c = [splat.properCoordinates(x) for x in s['DESIGNATION']]
+   >>> splot.plotMap(c)
+
+  .. image:: _images/example_plotmap_young.png
+
+Or to plot bright M dwarfs and L dwarfs separately, and save to a file:
+
+   >>> sm = splat.searchLibrary(spt=['M0','M9.5'],jmag=13)
+   >>> sl = splat.searchLibrary(spt=['L0','L9.5'],jmag=13)
+   >>> cm = [splat.properCoordinates(x) for x in sm['DESIGNATION']]
+   >>> cl = [splat.properCoordinates(x) for x in sm['DESIGNATION']]
+   >>> splot.plotMap(cm,cl,colors=['k','r'],markers=['o','o'],alpha=[0.3,0.9],output='bright_ml_map.pdf')
+
+  .. image:: _images/example_plotmap_brightml.png
+
 
 
 Examples

@@ -12,6 +12,7 @@ from __future__ import print_function
 #    Ivanna Escala
 #    Joshua Hazlett
 #    Carolina Herrara Hernandez
+#    Elizabeth Moreno Hilario
 #    Aishwarya Iyer
 #    Yuhui Jin
 #    Michael Lopez
@@ -20,7 +21,6 @@ from __future__ import print_function
 #    Alex Mendez
 #    Gretel Mercado
 #    Niana Mohammed
-#    Elizabeth Hilario Moreno
 #    Jonathan Parra
 #    Maitrayee Sahi
 #    Adrian Suarez
@@ -4387,7 +4387,7 @@ def classifyByIndex(sp, *args, **kwargs):
 
 
 
-def classifyByStandard(sp, *args, **kwargs):
+def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
     '''
     :Purpose: 
         Determine the spectral type and uncertainty for a
@@ -4414,10 +4414,15 @@ def classifyByStandard(sp, *args, **kwargs):
                 - *'stddev_norm'*: compare by computing normalized standard deviation
                 - *'absdev'*: compare by computing absolute deviation
 
-        * :param sd: set to True to compare to subdwarf standards (`subdwarf` does the same)
-        * :param esd: set to True to compare to extreme subdwarf standards 
-        * :param vlg: set to True to compare to very low gravity standards (`lowg` does the same)
-        * :param intg: set to True to compare to intermediate gravity standards (`lowg` does the same)
+        * :param std_class: the type of standard to compare to; allowed options are 'dwarf' (default), 'subdwarf', 'sd', 'dsd', 'esd', 'lowg', 'vlg', and 'intg'. These can also be set using the following keywords
+
+            - :param dwarf: set to True to compare to dwarf standards
+            - :param sd: set to True to compare to subdwarf standards (`subdwarf` does the same)
+            - :param dsd: set to True to compare to dwarf/subdwarf standards 
+            - :param esd: set to True to compare to extreme subdwarf standards 
+            - :param vlg: set to True to compare to very low gravity standards (`lowg` does the same)
+            - :param intg: set to True to compare to intermediate gravity standards
+
         * :param all: compare to standards across all metallicity and gravity types
         * :param method: set to ``'kirkpatrick'`` to follow the `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_ method, fitting only to the 0.9-1.4 micron band (optional, default = '')
         * :param best: set to True to return the best fit standard type (optional, default = True)
@@ -4487,42 +4492,51 @@ def classifyByStandard(sp, *args, **kwargs):
         return classifyByStandard(sp,**mkwargs)
 
 # assign subclasses
-    if kwargs.get('sd',False) == True or kwargs.get('subdwarf',False) == True:
+    allowed_classes = ['dwarf','subdwarf','sd','esd','dsd','lowg','vlg','intg','all']
+    for a in allowed_classes:
+        if kwargs.get(a,False) == True: std_class = a
+    std_class = std_class.lower()
+    if std_class not in allowed_classes:
+        if verbose==True: print('\nStandard class {} unknown; defaulting to dwarf'.format(std_class))
+        std_class = 'dwarf'
+
+    if std_class == 'dwarf':
+        initiateStandards()
+        stds = STDS_DWARF_SPEX
+        subclass = 'sd'
+        stdtype = 'Subdwarf'
+        if verbose==True: print('Using subdwarf standards')
+    elif std_class == 'sd' or std_class == 'subdwarf':
         initiateStandards(sd=True)
         stds = STDS_SD_SPEX
         subclass = 'sd'
         stdtype = 'Subdwarf'
-        if verbose:
-            print('Using subdwarf standards')
-    elif kwargs.get('dsd',False) == True:
+        if verbose==True: print('Using subdwarf standards')
+    elif std_class == 'dsd':
         initiateStandards(dsd=True)
         stds = STDS_DSD_SPEX
-        subclass = 'd/sd'
-        stdtype = 'Intermediate Subdwarf'
-        if verbose:
-            print('Using extreme subdwarf standards')
-    elif kwargs.get('esd',False) == True:
+        subclass = ''
+        stdtype = 'Dwarf'
+        if verbose == True: print('Using dwarf standards')
+    elif std_class == 'esd':
         initiateStandards(esd=True)
         stds = STDS_ESD_SPEX
         subclass = 'esd'
         stdtype = 'Extreme Subdwarf'
-        if verbose:
-            print('Using extreme subdwarf standards')
-    elif kwargs.get('vlg',False) == True or kwargs.get('lowg',False) == True:
+        if verbose == True: print('Using extreme subdwarf standards')
+    elif std_class == 'vlg' or std_class == 'lowg':
         initiateStandards(vlg=True)
         stds = STDS_VLG_SPEX
         subclass = ''
         stdtype = 'Very Low Gravity'
-        if verbose:
-            print('Using very low gravity standards')
-    elif kwargs.get('intg',False) == True:
+        if verbose == True: print('Using very low gravity standards')
+    elif std_class == 'intg':
         initiateStandards(intg=True)
         stds = STDS_INTG_SPEX
         subclass = ''
         stdtype = 'Intermediate Gravity'
-        if verbose:
-            print('Using intermediate low gravity standards')
-    elif kwargs.get('all',False) == True:
+        if verbose == True: print('Using intermediate low gravity standards')
+    elif std_class == 'all':
         initiateStandards()
         initiateStandards(sd=True)
         initiateStandards(dsd=True)
@@ -4537,15 +4551,9 @@ def classifyByStandard(sp, *args, **kwargs):
         stds.update(STDS_ESD_SPEX)
         subclass = ''
         stdtype = 'Mixed'
-        if verbose:
-            print('Using all of the standards')
+        if verbose == True: print('Using all of the standards')
     else:
-        stds = STDS_DWARF_SPEX
-        initiateStandards()
-        subclass = ''
-        stdtype = 'Dwarf'
-        if verbose:
-            print('Using dwarf standards')
+        raise ValueError('\nUnknown class type {}'.format(std_class))
 
 # select desired spectral range
     std_spt = numpy.array(list(stds.keys()))
@@ -5936,57 +5944,6 @@ def metallicity(sp,**kwargs):
 
     return mh, numpy.sqrt(numpy.nanstd(mhsim)**2+mh_unc**2)
 
-
-def lsfRotation(vsini,vsamp,epsilon=0.6):
-    '''
-    Purpose: 
-
-        Generates a line spread function for rotational broadening, based on Gray (1992) 
-        Ported over by Chris Theissen and Adam Burgasser from the IDL routine 
-        `lsf_rotate <https://idlastro.gsfc.nasa.gov/ftp/pro/astro/lsf_rotate.pro>`_ writting by W. Landsman
-
-    Required Inputs:  
-
-        :param: **vsini**: vsini of rotation, assumed in units of km/s
-        :param: **vsamp**: sampling velocity, assumed in unit of km/s. vsamp must be smaller than vsini or else a delta function is returned
-
-    Optional Inputs:
-
-        :param: **epsilon**: limb darkening parameter based on Gray (1992)
-
-    Output:
-
-        Line spread function kernel with length 2*vsini/vsamp (forced to be odd)
-
-    :Example:
-        >>> import splat
-        >>> kern = lsfRotation(30.,3.)
-        >>> print(kern)
-            array([ 0.        ,  0.29053574,  0.44558751,  0.55691445,  0.63343877,
-            0.67844111,  0.69330989,  0.67844111,  0.63343877,  0.55691445,
-            0.44558751,  0.29053574,  0.        ])
-    '''
-# limb darkening parameters
-    e1 = 2. * (1. - epsilon)
-    e2 = numpy.pi * epsilon/2.
-    e3 = numpy.pi * (1. - epsilon/3.)
-
-# vsini must be > vsamp - if not, return a delta function
-    if vsini <= vsamp:
-        print('\nWarning: velocity sampling {} is broader than vsini {}; returning delta function')  
-        lsf = numpy.zeros(5)  
-        lsf[2] = 1.
-        return lsf
-
-# generate LSF
-    nsamp = numpy.ceil(2.*vsini/vsamp)
-    if nsamp % 2 == 0:
-        nsamp+=1
-    x = numpy.arange(nsamp)-(nsamp-1.)/2.
-    x = x*vsamp/vsini
-    x2 = numpy.absolute(1.-x**2)
-
-    return (e1*numpy.sqrt(x2) + e2*x2)/e3
 
 
 def addUserData(folders=[],default_info={},verbose=True):

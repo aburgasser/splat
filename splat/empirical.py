@@ -157,7 +157,7 @@ def estimateDistance(*args, **kwargs):
 
 
 
-def typeToColor(spt,color, **kwargs):
+def typeToColor(spt,color,reference='skrzypek2015',uncertainty=0.,nsamples=100,verbose=False,**kwargs):
     """
     :Purpose: Takes a spectral type and optionally a color (string) and returns the typical color of the source. 
     :param spt: string or integer of the spectral type
@@ -188,82 +188,65 @@ def typeToColor(spt,color, **kwargs):
             (nan, nan)
     """
 
-#Keywords
-    nsamples = kwargs.get('nsamples', 100)
-    ref = kwargs.get('ref', 'skrzypek')
-    ref = kwargs.get('set', ref)
-    unc = kwargs.get('unc', 0.)
+# check inputs
+# Convert spectral type string to number
+    if isinstance(spt,str): sptn = typeToNum(spt)
+    else: sptn = copy.deepcopy(spt)
 
-# what empirical relations are used:
-    empirical_sets = {
-        'skrzypek': {
-            'reference': 'Skrzypek et al. (2015)',
-            'bibcode': '2015A%26A...574A..78S',
-            'rng': [15,38],
-            'filters': ['i','z','y','j','h','k','w1','w2'],
-            'scatter': 0.07,
-            'values': { 
-                'i-z': [0.91,1.45,1.77,1.93,1.99,2.01,2.02,2.04,2.1,2.2,2.33,2.51,2.71,2.93,3.15,3.36,3.55,3.7,3.82,3.9,3.95,3.98,4.01,4.08], \
-                'z-y': [0.47,0.6,0.7,0.77,0.82,0.86,0.88,0.9,0.92,0.94,0.97,1.0,1.04,1.09,1.16,1.23,1.33,1.43,1.55,1.68,1.81,1.96,2.11,2.26], \
-                'y-j': [0.55,0.67,0.78,0.87,0.96,1.04,1.11,1.18,1.23,1.27,1.31,1.33,1.35,1.21,1.2,1.19,1.19,1.18,1.18,1.17,1.16,1.16,1.15,1.15], \
-                'j-h': [0.45,0.53,0.56,0.58,0.6,0.63,0.67,0.73,0.79,0.86,0.91,0.96,0.97,0.96,0.9,0.8,0.65,0.46,0.25,0.02,-0.19,-0.35,-0.43,-0.36], \
-                'h-k': [0.32,0.39,0.44,0.47,0.51,0.54,0.58,0.63,0.67,0.71,0.74,0.75,0.75,0.71,0.65,0.56,0.45,0.31,0.16,0.01,-0.11,-0.19,-0.2,-0.09], \
-                'k-w1': [0.11,0.22,0.25,0.26,0.27,0.29,0.33,0.4,0.48,0.56,0.65,0.72,0.77,0.79,0.79,0.76,0.71,0.65,0.59,0.55,0.54,0.59,0.7,0.9], \
-                'w1-w2': [0.17,0.21,0.24,0.26,0.27,0.27,0.28,0.28,0.29,0.3,0.32,0.36,0.41,0.48,0.57,0.68,0.82,0.99,1.19,1.43,1.7,2.02,2.38,2.79]}
-        }
-    }
+    col = color.lower().replace(' ','').replace('2mass','').replace('sdss','').replace('wise','').replace('denis','')
+    uncertainty = kwargs.get('unc', uncertainty)
 
-#Convert spectral type string to number
-    if isinstance(spt,str):
-        spt = typeToNum(spt, uncertainty=unc)
-    else:
-        spt = copy.deepcopy(spt)
-
-    if ref.lower() in list(empirical_sets.keys()):
-        reference = empirical_sets[ref.lower()]['reference']
-        rng = empirical_sets[ref.lower()]['rng']
-        filters = empirical_sets[ref.lower()]['filters']
-        values = empirical_sets[ref.lower()]['values']
-        scatter = empirical_sets[ref.lower()]['scatter']
-
-    else:
-        sys.stderr.write('\nColor set from {} has not be intergrated into SPLAT\n\n'.format(ref))
+    reference = kwargs.get('ref', reference)
+    reference = kwargs.get('set', reference)
+    ref = checkEmpiricalRelation(reference.lower().replace(' ',''),splat.SPT_COLORS_SETS)
+    if ref == False:
+        print('\nColor set from {} has not be integrated into SPLAT\n\n'.format(reference))
         return numpy.nan, numpy.nan
-    if kwargs.get('verbose',False):
-        print('\nUsing the SpT/color trends from {}\n'.format(reference))
+    if verbose==True: print('\nUsing the SpT/color trends from {}\n'.format(ref))
 
-# spectral type array
-    if (rng[0] <= spt <= rng[1]):
+# check spt is in range
+    if not (splat.SPT_COLORS_SETS[ref]['range'][0] <= sptn <= splat.SPT_COLORS_SETS[ref]['range'][1]):
+        print('\n Spectral type {} is outside the range for reference set {}: {} to {}\n\n'.format(spt,ref,splat.SPT_COLORS_SETS[ref]['range'][0],splat.SPT_COLORS_SETS[ref]['range'][1]))
+        return numpy.nan, numpy.nan
 
 # fill in extra colors - a little inefficient right now  
-        if color.lower() not in list(values.keys()):
-#            basecolors = 
-            c1 = (color.lower()).split('-')[0]
-
-
-            for i in numpy.arange(len(list(tmpval.keys()))):
-                for a in list(tmpval.keys()):
-                    for b in list(tmpval.keys()):
-                        f1 = a.split('-')
-                        f2 = b.split('-')
-                        if f1[-1] == f2[0]:
-                            k = '{}-{}'.format(f1[0],f2[-1])
-                            if k not in list(values.keys()):
-                                values[k] = [sum(x) for x in zip(tmpval[a], tmpval[b])]
-
-        if color.lower() in list(values.keys()):
-            f = interp1d(numpy.arange(rng[0],rng[1]+1),values[color.lower()],bounds_error=False,fill_value=0.)
-            if (unc > 0.):
-                vals = [f(x) for x in numpy.random.normal(spt, unc, nsamples)]
-                return float(f(spt)), (numpy.nanstd(vals)**2+scatter**2)**0.5
-            else:
-                return float(f(spt)), scatter
-        else:
-            sys.stderr.write('\n Color {} is not in reference set for {}\n\n'.format(color,reference))
+    if col not in list(splat.SPT_COLORS_SETS[ref]['values'].keys()):
+# base color 
+        c1 = (col.split('-'))[0]
+        refcol = ''
+        for x in list(splat.SPT_COLORS_SETS[ref]['values'].keys()):
+            if x.split('-')[0] == c1: refcol = x
+        if refcol == '': 
+            print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_SETS[ref]['values'].keys())))
+            return numpy.nan, numpy.nan
+        refcolors = numpy.array(splat.SPT_COLORS_SETS[ref]['values'][refcol])
+# now run through colors until you create the correct match
+        cntr = 0
+        maxcntr = len(list(splat.SPT_COLORS_SETS[ref]['values'].keys()))
+        while refcol != col and cntr < maxcntr:
+            refadd = ''
+            for x in list(splat.SPT_COLORS_SETS[ref]['values'].keys()):
+                if x.split('-')[0] == (refcol.split('-'))[-1]: refadd = x
+            if refadd == '': 
+                print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_SETS[ref]['values'].keys())))
+                return numpy.nan, numpy.nan
+            refcol='{}-{}'.format((refcol.split('-'))[0],(refadd.split('-'))[-1])
+            refcolors = refcolors+numpy.array(splat.SPT_COLORS_SETS[ref]['values'][refadd])
+            splat.SPT_COLORS_SETS[ref]['values'][refcol] = refcolors
+            cntr=cntr+1
+        if cntr >= maxcntr:
+            print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_SETS[ref]['values'].keys())))
             return numpy.nan, numpy.nan
 
+    if col in list(splat.SPT_COLORS_SETS[ref]['values'].keys()):
+        f = interp1d(numpy.arange(splat.SPT_COLORS_SETS[ref]['range'][0],splat.SPT_COLORS_SETS[ref]['range'][1]+1),splat.SPT_COLORS_SETS[ref]['values'][col],bounds_error=False,fill_value=0.)
+        if uncertainty > 0.:
+            vals = f(numpy.random.normal(sptn, uncertainty, nsamples))
+            return float(f(sptn)), (numpy.nanstd(vals)**2+splat.SPT_COLORS_SETS[ref]['scatter']**2)**0.5
+        else:
+            return float(f(sptn)), splat.SPT_COLORS_SETS[ref]['scatter']
     else:
-        sys.stderr.write('\n Spectral type {} is outside the range for reference set {}\n\n'.format(typeToNum(spt),reference))
+        print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_SETS[ref]['values'].keys())))
         return numpy.nan, numpy.nan
 
 
@@ -410,11 +393,11 @@ def typeToMag(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,
 
         :param spt: string or integer of the spectral type
         :param filter: filter for which to retrieve absolute magnitude, which must be defined for the given reference set.
-        You can check what filters are available by printing splat.ABSMAG_SETS[reference]['filters'].keys(), where reference is, e.g., 'filippazzo2015'
+        You can check what filters are available by printing splat.SPT_ABSMAG_SETS[reference]['filters'].keys(), where reference is, e.g., 'filippazzo2015'
 
     :Optional Inputs: 
 
-        :param reference: Abs Mag/SpT relation used to compute the absolute magnitude (also 'ref' and 'set'). These are defined in splat.ABSMAG_SETS and are currently as follows:
+        :param reference: Abs Mag/SpT relation used to compute the absolute magnitude (also 'ref' and 'set'). These are defined in splat.SPT_ABSMAG_SETS and are currently as follows:
 
             - *dahn2002*: Abs Mag/SpT relation from `Dahn et al. (2002) <http://adsabs.harvard.edu/abs/2002AJ....124.1170D>`_
               Allowed spectral type range is M7 to L8, and allowed filters are 2MASS J
@@ -485,11 +468,11 @@ def typeToMag(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,
     if refcheck == False: return numpy.nan,numpy.nan
     else: ref=refcheck
 
-    sptoffset = ABSMAG_SETS[ref]['sptoffset']
-    coeff = ABSMAG_SETS[ref]['filters'][filt]['coeff']
-    rng = ABSMAG_SETS[ref]['filters'][filt]['range']
-    fitunc = ABSMAG_SETS[ref]['filters'][filt]['fitunc']
-    refstring = 'Absolute {}/SpT relation from {}'.format(filt,shortRef(ABSMAG_SETS[ref]['bibcode']))
+    sptoffset = SPT_ABSMAG_SETS[ref]['sptoffset']
+    coeff = SPT_ABSMAG_SETS[ref]['filters'][filt]['coeff']
+    rng = SPT_ABSMAG_SETS[ref]['filters'][filt]['range']
+    fitunc = SPT_ABSMAG_SETS[ref]['filters'][filt]['fitunc']
+    refstring = 'Absolute {}/SpT relation from {}'.format(filt,shortRef(SPT_ABSMAG_SETS[ref]['bibcode']))
     if verbose: print('\nUsing {}'.format(refstring))
 
 # compute magnitude if its in the right spectral type range
@@ -761,7 +744,7 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
 
     :Optional Inputs: 
 
-        :param reference: log Lbol/SpT relation reference (also 'ref' and 'set'). These are defined in splat.LBOL_SETS and are currently as follows:
+        :param reference: log Lbol/SpT relation reference (also 'ref' and 'set'). These are defined in splat.SPT_LBOL_SETS and are currently as follows:
 
             - *filippazzo2015* (default): Lbol/SpT relation from `Filippazzo et al. (2015) <http://adsabs.harvard.edu/abs/2013Sci...341.1492D>`_
               Allowed spectral type range is M6 to T9
@@ -787,11 +770,11 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
 
 
 # check that you can use the proscribed relation and filter
-    refcheck = checkEmpiricalRelation(ref,LBOL_SETS,verbose=verbose)
+    refcheck = checkEmpiricalRelation(ref,SPT_LBOL_SETS,verbose=verbose)
     if refcheck == False: return numpy.nan,numpy.nan
     else: ref=refcheck
 
-    refstring = 'Luminosity/SpT relation for from {}'.format(shortRef(LBOL_SETS[ref]['bibcode']))
+    refstring = 'Luminosity/SpT relation for from {}'.format(shortRef(SPT_LBOL_SETS[ref]['bibcode']))
     if verbose: print('\nUsing {}'.format(refstring))
 
 # normal approach: SpT -> Lbol
@@ -806,13 +789,13 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
             raise ValueError('\nInput spectral type {} must be a string, float or int'.format(spt))
 
 # polynomial method
-        if LBOL_SETS[ref]['method'] == 'polynomial':
-            rng = LBOL_SETS[ref]['range']
+        if SPT_LBOL_SETS[ref]['method'] == 'polynomial':
+            rng = SPT_LBOL_SETS[ref]['range']
             if (rng[0] <= sptn <= rng[1]):
-                lbol = numpy.polyval(LBOL_SETS[ref]['coeff'], sptn-LBOL_SETS[ref]['sptoffset'])
-                lbol_error = LBOL_SETS[ref]['fitunc']
+                lbol = numpy.polyval(SPT_LBOL_SETS[ref]['coeff'], sptn-SPT_LBOL_SETS[ref]['sptoffset'])
+                lbol_error = SPT_LBOL_SETS[ref]['fitunc']
                 if unc > 0.:
-                    vals = numpy.polyval(LBOL_SETS[ref]['coeff'], numpy.random.normal(sptn - LBOL_SETS[ref]['sptoffset'], unc, nsamples))
+                    vals = numpy.polyval(SPT_LBOL_SETS[ref]['coeff'], numpy.random.normal(sptn - SPT_LBOL_SETS[ref]['sptoffset'], unc, nsamples))
                     lbol_error = (numpy.nanstd(vals)**2+lbol_error**2)**0.5
                 return lbol, lbol_error
             else:
@@ -820,11 +803,11 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
                 return numpy.nan, numpy.nan
 
 # interpolation method
-        elif LBOL_SETS[ref]['method'] == 'interpolate':
-            rng = [numpy.nanmin(LBOL_SETS[ref]['spt']),numpy.nanmax(LBOL_SETS[ref]['spt'])]
+        elif SPT_LBOL_SETS[ref]['method'] == 'interpolate':
+            rng = [numpy.nanmin(SPT_LBOL_SETS[ref]['spt']),numpy.nanmax(SPT_LBOL_SETS[ref]['spt'])]
             if (rng[0] <= sptn <= rng[1]):
-                f = interp1d(LBOL_SETS[ref]['spt'],LBOL_SETS[ref]['bc'])
-                fe = interp1d(LBOL_SETS[ref]['spt'],LBOL_SETS[ref]['rms'])
+                f = interp1d(SPT_LBOL_SETS[ref]['spt'],SPT_LBOL_SETS[ref]['bc'])
+                fe = interp1d(SPT_LBOL_SETS[ref]['spt'],SPT_LBOL_SETS[ref]['rms'])
                 lbol = float(f(sptn))
                 lbol_error = float(fe(sptn))
                 if unc > 0.:
@@ -835,15 +818,15 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
                 if verbose: sys.stderr.write('\nSpectral type {} is out of range for {}'.format(typeToNum(sptn),refstring))
                 return numpy.nan, numpy.nan
         else:
-            raise ValueError('Unknown method {} for {}'.format(LBOL_SETS[ref]['method'],refstring))
+            raise ValueError('Unknown method {} for {}'.format(SPT_LBOL_SETS[ref]['method'],refstring))
 
 # reverse approach: Lbol -> SpT
     else:
         if not isinstance(spt,float): raise ValueError('Running this in reverse you need to provide a log luminosity value instead of {}'.format(spt))
-        if LBOL_SETS[ref]['method'] == 'polynomial':
-            rng = LBOL_SETS[ref]['range']
+        if SPT_LBOL_SETS[ref]['method'] == 'polynomial':
+            rng = SPT_LBOL_SETS[ref]['range']
             x = numpy.linspace(rng[0],rng[1],nsamples)
-            y = numpy.polyval(LBOL_SETS[ref]['coeff'], x-LBOL_SETS[ref]['sptoffset'])
+            y = numpy.polyval(SPT_LBOL_SETS[ref]['coeff'], x-SPT_LBOL_SETS[ref]['sptoffset'])
             f = interp1d(y,x)
             try:
                 lbol = float(f(spt))
@@ -852,7 +835,7 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
                 return numpy.nan, numpy.nan
             vals = []
             for i in range(nsamples):
-                ye = y+numpy.random.normal(0,LBOL_SETS[ref]['fitunc'])
+                ye = y+numpy.random.normal(0,SPT_LBOL_SETS[ref]['fitunc'])
                 f = interp1d(ye,x)
                 try:
                     vals.append(f(numpy.random.normal(spt,unc)))
@@ -860,8 +843,8 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
                     pass
             lbol_error = numpy.nanstd(vals)
             return lbol, lbol_error
-        elif BC_SETS[ref]['method'] == 'interpolate':
-            f = interp1d(LBOL_SETS[ref]['bc'],LBOL_SETS[ref]['spt'])
+        elif SPT_LBOL_SETS[ref]['method'] == 'interpolate':
+            f = interp1d(SPT_LBOL_SETS[ref]['bc'],SPT_LBOL_SETS[ref]['spt'])
             try:
                 lbol = f(spt)
             except:
@@ -869,8 +852,8 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
                 return numpy.nan, numpy.nan
             vals = []
             for i in range(nsamples):
-                y = numpy.random.normal(LBOL_SETS[ref]['bc'],LBOL_SETS[ref]['rms'])
-                f = interp1d(y,LBOL_SETS[ref]['spt'])
+                y = numpy.random.normal(SPT_LBOL_SETS[ref]['bc'],SPT_LBOL_SETS[ref]['rms'])
+                f = interp1d(y,SPT_LBOL_SETS[ref]['spt'])
                 try:
                     vals.append(f(numpy.random.normal(spt,unc)))
                 except:
@@ -878,7 +861,7 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
             lbol_error = numpy.nanstd(vals)
             return lbol, lbol_error
         else:
-            raise ValueError('Unknown method {} for {}'.format(LBOL_SETS[ref]['method'],refstring))
+            raise ValueError('Unknown method {} for {}'.format(SPT_LBOL_SETS[ref]['method'],refstring))
 
 
 
@@ -892,11 +875,11 @@ def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,r
 
         :param spt: string or integer of the spectral type
         :param filter: filter for which to retrieve absolute magnitude, which must be defined for the given reference set.
-        You can check what filters are available by printing splat.ABSMAG_SETS[reference]['filters'].keys(), where reference is, e.g., 'filippazzo2015'
+        You can check what filters are available by printing splat.SPT_BC_SETS[reference]['filters'].keys(), where reference is, e.g., 'filippazzo2015'
 
     :Optional Inputs: 
 
-        :param reference: Abs Mag/SpT relation used to compute the absolute magnitude (also 'ref' and 'set'). These are defined in splat.BC_SETS and are currently as follows:
+        :param reference: Abs Mag/SpT relation used to compute the absolute magnitude (also 'ref' and 'set'). These are defined in splat.SPT_BC_SETS and are currently as follows:
 
             - *liu2010*: BC/SpT relation from `Liu et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJ...722..311L>`_
               Allowed spectral type range is M6 to T8.5, and allowed filters are MKO J, H, K
@@ -936,7 +919,7 @@ def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,r
     if refcheck == False: return numpy.nan,numpy.nan
     else: ref=refcheck
 
-    refstring = 'BC/SpT relation for filter {} from {}'.format(filt,shortRef(BC_SETS[ref]['bibcode']))
+    refstring = 'BC/SpT relation for filter {} from {}'.format(filt,shortRef(SPT_BC_SETS[ref]['bibcode']))
     if verbose: print('\nUsing {}'.format(refstring))
 
 # normal approach: SpT -> BC
@@ -951,25 +934,25 @@ def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,r
             raise ValueError('\nInput spectral type {} must be a string, float or int'.format(spt))
 
 # polynomial method
-        if BC_SETS[ref]['method'] == 'polynomial':
-            rng = BC_SETS[ref]['filters'][filt]['range']
+        if SPT_BC_SETS[ref]['method'] == 'polynomial':
+            rng = SPT_BC_SETS[ref]['filters'][filt]['range']
             if (rng[0] <= sptn <= rng[1]):
-                bc = numpy.polyval(BC_SETS[ref]['filters'][filt]['coeff'], sptn-BC_SETS[ref]['sptoffset'])
-                bc_error = BC_SETS[ref]['filters'][filt]['fitunc']
+                bc = numpy.polyval(SPT_BC_SETS[ref]['filters'][filt]['coeff'], sptn-SPT_BC_SETS[ref]['sptoffset'])
+                bc_error = SPT_BC_SETS[ref]['filters'][filt]['fitunc']
                 if unc > 0.:
-                    vals = numpy.polyval(BC_SETS[ref]['filters'][filt]['coeff'], numpy.random.normal(sptn - BC_SETS[ref]['sptoffset'], unc, nsamples))
-                    bc_error = (numpy.nanstd(vals)**2+BC_SETS[ref]['filters'][filt]['fitunc']**2)**0.5
+                    vals = numpy.polyval(SPT_BC_SETS[ref]['filters'][filt]['coeff'], numpy.random.normal(sptn - SPT_BC_SETS[ref]['sptoffset'], unc, nsamples))
+                    bc_error = (numpy.nanstd(vals)**2+SPT_BC_SETS[ref]['filters'][filt]['fitunc']**2)**0.5
                 return bc, bc_error
             else:
                 if verbose: sys.stderr.write('\nSpectral type {} is out of range for {}'.format(typeToNum(sptn),refstring))
                 return numpy.nan, numpy.nan
 
 # interpolation method
-        elif BC_SETS[ref]['method'] == 'interpolate':
-            rng = [numpy.nanmin(BC_SETS[ref]['filters'][filt]['spt']),numpy.nanmax(BC_SETS[ref]['filters'][filt]['spt'])]
+        elif SPT_BC_SETS[ref]['method'] == 'interpolate':
+            rng = [numpy.nanmin(SPT_BC_SETS[ref]['filters'][filt]['spt']),numpy.nanmax(SPT_BC_SETS[ref]['filters'][filt]['spt'])]
             if (rng[0] <= sptn <= rng[1]):
-                f = interp1d(BC_SETS[ref]['filters'][filt]['spt'],BC_SETS[ref]['filters'][filt]['bc'])
-                fe = interp1d(BC_SETS[ref]['filters'][filt]['spt'],BC_SETS[ref]['filters'][filt]['rms'])
+                f = interp1d(SPT_BC_SETS[ref]['filters'][filt]['spt'],SPT_BC_SETS[ref]['filters'][filt]['bc'])
+                fe = interp1d(SPT_BC_SETS[ref]['filters'][filt]['spt'],SPT_BC_SETS[ref]['filters'][filt]['rms'])
                 bc = float(f(sptn))
                 bc_error = float(fe(sptn))
                 if unc > 0.:
@@ -980,15 +963,15 @@ def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,r
                 if verbose: sys.stderr.write('\nSpectral type {} is out of range for {}'.format(typeToNum(sptn),refstring))
                 return numpy.nan, numpy.nan
         else:
-            raise ValueError('Unknown method {} for {}'.format(BC_SETS[ref]['method'],refstring))
+            raise ValueError('Unknown method {} for {}'.format(SPT_BC_SETS[ref]['method'],refstring))
 
 # reverse approach: BC -> SpT
     else:
         if not isinstance(spt,float): raise ValueError('Running this in reverse you need to provide a BC value instead of {}'.format(spt))
-        if BC_SETS[ref]['method'] == 'polynomial':
-            rng = BC_SETS[ref]['filters'][filt]['range']
+        if SPT_BC_SETS[ref]['method'] == 'polynomial':
+            rng = SPT_BC_SETS[ref]['filters'][filt]['range']
             x = numpy.linspace(rng[0],rng[1],nsamples)
-            y = numpy.polyval(BC_SETS[ref]['filters'][filt]['coeff'], x-BC_SETS[ref]['sptoffset'])
+            y = numpy.polyval(SPT_BC_SETS[ref]['filters'][filt]['coeff'], x-SPT_BC_SETS[ref]['sptoffset'])
             f = interp1d(y,x)
             try:
                 bc = float(f(spt))
@@ -997,7 +980,7 @@ def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,r
                 return numpy.nan, numpy.nan
             vals = []
             for i in range(nsamples):
-                ye = y+numpy.random.normal(0,BC_SETS[ref]['filters'][filt]['fitunc'])
+                ye = y+numpy.random.normal(0,SPT_BC_SETS[ref]['filters'][filt]['fitunc'])
                 f = interp1d(ye,x)
                 try:
                     vals.append(f(numpy.random.normal(spt,unc)))
@@ -1005,8 +988,8 @@ def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,r
                     pass
             bc_error = numpy.nanstd(vals)
             return bc, bc_error
-        elif BC_SETS[ref]['method'] == 'interpolate':
-            f = interp1d(BC_SETS[ref]['filters'][filt]['bc'],BC_SETS[ref]['filters'][filt]['spt'])
+        elif SPT_BC_SETS[ref]['method'] == 'interpolate':
+            f = interp1d(SPT_BC_SETS[ref]['filters'][filt]['bc'],SPT_BC_SETS[ref]['filters'][filt]['spt'])
             try:
                 bc = f(spt)
             except:
@@ -1014,8 +997,8 @@ def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,r
                 return numpy.nan, numpy.nan
             vals = []
             for i in range(nsamples):
-                y = numpy.random.normal(BC_SETS[ref]['filters'][filt]['bc'],BC_SETS[ref]['filters'][filt]['rms'])
-                f = interp1d(y,BC_SETS[ref]['filters'][filt]['spt'])
+                y = numpy.random.normal(SPT_BC_SETS[ref]['filters'][filt]['bc'],SPT_BC_SETS[ref]['filters'][filt]['rms'])
+                f = interp1d(y,SPT_BC_SETS[ref]['filters'][filt]['spt'])
                 try:
                     vals.append(f(numpy.random.normal(spt,unc)))
                 except:
@@ -1023,7 +1006,7 @@ def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,r
             bc_error = numpy.nanstd(vals)
             return bc, bc_error
         else:
-            raise ValueError('Unknown method {} for {}'.format(BC_SETS[ref]['method'],refstring))
+            raise ValueError('Unknown method {} for {}'.format(SPT_BC_SETS[ref]['method'],refstring))
 
 
 

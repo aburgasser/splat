@@ -4,7 +4,6 @@
    contain the root `toctree` directive.
 
 
-
 Main SPLAT module
 ===============================================================
 
@@ -24,9 +23,11 @@ Spectal data are manipulated as a `Spectrum class`_ object, which contains the r
 flux, uncertainty) and additional information on the source and/or observation.  A Spectrum object is 
 the output of the various database access routines:
 
+>>> import splat
+>>> import splat.model as spmod
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]	# note that getSpectrum returns a list
 >>> sp = splat.getStandard('M0')[0]
->>> sp = splat.getModel(teff = 700, logg=4.5)
+>>> sp = spmod.getModel(teff = 700, logg=4.5)
 >>> splist = splat.getSpectrum(spt=['M7','L5'],jmag=[14.,99.])
 
 You can also read in your own spectrum by passing a filename
@@ -86,7 +87,7 @@ If you make changes to your Spectrum object, you can in many cases return it to 
 
 * To display the spectrum, use the Spectrum object's plot function, which makes use of the many options available in the `plotSpectrum`_ routine
 
-.. _`plotSpectrum` : splat_plot.html
+.. _`plotSpectrum` : api.html#splat.plot.plotSpectrum
 
 >>> sp.plot()
 >>> sp.plot(label='Awesome source', telluric=True)
@@ -185,13 +186,14 @@ You can also weight the individual spectral pixels by passing an array to the ``
 Reddening a spectrum
 ^^^^^^^^^^^^^^^^^^^^
 
-.. _`redden()` : api.html#splat.redden
+.. _`redden()` : api.html#splat.empirical.redden
+.. _`splat.empirical` : splat_empirical.html
 
-You can redden a spectrum following the `Cardelli, Clayton, and Mathis (1989) <http://adsabs.harvard.edu/abs/1989ApJ...345..245C>`_ reddening function using the `redden()`_ routine:
+You can redden a spectrum following the `Cardelli, Clayton, and Mathis (1989) <http://adsabs.harvard.edu/abs/1989ApJ...345..245C>`_ reddening function using the `redden()`_ routine contained in the `splat.empirical`_ package:
 
 >>> import splat
 >>> sp = splat.Spectrum(10001)                   # read in a source
->>> spr = splat.redden(sp,av=5.,rv=3.2)          # redden to equivalent of AV=5
+>>> sp.redden(sp,av=5.,rv=3.2)          		# redden to equivalent of AV=5
 >>> splat.plotSpectrum(sp,spr,colors=['k','r'])
 
 .. image:: _images/reddening.png
@@ -204,14 +206,15 @@ Here ``av`` is the visual reddening and ``rv`` the extinction coefficient (A_V =
 Spectrophotometry
 -----------------
 
-.. _`filterInfo()` : api.html#splat.filterInfo
-.. _`filterProperties()` : api.html#splat.filterProperties
-.. _`filterMag()` : api.html#splat.filterMag
+.. _`filterInfo()` : api.html#splat.photometry.filterInfo
+.. _`filterProperties()` : api.html#splat.photometry.filterProperties
+.. _`filterMag()` : api.html#splat.photometry.filterMag
 .. _`fluxCalibrate()` : api.html#splat.Spectrum.fluxCalibrate
 
 SPLAT allows spectrophotometry of spectra using common filters in the red optical and near-infrared. The filter transmission files are stored in the SPLAT reference library, and are accessed by name.  A list of current filters can be made by through the `filterInfo()`_ routine: 
 
->>> splat.filterInfo()
+>>> import splat.photometry as sphot
+>>> sphot.filterInfo()
   2MASS H: 2MASS H-band
   2MASS J: 2MASS J-band
   2MASS KS: 2MASS Ks-band
@@ -223,7 +226,7 @@ SPLAT allows spectrophotometry of spectra using common filters in the red optica
 
 You can access specific information about a given filter profile with the `filterProperties()`_ routine
 	
->>> result = splat.filterProperties('2MASS J')
+>>> result = sphot.filterProperties('2MASS J')
 	Filter 2MASS J: 2MASS J-band
 	Zeropoint = 1594.0 Jy
 	Pivot point: = 1.252 micron
@@ -234,17 +237,17 @@ The `filterMag()`_ routine determines the photometric magnitude of a source base
 
 >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
 >>> sp.fluxCalibrate('2MASS J',14.5)
->>> splat.filterMag(sp,'MKO J')
+>>> sphot.filterMag(sp,'MKO J')
     (14.346586427733005, 0.032091919093387822)
 
 By default the filter is convolved with a model of Vega to extract Vega magnitudes, but the user can also set the ``ab`` parameter to get AB magnitudes, the ``photon`` parameter to get photon flux, or the ``energy`` parameter to get total energy flux:
 
->>> splat.filterMag(sp,'MKO J',ab=True)
+>>> sphot.filterMag(sp,'MKO J',ab=True)
     (15.245064259793901, 0.031168695728282524)
->>> splat.filterMag(sp,'MKO J',energy=True)
+>>> sphot.filterMag(sp,'MKO J',energy=True)
 	(<Quantity 7.907663172914481e-13 erg / (cm2 s)>,
 	 <Quantity 2.090970538372485e-14 erg / (cm2 s)>)
->>> splat.filterMag(sp,'MKO J',photon=True)
+>>> sphot.filterMag(sp,'MKO J',photon=True)
 	(<Quantity 1.954421499626954e-24 1 / (cm2 s)>,
 	 <Quantity 5.53673880346918e-26 1 / (cm2 s)>)
 
@@ -253,12 +256,12 @@ One can measure photometry for custom filters using the ``custom`` parameter:
 >>> import numpy
 >>> fwave,ftrans = numpy.genfromtxt('my_custom_filter.txt',unpack=True)
 >>> filt = numpy.vstack((fwave,ftans))
->>> splat.filterMag(sp,'Custom',custom = filt)
+>>> sphot.filterMag(sp,'Custom',custom = filt)
 	(13.097348489365396, 0.046530636178618558)
 
 or define a simple notch filter with the two end wavelengthts:
 
->>> splat.filterMag(sp,'Custom',notch=[1.2,1.3])
+>>> sphot.filterMag(sp,'Custom',notch=[1.2,1.3])
 	(14.301864415761377, 0.031774478113182188)
 
 
@@ -274,7 +277,7 @@ This routine can take ``absolute`` as a parameter flag to indicate that the spec
 
 
 Classification
------------------
+--------------
 
 SPLAT contains several different methods for classifying a spectrum:
 
@@ -332,7 +335,11 @@ and fit to specific regions using either the ``fit_ranges`` parameter or setting
 >>> splat.classifyByStandard(sp,method='kirkpatrick')
     ('L7.0', 0.5)
 
-Subdwarf and extreme subdwarf standards can be accessed by setting the ``sd`` or ``esd`` parameters to True.  Finally, setting ``plot`` to True will bring up a comparison plot between the source and best fit standard.
+Subdwarf and extreme subdwarf standards can be accessed by setting the ``sd``, ``dsd`` or ``esd`` parameters to True.  
+Young spectral standards can be accessed by setting ``vlg``, ``intg`` to True.
+You can try all of these standards at once by setting ``all`` to True.
+
+Finally, setting ``plot`` to True will bring up a comparison plot between the source and best fit standard.
 
 >>> splat.classifyByStandard(sp,method='kirkpatrick',plot=True)
     ('L7.0', 0.5)
@@ -343,7 +350,8 @@ Subdwarf and extreme subdwarf standards can be accessed by setting the ``sd`` or
 	:align: center
 
 
-Note that the first time you run `classifyByStandard()`_, the standards must be initially read in to the dictionaries ``splat.SPEX_STDS``, ``splat.SPEX_SD_STDS`` and ``splat.SPEX_ESD_ STDS``. This can be prompted using the `initiateStandards()`_ routine:
+Note that the first time you run `classifyByStandard()`_, the standards must be initially read in to the dictionaries ``splat.STDS_DWARF_SPEX``, ``splat.STDS_SD_SPEX``,  ``splat.STDS_DSD_SPEX``, ``splat.STDS_ESD_SPEX``, 
+``splat.STDS_VLG_SPEX`` and ``splat.STDS_INTG_SPEX``. This can be prompted using the `initiateStandards()`_ routine:
 
 .. _`initiateStandards()` : api.html#splat.initiateStandards
 
@@ -449,139 +457,35 @@ Finally, the routine will return a dictionary of all index scores by setting the
      'spt': 'L4.0'}
 
 
-
-
-
-Empirical Relations
--------------------
-
-There are a number of empirical relations contained in the SPLAT code to help convert between common parameters. Examples include:
-
-.. _`typeToColor()` : api.html#splat.typeToColor
-.. _`typeToTeff()` : api.html#splat.typeToTeff
-.. _`typeToMag()` : api.html#splat.typeToMag
-.. _`estimateDistance()` : api.html#splat.estimateDistance
-
-* `typeToColor()`_
-	Takes a spectral type and optionally a ``color`` (string) and returns the typical color of the source, using one of the following empirical relationships (set by ``ref`` keyword):
-
-        - `Skryzpek et al. (2015) <http://adsabs.harvard.edu/abs/2015A%26A...574A..78S>`_ : Allowed spectral type range is M5 to T8, and colors include 'i-z', 'z-Y', 'Y-J', 'J-H', 'H-K', 'K-W1', 'W1-W2' and all intermediate colors (``ref`` = 'skryzpek')
-
-    Example:
-
-    >>> import splat
-    >>> print splat.typeToColor('L3', 'J-K')
-        (1.46, nan)
-    >>> print splat.typeToMag('M5', 'i-z', ref = 'skrzypek', unc=0.5)
-        (0.91, 0.57797809947624645)
-    >>> print splat.typeToMag('M0', 'i-z', ref = 'skrzypek')
-        Spectral type M0.0 is outside the range for reference set Skrzypek et al. (2015)
-        (nan, nan)
-
-
-* `typeToMag()`_
-	Takes a spectral type and a filter, and returns absolute magnitude, using one of the following empirical relationships (set by ``ref`` keyword):
-
-        - `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_ : Allowed spectral type range is L0 to T8, and allowed filters are MKO K (``ref`` = 'burgasser')
-        - `Faherty et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...752...56F>`_ : Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K. (``ref`` = 'faherty')
-        - `Dupuy & Liu (2012) <http://adsabs.harvard.edu/abs/2012ApJS..201...19D>`_ : Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS K. (``ref`` = 'dupuy')
-        - `Filippazzo et al. (2015). <http://adsabs.harvard.edu/abs/2015ApJ...810..158F>`_ : Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J and WISE W2. (``ref`` = 'filippazzo')       
-
-    Example:
-
-    >>> import splat
-    >>> print splat.typeToMag('L3', '2MASS J')
-        (12.730064813273996, 0.4)
-    >>> print splat.typeToMag(21, 'MKO K', ref = 'burgasser')
-        (10.705292820099999, 0.26)
-    >>> print splat.typeToMag(24, '2MASS J', ref = 'faherty')
-        Invalid filter given for Abs Mag/SpT relation from Faherty et al. (2012)
-        (nan, nan)
-    >>> print splat.typeToMag('M0', '2MASS H', ref = 'dupuy')
-        Spectral Type is out of range for Abs Mag/SpT relation from Dupuy & Liu (2012) Abs Mag/SpT relation
-        (nan, nan)
-
-
-
-* `typeToTeff()`_
-	Returns an effective temperature (Teff) and its uncertainty for a given spectral type, using one of the following empirical relationships (set by ``ref`` keyword):
-
-        - `Golimowski et al. (2004) <http://adsabs.harvard.edu/abs/2004AJ....127.3516G>`_ : Allowed spectral type range is M6 to T8  (``ref`` = 'golimowski')
-        - `Looper et al. (2008) <http://adsabs.harvard.edu/abs/2008ApJ...685.1183L>`_ : Allowed spectral type range is L0 to T8  (``ref`` = 'looper')
-        - `Stephens et al. (2009) <http://adsabs.harvard.edu/abs/2009ApJ...702..154S>`_ : Allowed spectral type range is M6 to T8 and uses alternate coefficients for L3 to T8.  (``ref`` = 'stephens')
-        - `Marocco et al. (2013) <http://adsabs.harvard.edu/abs/2013AJ....146..161M>`_ : Allowed spectral type range is M7 to T8  (``ref`` = 'marocco')
-        - `Filippazzo et al. (2015). <http://adsabs.harvard.edu/abs/2015ApJ...810..158F>`_ : Allowed spectral type range is M6 to T9 (``ref`` = 'filippazzo')
-
-    Example:
-
-    >>> import splat
-    >>> print splat.typeToTeff(20)
-        (2233.4796740905499, 100.00007874571999)
-    >>> print splat.typeToTeff(20, unc = 0.3, ref = 'golimowski')
-        (2305.7500497902788, 127.62548366132124)
-
-
-* `estimateDistance()`_
-	Takes the apparent magnitude in a given ``filter`` and either takes or determines the absolute magnitude from empirical relations, then uses the absolute magnitude/distance relation to estimate the distance to the object in parsecs. Returns estimated distance and uncertainty in parsecs. If given only a spectrum object, this routine will measure the apparent magnitude, classify the spectrum, estimate the absolute magnitude, and estimate the distance; any additional inputs such as ``mag`` (for apparent magnitude), ``spt`` (for spectral type), ``absmag`` (for absolute magnitude) and their uncertainties will reduce dependence on the Spectrum object. With all three parameters, this routine operates without a Spectrum object.
-
-    Example:
-    >>> import splat
-    >>> sp = splat.getSpectrum(shortname='1555+0954')[0]
-    Retrieving 2 files
-    >>> splat.estimateDistance(sp)
-        Please specify the filter used to determine the apparent magnitude
-        (nan, nan)
-    >>> splat.estimateDistance(sp, filter='2MASS J')
-    	(212.20546914411625, 50.593458481040173)
-    >>> sp.fluxCalibrate('2MASS J',12.83)
-    >>> splat.estimateDistance(sp, filter='2MASS J')
-    	(6.8967647325911665, 1.7439740983732679)
-    >>> splat.estimateDistance(sp, filter='2MASS J', mag=12.83)
-    	(6.4528658994336521, 1.6853855848066823)
-    >>> splat.estimateDistance(sp, filter='2MASS J', mag=12.83, mag_e=0.03)
-    	(6.1292809243737336, 1.4986946706101478)
-    >>> splat.estimateDistance(sp, filter='2MASS J', mag=12.83, mag_e=0.03, spt='L5')
-    	(6.9954039276140554, 1.1679437846129084)
-    >>> splat.estimateDistance(filter='2MASS J', mag=12.83, mag_e=0.03, spt='L5', absmag=13.56, absmag_e = 0.2)
-    	(7.1788501442275461, 0.74878521889450711)
-
-
-Other Utilities
----------------
-
-TBD
-
 Useful Program Constants
 ------------------------
 
 ``splat.DB_SOURCES``
-	An Astropy Table object containing the Source Database
+	A pandas table containing the Source Database
 	
 ``splat.DB_SPECTRA``
-	An Astropy Table object containing the Spectrum Database
+	A pandas table containing the Spectrum Database
 	
-``splat.SPEX_STDS``
-	A dictionary containing Spectrum objects of the M0-T9 dwarf standards; this dictionary is 
+``splat.STDS_DWARF_SPEX``, ``splat.STDS_SD_SPEX``,  ``splat.STDS_DSD_SPEX``, ``splat.STDS_ESD_SPEX``, 
+``splat.STDS_VLG_SPEX`` and ``splat.STDS_INTG_SPEX``
+	Dictionaries containing Spectrum objects of the SpeX classification standard templates; this dictionary is 
 	populated through calls to `splat.getStandard()`_ . A standard Spectrum object can be accessed
 	by using the spectral type as the referring key:
 
->>> sp = splat.getStandard('M0')[0]		# both are Spectrum objects of Gliese 270
->>> sp = splat.SPEX_STDS['M0.0']		# note the mandatory decimal
-
-	Available standards can be accessed through the command:
-
->>> splat.SPEX_STDS.keys()
-
-	
-``splat.SPEX_SD_STDS``
-	Same as ``splat.SPEX_STDS`` for subdwarf standards
-
-``splat.SPEX_ESD_STDS``
-	Same as ``splat.SPEX_STDS`` for extreme subdwarf standards
+>>> sp = splat.getStandard('M0')[0]		    # both are Spectrum objects of Gliese 270
+>>> sp = splat.STDS_DWARF_SPEX['M0.0']		# note the mandatory decimal
 
 ``splat.FILTERS``
 	A dictionary containing information on all of the filters used in SPLAT photometry. 
 
+``splat.INSTRUMENTS``
+	A dictionary containing information on the instruments currently read in as `native` to the SPLAT code. 
+
+``splat.SPECTRAL_MODELS``
+	A dictionary containing information on the spectral models currently contained in the SPLAT code
+
+``splat.EVOLUTIONARY_MODELS``
+	A dictionary containing information on the evolutionary models currently contained in the SPLAT code
 
 
 * :ref:`genindex`

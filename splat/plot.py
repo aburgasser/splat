@@ -273,33 +273,38 @@ def plotSpectrum(*args, **kwargs):
         
     :Example 1: A simple view of a random spectrum
        >>> import splat
+       >>> import splat.plot as splot
        >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0]
        >>> spc.plot()                       # this automatically generates a "quicklook" plot
-       >>> splat.plotSpectrum(spc)          # does the same thing
-       >>> splat.plotSpectrum(spc,uncertainty=True,tdwarf=True)     # show the spectrum uncertainty and T dwarf absorption features
+       >>> splot.plotSpectrum(spc)          # does the same thing
+       >>> splot.plotSpectrum(spc,uncertainty=True,tdwarf=True)     # show the spectrum uncertainty and T dwarf absorption features
 
     :Example 2: Viewing a set of spectra for a given object
         In this case we'll look at all of the spectra of TWA 30B in the library, sorted by year and compared to the first epoch data
         This is an example of using multiplot and multipage
 
+       >>> import splat
+       >>> import splat.plot as splot
        >>> splist = splat.getSpectrum(name = 'TWA 30B')         # get all spectra of TWA 30B
        >>> junk = [sp.normalize() for sp in splist]             # normalize the spectra
        >>> dates = [sp.date for sp in splist]                   # observation dates
        >>> spsort = [s for (s,d) in sorted(zip(dates,splis))]   # sort spectra by dates
        >>> dates.sort()                                         # don't forget to sort dates!
-       >>> splat.plotSpectrum(spsort,multiplot=True,layout=[2,2],multipage=True,\   # here's our plot statement
+       >>> splot.plotSpectrum(spsort,multiplot=True,layout=[2,2],multipage=True,\   # here's our plot statement
            comparison=spsort[0],uncertainty=True,mdwarf=True,telluric=True,legends=dates,\
            legendLocation='lower left',output='TWA30B.pdf')
        
     :Example 3: Display the spectra sequence of L dwarfs
         This example uses the list of standard files contained in SPLAT, and illustrates the stack feature
 
+       >>> import splat
+       >>> import splat.plot as splot
        >>> spt = [splat.typeToNum(i+20) for i in range(10)] # generate list of L spectral types
        >>> splat.initiateStandards()                        # initiate standards
        >>> splist = [splat.SPEX_STDS[s] for s in spt]       # extact just L dwarfs
        >>> junk = [sp.normalize() for sp in splist]         # normalize the spectra
        >>> labels = [sp.shortname for sp in splist]         # set labels to be names
-       >>> splat.plotSpectrum(splist,figsize=[10,20],labels=labels,stack=0.5,\  # here's our plot statement
+       >>> splot.plotSpectrum(splist,figsize=[10,20],labels=labels,stack=0.5,\  # here's our plot statement
            colorScheme='copper',legendLocation='outside',telluric=True,output='lstandards.pdf')
        
     '''
@@ -873,10 +878,11 @@ def plotBatch(*args, **kwargs):
 
     :Example:
        >>> import glob, splat
+       >>> import splat.plot as splot
        >>> files = glob.glob('/home/mydata/*.fits')
-       >>> sp = splat.plotBatch(files,classify=True,output='comparison.pdf')
-       >>> sp = splat.plotBatch('/home/mydata/*.fits',classify=True,output='comparison.pdf')
-       >>> sp = splat.plotBatch([splat.Spectrum(file=f) for f in files],classify=True,output='comparison.pdf')
+       >>> sp = splot.plotBatch(files,classify=True,output='comparison.pdf')
+       >>> sp = splot.plotBatch('/home/mydata/*.fits',classify=True,output='comparison.pdf')
+       >>> sp = splot.plotBatch([splat.Spectrum(file=f) for f in files],classify=True,output='comparison.pdf')
        All three of these commands produce the same result
     '''
 
@@ -1077,39 +1083,51 @@ def plotSED(*args, **kwargs):
 
 
 
-def plotSequence(*args, **kwargs):
+def plotSequence(spec,type_range=2, std_class='dwarf', spt='', output='', verbose=False, **kwargs):
     '''
-    :Purpose: Compares a spectrum to a sequence of standards a batch of spectra into a 2x2 set of PDF files, with options of overplotting comparison spectra, including best-match spectral standards. 
+    :Purpose: 
 
-    :param input: A single or list of Spectrum objects or filenames, or the glob search string for a set of files (e.g., '/Data/myspectra/*.fits'). 
-    :type input: required
+        Visualze compares a spectrum to a sequence of standards laid out vertically. The standards are chosen to be some number of
+        type about the best-guess classification, either passed as a parameter or determined with `classifyByStandard()`_.
+        More than one spectrum can be provided, in which case multiple plots are returned
 
-    :param type_range: Number of subtypes to consider above and below best-fit spectral type 
-    :type type_range: optional, default = 2
-    :param spt: Default spectral type for source; this input skips classifyByStandard
-    :type spt: optional, default = None
-    :param output: Filename for output; full path should be include if not saving to current directory. If blank, plot is shown on screen
-    :type output: optional, default = None (screen display)
+    :Required Inputs: 
 
-    Relevant parameters for plotSpectrum may also be passed
+        :param: spec: A single or series of Spectrum objects or filenames, or the glob search string for a set of files to read in (e.g., '/Data/myspectra/*.fits'). At least one input must be provided
+
+    :Optional Inputs: 
+
+        :param: spt = '': Default spectral type for source; this input skips `classifyByStandard()`_
+        :param: type_range = 2: Number of subtypes to consider above and below best-fit spectral type 
+        :param: std_type = 'dwarf': Type of standards to compare to. Should be one of the following: 'dwarf' (default), 'sd', 'dsd', 'esd', 'vlg', 'intg'. These can also be defined by setting the equalivalent keyword parameter; e.g., plotSequence(spec,dwarf=True).
+        :param: output = '': Filename for output; full path should be include if not saving to current directory. If blank, plot is shown on screen
+        :param: verbose = False: Set to True to provide additional feedback
+
+        In addition, relevant parameters for `plotSpectrum()`_ and `classifyByStandard()`_ may be provided
+
+    :Outputs: 
+
+        A matplotlib figure object containing the plot  of the spectrum(a) compared to sequence of standards on screen or saved to file
 
     :Example:
-       >>> import glob, splat
-       >>> files = glob.glob('/home/mydata/*.fits')
-       >>> sp = splat.plotBatch(files,classify=True,output='comparison.pdf')
-       >>> sp = splat.plotBatch('/home/mydata/*.fits',classify=True,output='comparison.pdf')
-       >>> sp = splat.plotBatch([splat.Spectrum(file=f) for f in files],classify=True,output='comparison.pdf')
-       All three of these commands produce the same result
+       >>> import splat
+       >>> import splat.plot as splot
+       >>> sp = splat.getSpectrum(lucky=True)[0]
+       >>> fig = splat.plotSequence(sp,output='classify.pdf')
+
+.. _`plotSpectrum()` : api.html#splat.plot.plotSpectrum
+.. _`classifyByStandard()` : api.html#splat.classifyByStandard
+
     '''
 
 # check inputs
-    if len(args) == 0:
-        raise ValueError('\nNeed to provide a spectrum object or filename for plotSequence')
 
 #    from .splat import classifyByStandard, Spectrum
-    parameters = ['type_range']
-    checkKeys(kwargs,parameters,forcekey=False)
-    type_range =kwargs.get('type_range',2)
+#    parameters = ['type_range']
+#    checkKeys(kwargs,parameters,forcekey=False)
+#    type_range =kwargs.get('type_range',2)
+
+# some taste preferences
     kwargs['stack']=kwargs.get('stack',0.5)
 #    kwargs['legendLocation']=kwargs.get('legendLocation','outside')
     kwargs['telluric']=kwargs.get('telluric',True)
@@ -1121,39 +1139,72 @@ def plotSequence(*args, **kwargs):
     kwargs['fontscale']=kwargs.get('fontscale',1.5)
 
 # process input
-    if isinstance(args[0],str):
-        if len(glob.glob(os.path.normpath(args[0]))) == 0:
-            raise ValueError('\nCannot find input file {} - make sure full path is included'.format(args[0]))
+    if isinstance(spec,str):
+        if len(glob.glob(os.path.normpath(spec))) == 0:
+            raise ValueError('\nCannot find input file {} - make sure full path is included'.format(spec))
         try:
-            sp = splat.Spectrum(file = args[0])
+            sp = splat.Spectrum(file = spec)
         except:
-            raise ValueError('\nCould not read in file {} - make sure the file is correctly formatted'.format(args[0]))
-    elif isinstance(args[0],splat.Spectrum):
-        sp = copy.deepcopy(args[0])
+            raise ValueError('\nCould not read in file {} - make sure the file is correctly formatted'.format(spec))
+    elif isinstance(spec,splat.Spectrum):
+        sp = copy.deepcopy(spec)
     else:
         raise ValueError('\nInput should be a Spectrum object or filename')
     sp.normalize()
 
+# choose the standard class set
+    allowed_classes = ['dwarf','sd','dsd','esd','vlg','intg','subdwarf','lowg']
+    for a in allowed_classes:
+        if kwargs.get(a,False) == True: std_class = a
+    std_class = std_class.lower()
+    if std_class not in allowed_classes: 
+        if verbose == True: print('\nDo not recognize class {}; defaulting to dwarf'.format(allowed_classes))
+        std_class = 'dwarf'
+
+    if verbose==True: print('Using {} class standards'.format(std_class))
+
+    if std_class == 'dwarf': std_ref = splat.STDS_DWARF_SPEX
+    elif std_class == 'sd' or std_class == 'subdwarf': std_ref = splat.STDS_SD_SPEX
+    elif std_class == 'dsd': std_ref = splat.STDS_DSD_SPEX
+    elif std_class == 'esd': std_ref = splat.STDS_ESD_SPEX
+    elif std_class == 'vlg' or std_class == 'lowg': std_ref = splat.STDS_VLG_SPEX
+    elif std_class == 'intg': std_ref = splat.STDS_INTG_SPEX
+    else:
+        raise ValueError('\nUnknown class type {}'.format(std_class))
+
 # classify by comparison to standards
-    spt = kwargs.get('spt',splat.classifyByStandard(sp,**kwargs)[0])
+    spt = kwargs.get('spt',splat.classifyByStandard(sp,std_class=std_class,**kwargs)[0])
     if not isinstance(spt,str):
-        spt = typeToNum(spt)
+        spt = typeToNum(spt,subclass=std_class)
 
 # produce range of standards for plot
-    stdnum = numpy.arange(numpy.floor(typeToNum(spt)-type_range),numpy.ceil(typeToNum(spt)+type_range)+1)
-    if numpy.max(stdnum) > 39:
-        stdnum-=(numpy.max(stdnum)-39)
-    if numpy.min(stdnum) < 10:
-        stdnum+=(10-numpy.min(stdnum))
-    stdspt = [typeToNum(i) for i in stdnum]
-    stds = [STDS_DWARF_SPEX[s] for s in stdspt]
-    stdlabels = ['{} Standard'.format(s) for s in stdspt]
+    std_ref_sptn = [typeToNum(s) for s in std_ref]
+    std_ref_sptn.sort()
+    try:
+        ref_ind = std_ref_sptn.index(typeToNum(spt))
+    except:
+        std_ref_diff = [numpy.absolute(s-splat.typeToNum('sdL0.0')) for s in std_ref_sptn]
+        ref_ind = numpy.argmin(numpy.array(std_ref_diff))
+    ref_range = [int(ref_ind-type_range),int(ref_ind+type_range)+1]
+    if ref_range[0]<0: ref_range[0] = 0
+    if ref_range[-1]>len(std_ref_sptn): ref_range[-1] = -1
+    std_spts = [splat.typeToNum(s,subclass=std_class) for s in std_ref_sptn[ref_range[0]:ref_range[1]]]
+
+    stds = []
+    stdlabels = []
+    for s in std_spts:
+        stds.append(std_ref[s])
+        if s == spt: stdlabels.append('{} Standard (Best)'.format(s))
+        else: stdlabels.append('{} Standard'.format(s))
+    if len(stds) == 0:
+        raise ValueError('\nCould not find any standards between {} and {} in class {}; try a wide range or different standard class'.format(stdspt[0],stdspt[1],std_class))
+    kwargs['yrange']=kwargs.get('yrange',[0,len(stds)*kwargs['stack']+1.])
     plotlist = []
-    labels = []
-    colors = []
+#    labels = []
+#    colors = []
     for i,stdsp in enumerate(stds):
         plotlist.append([stdsp,sp])
-        labels.extend([])
+#        labels.extend([])
     fig = plotSpectrum(stds,comparison=sp,labels=stdlabels,**kwargs)
 
     return fig

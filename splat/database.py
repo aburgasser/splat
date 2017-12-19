@@ -1064,7 +1064,7 @@ def importSpectra(*args,**kwargs):
     '''
 # check user access
     if checkAccess() == False:
-        print('\nSpectra may only be imported into library by designated manager or while online; please email {}'.format(SPLAT_EMAIL))
+        print('\nSpectra may only be imported into library by designated manager or while online; please email {}'.format(splat.SPLAT_EMAIL))
         return
 
 # check online

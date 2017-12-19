@@ -17,25 +17,29 @@ Database Access
 ^^^^^^^^^^^^^^^
 .. autofunction:: splat.utilities.checkFile
 .. autofunction:: splat.utilities.checkAccess
-.. autofunction:: splat.database.fetchDatabase
 .. autofunction:: splat.core.getSpectrum
 .. autofunction:: splat.core.getStandard
-.. autofunction:: splat.core.importSpectra
 .. autofunction:: splat.core.initiateStandards
+.. autofunction:: splat.core.searchLibrary
+.. autofunction:: splat.core.addUserData
 .. autofunction:: splat.core.keySource
 .. autofunction:: splat.core.keySpectrum
-.. autofunction:: splat.core.searchLibrary
 
 
 Spectral Comparison
 ^^^^^^^^^^^^^^^^^^^
 .. autofunction:: splat.core.compareSpectra
 .. autofunction:: splat.core.stitch
-.. autofunction:: splat.core._generateMask
+.. autofunction:: splat.core.generateMask
 
 
 Spectral Classification and Characterization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: splat.core.measureIndex
+.. autofunction:: splat.core.measureIndexSet
+.. autofunction:: splat.core.measureEW
+.. autofunction:: splat.core.measureEWElement
+.. autofunction:: splat.core.measureEWSet
 .. autofunction:: splat.core.classifyByIndex
 .. autofunction:: splat.core.classifyByStandard
 .. autofunction:: splat.core.classifyByTemplate
@@ -55,12 +59,10 @@ Spectrophotometry
 .. autofunction:: splat.photometry.visualizeFilter
 
 
-Other Spectral Analyses
-^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: splat.core.measureIndex
-.. autofunction:: splat.core.measureIndexSet
-.. autofunction:: splat.core.measureEW
-.. autofunction:: splat.core.measureEWSet
+High-resolution Spectroscopic Functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: splat.utilities.baryVel
+.. autofunction:: splat.utilities.lsfRotation
 
 
 Empirical Relationships

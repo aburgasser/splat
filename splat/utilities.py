@@ -208,7 +208,7 @@ def checkInstrument(instrument):
     if not isinstance(instrument,str):
         return output
     for k in list(INSTRUMENTS.keys()):
-        if instrument.upper()==k.upper() or instrument.upper().replace(' ','_').replace('_','-')==k.upper() or instrument.upper() in [a.upper() for a in INSTRUMENTS[k]['altnames']]:
+        if instrument.upper()==k.upper() or instrument.upper().replace(' ','_').replace('_','-')==k.upper() or instrument.upper() in [a.upper() for a in INSTRUMENTS[k]['altname']]:
             output = k
     return output
 
@@ -242,7 +242,7 @@ def checkFilterName(f,verbose=False):
     if not isinstance(f,str):
         return output
     for k in list(FILTERS.keys()):
-        if f.lower().replace(' ','_') == k.lower().replace(' ','_') or f.lower().replace(' ','_') in [x.lower().replace(' ','_') for x in FILTERS[k]['altnames']]:
+        if f.lower().replace(' ','_') == k.lower().replace(' ','_') or f.lower().replace(' ','_') in [x.lower().replace(' ','_') for x in FILTERS[k]['altname']]:
             output = k
     if verbose==True and output==False:
         print('\nSPLAT does not contain the filter {}'.format(f))
@@ -280,7 +280,7 @@ def checkSpectralModelName(model):
     if not isinstance(model,str):
         return output
     for k in list(SPECTRAL_MODELS.keys()):
-        if model.lower()==k.lower() or model.lower() in SPECTRAL_MODELS[k]['altnames']:
+        if model.lower()==k.lower() or model.lower() in SPECTRAL_MODELS[k]['altname']:
             output = k
     return output
 
@@ -312,7 +312,7 @@ def checkEvolutionaryModelName(model):
     if not isinstance(model,str):
         return output
     for k in list(EVOLUTIONARY_MODELS.keys()):
-        if model.lower()==k.lower() or model.lower() in EVOLUTIONARY_MODELS[k]['altnames']:
+        if model.lower()==k.lower() or model.lower() in EVOLUTIONARY_MODELS[k]['altname']:
             output = k
     return output
 
@@ -328,7 +328,7 @@ def checkAbsMag(ref,filt='',verbose=False):
 
     Required Inputs:
         :param ref: A string containing the reference for absolute magnitude relation, 
-        among the keys and alternate names in splat.ABSMAG_SETS
+        among the keys and alternate names in splat.SPT_ABSMAG_SETS
 
     Optional Inputs:
         :param filt: A string containing the filter name, to optionally check if this filter is among those defined in the reference set
@@ -349,11 +349,11 @@ def checkAbsMag(ref,filt='',verbose=False):
 # check reference    
     if not isinstance(ref,str):
         return output
-    for k in list(ABSMAG_SETS.keys()):
-        if ref.lower()==k.lower() or ref.lower() in ABSMAG_SETS[k]['altname']:
+    for k in list(SPT_ABSMAG_SETS.keys()):
+        if ref.lower()==k.lower() or ref.lower() in SPT_ABSMAG_SETS[k]['altname']:
             output = k
     if output == False:
-        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(ABSMAG_SETS.keys())))
+        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(SPT_ABSMAG_SETS.keys())))
         return output
 
 # check filter
@@ -362,8 +362,8 @@ def checkAbsMag(ref,filt='',verbose=False):
         if filt == False:
             if verbose: print('\nFilter {} is not among the filters used in SPLAT; try: {}'.format(filt,list(FILTERS.keys())))
             return False
-        if filt not in list(ABSMAG_SETS[output]['filters'].keys()):
-            if verbose: print('\nFilter {} is not among the filters defined for the {} absolutel magnitude relation; try: {}'.format(filt,output,list(ABSMAG_SETS[output]['filters'].keys())))
+        if filt not in list(SPT_ABSMAG_SETS[output]['filters'].keys()):
+            if verbose: print('\nFilter {} is not among the filters defined for the {} absolutel magnitude relation; try: {}'.format(filt,output,list(SPT_ABSMAG_SETS[output]['filters'].keys())))
             return False
 
     return output
@@ -379,7 +379,7 @@ def checkBC(ref,filt='',verbose=False):
 
     Required Inputs:
         :param ref: A string containing the reference for absolute magnitude relation, 
-        among the keys and alternate names in splat.BC_SETS
+        among the keys and alternate names in splat.SPT_BC_SETS
 
     Optional Inputs:
         :param filt: A string containing the filter name, to optionally check if this filter is among those defined in the reference set
@@ -400,11 +400,11 @@ def checkBC(ref,filt='',verbose=False):
 # check reference    
     if not isinstance(ref,str):
         return output
-    for k in list(BC_SETS.keys()):
-        if ref.lower()==k.lower() or ref.lower() in BC_SETS[k]['altname']:
+    for k in list(SPT_BC_SETS.keys()):
+        if ref.lower()==k.lower() or ref.lower() in SPT_BC_SETS[k]['altname']:
             output = k
     if output == False:
-        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(BC_SETS.keys())))
+        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(SPT_BC_SETS.keys())))
         return output
 
 # check filter
@@ -413,8 +413,8 @@ def checkBC(ref,filt='',verbose=False):
         if filt == False:
             if verbose: print('\nFilter {} is not among the filters used in SPLAT; try: {}'.format(filt,list(FILTERS.keys())))
             return False
-        if filt not in list(BC_SETS[output]['filters'].keys()):
-            if verbose: print('\nFilter {} is not among the filters defined for the {} absolutel magnitude relation; try: {}'.format(filt,output,list(BC_SETS[output]['filters'].keys())))
+        if filt not in list(SPT_BC_SETS[output]['filters'].keys()):
+            if verbose: print('\nFilter {} is not among the filters defined for the {} absolutel magnitude relation; try: {}'.format(filt,output,list(SPT_BC_SETS[output]['filters'].keys())))
             return False
 
     return output
@@ -430,7 +430,7 @@ def checkLbol(ref,verbose=False):
 
     Required Inputs:
         :param ref: A string containing the reference for lumiosity/SpT relation, 
-        among the keys and alternate names in splat.LBOL_SETS
+        among the keys and alternate names in splat.SPT_LBOL_SETS
 
     Optional Inputs:
         None
@@ -451,11 +451,11 @@ def checkLbol(ref,verbose=False):
 # check reference    
     if not isinstance(ref,str):
         return output
-    for k in list(LBOL_SETS.keys()):
-        if ref.lower()==k.lower() or ref.lower() in LBOL_SETS[k]['altname']:
+    for k in list(SPT_LBOL_SETS.keys()):
+        if ref.lower()==k.lower() or ref.lower() in SPT_LBOL_SETS[k]['altname']:
             output = k
     if output == False:
-        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(LBOL_SETS.keys())))
+        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(SPT_LBOL_SETS.keys())))
         return output
 
     return output
@@ -479,9 +479,9 @@ def checkEmpiricalRelation(ref,refdict,verbose=False):
     Example:
 
     >>> import splat
-    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.LBOL_SETS))
+    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.SPT_LBOL_SETS))
         filippazzo2015
-    >>> print(splat.checkEmpiricalRelation('burgasser',splat.BC_SETS))
+    >>> print(splat.checkEmpiricalRelation('burgasser',splat.SPT_BC_SETS))
         False
     '''
     output = False
@@ -957,31 +957,44 @@ def properCoordinates(c,frame='icrs',icrs=True,**kwargs):
 
 
 
-def typeToNum(inp, **kwargs):
+def typeToNum(inp, subclass='dwarf', error='', uncertainty=0., luminosity_class = '', metallicity_class='', age_class = '', color_class='', peculiar=False, verbose=False, **kwargs):
     '''
-    :Purpose: Converts between string and numeric spectral types, and vise versa.
-    :param input: Spectral type to convert. Can convert a number or a string from 0 (K0) and 49.0 (Y9).
-    :param error: magnitude of uncertainty. ':' for uncertainty > 1 and '::' for uncertainty > 2.
-    :type error: optional, default = ''
-    :param uncertainty: uncertainty of spectral type
-    :type uncertainty: optional, default = 0
-    :param subclass: subclass of object. Options include:
+    :Purpose: 
 
-        - *sd*: object is a subdwarf
-        - *esd*: object is an extreme subdwarf
-        - *usd*: object is an ultra subdwarf
+        Converts between string and numeric spectral types, with the option of specifying the class prefix/suffix and uncertainty tags
 
-    :type subclass: optional, default = ''
-    :param lumclass: luminosity class of object represented by roman numerals
-    :type lumclass: optional, default = ''
-    :param ageclass: age class of object
-    :type ageclass: optional, default = ''
-    :param colorclass: color class of object
-    :type colorclass: optional, default = ''
-    :param peculiar: if object is peculiar or not
-    :type peculiar: optional, default = False
+    :Required inputs: 
 
-    .. not too sure how colorclass and ageclass work
+        :param inp: Spectral type to convert. Can convert a number or a string from 0.0 (K0) and 49.0 (Y9).
+
+    :Optional inputs: 
+
+        :param: error = '': flag to indicate magnitude of classification uncertainty; by default ':' for uncertainty > 1 subtypes and '::' for uncertainty > 2 subtype added as suffix to string output. Can also use `err`.
+        :param: uncertainty = 0: numerical uncertainty of classification; can also use `unc`
+        :param: subclass = 'dwarf': spectral class; options include:
+
+            - *field* or *fld* or *alpha*: object is a field dwarf - no prefix/suffix to string output
+            - *sd* or *subdwarf*: object is a subdwarf - 'sd' prefix to string output
+            - *dsd* or *d/sd*: object is an intermediate subdwarf - 'd/sd' prefix to string output
+            - *esd*: object is an extreme subdwarf - 'esd' prefix to string output
+            - *usd*: object is an ultra subdwarf - 'usd' prefix to string output
+            - *delta*: object is a extremely low surface gravity dwarf (~1 Myr) - 'delta' suffix to string output
+            - *vlg* or *gamma* or *lowg*: object is a low surface gravity dwarf (~10 Myr) - 'gamma' suffix to string output
+            - *intg* or *beta*: object is an intermediate surface gravity dwarf (~100 Myr) - 'beta' suffix to string output
+            - *giant*: object is a giant with luminosity class III suffix added to string output
+            - *subgiant*: object is a subgiant with luminosity class IV suffix added to string output
+            - *supergiant*: object is a supergiant with luminosity class I suffix added to string output
+
+        :param: metallicity_class = '': metallicity class of object, traditionally represented by 'sd','d/sd','esd','usd', and added on as prefix to string output. Can also use `lumclass`
+        :param: luminosity_class = '': luminosity class of object traditionally represented by roman numerals (e.g., 'III') and added on as suffix to string output. Can also use `lumclass`
+        :param: age_class = '': age class of object, traditionally one of 'alpha', 'beta', 'gamma', 'delta' and added on as suffix to string output (see subclass). Can also use 'ageclass'
+        :param: color_class: color class of object, traditionally 'b' (for blue) or 'r' (for red), added as prefix to string output. Can also use 'colorclass'
+        :param: peculiar = False: Set to True if object is peculiar, which adds a 'pec' suffix to string output
+        :param: verbose = False: Set to True to provide more feedback
+
+    :Outputs: 
+
+        The number or string of a spectral type
 
     :Example:
         >>> import splat
@@ -996,144 +1009,153 @@ def typeToNum(inp, **kwargs):
             nan
     '''
 # keywords
-    error = kwargs.get('error','')
-    unc = kwargs.get('uncertainty',0.)
-    subclass = kwargs.get('subclass','')
-    lumclass = kwargs.get('lumclass','')
-    ageclass = kwargs.get('ageclass','')
+    error = kwargs.get('err','')
+    uncertainty = kwargs.get('unc',uncertainty)
+    luminosity_class = kwargs.get('lumclass',luminosity_class)
+    metallicity_class = kwargs.get('z_class',metallicity_class)
+    metallicity_class = kwargs.get('metal_class',metallicity_class)
+    age_class = kwargs.get('ageclass',age_class)
     colorclass = kwargs.get('colorclass','')
     peculiar = kwargs.get('peculiar',False)
     spletter = 'KMLTY'
-    verbose = kwargs.get('verbose',False)
+
+# as of 12/18/2017, this only works on individual inputs
+    if isinstance(inp,list):
+        raise ValueError('\nInput to typeToNum() must be a single element (string or number)')
 
 # convert input into an array
-    output = []
-    var = copy.deepcopy(inp)
+    # output = []
+    # var = copy.deepcopy(inp)
 
-    if not isinstance(var,list): var = [var]
-    if not isinstance(error,list): error = [error]
-    if not isinstance(unc,list): unc = [unc]
-    if not isinstance(subclass,list): subclass = [subclass]
-    if not isinstance(lumclass,list): lumclass = [lumclass]
-    if not isinstance(ageclass,list): ageclass = [ageclass]
-    if not isinstance(colorclass,list): colorclass = [colorclass]
-    if len(error) < len(var):
-        for i in numpy.arange(len(var)-len(error)): error.append(error[-1])
-    if len(unc) < len(var):
-        for i in numpy.arange(len(var)-len(unc)): unc.append(unc[-1])
+    # if not isinstance(var,list): var = [var]
+    # if not isinstance(error,list): error = [error]
+    # if not isinstance(unc,list): unc = [unc]
+    # if not isinstance(subclass,list): subclass = [subclass]
+    # if not isinstance(lumclass,list): lumclass = [lumclass]
+    # if not isinstance(ageclass,list): ageclass = [ageclass]
+    # if not isinstance(colorclass,list): colorclass = [colorclass]
+    # if len(error) < len(var):
+    #     for i in numpy.arange(len(var)-len(error)): error.append(error[-1])
+    # if len(unc) < len(var):
+    #     for i in numpy.arange(len(var)-len(unc)): unc.append(unc[-1])
 
 # number -> spectral type
-    if (isNumber(var[0])):
-        if len(subclass) < len(var):
-            for i in numpy.arange(len(var)-len(subclass)): subclass.append(subclass[-1])
-        if len(lumclass) < len(var):
-            for i in numpy.arange(len(var)-len(lumclass)): lumclass.append(lumclass[-1])
-        for i,l in enumerate(lumclass):
-            if l != '': lumclass[i]=' '+lumclass[i]
-        if len(ageclass) < len(var):
-            for i in numpy.arange(len(var)-len(ageclass)): ageclass.append(ageclass[-1])
-        if len(colorclass) < len(var):
-            for i in numpy.arange(len(var)-len(colorclass)): colorclass.append(colorclass[-1])
-        spind = numpy.array([int(abs(x/10.)) for x in var])
-        spdec = numpy.array([numpy.around(x,1) for x in var])-spind*10.
-        for i,v in enumerate(var):
-            pstr = ''
-            if (unc[i] > 1.):
-                error[i] = ':'
-            if (unc[i] > 2.):
-                error[i] = '::'
-            if (peculiar):
-                pstr = 'p'
-            if (0 <= spind[i] < len(spletter)):
-                output.append(colorclass[i]+subclass[i]+spletter[spind[i]]+'{:3.1f}'.format(spdec[i])+ageclass[i]+lumclass[i]+pstr+error[i])
-            else:
-                if verbose: print('Spectral type number must be between 0 ({}0) and {} ({}9)'.format(spletter[0],len(spletter)*10.-1.,spletter[-1]))
-                output.append('N/A')
+    if isNumber(inp):
+        # if len(subclass) < len(var):
+        #     for i in numpy.arange(len(var)-len(subclass)): subclass.append(subclass[-1])
+        # if len(lumclass) < len(var):
+        #     for i in numpy.arange(len(var)-len(lumclass)): lumclass.append(lumclass[-1])
+        # for i,l in enumerate(lumclass):
+        #     if l != '': lumclass[i]=' '+lumclass[i]
+        # if len(ageclass) < len(var):
+        #     for i in numpy.arange(len(var)-len(ageclass)): ageclass.append(ageclass[-1])
+        # if len(colorclass) < len(var):
+        #     for i in numpy.arange(len(var)-len(colorclass)): colorclass.append(colorclass[-1])
+
+        spind = int(abs(inp/10.))
+        if spind < 0 or spind > len(spletter): 
+            if verbose: print('Spectral type number must be between 0 ({}0) and {} ({}9)'.format(spletter[0],len(spletter)*10.-1.,spletter[-1]))
+            return 'N/A'
+        spdec = numpy.around(inp,1)-spind*10.
+# deal with subclasses
+        if subclass.lower() == 'sd' or subclass.lower() == 'subdwarf': metallicity_class = 'sd'
+        if subclass.lower() == 'dsd' or subclass.lower() == 'd/sd': metallicity_class = 'd/sd'
+        if subclass.lower() == 'esd': metallicity_class = 'esd'
+        if subclass.lower() == 'usd': metallicity_class = 'usd'
+        if subclass.lower() == 'giant': luminosity_class = 'III'
+        if subclass.lower() == 'subgiant': luminosity_class = 'IV'
+        if subclass.lower() == 'supergiant': luminosity_class = 'I'
+        if subclass.lower() == 'delta': age_class = 'delta'
+        if subclass.lower() == 'vlg' or subclass.lower() == 'vl-g' or subclass.lower() == 'lowg' or subclass.lower() == 'low-g' or subclass.lower() == 'gamma': age_class = 'gamma'
+        if subclass.lower() == 'intg' or subclass.lower() == 'int-g' or subclass.lower() == 'beta': age_class = 'beta'
+        if uncertainty > 1.: error = ':'
+        if uncertainty > 2.: error = '::'
+        pstr = ''
+        if peculiar == True: pstr = 'p'
+        
+        return '{}{}{}{:3.1f}{}{}{}{}'.format(color_class,metallicity_class,spletter[spind],spdec,age_class,luminosity_class,pstr,error)
+
 
 # spectral type -> number
-    elif isinstance(var[0],str):
-        output = []
-        for i,v in enumerate(var):
-            if (sys.version_info.major == 2):
-                v = string.split(v,sep='+/-')[0]    # remove +/- sides
-            else:
-                v = v.split('+/-')[0]    # remove +/- sides
-            v = v.replace('...','').replace(' ','')
+    elif isinstance(inp,str):
+#        output = []
+        if (sys.version_info.major == 2):
+            inp = string.split(inp,sep='+/-')[0]    # remove +/- sides
+        else:
+            inp = inp.split('+/-')[0]    # remove +/- sides
+        inp = inp.replace('...','').replace(' ','')
 
-            sptype = re.findall('[{}]'.format(spletter),v.upper())
-            outval = 0.
+        sptype = re.findall('[{}]'.format(spletter),inp.upper())
+        outval = 0.
 
-            if (len(sptype) >= 1):
 # specialty classes                
-                sptype = sptype[0]
-                ytype = re.findall('[abcd]',v.split('p')[-1])
-                if (len(ytype) == 1):
-                    ageclass[i] = ytype[0]
-                if (v.find('p') != -1):
-                     peculiar = True
-                     v.replace('p','')
-                if (v.find('alpha') != -1):
-                     ageclass[i] = 'alpha'
-                     v.replace('alpha','')
-                if (v.find('beta') != -1):
-                     ageclass[i] = 'beta'
-                     v.replace('beta','')
-                if (v.find('gamma') != -1):
-                     ageclass[i] = 'gamma'
-                     v.replace('gamma','')
-                if (v.find('delta') != -1):
-                     ageclass[i] = 'delta'
-                     v.replace('delta','')
-                if (v.find('esd') != -1):
-                     subclass[i] = 'esd'
-                     v.replace('esd','')
-                elif (v.find('usd') != -1):
-                     subclass[i] = 'usd'
-                     v.replace('usd','')
-                elif (v.find('d/sd') != -1):
-                     subclass[i] = 'd/sd'
-                     v.replace('d/sd','')
-                elif (v.find('sd') != -1):
-                     subclass[i] = 'sd'
-                     v.replace('sd','')
-                if (v.count('I') > 0):
-                     lumclass[i] = ''.join(re.findall('I',v))
-                     v.replace('I','')
-                if (v.count(':') > 0):
-                     error[i] = ''.join(re.findall(':',v))
-                     v.replace(':','')
-                if (v[0] == 'b' or v[0] == 'r'):
-                     colorclass[i] = v[0]
-                     v.replace('b','')
-                     v.replace('r','')
+        if len(sptype) >= 1:
+            ytype = re.findall('[abcd]',inp.split('p')[-1])
+            if len(ytype) == 1: age_class = ytype[0]
+            if inp.find('pec') != -1:
+                 peculiar = True
+                 inp.replace('pec','')
+            if inp.find('p') != -1:
+                 peculiar = True
+                 inp.replace('p','')
+            if inp.find('alpha') != -1:
+                 age_class = 'alpha'
+                 inp.replace('alpha','')
+            if inp.find('beta') != -1:
+                 age_class = 'beta'
+                 inp.replace('beta','')
+            if inp.find('gamma') != -1:
+                 age_class = 'gamma'
+                 inp.replace('gamma','')
+            if inp.find('delta') != -1:
+                 age_class = 'delta'
+                 inp.replace('delta','')
+            if inp.find('esd') != -1:
+                 subclass = 'esd'
+                 inp.replace('esd','')
+            elif inp.find('usd') != -1:
+                 subclass = 'usd'
+                 inp.replace('usd','')
+            elif inp.find('d/sd') != -1:
+                 subclass = 'd/sd'
+                 inp.replace('d/sd','')
+            elif inp.find('sd') != -1:
+                 subclass = 'sd'
+                 inp.replace('sd','')
+            if inp.count('I') > 0:
+                 luminosity_class = ''.join(re.findall('I',inp))
+                 inp.replace('I','')
+            if inp.count(':') > 0:
+                 error = ''.join(re.findall(':',inp))
+                 inp.replace(':','')
+            if inp[0] == 'b' or inp[0] == 'r':
+                 color_class = inp[0]
+                 inp.replace('b','')
+                 inp.replace('r','')
 
-                outval = spletter.find(sptype[0])*10.
-                spind = v.find(sptype[0])+1
-                if (spind < len(v)):
-                    if (v.find('.') < 0):
-                        if (isNumber(v[spind])):
-                            outval += float(v[spind])
-                    else:
-                        try:
-                            outval += float(v[spind:spind+3])
-                            spind = spind+3
-                        except:
-                            if verbose: print('\nProblem converting input type {} to a numeric type'.format(v))
-                            outval = numpy.nan
+            outval = spletter.find(sptype[0])*10.
+            spind = inp.find(sptype[0])+1
+            if spind < len(inp):
+                if inp.find('.') < 0:
+                    if isNumber(inp[spind]):
+                        outval = outval+float(inp[spind])
+                else:
+                    try:
+                        outval = outval+float(inp[spind:spind+3])
+                        spind = spind+3
+                    except:
+                        if verbose: print('\nProblem converting input type {} to a numeric type'.format(inp))
+                        outval = numpy.nan
+            return outval
 
-            else:
-                if verbose: print('\nOnly spectral classes {} are handled by typeToNum'.format(spletter))
-                outval = numpy.nan
-            output.append(outval)
+        else:
+            if verbose: print('\nOnly spectral classes {} are handled by typeToNum'.format(spletter))
+            return numpy.nan
 
 # none of the above - return the input
     else:
         if verbose: print('\nWarning: could not recognize format of spectral type {}\n'.format(inp))
-        output = var
-    if len(output) == 1 and not isinstance(inp,list): 
-        return output[0]
-    else:
-        return output
+        return inp
 
 
 def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.):
@@ -1328,6 +1350,57 @@ def baryVel(coord,obstime,location='keck',correction='barycenter'):
     else:
         raise ValueError('\n Could not interpret preferred correction {} '.format(correction))
 
+
+def lsfRotation(vsini,vsamp,epsilon=0.6):
+    '''
+    Purpose: 
+
+        Generates a line spread function for rotational broadening, based on Gray (1992) 
+        Ported over by Chris Theissen and Adam Burgasser from the IDL routine 
+        `lsf_rotate <https://idlastro.gsfc.nasa.gov/ftp/pro/astro/lsf_rotate.pro>`_ writting by W. Landsman
+
+    Required Inputs:  
+
+        :param: **vsini**: vsini of rotation, assumed in units of km/s
+        :param: **vsamp**: sampling velocity, assumed in unit of km/s. vsamp must be smaller than vsini or else a delta function is returned
+
+    Optional Inputs:
+
+        :param: **epsilon**: limb darkening parameter based on Gray (1992)
+
+    Output:
+
+        Line spread function kernel with length 2*vsini/vsamp (forced to be odd)
+
+    :Example:
+        >>> import splat
+        >>> kern = lsfRotation(30.,3.)
+        >>> print(kern)
+            array([ 0.        ,  0.29053574,  0.44558751,  0.55691445,  0.63343877,
+            0.67844111,  0.69330989,  0.67844111,  0.63343877,  0.55691445,
+            0.44558751,  0.29053574,  0.        ])
+    '''
+# limb darkening parameters
+    e1 = 2. * (1. - epsilon)
+    e2 = numpy.pi * epsilon/2.
+    e3 = numpy.pi * (1. - epsilon/3.)
+
+# vsini must be > vsamp - if not, return a delta function
+    if vsini <= vsamp:
+        print('\nWarning: velocity sampling {} is broader than vsini {}; returning delta function')  
+        lsf = numpy.zeros(5)  
+        lsf[2] = 1.
+        return lsf
+
+# generate LSF
+    nsamp = numpy.ceil(2.*vsini/vsamp)
+    if nsamp % 2 == 0:
+        nsamp+=1
+    x = numpy.arange(nsamp)-(nsamp-1.)/2.
+    x = x*vsamp/vsini
+    x2 = numpy.absolute(1.-x**2)
+
+    return (e1*numpy.sqrt(x2) + e2*x2)/e3
 
 #####################################################
 ############   STATISTICAL FUNCTIONS   ##############
