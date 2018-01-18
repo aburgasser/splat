@@ -29,8 +29,8 @@ from scipy.integrate import trapz
 
 
 # code constants
-from .initialize import *
 import splat
+from splat.initialize import *
 
 # Python 2->3 fix for input
 try: input=raw_input
@@ -178,6 +178,44 @@ def checkOnlineFile(*args):
     else:
         return requests.get(SPLAT_URL).status_code == requests.codes.ok
 
+def checkEmpiricalRelation(ref,refdict,verbose=False):
+    '''
+    Purpose: 
+        General checking program for empirical relation dictionaries 
+
+    Required Inputs:
+        :param ref: A string containing the reference for lumiosity/SpT relation, should be among the keys and alternate names in refdict
+        :param refdict: dictionary containing empirical relation information
+
+    Optional Inputs:
+        None
+
+    Output:
+        A string containing SPLAT's default name for a given reference set, or False if that reference is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.SPT_LBOL_SETS))
+        filippazzo2015
+    >>> print(splat.checkEmpiricalRelation('burgasser',splat.SPT_BC_SETS))
+        False
+    '''
+    output = False
+
+# check reference    
+    if not isinstance(ref,str):
+        return output
+    for k in list(refdict.keys()):
+        if ref.lower()==k.lower() or ref.lower() in refdict[k]['altname']:
+            output = k
+    if output == False:
+        if verbose: print('\nReference {} is not among those present in the reference dictionary; try: {}'.format(ref,list(refdict.keys())))
+        return output
+
+    return output
+
+
 
 def checkInstrument(instrument):
     '''
@@ -276,13 +314,15 @@ def checkSpectralModelName(model):
     >>> print(splat.checkSpectralModelName('somethingelse'))
         False
     '''
-    output = False
-    if not isinstance(model,str):
-        return output
-    for k in list(SPECTRAL_MODELS.keys()):
-        if model.lower()==k.lower() or model.lower() in SPECTRAL_MODELS[k]['altname']:
-            output = k
-    return output
+    return checkEmpiricalRelation(model,SPECTRAL_MODELS)
+
+    # output = False
+    # if not isinstance(model,str):
+    #     return output
+    # for k in list(SPECTRAL_MODELS.keys()):
+    #     if model.lower()==k.lower() or model.lower() in SPECTRAL_MODELS[k]['altname']:
+    #         output = k
+    # return output
 
 
 def checkEvolutionaryModelName(model):
@@ -460,43 +500,6 @@ def checkLbol(ref,verbose=False):
 
     return output
 
-
-def checkEmpiricalRelation(ref,refdict,verbose=False):
-    '''
-    Purpose: 
-        General checking program for empirical relation dictionaries 
-
-    Required Inputs:
-        :param ref: A string containing the reference for lumiosity/SpT relation, should be among the keys and alternate names in refdict
-        :param refdict: dictionary containing empirical relation information
-
-    Optional Inputs:
-        None
-
-    Output:
-        A string containing SPLAT's default name for a given reference set, or False if that reference is not present
-
-    Example:
-
-    >>> import splat
-    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.SPT_LBOL_SETS))
-        filippazzo2015
-    >>> print(splat.checkEmpiricalRelation('burgasser',splat.SPT_BC_SETS))
-        False
-    '''
-    output = False
-
-# check reference    
-    if not isinstance(ref,str):
-        return output
-    for k in list(refdict.keys()):
-        if ref.lower()==k.lower() or ref.lower() in refdict[k]['altname']:
-            output = k
-    if output == False:
-        if verbose: print('\nReference {} is not among those present in the reference dictionary; try: {}'.format(ref,list(refdict.keys())))
-        return output
-
-    return output
 
 
 def checkTelescope(location):

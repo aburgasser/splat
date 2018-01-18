@@ -1,7 +1,7 @@
 name	Veyette
 citation	Veyette et al. (2016,2017)
 bibcode	2017arXiv171010259V
-altnames	veyette16,veyette17,veyette2016,veyette2017
+altname	veyette16,veyette17,veyette2016,veyette2017
 teff	3000
 logg	5.0
 z	0.0

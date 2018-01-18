@@ -1,7 +1,7 @@
 name	Morley 2014
 citation	Morley et al. (2014)
 bibcode	2014ApJ...787...78M
-altnames	morley2014
+altname	morley2014
 teff	300
 logg	5.0
 z	0.0

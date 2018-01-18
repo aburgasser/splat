@@ -112,7 +112,7 @@ def addUserModels(folders=[],default_info={},verbose=True):
             'name': '', 
             'citation': '', 
             'bibcode': '', 
-            'altnames': [], 
+            'altname': [], 
             'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
 
 # read in folders specified in .splat_spectral_models
@@ -189,7 +189,7 @@ def _initializeModels(verbose=False):
         'name': '', 
         'citation': '', 
         'bibcode': '', 
-        'altnames': [], 
+        'altname': [], 
         'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
 
 # folders from which models are to be found
@@ -1103,7 +1103,7 @@ def loadOriginalInterpolatedModel(model='btsettl08',teff=2000,logg=5.0,**kwargs)
     return mdl_return
 
 # make model function
-def makeForwardModel(parameters,data,atmodel=None,binary=False,model=None,model1=None,model2=None,instkern=None,contfitdeg=5,return_nontelluric=False,checkplots=False,checkprefix='tmp',verbose=True):
+def makeForwardModel(parameters,data,atm=None,binary=False,model=None,model1=None,model2=None,instkern=None,contfitdeg=5,return_nontelluric=False,checkplots=False,checkprefix='tmp',verbose=True):
     '''
     parameters may contain any of the following:
         - **modelparam** or **modelparam1**: dictionary of model parameters for primary if model not provided in model or model1: {modelset,teff,logg,z,fsed,kzz,cld}
@@ -1138,9 +1138,9 @@ def makeForwardModel(parameters,data,atmodel=None,binary=False,model=None,model1
         if 'modelparam2' not in list(parameters.keys()):
             raise ValueError('\nMust provide model parameter dictionary for secondary')
 
-    if atmodel != None:
-        if isinstance(atmodel,splat.Spectrum) == False:
-            raise ValueError('\nModel for atmosphere {} must be a Spectrum object'.format(atmodel))
+    if atm != None:
+        if isinstance(atm,splat.Spectrum) == False:
+            raise ValueError('\nModel for atmosphere {} must be a Spectrum object'.format(atm))
     if model2 != None or 'modelparam2' in list(parameters.keys()):
         binary == True
 
@@ -1190,7 +1190,7 @@ def makeForwardModel(parameters,data,atmodel=None,binary=False,model=None,model1
         mdl = mdl1
 
 # read in telluric, scale & apply
-    atm = copy.deepcopy(atmodel)
+    atm = copy.deepcopy(atm)
     if atm == None:
         atm = loadTelluric(mdl.wave.value,output='spec')
     else:
@@ -1271,11 +1271,72 @@ def makeForwardModel(parameters,data,atmodel=None,binary=False,model=None,model1
         
 
 # MCMC loop
-def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=100,dof=0.,binary=False,atmodel=None,interimReport=True,report_index=10,file='tmp',output='all',verbose=True):
-    
+def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=100,dof=0.,binary=False,secondary_model=None,atm=None,report=True,report_index=10,file='tmp',output='all',verbose=True,**kwargs):
+    '''
+    :Purpose:
+
+        Conducts and Markov Chain Monte Carlo (MCMC) forward modeling fit of a spectrum. 
+        This routine assumes the spectral data have already been wavelength calibrated
+        THIS ROUTINE IS CURRENTLY IN DEVELOPMENT
+
+    :Required Inputs:
+
+        :param data: Spectrum object containing the data to be modeled
+        :param model: Spectrum object containing the spectral model; should be of higher resolution and wider wavelength range than the data
+        :param param0: dictionary containing the initial parameters; allowed parameters are the same as those defined in `makeForwardModel()`_
+        :param param_var: dictionary containing the scales (gaussian sigmas) over which the parameters are varied at each iteration; should contain the same elements as param0. If a parameter var is set to 0, then that parameter is held fixed
+
+    :Optional Inputs:
+
+        :param: limits = {}: dictionary containing the limits of the parameters; each parameter that is limited should be matched to a two-element list defining the upper and lower bounds
+        :param: nwalkers = 1: number of MCMC walkers
+        :param: nsteps = 100: number of MCMC steps taken by each walker; the actual number of fits is nsteps x # parameters
+        :param: dof: degrees of freedom; if not provided, assumed to be the number of datapoints minus the number of varied parameters
+        :param: binary = False: set to True to do a binary model fit
+        :param: secondary_model = None: if binary = True, use this parameter to specify the model of the secondary
+        :param: atm = None: Spectrum object containing the atmospheric/instrumental transmission profile (e.g., `loadTelluric()`_)
+        :param: report = True: set to True to iteratively report the progress of the fit 
+        :param: report_index = 10: if report = True, the number of steps to provide an interim report 
+        :param: file = 'tmp': file prefix for outputs; should include full path unless in operating in desired folder
+        :param: output = 'all': what to return on completion; options include:
+
+            * 'all': (default) return a list of all parameter dictionaries and chi-square values
+            * 'best': return only a single dictionary of the best fit parameters and the best fit chi-square value
+
+        :param: verbose = False: provide extra feedback
+
+        mcmcForwardModelFit() will also take as inputs the plotting parameters for `mcmcForwardModelReport()`_ and `plotSpectrum()`_
+
+    :Outputs:
+        
+        Depending on what is set for the `output` parameter, a list or single dictionary containing model parameters, and a list or single best chi-square values.
+        These outputs can be fed into `mcmcForwardModelReport()`_ to visualize the best fitting model and parameters
+
+    :Example:
+
+    >>> import splat
+    >>> import splat.model as spmdl
+    >>> import astropy.units as u
+    >>> # read in spectrum
+    >>> sp = splat.Spectrum('nirspec_spectrum.txt')
+    >>> # read in and trim model
+    >>> mdl = spmdl.loadModel(model='btsettl',teff=2600,logg=5.0,raw=True)
+    >>> mdl.trim([numpy.min(sp.wave)-0.01*u.micron,numpy.max(sp.wave)+0.01*u.micron])
+    >>> # read in and trim atmospheric absorption
+    >>> atm = spmdl.loadTelluric(wave_range=[numpy.min(mdl.wave.value)-0.02,numpy.max(mdl.wave.value)+0.02],output='spec')
+    >>> # inital parameters
+    >>> mpar = {'rv': 0., 'vsini': 10., 'vinst': 5., 'alpha': 0.6}
+    >>> mvar = {'rv': 1., 'vsini': 1., 'vinst': 0.2, 'alpha': 0.05}
+    >>> mlim = {'vsini': [0.,500.], 'alpha': [0.,100.]}
+    >>> # do fit
+    >>> pars,chis = spmdl.mcmcForwardModelFit(sp,mdl,mpar,mvar,limits=mlim,atm=atm,nsteps=100,file='fit'')
+    >>> # visualize results
+    >>> spmdl.mcmcForwardModelReport(sp,mdl,pars,chis,file='fit',chiweights=True,plotParameters=['rv','vsini'])
+
+    '''    
 # generate first fit
     if dof == 0.: dof = int(len(data.wave)-len(list(param0.keys())))
-    mdl = makeForwardModel(param0,data,binary=binary,atmodel=atmodel,model=model)
+    mdl = makeForwardModel(param0,data,binary=binary,atm=atm,model=model)
     chi0,scale = splat.compareSpectra(data,mdl)
     parameters = [param0]
     chis = [chi0]
@@ -1287,7 +1348,7 @@ def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=
             if k in list(limits.keys()):
                 if param[k] < numpy.min(limits[k]): param[k] = 2.*numpy.min(limits[k])-param[k]
                 if param[k] > numpy.max(limits[k]): param[k] = 2.*numpy.max(limits[k])-param[k]
-            mdl = makeForwardModel(param,data,binary=binary,atmodel=atmodel,model=model)
+            mdl = makeForwardModel(param,data,binary=binary,atm=atm,model=model)
             chi,scale = splat.compareSpectra(data,mdl)            
 #            if stats.f.cdf(chi/chi0, dof, dof) < numpy.random.uniform(0,1):
             if stats.f.cdf(chi/numpy.nanmin(chis), dof, dof) < numpy.random.uniform(0,1):
@@ -1297,31 +1358,68 @@ def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=
             chis.append(chi0)
 
 # report where we are            
-        if interimReport == True and i % int(report_index) == 0 and i > 0:
-            l = 'i={}, chi={:.0f}, dof={}'.format(i,chis[-1],dof)
+        if report == True and i % int(report_index) == 0 and i > 0:
+            l = 'Step {}: chi={:.0f}, dof={}'.format(i,chis[-1],dof)
             for k in list(param0.keys()): l+=' , {}={:.2f}'.format(k,parameters[-1][k])
             print(l)
-            mdl,mdlnt = makeForwardModel(parameters[-1],data,binary=binary,atmodel=atmodel,model=model,return_nontelluric=True)
-            chi,scale = splat.compareSpectra(data,mdl)            
-            mdl.scale(scale)
-            mdlnt.scale(scale)
-            splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model','Model+Telluric','Difference\nChi2={:.0f}'.format(chi)],figsize=[15,5],file=file+'_interimComparison.pdf')
+
+            ibest = numpy.argmin(chis)
+            best_parameters = parameters[ibest]
+            l = 'Best chi={:.0f}, dof={}'.format(chis[ibest],dof)
+            for k in list(param0.keys()): l+=' , {}={:.2f}'.format(k,best_parameters[k])
+            print(l)
+
+            # mdl,mdlnt = makeForwardModel(parameters[-1],data,binary=binary,atm=atm,model=model,return_nontelluric=True)
+            # chi,scale = splat.compareSpectra(data,mdl)            
+            # mdl.scale(scale)
+            # mdlnt.scale(scale)
+            # splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model','Model+Telluric','Difference\nChi2={:.0f}'.format(chi)],figsize=kwargs.get('figsize',[15,5]),file=file+'_interimComparison.pdf')
+
+            # mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atm=atm,model=model,return_nontelluric=True)
+            # chi,scale = splat.compareSpectra(data,mdl)
+            # mdl.scale(scale)
+            # mdlnt.scale(scale)
+            # splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model-Telluric','Best Model\nChi2={:.0f}'.format(chi),'Difference'],figsize=kwargs.get('figsize',[15,5]),file=file+'_bestModel.pdf')
+
+            # f = open(file+'_report.txt','w')
+            # f.write('steps completed = {}\n'.format(i))
+            # f.write('best chi^2 = {:.0f}\n'.format(chis[i]))
+            # f.write('degrees of freedom = {:.0f}\n'.format(dof))
+            # for k in list(param0.keys()): f.write('{} = {:.2f}\n'.format(k,best_parameters[k]))
+            # f.close()
+
+            final_parameters = {}
+            for k in list(param0.keys()):
+                vals = []
+                for i in range(len(parameters)): vals.append(parameters[i][k])
+                final_parameters[k] = vals
+
+            mcmcForwardModelReport(data,model,final_parameters,chis,dof=dof,atm=atm,file=file,binary=binary,verbose=verbose,**kwargs)
 
 # identify best model
-#    print(type(chis),type(parameters))
-    i = numpy.argmin(chis)
-    best_chi = chis[i]
-    best_parameters = parameters[i]
+    ibest = numpy.argmin(chis)
+    best_chi = chis[ibest]
+    best_parameters = parameters[ibest]
 
-    if interimReport == True:
-        l = 'Best chi={:.0f}'.format(best_chi)
+# reformat parameters
+    final_parameters = {}
+    for k in list(param0.keys()):
+        vals = []
+        for i in range(len(parameters)): vals.append(parameters[i][k])
+        final_parameters[k] = vals
+
+    if report == True:
+        l = 'Best chi={:.0f}, dof={}'.format(best_chi,dof)
         for k in list(param0.keys()): l+=' , {}={:.2f}'.format(k,best_parameters[k])
         print(l)
-        mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atmodel=atmodel,model=model,return_nontelluric=True)
-        chi0,scale = splat.compareSpectra(data,mdl)
-        mdl.scale(scale)
-        mdlnt.scale(scale)
-        splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model-Telluric','Best Model\nChi2={:.0f}'.format(best_chi),'Difference'],figsize=[15,5],file=file+'_BestModel.pdf')
+
+        mcmcForwardModelReport(data,model,final_parameters,chis,dof=dof,atm=atm,file=file,binary=binary,verbose=verbose,**kwargs)
+
+        # mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atm=atm,model=model,return_nontelluric=True)
+        # chi0,scale = splat.compareSpectra(data,mdl)
+        # mdl.scale(scale)
+        # mdlnt.scale(scale)
+        # splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model-Telluric','Best Model\nChi2={:.0f}'.format(best_chi),'Difference'],figsize=figsize,file=file+'_bestModel.pdf')
     
 # burn off beginning of chain            
 #    burned_parameters = parameters[int(burn*len(parameters)):]
@@ -1331,12 +1429,6 @@ def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=
 #        parameters = burned_parameters
 #        chis = burned_chis
 
-# reformat parameters
-    final_parameters = {}
-    for k in list(param0.keys()):
-        vals = []
-        for i in range(len(parameters)): vals.append(parameters[i][k])
-        final_parameters[k] = vals
 
 # correct for barycentric motion
 #    if isinstance(vbary,u.quantity.Quantity):
@@ -1360,8 +1452,66 @@ def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=
         return final_parameters, chis
 
 
-def mcmcForwardModelReport(data,model,parameters,chis,burn=0.1,dof=0,plotChains=True,plotBest=True,plotMean=True,plotCorner=True,plotParameters=None,writeReport=True,vbary=0.,file='tmp',atmodel=None,chiweights=False,binary=False,verbose=True):
+def mcmcForwardModelReport(data,model,parameters,chis,burn=0.25,dof=0,plotChains=True,plotBest=True,plotMean=True,plotCorner=True,plotParameters=None,writeReport=True,vbary=0.,file='tmp',atm=None,chiweights=False,binary=False,verbose=True):
+    '''
+    :Purpose:
 
+        Plotting and fit analysis routine for `mcmcForwardModelFit()`_
+
+    :Required Inputs:
+
+        :param data: Spectrum object containing the data modeled
+        :param model: Spectrum object containing the spectral model; should be of higher resolution and wider wavelength range than the data
+        :param parameters: dictionary containing the parameters from the fit; each parameter should be linked to a array
+        :param chis: list of the chi-square values (or equivalent statistic) that match the parameter arrays
+
+    :Optional Inputs:
+
+        :param: atm = None: Spectrum object containing the atmospheric/instrumental transmission profile (e.g., `loadTelluric()`_)
+        :param: burn = 0.25: initial fraction of parameters to throw out ("burn-in")
+        :param: dof = 0: degrees of freedom; if not provided, assumed to be the number of datapoints minus the number of varied parameters
+        :param: binary = False: set to True if a binary model fit was done
+        :param: vbary = 0.: set to a velocity (assumed barycentric) to add to rv values
+
+        :param: plotParameters = None: array of the parameters to plot, which should be keys in teh parameters input dictionary; if None, all of the parameters are plot
+        :param: plotChains = True: set to True to plot the parameter & chi-square value chains
+        :param: plotBest = True: set to True to plot the best fit model
+        :param: plotMean = True: set to True to plot the mean parameter model
+        :param: plotCorner = True: set to True to plot a corner plot of parameters (requires corner.py package)
+        :param: writeReport = True: set to True to write out best and average parameters to a file
+
+        :param: chiweights = False: apply chi-square weighting for determining mean parameter values
+        :param: file = 'tmp': file prefix for outputs; should include full path unless in operating in desired folder
+        :param: verbose = False: provide extra feedback
+
+        mcmcForwardModelReport() will also take as inputs the plotting parameters for `plotSpectrum()`_
+
+    :Outputs:
+        
+        Depending on the flags set, various plots showing the derived parameters and best fit model for `mcmcForwardModelFit()`_
+
+    :Example:
+
+    >>> import splat
+    >>> import splat.model as spmdl
+    >>> import astropy.units as u
+    >>> # read in spectrum
+    >>> sp = splat.Spectrum('nirspec_spectrum.txt')
+    >>> # read in and trim model
+    >>> mdl = spmdl.loadModel(model='btsettl',teff=2600,logg=5.0,raw=True)
+    >>> mdl.trim([numpy.min(sp.wave)-0.01*u.micron,numpy.max(sp.wave)+0.01*u.micron])
+    >>> # read in and trim atmospheric absorption
+    >>> atm = spmdl.loadTelluric(wave_range=[numpy.min(mdl.wave.value)-0.02,numpy.max(mdl.wave.value)+0.02],output='spec')
+    >>> # inital parameters
+    >>> mpar = {'rv': 0., 'vsini': 10., 'vinst': 5., 'alpha': 0.6}
+    >>> mvar = {'rv': 1., 'vsini': 1., 'vinst': 0.2, 'alpha': 0.05}
+    >>> mlim = {'vsini': [0.,500.], 'alpha': [0.,100.]}
+    >>> # do fit
+    >>> pars,chis = spmdl.mcmcForwardModelFit(sp,mdl,mpar,mvar,limits=mlim,atm=atm,nsteps=100,file='fit'')
+    >>> # visualize results
+    >>> spmdl.mcmcForwardModelReport(sp,mdl,pars,chis,file='fit',chiweights=True,plotParameters=['rv','vsini'])
+
+    '''    
     par = copy.deepcopy(parameters)
     chi = copy.deepcopy(chis)
     nval = len(chis)
@@ -1387,8 +1537,11 @@ def mcmcForwardModelReport(data,model,parameters,chis,burn=0.1,dof=0,plotChains=
         vb = copy.deepcopy(vbary)
     if 'rv' in list(par.keys()): par['rv'] = [r+vb for r in par['rv']]
     if 'rv1' in list(par.keys()): par['rv1'] = [r+vb for r in par['rv1']]
-    if 'rv2' in list(par.keys()): par['rv2'] = [r+vb for r in par['rv2']]
-        
+    if 'rv2' in list(par.keys()): 
+        par['rv2'] = [r+vb for r in par['rv2']]
+        par['rv1-rv2'] = numpy.array(par['rv1'])-numpy.array(par['rv2'])
+        par['rv2-rv1'] = numpy.array(par['rv2'])-numpy.array(par['rv1'])
+
 # best parameters
     i = numpy.argmin(chi)
     best_parameters = {}
@@ -1452,7 +1605,7 @@ def mcmcForwardModelReport(data,model,parameters,chis,burn=0.1,dof=0,plotChains=
 # plot best model
     if plotBest==True:
         plt.clf()
-        mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atmodel=atmodel,model=model,return_nontelluric=True)
+        mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atm=atm,model=model,return_nontelluric=True)
         chi0,scale = splat.compareSpectra(data,mdl)
         mdl.scale(scale)
         mdlnt.scale(scale)
@@ -1461,7 +1614,7 @@ def mcmcForwardModelReport(data,model,parameters,chis,burn=0.1,dof=0,plotChains=
 # plot mean model
     if plotMean==True:
         plt.clf()
-        mdl,mdlnt = makeForwardModel(mean_parameters,data,binary=binary,atmodel=atmodel,model=model,return_nontelluric=True)
+        mdl,mdlnt = makeForwardModel(mean_parameters,data,binary=binary,atm=atm,model=model,return_nontelluric=True)
         chi0,scale = splat.compareSpectra(data,mdl)
         mdl.scale(scale)
         mdlnt.scale(scale)
@@ -2276,7 +2429,9 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
         'bibcode': '1991aass.book.....L',
         'istransmission': True
         } 
-        return Spectrum(**mkwargs)
+        atm = Spectrum(**mkwargs)
+        atm.funit = u.m/u.m
+        return atm
     else: 
         return numpy.array(trans_sampled)
 
