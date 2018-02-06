@@ -29,7 +29,7 @@ from splat.utilities import *
 import splat.core as splat
 
 
-def plotMap(*args,**kwargs):
+def plotMap(projection='mollweide',file='',*args,**kwargs):
     '''
     :Purpose: Plot coordinates onto an equatorial map grid
 
@@ -80,7 +80,6 @@ def plotMap(*args,**kwargs):
        >>> splot.plotMap(c)
     '''
     
-    projection = kwargs.get('projection','mollweide')
     figsize = kwargs.get('figsize',(8,6))
     colors = kwargs.get('colors',['k' for i in range(len(args))])
     colors = kwargs.get('color',colors)
@@ -96,8 +95,7 @@ def plotMap(*args,**kwargs):
     symsizes = kwargs.get('symsizes',symsizes)
     rdec = kwargs.get('reference_declination',None)
     rdec = kwargs.get('rdec',rdec)
-    file = kwargs.get('output',None)
-    file = kwargs.get('file',file)
+    file = kwargs.get('output',file)
     file = kwargs.get('filename',file)
 
 

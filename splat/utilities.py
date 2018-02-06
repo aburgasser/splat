@@ -885,6 +885,48 @@ def designationToCoordinate(value, **kwargs):
     else:
         return [ra,dec]
 
+def designationToCoordinateString(designation,delimiter=' ',radec_delimiter=' '):
+    '''
+    :Purpose: 
+
+        Convert a designation string into a coordinate string with delimiters between hour, minute, second, etc.
+
+    :Required Inputs: 
+
+        :param designation: designation, which should be a string of the form 'J12345678+01234567'
+
+    :Optional Inputs: 
+
+        :param: delimiter = ' ': delimiter between coordinate elements
+        :param: radec_delimiter = ' ': delimiter between RA and declination substrings
+
+    :Output: 
+
+        coordinate string of the form '12 34 56.78 +01 23 45.67' (depending on delimiters)
+
+    :Example:
+    >>> import splat
+    >>> splat.designationToCoordinateString('J1555264+0954120')
+    15 55 26.4 +09 54 12.0
+    >>> splat.designationToCoordinateString('J155526400+095412000',delimiter=':')
+    15 55 26.400 +09 54 12.000
+    '''
+    if not isinstance(designation,string): raise ValueError('Input variable must be a string')
+
+    d = designation.replace('J','').replace('j','').replace('.','')
+    dsym = '+'
+    tmp = d.split(dsym)
+    if len(tmp) != 2: 
+        dsym = '-'
+        tmp = d.split(dsym)
+    if len(tmp) != 2: raise ValueError('problem processing designation string {}'.format(d))
+    output = tmp[0][0:2]+delimiter+tmp[0][2:4]+delimiter+tmp[0][4:6]
+    if len(tmp[0]) > 6: output = output+'.'+tmp[0][6:]
+    output = output+radec_delimiter+dsym+tmp[1][0:2]+delimiter+tmp[1][2:4]+delimiter+tmp[1][4:6]
+    if len(tmp[1]) > 6: output = output+'.'+tmp[1][6:]
+
+    return output
+
 
 def designationToShortName(value):
     '''
@@ -1323,10 +1365,15 @@ def baryVel(coord,obstime,location='keck',correction='barycenter'):
                     raise ValueError('\nCould not convert location input {} into an EarthLocation; may be offline'.format(location))
         elif isinstance(location,list) or isinstance(location,float):
             try:
-                if len(l) == 2:
-                    l = EarthLocation.from_geodetic(lat=location[0]*u.deg, lon=location[1]*u.deg)
-                elif len(l) == 3:
-                    l = EarthLocation.from_geodetic(lat=location[0]*u.deg, lon=location[1]*u.deg, height=location[2]*u.m)
+                if len(location) == 2:
+                    if not isUnit(l[0]): location = [x*u.deg for x in l]
+                    l = EarthLocation.from_geodetic(lat=location[0], lon=location[1])
+                elif len(location) == 3:
+                    if not isUnit(location[0]): 
+                        location[0] = l[0]*u.deg
+                        location[1] = l[1]*u.deg
+                        location[2] = l[2]*u.m
+                    l = EarthLocation.from_geodetic(lat=location[0], lon=location[1], height=location[2])
                 else:
                     raise ValueError('\nCould not convert location input {} into an EarthLocation'.format(location))
             except:
@@ -1447,6 +1494,68 @@ def gauss(x,*p):
 
     A,mu,sig,c = p
     return c+A*numpy.exp(-(x-mu)**2/(2*sig**2))
+
+
+def reMap(x1,y1,x2,nsamp=100):
+    '''
+    :Purpose: 
+
+        Maps a function y(x) onto a new grid x'. If x' is higher resolution this is done through interpolation; 
+        if x' is lower resolution, this is done by integrating over the relevant pixels
+
+    Required Inputs:
+
+        :param x1: x-axis values for original function
+        :param y1: y-axis values for original function
+        :param x2: x-axis values for output function
+
+    Optional Inputs:
+
+        :param nsamp: Number of samples for stepwise integration if going from high resolution to low resolution
+
+    Output:
+
+        y-axis values for resulting remapped function
+
+    :Example:
+
+    >>> # a coarse way of downsampling spectrum
+    >>> import splat, numpy
+    >>> sp = splat.Spectrum(file='high_resolution_spectrum.fits')
+    >>> w_low = numpy.linspace(numpy.min(sp.wave.value),numpy.max(sp.wave.value),len(sp.wave.value)/10.)
+    >>> f_low = splat.integralResample(sp.wave.value,sp.flux.value,w_low)
+    >>> n_low = splat.integralResample(sp.wave.value,sp.noise.value,w_low)
+    >>> sp.wave = w_low*sp.wave.unit
+    >>> sp.flux = f_low*sp.flux.unit
+    >>> sp.noise = n_low*sp.noise.unit
+    '''
+
+# check inputs
+    if x2[0] < x1[0] or x2[-1] > x1[-1]: 
+        raise ValueError('\nOutput x range {} to {} must be within input x range {} to {}'.format(x2[0],x2[-1],x1[0],x1[-1]))
+
+    f = interp1d(x1,y1,bounds_error=False,fill_value=0.)
+    y2 = f(x2)
+
+# high resolution -> low resolution: intergrate
+    if len(y1) > len(y2): 
+
+# set up samples
+        xs = [numpy.max([x1[0],x2[0]-0.5*(x2[1]-x2[0])])]
+        for i in range(len(x2)-1): xs.append(x2[i]+0.5*(x2[i+1]-x2[i]))
+        xs.append(numpy.min([x2[-1]+0.5*(x2[-1]-x2[-2]),x1[-1]]))
+
+# integral loop
+        y2 = []
+        for i in range(len(x2)):
+            dx = numpy.linspace(xs[i],xs[i+1],nsamp)
+            y2.append(trapz(f(dx),x=dx)/trapz(numpy.ones(nsamp),x=dx))
+#    plt.plot(xh,yh,color='k')
+#    plt.plot(xl,ys,color='r')
+
+    return y2
+
+
 
 
 def integralResample(xh, yh, xl, nsamp=100):

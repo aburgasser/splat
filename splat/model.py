@@ -1103,11 +1103,11 @@ def loadOriginalInterpolatedModel(model='btsettl08',teff=2000,logg=5.0,**kwargs)
     return mdl_return
 
 # make model function
-def makeForwardModel(parameters,data,atm=None,binary=False,model=None,model1=None,model2=None,instkern=None,contfitdeg=5,return_nontelluric=False,checkplots=False,checkprefix='tmp',verbose=True):
+def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model=None,model1=None,model2=None,instkern=None,contfitdeg=5,return_nontelluric=False,checkplots=False,checkprefix='tmp',verbose=True):
     '''
     parameters may contain any of the following:
-        - **modelparam** or **modelparam1**: dictionary of model parameters for primary if model not provided in model or model1: {modelset,teff,logg,z,fsed,kzz,cld}
-        - **modelparam2**: dictionary of model parameters for secondary if model not provided in model2: {modelset,teff,logg,z,fsed,kzz,cld}
+        - **modelparam** or **modelparam1**: dictionary of model parameters for primary if model not provided in model or model1: {modelset,teff,logg,z,fsed,kzz,cld,instrument}
+        - **modelparam2**: dictionary of model parameters for secondary if model not provided in model2: {modelset,teff,logg,z,fsed,kzz,cld,instrument}
         - **rv** or **rv1**: radial velocity of primary
         - **rv2**: radial velocity of secondary
         - **vsini** or **vsini1**: rotational velocity of primary
@@ -1120,52 +1120,104 @@ def makeForwardModel(parameters,data,atm=None,binary=False,model=None,model1=Non
     '''
 # check inputs
 
+    if 'modelset' in list(parameters.keys()) and 'modelset1' not in list(parameters.keys()): parameters['modelset1'] = parameters['modelset']
+    if 'set' in list(parameters.keys()) and 'modelset1' not in list(parameters.keys()): parameters['modelset1'] = parameters['set']
+    if 'set1' in list(parameters.keys()) and 'modelset1' not in list(parameters.keys()): parameters['modelset1'] = parameters['set1']
+    if 'set2' in list(parameters.keys()) and 'modelset2' not in list(parameters.keys()): parameters['modelset2'] = parameters['set2']
+
+# data
     if data != None:
         if isinstance(data,splat.Spectrum) == False:
             raise ValueError('\nData {} must be a Spectrum object'.format(data))
-    if model != None or model1 != None:
-        if model != None and isinstance(model,splat.Spectrum) == False:
-            raise ValueError('\nModel for primary source {} must be a Spectrum object'.format(model))
-        if model1 != None and isinstance(model1,splat.Spectrum) == False:
+
+# model / model parameters
+    if model1 == None and model1 != None: model1 = copy.deepcopy(model)
+
+    if model1 != None:
+        if isinstance(model1,splat.Spectrum) == False:
             raise ValueError('\nModel for primary source {} must be a Spectrum object'.format(model1))
     else:
-        if 'modelparam' not in list(parameters.keys()) or 'modelparam1' not in list(parameters.keys()):
-            raise ValueError('\nMust provide model parameter dictionary for primary')
-    if model2 != None:
-        if isinstance(model2,splat.Spectrum) == False:
-            raise ValueError('\nModel for secondary source {} must be a Spectrum object'.format(model2))
-    elif model1 == None and model == None:
-        if 'modelparam2' not in list(parameters.keys()):
-            raise ValueError('\nMust provide model parameter dictionary for secondary')
+        if 'modelset1' not in list(parameters.keys()): raise ValueError('\nMust provide model parameters for primary')
 
+    if binary == True and model2 == None and 'modelset2' not in list(parameters.keys()): 
+        parameters['modelset2'] = parameters['modelset1']
+
+    if binary == True:
+        if model2 != None:
+            if isinstance(model2,splat.Spectrum) == False:
+                raise ValueError('\nModel for secondary source {} must be a Spectrum object'.format(model2))
+        elif 'modelset2' not in list(parameters.keys()): 
+            raise ValueError('\nMust provide model parameters for secondary')
+
+    if 'modelset1' in list(parameters.keys()):
+        mset1 = checkSpectralModelName(parameters['modelset1'])
+        if mset1 != False: parameters['modelset1'] = mset1
+        else: raise ValueError('Unknown model set {} for primary'.format(parameters['modelset1']))
+
+    if 'modelset2' in list(parameters.keys()):
+        mset2 = checkSpectralModelName(parameters['modelset2'])
+        if mset2 != False: parameters['modelset2'] = mset2
+        else: raise ValueError('Unknown model set {} for primary'.format(parameters['modelset2']))
+
+    if 'instrument' not in list(parameters.keys()): parameters['instrument'] = 'RAW'
+    if parameters['instrument'] not in list(splat.SPECTRAL_MODELS[parameters['modelset1']]['instruments'].keys()):
+        raise ValueError('Instrument {} has not been established for model {}'.format(parameters['instrument'],parameters['modelset1']))
+
+# telluric absorption
     if atm != None:
         if isinstance(atm,splat.Spectrum) == False:
             raise ValueError('\nModel for atmosphere {} must be a Spectrum object'.format(atm))
-    if model2 != None or 'modelparam2' in list(parameters.keys()):
-        binary == True
 
 # establish model spectrum
-    if model == None and model1 == None:
-# code to read in new model - TBD
-        raise ValueError('\nHave not added in model read yet')
-    elif model != None:
-        mdl1 = copy.deepcopy(model)
-    else:
+    if model1 != None:
         mdl1 = copy.deepcopy(model1)
+    else:
+# read in new model
+        mparam = {'modelset': parameters['modelset1'], 'instrument': parameters['instrument']}
+        for m in list(splat.SPECTRAL_MODELS[parameters['modelset1']]['default'].keys()):
+            if m in list(parameters.keys()): mparam[m] = parameters[m]
+            if '{}1'.format(m) in list(parameters.keys()): mparam[m] = parameters['{}1'.format(m)]
+        try:
+            mdl1 = getModel(**mparam)
+        except:
+            raise ValueError('\nError in creating primary model with parameters {}'.format(mparam))
+#        print(mparam)
+#        mdl1.info()
+
+# add in secondary if desired
     if binary==True:
-        if model2 == None:
-            if 'modelparam2' not in list(parameters.keys()):
+        if duplicate == True:
+            mdl2 = copy.deepcopy(mdl1)
+        elif model2 != None:
+            mdl2 = copy.deepcopy(model2)
+        else:
+            mparam = {'modelset': parameters['modelset2'], 'instrument': parameters['instrument']}
+            for m in list(splat.SPECTRAL_MODELS[parameters['modelset2']]['default'].keys()):
+                if '{}2'.format(m) in list(parameters.keys()): mparam[m] = parameters['{}2'.format(m)]
+            if len(list(mparam.keys())) == 2:
+                print('Warning: no parameters provided for secondary; assuming a duplicate model')
                 mdl2 = copy.deepcopy(mdl1)
             else:
-# code to read in new model - TBD
-                raise ValueError('\nHave not added in model read yet')
-        else:
-            mdl2 = copy.deepcopy(model2)
+                try: 
+                    mdl2 = getModel(**mparam)
+                except:
+                    raise ValueError('\nError in creating secondary model with parameters {}'.format(mparam))
+#        mdl2.info()
+
+# make sure everything is on the same wavelength range
+    if atm != None:
+        atm.toWaveUnit(data.wave.unit)
+    mdl1.toWaveUnit(data.wave.unit)    
+    if binary == True: 
+        mdl2.toWaveUnit(data.wave.unit)    
+
+# visualize spectra for error checking
         if checkplots==True:
             splot.plotSpectrum(mdl1,mdl2,colors=['k','r'],legend=['Model 1','Model 2'],file=checkprefix+'_model.pdf')
     else:
         if checkplots==True:
             splot.plotSpectrum(mdl1,colors=['k'],legend=['Model 1'],file=checkprefix+'_model.pdf')
+
 
 # apply rv shift and vsini broadening the model spectrum
     if 'rv' in list(parameters.keys()):
@@ -1190,40 +1242,44 @@ def makeForwardModel(parameters,data,atm=None,binary=False,model=None,model1=Non
         mdl = mdl1
 
 # read in telluric, scale & apply
-    atm = copy.deepcopy(atm)
-    if atm == None:
-        atm = loadTelluric(mdl.wave.value,output='spec')
-    else:
+    if atm != None:
 # integral resample telluric profile onto mdl flux range
-        if len(atm.flux) != len(mdl.flux):
-            funit = atm.flux.unit
-            atm.flux = splat.integralResample(atm.wave.value,atm.flux.value,mdl.wave.value)
-            atm.flux*=funit
-            atm.wave = mdl.wave
-            atm.noise = [numpy.nan for f in atm.flux]*funit
-            atm.variance = [numpy.nan for f in atm.flux]*(funit**2)
-    if 'alpha' in list(parameters.keys()):
-        atm.flux = [t**parameters['alpha'] for t in atm.flux.value]*atm.funit
-    mdlt = mdl*atm 
-    if checkplots==True:
-        splot.plotSpectrum(mdlt,mdl,colors=['r','k'],legend=['Model x Atmosphere','Model'],file=checkprefix+'_modelatm.pdf')
+        atmapp = copy.deepcopy(atm)
+        if len(atmapp.flux) != len(mdl.flux):
+            funit = atmapp.flux.unit
+#            atmapp.flux = splat.integralResample(atmapp.wave.value,atmapp.flux.value,mdl.wave.value)
+            atmapp.flux = splat.reMap(atmapp.wave.value,atmapp.flux.value,mdl.wave.value)
+            atmapp.flux = atmapp.flux*funit
+            atmapp.wave = mdl.wave
+            atmapp.noise = [numpy.nan for f in atmapp.flux]*funit
+            atmapp.variance = [numpy.nan for f in atmapp.flux]*(funit**2)
+        if 'alpha' in list(parameters.keys()):
+            atmapp.flux = [t**parameters['alpha'] for t in atmapp.flux.value]*atmapp.flux.unit
+        mdlt = mdl*atmapp 
+        if checkplots==True:
+            splot.plotSpectrum(mdlt,mdl,colors=['r','k'],legend=['Model x Atmosphere','Model'],file=checkprefix+'_modelatm.pdf')
+    else: mdlt = copy.deepcopy(mdl)
 
 # resample original and telluric corrected models onto data wavelength range
-    funit = mdlt.flux.unit
+    funit = mdl.flux.unit
     mdlsamp = copy.deepcopy(mdl)
-    mdlsamp.flux = splat.integralResample(mdl.wave.value,mdl.flux.value,data.wave.value)
-    mdlsamp.flux*=funit
+#    mdlsamp.flux = splat.integralResample(mdl.wave.value,mdl.flux.value,data.wave.value)
+    mdlsamp.flux = splat.reMap(mdl.wave.value,mdl.flux.value,data.wave.value)
+    mdlsamp.flux = mdlsamp.flux*funit
     mdlsamp.wave = data.wave
     mdlsamp.noise = [numpy.nan for f in mdlsamp.flux]*funit
-    mdlsamp.variance = [numpy.nan for f in mdlsamp.flux]*funit
+    mdlsamp.variance = [numpy.nan for f in mdlsamp.flux]*(funit**2)
+    funit = mdlt.flux.unit
     mdltsamp = copy.deepcopy(mdlt)
-    mdltsamp.flux = splat.integralResample(mdlt.wave.value,mdlt.flux.value,data.wave.value)
-    mdltsamp.flux*=funit
+#    mdltsamp.flux = splat.integralResample(mdlt.wave.value,mdlt.flux.value,data.wave.value)
+    mdltsamp.flux = splat.reMap(mdlt.wave.value,mdlt.flux.value,data.wave.value)
+    mdltsamp.flux = mdltsamp.flux*funit
     mdltsamp.wave = data.wave
     mdltsamp.noise = [numpy.nan for f in mdltsamp.flux]*funit
-    mdltsamp.variance = [numpy.nan for f in mdltsamp.flux]*funit
+    mdltsamp.variance = [numpy.nan for f in mdltsamp.flux]*(funit**2)
     if checkplots==True:
         splot.plotSpectrum(mdltsamp,mdlsamp,colors=['r','k'],legend=['Model x Atmosphere','Model'],file=checkprefix+'_modelatmsamp.pdf')
+
 
 # broaden by instrumental profile
     if instkern != None:
@@ -1235,26 +1291,41 @@ def makeForwardModel(parameters,data,atm=None,binary=False,model=None,model1=Non
     if checkplots==True:
         splot.plotSpectrum(mdltsamp,mdlsamp,colors=['r','k'],legend=['Model x Atmosphere','Model'],file=checkprefix+'_modelatmsampbroad.pdf')
 
+# apply flux offset (e.g. poor background subtraction)
+    if 'offset' in list(parameters.keys()):
+        funit = mdlsamp.flux.unit
+        mdlsamp.flux = [m+parameters['offset'] for m in mdlsamp.flux.value]*funit
+        funit = mdltsamp.flux.unit
+        mdltsamp.flux = [m+parameters['offset'] for m in mdltsamp.flux.value]*funit
+    if 'offset_fraction' in list(parameters.keys()):
+        funit = mdlsamp.flux.unit
+        mdlsamp.flux = [m+parameters['offset_fraction']*numpy.median(mdlsamp.flux.value) for m in mdlsamp.flux.value]*funit
+        funit = mdltsamp.flux.unit
+        mdltsamp.flux = [m+parameters['offset_fraction']*numpy.median(mdltsamp.flux.value) for m in mdltsamp.flux.value]*funit
+
 # correct for continuum
     mdlcont = copy.deepcopy(mdlsamp)
     mdltcont = copy.deepcopy(mdltsamp)
+
     if 'continuum' in list(parameters.keys()):
-        mdlcont.flux*=numpy.polyval(parameters['continuum'],mdlcont.wave.value)
-        mdltcont.flux*=numpy.polyval(parameters['continuum'],mdltcont.wave.value)
+        mdlcont.flux = mdlcont.flux*numpy.polyval(parameters['continuum'],mdlcont.wave.value)
+        mdltcont.flux = mdlcont.flux*numpy.polyval(parameters['continuum'],mdltcont.wave.value)
     else:
         mdldiv = data/mdltsamp
         mdldiv.smooth(pixels=20)
-# note: this fails if there are any nans around        
+# NOTE: this fails if there are any nans around    
+
         pcont = numpy.polyfit(mdldiv.wave.value,mdldiv.flux.value,contfitdeg)
 #        f = interp1d(data.wave.value,data.flux.value)
 #        pcont = numpy.polyfit(mdltfinal.wave.value,f(mdltfinal.wave.value)/mdltfinal.flux.value,contfitdeg)
-        mdlcont.flux*=numpy.polyval(pcont,mdlcont.wave.value)
-        mdltcont.flux*=numpy.polyval(pcont,mdltcont.wave.value)
+        mdlcont.flux = mdlcont.flux*numpy.polyval(pcont,mdlcont.wave.value)
+        mdltcont.flux = mdltcont.flux*numpy.polyval(pcont,mdltcont.wave.value)
     if checkplots==True:
         mdltmp = copy.deepcopy(mdlsamp)
         mdldiv = data/mdltsamp
         mdltmp.scale(numpy.nanmedian(mdldiv.flux.value))
         splot.plotSpectrum(mdltcont,mdlcont,data,colors=['r','k','b'],legend=['Model x Atmosphere x Continuum','Model','Data'],file=checkprefix+'_modelatmsampbroadcont.pdf')
+
 
 # correct for velocity shift (wavelength calibration error)
     mdlfinal = copy.deepcopy(mdlcont)
@@ -1264,6 +1335,8 @@ def makeForwardModel(parameters,data,atm=None,binary=False,model=None,model1=Non
         mdltfinal.rvShift(parameters['vshift'])
 
 # return model
+    mdlfinal.name = '{} model'.format(parameters['modelset1'])
+    mdltfinal.name = '{} model x Atmosphere'.format(parameters['modelset1'])
     if return_nontelluric == True:
         return mdltfinal,mdlfinal
     else:
@@ -1271,7 +1344,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,model=None,model1=Non
         
 
 # MCMC loop
-def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=100,dof=0.,binary=False,secondary_model=None,atm=None,report=True,report_index=10,file='tmp',output='all',verbose=True,**kwargs):
+def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,nsteps=100,nsniffs=1,dof=0.,binary=False,duplicate=False,secondary_model=None,atm=None,report=True,report_index=10,report_each=False,file='tmp',output='all',verbose=True,**kwargs):
     '''
     :Purpose:
 
@@ -1282,7 +1355,6 @@ def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=
     :Required Inputs:
 
         :param data: Spectrum object containing the data to be modeled
-        :param model: Spectrum object containing the spectral model; should be of higher resolution and wider wavelength range than the data
         :param param0: dictionary containing the initial parameters; allowed parameters are the same as those defined in `makeForwardModel()`_
         :param param_var: dictionary containing the scales (gaussian sigmas) over which the parameters are varied at each iteration; should contain the same elements as param0. If a parameter var is set to 0, then that parameter is held fixed
 
@@ -1294,9 +1366,11 @@ def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=
         :param: dof: degrees of freedom; if not provided, assumed to be the number of datapoints minus the number of varied parameters
         :param: binary = False: set to True to do a binary model fit
         :param: secondary_model = None: if binary = True, use this parameter to specify the model of the secondary
-        :param: atm = None: Spectrum object containing the atmospheric/instrumental transmission profile (e.g., `loadTelluric()`_)
+        :param: model = None: Spectrum object containing the spectral model to use if assumed fixed; should be of higher resolution and wider wavelength range than the data
+        :param: atm = None: Spectrum object containing the atmospheric/instrumental transmission profile (e.g., `loadTelluric()`_); should be of higher resolution and wider wavelength range than the data
         :param: report = True: set to True to iteratively report the progress of the fit 
         :param: report_index = 10: if report = True, the number of steps to provide an interim report 
+        :param: report_each = False: set to True to save all reports separately (useful for movie making)
         :param: file = 'tmp': file prefix for outputs; should include full path unless in operating in desired folder
         :param: output = 'all': what to return on completion; options include:
 
@@ -1336,37 +1410,47 @@ def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=
     '''    
 # generate first fit
     if dof == 0.: dof = int(len(data.wave)-len(list(param0.keys())))
-    mdl = makeForwardModel(param0,data,binary=binary,atm=atm,model=model)
+    mdl = makeForwardModel(param0,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
     chi0,scale = splat.compareSpectra(data,mdl)
     parameters = [param0]
     chis = [chi0]
     for i in range(nsteps):
-        for k in list(param0.keys()):
-            param = copy.deepcopy(param0)
-            param[k] = numpy.random.normal(param[k],param_var[k])
-# force positivity            
-            if k in list(limits.keys()):
-                if param[k] < numpy.min(limits[k]): param[k] = 2.*numpy.min(limits[k])-param[k]
-                if param[k] > numpy.max(limits[k]): param[k] = 2.*numpy.max(limits[k])-param[k]
-            mdl = makeForwardModel(param,data,binary=binary,atm=atm,model=model)
-            chi,scale = splat.compareSpectra(data,mdl)            
+        for k in list(param_var.keys()):
+            if param_var[k] != 0.:
+                param = copy.deepcopy(param0)
+                param[k] = numpy.random.normal(param[k],param_var[k])
+# force within range with soft bounce            
+                if k in list(limits.keys()):
+                    if param[k] < numpy.min(limits[k]): param[k] = numpy.min(limits[k])+numpy.random.uniform()*(numpy.min(limits[k])-param[k])
+                    if param[k] > numpy.max(limits[k]): param[k] = numpy.max(limits[k])-numpy.random.uniform()*(param[k]-numpy.max(limits[k]))
+                mdl = makeForwardModel(param,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
+                chi,scale = splat.compareSpectra(data,mdl)            
 #            if stats.f.cdf(chi/chi0, dof, dof) < numpy.random.uniform(0,1):
-            if stats.f.cdf(chi/numpy.nanmin(chis), dof, dof) < numpy.random.uniform(0,1):
-                param0 = copy.deepcopy(param)
-                chi0 = chi
-            parameters.append(param0)
-            chis.append(chi0)
+                if stats.f.cdf(chi/numpy.nanmin(chis), dof, dof) < numpy.random.uniform(0,1):
+                    param0 = copy.deepcopy(param)
+                    chi0 = chi
+                parameters.append(param0)
+                chis.append(chi0)
+                if verbose == True:
+                    l = 'Step {}: chi={:.0f}, dof={}'.format(i,chis[-1],dof)
+                    for k in list(param_var.keys()): 
+                        if param_var[k] != 0.: l+=' , {}={:.2f}'.format(k,parameters[-1][k])
+                    print(l)
 
 # report where we are            
         if report == True and i % int(report_index) == 0 and i > 0:
-            l = 'Step {}: chi={:.0f}, dof={}'.format(i,chis[-1],dof)
-            for k in list(param0.keys()): l+=' , {}={:.2f}'.format(k,parameters[-1][k])
-            print(l)
+#            l = 'Step {}: chi={:.0f}, dof={}'.format(i,chis[-1],dof)
+#            for k in list(param0.keys()): 
+#                if isinstance(parameters[-1][k],float): l+=' , {}={:.2f}'.format(k,parameters[-1][k])
+#                else: l+=' , {}={}'.format(k,parameters[-1][k])
+#            print(l)
 
             ibest = numpy.argmin(chis)
             best_parameters = parameters[ibest]
-            l = 'Best chi={:.0f}, dof={}'.format(chis[ibest],dof)
-            for k in list(param0.keys()): l+=' , {}={:.2f}'.format(k,best_parameters[k])
+            l = '\nBest chi={:.0f}, dof={}'.format(chis[ibest],dof)
+            for k in list(param0.keys()): 
+                if isinstance(best_parameters[k],float): l+=' , {}={:.2f}'.format(k,best_parameters[k])
+                else: l+=' , {}={}'.format(k,best_parameters[k])
             print(l)
 
             # mdl,mdlnt = makeForwardModel(parameters[-1],data,binary=binary,atm=atm,model=model,return_nontelluric=True)
@@ -1394,7 +1478,7 @@ def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=
                 for i in range(len(parameters)): vals.append(parameters[i][k])
                 final_parameters[k] = vals
 
-            mcmcForwardModelReport(data,model,final_parameters,chis,dof=dof,atm=atm,file=file,binary=binary,verbose=verbose,**kwargs)
+            mcmcForwardModelReport(data,final_parameters,chis,dof=dof,atm=atm,file=file,binary=binary,duplicate=duplicate,verbose=verbose,**kwargs)
 
 # identify best model
     ibest = numpy.argmin(chis)
@@ -1410,10 +1494,12 @@ def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=
 
     if report == True:
         l = 'Best chi={:.0f}, dof={}'.format(best_chi,dof)
-        for k in list(param0.keys()): l+=' , {}={:.2f}'.format(k,best_parameters[k])
+        for k in list(best_parameters.keys()): 
+            if isinstance(best_parameters[k],float): l+=' , {}={:.2f}'.format(k,best_parameters[k])
+            else: l+=' , {}={}'.format(k,best_parameters[k])
         print(l)
 
-        mcmcForwardModelReport(data,model,final_parameters,chis,dof=dof,atm=atm,file=file,binary=binary,verbose=verbose,**kwargs)
+        mcmcForwardModelReport(data,final_parameters,chis,dof=dof,atm=atm,file=file,binary=binary,duplicate=duplicate,verbose=verbose,**kwargs)
 
         # mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atm=atm,model=model,return_nontelluric=True)
         # chi0,scale = splat.compareSpectra(data,mdl)
@@ -1452,7 +1538,7 @@ def mcmcForwardModelFit(data,model,param0,param_var,limits={},nwalkers=1,nsteps=
         return final_parameters, chis
 
 
-def mcmcForwardModelReport(data,model,parameters,chis,burn=0.25,dof=0,plotChains=True,plotBest=True,plotMean=True,plotCorner=True,plotParameters=None,writeReport=True,vbary=0.,file='tmp',atm=None,chiweights=False,binary=False,verbose=True):
+def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,plotBest=True,plotMean=True,plotCorner=True,plotParameters=None,writeReport=True,vbary=0.,file='tmp',atm=None,model=None,model2=None,chiweights=False,binary=False,duplicate=False,verbose=True):
     '''
     :Purpose:
 
@@ -1461,7 +1547,6 @@ def mcmcForwardModelReport(data,model,parameters,chis,burn=0.25,dof=0,plotChains
     :Required Inputs:
 
         :param data: Spectrum object containing the data modeled
-        :param model: Spectrum object containing the spectral model; should be of higher resolution and wider wavelength range than the data
         :param parameters: dictionary containing the parameters from the fit; each parameter should be linked to a array
         :param chis: list of the chi-square values (or equivalent statistic) that match the parameter arrays
 
@@ -1471,7 +1556,10 @@ def mcmcForwardModelReport(data,model,parameters,chis,burn=0.25,dof=0,plotChains
         :param: burn = 0.25: initial fraction of parameters to throw out ("burn-in")
         :param: dof = 0: degrees of freedom; if not provided, assumed to be the number of datapoints minus the number of varied parameters
         :param: binary = False: set to True if a binary model fit was done
+        :param: duplicate = False: set to True if the secondary spectrum has same model parameters as primary
         :param: vbary = 0.: set to a velocity (assumed barycentric) to add to rv values
+        :param: model = None: Spectrum object containing the primary spectral model; should be of higher resolution and wider wavelength range than the data
+        :param: model2 = None: Spectrum object containing the secondary spectral model; should be of higher resolution and wider wavelength range than the data
 
         :param: plotParameters = None: array of the parameters to plot, which should be keys in teh parameters input dictionary; if None, all of the parameters are plot
         :param: plotChains = True: set to True to plot the parameter & chi-square value chains
@@ -1554,35 +1642,43 @@ def mcmcForwardModelReport(data,model,parameters,chis,burn=0.25,dof=0,plotChains
 # mean parameters
     mean_parameters = {}
     mean_parameters_unc = {}
-    for k in list(par.keys()): 
-        mean_parameters[k] = numpy.nansum(numpy.array(par[k])*weights)
-        mean_parameters_unc[k] = numpy.sqrt(numpy.nansum((numpy.array(par[k])**2)*weights)-mean_parameters[k]**2)
+    for k in list(par.keys()):
+        try:
+            mean_parameters[k] = numpy.nansum(numpy.array(par[k])*weights)
+            mean_parameters_unc[k] = numpy.sqrt(numpy.nansum((numpy.array(par[k])**2)*weights)-mean_parameters[k]**2)
+        except:
+            pass
     if verbose == True:
         print('\nMean Parameter Values:')
-        for k in list(par.keys()): print('\t{} = {}+/-{}'.format(k,mean_parameters[k],mean_parameters_unc[k]))
+        for k in list(mean_parameters.keys()): print('\t{} = {}+/-{}'.format(k,mean_parameters[k],mean_parameters_unc[k]))
 
 # prep plotting
     if plotParameters == None:
-        plotParameters = list(par.keys())
+        plotParameters = list(mean_parameters.keys())
     toplot = {}
     for k in plotParameters: 
         if k in list(par.keys()): 
-            toplot[k] = par[k]
+            if numpy.nanstd(par[k]) > 0.: 
+                if k in list(mean_parameters.keys()):
+                    if numpy.isfinite(mean_parameters_unc[k]): 
+                        toplot[k] = par[k]
         else:
             print('\nWarning: parameter {} not in MCMC parameter list; ignoring'.format(k))
+
+#    print(plotParameters,toplot.keys(),best_parameters.keys(),mean_parameters.keys())
 
 # plot chains
     if plotChains==True:
         plt.clf()
-        plt.figure(figsize=(6,3*(len(plotParameters)+1)))
-        for i,k in enumerate(plotParameters):
-            plt.subplot(len(plotParameters)+1,1,i+1)
+        plt.figure(figsize=(6,3*(len(list(toplot.keys()))+1)))
+        for i,k in enumerate(list(toplot.keys())):
+            plt.subplot(len(list(toplot.keys()))+1,1,i+1)
             plt.plot(range(len(toplot[k])),toplot[k],'k-')
             plt.plot([0,len(toplot[k])],[best_parameters[k],best_parameters[k]],'b-')
             plt.plot([0,len(toplot[k])],[mean_parameters[k],mean_parameters[k]],'g--')
             plt.ylabel(str(k))  
             plt.xlim([0,len(toplot[k])])
-        plt.subplot(len(plotParameters)+1,1,i+2)
+        plt.subplot(len(list(toplot.keys()))+1,1,i+2)
         plt.plot(range(len(toplot[k])),chi)
         plt.ylabel(r'$\chi^2$')    
         plt.xlim([0,len(toplot[k])])
@@ -1605,29 +1701,32 @@ def mcmcForwardModelReport(data,model,parameters,chis,burn=0.25,dof=0,plotChains
 # plot best model
     if plotBest==True:
         plt.clf()
-        mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atm=atm,model=model,return_nontelluric=True)
+        mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atm=atm,model=model,model2=model2,duplicate=duplicate,return_nontelluric=True)
         chi0,scale = splat.compareSpectra(data,mdl)
         mdl.scale(scale)
         mdlnt.scale(scale)
-        splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model-Telluric','Best Model','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_bestModel.pdf')
+        splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model','Model x Telluric','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_bestModel.pdf')
 
 # plot mean model
     if plotMean==True:
         plt.clf()
-        mdl,mdlnt = makeForwardModel(mean_parameters,data,binary=binary,atm=atm,model=model,return_nontelluric=True)
+        mdl,mdlnt = makeForwardModel(mean_parameters,data,binary=binary,atm=atm,model=model,model2=model2,duplicate=duplicate,return_nontelluric=True)
         chi0,scale = splat.compareSpectra(data,mdl)
         mdl.scale(scale)
         mdlnt.scale(scale)
-        splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model-Telluric','Mean Model','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_meanModel.pdf')
+        splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model','Model x Telluric','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_meanModel.pdf')
 
 # summarize results to a text file
     if writeReport==True:
         f = open(file+'_report.txt','w')
-        f.write('Best Parameter Values:')
-        for k in list(par.keys()): f.write('\n\t{} = {}'.format(k,best_parameters[k]))
+        f.write('Last Parameter Values:')
+        for k in list(par.keys()): f.write('\n\t{} = {}'.format(k,par[k][-1]))
+        f.write('\n\tchi^2 = {}'.format(chi[-1]))
+        f.write('\n\nBest Parameter Values:')
+        for k in list(best_parameters.keys()): f.write('\n\t{} = {}'.format(k,best_parameters[k]))
         f.write('\n\tchi^2 = {}'.format(numpy.nanmin(chi)))
         f.write('\n\nMean Parameter Values:')
-        for k in list(par.keys()): f.write('\n\t{} = {}+/-{}'.format(k,mean_parameters[k],mean_parameters_unc[k]))
+        for k in list(mean_parameters.keys()): f.write('\n\t{} = {}+/-{}'.format(k,mean_parameters[k],mean_parameters_unc[k]))
         f.close()        
 
     return        
@@ -1756,7 +1855,7 @@ def loadModel(modelset=False,instrument='SPEX-PRISM',raw=False,sed=False,*args,*
     modelset = kwargs.get('set',modelset)
     mset = checkSpectralModelName(modelset)
     if mset == False: raise ValueError('Could not find model set {}; possible options are {}'.format(modelset,list(SPECTRAL_MODELS.keys())))
-    kwargs['model'] = mset
+    kwargs['modelset'] = mset
 
 #    kwargs['instrument'] = kwargs.get('instrument','SPEX-PRISM')
     instrument = kwargs.get('instr',instrument)
@@ -1765,25 +1864,25 @@ def loadModel(modelset=False,instrument='SPEX-PRISM',raw=False,sed=False,*args,*
     inst = checkInstrument(instrument)
     if inst != False: instrument = inst
     if instrument not in list(SPECTRAL_MODELS[mset]['instruments'].keys()):
-        raise ValueError('Models for set {} and instrument {} have not yet been computed; run processModelsToInstrument()'.format(mset,instrument))
+        raise ValueError('Models for set {} and instrument {} have not yet been computed; run processModelsToInstrument()'.format(kwargs['modelset'],instrument))
     kwargs['instrument'] = instrument
-    kwargs['name'] = kwargs['model']+' ('+kwargs['instrument']+')'
+    kwargs['name'] = kwargs['modelset']+' ('+kwargs['instrument']+')'
 
 
 # check that model data is available
 #    kwargs['folder'] = kwargs.get('folder',os.path.normpath(SPECTRAL_MODELS[kwargs['model']]['folder']+'/'+kwargs['instrument']+'/'))
-    kwargs['folder'] = os.path.normpath(SPECTRAL_MODELS[kwargs['model']]['instruments'][kwargs['instrument']])
+    kwargs['folder'] = os.path.normpath(SPECTRAL_MODELS[kwargs['modelset']]['instruments'][kwargs['instrument']])
     if not os.path.exists(kwargs['folder']):
         finit = kwargs['folder']
-        kwargs['folder'] = os.path.normpath(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['model']+'/'+kwargs['instrument']+'/')
+        kwargs['folder'] = os.path.normpath(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['modelset']+'/'+kwargs['instrument']+'/')
         if not os.path.exists(kwargs['folder']):
-            raise ValueError('\nCould not locate folder {} or {} for model {} and instrument {}; make sure models are properly located'.format(finit,kwargs['folder'],kwargs['model'],kwargs['instrument']))
+            raise ValueError('\nCould not locate folder {} or {} for model {} and instrument {}; make sure models are properly located'.format(finit,kwargs['folder'],kwargs['modelset'],kwargs['instrument']))
 
 # preset defaults
     mparam = {}
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        if ms in list(SPECTRAL_MODELS[kwargs['model']]['default'].keys()):
-            mparam[ms] = kwargs.get(ms,SPECTRAL_MODELS[kwargs['model']]['default'][ms])
+        if ms in list(SPECTRAL_MODELS[kwargs['modelset']]['default'].keys()):
+            mparam[ms] = kwargs.get(ms,SPECTRAL_MODELS[kwargs['modelset']]['default'][ms])
             if isUnit(mparam[ms]):
                 mparam[ms] = (mparam[ms].to(SPECTRAL_MODEL_PARAMETERS[ms]['unit'])).value
     if len(mparam.keys()) == 0:
@@ -1792,11 +1891,10 @@ def loadModel(modelset=False,instrument='SPEX-PRISM',raw=False,sed=False,*args,*
 
 # generate model filename
     
-    filename = os.path.join(SPECTRAL_MODELS[kwargs['model']]['instruments'][kwargs['instrument']],kwargs['model'])
-
+    filename = os.path.join(SPECTRAL_MODELS[kwargs['modelset']]['instruments'][kwargs['instrument']],kwargs['modelset'])
 
     for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        if k in list(SPECTRAL_MODELS[kwargs['model']]['default'].keys()):
+        if k in list(SPECTRAL_MODELS[kwargs['modelset']]['default'].keys()):
             if k in list(mparam.keys()): val = mparam[k] 
             else: val = SPECTRAL_MODELS[mset]['default'][k]
             if SPECTRAL_MODEL_PARAMETERS[k]['type'] == 'continuous':
@@ -1874,8 +1972,9 @@ def loadModel(modelset=False,instrument='SPEX-PRISM',raw=False,sed=False,*args,*
         MODELS_READIN[kwargs['filename']] = sp
 
 # populate model parameters
-    setattr(sp,'model',mset)
-    for k in list(SPECTRAL_MODELS[kwargs['model']]['default'].keys()):
+    setattr(sp,'modelset',kwargs['modelset'])
+    setattr(sp,'instrument',kwargs['instrument'])
+    for k in list(SPECTRAL_MODELS[kwargs['modelset']]['default'].keys()):
         if k in list(mparam.keys()): setattr(sp,k,mparam[k])
         else: setattr(sp,k,SPECTRAL_MODELS[mset]['default'][k])
 

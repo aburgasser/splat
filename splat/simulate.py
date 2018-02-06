@@ -486,7 +486,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],distribution='powerlaw',parameter
 
 # protective offset
     if mass_range[0] == mass_range[1]:
-        mass_range[1]+=0.0001
+        mass_range[1]=mass_range[1]+0.0001
 
 # set default parameters
     if kwargs.get('parameters',False) == False:
@@ -513,8 +513,8 @@ def simulateMasses(num,mass_range = [0.01,0.1],distribution='powerlaw',parameter
         else:
             y = x**(1.-parameters['alpha'])
 #        print(x,y)
-        y -= numpy.min(y)
-        y /= numpy.max(y)
+        y = y-numpy.min(y)
+        y = y/numpy.max(y)
         f = interp1d(y,x)
 #        plt.plot(x,y)
         masses = f(numpy.random.uniform(size=num))
@@ -563,10 +563,10 @@ def simulateMasses(num,mass_range = [0.01,0.1],distribution='powerlaw',parameter
         xf = numpy.linspace(mass_range[0],mass_range[1],num=10000)
         f = interp1d(xfull,yfull)
         yf = f(xf)
-        yf -= numpy.min(yf)
+        yf = yf-numpy.min(yf)
         yc = numpy.cumsum(yf)
-        yc -= numpy.min(yc)
-        yc /= numpy.max(yc)
+        yc = yc-numpy.min(yc)
+        yc = yc/numpy.max(yc)
 #        plt.plot(xfull,yc)
 #        plt.ylim([7,10])
 #        plt.show()
@@ -609,7 +609,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],distribution='powerlaw',parameter
                 x = numpy.linspace(mbs[iii],mbs[iii+1],num=10000)
                 y = numpy.array(x**(-1.*alphas[iii]))
                 if len(yfull) > 0:
-                    y *= yfull[-1]/y[0]
+                    y = y*yfull[-1]/y[0]
                     yfull = numpy.append(yfull,y)
                     xfull = numpy.append(xfull,x)
                 else:
@@ -677,8 +677,7 @@ def simulateMassRatios(num,distribution='uniform',q_range=[0.1,1.0],parameters =
     '''
 
 # initial parameters
-    allowed_distributions = ['uniform','flat','powerlaw','power-law','allen']
-    distribution = kwargs.get('distribution','uniform')
+    allowed_distributions = ['uniform','flat','powerlaw','power-law','allen','burgasser']
     mn = kwargs.get('minq',0.1)
     mn = kwargs.get('min',mn)
     mx = kwargs.get('maxq',1.)
@@ -689,13 +688,9 @@ def simulateMassRatios(num,distribution='uniform',q_range=[0.1,1.0],parameters =
 
 # protective offset
     if q_range[0] == q_range[1]:
-        q_range[0]-=0.0001
+        q_range[0]=q_range[0]-0.0001
 
 # set default parameters
-    if kwargs.get('parameters',False) == False:
-        parameters = {}
-    else:
-        parameters = kwargs['parameters']
     if 'gamma' not in list(parameters.keys()):
         parameters['gamma'] = kwargs.get('gamma',1.8)
 
@@ -709,8 +704,8 @@ def simulateMassRatios(num,distribution='uniform',q_range=[0.1,1.0],parameters =
         else:
             y = x**(1.+parameters['gamma'])
 #        print(x,y)
-        y -= numpy.min(y)
-        y /= numpy.max(y)
+        y = y-numpy.min(y)
+        y = y/numpy.max(y)
         f = interp1d(y,x)
 #        plt.plot(x,y)
         q = f(numpy.random.uniform(size=num))

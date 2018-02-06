@@ -229,7 +229,7 @@ def longRef(bib_dict,**kwargs):
     return output+' "{}". {}, {}, {} ({})'.format(bib_dict['title'],bib_dict['journal'],bib_dict['volume'],bib_dict['pages'],bib_dict['year'])
 
 
-def verylongRef(bib_dict,**kwargs):
+def veryLongRef(bib_dict,**kwargs):
     '''
     :Purpose:
         Takes a bibtex dictionary and returns a long (in-line) version of the citation
@@ -345,15 +345,15 @@ def getBibTex(bibcode,**kwargs):
     else:
         biblibrary = kwargs.get('biblibrary', SPLAT_PATH+DB_FOLDER+BIBFILE)
 # check the file
-        if not os.path.exists(biblibrary):
+        if not os.path.exists(os.path.normpath(biblibrary)):
             if kwargs.get('verbose',True) == True: print('Could not find bibtex library {}'.format(biblibrary))
             biblibrary = SPLAT_PATH+DB_FOLDER+BIBFILE
 
-        if not os.path.exists(biblibrary):
+        if not os.path.exists(os.path.normpath(biblibrary)):
             raise NameError('Could not find SPLAT main bibtext library {}; something is wrong'.format(biblibrary))
 
 
-        with open(biblibrary, 'r') as bib_file:
+        with open(os.path.normpath(biblibrary), 'r') as bib_file:
             text = bib_file.read()
             #print re.search('@[A-Z]+{' + bib_code, bib_file)        
             in_lib = re.search('@[a-z]+{' + bibcode, text)

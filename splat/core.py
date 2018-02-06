@@ -462,6 +462,21 @@ class Spectrum(object):
 
         return
 
+
+    def mapTo(self,other):
+        '''
+        Purpose: maps spectrum onto the wavelength scale of another spectrum
+        '''
+        self.toWaveUnit(other.wave.unit)
+        funit = self.flux.unit
+        self.flux = reMap(self.wave.value,self.flux.value,other.wave.value)*funit
+        self.noise = reMap(self.wave.value,self.noise.value,other.wave.value)*funit
+        self.wave = other.wave
+        self.variance = [x**2 for x in self.noise.value]*funit**2
+        self.history.append('Mapped onto wavelength grid of {}'.format(other))
+        return
+
+
     def __copy__(self):
         '''
         :Purpose: Make a copy of a Spectrum object
@@ -610,12 +625,12 @@ class Spectrum(object):
             Spectrum of 2MASS J17373467+5953434 x WISE J174928.57-380401.6
         '''
 # convert wavelength units
-        other.toWaveUnit(self.wunit)
+        other.toWaveUnit(self.wave.unit)
 
 # make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
-        sp.wave=sp.wave*self.wunit
+        sp.wave=sp.wave*self.wave.unit
 
 # generate interpolated axes
         f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
@@ -624,18 +639,18 @@ class Spectrum(object):
         n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
 
 # multiply
-        sp.flux = numpy.multiply(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*self.funit*other.funit
+        sp.flux = numpy.multiply(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*self.flux.unit*other.flux.unit
 
 # uncertainty
         sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
-        sp.variance=sp.variance*((self.funit*other.funit)**2)
+        sp.variance=sp.variance*((self.flux.unit*other.flux.unit)**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
 
 # update information
         sp.name = self.name+' x '+other.name
-        sp.funit = self.funit*other.funit
-        sp.funit_label = self.funit*other.funit
+        sp.funit = self.flux.unit*other.flux.unit
+        sp.funit_label = str(self.flux.unit*other.flux.unit)
         ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
@@ -664,12 +679,12 @@ class Spectrum(object):
             Spectrum of 2MASS J17373467+5953434 + WISE J174928.57-380401.6
         '''
 # convert wavelength units
-        other.toWaveUnit(self.wunit)
+        other.toWaveUnit(self.wave.unit)
 
 # make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
-        sp.wave=sp.wave*self.wunit
+        sp.wave=sp.wave*self.wave.unit
 
 # generate interpolated axes
         f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
@@ -678,23 +693,23 @@ class Spectrum(object):
         n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
 
 # divide
-        sp.flux = numpy.divide(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*(self.funit/other.funit)
+        sp.flux = numpy.divide(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*(self.flux.unit/other.flux.unit)
 
 # uncertainty
         sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
-        sp.variance=sp.variance*((self.funit/other.funit)**2)
+        sp.variance=sp.variance*((self.flux.unit/other.flux.unit)**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
 
 # clean up infinities
-        sp.flux = (numpy.where(numpy.absolute(sp.flux.value) == numpy.inf, numpy.nan, sp.flux.value))*self.funit/other.funit
-        sp.noise = (numpy.where(numpy.absolute(sp.noise.value) == numpy.inf, numpy.nan, sp.noise.value))*self.funit/other.funit
-        sp.variance = (numpy.where(numpy.absolute(sp.variance.value) == numpy.inf, numpy.nan, sp.variance.value))*(self.funit/other.funit)**2
+        sp.flux = (numpy.where(numpy.absolute(sp.flux.value) == numpy.inf, numpy.nan, sp.flux.value))*self.funit/other.flux.unit
+        sp.noise = (numpy.where(numpy.absolute(sp.noise.value) == numpy.inf, numpy.nan, sp.noise.value))*self.funit/other.flux.unit
+        sp.variance = (numpy.where(numpy.absolute(sp.variance.value) == numpy.inf, numpy.nan, sp.variance.value))*(self.flux.unit/other.flux.unit)**2
 
 # update information
         sp.name = self.name+' / '+other.name
-        sp.funit = self.funit/other.funit
-        sp.funit_label = self.funit/other.funit
+        sp.funit = self.flux.unit/other.flux.unit
+        sp.funit_label = str(self.flux.unit/other.flux.unit)
         ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
@@ -722,12 +737,12 @@ class Spectrum(object):
             Spectrum of 2MASS J17373467+5953434 + WISE J174928.57-380401.6
         '''
 # convert wavelength units
-        other.toWaveUnit(self.wunit)
+        other.toWaveUnit(self.wave.unit)
 
 # make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
-        sp.wave=sp.wave*self.wunit
+        sp.wave=sp.wave*self.wave.unit
 
 # generate interpolated axes
         f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
@@ -736,23 +751,23 @@ class Spectrum(object):
         n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
 
 # divide
-        sp.flux = numpy.divide(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*self.funit/other.funit
+        sp.flux = numpy.divide(numpy.array(f1(sp.wave.value)),numpy.array(f2(sp.wave.value)))*self.flux.unit/other.flux.unit
 
 # uncertainty
         sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
-        sp.variance=sp.variance*((self.funit/other.funit)**2)
+        sp.variance=sp.variance*((self.flux.unit/other.flux.unit)**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
 
 # clean up infinities
-        sp.flux = (numpy.where(numpy.absolute(sp.flux.value) == numpy.inf, numpy.nan, sp.flux.value))*self.funit/other.funit
-        sp.noise = (numpy.where(numpy.absolute(sp.noise.value) == numpy.inf, numpy.nan, sp.noise.value))*self.funit/other.funit
-        sp.variance = (numpy.where(numpy.absolute(sp.variance.value) == numpy.inf, numpy.nan, sp.variance.value))*(self.funit/other.funit)**2
+        sp.flux = (numpy.where(numpy.absolute(sp.flux.value) == numpy.inf, numpy.nan, sp.flux.value))*self.flux.unit/other.flux.unit
+        sp.noise = (numpy.where(numpy.absolute(sp.noise.value) == numpy.inf, numpy.nan, sp.noise.value))*self.flux.unit/other.flux.unit
+        sp.variance = (numpy.where(numpy.absolute(sp.variance.value) == numpy.inf, numpy.nan, sp.variance.value))*(self.flux.unit/other.flux.unit)**2
 
 # update information
         sp.name = self.name+' / '+other.name
-        sp.funit = self.funit/other.funit
-        sp.funit_label = self.funit/other.funit
+        sp.funit = self.flux.unit/other.flux.unit
+        sp.funit_label = str(self.flux.unit/other.flux.unit)
         ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
@@ -894,7 +909,7 @@ class Spectrum(object):
         print(f)
         return
 
-    def export(self,filename='',clobber=True,csv=False,tab=True,delimiter='\t',header=True,comment='#',*args,**kwargs):
+    def export(self,filename='',clobber=True,csv=False,tab=True,delimiter='\t',save_header=True,save_noise=True,comment='#',*args,**kwargs):
         '''
         :Purpose: 
             Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  
@@ -913,7 +928,8 @@ class Spectrum(object):
             :param csv: Set to True to write a CSV (comma-delimited) file (default = False) 
             :param tab: Set to True to write a tab-delimited file (default = True) 
             :param delimiter: character or string to specify as delimiter between columns (default = '\t'); alternate keywords: `sep` 
-            :param header: set to True to add header to ascii files (default = True) 
+            :param save_header: set to True to add header to ascii files (default = True) 
+            :param save_noise: set to True to save the noise column (default = True) 
             :param comment: use to specify comment character (default = '#') 
 
         :Output: 
@@ -983,9 +999,8 @@ class Spectrum(object):
 # ascii file - by default tab delimited
         else:
             delimiter = kwargs.get('sep',delimiter)
-            f = open(filename,'r')
-            if kwargs.get('header',True):
-                f = open(filename,'w')
+            f = open(filename,'w')
+            if save_header == True:
                 for k in list(self.header.keys()):
                     if k.upper() not in ['HISTORY','COMMENT'] and k.replace('#','') != '':
                         f.write('{}{} = {}\n'.format(comment,k.upper(),self.header[k]))
@@ -993,8 +1008,11 @@ class Spectrum(object):
                     if isinstance(self.__getattribute__(k),str) == True or (isinstance(self.__getattribute__(k),float) == True and numpy.isnan(self.__getattribute__(k)) == False) or isinstance(self.__getattribute__(k),int) == True or isinstance(self.__getattribute__(k),bool) == True:
                         f.write('{}{} = {}\n'.format(comment,k.upper(),self.__getattribute__(k)))
                 f.write('{}WAVELENGTH{}FLUX{}UNCERTAINTY\n'.format(comment,delimiter,delimiter))
+            if save_noise == True:
                 for i in range(len(self.wave.value)): f.write('{}{}{}{}{}\n'.format(self.wave.value[i],delimiter,self.flux.value[i],delimiter,self.noise.value[i]))
-                f.close()
+            else:
+                for i in range(len(self.wave.value)): f.write('{}{}{}\n'.format(self.wave.value[i],delimiter,self.flux.value[i]))
+            f.close()
 
         self.history.append('Spectrum saved to {}'.format(filename))
         return
@@ -2455,26 +2473,47 @@ class Spectrum(object):
 
         mask = numpy.zeros(len(self.wave))
 
+# some code to deal with various possibilities, ultimately leading to [ [r1a,r1b], [r2a,r2b], ...]
+# convert a unit-ed quantity
+        if isUnit(rng):
+            try:
+                rng.to(self.wave.unit).value
+            except:
+                raise ValueError('Could not convert trim range unit {} to spectrum wavelength unit {}'.format(rng.unit,self.wave.unit))
+
+# single number = turn into small range
         if isinstance(rng,float):
-            rng = [rng-0.1,rng+0.1]
+            rng = [rng-0.01*(numpy.nanmax(self.wave.value)-numpy.nanmin(self.wave.value)),rng+0.01*(numpy.nanmax(self.wave.value)-numpy.nanmin(self.wave.value))]
+
+        if isUnit(rng[0]):
+            try:
+                rng = [r.to(self.wave.unit).value for r in rng]
+            except:
+                raise ValueError('Could not convert trim range unit {} to spectrum wavelength unit {}'.format(rng[0].unit,self.wave.unit))
+
         if not isinstance(rng[0],list):
             rng = [rng]
 
         for r in rng:
-            if isUnit(r):
-                r=[(x*r.unit).to(self.wave.unit) for x in r]
-            if not isUnit(r[0]):
-                r = [x*self.wave.unit for x in r]
-            mask[numpy.where(numpy.logical_and(self.wave.value >= r[0].value,self.wave.value <= r[1].value))] = 1
+#            if isUnit(r):
+#                r=[(x*r.unit).to(self.wave.unit) for x in r]
+#            if not isUnit(r[0]):
+#                r = [x*self.wave.unit for x in r]
+            if isUnit(r[0]):
+                try:
+                    r = [x.to(self.wave.unit).value for x in r]
+                except:
+                    raise ValueError('Could not convert trim range unit {} to spectrum wavelength unit {}'.format(r[0].unit,self.wave.unit))
+            mask[numpy.where(numpy.logical_and(self.wave.value >= r[0],self.wave.value <= r[1]))] = 1
 #        w = numpy.where(mask == 1)
         self.wave = self.wave[mask == 1]
         self.flux = self.flux[mask == 1]
         self.noise = self.noise[mask == 1]
         self.variance = self.variance[mask == 1]
-        self.flam = self.flux
-        self.nu = self.wave.to('Hz',equivalencies=u.spectral())
-        self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
-        self.noisenu = self.noise.to('Jy',equivalencies=u.spectral_density(self.wave))
+#        self.flam = self.flux
+#        self.nu = self.wave.to('Hz',equivalencies=u.spectral())
+#        self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
+#        self.noisenu = self.noise.to('Jy',equivalencies=u.spectral_density(self.wave))
         self.snr = self.computeSN()
         self.history.append('Spectrum trimmed to ranges {}'.format(rng))
         return
