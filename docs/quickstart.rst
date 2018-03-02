@@ -171,30 +171,37 @@ Note that comparing to the large template library of SPLAT can take a long time 
 
 * To compare a spectrum to another spectrum or a model, use `compareSpectra()`_:
 
+>>> from splat.model import loadModel     # loads in model reading package
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
->>> from splat.model import loadModel			# loads in model reading package
->>> mdl = splat.loadModel(teff=700,logg=5.0)	# BTSettl08 model by default
+>>> mdl = loadModel(teff=700,logg=5.0)	# BTSettl08 model by default
 >>> chi,scale = splat.compareSpectra(sp,mdl,plot=True,file='comparison.pdf')
 
 Notice in the last line, the keyword ``plot`` allows you to visualize the comparison, which can be saved as a file
 
 The available spectral models are 
 
-	* *BTSettl2008* from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  (default)
+  * *btnextgen* from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_
+  * *btsettl08* from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  (default)
+  * *btsettl15* from `Allard et al. (2015) <http://adsabs.harvard.edu/abs/2015A&A...577A..42B>`_
 	* *burrows06* from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_ 
+  * *cond01* from `Allard et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...556..357A>`_ 
 	* *saumon12* from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_ 
-	* *drift* from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_ 
+  * *drift* from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_ 
+  * *dusty01* from `Allard et al. (2011) <http://adsabs.harvard.edu/abs/2001ApJ...556..357A>`_ 
 	* *madhusudhan* from `Madhusudhan et al. (2011) <http://adsabs.harvard.edu/abs/2011ApJ...737...34M>`_ 
 	* *morley12* from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_ 
-	* *morley14* from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ 
+  * *morley14* from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ 
+  * *nextgen99* from `Hauschildt et al. (1999) <http://adsabs.harvard.edu/abs/1999ApJ...525..871H>`_ 
+  * *saumon12* from `Saumon et al. (2012) <2012ApJ...750...74S>`_ 
+
 
 * You can fit models to the spectral data using one of three built-in model-fitting routines: `modelFitGrid()`_, `modelFitMCMC()`_, and `modelFitEMCEE()`_:
 
 >>> import splat.model as spmodel
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
->>> results = spmod.modelFitGrid(sp,teff_range=[1200,2500],model='Saumon',file='fit1507')
->>> results = spmod.modelFitMCMC(sp,initial_guess=[900,5.0,0.0],nsamples=1000)
->>> results = modelFitEMCEE(sp,t0=900,g0=5.0,nwalkers=50,nsamples=500,output='basefilename')
+>>> results = spmodel.modelFitGrid(sp,teff_range=[1200,2500],model='Saumon',file='fit1507')
+>>> results = spmodel.modelFitMCMC(sp,initial_guess=[900,5.0,0.0],nsamples=1000)
+>>> results = spmodel.modelFitEMCEE(sp,t0=900,g0=5.0,nwalkers=50,nsamples=500,output='basefilename')
 
 
 The output of each of these is a dictionary containing the best fit model parameters, average fit model parameters, and visualization plots. Refer to the API for these for more details.

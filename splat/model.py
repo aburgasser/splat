@@ -1749,7 +1749,7 @@ def _smooth2resolution(wave,flux,resolution,**kwargs):
 
 
 
-def loadModel(modelset=False,instrument='SPEX-PRISM',raw=False,sed=False,*args,**kwargs):
+def loadModel(modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,*args,**kwargs):
     '''
     Purpose: 
         Loads up a model spectrum based on a set of input parameters. The models may be any one of the following listed below. For parameters between the model grid points, loadModel calls the function `_loadInterpolatedModel()`_.

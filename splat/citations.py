@@ -312,6 +312,43 @@ def citeURL(bib_dict,**kwargs):
         else:
             raise NameError('BibTex dictionary does not contain a bibcode')
 
+def processBiblibrary(biblibrary,verbose=False):
+    '''
+    Purpose
+        Processes a bibtex .bib library (multiple bibtex entries) into a dictionary whose keys
+        are the bibcode
+
+
+    :Required parameters:
+        :param biblibrary: .bib file containing the bibtex entries
+
+    :Optional parameters:
+        :param: verbose = False: Set to True to provide extensive feedback
+
+    :Output:
+        A dictionary containing the bibtex information, organized by bibcode key
+
+    '''    
+    if not os.path.exists(os.path.normpath(biblibrary)):
+        raise ValueError('Could not find bibtex library file {}'.format(biblibrary))
+
+    with open(os.path.normpath(biblibrary), 'r') as bib_file:
+        text = bib_file.read()
+
+# find all of the bibtex codes
+    output = {}
+    in_lib = re.search('@[A-Z]+{', text)
+    while in_lib != None:
+        in_lib = re.search('@[A-Z]+{', text)
+        asc = text[in_lib.start():]
+        in_lib = re.search('\n@', asc)
+#        print(in_lib)
+        if in_lib != None:
+            text = asc[(in_lib.start()-2):]
+            asc = asc[:in_lib.end()]
+        p = bibTexParser(asc)
+        output[p['bibcode']] = p
+    return output
 
 
 def getBibTex(bibcode,**kwargs):
