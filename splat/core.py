@@ -4935,7 +4935,7 @@ def classifyByTemplate(sp, *args, **kwargs):
     dkey = lib['DATA_KEY']
     sspt = [typeToNum(s) for s in lib[spt_type]]
 
-    if (verbose):
+    if verbose == True:
         print('\nComparing to {} templates\n'.format(len(files)))
         if len(files) > 100:
             print('This may take some time!\n\n'.format(len(files)))
@@ -4947,12 +4947,15 @@ def classifyByTemplate(sp, *args, **kwargs):
 
 # INSERT TRY STATEMNT HERE?
 
-        s = Spectrum(idkey=d)
-        stt,scale = compareSpectra(sp,s,fit_ranges=fit_ranges,statistic=statistic,novar2=True,*kwargs)
+        s = Spectrum(d)
+
+        mkwargs = copy.deepcopy(kwargs)
+        if 'plot' in (mkwargs.keys()): mkwargs['plot'] = False
+
+        stt,scale = compareSpectra(sp,s,fit_ranges=fit_ranges,statistic=statistic,novar2=True,**mkwargs)
         stat.append(stt)
         scl.append(scale)
-        if (verbose):
-            print(keySpectrum(d)['NAME'][0], typeToNum(sspt[i]), stt, scale)
+        if verbose == True: print(s)
 
 # list of sorted standard files and spectral types
     sorted_dkey = [x for (y,x) in sorted(zip(stat,dkey))]
@@ -4974,7 +4977,7 @@ def classifyByTemplate(sp, *args, **kwargs):
 
 # plot spectrum compared to best spectrum
     if (kwargs.get('plot',False) != False):
-        s = Spectrum(idkey=sorted_dkey[0])
+        s = Spectrum(sorted_dkey[0])
 #        chisq,scale = compareSpectra(s,sp,fit_ranges=[comprng],stat='chisqr',novar2=True)
         s.scale(sorted_scale[0])
         kwargs['legend'] = [sp.name,s.name]
@@ -4988,16 +4991,16 @@ def classifyByTemplate(sp, *args, **kwargs):
     else:
         output_spt = sptn
 
-    if verbose:
-        s = Spectrum(idkey=sorted_dkey[0])
-        print('\nBest match = {} with spectral type {}'.format(s.name,s.lit_type))
+    if verbose == True:
+        s = Spectrum(sorted_dkey[0])
+        print('\nBest match = {} with spectral type {}'.format(s,typeToNum(sorted_spt[0])))
         print('Mean spectral type = {}+/-{}'.format(output_spt,sptn_e))
 
 # return dictionary of results
     return {'result': (output_spt,sptn_e), \
         'statistic': sorted(stat)[0:nbest], 'spt': sorted_spt[0:nbest], \
         'scale': sorted_scale[0:nbest], \
-        'spectra': [Spectrum(idkey=d) for d in sorted_dkey[0:nbest]]}
+        'spectra': [Spectrum(d) for d in sorted_dkey[0:nbest]]}
 
 
 

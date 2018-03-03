@@ -163,10 +163,10 @@ This returns (depending on the source returned):
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> spt,unc = splat.classifyByStandard(sp,spt=['T5','T9'])
 >>> spt,unc = splat.classifyByIndex(sp,set='burgasser')
->>> bestMatches = splat.classifyByTemplate(sp,spt=['T6','T9'],nbest=5)
+>>> bestMatches = splat.classifyByTemplate(sp,spt=['T6','T8'],nbest=5)
 
 The last line returns a dictionary containing the best 5 template matches to the Spectrum sp. 
-Note that comparing to the large template library of SPLAT can take a long time to run!
+Note that comparing to the large template library of SPLAT can take a long time to run; currently you have to set force=True to run more than 100 templates. (then go get a coffee!)
 
 
 * To compare a spectrum to another spectrum or a model, use `compareSpectra()`_:
