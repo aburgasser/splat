@@ -16,6 +16,7 @@ from __future__ import print_function
 #    Aishwarya Iyer
 #    Yuhui Jin
 #    Michael Lopez
+#    Ryan Low
 #    Dorsa Majidi
 #    Diego Octavio Talavera Maya
 #    Alex Mendez
@@ -5322,7 +5323,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
         kwargs['colors'] = kwargs.get('colors',['k','r','b'])
         kwargs['title'] = kwargs.get('title',sp1.name+' vs '+sp2.name)
         from .plot import plotSpectrum
-        plotSpectrum(sp1,spcomp,sp1-spcomp,**kwargs,labels=[sp1.name,sp2.name,'{} = {}'.format(statistic,stat)])
+        plotSpectrum(sp1,spcomp,sp1-spcomp,labels=[sp1.name,sp2.name,'{} = {}'.format(statistic,stat)],**kwargs)
 
 
     return numpy.nanmax([stat,minreturn])*unit, scale_factor
@@ -5582,7 +5583,7 @@ def measureEWSet(sp,*args,**kwargs):
     return result
 
 
-def measureIndex(sp,*args,method='ratio',sample='integrate',nsamples=100,noiseFlag=True,**kwargs):
+def measureIndex(sp,method='ratio',sample='integrate',nsamples=100,noiseFlag=True,*args,**kwargs):
     '''
     :Purpose: Measure an index on a spectrum based on defined methodology
                 measure method can be mean, median, integrate
