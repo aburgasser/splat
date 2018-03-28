@@ -573,30 +573,38 @@ def simulateMasses(num,mass_range = [0.01,0.1],distribution='powerlaw',parameter
         f = interp1d(yc,xf)
         masses = f(numpy.random.uniform(size=num))
 
-# Chabrier (2005) distribution
+# Chabrier (2003) distribution
     elif 'chabrier' in distribution.lower():
 # lognormal below 1 solar mass
         yfull = []
         xfull = []
         if numpy.min(mass_range) < 1.0:
             xfull = numpy.linspace(numpy.min(mass_range),numpy.min([numpy.max(mass_range),1.0]),num=10000)
-#            yfull = stats.lognorm.pdf(xfull/0.079,0.69)
+# default
+            yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.079))/0.69)**2)/xfull
+            mcut = 1.0
             if 'system' in distribution.lower():
                 yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.22))/0.57)**2)/xfull
                 mcut = 1.0
-            elif 'globular' in distribution.lower():
+            if 'globular' in distribution.lower():
                 yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.33))/0.34)**2)/xfull
                 mcut = 0.9
-            elif 'halo' in distribution.lower():
+            if 'halo' in distribution.lower() or 'spheroid' in distribution.lower():
                 yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.22))/0.33)**2)/xfull
                 mcut = 0.7
-            else:
-                yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.079))/0.69)**2)/xfull
-                mcut = 1.0
+            if '2005' in distribution:
+                if 'system' in distribution.lower():
+                    yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.2))/0.55)**2)/xfull
+                    mcut = 1.0
+                else:
+                    yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.25))/0.55)**2)/xfull
+                    mcut = 1.0
+                
 # salpeter or broken power law above this
         if numpy.max(mass_range) > mcut:
             mbs = [numpy.max([numpy.min(mass_range),mcut]),numpy.max(mass_range)]
             alphas = [2.3]
+            if '2005' in distribution: alphas = [2.35]
             if 'broken' in distribution.lower():
                 mbs = numpy.array([numpy.max([numpy.min(mass_range),mcut]),10.**0.54,10.**1.26,10.**1.80])
                 alphas = numpy.array([5.37,4.53,3.11])
@@ -636,7 +644,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],distribution='powerlaw',parameter
     return masses
 
 
-def simulateMassRatios(num,distribution='uniform',q_range=[0.1,1.0],parameters = {},verbose=False,**kwargs):
+def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],gamma=1.8,parameters = {},verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -651,9 +659,9 @@ def simulateMassRatios(num,distribution='uniform',q_range=[0.1,1.0],parameters =
         :param: distribution = 'uniform': set to one of the following to define the type of mass distribution to sample:
 
             * `uniform`: uniform distribution
-            * `powerlaw` or `power-law`: single power-law distribution, P(M) ~ M\^-alpha. You must specify the parameter `alpha` or set ``distribution`` to TBD
-            * `allen`: power-law distribution with gamma = -1.8 based on `Allen (2007, ApJ 668, 492) <http://adsabs.harvard.edu/abs/2007ApJ...668..492A>`_
-            * `burgasser`: power-law distribution with gamma = -4.2 based on `Burgasser et al (2006, ApJS 166, 585) <http://adsabs.harvard.edu/abs/2006ApJS..166..585B>`_
+            * `powerlaw` or `power-law`: single power-law distribution, P(q) ~ q\^-gamma. You must specify the parameter `gamma` or set ``distribution`` to 'allen', 'burgasser', or 'reggiani'
+            * `allen`: power-law distribution with gamma = 1.8 based on `Allen (2007, ApJ 668, 492) <http://adsabs.harvard.edu/abs/2007ApJ...668..492A>`_
+            * `burgasser`: power-law distribution with gamma = 4.2 based on `Burgasser et al (2006, ApJS 166, 585) <http://adsabs.harvard.edu/abs/2006ApJS..166..585B>`_
 
         :param: q_range = [0.1,1.0]: range of masses to draw from; can also specify ``range``, ``minq`` or ``min``, and ``maxq`` or ``max``
         :param: parameters = {}: dictionary containing the parameters for the age distribution/star formation model being used; options include:
@@ -677,7 +685,7 @@ def simulateMassRatios(num,distribution='uniform',q_range=[0.1,1.0],parameters =
     '''
 
 # initial parameters
-    allowed_distributions = ['uniform','flat','powerlaw','power-law','allen','burgasser']
+    allowed_distributions = ['uniform','flat','powerlaw','power-law','allen','burgasser','reggiani']
     mn = kwargs.get('minq',0.1)
     mn = kwargs.get('min',mn)
     mx = kwargs.get('maxq',1.)
@@ -692,12 +700,13 @@ def simulateMassRatios(num,distribution='uniform',q_range=[0.1,1.0],parameters =
 
 # set default parameters
     if 'gamma' not in list(parameters.keys()):
-        parameters['gamma'] = kwargs.get('gamma',1.8)
+        parameters['gamma'] = gamma
 
 # power-law - sample from CDF
-    if distribution.lower() == 'power-law' or distribution.lower() == 'powerlaw' or distribution.lower() == 'allen' or distribution.lower() == 'burgasser':
+    if distribution.lower() in ['power-law','powerlaw','allen','burgasser','reggiani']:
         if distribution.lower() == 'allen' or kwargs.get('allen',False) == True: parameters['gamma'] = 1.8
         if distribution.lower() == 'burgasser' or kwargs.get('burgasser',False) == True: parameters['gamma'] = 4.2
+        if distribution.lower() == 'reggiani' or kwargs.get('reggiani',False) == True: parameters['gamma'] = 0.25
         x = numpy.linspace(numpy.min(q_range),numpy.max(q_range),num=10000)
         if parameters['gamma'] == 1.:
             y = numpy.log(x)

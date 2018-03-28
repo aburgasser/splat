@@ -19,16 +19,23 @@ from __future__ import print_function, division
 
 # imports: internal
 import copy
+import os
+import time
 
 # imports: external
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import numpy
+import pandas
 from astropy import units as u            # standard units
 from scipy.interpolate import interp1d
+from scipy.integrate import trapz        # for numerical integration
 
 # imports: splat
 from .core import getSpectrum, classifyByIndex
-from . import empirical as spemp
-from . import plot as splot
+import splat.empirical as spem
+import splat.evolve as spev
+import splat.plot as splot
 
 # some euclid parameters
 EUCLID_WAVERANGE = [1.25,1.85]
@@ -154,4 +161,6 @@ if __name__ == '__main__':
 	print('For H = {}, SpT = {}+/-{}'.format(m1,spt[0],spt[1]))
 	print('For H = {}, SpT = {}+/-{}'.format(m3,spt[0],spt[1]))
 	print('For H = {}, SpT = {}+/-{}'.format(m2,spt[0],spt[1]))
+
+
 

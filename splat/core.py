@@ -161,6 +161,7 @@ class Spectrum(object):
         self.wave = []
         self.flux = []
         self.noise = []
+        self.variance = []
 
 # process arguments
 # option 1: a filename is given
@@ -193,7 +194,7 @@ class Spectrum(object):
             if len(kwargs.get('noise','')) > 0:
                 self.noise = kwargs['noise']
             else:
-                self.noise = numpy.array([numpy.nan for i in self.wave])
+                self.noise = numpy.zeros(len(self.wave))
 # some extras
             others = ['pixel','mask','flag','flags','model']
             for o in others:
@@ -267,17 +268,19 @@ class Spectrum(object):
             self.flux = numpy.array(self.flux)
             self.noise = numpy.array(self.noise)
 # enforce positivity and non-nan
-            if (numpy.nanmin(self.flux) < 0):
-                self.flux[numpy.where(self.flux < 0)] = 0.
-            self.flux[numpy.isnan(self.flux)] = 0.
+# THESE HAVE BEEN REMOVED
+#            if (numpy.nanmin(self.flux) < 0):
+#                self.flux[numpy.where(self.flux < 0)] = 0.
+#            self.flux[numpy.isnan(self.flux)] = 0.
             try:
                 if numpy.nanmin(self.noise) < 0.:
-                    self.noise[numpy.where(self.noise < 0.)] = numpy.nan
+                    self.noise[numpy.where(self.noise < 0.)] = 0.
             except:
                 pass
 # check on noise being too low - a problem with old SpeX files
-            if (numpy.nanmax(self.flux/self.noise) > max_snr):
-                self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
+# THIS HAS BEEN REMOVED
+#            if (numpy.nanmax(self.flux/self.noise) > max_snr):
+#                self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
 # convert to astropy quantities with units
             if not isUnit(self.wave):
                 self.wave = numpy.array(self.wave)*self.wunit
@@ -303,7 +306,7 @@ class Spectrum(object):
                 pass
             self.temperature = numpy.zeros(len(self.flux))
 # calculate variance & S/N
-            self.variance = self.noise**2
+            self.variance = numpy.array([n**2 for n in self.noise.value])*self.noise.unit*self.noise.unit
             self.snr = self.computeSN()
 
 # estimate resolution - be default central lam/lam spacing/3
@@ -464,12 +467,17 @@ class Spectrum(object):
         return
 
 
-    def mapTo(self,other):
+    def mapTo(self,other,overhang=0.1):
         '''
         Purpose: maps spectrum onto the wavelength scale of another spectrum
+
         '''
         self.toWaveUnit(other.wave.unit)
         funit = self.flux.unit
+        trng = [numpy.nanmin(other.wave.value),numpy.nanmax(other.wave.value)]
+        dt = numpy.abs(trng[1]-trng[0])
+        trng = [trng[0]-overhang*dt,trng[1]+overhang*dt]*other.wave.unit
+        self.trim(trng)
         self.flux = reMap(self.wave.value,self.flux.value,other.wave.value)*funit
         self.noise = reMap(self.wave.value,self.noise.value,other.wave.value)*funit
         self.wave = other.wave
@@ -646,6 +654,7 @@ class Spectrum(object):
         sp.variance = numpy.multiply(sp.flux**2,((numpy.divide(n1(sp.wave.value),f1(sp.wave.value))**2)+(numpy.divide(n2(sp.wave.value),f2(sp.wave.value))**2)))
         sp.variance=sp.variance*((self.flux.unit*other.flux.unit)**2)
         sp.noise = sp.variance**0.5
+        sp.cleanNoise()
         sp.snr = sp.computeSN()
 
 # update information
@@ -704,8 +713,7 @@ class Spectrum(object):
 
 # clean up infinities
         sp.flux = (numpy.where(numpy.absolute(sp.flux.value) == numpy.inf, numpy.nan, sp.flux.value))*self.funit/other.flux.unit
-        sp.noise = (numpy.where(numpy.absolute(sp.noise.value) == numpy.inf, numpy.nan, sp.noise.value))*self.funit/other.flux.unit
-        sp.variance = (numpy.where(numpy.absolute(sp.variance.value) == numpy.inf, numpy.nan, sp.variance.value))*(self.flux.unit/other.flux.unit)**2
+        sp.cleanNoise()
 
 # update information
         sp.name = self.name+' / '+other.name
@@ -762,8 +770,7 @@ class Spectrum(object):
 
 # clean up infinities
         sp.flux = (numpy.where(numpy.absolute(sp.flux.value) == numpy.inf, numpy.nan, sp.flux.value))*self.flux.unit/other.flux.unit
-        sp.noise = (numpy.where(numpy.absolute(sp.noise.value) == numpy.inf, numpy.nan, sp.noise.value))*self.flux.unit/other.flux.unit
-        sp.variance = (numpy.where(numpy.absolute(sp.variance.value) == numpy.inf, numpy.nan, sp.variance.value))*(self.flux.unit/other.flux.unit)**2
+        sp.cleanNoise()
 
 # update information
         sp.name = self.name+' / '+other.name
@@ -780,6 +787,18 @@ class Spectrum(object):
 # reset original
         sp.original = copy.deepcopy(sp)
         return sp
+
+
+    def cleanNoise(self,replace='median'):
+        ns = numpy.array(self.noise.value)
+        rep = 0.
+        if replace=='median': rep = numpy.nanmedian(ns)
+        ns[numpy.isnan(ns)==True] = rep
+        ns[numpy.isinf(ns)==True] = rep
+        var = ns**2
+        self.noise = ns*self.noise.unit
+        self.variance = (ns**2)*self.noise.unit*self.noise.unit
+        return
 
     def computeSN(self):
         '''
@@ -1645,7 +1664,7 @@ class Spectrum(object):
 
 
 # determine maximum flux, by default in non telluric regions
-    def fluxMax(self,**kwargs):
+    def fluxMax(self,maskTelluric=True,**kwargs):
         '''
         :Purpose: Reports the maximum flux of a Spectrum object ignoring nan's.
 
@@ -1665,21 +1684,21 @@ class Spectrum(object):
             print('\nWarning: spectrum object has a flux vector of zero length - maybe empty?')
             return numpy.nan
 
-        if kwargs.get('maskTelluric',True):            
+        if maskTelluric == True:            
             try:
-                fl = self.flux[numpy.where(numpy.logical_or(\
+                fl = self.flux.value[numpy.where(numpy.logical_or(\
                     numpy.logical_and(self.wave.to(u.micron) > 0.9*u.micron,self.wave.to(u.micron) < 1.35*u.micron),
                     numpy.logical_and(self.wave.to(u.micron) > 1.42*u.micron,self.wave.to(u.micron) < 1.8*u.micron),
                     numpy.logical_and(self.wave.to(u.micron) > 1.92*u.micron,self.wave.to(u.micron) < 2.3*u.micron)))]
-                if isUnit(fl[0]): fl = [f.value for f in fl]
-                return numpy.nanmax(fl)*self.funit
+                if len(fl) > 0: return numpy.nanmax(fl)*self.funit
+#                if isUnit(fl[0]): fl = [f.value for f in fl]
             except:
                 pass
         
-        fl = self.flux[numpy.where(\
-                numpy.logical_and(self.wave > numpy.nanmin(self.wave)+0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave)),self.wave < numpy.nanmax(self.wave)-0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave))))]
-        if isUnit(fl[0]): fl = [f.value for f in fl]
-        return numpy.nanmax(fl)*self.funit
+#        fl = self.flux.value[numpy.where(\
+#                numpy.logical_and(self.wave > numpy.nanmin(self.wave.value)+0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave)),self.wave < numpy.nanmax(self.wave)-0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave))))]
+#        if isUnit(fl[0]): fl = [f.value for f in fl]
+        return numpy.nanmax(self.flux.value)*self.flux.unit
 
 
     def normalize(self,*args,**kwargs):
@@ -2505,7 +2524,7 @@ class Spectrum(object):
                     r = [x.to(self.wave.unit).value for x in r]
                 except:
                     raise ValueError('Could not convert trim range unit {} to spectrum wavelength unit {}'.format(r[0].unit,self.wave.unit))
-            mask[numpy.where(numpy.logical_and(self.wave.value >= r[0],self.wave.value <= r[1]))] = 1
+            mask[numpy.where(numpy.logical_and(self.wave.value > r[0],self.wave.value < r[1]))] = 1
 #        w = numpy.where(mask == 1)
         self.wave = self.wave[mask == 1]
         self.flux = self.flux[mask == 1]
@@ -2516,7 +2535,7 @@ class Spectrum(object):
 #        self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
 #        self.noisenu = self.noise.to('Jy',equivalencies=u.spectral_density(self.wave))
         self.snr = self.computeSN()
-        self.history.append('Spectrum trimmed to ranges {}'.format(rng))
+        self.history.append('Spectrum trimmed to range {}'.format(rng))
         return
 
     def updateSourceInfo(self,verbose=False,radius=10.*u.arcsec,**kwargs):
