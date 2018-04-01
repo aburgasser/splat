@@ -1235,6 +1235,11 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
             mdl2.rvShift(parameters['rv2'])
         if 'vsini2' in list(parameters.keys()):
             mdl2.broaden(parameters['vsini2'],method='rotation')
+        else:
+            if 'vsini' in list(parameters.keys()):
+                mdl2.broaden(parameters['vsini'],method='rotation')
+            elif 'vsini1' in list(parameters.keys()):
+                mdl2.broaden(parameters['vsini1'],method='rotation')
 
 # add primary and secondary back together
         mdl = mdl1+mdl2
@@ -1432,7 +1437,7 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
                 parameters.append(param0)
                 chis.append(chi0)
                 if verbose == True:
-                    l = 'Step {}: chi={:.0f}, dof={}'.format(i,chis[-1],dof)
+                    l = 'Step {}: varied {}, chi={:.0f}, dof={}'.format(i,k,chis[-1],dof)
                     for k in list(param_var.keys()): 
                         if param_var[k] != 0.: l+=' , {}={:.2f}'.format(k,parameters[-1][k])
                     print(l)
@@ -1693,10 +1698,14 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
         else:
             plt.clf()
             pd = pandas.DataFrame(toplot)
-            fig = corner.corner(pd, quantiles=[0.16, 0.5, 0.84], \
-                labels=list(pd.columns), show_titles=True, weights=weights, \
-                title_kwargs={"fontsize": 12})
-            plt.savefig(file+'_corner.pdf')
+            for k in list(pd.columns):
+                if numpy.nanmin(pd[k])==numpy.nanmax(pd[k]): del pd[k]
+            if len(list(pd.columns)) > 0:
+                fig = corner.corner(pd, quantiles=[0.16, 0.5, 0.84], \
+                    labels=list(pd.columns), show_titles=True, weights=weights, \
+                    title_kwargs={"fontsize": 12})
+                plt.savefig(file+'_corner.pdf')
+
 
 # plot best model
     if plotBest==True:
@@ -1705,7 +1714,7 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
         chi0,scale = splat.compareSpectra(data,mdl)
         mdl.scale(scale)
         mdlnt.scale(scale)
-        splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model','Model x Telluric','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_bestModel.pdf')
+        splot.plotSpectrum(data,mdl,mdlnt,data-mdl,colors=['k','r','g','b'],legend=['Data','Model x Telluric','Model','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_bestModel.pdf')
 
 # plot mean model
     if plotMean==True:
@@ -1714,7 +1723,7 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
         chi0,scale = splat.compareSpectra(data,mdl)
         mdl.scale(scale)
         mdlnt.scale(scale)
-        splot.plotSpectrum(data,mdlnt,mdl,data-mdl,colors=['k','g','r','b'],legend=['Data','Model','Model x Telluric','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_meanModel.pdf')
+        splot.plotSpectrum(data,mdl,mdlnt,data-mdl,colors=['k','r','g','b'],legend=['Data','Model x Telluric','Model','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_meanModel.pdf')
 
 # summarize results to a text file
     if writeReport==True:
