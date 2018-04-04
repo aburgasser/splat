@@ -75,13 +75,12 @@ def checkAccess(**kwargs):
     result = False
 
     try:
-	    home = os.path.expanduser("~")
-	    if home == None:
-	        home = './'
-	    bcode = requests.get(SPLAT_URL+ACCESS_FILE).content
-	    lcode = base64.b64encode(open(home+'/'+ACCESS_FILE,'r').read().encode())
-	    if (bcode in lcode):        # changed to partial because of EOL variations
-	        result = True
+        home = os.path.expanduser("~")
+        if home == None: home = './'
+        bcode = requests.get(SPLAT_URL+ACCESS_FILE).content
+        lcode = base64.b64encode(open(home+'/'+ACCESS_FILE,'r').read().encode())
+        print(bcode,lcode)
+        if (bcode[:-3] in lcode): result = True
     except:
         result = False
 
@@ -1534,10 +1533,11 @@ def reMap(x1,y1,x2,nsamp=100):
     if x2[0] < x1[0] or x2[-1] > x1[-1]: 
         raise ValueError('\nOutput x range {} to {} must be within input x range {} to {}'.format(x2[0],x2[-1],x1[0],x1[-1]))
 
+# low resolution -> high resolution: interpolation
     f = interp1d(x1,y1,bounds_error=False,fill_value=0.)
     y2 = f(x2)
 
-# high resolution -> low resolution: intergrate
+# high resolution -> low resolution: integrate
     if len(y1) > len(y2): 
 
 # set up samples
