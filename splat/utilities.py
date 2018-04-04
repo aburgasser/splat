@@ -79,7 +79,6 @@ def checkAccess(**kwargs):
         if home == None: home = './'
         bcode = requests.get(SPLAT_URL+ACCESS_FILE).content
         lcode = base64.b64encode(open(home+'/'+ACCESS_FILE,'r').read().encode())
-        print(bcode,lcode)
         if (bcode[:-3] in lcode): result = True
     except:
         result = False
