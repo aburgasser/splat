@@ -41,6 +41,22 @@ sys.ps1 = 'splat util> '
 
 
 #####################################################
+###########   SIMPLE HELPER FUNCTIONS   #############
+#####################################################
+
+def padWhereArray(w,mx):
+    '''
+    Purpose:
+
+        Pads the output of a numpy.where array to select (if available) one more index spot beyond limits
+
+    '''
+    if w[0][0] > 0: w = (numpy.insert(w[0],0,w[0][0]-1),)
+    if w[0][-1] < mx: w = (numpy.append(w[0],w[0][-1]+1),)
+    return w
+
+
+#####################################################
 ################   VARIOUS CHECKS   #################
 #####################################################
 

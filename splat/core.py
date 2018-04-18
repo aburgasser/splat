@@ -3157,7 +3157,6 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', *args, **kwargs):
 
 # program parameters
     ref = kwargs.get('output','all')
-    radius = kwargs.get('radius',10.)      # search radius in arcseconds
     object_classes = numpy.unique(numpy.sort(numpy.array([str(x) for x in splat.DB_SOURCES['OBJECT_TYPE']])))
     object_classes = object_classes[numpy.where(object_classes != '0')]  # eliminate masked element
     object_classes = object_classes[numpy.where(object_classes != 'nan')]  # eliminate masked element
@@ -3263,8 +3262,10 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', *args, **kwargs):
                     source_db['DEC'] = [c.dec.degree for c in coords]
 
             source_db['COORDFLAG'] = numpy.zeros(len(source_db))
-            source_db['COORDSEPR'] = [numpy.abs((cc.ra.degree-source_db['RA'].iloc[i])*numpy.cos(cc.dec.degree*numpy.pi/180.)*3600.) for i in range(len(source_db))]
+            source_db['COORDSEPR'] = [numpy.abs((cc.ra.degree-r)*numpy.cos(cc.dec.degree*numpy.pi/180.)*3600.) for r in source_db['RA']]
             source_db['COORDSEPD'] = [numpy.abs((cc.dec.degree-d)*3600.) for d in source_db['DEC']]
+            r = (source_db['COORDSEPR']**2+source_db['COORDSEPD']**2)**0.5
+            print(radius,numpy.nanmin(r),source_db['DESIGNATION'].iloc[numpy.argmin(r)])
             chk = source_db[source_db['COORDSEPR'] <= radius]
             chk = chk[chk['COORDSEPD'] <= radius]
             if len(chk) > 0:
@@ -4172,7 +4173,8 @@ def _readWFC3(file,**kwargs):
 #####################################################
 
 
-def classifyByIndex(sp, *args, **kwargs):
+def classifyByIndex(sp,ref='burgasser',str_flag=True,rnd_flag=False,rem_flag=True,nsamples=100,nloop=5,verbose=False,indices={},sptoffset=0.,coeffs={},method='polynomial', **kwargs):
+
     '''
     :Purpose: 
 
@@ -4206,25 +4208,20 @@ def classifyByIndex(sp, *args, **kwargs):
 
     '''
 
-    str_flag = kwargs.get('string', True)
-    verbose = kwargs.get('verbose', False)
-    rnd_flag = kwargs.get('round', False)
-    rem_flag = kwargs.get('remeasure', True)
-    nsamples = kwargs.get('nsamples', 100)
-    nloop = kwargs.get('nloop', 5)
-    set = kwargs.get('set','burgasser')
-    set = kwargs.get('ref',set)
-    kwargs['set'] = set
+    str_flag = kwargs.get('string', str_flag)
+#    verbose = kwargs.get('verbose', False)
+    rnd_flag = kwargs.get('round', rnd_flag)
+    rem_flag = kwargs.get('remeasure', rem_flag)
+#    nsamples = kwargs.get('nsamples', 100)
+#    nloop = kwargs.get('nloop', 5)
+    ref = kwargs.get('set',ref)
+    kwargs['ref'] = ref
 #    if (set.lower() not in allowed_sets):
 #        print('\nWarning: index classification method {} not present; returning nan\n\n'.format(set))
 #        return numpy.nan, numpy.nan
 
-# measure indices if necessary
-    if (len(args) != 0):
-        indices = args[0]
-
 # Reid et al. (2001, AJ, 121, 1710)
-    elif (set.lower() == 'reid'):
+    if (ref.lower() == 'reid'):
         if (rem_flag or len(args) == 0):
             indices = measureIndexSet(sp, **kwargs)
         sptoffset = 20.
@@ -4236,7 +4233,7 @@ def classifyByIndex(sp, *args, **kwargs):
         method='polynomial'
 
 # Testi et al. (2001, ApJ, 522, L147)
-    elif (set.lower() == 'testi'):
+    elif (ref.lower() == 'testi'):
         if (rem_flag or len(args) == 0):
             indices = measureIndexSet(sp, **kwargs)
         sptoffset = 10.
@@ -4256,7 +4253,7 @@ def classifyByIndex(sp, *args, **kwargs):
         method='polynomial'
 
 # Burgasser (2007, ApJ, 659, 655) calibration
-    elif (set.lower() == 'burgasser'):
+    elif (ref.lower() == 'burgasser'):
         if (rem_flag or len(args) == 0):
             indices = measureIndexSet(sp, **kwargs)
         sptoffset = 20.
@@ -4274,11 +4271,11 @@ def classifyByIndex(sp, *args, **kwargs):
         method='polynomial'
 
 # Geballe et al. (2002, ApJ, 564, 466) calibration
-    elif set.lower() == 'geballe':
+    elif ref.lower() == 'geballe':
         if (rem_flag or len(args) == 0):
-            kwargs['set'] = 'geballe'
+            kwargs['ref'] = 'geballe'
             i1 = measureIndexSet(sp, **kwargs)
-            kwargs['set'] = 'martin'
+            kwargs['ref'] = 'martin'
             i2 = measureIndexSet(sp, **kwargs)
             if sys.version_info.major == 2:
                 indices = dict(i1.items() + i2.items())
@@ -4296,13 +4293,13 @@ def classifyByIndex(sp, *args, **kwargs):
         method='ranges'
 
 # Allers et al. (2013, ApJ, 657, 511)
-    elif (set.lower() == 'allers'):
+    elif (ref.lower() == 'allers'):
         if (rem_flag or len(args) == 0):
-            kwargs['set'] = 'mclean'
+            kwargs['ref'] = 'mclean'
             i1 = measureIndexSet(sp, **kwargs)
-            kwargs['set'] = 'slesnick'
+            kwargs['ref'] = 'slesnick'
             i2 = measureIndexSet(sp, **kwargs)
-            kwargs['set'] = 'allers'
+            kwargs['ref'] = 'allers'
             i3 = measureIndexSet(sp, **kwargs)
             if sys.version_info.major == 2:
                 indices = dict(i1.items() + i2.items() + i3.items())
@@ -4320,92 +4317,65 @@ def classifyByIndex(sp, *args, **kwargs):
             'coeff': [37.5013, -97.8144, 55.4580, 10.8822]}}
         method='polynomial'
 
-# Aganze et al. 2015 (in preparation)
-#    elif (set.lower() == 'aganze'):
-#        if (rem_flag or len(args) == 0):
-#            kwargs['set'] = 'geballe'
-#            i1 = measureIndexSet(sp, **kwargs)
-#            kwargs['set'] = 'slesnick'
-#            i2 = measureIndexSet(sp, **kwargs)
-#            kwargs['set'] = 'allers'
-#            i3 = measureIndexSet(sp, **kwargs)
-#            kwargs['set'] = 'burgasser'
-#            i4 = measureIndexSet(sp, **kwargs)
-#            kwargs['set'] = 'reid'
-#            i5 = measureIndexSet(sp, **kwargs)
-#            kwargs['set'] = 'tokunaga'
-#            i6 = measureIndexSet(sp, **kwargs)
-#            if sys.version_info.major == 2:
-#                indices = dict(i1.items() + i2.items() + i3.items()+ i4.items() + i5.items() + i6.items())
-#            else:
-#                indices = dict(i1.items() | i2.items() | i3.items()| i4.items() | i5.items() | i6.items())
-#        sptoffset = 0.0
-#        sptfact = 1.0
-#        coeffs = { \
-#            'H2O': {'fitunc': 0.863, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-#            'coeff': [ -361.25130485, 1663.93768276, -2870.50724103,  2221.99873698, -638.03203556]}, \
-#            'H2O-J': {'fitunc': 0.902, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-#            'coeff': [ -146.21144969 ,  632.34633568,  -1008.79681307,   678.80156994 , -137.92921741]}, \
-#            'H2O-K': {'fitunc':0.973, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-#            'coeff': [-21366.79781425,  38630.25299752,  -25984.2424891  ,  7651.46728497,  -805.79462608]}, \
-#            'K1': {'fitunc':0.878, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-#            'coeff': [  10.29493194 ,  -62.71016723 ,  115.76162692,   -60.72606292 ,  15.1905955 ]}, \
-#            'K2': {'fitunc':0.934, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-#            'coeff': [ -44.78083424 , 225.58312733 ,-428.98225919 ,379.28205312 , -114.74469746]}, \
-#            'H2O-1': {'fitunc':1.035, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-#            'coeff': [ -2999.69506898 , 11118.42653046 , -15340.87706264  ,9307.5183138, -2068.63608393]}, \
-#            'H2O-B': {'fitunc':1.096, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-#            'coeff': [ -458.07448646 , 1547.35113353 , -1936.51451632 , 1041.95275566  , -178.50240834]}, \
-#            'H2O-H': {'fitunc':1.041, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-#            'coeff': [ -767.21126974 , 2786.26168556 , -3762.93498987,   2211.62680244,  -451.54693932]}, \
-#            'CH4-2.2': {'fitunc': 0.932, 'range': [15,23], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-#            'coeff': [-331.74150369, 133.08406514  , -0.84614999  , 19.78717161  , 17.18479766]}}
-
     else:
-        sys.stderr.write('\nWarning: '+set.lower()+' SpT-index relation not in classifyByIndex code\n\n')
-        return numpy.nan, numpy.nan
+        if len(indices.keys()) == 0: 
+            print('Error: indices is an empty dictionary')
+            return numpy.nan, numpy.nan
+        if len(coeff.keys()) == 0: 
+            print('Error: coeffs is an empty dictionary')
+            return numpy.nan, numpy.nan
+
+# check coefficient index names
+    for i in list(coeffs.keys()):
+        if i not in list(indices.keys()):
+            print('Error: coefficient index {} is not one of the measured indices {}; remeasure indices'.format(i,list(indices.keys())))
+            return numpy.nan, numpy.nan
 
 # polynomial method
     if method=='polynomial':
         for index in coeffs.keys():
-            if indices[index][1] > 0.:
-                vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))
+            coeffs[index]['spt'] = numpy.nan
+            coeffs[index]['sptunc'] = numpy.nan
+            coeffs[index]['mask'] = 0.
+            if numpy.isfinite(indices[index][0]):
                 coeffs[index]['spt'] = numpy.polyval(coeffs[index]['coeff'],indices[index][0])+sptoffset
-                if (set.lower() == 'testi'):
-                    vals = (vals-10.)*10.+10.
-                    coeffs[index]['spt'] = (coeffs[index]['spt']-10.)*10.+10.
-                coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
-            else:
-                coeffs[index]['spt'] = numpy.nan
-                coeffs[index]['sptunc'] = numpy.nan
-    # fix testi spectral types
+                coeffs[index]['sptunc'] = coeffs[index]['fitunc']
+                if (ref.lower() == 'testi'): coeffs[index]['spt'] = (coeffs[index]['spt']-10.)*10.+10.
+# noise sim
+                if numpy.isfinite(indices[index][1]):
+                    vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))
+                    if (ref.lower() == 'testi'): vals = (vals-10.)*10.+10.
+                    coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
+# unmask good values
+            if coeffs[index]['spt'] >= numpy.nanmin(coeffs[index]['range']) and coeffs[index]['spt'] <= numpy.nanmax(coeffs[index]['range']) and numpy.isfinite(coeffs[index]['spt']): coeffs[index]['mask'] = 1.
 
-            if (coeffs[index]['spt'] < coeffs[index]['range'][0] or coeffs[index]['spt'] > coeffs[index]['range'][1] or numpy.isnan(coeffs[index]['spt'])):
-                coeffs[index]['mask'] = 0.
-            else:
-                coeffs[index]['mask'] = 1.
+# no good values
+        mask = [coeffs[index]['mask'] for index in list(coeffs.keys())]
+        if numpy.nansum(mask) == 0.:
+            if verbose==True: print('\nNone of the indices in set {} returned viable values\n'.format(set))
+            return numpy.nan, numpy.nan
 
+# computed weighted mean with rejection, iterating to deal with indices outside ranges      
         for i in numpy.arange(nloop):
-            wts = [coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in coeffs.keys()]
-            if (numpy.nansum(wts) == 0.):
-                sys.stderr.write('\nIndices do not fit within allowed ranges\n\n')
+            wts = numpy.array([coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in list(coeffs.keys())])
+            vals = numpy.array([coeffs[index]['mask']*coeffs[index]['spt']/coeffs[index]['sptunc']**2 for index in list(coeffs.keys())])
+            w = numpy.where(numpy.isfinite(wts+vals))
+            if len(w) == 0:
+                if verbose==True: print('\nNone of the indices in set {} returned viable values\n'.format(set))
                 return numpy.nan, numpy.nan
-            vals = [coeffs[index]['mask']*coeffs[index]['spt']/coeffs[index]['sptunc']**2 \
-                for index in coeffs.keys()]
-            sptn = numpy.nansum(vals)/numpy.nansum(wts)
-            sptn_e = 1./numpy.nansum(wts)**0.5
+            sptn = numpy.nansum(vals[w])/numpy.nansum(wts[w])
+            sptn_e = 1./numpy.nansum(wts[w])**0.5
             for index in coeffs.keys():
-                if (sptn < coeffs[index]['range'][0] or sptn > coeffs[index]['range'][1]):
-                    coeffs[index]['mask'] = 0
+                if sptn < numpy.nanmin(coeffs[index]['range']) or sptn > numpy.nanmax(coeffs[index]['range']): coeffs[index]['mask'] = 0.
 
 # report individual subtypes
         if verbose == True:
             for i in coeffs.keys():
                 flg = '*'
-                if coeffs[i]['mask'] == 0: flg = ''
-                print('{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc']))
+                if coeffs[i]['mask'] == 0.: flg = ''
+                print('{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{:.1f}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc']))
 
-# ranges method - NOTE NOT CURRENTLY INCLUDING UNCERTAINTIES IN INDEX
+# ranges method - NOT CURRENTLY CONSIDERING UNCERTAINTY
     if method=='ranges':
         spts = []
         spts_unc = []
@@ -4426,14 +4396,11 @@ def classifyByIndex(sp, *args, **kwargs):
         sptn_e = numpy.nanstd(spts)
 
 # round off to nearest 0.5 subtypes if desired
-    if (rnd_flag):
-        sptn = 0.5*numpy.around(sptn*2.)
+    if (rnd_flag): sptn = 0.5*numpy.around(sptn*2.)
 
 # change to string if desired
-    if (str_flag):
-        spt = typeToNum(sptn,uncertainty=sptn_e)
-    else:
-        spt = sptn
+    if (str_flag): spt = typeToNum(sptn,uncertainty=sptn_e)
+    else: spt = sptn
 
     if kwargs.get('allmeasures',False) == True and method == 'polynomial':
         output = {}
@@ -5557,7 +5524,7 @@ def measureEWElement(sp,element,wave_range=[0.,0.],getNist=False,**kwargs):
         
 
 
-def measureEWSet(sp,*args,**kwargs):
+def measureEWSet(sp,ref='rojas',*args,**kwargs):
     '''
     :Purpose: Measures equivalent widths (EWs) of lines from specified sets. Returns dictionary of indices.
     :param sp: Spectrum class object, which should contain wave, flux and noise array elements
@@ -5574,10 +5541,10 @@ def measureEWSet(sp,*args,**kwargs):
     >>> print splat.measureEWSet(sp, set = 'rojas')
         {'Na I 2.206/2.209': (1.7484002652013144, 0.23332441577025356), 'Ca I 2.26': (1.3742491939667159, 0.24867705962337672), 'names': ['Na I 2.206/2.209', 'Ca I 2.26'], 'reference': 'EW measures from Rojas-Ayala et al. (2012)'}
     '''
-    set = kwargs.get('set','rojas')
+    ref = kwargs.get('set',ref)
 
 # determine combine method
-    if ('rojas' in set.lower()):
+    if ('rojas' in ref.lower()):
         reference = 'EW measures from Rojas-Ayala et al. (2012)'
         names = ['Na I 2.206/2.209','Ca I 2.26']
         ews = numpy.zeros(len(names))
@@ -5602,7 +5569,7 @@ def measureEWSet(sp,*args,**kwargs):
     return result
 
 
-def measureIndex(sp,method='ratio',sample='integrate',nsamples=100,noiseFlag=True,*args,**kwargs):
+def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseFlag=False,plot=False,verbose=False,**pkwargs):
     '''
     :Purpose: Measure an index on a spectrum based on defined methodology
                 measure method can be mean, median, integrate
@@ -5612,47 +5579,64 @@ def measureIndex(sp,method='ratio',sample='integrate',nsamples=100,noiseFlag=Tru
 
 # NOTE: NOISE FLAG ERROR IS BACKWARDS HERE    '''
 
-# keyword parameters
-#    method = kwargs.get('method','ratio')
-#    sample = kwargs.get('sample','integrate')
-#    nsamples = kwargs.get('nsamples',1000)
-#    noiseFlag = kwargs.get('noise',True)
-
-# create interpolation functions
-    w = numpy.where(numpy.isnan(sp.flux) == False)
-    f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=0.)
-    w = numpy.where(numpy.isnan(sp.noise) == False)
-# note that units are stripped out
-    if (numpy.size(w) != 0):
-        s = interp1d(sp.wave.value[w],sp.noise.value[w],bounds_error=False,fill_value=numpy.nan)
-        noiseFlag = kwargs.get('noise',False)
-    else:
-        s = interp1d(sp.wave.value[:],sp.noise.value[:],bounds_error=False,fill_value=numpy.nan)
-        noiseFlag = kwargs.get('noise',True)
-
 # error checking on number of arguments provided
-    if len(args) < 1:
+    if len(ranges) == 0:
         print('\nmeasureIndex needs at least 1 sample region')
         return numpy.nan, numpy.nan
-    if len(args) == 1:
+    if len(ranges) == 1:
         method = 'single'
-    if (len(args) < 2 and (method == 'ratio' or method == 'change')):
+    if not isinstance(ranges[0],list) and not isinstance(ranges[0],numpy.ndarray) and not isinstance(ranges[0],tuple) and not isinstance(ranges[0],set):
+        print('\nmeasureIndex needs a list of wavelength ranges, you entered {} which has types {}'.format(ranges,type(ranges[0])))
+        return numpy.nan, numpy.nan
+    for r in ranges:
+        if len(r) != 2:
+            print('\nProblem with range {} in input ranges {}: must be 2-element array'.format(r,ranges))
+            return numpy.nan, numpy.nan
+    if (len(ranges) < 2 and (method == 'ratio' or method == 'change')):
         print('\nIndex method {} needs at least 2 sample regions'.format(method))
         return numpy.nan, numpy.nan
-    if (len(args) < 3 and (method == 'line' or method == 'allers' or method == 'inverse_line'  or method == 'sumnum' or method == 'sumdenom')):
-        print('\n Index method {} needs at least 3 sample regions'.format(method))
+    if (len(ranges) < 3 and (method == 'line' or method == 'allers' or method == 'inverse_line'  or method == 'sumnum' or method == 'sumdenom')):
+        print('\nIndex method {} needs at least 3 sample regions'.format(method))
         return numpy.nan, numpy.nan
 
+
 # define the sample vectors
-    value = numpy.zeros(len(args))
-    value_sim = numpy.zeros((len(args),nsamples))
+    value = numpy.zeros(len(ranges))
+    value_sim = numpy.zeros((len(ranges),nsamples))
 
 # loop over all sampling regions
-    for i,waveRng in enumerate(args):
+    for i,waveRng in enumerate(ranges):
+
+# convert units
+        if isUnit(waveRng):
+            waveRng = (waveRng.to(sp.wave.unit)).value
+        elif isUnit(waveRng[0]):
+            waveRng = [(w.to(sp.wave.unit)).value for w in waveRng]
+        else:
+            waveRng = ((waveRng*DEFAULT_WAVE_UNIT).to(sp.wave.unit)).value
         xNum = (numpy.arange(0,nsamples+1.0)/nsamples)* \
             (numpy.nanmax(waveRng)-numpy.nanmin(waveRng))+numpy.nanmin(waveRng)
+
+# identify measureable regions
+        w = numpy.where(numpy.logical_and(\
+            numpy.logical_and(numpy.isnan(sp.flux.value) == False,numpy.isnan(sp.noise.value) == False),\
+            numpy.logical_and(sp.wave.value >= numpy.nanmin(waveRng),sp.wave.value <= numpy.nanmax(waveRng))))
+        if len(w) == 0:
+            noiseFlag = True
+            w = numpy.where(numpy.logical_and(\
+                numpy.isnan(sp.flux) == False,\
+                numpy.logical_and(sp.wave.value >= numpy.nanmin(waveRng),sp.wave.value <= numpy.nanmax(waveRng))))
+        if len(w) == 0:
+            if verbose: print('Warning: no data in the wavelength range {}'.format(waveRng))
+            return numpy.nan,numpy.nan
+
+# compute intepolated flux and noise
+        w = padWhereArray(w,len(sp.wave))
+        f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=numpy.nan)
         yNum = f(xNum)
-        yNum_e = s(xNum)
+        if noiseFlag == False:
+            s = interp1d(sp.wave.value[w],sp.noise.value[w],bounds_error=False,fill_value=0.)
+            yNum_e = s(xNum)
 
 # first compute the actual value
         if (sample == 'integrate'):
@@ -5670,88 +5654,90 @@ def measureIndex(sp,method='ratio',sample='integrate',nsamples=100,noiseFlag=Tru
         else:
             value[i] = numpy.nanmean(yNum)
 
-# now do MonteCarlo measurement of value and uncertainty
-        for j in numpy.arange(0,nsamples):
+# now do Monte Carlo measurement of value and uncertainty
+# THERE IS A PROBLEM HERE - ALL VALUE_SIM = NAN
+        if noiseFlag == False: 
+            for j in numpy.arange(0,nsamples):
 
 # sample variance
-            if (numpy.isnan(yNum_e[0]) == False):
-                yVar = yNum+numpy.random.normal(0.,1.)*yNum_e
-# NOTE: I'M NOT COMFORTABLE WITH ABOVE LINE - SEEMS TO BE TOO COARSE OF UNCERTAINTY
-# BUT FOLLOWING LINES GIVE UNCERTAINTIES THAT ARE WAY TOO SMALL
+# METHOD 1 - THIS SEEMS RIGHT BUT VERY SMALL UNCERTAINTIES
+#                yVar = yNum+numpy.random.normal(0.,1.,size=len(yNum))*yNum_e
+                yVar = yNum+numpy.random.normal(0.,3.,size=len(yNum))*yNum_e
+# METHOD 1 - THIS IS THE SAME AS 1
 #                yVar = numpy.random.normal(yNum,yNum_e)
-#                yVar = yNum+numpy.random.normal(0.,1.,len(yNum))*yNum_e
-            else:
-                yVar = yNum
+# METHOD 3 - THIS SEEMS TOO COARSE
+#                yVar = yNum+numpy.random.normal(0.,1.)*yNum_e
+#                print(numpy.std((yVar-yNum)/yNum_e))
 
 # choose function for measuring indices
-            if (sample == 'integrate'):
-                value_sim[i,j] = trapz(yVar,xNum)
-            elif (sample == 'average'):
-                value_sim[i,j] = numpy.nanmean(yVar)
-            elif (sample == 'sum'):
-                value_sim[i,j] = numpy.nansum(yVar)
-            elif (sample == 'median'):
-                value_sim[i,j] = numpy.median(yVar)
-            elif (sample == 'maximum'):
-                value_sim[i,j] = numpy.nanmax(yVar)
-            elif (sample == 'minimum'):
-                value_sim[i,j] = numpy.nanmin(yVar)
-            else:
-                value_sim[i,j] = numpy.nanmean(yVar)
+                if (sample == 'integrate'):
+                    value_sim[i,j] = trapz(yVar,xNum)
+                elif (sample == 'average'):
+                    value_sim[i,j] = numpy.nanmean(yVar)
+                elif (sample == 'sum'):
+                    value_sim[i,j] = numpy.nansum(yVar)
+                elif (sample == 'median'):
+                    value_sim[i,j] = numpy.median(yVar)
+                elif (sample == 'maximum'):
+                    value_sim[i,j] = numpy.nanmax(yVar)
+                elif (sample == 'minimum'):
+                    value_sim[i,j] = numpy.nanmin(yVar)
+                else:
+                    value_sim[i,j] = numpy.nanmean(yVar)
 
 # compute index based on defined method
 # default is a simple ratio
-    if (method == 'single'):
-        val = value[0]
-        vals = value_sim[0,:]
-    elif (method == 'ratio'):
-        val = value[0]/value[1]
-        vals = value_sim[0,:]/value_sim[1,:]
-    elif (method == 'line'):
-        val = 0.5*(value[0]+value[1])/value[2]
-        vals = 0.5*(value_sim[0,:]+value_sim[1,:])/value_sim[2,:]
-    elif (method == 'inverse_line'):
-        val = 2.*value[0]/(value[1]+value[2])
-        vals = 2.*value_sim[0,:]/(value_sim[1,:]+value_sim[2,:])
-    elif (method == 'change'):
-        val = 2.*(value[0]-value[1])/(value[0]+value[1])
-        vals = 2.*(value_sim[0,:]-value_sim[1,:])/(value_sim[0,:]+value_sim[1,:])
-    elif (method == 'sumnum'):
-        val = (value[0]+value[1])/value[2]
-        vals = (value_sim[0,:]+value_sim[1,:])/value_sim[2,:]
-    elif (method == 'sumdenom'):
-        val = value[0]/(value[1]+value[2])
-        vals = value_sim[0,:]/(value_sim[1,:]+value_sim[2,:])
-    elif (method == 'allers'):
-        val = (((numpy.mean(args[0])-numpy.mean(args[1]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value[2] \
-            + ((numpy.mean(args[2])-numpy.mean(args[0]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value[1]) \
-            /value[0]
-        vals = (((numpy.mean(args[0])-numpy.mean(args[1]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value_sim[2,:] \
-            + ((numpy.mean(args[2])-numpy.mean(args[0]))/(numpy.mean(args[2])-numpy.mean(args[1])))*value_sim[1,:]) \
-            /value_sim[0,:]
-    else:
-        val = value[0]/value[1]
-        vals = value_sim[0,:]/value_sim[1,:]
+        if (method == 'single'):
+            val = value[0]
+            vals = value_sim[0,:]
+        elif (method == 'ratio'):
+            val = value[0]/value[1]
+            vals = value_sim[0,:]/value_sim[1,:]
+        elif (method == 'line'):
+            val = 0.5*(value[0]+value[1])/value[2]
+            vals = 0.5*(value_sim[0,:]+value_sim[1,:])/value_sim[2,:]
+        elif (method == 'inverse_line'):
+            val = 2.*value[0]/(value[1]+value[2])
+            vals = 2.*value_sim[0,:]/(value_sim[1,:]+value_sim[2,:])
+        elif (method == 'change'):
+            val = 2.*(value[0]-value[1])/(value[0]+value[1])
+            vals = 2.*(value_sim[0,:]-value_sim[1,:])/(value_sim[0,:]+value_sim[1,:])
+        elif (method == 'sumnum'):
+            val = (value[0]+value[1])/value[2]
+            vals = (value_sim[0,:]+value_sim[1,:])/value_sim[2,:]
+        elif (method == 'sumdenom'):
+            val = value[0]/(value[1]+value[2])
+            vals = value_sim[0,:]/(value_sim[1,:]+value_sim[2,:])
+        elif (method == 'allers'):
+            val = (((numpy.mean(ranges[0])-numpy.mean(ranges[1]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value[2] \
+                + ((numpy.mean(ranges[2])-numpy.mean(ranges[0]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value[1]) \
+                /value[0]
+            vals = (((numpy.mean(ranges[0])-numpy.mean(ranges[1]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value_sim[2,:] \
+                + ((numpy.mean(ranges[2])-numpy.mean(ranges[0]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value_sim[1,:]) \
+                /value_sim[0,:]
+        else:
+            val = value[0]/value[1]
+            vals = value_sim[0,:]/value_sim[1,:]
 
 # PLOTTING/VISUALIZATION?
-    if kwargs.get('plot',False) == True:
-        from .plot import visualizeIndices, plotSpectrum
-        bands = []
-        for a in args: bands.append(a)
-        inddict = {kwargs.get('name','Index'): {'ranges': bands, 'value': value}}
-#        visualizeIndices(sp,inddict,**kwargs)        
-        plotSpectrum(sp,bands=bands,bandlabels=[kwargs.get('name','') for b in bands],**kwargs)        
+        if plot == True:
+            from splat.plot import visualizeIndices, plotSpectrum
+            bands = []
+            for r in ranges: bands.append(r)
+            inddict = {pkwargs.get('name','Index'): {'ranges': bands, 'value': value}}
+    #        visualizeIndices(sp,inddict,**kwargs)        
+            plotSpectrum(sp,bands=bands,bandlabels=[pkwargs.get('name','') for b in bands],**pkwargs)        
 
 # output mean, standard deviation
-    if (noiseFlag):
-        return val, numpy.nan
-    else:
-        return val, numpy.nanstd(vals)
+
+    if noiseFlag == True: return val, numpy.nan
+    return val, numpy.nanstd(vals)
 
 
-# wrapper function for measuring specific sets of indices
 
-def measureIndexSet(sp,set='burgasser',**kwargs):
+
+
+def measureIndexSet(sp,ref='burgasser',verbose=False,**kwargs):
     '''
     :Purpose: Measures indices of ``sp`` from specified sets. Returns dictionary of indices.
     :param sp: Spectrum class object, which should contain wave, flux and noise array elements
@@ -5768,17 +5754,19 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
             - *mclean*: H2OD from `McLean et al. (2003) <http://adsabs.harvard.edu/abs/2003ApJ...596..561M>`_
             - *rojas*: H2O-K2 from `Rojas-Ayala et al.(2012) <http://adsabs.harvard.edu/abs/2012ApJ...748...93R>`_
 
-    :type set: optional, default = 'burgasser'
+    :type ref: optional, default = 'burgasser'
 
     :Example:
     >>> import splat
     >>> sp = splat.getSpectrum(shortname='1555+0954')[0]
-    >>> print splat.measureIndexSet(sp, set = 'reid')
+    >>> print splat.measureIndexSet(sp, ref = 'reid')
         {'H2O-B': (1.0531856077273236, 0.0045092074790538221), 'H2O-A': (0.89673318593633422, 0.0031278302105038594)}
     '''
 # keyword parameters
 
-    if ('allers' in set.lower()):
+    ref = kwargs.get('set',ref)
+
+    if ('allers' in ref.lower()):
         reference = 'Indices from Allers et al. (2007), Allers & Liu (2013)'
         refcode = '2013ApJ...772...79A'
         names = ['H2O','FeH-z','VO-z','FeH-J','KI-J','H-cont']
@@ -5790,7 +5778,7 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
             ([1.54960,1.57040],[1.45960,1.48040],[1.65960,1.68040])]
         methods = ['ratio','allers','allers','allers','allers','allers']
         samples = ['average']*len(names)
-    elif ('bardalez' in set.lower()):
+    elif ('bardalez' in ref.lower()):
         reference = 'Indices from Bardalez Gagliuffi et al. (2014)'
         refcode = '2014ApJ...794..143B'
         names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J','H-dip','K-slope','J-slope','J-curve','H-bump','H2O-Y']
@@ -5809,7 +5797,7 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
             ([1.04,1.07],[1.14,1.17])]
         methods = ['ratio','ratio','ratio','ratio','ratio','ratio','ratio','inverse_line','ratio','ratio','line','ratio','ratio',]
         samples = ['integrate']*len(names)
-    elif ('burgasser' in set.lower()):
+    elif ('burgasser' in ref.lower()):
         reference = 'Indices from Burgasser et al. (2006)'
         refcode = '2006ApJ...637.1067B'
         names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J']
@@ -5822,7 +5810,7 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
             ([2.06,2.10],[1.25,1.29])]
         methods = ['ratio']*len(names)
         samples = ['integrate']*len(names)
-    elif ('geballe' in set.lower()):
+    elif ('geballe' in ref.lower()):
         reference = 'Indices from Geballe et al. (2002)'
         refcode = '2002ApJ...564..466G'
         names = ['Color-d2','Cont-1.0','H2O-1.2','H2O-1.5','H2O-2.2','CH4-1.6','CH4-2.2']
@@ -5837,7 +5825,7 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
             ]
         methods = ['ratio']*len(names)
         samples = ['integrate']*len(names)
-    elif ('kirkpatrick' in set.lower()):
+    elif ('kirkpatrick' in ref.lower()):
         reference = 'Indices from Kirkpatrick et al. (1999)'
         refcode = '1999ApJ...519..802K'
         names = ['Rb-a','Rb-b','Na-a','Na-b','Cs-a','Cs-b','TiO-a','TiO-b','VO-a','VO-b','CrH-a','CrH-b','FeH-a','FeH-b','Color-a','Color-b','Color-c','Color-d']
@@ -5863,7 +5851,7 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
         ]
         methods = ['line','line','ratio','ratio','line','line','ratio','ratio','sumnum','sumnum','ratio','ratio','ratio','ratio','ratio','ratio','ratio','ratio']
         samples = ['sum']*len(names)
-    elif ('martin' in set.lower()):
+    elif ('martin' in ref.lower()):
         reference = 'Indices from Martin et al. (1999)'
         refcode = '1999AJ....118.2466M'
         names = ['PC3','PC6','CrH1','CrH2','FeH1','FeH2','H2O1','TiO1','TiO2','VO1','VO2']
@@ -5882,21 +5870,21 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
         ]
         methods = ['ratio']*len(names)
         samples = ['integrate']*len(names)
-    elif ('mclean' in set.lower()):
+    elif ('mclean' in ref.lower()):
         reference = 'Indices from McLean et al. (2003)'
         refcode = '2003ApJ...596..561M'
         names = ['H2OD']
         ranges = [([1.951,1.977],[2.062,2.088])]
         methods = ['ratio']
         samples = ['average']
-    elif ('reid' in set.lower()):
+    elif ('reid' in ref.lower()):
         reference = 'Indices from Reid et al. (2001)'
         refcode = '2001AJ....121.1710R'
         names = ['H2O-A','H2O-B']
         ranges = [([1.33,1.35],[1.28,1.30]),([1.47,1.49],[1.59,1.61])]
         methods = ['ratio']*len(names)
         samples = ['average']*len(names)
-    elif ('rojas' in set.lower()):
+    elif ('rojas' in ref.lower()):
         reference = 'Indices from Rojas-Ayala et al.(2012)'
         refcode = '2012ApJ...748...93R'
         names = ['H2O-K2num','H2O-K2den']
@@ -5904,7 +5892,7 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
             ([2.235,2.255],[2.360,2.380])]
         methods = ['ratio']*len(names)
         samples = ['average']*len(names)
-    elif ('slesnick' in set.lower()):
+    elif ('slesnick' in ref.lower()):
         reference = 'Indices from Slesnick et al. (2004)'
         refcode = '2004ApJ...610.1045S'
         names = ['H2O-1','H2O-2','FeH']
@@ -5913,7 +5901,7 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
             ([1.1935,1.2065],[1.2235,1.2365])]
         methods = ['ratio']*len(names)
         samples = ['average']*len(names)
-    elif ('testi' in set.lower()):
+    elif ('testi' in ref.lower()):
         reference = 'Indices from Testi et al. (2001)'
         refcode = '2001ApJ...552L.147T'
         names = ['sHJ','sKJ','sH2O_J','sH2O_H1','sH2O_H2','sH2O_K']
@@ -5925,7 +5913,7 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
             ([2.12,2.16],[1.96,1.99])]
         methods = ['change']*len(names)
         samples = ['average']*len(names)
-    elif ('tokunaga' in set.lower()):
+    elif ('tokunaga' in ref.lower()):
         reference = 'Indices from Tokunaga & Kobayashi (1999)'
         refcode = '1999AJ....117.1010T'
         names = ['K1','K2']
@@ -5937,19 +5925,23 @@ def measureIndexSet(sp,set='burgasser',**kwargs):
 #        inds[0],errs[0] = measureIndex(sp,[2.1,2.18],[1.96,2.04],method='change',sample='average',**kwargs)
 #        inds[1],errs[1] = measureIndex(sp,[2.2,2.28],[2.1,2.18],method='change',sample='average',**kwargs)
     else:
-        print('{} is not one of the sets used for measureIndexSet'.format(set))
+        print('{} is not one of the sets used for measureIndexSet'.format(ref))
         return numpy.nan
 
-    result = {'set': set, 'bibcode': refcode}
-    for i,n in enumerate(names): 
-        ind,err = measureIndex(sp,*ranges[i],method=methods[i],sample=samples[i],**kwargs)
+    result = {'ref': ref, 'bibcode': refcode}
+    pkwargs = copy.deepcopy(kwargs) 
+    if 'method' in list(pkwargs.keys()): del pkwargs['method']
+    if 'sample' in list(pkwargs.keys()): del pkwargs['sample']
+    for i,n in enumerate(names):
+        ind,err = measureIndex(sp,ranges[i],method=methods[i],sample=samples[i],verbose=verbose,**pkwargs)
         result[n] = (ind,err)
+        if verbose == True: print('Index {}: {:.3f}+/-{:.3f}'.format(n,ind,err))
 
 # some exceptions
-    if 'bardalez' in set.lower():
+    if 'bardalez' in ref.lower():
         result['H-dip'] = tuple([i*0.5 for i in result['H-dip']])
         result['J-curve'] = tuple([i*2. for i in result['J-curve']])
-    elif 'rojas' in set.lower():
+    elif 'rojas' in ref.lower():
         ind = result['H2O-K2num'][0]/result['H2O-K2den'][0]
         err = [ind*numpy.sqrt((result['H2O-K2num'][1]/result['H2O-K2num'][0])**2+(result['H2O-K2den'][1]/result['H2O-K2den'][0])**2)]
         result['H2O-K2'] = (ind,err)
@@ -5986,8 +5978,8 @@ def metallicity(sp,**kwargs):
     coeff_mh_e = [0.12,0.016,0.023]
     mh_unc = 0.100
 
-    h2ok2,h2ok2_e = measureIndexSet(sp, set='rojas')['H2O-K2']
-    ew = measureEWSet(sp,set='rojas')
+    h2ok2,h2ok2_e = measureIndexSet(sp, ref='rojas')['H2O-K2']
+    ew = measureEWSet(sp,ref='rojas')
     nai = kwargs.get('nai',False)
     nai_e = kwargs.get('nai_e',0.)
     if nai is False:
