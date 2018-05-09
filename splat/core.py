@@ -4273,10 +4273,8 @@ def classifyByIndex(sp,ref='burgasser',str_flag=True,rnd_flag=False,rem_flag=Tru
 # Geballe et al. (2002, ApJ, 564, 466) calibration
     elif ref.lower() == 'geballe':
         if (rem_flag or len(args) == 0):
-            kwargs['ref'] = 'geballe'
-            i1 = measureIndexSet(sp, **kwargs)
-            kwargs['ref'] = 'martin'
-            i2 = measureIndexSet(sp, **kwargs)
+            i1 = measureIndexSet(sp, ref='geballe')
+            i2 = measureIndexSet(sp, ref='martin')
             if sys.version_info.major == 2:
                 indices = dict(i1.items() + i2.items())
             else:
@@ -4295,12 +4293,9 @@ def classifyByIndex(sp,ref='burgasser',str_flag=True,rnd_flag=False,rem_flag=Tru
 # Allers et al. (2013, ApJ, 657, 511)
     elif (ref.lower() == 'allers'):
         if (rem_flag or len(args) == 0):
-            kwargs['ref'] = 'mclean'
-            i1 = measureIndexSet(sp, **kwargs)
-            kwargs['ref'] = 'slesnick'
-            i2 = measureIndexSet(sp, **kwargs)
-            kwargs['ref'] = 'allers'
-            i3 = measureIndexSet(sp, **kwargs)
+            i1 = measureIndexSet(sp, ref='mclean')
+            i2 = measureIndexSet(sp, ref='slesnick')
+            i3 = measureIndexSet(sp, ref='allers')
             if sys.version_info.major == 2:
                 indices = dict(i1.items() + i2.items() + i3.items())
             else:
@@ -5621,17 +5616,19 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
         w = numpy.where(numpy.logical_and(\
             numpy.logical_and(numpy.isnan(sp.flux.value) == False,numpy.isnan(sp.noise.value) == False),\
             numpy.logical_and(sp.wave.value >= numpy.nanmin(waveRng),sp.wave.value <= numpy.nanmax(waveRng))))
-        if len(w) == 0:
+        if len(w[0]) == 0:
             noiseFlag = True
             w = numpy.where(numpy.logical_and(\
                 numpy.isnan(sp.flux) == False,\
                 numpy.logical_and(sp.wave.value >= numpy.nanmin(waveRng),sp.wave.value <= numpy.nanmax(waveRng))))
-        if len(w) == 0:
+        if len(w[0]) == 0:
             if verbose: print('Warning: no data in the wavelength range {}'.format(waveRng))
             return numpy.nan,numpy.nan
 
 # compute intepolated flux and noise
+#        print(waveRng,len(w),numpy.min(w),numpy.max(w))
         w = padWhereArray(w,len(sp.wave))
+#        print(waveRng,len(w),numpy.min(w),numpy.max(w))
         f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=numpy.nan)
         yNum = f(xNum)
         if noiseFlag == False:

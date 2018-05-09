@@ -22,7 +22,7 @@ SPLAT Spectral Modeling
 .. _`modelFitEMCEE()` : api.html#splat_model.modelFitEMCEE
 
 
-The SPLAT spectral modeling package provides tools for reading in, comparing, fitting spectral models to the spectral data contained in the SPL, and visualizing the results. 
+The SPLAT spectral modeling package splat.model provides tools for reading in, comparing, fitting spectral models to any spectral data, and visualizing the results. 
 
 The spectral models contained in SPLAT are located in the code's reference/SpectralModels folder, and include the following:
 
@@ -31,7 +31,7 @@ The spectral models contained in SPLAT are located in the code's reference/Spect
     - `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_  with effective temperatures of 400 to 1300 K (steps of 50 K); surface gravities of 4.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and sedimentation efficiency (fsed) of 2, 3, 4 or 5; metallicity is fixed to solar, equilibrium chemistry is assumed, and there are no clouds associated with this model.
     - `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_  with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, sedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50%.
     - `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_  with effective temperatures of 400 to 1500 K (steps of 50 K); and surface gravities of 3.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, and no clouds are associated with these models.
-    - `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_  with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex); cloud opacity is fixed in this model, equilibrium chemistry is assumed.
+    - `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_  with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex); cloud opacity is determined through a complex cloud model described in XXXX; and equilibrium chemistry is assumed.
 
 The model parameters that may be set is determined by the model:
 
@@ -47,36 +47,86 @@ In addition, one can set:
 	- **slit**: slit weight of the model in arcseconds; by default this is 0.5
 	- **sed**: if set to True, returns a broad-band spectrum spanning 0.3-30 micron (only for BTSettl2008 models with Teff < 2000 K)
 
-If you aren't sure what the name of the model is, you can always check it with `checkModelName()`_
+If you aren't sure what the name of the model is, you can always check it with `checkSpectralModelName()`_
 
     >>> import splat
-    >>> splat.checkModelName('burrows')
+    >>> splat.checkSpectralModelName('burrows')
         burrows06
 
 
 Reading in models
 -----------------
 
-Models are read in using the `getModel()`_  or `loadModel()`_ routines:
+Models are read in using the `getModel()`_  or `loadModel()`_ routines inside splat.model:
 
     >>> import splat
-    >>> mdl = splat.getModel(teff=1000,logg=5.0)
+    >>> import splat.model as spmdl
+    >>> mdl = spmdl.getModel(teff=1000,logg=5.0)
     >>> mdl.info()
-        BTSettl2008 model with the following parmeters:
-        Teff = 1000 K
-        logg = 5.0 cm/s2
-        z = 0.0
-        fsed = nc
-        cld = nc
-        kzz = eq
-        Smoothed to slit width 0.5 arcseconds
+        btsettl08 model for instrument SPEX-PRISM with the following parmeters:
+            teff = 1000 K
+            logg = 5.0 dex
+            z = 0.0 dex
+            fsed = nan 
+            cld = LC 
+            kzz = CE 
+            ad = 1.0 
+            enrich = 0.0 dex
+            broad = A 
+            logpmin = -8. dex
+            logpmax = 4. dex
+        If you use this model, please cite Allard, F. et al. (2012, Philosophical Transactions of the Royal Society A, 370, 2765-2777)
+        bibcode = 2012RSPTA.370.2765A
+        History:
+            LRIS-RED spectrum successfully loaded
     >>> mdl.plot()
 
 .. image:: _images/btsettl_model.png
 	:width: 400
 	:align: center
 
-The output is an instance of the `SPLAT Spectrum class`_ , and thus inherits all of the aspects and functions of that class, with wavelength in microns, surface fluxes in F\_lambda units of erg/cm\^2/s/micron, and an noise array that is all ``nan`` values.
+The output is an instance of the `SPLAT Spectrum class`_ , and thus inherits all of the aspects and functions of that class, with wavelength in microns, surface fluxes in F\_lambda units of erg/cm\^2/s/micron, and an noise array that in this case is all ``nan`` values.
+
+You can choose another model set with the ``modelset'' keyword:
+    >>> mdl = spmdl.getModel(teff=1000,logg=5.0,modelset='morley12')
+    >>> mdl.info()
+        morley12 for instrument SPEX-PRISM with the following parmeters:
+            teff = 1000 K
+            logg = 5.0 dex
+            z = 0.0 dex
+            fsed = f5 
+            cld = LC 
+            kzz = CE 
+            ad = 1.0 
+            broad = A 
+            logpmin = -8. dex
+            logpmax = 4. dex
+        If you use this model, please cite Morley, C. V. et al. (2012, ApJ, 756, 172)
+        bibcode = 2012ApJ...756..172M
+
+
+By default, the `getModel()`_ assumes you are comparing to SpeX prism spectral data, but you can change this by setting the ``instrument'' parameter:
+
+    >>> mdl = spmdl.getModel(teff=1000,logg=5.0,instrument='LRIS-RED')
+    >>> mdl.info()
+        btsettl08 for instrument LRIS-RED with the following parmeters:
+            teff = 1000 K
+            logg = 5.0 dex
+            z = 0.0 dex
+            fsed = nan 
+            cld = LC 
+            kzz = CE 
+            ad = 1.0 
+            enrich = 0.0 dex
+            broad = A 
+            logpmin = -8. dex
+            logpmax = 4. dex
+        If you use this model, please cite Allard, F. et al. (2012, Philosophical Transactions of the Royal Society A, 370, 2765-2777)
+        bibcode = 2012RSPTA.370.2765A
+        History:
+            LRIS-RED spectrum successfully loaded
+
+
 
 For parameters that are between model grid points, the function `loadInterpolatedModel()\_ is called, which performs log linear interpolation on nearest neighbor models.
 

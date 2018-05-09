@@ -288,6 +288,7 @@ def _initializeModels(verbose=False):
                                 if verbose == True: print('\nAdding model {} and instrument {} from {}'.format(name,instrument,fnmi))
                             else:
                                 if verbose == True: print('\nModel {} and instrument {}: ignoring {} as these already exists in {}'.format(name,instrument,fnmi,SPECTRAL_MODELS[name]['instruments'][instrument]))
+
     return
 
 _initializeModels()
@@ -1269,6 +1270,11 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
     funit = mdl.flux.unit
     mdlsamp = copy.deepcopy(mdl)
 #    mdlsamp.flux = splat.integralResample(mdl.wave.value,mdl.flux.value,data.wave.value)
+#
+# somtheing is failing here
+#
+#    print(len(mdl.wave.value),len(mdl.flux.value),len(data.wave.value),parameters['modelset1'],parameters['modelset2'])
+
     mdlsamp.flux = splat.reMap(mdl.wave.value,mdl.flux.value,data.wave.value)
     mdlsamp.flux = mdlsamp.flux*funit
     mdlsamp.wave = data.wave

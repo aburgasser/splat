@@ -449,6 +449,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],distribution='powerlaw',parameter
             * 'lognormal` or `log-normal`: log normal distribution, P(M) ~ exp(-0.5*(M-M0)\^2/sigmaM^2). You must specify the parameters `M0` and `sigmaM` or set ``distribution`` to `chabrier` (default parameters)
             * `kroupa`: broken power-law distribution with parameters from Kroupa (2001): `http://adsabs.harvard.edu/abs/2001MNRAS.322..231K`_
             * `chabrier`: lognormal distribution with parameters from Chabrier (2003): `http://adsabs.harvard.edu/abs/2003PASP..115..763C`_
+            * `chabrier 2005`: lognormal distribution with parameters from Chabrier (2005): `http://adsabs.harvard.edu/abs/2005ASSL..327...41C`_
             * `pena-ramirez`: broken power-law distribution with parameters from Pena-Ramirez (2012, A&A, 754, 30): `http://adsabs.harvard.edu/abs/2015A%26A...574A.118P`_
 
             `distribution` can also be set to a 2 x N array specifying the mass distribution; the first vector should be the masses for the distribution function and the second vector the distribution function itself
