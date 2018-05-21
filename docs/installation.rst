@@ -1,7 +1,7 @@
 Installation and Dependencies
 ===============================================
 
-SPLAT is best forked from the github site http://github.org/aburgasser/splat, 
+SPLAT is best forked from the github site https://github.com/aburgasser/splat/, 
 which is updated on a regular basis. There is a possibility of ``pip`` installation, but this is not working quite yet.
 
 There are two additional steps to complete to get full functionality:

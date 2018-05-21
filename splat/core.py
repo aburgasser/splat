@@ -212,6 +212,7 @@ class Spectrum(object):
             self.simplefilename = os.path.basename(self.filename)
 #            self.file = self.filename
             self.name = kwargs.get('name',self.simplefilename)
+
 # folder is by default the current directory
             mkwargs['folder'] = kwargs.get('folder','./')
             mkwargs['wunit'] = self.wunit
@@ -426,14 +427,17 @@ class Spectrum(object):
             self.slit = kwargs.get('slit',numpy.nan)
             self.model = kwargs.get('model','')
             mset = checkSpectralModelName(self.model)
+#            print(self.model,mset)
             if mset != False:
                 self.model = mset
                 for k in list(SPECTRAL_MODELS[mset].keys()):
+#                    print(k,SPECTRAL_MODELS[mset][k])
                     setattr(self,k.lower(),SPECTRAL_MODELS[mset][k])
-            self.name = self.model+' model'
-            self.shortname = self.name
+#            self.name = self.model+' model'
+#            self.shortname = self.name
             self.fscale = 'Surface'
             self.published = 'Y'
+#            print(self.name)
 
 # information on transmission/filter spectrum
         elif self.istransmission == True:
@@ -937,7 +941,7 @@ class Spectrum(object):
             If the filename does not include the full path, the file is saved in the current directory.  
             Spectrum.export and `Spectrum.save()`_ function in the same manner.
 
-        .. _`Spectrum.save()` : api.html#splat.Spectrum.save
+        .. _`Spectrum.save()` : api.html#splat.core.Spectrum.save
 
         :Required Inputs: 
             None
@@ -1044,7 +1048,7 @@ class Spectrum(object):
 
         `Spectrum.export()`_ and `Spectrum.save` function in the same manner.
 
-        .. _`Spectrum.export()` : api.html#splat.Spectrum.export
+        .. _`Spectrum.export()` : api.html#splat.core.Spectrum.export
         '''
         self.export(*args,**kwargs)
 
@@ -1550,7 +1554,7 @@ class Spectrum(object):
 
             Rotationally broaden the lines of a spectrum; a shortcut call to `Spectrum.broaden()`_
 
-        .._`Spectrum.broaden()` : api.html#splat.Spectrum.broaden
+        .. _`Spectrum.broaden()` : api.html#splat.core.Spectrum.broaden
 
         :Required Inputs:
             :param vsini: Rotational velocity in km/s
@@ -2171,9 +2175,9 @@ class Spectrum(object):
             :param slitPixelWidth: Number of pixels to smooth in pixel space; see `_smoothToSlitPixelWidth()`_ (default = None)
             :param slitWidth: Number of pixels to smooth in angular space; see `_smoothToPixelWidth()`_ (default = None)
 
-        .. _`_smoothToResolution()` : api.html#splat.Spectrum._smoothToResolution
-        .. _`_smoothToPixelWidth()` : api.html#splat.Spectrum._smoothToPixelWidth
-        .. _`_smoothToSlitPixelWidth()` : api.html#splat.Spectrum._smoothToSlitPixelWidth
+        .. _`_smoothToResolution()` : api.html#splat.core.Spectrum._smoothToResolution
+        .. _`_smoothToPixelWidth()` : api.html#splat.core.Spectrum._smoothToPixelWidth
+        .. _`_smoothToSlitPixelWidth()` : api.html#splat.core.Spectrum._smoothToSlitPixelWidth
 
 
         :Output: 
@@ -2228,7 +2232,7 @@ class Spectrum(object):
 
             see other optional keywords in _`Spectrum.smooth()`
 
-        .. _`Spectrum.smooth()` : api.html#splat.Spectrum.smooth
+        .. _`Spectrum.smooth()` : api.html#splat.core.Spectrum.smooth
 
         :Outputs:
             None; spectrum is smoothed
@@ -2327,7 +2331,7 @@ class Spectrum(object):
 
             see other optional keywords in _`Spectrum.smooth()`
 
-        .. _`Spectrum.smooth()` : api.html#splat.Spectrum.smooth
+        .. _`Spectrum.smooth()` : api.html#splat.core.Spectrum.smooth
 
         :Outputs:
             None; spectrum is smoothed
@@ -2383,7 +2387,7 @@ class Spectrum(object):
 
             see other optional keywords in _`Spectrum.smooth()`
 
-        .. _`Spectrum.smooth()` : api.html#splat.Spectrum.smooth
+        .. _`Spectrum.smooth()` : api.html#splat.core.Spectrum.smooth
 
         :Outputs:
             None; spectrum is smoothed
@@ -2413,7 +2417,7 @@ class Spectrum(object):
         return
 
 
-    def surface(self,radius):
+    def toSurface(self,radius):
         '''
         :Purpose: Convert to surface fluxes given a radius, assuming at absolute fluxes
         .. note:: UNTESTED, NEED TO ADD IN UNCERTAINTIES
@@ -2431,7 +2435,7 @@ class Spectrum(object):
         return
 
 
-    def brightnessTemperature(self,limbdarkening=False,limbdarkeningcoeff = 0.7):
+    def toBrightnessTemperature(self,limbdarkening=False,limbdarkeningcoeff = 0.7):
         '''
         :Purpose: Convert to surface fluxes given a radius, assuming at absolute fluxes
         .. note: UNTESTED
@@ -2458,7 +2462,7 @@ class Spectrum(object):
         self.funit = u.K
         return
 
-    def temperature(self):
+    def toTemperature(self):
         self.brightnessTemperature()
 
 
@@ -2821,7 +2825,7 @@ def getSpectrum(getList=False, limit=0, *args, **kwargs):
 
         Gets a spectrum from the SPLAT library using various selection criteria. Calls searchLibrary_ to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. 
 
-    .. _searchLibrary : api.html#splat_db.searchLibrary
+    .. _searchLibrary : api.html#splat.core.searchLibrary
 
     :Output: 
 
@@ -4457,7 +4461,7 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
 
     Users can also set keyword parameters defined in plotSpectrum_ and compareSpectra_ routine.
 
-    .. _compareSpectra : api.html#splat.compareSpectra
+    .. _compareSpectra : api.html#splat.core.compareSpectra
     .. _plotSpectrum : api.html#splat.plot.plotSpectrum
 
     :Output: 
@@ -4779,9 +4783,9 @@ def classifyByTemplate(sp, *args, **kwargs):
           <Quantity 2579.0089210846527>,
           <Quantity 2684.003187310027>]}
 
-    .. _classifyByStandard : api.html#splat.classifyByStandard
-    .. _searchLibrary : api.html#splat_db.searchLibrary
-    .. _plotSpectrum : api.html#splat_plot.plotSpectrum
+    .. _classifyByStandard : api.html#splat.core.classifyByStandard
+    .. _searchLibrary : api.html#splat.core.searchLibrary
+    .. _plotSpectrum : api.html#splat.plot.plotSpectrum
 
     '''
 

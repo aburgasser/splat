@@ -30,6 +30,7 @@ from astroquery.simbad import Simbad
 from astroquery.vizier import Vizier
 from astroquery.nist import Nist
 from astroquery.xmatch import XMatch
+from astroquery.gaia import Gaia
 
 # splat requirements
 import splat
@@ -376,7 +377,8 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
             * 'UCAC4' (or set ``UCAC4``=True): the UCAC4 Catalogue (`Zacharias et al. 2012 <http://adsabs.harvard.edu/abs/2012yCat.1322....0Z>`_), Vizier id I/322A
             * 'USNOB' (or set ``USNO``=True): the USNO-B1.0 Catalog (`Monet et al. 2003 <http://adsabs.harvard.edu/abs/2003AJ....125..984M>`_), Vizier id I/284
             * 'LSPM' (or set ``LSPM``=True): the LSPM-North Catalog (`Lepine et al. 2005 <http://adsabs.harvard.edu/abs/2005AJ....129.1483L>`_), Vizier id I/298
-            * 'GAIA' (or set ``GAIA``=True): the GAIA DR1 Catalog (`Gaia Collaboration et al. 2016 <http://adsabs.harvard.edu/abs/2016yCat.1337....0G>`_), Vizier id I/337
+            * 'GAIA-DR1': the GAIA DR1 Catalog (`Gaia Collaboration et al. 2016 <http://adsabs.harvard.edu/abs/2016yCat.1337....0G>`_), Vizier id I/337
+            * 'GAIA' or 'GAIA-DR2' (or set ``GAIA``=True): the GAIA DR2 Catalog (REF TBD), Vizier id I/345/gaia2
 
         :param: sort: String specifying the parameter to sort the returned SIMBAD table by; by default this is the offset from the input coordinate (default = 'sep')
         :param: nearest: Set to True to return on the single nearest source to coordinate (default = False)
@@ -442,9 +444,11 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
         catalog = u'I/284'
     if kwargs.get('LSPM',False) or kwargs.get('lspm',False) or kwargs.get('LSPM-NORTH',False) or kwargs.get('lspm-north',False) or kwargs.get('LSPM-N',False) or kwargs.get('lspm-n',False) or catalog.upper() == 'LSPM' or catalog.upper() == 'LSPMN' or catalog.upper() == 'LSPM-N':
         catalog = u'I/298'
-    if kwargs.get('GAIA',False) or kwargs.get('gaia',False) or kwargs.get('GAIA-DR1',False) or catalog.upper() == 'GAIA':
+    if kwargs.get('GAIA-DR1',False) or catalog.upper() == 'GAIA-DR1':
         catalog = u'I/337'
-
+    if kwargs.get('GAIA',False) or kwargs.get('gaia',False) or kwargs.get('GAIA-DR2',False) or catalog.upper() == 'GAIA' or catalog.upper() == 'GAIA-DR2':
+        catalog = u'I/345/gaia2'
+        
 # convert coordinate if necessary
     if not isinstance(coordinate,SkyCoord):
         try:
@@ -890,7 +894,7 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
         :param desigCol: column in db that specifies source designations ('Jhhmmss[.]s±ddmmss[.]s')
         :param raCol: column in db that specifies source RAs (in degrees)
         :param decCol: column in db that specifies source DECs (in degrees)
-        :param catalog: Database to query, which can be set one of the follow presets or any catalog listed in astroquery.xmatch.XMatch.XXXX:
+        :param catalog: Database to query, which can be set one of the follow presets or any catalog listed in astroquery.xmatch.XMatch.get_available_tables():
 
             * 'SIMBAD' (or set ``SIMBAD``=True): query SIMBAD (coordinate search only)
             * '2MASS' (or set ``2MASS``=True): query the 2MASS All-Sky Catalog of Point Sources (`Cutri et al. 2003 <http://adsabs.harvard.edu/abs/2003yCat.2246....0C>`_), Vizier id II/246
@@ -898,8 +902,9 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
             * 'SDSS9' (or set ``SDSS``=True): query the SDSS Photometric Catalog, Release 9 (`Adelman-McCarthy et al. 2012 <http://adsabs.harvard.edu/abs/2012ApJS..203...21A>`_), Vizier id V/147
             * 'ALLWISE' (or set ``ALLWISE``=True): the AllWISE Data Release (`Cutri et al. 2014 <http://adsabs.harvard.edu/abs/2014yCat.2328....0C>`_), Vizier id II/328
             * 'DENIS' (or set ``DENIS``=True): the DENIS DR3 (DENIS Consortium 2005), Vizier id B/denis/denis
-            * 'GAIA' (or set ``GAIA``=True): the GAIA DR1 Catalog (`Gaia Collaboration et al. 2016 <http://adsabs.harvard.edu/abs/2016yCat.1337....0G>`_), Vizier id I/337
-
+            * 'GAIA-DR1': the GAIA DR1 Catalog (`Gaia Collaboration et al. 2016 <http://adsabs.harvard.edu/abs/2016yCat.1337....0G>`_), Vizier id I/337
+            * 'GAIA' or 'GAIA-DR2': the GAIA DR2 Catalog (REF TBD), Vizier id I/345/gaia2, accessed using astroquery.gaia
+            
         :param nearest: Set to True to return only the single nearest source to each coordinate (default = True)
         :param clean: Set to True to clean the SIMBAD output and reassign to a predefined set of parameters (default = True)
         :param file: Write the output to a csv or xlsx file (default = '' or not saved)

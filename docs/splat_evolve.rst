@@ -14,9 +14,8 @@ The SPLAT brown dwarf evolutionary model package serves routines that allow for 
 The evolutionary models currently available through this package are:
 
 	- **burrows**: Models from `Burrows et al. (2001) <http://adsabs.harvard.edu/abs/2001RvMP...73..719B>`_ for 1 Myr < age < 10 Gyr, 0.005 Msol < mass < 0.2 Msol, and solar metallicity
-
-	- **baraffe**: Models from `Baraffe et al. (2003) <http://adsabs.harvard.edu/abs/2003A&A...402..701B>`_ for 1 Myr < age < 10 Gyr, 0.005 Msol < mass < 0.1 Msol, and solar metallicity, with the COND dust prescription
-
+  - **baraffe03**: Models from `Baraffe et al. (2003) <http://adsabs.harvard.edu/abs/2003A&A...402..701B>`_ for 1 Myr < age < 10 Gyr, 0.005 Msol < mass < 0.1 Msol, and solar metallicity, with the COND dust prescription
+  - **baraffe15**: Models from `Baraffe et al. (2015) <http://adsabs.harvard.edu/abs/2015A&A...577A..42B>`_ for 1 Myr < age < 10 Gyr, 0.07 Msol < mass < 1.4 Msol, and solar metallicity, with the BT-Settl dust prescription
 	- **saumon**: Models from `Saumon et al. (2003) <http://adsabs.harvard.edu/abs/2008ApJ...689.1327S>`_ for 3 Myr < age < 10 Gyr, 0.002 Msol < mass < 0.085 Msol, although the actual ranges vary as the maximum temperature for the models is 2500 K. For this model set, there are additional options for:
 
 		- **metallicity** = `solar`, `+0.3`, `-0.3`
@@ -24,7 +23,7 @@ The evolutionary models currently available through this package are:
 
 These models are contained in SPLAT's reference/EvolutionaryModels folder.
 
-.. _`modelParameters()` : api.html#splat_evolve.modelParameters
+.. _`modelParameters()` : api.html#splat.evolve.modelParameters
 
 The primary routine is `modelParameters()`_ which takes as inputs the model name and two of the following
 parameters: mass, age, temperature, luminosity, gravity, or radius. These can be entered as 
@@ -33,10 +32,11 @@ model parameters are computed through log-linear interpolation of the original m
 that fall outside the grid return ``nan``.
 
 
-    >>> import splat, numpy
+    >>> import splat.evolve as spev
+    >>> import numpy
     >>> masses = numpy.random.uniform(0.01,0.1,20)
     >>> ages = numpy.random.uniform(0.01,10,20)
-    >>> p = splat.modelParameters('baraffe',mass=masses,age=ages)
+    >>> p = spev.modelParameters('baraffe',mass=masses,age=ages)
     You are using baraffe's models.
     >>> print(p.temperature)
     [ 2502.90132332  2818.85920306  1002.64227134  1330.37273021  1192.86976417
@@ -44,13 +44,13 @@ that fall outside the grid return ``nan``.
       2682.9697321   2512.45223777   346.41152614  2066.19972036   843.28528456
       2264.93051445  2767.85660557   348.84214986   922.87030167  2669.27152307] K    
 
-.. _`loadEvolModel()` : api.html#splat_evolve.loadEvolModel
+.. _`loadEvolModel()` : api.html#splat.evolve.loadEvolModel
 
 The models themselves are read in through the `loadEvolModel()`_ routine:
 
 
-    >>> import splat
-    >>> p = splat.loadEvolModel('saumon',metallicity=-0.3,cloud='nc')
+    >>> import splat.evolve as spev
+    >>> p = spev.loadEvolModel('saumon',metallicity=-0.3,cloud='nc')
     You are using saumon's models.
     >>> for k in list(p.keys()): print('{}: {}'.format(k, p[k][12]))
     age: 0.15
@@ -76,22 +76,23 @@ The models themselves are read in through the `loadEvolModel()`_ routine:
       0.1163  0.1174  0.118   0.1193  0.12    0.121 ]
 
 
-.. _`plotModelParameters()` : api.html#splat_evolve.plotModelParameters
+.. _`plotModelParameters()` : api.html#splat.evolve.plotModelParameters
 
 It is also possible to visualize various parameter spaces using the `plotModelParameters()`_ routine. 
 
-    >>> import splat, numpy
+    >>> import splat.evolve as spev
+    >>> import numpy
     >>> age_samp = 10.**numpy.random.normal(numpy.log10(1.),0.3,50)
     >>> mass_samp = numpy.random.uniform(0.001,0.1,50)
-    >>> p = splat.modelParameters('baraffe',age=age_samp,mass=mass_samp)
-    >>> splat.plotModelParameters(p,'age','temperature',showmodels=True,model='baraffe',show=True)
+    >>> p = spev.modelParameters('baraffe',age=age_samp,mass=mass_samp)
+    >>> spev.plotModelParameters(p,'age','temperature',showmodels=True,model='baraffe',show=True)
 
 .. image:: _images/evolve_example.png
 	:width: 400
 	:align: center
 
 Any two parameters can be plotted against each other, and you can examine either isochrones or constant mass tracks
-using the ``tracks`` keyword. See the `SPLAT API entry for plotModelParameters() <api.html#splat_evolve.plotModelParameters>`_ for more details.
+using the ``tracks`` keyword. See the `SPLAT API entry for plotModelParameters() <api.html#splat.evolve.plotModelParameters>`_ for more details.
 
 
 * :ref:`genindex`

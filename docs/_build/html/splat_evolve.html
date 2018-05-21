@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Brown Dwarf Evolutionary Models &mdash; SpeX Prism Library Analysis Toolkit 0.31 documentation</title>
+  <title>Brown Dwarf Evolutionary Models &mdash; SpeX Prism Library Analysis Toolkit 2018.05.21 documentation</title>
   
 
   
@@ -32,8 +32,11 @@
   
 
   
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.31 documentation" href="index.html"/>
-        <link rel="next" title="API" href="api.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 2018.05.21 documentation" href="index.html"/>
+        <link rel="next" title="Population Simulation Routines" href="splat_simulate.html"/>
         <link rel="prev" title="SPLAT Spectral Modeling" href="splat_model.html"/> 
 
   
@@ -65,7 +68,7 @@
             
             
               <div class="version">
-                0.31
+                2018.05.21
               </div>
             
           
@@ -90,9 +93,11 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_empirical.html">Empirical Relations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Brown Dwarf Evolutionary Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_simulate.html">Population Simulation Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
@@ -128,7 +133,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/splat_evolve.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/splat_evolve.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -143,11 +148,17 @@
 <p>The SPLAT brown dwarf evolutionary model package serves routines that allow for the conversion between physical (e.g., mass, age) and observable parameters (temperature, luminosity, radius, surface gravity) using published evolutionary model grids.</p>
 <p>The evolutionary models currently available through this package are:</p>
 <blockquote>
-<div><ul>
-<li><p class="first"><strong>burrows</strong>: Models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2001RvMP...73..719B">Burrows et al. (2001)</a> for 1 Myr &lt; age &lt; 10 Gyr, 0.005 Msol &lt; mass &lt; 0.2 Msol, and solar metallicity</p>
+<div><blockquote>
+<div><ul class="simple">
+<li><strong>burrows</strong>: Models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2001RvMP...73..719B">Burrows et al. (2001)</a> for 1 Myr &lt; age &lt; 10 Gyr, 0.005 Msol &lt; mass &lt; 0.2 Msol, and solar metallicity</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p class="first"><strong>baraffe03</strong>: Models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2003A&amp;A...402..701B">Baraffe et al. (2003)</a> for 1 Myr &lt; age &lt; 10 Gyr, 0.005 Msol &lt; mass &lt; 0.1 Msol, and solar metallicity, with the COND dust prescription</p>
 </li>
-<li><p class="first"><strong>baraffe</strong>: Models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2003A&amp;A...402..701B">Baraffe et al. (2003)</a> for 1 Myr &lt; age &lt; 10 Gyr, 0.005 Msol &lt; mass &lt; 0.1 Msol, and solar metallicity, with the COND dust prescription</p>
-</li>
+<li><dl class="first docutils">
+<dt><strong>baraffe15</strong>: Models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2015A&amp;A...577A..42B">Baraffe et al. (2015)</a> for 1 Myr &lt; age &lt; 10 Gyr, 0.07 Msol &lt; mass &lt; 1.4 Msol, and solar metallicity, with the BT-Settl dust prescription</dt>
+<dd><ul class="first last">
 <li><p class="first"><strong>saumon</strong>: Models from <a class="reference external" href="http://adsabs.harvard.edu/abs/2008ApJ...689.1327S">Saumon et al. (2003)</a> for 3 Myr &lt; age &lt; 10 Gyr, 0.002 Msol &lt; mass &lt; 0.085 Msol, although the actual ranges vary as the maximum temperature for the models is 2500 K. For this model set, there are additional options for:</p>
 <blockquote>
 <div><ul class="simple">
@@ -157,17 +168,22 @@
 </div></blockquote>
 </li>
 </ul>
+</dd>
+</dl>
+</li>
+</ul>
 </div></blockquote>
-<p>These models are contained in SPLAT&#8217;s reference/EvolutionaryModels folder.</p>
-<p>The primary routine is <a class="reference external" href="api.html#splat_evolve.modelParameters">modelParameters()</a> which takes as inputs the model name and two of the following
+<p>These models are contained in SPLAT’s reference/EvolutionaryModels folder.</p>
+<p>The primary routine is <a class="reference external" href="api.html#splat.evolve.modelParameters">modelParameters()</a> which takes as inputs the model name and two of the following
 parameters: mass, age, temperature, luminosity, gravity, or radius. These can be entered as
 individual values or arrays.  Using the input parameters, the associated evolutionary
 model parameters are computed through log-linear interpolation of the original model grid. Parameters
-that fall outside the grid return <code class="docutils literal"><span class="pre">nan</span></code>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span><span class="o">,</span> <span class="nn">numpy</span>
+that fall outside the grid return <code class="docutils literal notranslate"><span class="pre">nan</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.evolve</span> <span class="k">as</span> <span class="nn">spev</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">masses</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ages</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span><span class="n">mass</span><span class="o">=</span><span class="n">masses</span><span class="p">,</span><span class="n">age</span><span class="o">=</span><span class="n">ages</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">spev</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span><span class="n">mass</span><span class="o">=</span><span class="n">masses</span><span class="p">,</span><span class="n">age</span><span class="o">=</span><span class="n">ages</span><span class="p">)</span>
 <span class="go">You are using baraffe&#39;s models.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">temperature</span><span class="p">)</span>
 <span class="go">[ 2502.90132332  2818.85920306  1002.64227134  1330.37273021  1192.86976417</span>
@@ -176,9 +192,9 @@ that fall outside the grid return <code class="docutils literal"><span class="pr
 <span class="go">  2264.93051445  2767.85660557   348.84214986   922.87030167  2669.27152307] K</span>
 </pre></div>
 </div>
-<p>The models themselves are read in through the <a class="reference external" href="api.html#splat_evolve.loadEvolModel">loadEvolModel()</a> routine:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">loadEvolModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">,</span><span class="n">metallicity</span><span class="o">=-</span><span class="mf">0.3</span><span class="p">,</span><span class="n">cloud</span><span class="o">=</span><span class="s1">&#39;nc&#39;</span><span class="p">)</span>
+<p>The models themselves are read in through the <a class="reference external" href="api.html#splat.evolve.loadEvolModel">loadEvolModel()</a> routine:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.evolve</span> <span class="k">as</span> <span class="nn">spev</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">spev</span><span class="o">.</span><span class="n">loadEvolModel</span><span class="p">(</span><span class="s1">&#39;saumon&#39;</span><span class="p">,</span><span class="n">metallicity</span><span class="o">=-</span><span class="mf">0.3</span><span class="p">,</span><span class="n">cloud</span><span class="o">=</span><span class="s1">&#39;nc&#39;</span><span class="p">)</span>
 <span class="go">You are using saumon&#39;s models.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">12</span><span class="p">]))</span>
 <span class="go">age: 0.15</span>
@@ -204,17 +220,18 @@ that fall outside the grid return <code class="docutils literal"><span class="pr
 <span class="go">  0.1163  0.1174  0.118   0.1193  0.12    0.121 ]</span>
 </pre></div>
 </div>
-<p>It is also possible to visualize various parameter spaces using the <a class="reference external" href="api.html#splat_evolve.plotModelParameters">plotModelParameters()</a> routine.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span><span class="o">,</span> <span class="nn">numpy</span>
+<p>It is also possible to visualize various parameter spaces using the <a class="reference external" href="api.html#splat.evolve.plotModelParameters">plotModelParameters()</a> routine.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.evolve</span> <span class="k">as</span> <span class="nn">spev</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">age_samp</span> <span class="o">=</span> <span class="mf">10.</span><span class="o">**</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mf">1.</span><span class="p">),</span><span class="mf">0.3</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mass_samp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span><span class="n">age</span><span class="o">=</span><span class="n">age_samp</span><span class="p">,</span><span class="n">mass</span><span class="o">=</span><span class="n">mass_samp</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotModelParameters</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;age&#39;</span><span class="p">,</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span><span class="n">showmodels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span><span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">spev</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">(</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span><span class="n">age</span><span class="o">=</span><span class="n">age_samp</span><span class="p">,</span><span class="n">mass</span><span class="o">=</span><span class="n">mass_samp</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spev</span><span class="o">.</span><span class="n">plotModelParameters</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;age&#39;</span><span class="p">,</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span><span class="n">showmodels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;baraffe&#39;</span><span class="p">,</span><span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/evolve_example.png"><img alt="_images/evolve_example.png" class="align-center" src="_images/evolve_example.png" style="width: 400px;" /></a>
 <p>Any two parameters can be plotted against each other, and you can examine either isochrones or constant mass tracks
-using the <code class="docutils literal"><span class="pre">tracks</span></code> keyword. See the <a class="reference external" href="api.html#splat_evolve.plotModelParameters">SPLAT API entry for plotModelParameters()</a> for more details.</p>
+using the <code class="docutils literal notranslate"><span class="pre">tracks</span></code> keyword. See the <a class="reference external" href="api.html#splat.evolve.plotModelParameters">SPLAT API entry for plotModelParameters()</a> for more details.</p>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
@@ -229,7 +246,7 @@ using the <code class="docutils literal"><span class="pre">tracks</span></code> 
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="splat_simulate.html" class="btn btn-neutral float-right" title="Population Simulation Routines" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="splat_model.html" class="btn btn-neutral" title="SPLAT Spectral Modeling" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -241,7 +258,7 @@ using the <code class="docutils literal"><span class="pre">tracks</span></code> 
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Adam Burgasser.
+        &copy; Copyright 2016-2018, Adam Burgasser.
 
     </p>
   </div>
@@ -263,7 +280,7 @@ using the <code class="docutils literal"><span class="pre">tracks</span></code> 
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.31',
+            VERSION:'2018.05.21',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

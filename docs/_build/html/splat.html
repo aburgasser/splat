@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Main SPLAT module &mdash; SpeX Prism Library Analysis Toolkit 0.31 documentation</title>
+  <title>Main SPLAT module &mdash; SpeX Prism Library Analysis Toolkit 2018.05.21 documentation</title>
   
 
   
@@ -32,8 +32,11 @@
   
 
   
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.31 documentation" href="index.html"/>
-        <link rel="next" title="SPLAT Plotting Routines" href="splat_plot.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 2018.05.21 documentation" href="index.html"/>
+        <link rel="next" title="Empirical Relations" href="splat_empirical.html"/>
         <link rel="prev" title="Quickstart" href="quickstart.html"/> 
 
   
@@ -65,7 +68,7 @@
             
             
               <div class="version">
-                0.31
+                2018.05.21
               </div>
             
           
@@ -103,14 +106,14 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#spectrophotometry">Spectrophotometry</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#classification">Classification</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#empirical-relations">Empirical Relations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#other-utilities">Other Utilities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#useful-program-constants">Useful Program Constants</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="splat_empirical.html">Empirical Relations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_simulate.html">Population Simulation Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
@@ -146,7 +149,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/splat.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/splat.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -165,37 +168,39 @@ standard classification and spectral analysis routines, and helper functions.</p
 <p>Spectal data are manipulated as a <a class="reference external" href="api.html#spectrum">Spectrum class</a> object, which contains the relevant data (wavelength,
 flux, uncertainty) and additional information on the source and/or observation.  A Spectrum object is
 the output of the various database access routines:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1"># note that getSpectrum returns a list</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.model</span> <span class="k">as</span> <span class="nn">spmod</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1"># note that getSpectrum returns a list</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getModel</span><span class="p">(</span><span class="n">teff</span> <span class="o">=</span> <span class="mi">700</span><span class="p">,</span> <span class="n">logg</span><span class="o">=</span><span class="mf">4.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">spmod</span><span class="o">.</span><span class="n">getModel</span><span class="p">(</span><span class="n">teff</span> <span class="o">=</span> <span class="mi">700</span><span class="p">,</span> <span class="n">logg</span><span class="o">=</span><span class="mf">4.5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;M7&#39;</span><span class="p">,</span><span class="s1">&#39;L5&#39;</span><span class="p">],</span><span class="n">jmag</span><span class="o">=</span><span class="p">[</span><span class="mf">14.</span><span class="p">,</span><span class="mf">99.</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>You can also read in your own spectrum by passing a filename</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;PATH_TO/myspectrum.fits&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;PATH_TO/myspectrum.fits&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that this file must conform to the standard of the SPL data: the first column is
 wavelength in microns, second column flux in F_lambda units, third column (optional) is
 flux uncertainty. The file can be a fits or ascii file.</p>
 <p>You can also access a file based on its unique spectum key</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="mi">10002</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="mi">10002</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>There are many aspects of the Spectrum class that can be referenced or set, all of which are
 described in the <a class="reference external" href="api.html#spectrum">API entry</a>. Some primary examples:</p>
 <dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">sp.wave</span></code>, <code class="docutils literal"><span class="pre">sp.flux</span></code>, <code class="docutils literal"><span class="pre">sp.noise</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">sp.wave</span></code>, <code class="docutils literal notranslate"><span class="pre">sp.flux</span></code>, <code class="docutils literal notranslate"><span class="pre">sp.noise</span></code></dt>
 <dd>Wavelengths, flux density (per wavelength) values, and flux uncertainty of the spectrum (uncertainty = NaN for models)</dd>
-<dt><code class="docutils literal"><span class="pre">sp.wunit</span></code>, <code class="docutils literal"><span class="pre">sp.funit</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">sp.wunit</span></code>, <code class="docutils literal notranslate"><span class="pre">sp.funit</span></code></dt>
 <dd>Astropy units for wavelength and flux, by default microns and erg/cm:sup: <cite>2</cite>/s/micron</dd>
-<dt><code class="docutils literal"><span class="pre">sp.nu</span></code>, <code class="docutils literal"><span class="pre">sp.fnu</span></code>, <code class="docutils literal"><span class="pre">sp.fnu_unit</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">sp.nu</span></code>, <code class="docutils literal notranslate"><span class="pre">sp.fnu</span></code>, <code class="docutils literal notranslate"><span class="pre">sp.fnu_unit</span></code></dt>
 <dd>Frequencies, flux density (per frequency), and fnu units, by default Jy</dd>
-<dt><code class="docutils literal"><span class="pre">sp.snr</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">sp.snr</span></code></dt>
 <dd>Median estimate of spectrum signal-to-noise</dd>
-<dt><code class="docutils literal"><span class="pre">sp.header</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">sp.header</span></code></dt>
 <dd>Fits header (dictionary) from original file, if present</dd>
-<dt><code class="docutils literal"><span class="pre">sp.teff</span></code>, <code class="docutils literal"><span class="pre">sp.logg</span></code>, <code class="docutils literal"><span class="pre">sp.z</span></code>, <code class="docutils literal"><span class="pre">sp.fsed</span></code>, <code class="docutils literal"><span class="pre">sp.cld</span></code>, <code class="docutils literal"><span class="pre">sp.kzz</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">sp.teff</span></code>, <code class="docutils literal notranslate"><span class="pre">sp.logg</span></code>, <code class="docutils literal notranslate"><span class="pre">sp.z</span></code>, <code class="docutils literal notranslate"><span class="pre">sp.fsed</span></code>, <code class="docutils literal notranslate"><span class="pre">sp.cld</span></code>, <code class="docutils literal notranslate"><span class="pre">sp.kzz</span></code></dt>
 <dd>If Spectrum is a model, these values give the effective temperature (in K), log surface gravity (cm/s<sup>2</sup>),
 log metallicity (relative to Sun), sedimentation efficient f:sub: sed(for Saumon &amp; Marley 2012 models),
 cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffusion constant</dd>
@@ -205,35 +210,35 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 <ul class="simple">
 <li>Information on the Spectrum object</li>
 </ul>
-<p>The <a class="reference external" href="api.html#splat.Spectrum.info">info()</a> command produces a summary of the Spectrum object&#8217;s primary information:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+<p>The <a class="reference external" href="api.html#splat.Spectrum.info">info()</a> command produces a summary of the Spectrum object’s primary information:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The <a class="reference external" href="api.html#splat.Spectrum.showHistory">showHistory()</a> command provides a summary of actions taken to maniupate a Spectrum object:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">showHistory</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">showHistory</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>If you make changes to your Spectrum object, you can in many cases return it to its original state using the <a class="reference external" href="api.html#splat.Spectrum.reset">reset()</a> function</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li>To display the spectrum, use the Spectrum object&#8217;s plot function, which makes use of the many options available in the <a class="reference external" href="splat_plot.html">plotSpectrum</a> routine</li>
+<li>To display the spectrum, use the Spectrum object’s plot function, which makes use of the many options available in the <a class="reference external" href="api.html#splat.plot.plotSpectrum">plotSpectrum</a> routine</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Awesome source&#39;</span><span class="p">,</span> <span class="n">telluric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;plot_output.eps&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You can save this display by adding a filename:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;spectrum.png&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;spectrum.png&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li>Saving a spectrum</li>
 </ul>
 <p>A spectrum contained in a Spectrum object can be output to a file using the built-in <a class="reference external" href="api.html#splat.Spectrum.export">export()</a> or <a class="reference external" href="api.html#splat.Spectrum.save">save()</a> commands; both fits and tab-delimited ascii outputs are supported:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;myspectrum.fits&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;myspectrum.fits&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -244,18 +249,18 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 <div class="section" id="scaling-a-spectrum">
 <h3>Scaling a spectrum<a class="headerlink" href="#scaling-a-spectrum" title="Permalink to this headline">¶</a></h3>
 <p>Spectra can be scaled by an arbitrary factor:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">1.e9</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">1.e9</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>or simply normalized:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="spectral-math">
 <h3>Spectral math<a class="headerlink" href="#spectral-math" title="Permalink to this headline">¶</a></h3>
 <p>Spectrum objects can be manipulated through normal arithmetic operations, which function on a wavelength-by-wavelength scale and properly propogate uncertainties</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span><span class="o">+</span><span class="n">sp2</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span><span class="o">+</span><span class="n">sp2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span><span class="o">-</span><span class="n">sp2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span><span class="o">*</span><span class="n">sp2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp3</span> <span class="o">=</span> <span class="n">sp1</span><span class="o">/</span><span class="n">sp2</span>
@@ -265,7 +270,7 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 <div class="section" id="comparing-spectra">
 <h3>Comparing spectra<a class="headerlink" href="#comparing-spectra" title="Permalink to this headline">¶</a></h3>
 <p>Spectra can be formally compared to each other using the <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra()</a> routine, which take two spectra and returns a comparison statistic and the optimal scale factor for the second spectrum:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp7</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0727+1710&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="go">Retrieving 1 file</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp8</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
@@ -277,7 +282,7 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/comparespectra_ex1.png"><img alt="_images/comparespectra_ex1.png" class="align-center" src="_images/comparespectra_ex1.png" style="width: 400px;" /></a>
-<p>You can select different statistics usign the <code class="docutils literal"><span class="pre">statistic</span></code> keyword:</p>
+<p>You can select different statistics usign the <code class="docutils literal notranslate"><span class="pre">statistic</span></code> keyword:</p>
 <blockquote>
 <div><ul class="simple">
 <li><strong>chisqr</strong>: chi squared value (requires spectra with noise values)</li>
@@ -289,17 +294,17 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 <dl class="docutils">
 <dt>You can also tailor the wavelength ranges over which the spectra are compared by using one of the keywords:</dt>
 <dd><ul class="first last simple">
-<li><code class="docutils literal"><span class="pre">fit_ranges</span></code> = a nested set of 2-element arrays specifying which areas to fit</li>
-<li><code class="docutils literal"><span class="pre">mask_ranges</span></code> = a nested set of 2-element arrays specifying which areas to avoid</li>
-<li><code class="docutils literal"><span class="pre">mask</span></code> = an array of 0s (good) and 1s (bad) specifying the regions to fit; this can be generated using the <a class="reference external" href="api.html#splat.generateMask">generateMask()</a> mask routine</li>
-<li><code class="docutils literal"><span class="pre">mask_telluric</span></code> set to True masks the regions of strong telluric absorption</li>
-<li><code class="docutils literal"><span class="pre">mask_standard</span></code> set to True masks the telluric regions and wavelengths &lt; 0.8 micron or &gt; 2.35 micron</li>
+<li><code class="docutils literal notranslate"><span class="pre">fit_ranges</span></code> = a nested set of 2-element arrays specifying which areas to fit</li>
+<li><code class="docutils literal notranslate"><span class="pre">mask_ranges</span></code> = a nested set of 2-element arrays specifying which areas to avoid</li>
+<li><code class="docutils literal notranslate"><span class="pre">mask</span></code> = an array of 0s (good) and 1s (bad) specifying the regions to fit; this can be generated using the <a class="reference external" href="api.html#splat.generateMask">generateMask()</a> mask routine</li>
+<li><code class="docutils literal notranslate"><span class="pre">mask_telluric</span></code> set to True masks the regions of strong telluric absorption</li>
+<li><code class="docutils literal notranslate"><span class="pre">mask_standard</span></code> set to True masks the telluric regions and wavelengths &lt; 0.8 micron or &gt; 2.35 micron</li>
 </ul>
 </dd>
 </dl>
-<p>You can also weight the individual spectral pixels by passing an array to the <code class="docutils literal"><span class="pre">weight</span></code> keyword.</p>
-<p><a class="reference external" href="api.html#splat.compareSpectra">compareSpectra()</a> has its own plotting output which can be triggered by setting <code class="docutils literal"><span class="pre">plot</span></code> to True. This will display the two spectra properly scaled and the difference spectra</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp7</span><span class="p">,</span><span class="n">sp8</span><span class="p">,</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">mask_telluric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p>You can also weight the individual spectral pixels by passing an array to the <code class="docutils literal notranslate"><span class="pre">weight</span></code> keyword.</p>
+<p><a class="reference external" href="api.html#splat.compareSpectra">compareSpectra()</a> has its own plotting output which can be triggered by setting <code class="docutils literal notranslate"><span class="pre">plot</span></code> to True. This will display the two spectra properly scaled and the difference spectra</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">sp7</span><span class="p">,</span><span class="n">sp8</span><span class="p">,</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">mask_telluric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">(20670.083806484316 0.766085949716)</span>
 </pre></div>
 </div>
@@ -307,21 +312,22 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 </div>
 <div class="section" id="reddening-a-spectrum">
 <h3>Reddening a spectrum<a class="headerlink" href="#reddening-a-spectrum" title="Permalink to this headline">¶</a></h3>
-<p>You can redden a spectrum following the <a class="reference external" href="http://adsabs.harvard.edu/abs/1989ApJ...345..245C">Cardelli, Clayton, and Mathis (1989)</a> reddening function using the <a class="reference external" href="api.html#splat.redden">redden()</a> routine:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<p>You can redden a spectrum following the <a class="reference external" href="http://adsabs.harvard.edu/abs/1989ApJ...345..245C">Cardelli, Clayton, and Mathis (1989)</a> reddening function using the <a class="reference external" href="api.html#splat.empirical.redden">redden()</a> routine contained in the <a class="reference external" href="splat_empirical.html">splat.empirical</a> package:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">Spectrum</span><span class="p">(</span><span class="mi">10001</span><span class="p">)</span>                   <span class="c1"># read in a source</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spr</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">redden</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">av</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span><span class="n">rv</span><span class="o">=</span><span class="mf">3.2</span><span class="p">)</span>          <span class="c1"># redden to equivalent of AV=5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">redden</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">av</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span><span class="n">rv</span><span class="o">=</span><span class="mf">3.2</span><span class="p">)</span>                          <span class="c1"># redden to equivalent of AV=5</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spr</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/reddening.png"><img alt="_images/reddening.png" class="align-center" src="_images/reddening.png" style="width: 400px;" /></a>
-<p>Here <code class="docutils literal"><span class="pre">av</span></code> is the visual reddening and <code class="docutils literal"><span class="pre">rv</span></code> the extinction coefficient (A_V = R_V * E(B-V) ), which is by default = 3.1, but can be modified (as in example above).</p>
+<p>Here <code class="docutils literal notranslate"><span class="pre">av</span></code> is the visual reddening and <code class="docutils literal notranslate"><span class="pre">rv</span></code> the extinction coefficient (A_V = R_V * E(B-V) ), which is by default = 3.1, but can be modified (as in example above).</p>
 </div>
 </div>
 <div class="section" id="spectrophotometry">
 <h2>Spectrophotometry<a class="headerlink" href="#spectrophotometry" title="Permalink to this headline">¶</a></h2>
-<p>SPLAT allows spectrophotometry of spectra using common filters in the red optical and near-infrared. The filter transmission files are stored in the SPLAT reference library, and are accessed by name.  A list of current filters can be made by through the <a class="reference external" href="api.html#splat.filterInfo">filterInfo()</a> routine:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterInfo</span><span class="p">()</span>
+<p>SPLAT allows spectrophotometry of spectra using common filters in the red optical and near-infrared. The filter transmission files are stored in the SPLAT reference library, and are accessed by name.  A list of current filters can be made by through the <a class="reference external" href="api.html#splat.photometry.filterInfo">filterInfo()</a> routine:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.photometry</span> <span class="k">as</span> <span class="nn">sphot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sphot</span><span class="o">.</span><span class="n">filterInfo</span><span class="p">()</span>
 <span class="go">  2MASS H: 2MASS H-band</span>
 <span class="go">  2MASS J: 2MASS J-band</span>
 <span class="go">  2MASS KS: 2MASS Ks-band</span>
@@ -331,8 +337,8 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 <span class="go">  ...</span>
 </pre></div>
 </div>
-<p>You can access specific information about a given filter profile with the <a class="reference external" href="api.html#splat.filterProperties">filterProperties()</a> routine</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">filterProperties</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
+<p>You can access specific information about a given filter profile with the <a class="reference external" href="api.html#splat.photometry.filterProperties">filterProperties()</a> routine</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">sphot</span><span class="o">.</span><span class="n">filterProperties</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
 <span class="go">        Filter 2MASS J: 2MASS J-band</span>
 <span class="go">        Zeropoint = 1594.0 Jy</span>
 <span class="go">        Pivot point: = 1.252 micron</span>
@@ -340,43 +346,43 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 <span class="go">        Wavelength range = 1.075 to 1.416 micron</span>
 </pre></div>
 </div>
-<p>The <a class="reference external" href="api.html#splat.filterMag">filterMag()</a> routine determines the photometric magnitude of a source based on its spectrum, by convolving fluxes with a defined filter profile:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<p>The <a class="reference external" href="api.html#splat.photometry.filterMag">filterMag()</a> routine determines the photometric magnitude of a source based on its spectrum, by convolving fluxes with a defined filter profile:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sphot</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)</span>
 <span class="go">    (14.346586427733005, 0.032091919093387822)</span>
 </pre></div>
 </div>
-<p>By default the filter is convolved with a model of Vega to extract Vega magnitudes, but the user can also set the <code class="docutils literal"><span class="pre">ab</span></code> parameter to get AB magnitudes, the <code class="docutils literal"><span class="pre">photon</span></code> parameter to get photon flux, or the <code class="docutils literal"><span class="pre">energy</span></code> parameter to get total energy flux:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">ab</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p>By default the filter is convolved with a model of Vega to extract Vega magnitudes, but the user can also set the <code class="docutils literal notranslate"><span class="pre">ab</span></code> parameter to get AB magnitudes, the <code class="docutils literal notranslate"><span class="pre">photon</span></code> parameter to get photon flux, or the <code class="docutils literal notranslate"><span class="pre">energy</span></code> parameter to get total energy flux:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sphot</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">ab</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">    (15.245064259793901, 0.031168695728282524)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">energy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sphot</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">energy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">        (&lt;Quantity 7.907663172914481e-13 erg / (cm2 s)&gt;,</span>
 <span class="go">         &lt;Quantity 2.090970538372485e-14 erg / (cm2 s)&gt;)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">photon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sphot</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">photon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">        (&lt;Quantity 1.954421499626954e-24 1 / (cm2 s)&gt;,</span>
 <span class="go">         &lt;Quantity 5.53673880346918e-26 1 / (cm2 s)&gt;)</span>
 </pre></div>
 </div>
-<p>One can measure photometry for custom filters using the <code class="docutils literal"><span class="pre">custom</span></code> parameter:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
+<p>One can measure photometry for custom filters using the <code class="docutils literal notranslate"><span class="pre">custom</span></code> parameter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fwave</span><span class="p">,</span><span class="n">ftrans</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="s1">&#39;my_custom_filter.txt&#39;</span><span class="p">,</span><span class="n">unpack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">fwave</span><span class="p">,</span><span class="n">ftans</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;Custom&#39;</span><span class="p">,</span><span class="n">custom</span> <span class="o">=</span> <span class="n">filt</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sphot</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;Custom&#39;</span><span class="p">,</span><span class="n">custom</span> <span class="o">=</span> <span class="n">filt</span><span class="p">)</span>
 <span class="go">        (13.097348489365396, 0.046530636178618558)</span>
 </pre></div>
 </div>
 <p>or define a simple notch filter with the two end wavelengthts:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;Custom&#39;</span><span class="p">,</span><span class="n">notch</span><span class="o">=</span><span class="p">[</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">1.3</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sphot</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;Custom&#39;</span><span class="p">,</span><span class="n">notch</span><span class="o">=</span><span class="p">[</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">1.3</span><span class="p">])</span>
 <span class="go">        (14.301864415761377, 0.031774478113182188)</span>
 </pre></div>
 </div>
-<p>Finally, to flux calibrate a spectrum to a given magnitude, use the Spectrum object&#8217;s built in <a class="reference external" href="api.html#splat.Spectrum.fluxCalibrate">fluxCalibrate()</a> method:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.0</span><span class="p">)</span>
+<p>Finally, to flux calibrate a spectrum to a given magnitude, use the Spectrum object’s built in <a class="reference external" href="api.html#splat.Spectrum.fluxCalibrate">fluxCalibrate()</a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.0</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This routine can take <code class="docutils literal"><span class="pre">absolute</span></code> as a parameter flag to indicate that the spectra are absolutely flux calibrated:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;L5&#39;</span><span class="p">,</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p>This routine can take <code class="docutils literal notranslate"><span class="pre">absolute</span></code> as a parameter flag to indicate that the spectra are absolutely flux calibrated:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;L5&#39;</span><span class="p">,</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">absolute</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fscale</span>
 <span class="go">        &#39;Absolute&#39;</span>
 </pre></div>
@@ -398,13 +404,13 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 </ul>
 </div></blockquote>
 <p>These can be accessed through the <a class="reference external" href="api.html#splat.classifyByIndices">classifyByIndices()</a> routine, which returns the average subtype and uncertainty:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0559-1404&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0559-1404&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="s1">&#39;burgasser&#39;</span><span class="p">,</span> <span class="nb">round</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">        (&#39;T4.5&#39;, 0.2562934083414341)</span>
 </pre></div>
 </div>
-<p>Using the <code class="docutils literal"><span class="pre">allmeasures</span></code> parameter provides the index values and individual index spectral types in a dictionary:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;2320+4123&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">allmeasures</span></code> parameter provides the index values and individual index spectral types in a dictionary:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;2320+4123&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByIndex</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="s1">&#39;reid&#39;</span><span class="p">,</span> <span class="n">allmeasures</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">        {&#39;H2O-A&#39;: {&#39;index&#39;: 0.76670417987511119,</span>
 <span class="go">          &#39;index_e&#39;: 0.76670417987511119,</span>
@@ -420,39 +426,43 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 <ul class="simple">
 <li>Classifying by Standards</li>
 </ul>
-<p>SPLAT contains spectral standards for dwarf classes M0 through T9, drawn from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...637.1067B">Burgasser et al. (2006)</a>, <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a> and <a class="reference external" href="http://adsabs.harvard.edu/abs/2011ApJ...743...50C">Cushing et al. (2011)</a>. There are also M and L subdwarf and M extreme subdwarf standards.  These may be used to infer spectral classifications by &#8220;closest match&#8221;, using all or part of the near-infrared spectrum.</p>
+<p>SPLAT contains spectral standards for dwarf classes M0 through T9, drawn from <a class="reference external" href="http://adsabs.harvard.edu/abs/2006ApJ...637.1067B">Burgasser et al. (2006)</a>, <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a> and <a class="reference external" href="http://adsabs.harvard.edu/abs/2011ApJ...743...50C">Cushing et al. (2011)</a>. There are also M and L subdwarf and M extreme subdwarf standards.  These may be used to infer spectral classifications by “closest match”, using all or part of the near-infrared spectrum.</p>
 <p>The routine for this is <a class="reference external" href="api.html#splat.classifyByStandard">classifyByStandard()</a>, which by default simply matches to the best-fitting standard:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0805+4812&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0805+4812&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
 <span class="go">        (&#39;T0.0&#39;, 0.5)</span>
 </pre></div>
 </div>
-<p>You can also return an uncertainty-weighted mean classifiction by setting <code class="docutils literal"><span class="pre">average</span></code> = True:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">average</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p>You can also return an uncertainty-weighted mean classifiction by setting <code class="docutils literal notranslate"><span class="pre">average</span></code> = True:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">average</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">    (&#39;L7.0::&#39;, 2.1064575737396338)</span>
 </pre></div>
 </div>
-<p>and fit to specific regions using either the <code class="docutils literal"><span class="pre">fit_ranges</span></code> parameter or setting <code class="docutils literal"><span class="pre">method</span></code> = &#8216;kirkpatrick&#8217; to conform with the <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a> method of near-infrared spectral classification:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;kirkpatrick&#39;</span><span class="p">)</span>
+<p>and fit to specific regions using either the <code class="docutils literal notranslate"><span class="pre">fit_ranges</span></code> parameter or setting <code class="docutils literal notranslate"><span class="pre">method</span></code> = ‘kirkpatrick’ to conform with the <a class="reference external" href="http://adsabs.harvard.edu/abs/2010ApJS..190..100K">Kirkpatrick et al. (2010)</a> method of near-infrared spectral classification:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;kirkpatrick&#39;</span><span class="p">)</span>
 <span class="go">    (&#39;L7.0&#39;, 0.5)</span>
 </pre></div>
 </div>
-<p>Subdwarf and extreme subdwarf standards can be accessed by setting the <code class="docutils literal"><span class="pre">sd</span></code> or <code class="docutils literal"><span class="pre">esd</span></code> parameters to True.  Finally, setting <code class="docutils literal"><span class="pre">plot</span></code> to True will bring up a comparison plot between the source and best fit standard.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;kirkpatrick&#39;</span><span class="p">,</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p>Subdwarf and extreme subdwarf standards can be accessed by setting the <code class="docutils literal notranslate"><span class="pre">sd</span></code>, <code class="docutils literal notranslate"><span class="pre">dsd</span></code> or <code class="docutils literal notranslate"><span class="pre">esd</span></code> parameters to True.
+Young spectral standards can be accessed by setting <code class="docutils literal notranslate"><span class="pre">vlg</span></code>, <code class="docutils literal notranslate"><span class="pre">intg</span></code> to True.
+You can try all of these standards at once by setting <code class="docutils literal notranslate"><span class="pre">all</span></code> to True.</p>
+<p>Finally, setting <code class="docutils literal notranslate"><span class="pre">plot</span></code> to True will bring up a comparison plot between the source and best fit standard.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;kirkpatrick&#39;</span><span class="p">,</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">    (&#39;L7.0&#39;, 0.5)</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/classifyByStandard_example.png"><img alt="_images/classifyByStandard_example.png" class="align-center" src="_images/classifyByStandard_example.png" style="width: 400px;" /></a>
-<p>Note that the first time you run <a class="reference external" href="api.html#splat.classifyByStandard">classifyByStandard()</a>, the standards must be initially read in to the dictionaries <code class="docutils literal"><span class="pre">splat.SPEX_STDS</span></code>, <code class="docutils literal"><span class="pre">splat.SPEX_SD_STDS</span></code> and <code class="docutils literal"><span class="pre">splat.SPEX_ESD_</span> <span class="pre">STDS</span></code>. This can be prompted using the <a class="reference external" href="api.html#splat.initiateStandards">initiateStandards()</a> routine:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">initiateStandards</span><span class="p">()</span>
+<p>Note that the first time you run <a class="reference external" href="api.html#splat.classifyByStandard">classifyByStandard()</a>, the standards must be initially read in to the dictionaries <code class="docutils literal notranslate"><span class="pre">splat.STDS_DWARF_SPEX</span></code>, <code class="docutils literal notranslate"><span class="pre">splat.STDS_SD_SPEX</span></code>,  <code class="docutils literal notranslate"><span class="pre">splat.STDS_DSD_SPEX</span></code>, <code class="docutils literal notranslate"><span class="pre">splat.STDS_ESD_SPEX</span></code>,
+<code class="docutils literal notranslate"><span class="pre">splat.STDS_VLG_SPEX</span></code> and <code class="docutils literal notranslate"><span class="pre">splat.STDS_INTG_SPEX</span></code>. This can be prompted using the <a class="reference external" href="api.html#splat.initiateStandards">initiateStandards()</a> routine:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">initiateStandards</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>One the standards are loaded, subsequent calls to <a class="reference external" href="api.html#splat.classifyByStandard">classifyByStandard()</a> are much faster.</p>
 <ul class="simple">
 <li>Classifying by Templates</li>
 </ul>
-<p>You can also classify sources by comparing to individual template spectra in the library. The <a class="reference external" href="api.html#splat.classifyByTemplate">classifyByTemplate()</a> routine behaves similarly to <a href="#id8"><span class="problematic" id="id9">`classifyByStandard`_</span></a>, but has the option of returning a dictionary of the <code class="docutils literal"><span class="pre">nbest</span></code> best matches sorted by whatever statistic is desired (set with the <code class="docutils literal"><span class="pre">statistic</span></code> parameter; see <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra()</a>).  Because each template must be read in, it is strongly recommended that users downselect the templates using keywords associated with <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary()</a>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<p>You can also classify sources by comparing to individual template spectra in the library. The <a class="reference external" href="api.html#splat.classifyByTemplate">classifyByTemplate()</a> routine behaves similarly to <a href="#id6"><span class="problematic" id="id7">`classifyByStandard`_</span></a>, but has the option of returning a dictionary of the <code class="docutils literal notranslate"><span class="pre">nbest</span></code> best matches sorted by whatever statistic is desired (set with the <code class="docutils literal notranslate"><span class="pre">statistic</span></code> parameter; see <a class="reference external" href="api.html#splat.compareSpectra">compareSpectra()</a>).  Because each template must be read in, it is strongly recommended that users downselect the templates using keywords associated with <a class="reference external" href="api.html#splat_db.searchLibrary">searchLibrary()</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">26</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="go">        Too many templates (1819) for classifyByTemplate; set force=True to override this</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">26</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
@@ -468,8 +478,8 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 <span class="go">    Mean spectral type = L4.5+/-0.724296125146</span>
 </pre></div>
 </div>
-<p>Note that the program doesn&#8217;t proceed automatically if there are more than 100 templates; you can override this using the <code class="docutils literal"><span class="pre">force</span></code> parameter:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">26</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p>Note that the program doesn’t proceed automatically if there are more than 100 templates; you can override this using the <code class="docutils literal notranslate"><span class="pre">force</span></code> parameter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">26</span><span class="p">],</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">        Comparing to 210 templates</span>
 <span class="go">        This may take some time!</span>
 <span class="go">        SDSS J000112.18+153535.5 L4.0 24551.836698 14.3533608111</span>
@@ -480,7 +490,7 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 </pre></div>
 </div>
 <dl class="docutils">
-<dt>You can also downselect templates using the <code class="docutils literal"><span class="pre">select</span></code> parameter for the following predefined template sets:</dt>
+<dt>You can also downselect templates using the <code class="docutils literal notranslate"><span class="pre">select</span></code> parameter for the following predefined template sets:</dt>
 <dd><ul class="first last simple">
 <li>select = <cite>m dwarf</cite>: fit to M dwarfs only</li>
 <li>select = <cite>l dwarf</cite>: fit to M dwarfs only</li>
@@ -498,7 +508,7 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 </dd>
 </dl>
 <p>These sets can be combined:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">select</span><span class="o">=</span><span class="s1">&#39;l dwarfs, young&#39;</span><span class="p">,</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByTemplate</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">select</span><span class="o">=</span><span class="s1">&#39;l dwarfs, young&#39;</span><span class="p">,</span><span class="n">nbest</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">        Comparing to 79 templates</span>
 <span class="go">        SDSS J000112.18+153535.5 L4.0 24551.836698 14.3533608111</span>
 <span class="go">        2MASS J00193927-3724392 L3.0 10299.0508807 16.2807901643</span>
@@ -512,19 +522,19 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 <li>Gravity Classification</li>
 </ul>
 <p>The <a class="reference external" href="api.html#splat.classifyGravity">classifyGravity()</a> routine uses the index-based method of <a class="reference external" href="http://adsabs.harvard.edu/abs/2013ApJ...772...79A">Allers &amp; Liu (2013)</a> to determine gravity scores from VO, FeH, K I and H-band continuum indices.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
 <span class="go">    FLD-G</span>
 </pre></div>
 </div>
 <p>In its default mode it also determines the classification of the source using the
-<a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...657..511A">Allers et al. (2007)</a> index-based scheme, but you can also force an spectral type by setting the <code class="docutils literal"><span class="pre">spt</span></code> parameter:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="s1">&#39;L5&#39;</span><span class="p">)</span>
+<a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...657..511A">Allers et al. (2007)</a> index-based scheme, but you can also force an spectral type by setting the <code class="docutils literal notranslate"><span class="pre">spt</span></code> parameter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">spt</span><span class="o">=</span><span class="s1">&#39;L5&#39;</span><span class="p">)</span>
 <span class="go">    FLD-G</span>
 </pre></div>
 </div>
-<p>Finally, the routine will return a dictionary of all index scores by setting the <code class="docutils literal"><span class="pre">allscores</span></code> parameter to True:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">allscores</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p>Finally, the routine will return a dictionary of all index scores by setting the <code class="docutils literal notranslate"><span class="pre">allscores</span></code> parameter to True:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyGravity</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">allscores</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">    Gravity Classification:</span>
 <span class="go">        SpT = L4.0</span>
 <span class="go">        VO-z: 1.012+/-0.029 =&gt; 0.0</span>
@@ -543,149 +553,33 @@ cloud coverage fraction (for Morley models) and non-equilibrium chemistry diffus
 </pre></div>
 </div>
 </div>
-<div class="section" id="empirical-relations">
-<h2>Empirical Relations<a class="headerlink" href="#empirical-relations" title="Permalink to this headline">¶</a></h2>
-<p>There are a number of empirical relations contained in the SPLAT code to help convert between common parameters. Examples include:</p>
-<ul>
-<li><dl class="first docutils">
-<dt><a class="reference external" href="api.html#splat.typeToColor">typeToColor()</a></dt>
-<dd><blockquote class="first">
-<div><p>Takes a spectral type and optionally a <code class="docutils literal"><span class="pre">color</span></code> (string) and returns the typical color of the source, using one of the following empirical relationships (set by <code class="docutils literal"><span class="pre">ref</span></code> keyword):</p>
-<ul class="simple">
-<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2015A%26A...574A..78S">Skryzpek et al. (2015)</a> : Allowed spectral type range is M5 to T8, and colors include &#8216;i-z&#8217;, &#8216;z-Y&#8217;, &#8216;Y-J&#8217;, &#8216;J-H&#8217;, &#8216;H-K&#8217;, &#8216;K-W1&#8217;, &#8216;W1-W2&#8217; and all intermediate colors (<code class="docutils literal"><span class="pre">ref</span></code> = &#8216;skryzpek&#8217;)</li>
-</ul>
-</div></blockquote>
-<p>Example:</p>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToColor</span><span class="p">(</span><span class="s1">&#39;L3&#39;</span><span class="p">,</span> <span class="s1">&#39;J-K&#39;</span><span class="p">)</span>
-<span class="go">    (1.46, nan)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M5&#39;</span><span class="p">,</span> <span class="s1">&#39;i-z&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">,</span> <span class="n">unc</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="go">    (0.91, 0.57797809947624645)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">,</span> <span class="s1">&#39;i-z&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">)</span>
-<span class="go">    Spectral type M0.0 is outside the range for reference set Skrzypek et al. (2015)</span>
-<span class="go">    (nan, nan)</span>
-</pre></div>
-</div>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference external" href="api.html#splat.typeToMag">typeToMag()</a></dt>
-<dd><blockquote class="first">
-<div><p>Takes a spectral type and a filter, and returns absolute magnitude, using one of the following empirical relationships (set by <code class="docutils literal"><span class="pre">ref</span></code> keyword):</p>
-<ul class="simple">
-<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2007ApJ...659..655B">Burgasser (2007)</a> : Allowed spectral type range is L0 to T8, and allowed filters are MKO K (<code class="docutils literal"><span class="pre">ref</span></code> = &#8216;burgasser&#8217;)</li>
-<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJ...752...56F">Faherty et al. (2012)</a> : Allowed spectral type range is L0 to T8, and allowed filters are MKO J, MKO H and MKO K. (<code class="docutils literal"><span class="pre">ref</span></code> = &#8216;faherty&#8217;)</li>
-<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2012ApJS..201...19D">Dupuy &amp; Liu (2012)</a> : Allowed spectral type range is M6 to T9, and allowed filters are MKO J, MKO Y, MKO H, MKO K, MKO LP, 2MASS J, 2MASS H, and 2MASS K. (<code class="docutils literal"><span class="pre">ref</span></code> = &#8216;dupuy&#8217;)</li>
-<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2015ApJ...810..158F">Filippazzo et al. (2015).</a> : Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J and WISE W2. (<code class="docutils literal"><span class="pre">ref</span></code> = &#8216;filippazzo&#8217;)</li>
-</ul>
-</div></blockquote>
-<p>Example:</p>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;L3&#39;</span><span class="p">,</span> <span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
-<span class="go">    (12.730064813273996, 0.4)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="mi">21</span><span class="p">,</span> <span class="s1">&#39;MKO K&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;burgasser&#39;</span><span class="p">)</span>
-<span class="go">    (10.705292820099999, 0.26)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;faherty&#39;</span><span class="p">)</span>
-<span class="go">    Invalid filter given for Abs Mag/SpT relation from Faherty et al. (2012)</span>
-<span class="go">    (nan, nan)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">,</span> <span class="s1">&#39;2MASS H&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;dupuy&#39;</span><span class="p">)</span>
-<span class="go">    Spectral Type is out of range for Abs Mag/SpT relation from Dupuy &amp; Liu (2012) Abs Mag/SpT relation</span>
-<span class="go">    (nan, nan)</span>
-</pre></div>
-</div>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference external" href="api.html#splat.typeToTeff">typeToTeff()</a></dt>
-<dd><blockquote class="first">
-<div><p>Returns an effective temperature (Teff) and its uncertainty for a given spectral type, using one of the following empirical relationships (set by <code class="docutils literal"><span class="pre">ref</span></code> keyword):</p>
-<ul class="simple">
-<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2004AJ....127.3516G">Golimowski et al. (2004)</a> : Allowed spectral type range is M6 to T8  (<code class="docutils literal"><span class="pre">ref</span></code> = &#8216;golimowski&#8217;)</li>
-<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2008ApJ...685.1183L">Looper et al. (2008)</a> : Allowed spectral type range is L0 to T8  (<code class="docutils literal"><span class="pre">ref</span></code> = &#8216;looper&#8217;)</li>
-<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2009ApJ...702..154S">Stephens et al. (2009)</a> : Allowed spectral type range is M6 to T8 and uses alternate coefficients for L3 to T8.  (<code class="docutils literal"><span class="pre">ref</span></code> = &#8216;stephens&#8217;)</li>
-<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2013AJ....146..161M">Marocco et al. (2013)</a> : Allowed spectral type range is M7 to T8  (<code class="docutils literal"><span class="pre">ref</span></code> = &#8216;marocco&#8217;)</li>
-<li><a class="reference external" href="http://adsabs.harvard.edu/abs/2015ApJ...810..158F">Filippazzo et al. (2015).</a> : Allowed spectral type range is M6 to T9 (<code class="docutils literal"><span class="pre">ref</span></code> = &#8216;filippazzo&#8217;)</li>
-</ul>
-</div></blockquote>
-<p>Example:</p>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
-<span class="go">    (2233.4796740905499, 100.00007874571999)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">unc</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;golimowski&#39;</span><span class="p">)</span>
-<span class="go">    (2305.7500497902788, 127.62548366132124)</span>
-</pre></div>
-</div>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference external" href="api.html#splat.estimateDistance">estimateDistance()</a></dt>
-<dd><blockquote class="first">
-<div><p>Takes the apparent magnitude in a given <code class="docutils literal"><span class="pre">filter</span></code> and either takes or determines the absolute magnitude from empirical relations, then uses the absolute magnitude/distance relation to estimate the distance to the object in parsecs. Returns estimated distance and uncertainty in parsecs. If given only a spectrum object, this routine will measure the apparent magnitude, classify the spectrum, estimate the absolute magnitude, and estimate the distance; any additional inputs such as <code class="docutils literal"><span class="pre">mag</span></code> (for apparent magnitude), <code class="docutils literal"><span class="pre">spt</span></code> (for spectral type), <code class="docutils literal"><span class="pre">absmag</span></code> (for absolute magnitude) and their uncertainties will reduce dependence on the Spectrum object. With all three parameters, this routine operates without a Spectrum object.</p>
-</div></blockquote>
-<p>Example:
-&gt;&gt;&gt; import splat
-&gt;&gt;&gt; sp = splat.getSpectrum(shortname=&#8216;1555+0954&#8217;)[0]
-Retrieving 2 files
-&gt;&gt;&gt; splat.estimateDistance(sp)</p>
-<blockquote>
-<div><p>Please specify the filter used to determine the apparent magnitude
-(nan, nan)</p>
-</div></blockquote>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
-<span class="go">    (212.20546914411625, 50.593458481040173)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">12.83</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
-<span class="go">    (6.8967647325911665, 1.7439740983732679)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">mag</span><span class="o">=</span><span class="mf">12.83</span><span class="p">)</span>
-<span class="go">    (6.4528658994336521, 1.6853855848066823)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">mag</span><span class="o">=</span><span class="mf">12.83</span><span class="p">,</span> <span class="n">mag_e</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
-<span class="go">    (6.1292809243737336, 1.4986946706101478)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">mag</span><span class="o">=</span><span class="mf">12.83</span><span class="p">,</span> <span class="n">mag_e</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">spt</span><span class="o">=</span><span class="s1">&#39;L5&#39;</span><span class="p">)</span>
-<span class="go">    (6.9954039276140554, 1.1679437846129084)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">mag</span><span class="o">=</span><span class="mf">12.83</span><span class="p">,</span> <span class="n">mag_e</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">spt</span><span class="o">=</span><span class="s1">&#39;L5&#39;</span><span class="p">,</span> <span class="n">absmag</span><span class="o">=</span><span class="mf">13.56</span><span class="p">,</span> <span class="n">absmag_e</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">)</span>
-<span class="go">    (7.1788501442275461, 0.74878521889450711)</span>
-</pre></div>
-</div>
-</dd>
-</dl>
-</li>
-</ul>
-</div>
-<div class="section" id="other-utilities">
-<h2>Other Utilities<a class="headerlink" href="#other-utilities" title="Permalink to this headline">¶</a></h2>
-<p>TBD</p>
-</div>
 <div class="section" id="useful-program-constants">
 <h2>Useful Program Constants<a class="headerlink" href="#useful-program-constants" title="Permalink to this headline">¶</a></h2>
 <dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">splat.DB_SOURCES</span></code></dt>
-<dd>An Astropy Table object containing the Source Database</dd>
-<dt><code class="docutils literal"><span class="pre">splat.DB_SPECTRA</span></code></dt>
-<dd>An Astropy Table object containing the Spectrum Database</dd>
-<dt><code class="docutils literal"><span class="pre">splat.SPEX_STDS</span></code></dt>
-<dd>A dictionary containing Spectrum objects of the M0-T9 dwarf standards; this dictionary is
-populated through calls to <a href="#id10"><span class="problematic" id="id11">`splat.getStandard()`_</span></a> . A standard Spectrum object can be accessed
-by using the spectral type as the referring key:</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">splat.DB_SOURCES</span></code></dt>
+<dd>A pandas table containing the Source Database</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">splat.DB_SPECTRA</span></code></dt>
+<dd>A pandas table containing the Spectrum Database</dd>
 </dl>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>             <span class="c1"># both are Spectrum objects of Gliese 270</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">SPEX_STDS</span><span class="p">[</span><span class="s1">&#39;M0.0&#39;</span><span class="p">]</span>                <span class="c1"># note the mandatory decimal</span>
-</pre></div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">splat.STDS_DWARF_SPEX</span></code>, <code class="docutils literal notranslate"><span class="pre">splat.STDS_SD_SPEX</span></code>,  <code class="docutils literal notranslate"><span class="pre">splat.STDS_DSD_SPEX</span></code>, <code class="docutils literal notranslate"><span class="pre">splat.STDS_ESD_SPEX</span></code>,
+<code class="docutils literal notranslate"><span class="pre">splat.STDS_VLG_SPEX</span></code> and <code class="docutils literal notranslate"><span class="pre">splat.STDS_INTG_SPEX</span></code></p>
 <blockquote>
-<div>Available standards can be accessed through the command:</div></blockquote>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">SPEX_STDS</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<div>Dictionaries containing Spectrum objects of the SpeX classification standard templates; this dictionary is
+populated through calls to <a href="#id8"><span class="problematic" id="id9">`splat.getStandard()`_</span></a> . A standard Spectrum object can be accessed
+by using the spectral type as the referring key:</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getStandard</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>                 <span class="c1"># both are Spectrum objects of Gliese 270</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">STDS_DWARF_SPEX</span><span class="p">[</span><span class="s1">&#39;M0.0&#39;</span><span class="p">]</span>          <span class="c1"># note the mandatory decimal</span>
 </pre></div>
 </div>
 <dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">splat.SPEX_SD_STDS</span></code></dt>
-<dd>Same as <code class="docutils literal"><span class="pre">splat.SPEX_STDS</span></code> for subdwarf standards</dd>
-<dt><code class="docutils literal"><span class="pre">splat.SPEX_ESD_STDS</span></code></dt>
-<dd>Same as <code class="docutils literal"><span class="pre">splat.SPEX_STDS</span></code> for extreme subdwarf standards</dd>
-<dt><code class="docutils literal"><span class="pre">splat.FILTERS</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">splat.FILTERS</span></code></dt>
 <dd>A dictionary containing information on all of the filters used in SPLAT photometry.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">splat.INSTRUMENTS</span></code></dt>
+<dd>A dictionary containing information on the instruments currently read in as <cite>native</cite> to the SPLAT code.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">splat.SPECTRAL_MODELS</span></code></dt>
+<dd>A dictionary containing information on the spectral models currently contained in the SPLAT code</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">splat.EVOLUTIONARY_MODELS</span></code></dt>
+<dd>A dictionary containing information on the evolutionary models currently contained in the SPLAT code</dd>
 </dl>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
@@ -702,7 +596,7 @@ by using the spectral type as the referring key:</dd>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="splat_plot.html" class="btn btn-neutral float-right" title="SPLAT Plotting Routines" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="splat_empirical.html" class="btn btn-neutral float-right" title="Empirical Relations" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="quickstart.html" class="btn btn-neutral" title="Quickstart" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -714,7 +608,7 @@ by using the spectral type as the referring key:</dd>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Adam Burgasser.
+        &copy; Copyright 2016-2018, Adam Burgasser.
 
     </p>
   </div>
@@ -736,7 +630,7 @@ by using the spectral type as the referring key:</dd>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.31',
+            VERSION:'2018.05.21',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

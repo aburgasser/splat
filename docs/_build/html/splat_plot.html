@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SPLAT Plotting Routines &mdash; SpeX Prism Library Analysis Toolkit 0.31 documentation</title>
+  <title>SPLAT Plotting Routines &mdash; SpeX Prism Library Analysis Toolkit 2018.05.21 documentation</title>
   
 
   
@@ -32,9 +32,12 @@
   
 
   
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.31 documentation" href="index.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 2018.05.21 documentation" href="index.html"/>
         <link rel="next" title="SPLAT Spectral Modeling" href="splat_model.html"/>
-        <link rel="prev" title="Main SPLAT module" href="splat.html"/> 
+        <link rel="prev" title="Empirical Relations" href="splat_empirical.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -65,7 +68,7 @@
             
             
               <div class="version">
-                0.31
+                2018.05.21
               </div>
             
           
@@ -90,8 +93,9 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_empirical.html">Empirical Relations</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">SPLAT Plotting Routines</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#basic-plots">Basic plots</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-spectral-plots">Basic spectral plots</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#feature-labels-and-legends">Feature labels and legends</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#insets">Insets</a></li>
 </ul>
@@ -106,11 +110,16 @@
 <li class="toctree-l3"><a class="reference internal" href="#multi-page-plots">Multi-page plots</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#other-plotting-tools">Other Plotting Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">plotMap()</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_simulate.html">Population Simulation Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
@@ -146,7 +155,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/splat_plot.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/splat_plot.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -158,32 +167,37 @@
             
   <div class="section" id="splat-plotting-routines">
 <h1>SPLAT Plotting Routines<a class="headerlink" href="#splat-plotting-routines" title="Permalink to this headline">¶</a></h1>
-<p>The SPLAT plotting routines are designed to visualize spectral data and comparisons to other templates and models. Additional routines to visualize indices on the spectral data and the index values themselves are currently under development.</p>
-<div class="section" id="basic-plots">
-<h2>Basic plots<a class="headerlink" href="#basic-plots" title="Permalink to this headline">¶</a></h2>
-<p>The core plotting function is <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum()</a>, which allows flexible methods for displaying single or groups of spectra, and comparing spectra to each other. Nearly all of the functions described below are wrappers for <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum()</a> with various options, described in more detail in the  <a class="reference external" href="api.html">API</a>. Plots are made using the <a class="reference external" href="http://matplotlib.org/api/pyplot_summary.html">pyplot</a> package in <a class="reference external" href="http://matplotlib.org/">matplotlib</a>.</p>
-<p>The simplest way to visualize a spectrum is to simply call <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum()</a> with the Spectrum class object:</p>
+<p>The SPLAT plotting routines are designed to visualize spectral data and comparisons to other templates and models.
+These are all contained in the <a class="reference external" href="splat_plot.html">splat.plot</a> module, which should be imported separately:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.plot</span> <span class="k">as</span> <span class="nn">splot</span>
+</pre></div>
+</div>
+<div class="section" id="basic-spectral-plots">
+<h2>Basic spectral plots<a class="headerlink" href="#basic-spectral-plots" title="Permalink to this headline">¶</a></h2>
+<p>The core plotting function is <a class="reference external" href="api.html#splat.plot.plotSpectrum">plotSpectrum()</a>, which allows flexible methods for displaying single or groups of spectra, and comparing spectra to each other. Nearly all of the functions described below are wrappers for <a class="reference external" href="api.html#splat.plot.plotSpectrum">plotSpectrum()</a> with various options, described in more detail in the  <a class="reference external" href="api.html">API</a>. Plots are made using the <a class="reference external" href="http://matplotlib.org/api/pyplot_summary.html">pyplot</a> package in <a class="reference external" href="http://matplotlib.org/">matplotlib</a>.</p>
+<p>The simplest way to visualize a spectrum is to simply call <a class="reference external" href="api.html#splat.plot.plotSpectrum">plotSpectrum()</a> with the Spectrum class object:</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.plot</span> <span class="k">as</span> <span class="nn">splot</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;T5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotspectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotspectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">)</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_example1.png"><img alt="_images/plot_basic_example1.png" class="align-center" src="_images/plot_basic_example1.png" style="width: 400px;" /></a>
 </div></blockquote>
-<p>You can also use the Spectrum class&#8217;s built in <a class="reference external" href="api.html#splat.Spectrum.plot">plot()</a> function:</p>
+<p>You can also use the Spectrum class’s built in <a class="reference external" href="api.html#splat.Spectrum.plot">plot()</a> function:</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_example2.png"><img alt="_images/plot_basic_example2.png" class="align-center" src="_images/plot_basic_example2.png" style="width: 400px;" /></a>
 </div></blockquote>
-<p>Note that this adds a legend with the name of the source, the uncertainty spectrum (if present) and the zeropoint. These can be called explicitly within <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum()</a> as well:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotspectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="n">spc</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">showNoise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">showZero</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p>Note that this adds a legend with the name of the source, the uncertainty spectrum (if present) and the zeropoint. These can be called explicitly within <a class="reference external" href="api.html#splat.plot.plotSpectrum">plotSpectrum()</a> as well:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotspectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="n">spc</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">showNoise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">showZero</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>There are many options for adding details to your spectrum plot, listed below. In addition, the output of a call to <a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum()</a> is a <a class="reference external" href="http://matplotlib.org/api/figure_api.html#matplotlib.figure.Figure">matplotlib.figure.Figure</a> class</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">plotspectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">)</span>
+<p>There are many options for adding details to your spectrum plot, listed below. In addition, the output of a call to <a class="reference external" href="api.html#splat.plot.plotSpectrum">plotSpectrum()</a> is a <a class="reference external" href="http://matplotlib.org/api/figure_api.html#matplotlib.figure.Figure">matplotlib.figure.Figure</a> class</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">plotspectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span>
 <span class="go">  [&lt;matplotlib.figure.Figure at 0x119e4f710&gt;]</span>
 </pre></div>
@@ -191,10 +205,10 @@
 <p>so you can use other options from this class to further augment your plot.</p>
 <div class="section" id="feature-labels-and-legends">
 <h3>Feature labels and legends<a class="headerlink" href="#feature-labels-and-legends" title="Permalink to this headline">¶</a></h3>
-<p>Specific absorption features can be labeled on the plot by setting the <code class="docutils literal"><span class="pre">features</span></code> to a list of atoms and molecules.</p>
+<p>Specific absorption features can be labeled on the plot by setting the <code class="docutils literal notranslate"><span class="pre">features</span></code> to a list of atoms and molecules.</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;T5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;h2o&#39;</span><span class="p">,</span><span class="s1">&#39;ch4&#39;</span><span class="p">,</span><span class="s1">&#39;h2&#39;</span><span class="p">])</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;T5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;h2o&#39;</span><span class="p">,</span><span class="s1">&#39;ch4&#39;</span><span class="p">,</span><span class="s1">&#39;h2&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_features_example1.png"><img alt="_images/plot_basic_features_example1.png" class="align-center" src="_images/plot_basic_features_example1.png" style="width: 400px;" /></a>
@@ -228,45 +242,45 @@
 </dd>
 </dl>
 </div></blockquote>
-<p>You can also set groups of features based on the type of object; options include <code class="docutils literal"><span class="pre">mdwarf</span></code>, <code class="docutils literal"><span class="pre">ldwarf</span></code> and <code class="docutils literal"><span class="pre">tdwarf</span></code></p>
+<p>You can also set groups of features based on the type of object; options include <code class="docutils literal notranslate"><span class="pre">mdwarf</span></code>, <code class="docutils literal notranslate"><span class="pre">ldwarf</span></code> and <code class="docutils literal notranslate"><span class="pre">tdwarf</span></code></p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;L5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">ldwarf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;L5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">ldwarf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_features_example2.png"><img alt="_images/plot_basic_features_example2.png" class="align-center" src="_images/plot_basic_features_example2.png" style="width: 400px;" /></a>
 </div></blockquote>
-<p>To label and shade regions of telluric absorption, set <code class="docutils literal"><span class="pre">telluric</span></code> = True</p>
+<p>To label and shade regions of telluric absorption, set <code class="docutils literal notranslate"><span class="pre">telluric</span></code> = True</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">telluric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">telluric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_features_example3.png"><img alt="_images/plot_basic_features_example3.png" class="align-center" src="_images/plot_basic_features_example3.png" style="width: 400px;" /></a>
 </div></blockquote>
-<p>To add a legend, use the <code class="docutils literal"><span class="pre">legend</span></code> or <code class="docutils literal"><span class="pre">label</span></code> keyword:</p>
+<p>To add a legend, use the <code class="docutils literal notranslate"><span class="pre">legend</span></code> or <code class="docutils literal notranslate"><span class="pre">label</span></code> keyword:</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span><span class="p">,</span><span class="n">spt_e</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">classifyByStandard</span><span class="p">(</span><span class="n">spc</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> SpT = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spc</span><span class="o">.</span><span class="n">shortname</span><span class="p">,</span><span class="n">spt</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> SpT = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spc</span><span class="o">.</span><span class="n">shortname</span><span class="p">,</span><span class="n">spt</span><span class="p">)])</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_features_example4.png"><img alt="_images/plot_basic_features_example4.png" class="align-center" src="_images/plot_basic_features_example4.png" style="width: 400px;" /></a>
 </div></blockquote>
-<p>You can vary the size and location of the legend using the <code class="docutils literal"><span class="pre">legendfontscale</span></code> and <code class="docutils literal"><span class="pre">legendlocation</span></code> keywords.</p>
+<p>You can vary the size and location of the legend using the <code class="docutils literal notranslate"><span class="pre">legendfontscale</span></code> and <code class="docutils literal notranslate"><span class="pre">legendlocation</span></code> keywords.</p>
 <div class="section" id="insets">
 <h4>Insets<a class="headerlink" href="#insets" title="Permalink to this headline">¶</a></h4>
-<p>You can place an inset in your plot to zoom in on a particular feature using the <code class="docutils literal"><span class="pre">inset</span></code> keyword:</p>
+<p>You can place an inset in your plot to zoom in on a particular feature using the <code class="docutils literal notranslate"><span class="pre">inset</span></code> keyword:</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">sbinary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">sbinary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">inset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">inset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_inset_example1.png"><img alt="_images/plot_basic_inset_example1.png" class="align-center" src="_images/plot_basic_inset_example1.png" style="width: 400px;" /></a>
 </div></blockquote>
-<p>You can get some control over the positioning and sampled range using <code class="docutils literal"><span class="pre">inset_position</span></code> (left edge, bottom edge, width, height) and <code class="docutils literal"><span class="pre">inset_xrange</span></code>:</p>
+<p>You can get some control over the positioning and sampled range using <code class="docutils literal notranslate"><span class="pre">inset_position</span></code> (left edge, bottom edge, width, height) and <code class="docutils literal notranslate"><span class="pre">inset_xrange</span></code>:</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">inset</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">inset_xrange</span><span class="o">=</span><span class="p">[</span><span class="mf">1.52</span><span class="p">,</span><span class="mf">1.72</span><span class="p">],</span><span class="n">inset_position</span><span class="o">=</span><span class="p">[</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.55</span><span class="p">,</span><span class="mf">0.28</span><span class="p">,</span><span class="mf">0.32</span><span class="p">])</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">inset</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">inset_xrange</span><span class="o">=</span><span class="p">[</span><span class="mf">1.52</span><span class="p">,</span><span class="mf">1.72</span><span class="p">],</span><span class="n">inset_position</span><span class="o">=</span><span class="p">[</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.55</span><span class="p">,</span><span class="mf">0.28</span><span class="p">,</span><span class="mf">0.32</span><span class="p">])</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_inset_example2.png"><img alt="_images/plot_basic_inset_example2.png" class="align-center" src="_images/plot_basic_inset_example2.png" style="width: 400px;" /></a>
@@ -275,10 +289,10 @@
 </div>
 <div class="section" id="colors-and-line-styles">
 <h3>Colors and line styles<a class="headerlink" href="#colors-and-line-styles" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum()</a> uses the same commands as <a class="reference external" href="http://matplotlib.org/api/pyplot_summary.html">pyplot</a> for setting <a class="reference external" href="http://matplotlib.org/api/colors_api.html">colors</a> (default black) and <a class="reference external" href="http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D.set_linestyle">linestyles</a> (default solid):</p>
+<p><a class="reference external" href="api.html#splat.plot.plotSpectrum">plotSpectrum()</a> uses the same commands as <a class="reference external" href="http://matplotlib.org/api/pyplot_summary.html">pyplot</a> for setting <a class="reference external" href="http://matplotlib.org/api/colors_api.html">colors</a> (default black) and <a class="reference external" href="http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D.set_linestyle">linestyles</a> (default solid):</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;M9&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;M9&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_color_example1.png"><img alt="_images/plot_basic_color_example1.png" class="align-center" src="_images/plot_basic_color_example1.png" style="width: 400px;" /></a>
@@ -286,25 +300,25 @@
 </div>
 <div class="section" id="manipulating-the-plot-format">
 <h3>Manipulating the plot format<a class="headerlink" href="#manipulating-the-plot-format" title="Permalink to this headline">¶</a></h3>
-<p>You can adjust the plot ranges using the <code class="docutils literal"><span class="pre">xrange</span></code> and <code class="docutils literal"><span class="pre">yrange</span></code> keywords</p>
+<p>You can adjust the plot ranges using the <code class="docutils literal notranslate"><span class="pre">xrange</span></code> and <code class="docutils literal notranslate"><span class="pre">yrange</span></code> keywords</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;T5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;T5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">xrange</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.6</span><span class="p">],</span><span class="n">yrange</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">xrange</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.6</span><span class="p">],</span><span class="n">yrange</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_manipulate_example1.png"><img alt="_images/plot_basic_manipulate_example1.png" class="align-center" src="_images/plot_basic_manipulate_example1.png" style="width: 400px;" /></a>
 </div></blockquote>
-<p>Or change the labels of these axes using the <code class="docutils literal"><span class="pre">xlabel</span></code> and <code class="docutils literal"><span class="pre">ylabel</span></code> keywords</p>
+<p>Or change the labels of these axes using the <code class="docutils literal notranslate"><span class="pre">xlabel</span></code> and <code class="docutils literal notranslate"><span class="pre">ylabel</span></code> keywords</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">xrange</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.6</span><span class="p">],</span><span class="n">yrange</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;A Length Quantity&#39;</span><span class="p">,</span><span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;A Flux Density Quantity&#39;</span><span class="p">)</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">xrange</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.6</span><span class="p">],</span><span class="n">yrange</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;A Length Quantity&#39;</span><span class="p">,</span><span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;A Flux Density Quantity&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_manipulate_example3.png"><img alt="_images/plot_basic_manipulate_example3.png" class="align-center" src="_images/plot_basic_manipulate_example3.png" style="width: 400px;" /></a>
 </div></blockquote>
-<p>You can also adjust the plot size using the <code class="docutils literal"><span class="pre">figsize</span></code> keyword</p>
+<p>You can also adjust the plot size using the <code class="docutils literal notranslate"><span class="pre">figsize</span></code> keyword</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/plot_basic_manipulate_example2.png"><img alt="_images/plot_basic_manipulate_example2.png" class="align-center" src="_images/plot_basic_manipulate_example2.png" style="width: 600px;" /></a>
@@ -312,8 +326,8 @@
 </div>
 <div class="section" id="exporting-the-plot">
 <h3>Exporting the plot<a class="headerlink" href="#exporting-the-plot" title="Permalink to this headline">¶</a></h3>
-<p>To export the plot to a file, simply set the <code class="docutils literal"><span class="pre">file</span></code> keyword:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;myplot.pdf&#39;</span><span class="p">)</span>
+<p>To export the plot to a file, simply set the <code class="docutils literal notranslate"><span class="pre">file</span></code> keyword:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotSpectrum</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;myplot.pdf&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that <a class="reference external" href="http://matplotlib.org/">matplotlib</a> automatically figures out the file format based on the filename suffix.</p>
@@ -321,16 +335,50 @@
 </div>
 <div class="section" id="plotting-multiple-spectra">
 <h2>Plotting multiple spectra<a class="headerlink" href="#plotting-multiple-spectra" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="api.html#splat_plot.plotSpectrum">plotSpectrum()</a> can also manage plotting multiple spectra, either on top of each other or stacked in the plot, or across multiple. There are also separate routines to handle common cases.</p>
+<p><a class="reference external" href="api.html#splat.plot.plotSpectrum">plotSpectrum()</a> can also manage plotting multiple spectra, either on top of each other or stacked in the plot, or across multiple. There are also separate routines to handle common cases.</p>
 <div class="section" id="comparison-plots">
 <h3>Comparison plots<a class="headerlink" href="#comparison-plots" title="Permalink to this headline">¶</a></h3>
-<p>[EXAMPLE OF MULTIPLE SPECTRA]</p>
-<p>Spectra can be stacked on top of each other using the <code class="docutils literal"><span class="pre">stack</span></code> parameter, which is a numerical value that indicates the offset between</p>
+<p>Spectra can be stacked on top of each other using the <code class="docutils literal notranslate"><span class="pre">stack</span></code> parameter, which is a numerical value that indicates the offset between sequential spectra. For example, the plot the sequence of NIR L dwarf standards:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">initiateStandards</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stdspt</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">30</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sps</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">STDS_DWARF_SPEX</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">stdspt</span><span class="p">]</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+<p>[EXAMPLE NEEDED MULTIPLE SPECTRA]</p>
 <p>[PLOTBATCH]</p>
 <p>[PLOTSEQUENCE]</p>
 </div>
 <div class="section" id="multi-page-plots">
 <h3>Multi-page plots<a class="headerlink" href="#multi-page-plots" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="other-plotting-tools">
+<h2>Other Plotting Tools<a class="headerlink" href="#other-plotting-tools" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>plotMap()<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="api.html#splat.plot.plotMap">plotMap()</a> plots coordinates onto a sky map, with options to plot groups of coordinates with different colors, symbols, and symbol sizes.  <a class="reference external" href="api.html#splat.plot.plotMap">plotMap()</a> takes as its primary input an array of astropy Skycoord objects, but will do conversions as necesssary with <a class="reference external" href="api.html#splat.utilities.properCoordinates">properCoordinates()</a>.
+Map projections are those defined in the matplotlib <a class="reference external" href="https://matplotlib.org/basemap/users/mapsetup.html">Basemap documentation</a>.</p>
+<p>For example, to plot all of the sources labeled “young” in the SPLAT library:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">searchLibrary</span><span class="p">(</span><span class="n">young</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">properCoordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;DESIGNATION&#39;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotMap</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="_images/example_plotmap_young.png" src="_images/example_plotmap_young.png" />
+</div></blockquote>
+<p>Or to plot bright M dwarfs and L dwarfs separately, and save to a file:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sm</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">searchLibrary</span><span class="p">(</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;M0&#39;</span><span class="p">,</span><span class="s1">&#39;M9.5&#39;</span><span class="p">],</span><span class="n">jmag</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sl</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">searchLibrary</span><span class="p">(</span><span class="n">spt</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;L0&#39;</span><span class="p">,</span><span class="s1">&#39;L9.5&#39;</span><span class="p">],</span><span class="n">jmag</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">properCoordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sm</span><span class="p">[</span><span class="s1">&#39;DESIGNATION&#39;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cl</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">properCoordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sm</span><span class="p">[</span><span class="s1">&#39;DESIGNATION&#39;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splot</span><span class="o">.</span><span class="n">plotMap</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span><span class="n">cl</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">],</span><span class="n">markers</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;o&#39;</span><span class="p">,</span><span class="s1">&#39;o&#39;</span><span class="p">],</span><span class="n">alpha</span><span class="o">=</span><span class="p">[</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">0.9</span><span class="p">],</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;bright_ml_map.pdf&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="_images/example_plotmap_brightml.png" src="_images/example_plotmap_brightml.png" />
+</div></blockquote>
 </div>
 </div>
 <div class="section" id="examples">
@@ -339,7 +387,7 @@
 <div><dl class="docutils">
 <dt><strong>Example 1: A simple view of a random spectrum</strong></dt>
 <dd><p class="first">This example shows various ways of displaying a random spectrum in the library</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>&gt;&gt;&gt; import splat
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; import splat
 &gt;&gt;&gt; spc = splat.getSpectrum(spt = &#39;T5&#39;, lucky=True)[0]   # select random spectrum
 &gt;&gt;&gt; spc.`plot()`                                                 # this automatically generates a &quot;quicklook&quot; plot
 &gt;&gt;&gt; splat.plotSpectrum(spc)                                      # does the same thing
@@ -353,7 +401,7 @@
 <dl class="docutils">
 <dt><strong>Example 2: Compare two spectra</strong></dt>
 <dd><p class="first">Optimally scale and compare two spectra.</p>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;T5&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># select random spectrum</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spc2</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">spt</span> <span class="o">=</span> <span class="s1">&#39;T4&#39;</span><span class="p">,</span> <span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># read in another random spectrum</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">compareSpectra</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span><span class="n">spc2</span><span class="p">)</span>        <span class="c1"># compare spectra to get optimal scaling</span>
@@ -366,8 +414,8 @@
 <a class="reference internal image-reference" href="_images/plot_example2.png"><img alt="_images/plot_example2.png" class="align-center" src="_images/plot_example2.png" style="width: 400px;" /></a>
 <dl class="docutils">
 <dt><strong>Example 3: Compare several spectra for a given object</strong></dt>
-<dd><p class="first">In this case we&#8217;ll look at all of the spectra of TWA 30B in the library, sorted by year and compare each to the first epoch data. This is an example of using both multiplot and multipage.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;TWA 30B&#39;</span><span class="p">)</span>         <span class="c1"># get all spectra of TWA 30B</span>
+<dd><p class="first">In this case we’ll look at all of the spectra of TWA 30B in the library, sorted by year and compare each to the first epoch data. This is an example of using both multiplot and multipage.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;TWA 30B&#39;</span><span class="p">)</span>         <span class="c1"># get all spectra of TWA 30B</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>             <span class="c1"># normalize the spectra</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">date</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>                   <span class="c1"># observation dates</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spsort</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span><span class="n">splist</span><span class="p">))]</span>   <span class="c1"># sort spectra by dates</span>
@@ -385,7 +433,7 @@
 <dt><strong>Example 4: Display the spectra sequence of L dwarfs</strong></dt>
 <dd><blockquote class="first">
 <div>This example uses the list of standard files contained in SPLAT, and illustrates the stack feature</div></blockquote>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">20</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span> <span class="c1"># generate list of L spectral types</span>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spt</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">typeToNum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">20</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span> <span class="c1"># generate list of L spectral types</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">initiateStandards</span><span class="p">()</span>                        <span class="c1"># initiate standards</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="p">[</span><span class="n">splat</span><span class="o">.</span><span class="n">SPEX_STDS</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spt</span><span class="p">]</span>       <span class="c1"># extact just L dwarfs</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">junk</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">]</span>         <span class="c1"># normalize the spectra</span>
@@ -416,7 +464,7 @@
         <a href="splat_model.html" class="btn btn-neutral float-right" title="SPLAT Spectral Modeling" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="splat.html" class="btn btn-neutral" title="Main SPLAT module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="splat_empirical.html" class="btn btn-neutral" title="Empirical Relations" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -425,7 +473,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Adam Burgasser.
+        &copy; Copyright 2016-2018, Adam Burgasser.
 
     </p>
   </div>
@@ -447,7 +495,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.31',
+            VERSION:'2018.05.21',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

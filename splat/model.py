@@ -340,15 +340,15 @@ def _readBtsettl08(file,expon=-8.):
     if file[-3:] == '.gz':
         with gzip.open(os.path.normpath(file),'rt') as f:
             for line in f:
-                data.append(line.replace('- ','-').replace('-',' -').replace('D -','D-'))
+                if line[0] != '#': data.append(line.replace('- ','-').replace('-',' -').replace('D -','D-').replace('e -','e-'))
     elif file[-4:] == '.bz2':
         with bz2.open(os.path.normpath(file),'rt') as f:
             for line in f:
-                data.append(line.replace('- ','-').replace('-',' -').replace('D -','D-'))
+                if line[0] != '#': data.append(line.replace('- ','-').replace('-',' -').replace('D -','D-'))
     else:
         with open(os.path.normpath(file),'rt') as f:
             for line in f:
-                data.append(line)
+                if line[0] != '#': data.append(line)
     wave = numpy.array([float((d.split()[0]).replace('D','e'))/1.e4 for d in data])*u.micron
     wave = wave.to(DEFAULT_WAVE_UNIT)
     flux = numpy.array([10.**(float(d.split()[1].replace('D','e'))+expon) for d in data])*u.erg/(u.s*u.Angstrom*u.cm**2)
@@ -1879,9 +1879,9 @@ def loadModel(modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,*
     inst = checkInstrument(instrument)
     if inst != False: instrument = inst
     if instrument not in list(SPECTRAL_MODELS[mset]['instruments'].keys()):
-        raise ValueError('Models for set {} and instrument {} have not yet been computed; run processModelsToInstrument()'.format(kwargs['modelset'],instrument))
+        raise ValueError('Models for set {} and instrument {} have not yet been computed; run processModelsToInstrument(set={},instrument={})'.format(kwargs['modelset'],instrument,kwargs['modelset'],instrument))
     kwargs['instrument'] = instrument
-    kwargs['name'] = kwargs['modelset']+' ('+kwargs['instrument']+')'
+    kwargs['name'] = '{} model'.format(kwargs['modelset'])
 
 
 # check that model data is available
@@ -1901,7 +1901,7 @@ def loadModel(modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,*
             if isUnit(mparam[ms]):
                 mparam[ms] = (mparam[ms].to(SPECTRAL_MODEL_PARAMETERS[ms]['unit'])).value
     if len(mparam.keys()) == 0:
-        raise ValueError('\nDid not have any parameters to set; this is a error in the program')
+        raise ValueError('\nDid not have any parameters to set; model set may not be configured in SPLAT')
     for ms in mparam.keys(): kwargs[ms] = mparam[ms]
 
 # generate model filename

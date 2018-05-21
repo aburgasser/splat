@@ -12,7 +12,7 @@ from astropy import units as u
 
 
 # things that are constants
-VERSION = '2018.02.16'
+VERSION = '2018.05.21'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'

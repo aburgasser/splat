@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation and Dependencies &mdash; SpeX Prism Library Analysis Toolkit 0.31 documentation</title>
+  <title>Installation and Dependencies &mdash; SpeX Prism Library Analysis Toolkit 2018.05.21 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="SpeX Prism Library Analysis Toolkit 0.31 documentation" href="index.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="SpeX Prism Library Analysis Toolkit 2018.05.21 documentation" href="index.html"/>
         <link rel="next" title="Quickstart" href="quickstart.html"/>
         <link rel="prev" title="SPLAT: The SpeX Prism Library Analysis Toolkit" href="index.html"/> 
 
@@ -65,7 +68,7 @@
             
             
               <div class="version">
-                0.31
+                2018.05.21
               </div>
             
           
@@ -90,9 +93,11 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation and Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_empirical.html">Empirical Relations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_simulate.html">Population Simulation Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
@@ -128,7 +133,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/installation.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -140,18 +145,18 @@
             
   <div class="section" id="installation-and-dependencies">
 <h1>Installation and Dependencies<a class="headerlink" href="#installation-and-dependencies" title="Permalink to this headline">¶</a></h1>
-<p>SPLAT is best forked from the github site <a class="reference external" href="http://github.org/aburgasser/splat">http://github.org/aburgasser/splat</a>,
-which is updated on a regular basis. There is a possibility of <code class="docutils literal"><span class="pre">pip</span></code> installation, but this is not working quite yet.</p>
+<p>SPLAT is best forked from the github site <a class="reference external" href="https://github.com/aburgasser/splat/">https://github.com/aburgasser/splat/</a>,
+which is updated on a regular basis. There is a possibility of <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation, but this is not working quite yet.</p>
 <p>There are two additional steps to complete to get full functionality:</p>
 <ul>
-<li><p class="first">Copy the file <code class="docutils literal"><span class="pre">.splat_access</span></code> into your home directory - this is your access key if you have priveleged access to unpublished data.</p>
+<li><p class="first">Copy the file <code class="docutils literal notranslate"><span class="pre">.splat_access</span></code> into your home directory - this is your access key if you have priveleged access to unpublished data.</p>
 </li>
 <li><p class="first">Set up your environment variables to find the SPLAT code; this can be done in three ways (in the order of which the code looks for this directory):</p>
 <blockquote>
 <div><ul class="simple">
-<li>Best: create an environment variable called SPLAT_PATH and set it to the root directory of the SPLAT code (in bsh environment, add the line <code class="docutils literal"><span class="pre">export</span> <span class="pre">SPLAT_PATH=/Users/adam/projects/splat</span></code> to your .bashrc or .bash_profile)</li>
-<li>If you use the PYTHONPATH environment variable, add the root directory of the SPLAT code to it (in bsh environment add the line <code class="docutils literal"><span class="pre">export</span> <span class="pre">PYTHONPATH=/Users/adam/projects/splat:${PYTHONPATH}</span></code> to your .bashrc or .bash_profile)</li>
-<li>add the root directory of the SPLAT code to your system PATH variable (in bsh environment add the line <code class="docutils literal"><span class="pre">export</span> <span class="pre">PATH=/Users/adam/projects/splat:${PATH}</span></code> to your .bashrc or .bash_profile)</li>
+<li>Best: create an environment variable called SPLAT_PATH and set it to the root directory of the SPLAT code (in bsh environment, add the line <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">SPLAT_PATH=/Users/adam/projects/splat</span></code> to your .bashrc or .bash_profile)</li>
+<li>If you use the PYTHONPATH environment variable, add the root directory of the SPLAT code to it (in bsh environment add the line <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PYTHONPATH=/Users/adam/projects/splat:${PYTHONPATH}</span></code> to your .bashrc or .bash_profile)</li>
+<li>add the root directory of the SPLAT code to your system PATH variable (in bsh environment add the line <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PATH=/Users/adam/projects/splat:${PATH}</span></code> to your .bashrc or .bash_profile)</li>
 </ul>
 </div></blockquote>
 </li>
@@ -222,7 +227,7 @@ sending bug reports to <a class="reference external" href="mailto:aburgasser&#37
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Adam Burgasser.
+        &copy; Copyright 2016-2018, Adam Burgasser.
 
     </p>
   </div>
@@ -244,7 +249,7 @@ sending bug reports to <a class="reference external" href="mailto:aburgasser&#37
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.31',
+            VERSION:'2018.05.21',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

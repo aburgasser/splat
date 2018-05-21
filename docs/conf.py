@@ -21,6 +21,9 @@ import os
 import shlex
 import sphinx_rtd_theme
 from splat.initialize import __version__
+#from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+#from sphinx.util import compat
+#compat.make_admonition = BaseAdmonition
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -36,7 +39,7 @@ sys.path.insert(0, os.path.abspath('../'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinxcontrib.autorun','sphinx.ext.autodoc','sphinx.ext.intersphinx', 'sphinx.ext.napoleon', 'sphinx.ext.imgmath',
+    'sphinx.ext.autodoc','sphinx.ext.intersphinx', 'sphinx.ext.napoleon', 'sphinx.ext.imgmath',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -55,7 +58,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'SpeX Prism Library Analysis Toolkit'
-copyright = u'2016, Adam Burgasser'
+copyright = u'2016-2018, Adam Burgasser'
 author = u'Adam Burgasser'
 
 # The version info for the project you're documenting, acts as replacement for
