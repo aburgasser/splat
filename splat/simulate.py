@@ -236,7 +236,7 @@ def volumeCorrection(coordinate,dmax,model='juric',center='sun',nsamp=1000,unit=
 
 
 
-def simulateAges(num,age_range=[],distribution='uniform',parameters={},sfh=False,verbose=False,**kwargs):
+def simulateAges(num,age_range=[0.1,10.],distribution='uniform',parameters={},sfh=False,verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -299,7 +299,7 @@ def simulateAges(num,age_range=[],distribution='uniform',parameters={},sfh=False
     mx = kwargs.get('maxage',10.)
     mx = kwargs.get('max',mx)
 #    sfh = kwargs.get('sfh',False)
-#    age_range = kwargs.get('age_range',[mn,mx])
+    age_range = kwargs.get('age_range',[mn,mx])
     age_range = kwargs.get('range',age_range)
 #    verbose = kwargs.get('verbose',False)
     if distribution.lower() not in allowed_distributions:
