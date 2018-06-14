@@ -2969,7 +2969,7 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
 # test away    
 #    stats = []
     for p in parameters:
-        model = loadModel(**p,force=True)
+        model = loadModel(force=True,**p)
         mkwargs = copy.deepcopy(kwargs)
         mkwargs['plot'] = False
         chi,scl = compareSpectra(spec, model, stat=statistic, **mkwargs)
