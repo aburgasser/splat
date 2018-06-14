@@ -2469,8 +2469,9 @@ def _loadModelParameters(*args,**kwargs):
             sp = numpy.array(sp)
         for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
             if ms in list(parameters.keys()):
-#                print(mf,sp,ms)
-                val = sp[[SPECTRAL_MODEL_PARAMETERS[ms]['prefix'] in l for l in sp]][0][len(SPECTRAL_MODEL_PARAMETERS[ms]['prefix']):]
+                w = numpy.array([SPECTRAL_MODEL_PARAMETERS[ms]['prefix'] in l for l in sp])
+                val = sp[w][0][len(SPECTRAL_MODEL_PARAMETERS[ms]['prefix']):]
+                print(val)
                 if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous': val = float(val)
                 parameters[ms].append(val)
                 p[ms] = val
