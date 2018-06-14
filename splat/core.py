@@ -41,6 +41,7 @@ import sys
 import warnings
 
 # imports - external
+import matplotlib; matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy
 import pandas
@@ -2926,28 +2927,33 @@ def getStandard(spt, **kwargs):
         stds = STDS_ESD_SPEX
         kys = STDS_ESD_SPEX_KEYS
         subclass = 'esd'
+        stdtype = 'extreme subdwarf'
     elif kwargs.get('sd',False) or 'sd' in sptstr:
         stds = STDS_SD_SPEX
         kys = STDS_SD_SPEX_KEYS
         subclass = 'sd'
+        stdtype = 'subdwarf'
     elif kwargs.get('vlg',False) or 'gamma' in sptstr:
         stds = STDS_VLG_SPEX
         kys = STDS_VLG_SPEX_KEYS
-        subclass = ''
+        subclass = 'gamma'
+        stdtype = 'very low gravity dwarf'
     elif kwargs.get('intg',False) or 'beta' in sptstr:
         stds = STDS_INTG_SPEX
         kys = STDS_INTG_SPEX_KEYS
-        subclass = ''
+        subclass = 'beta'
+        stdtype = 'intermediate gravity dwarf'
     else:
         stds = STDS_DWARF_SPEX
         kys = STDS_DWARF_SPEX_KEYS
         subclass = ''
+        stdtype = 'dwarf'
 
     spt = typeToNum(spt,subclass=subclass)
 
 # not a valid subtype
     if spt not in list(kys.keys()):
-        print('Type {} is not in {} standards: try one of the following:'.format(spt,subclass))
+        print('Type {} is not in {} standards: try one of the following:'.format(spt,stdtype))
         print(sorted(list(kys.keys())))
         return Spectrum()
 
