@@ -1,0 +1,62 @@
+
+Notice - This anonymous ftp service is under development and is subject
+to change without notice.
+
+Welcome,
+
+This subdirectory contains a solar spectral atlas obtained with
+the  Fourier Transform Spectrometer at the McMath/Pierce Solar Telescope
+situated on Kitt Peak, Arizona, and operated by the National Solar
+Observatory, a Division of the National Optical Astronomy Observatories.
+NOAO is adminsitered by the Association of Univiersities for Research in
+Astronomy, Inc., under cooperative agreement with the National Science
+Foundation.
+
+This version of ``An Atlas of the Solar Spectrum in the Infrared from 
+1850 to 9000 cm-1 (1.1 to 5.4 microns)'' (N.S.O. Technical Report #91-001,
+July 1991) by W. Livingston and L. Wallace is meant to be used in conjunction 
+with the original hard-copy version, and the caveats in the text of that 
+version apply here equally.
+
+The three spectra in each page of the original are combined into one ascii file
+covering the main 25 cm-1 of the page plus 2 cm-1 of overlap on each end.  
+Each file is given the name ``wnxxxx'' where xxxx is the wavenumber of the 
+beginning of the main 25 cm-1 of the page.  Thus, wn4525 contains the material
+from 4525 to 4550 cm-1 plus 2 cm-1 of overlap on each end.  The first column
+contains the wavenumber while the second, third and fourth contain the solar
+component, the atmospheric component and the total, respectively.  The point
+density of the original FTS spectra has been maintained with the result
+that each file contains 3061 points.
+
+The parameter ``dg'', which controlled the extent of the gaps in the
+original version of the solar component due to strong atmospheric absorption, 
+replaces the last point in the ``total''.  The user is warned that in this
+version there are no gaps.  Instead, the regions where the solar component is 
+undetermined are replaced by linear interpolations between the last ``good'' 
+points on each side of the undetermined region.  In order to identify these 
+interpolated regions the user must either refer to the plots in the 
+original version or use the parameter ``dg'' in the same way as the authors. 
+
+Finally, the intensities of the spectra in each file have been adjusted
+to predetermined values.  One result is that the intensities are not
+continuous from file to file.  If continuity is required from one file 
+to another, the intensities can be readjusted using the spectra in the
+overlap region.  
+
+
+
+***** RESTRICTION ON USE OF THESE DATA *****
+
+These data are freely available with one restriction: If you use the data
+or some product based on the data in a published paper, we ask that you
+include an acknowledgement as follows:
+
+	NSO/Kitt Peak FTS data used here were produced by NSF/NOAO.
+
+*********************************************
+
+For further information contact:
+fhill@noao.edu (internet)
+
+9/29/93 - F. Hill
+

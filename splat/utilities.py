@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects
 import numpy
 from scipy import stats
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d,InterpolatedUnivariateSpline
 from scipy.integrate import trapz
 
 
@@ -192,6 +192,45 @@ def checkOnlineFile(*args):
     else:
         return requests.get(SPLAT_URL).status_code == requests.codes.ok
 
+
+def checkDict(ref,refdict,altref='altname',verbose=False):
+    '''
+    Purpose: 
+        General usage program to check if a key is present in a dictionary, with the option to look through alternate names
+
+    Required Inputs:
+        :param ref: A string containing the reference for lumiosity/SpT relation, should be among the keys and alternate names in refdict
+        :param refdict: dictionary containing empirical relation information
+
+    Optional Inputs:
+        None
+
+    Output:
+        A string containing SPLAT's default name for a given reference set, or False if that reference is not present
+
+    Example:
+
+    >>> import splat
+    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.SPT_LBOL_SETS))
+        filippazzo2015
+    >>> print(splat.checkEmpiricalRelation('burgasser',splat.SPT_BC_SETS))
+        False
+    '''
+    output = False
+
+# check reference    
+    if not isinstance(ref,str):
+        return output
+    for k in list(refdict.keys()):
+        if ref.lower()==k.lower(): output = k
+        if altref in list(refdict[k].keys()):
+            if ref.lower() in [x.lower() for x in list(refdict[k][altref])]: output = k
+    if output == False:
+        if verbose: print('\nCould not find item {} in input dictionary; try: {}'.format(ref,list(refdict.keys())))
+
+    return output
+
+
 def checkEmpiricalRelation(ref,refdict,verbose=False):
     '''
     Purpose: 
@@ -225,7 +264,6 @@ def checkEmpiricalRelation(ref,refdict,verbose=False):
             output = k
     if output == False:
         if verbose: print('\nReference {} is not among those present in the reference dictionary; try: {}'.format(ref,list(refdict.keys())))
-        return output
 
     return output
 
@@ -328,7 +366,7 @@ def checkSpectralModelName(model):
     >>> print(splat.checkSpectralModelName('somethingelse'))
         False
     '''
-    return checkEmpiricalRelation(model,SPECTRAL_MODELS)
+    return checkDict(model,SPECTRAL_MODELS)
 
     # output = False
     # if not isinstance(model,str):
@@ -1238,7 +1276,7 @@ def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.):
     return uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance),numpy.random.normal(mu[0],e_mu[0]),numpy.random.normal(mu[1],e_mu[1]),numpy.random.normal(rv,e_rv))
 
 
-def xyz(coordinate,center='sun',r0=8000*u.pc,z0=25*u.pc,unit=u.pc,**kwargs):
+def XYZ(coordinate,center='sun',r0=8000*u.pc,z0=25*u.pc,unit=u.pc,**kwargs):
     '''
     :Purpose:
 
@@ -1510,7 +1548,7 @@ def gauss(x,*p):
     return c+A*numpy.exp(-(x-mu)**2/(2*sig**2))
 
 
-def reMap(x1,y1,x2,nsamp=100):
+def reMap(x1,y1,x2,nsamp=100,method='fast'):
     '''
     :Purpose: 
 
@@ -1549,31 +1587,36 @@ def reMap(x1,y1,x2,nsamp=100):
         raise ValueError('\nOutput x range {} to {} must be within input x range {} to {}'.format(x2[0],x2[-1],x1[0],x1[-1]))
 
 # low resolution -> high resolution: interpolation
-    f = interp1d(x1,y1,bounds_error=False,fill_value=0.)
-    y2 = f(x2)
+    if len(x1) <= len(x2): 
+        f = interp1d(x1,y1,bounds_error=False,fill_value=0.)
+        y2 = f(x2)
 
 # high resolution -> low resolution: integrate
-    if len(y1) > len(y2): 
+    else: 
 
-# set up samples
-        xs = [numpy.max([x1[0],x2[0]-0.5*(x2[1]-x2[0])])]
-        for i in range(len(x2)-1): xs.append(x2[i]+0.5*(x2[i+1]-x2[i]))
-        xs.append(numpy.min([x2[-1]+0.5*(x2[-1]-x2[-2]),x1[-1]]))
+# slow flux-preserving method
+        if method == 'splat':
+            xs = [numpy.max([x1[0],x2[0]-0.5*(x2[1]-x2[0])])]
+            for i in range(len(x2)-1): xs.append(x2[i]+0.5*(x2[i+1]-x2[i]))
+            xs.append(numpy.min([x2[-1]+0.5*(x2[-1]-x2[-2]),x1[-1]]))
 
 # integral loop
-        y2 = []
-        for i in range(len(x2)):
-            dx = numpy.linspace(xs[i],xs[i+1],nsamp)
-            y2.append(trapz(f(dx),x=dx)/trapz(numpy.ones(nsamp),x=dx))
-#    plt.plot(xh,yh,color='k')
-#    plt.plot(xl,ys,color='r')
+            y2 = []
+            for i in range(len(x2)):
+                dx = numpy.linspace(xs[i],xs[i+1],nsamp)
+                y2.append(trapz(f(dx),x=dx)/trapz(numpy.ones(nsamp),x=dx))
+
+# fast method
+        elif method == 'fast':
+            baseline = numpy.polynomial.Polynomial.fit(x1, y1, 4)
+            ip       = InterpolatedUnivariateSpline(x1, y1/baseline(x1), k=3)
+            y2       = baseline(x2)*ip(x2)
 
     return y2
 
 
 
-
-def integralResample(xh, yh, xl, nsamp=100):
+def integralResample_OLD(xh, yh, xl, nsamp=100):
     '''
     :Purpose: A 1D integral smoothing and resampling function that attempts to preserve total flux. Uses
     scipy.interpolate.interp1d and scipy.integrate.trapz to perform piece-wise integration
@@ -1623,6 +1666,65 @@ def integralResample(xh, yh, xl, nsamp=100):
 #    plt.plot(xl,ys,color='r')
 
     return ys
+
+
+def integralResample(xh, yh, xl, nsamp=100,method='fast'):
+    '''
+    :Purpose: A 1D integral smoothing and resampling function that attempts to preserve total flux. Uses
+    scipy.interpolate.interp1d and scipy.integrate.trapz to perform piece-wise integration
+
+    Required Inputs:
+
+    :param xh: x-axis values for "high resolution" data
+    :param yh: y-axis values for "high resolution" data
+    :param xl: x-axis values for resulting "low resolution" data, must be contained within high resolution and have fewer values
+
+    Optional Inputs:
+
+    :param nsamp: Number of samples for stepwise integration
+
+    Output:
+
+    y-axis values for resulting "low resolution" data
+
+    :Example:
+    >>> # a coarse way of downsampling spectrum
+    >>> import splat, numpy
+    >>> sp = splat.Spectrum(file='high_resolution_spectrum.fits')
+    >>> w_low = numpy.linspace(numpy.min(sp.wave.value),numpy.max(sp.wave.value),len(sp.wave.value)/10.)
+    >>> f_low = splat.integralResample(sp.wave.value,sp.flux.value,w_low)
+    >>> n_low = splat.integralResample(sp.wave.value,sp.noise.value,w_low)
+    >>> sp.wave = w_low*sp.wave.unit
+    >>> sp.flux = f_low*sp.flux.unit
+    >>> sp.noise = n_low*sp.noise.unit
+    '''
+# check inputs
+    if xl[0] < xh[0] or xl[-1] > xh[-1]: raise ValueError('\nLow resolution x range {} to {} must be within high resolution x range {} to {}'.format(xl[0],xl[-1],xh[0],xh[-1]))
+    if len(xl) > len(xh): raise ValueError('\nTarget x-axis must be lower resolution than original x-axis')
+
+# set up samples
+    if method == 'splat':
+        xs = [numpy.max([xh[0],xl[0]-0.5*(xl[1]-xl[0])])]
+        for i in range(len(xl)-1): xs.append(xl[i]+0.5*(xl[i+1]-xl[i]))
+        xs.append(numpy.min([xl[-1]+0.5*(xl[-1]-xl[-2]),xh[-1]]))
+
+        f = interp1d(xh,yh)
+
+# integral loop
+        ys = []
+        for i in range(len(xl)):
+            dx = numpy.linspace(xs[i],xs[i+1],nsamp)
+            ys.append(trapz(f(dx),x=dx)/trapz(numpy.ones(nsamp),x=dx))
+#    plt.plot(xh,yh,color='k')
+#    plt.plot(xl,ys,color='r')
+
+    elif method == 'fast':
+        baseline = numpy.polynomial.Polynomial.fit(xh, yh, 4)
+        ip       = InterpolatedUnivariateSpline(xh, yh/baseline(xh), k=3)
+        ys       = baseline(xl)*ip(xl)
+
+    return ys
+
 
 
 def isNumber(s):

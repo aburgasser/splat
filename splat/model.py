@@ -17,6 +17,7 @@ import time
 
 # imports: external
 #import corner
+import matplotlib; matplotlib.use('agg')
 from matplotlib import cm
 import matplotlib.pyplot as plt
 import numpy
@@ -25,7 +26,7 @@ from scipy import stats, signal
 from scipy.integrate import trapz        # for numerical integration
 from scipy.interpolate import griddata, interp1d
 import scipy.optimize as op
-from astropy.io import ascii            # for reading in spreadsheet
+from astropy.io import ascii,fits            # for reading in spreadsheet
 from astropy.table import Table
 from astropy.table import unique as tunique
 import astropy.units as u
@@ -1104,7 +1105,7 @@ def loadOriginalInterpolatedModel(model='btsettl08',teff=2000,logg=5.0,**kwargs)
     return mdl_return
 
 # make model function
-def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model=None,model1=None,model2=None,instkern=None,contfitdeg=5,return_nontelluric=False,checkplots=False,checkprefix='tmp',verbose=True):
+def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model=None,model1=None,model2=None,instkern=None,contfitdeg=5,return_nontelluric=False,checkplots=False,checkprefix='tmp',verbose=True,timecheck=False):
     '''
     parameters may contain any of the following:
         - **modelparam** or **modelparam1**: dictionary of model parameters for primary if model not provided in model or model1: {modelset,teff,logg,z,fsed,kzz,cld,instrument}
@@ -1121,6 +1122,9 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
     '''
 # check inputs
 
+# timing check
+    timing = [time.time()]
+
     if 'modelset' in list(parameters.keys()) and 'modelset1' not in list(parameters.keys()): parameters['modelset1'] = parameters['modelset']
     if 'set' in list(parameters.keys()) and 'modelset1' not in list(parameters.keys()): parameters['modelset1'] = parameters['set']
     if 'set1' in list(parameters.keys()) and 'modelset1' not in list(parameters.keys()): parameters['modelset1'] = parameters['set1']
@@ -1132,7 +1136,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
             raise ValueError('\nData {} must be a Spectrum object'.format(data))
 
 # model / model parameters
-    if model1 == None and model1 != None: model1 = copy.deepcopy(model)
+    if model1 == None and model != None: model1 = copy.deepcopy(model)
 
     if model1 != None:
         if isinstance(model1,splat.Spectrum) == False:
@@ -1164,10 +1168,17 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
     if parameters['instrument'] not in list(splat.SPECTRAL_MODELS[parameters['modelset1']]['instruments'].keys()):
         raise ValueError('Instrument {} has not been established for model {}'.format(parameters['instrument'],parameters['modelset1']))
 
+# timing check
+    timing.append(time.time())
+
 # telluric absorption
     if atm != None:
         if isinstance(atm,splat.Spectrum) == False:
             raise ValueError('\nModel for atmosphere {} must be a Spectrum object'.format(atm))
+#        print(numpy.nanmin(atm.wave.value),numpy.nanmax(atm.wave.value))
+
+# timing check
+    timing.append(time.time())
 
 # establish model spectrum
     if model1 != None:
@@ -1185,6 +1196,10 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
 #        print(mparam)
 #        mdl1.info()
 
+# timing check
+    timing.append(time.time())
+    print('Reading',numpy.nanmin(mdl1.wave.value),numpy.nanmax(mdl1.wave.value))
+
 # add in secondary if desired
     if binary==True:
         if duplicate == True:
@@ -1201,9 +1216,14 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
             else:
                 try: 
                     mdl2 = getModel(**mparam)
+                    print(mparam)
+                    print('Model 2 original',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
                 except:
                     raise ValueError('\nError in creating secondary model with parameters {}'.format(mparam))
 #        mdl2.info()
+
+# timing check
+    timing.append(time.time())
 
 # make sure everything is on the same wavelength range
     if atm != None:
@@ -1219,21 +1239,35 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         if checkplots==True:
             splot.plotSpectrum(mdl1,colors=['k'],legend=['Model 1'],file=checkprefix+'_model.pdf')
 
+# timing check
+    timing.append(time.time())
+
 
 # apply rv shift and vsini broadening the model spectrum
     if 'rv' in list(parameters.keys()):
         mdl1.rvShift(parameters['rv'])
     elif 'rv1' in list(parameters.keys()):
         mdl1.rvShift(parameters['rv1'])
+    if 'vshift' in list(parameters.keys()):
+        mdl1.rvShift(parameters['vshift'])
     if 'vsini' in list(parameters.keys()):
         mdl1.broaden(parameters['vsini'],method='rotation')
     elif 'vsini1' in list(parameters.keys()):
         mdl1.broaden(parameters['vsini1'],method='rotation')
+
+    print('Shifted',numpy.nanmin(mdl1.wave.value),numpy.nanmax(mdl1.wave.value))
+
+# timing check
+    timing.append(time.time())
+
     if binary==True:
+        print('Model 2 original',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
         if 'f2' in list(parameters.keys()):
             mdl2.scale(parameters['f2'])
         if 'rv2' in list(parameters.keys()):
             mdl2.rvShift(parameters['rv2'])
+        if 'vshift' in list(parameters.keys()):
+            mdl2.rvShift(parameters['vshift'])
         if 'vsini2' in list(parameters.keys()):
             mdl2.broaden(parameters['vsini2'],method='rotation')
         else:
@@ -1242,15 +1276,24 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
             elif 'vsini1' in list(parameters.keys()):
                 mdl2.broaden(parameters['vsini1'],method='rotation')
 
+        print('Model 2 shifted',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
+
 # add primary and secondary back together
         mdl = mdl1+mdl2
     else:
         mdl = mdl1
 
+    print('Combined',numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))
+
+# timing check
+    timing.append(time.time())
+
 # read in telluric, scale & apply
     if atm != None:
 # integral resample telluric profile onto mdl flux range
         atmapp = copy.deepcopy(atm)
+        if 'vshift' in list(parameters.keys()):
+            atmapp.rvShift(parameters['vshift'])
         if len(atmapp.flux) != len(mdl.flux):
             funit = atmapp.flux.unit
 #            atmapp.flux = splat.integralResample(atmapp.wave.value,atmapp.flux.value,mdl.wave.value)
@@ -1266,20 +1309,28 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
             splot.plotSpectrum(mdlt,mdl,colors=['r','k'],legend=['Model x Atmosphere','Model'],file=checkprefix+'_modelatm.pdf')
     else: mdlt = copy.deepcopy(mdl)
 
+# timing check
+    timing.append(time.time())
+
+# correct for velocity shift from wavelength error
+#    if 'vshift' in list(parameters.keys()):
+#        mdl.rvShift(parameters['vshift'])
+#        mdlt.rvShift(parameters['vshift'])
+
+# timing check
+    timing.append(time.time())
+
 # resample original and telluric corrected models onto data wavelength range
     funit = mdl.flux.unit
     mdlsamp = copy.deepcopy(mdl)
-#    mdlsamp.flux = splat.integralResample(mdl.wave.value,mdl.flux.value,data.wave.value)
-#
-# somtheing is failing here
-#
-#    print(len(mdl.wave.value),len(mdl.flux.value),len(data.wave.value),parameters['modelset1'],parameters['modelset2'])
-
+    print(numpy.nanmin(data.wave.value),numpy.nanmax(data.wave.value))
+    print(numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))
     mdlsamp.flux = splat.reMap(mdl.wave.value,mdl.flux.value,data.wave.value)
     mdlsamp.flux = mdlsamp.flux*funit
     mdlsamp.wave = data.wave
     mdlsamp.noise = [numpy.nan for f in mdlsamp.flux]*funit
     mdlsamp.variance = [numpy.nan for f in mdlsamp.flux]*(funit**2)
+
     funit = mdlt.flux.unit
     mdltsamp = copy.deepcopy(mdlt)
 #    mdltsamp.flux = splat.integralResample(mdlt.wave.value,mdlt.flux.value,data.wave.value)
@@ -1288,6 +1339,10 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
     mdltsamp.wave = data.wave
     mdltsamp.noise = [numpy.nan for f in mdltsamp.flux]*funit
     mdltsamp.variance = [numpy.nan for f in mdltsamp.flux]*(funit**2)
+
+# timing check
+    timing.append(time.time())
+
     if checkplots==True:
         splot.plotSpectrum(mdltsamp,mdlsamp,colors=['r','k'],legend=['Model x Atmosphere','Model'],file=checkprefix+'_modelatmsamp.pdf')
 
@@ -1302,6 +1357,10 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
     if checkplots==True:
         splot.plotSpectrum(mdltsamp,mdlsamp,colors=['r','k'],legend=['Model x Atmosphere','Model'],file=checkprefix+'_modelatmsampbroad.pdf')
 
+# timing check
+    timing.append(time.time())
+
+
 # apply flux offset (e.g. poor background subtraction)
     if 'offset' in list(parameters.keys()):
         funit = mdlsamp.flux.unit
@@ -1313,6 +1372,9 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         mdlsamp.flux = [m+parameters['offset_fraction']*numpy.median(mdlsamp.flux.value) for m in mdlsamp.flux.value]*funit
         funit = mdltsamp.flux.unit
         mdltsamp.flux = [m+parameters['offset_fraction']*numpy.median(mdltsamp.flux.value) for m in mdltsamp.flux.value]*funit
+
+# timing check
+    timing.append(time.time())
 
 # correct for continuum
     mdlcont = copy.deepcopy(mdlsamp)
@@ -1337,17 +1399,29 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         mdltmp.scale(numpy.nanmedian(mdldiv.flux.value))
         splot.plotSpectrum(mdltcont,mdlcont,data,colors=['r','k','b'],legend=['Model x Atmosphere x Continuum','Model','Data'],file=checkprefix+'_modelatmsampbroadcont.pdf')
 
+# timing check
+    timing.append(time.time())
 
 # correct for velocity shift (wavelength calibration error)
     mdlfinal = copy.deepcopy(mdlcont)
     mdltfinal = copy.deepcopy(mdltcont)
-    if 'vshift' in list(parameters.keys()):
-        mdlfinal.rvShift(parameters['vshift'])
-        mdltfinal.rvShift(parameters['vshift'])
+#    if 'vshift' in list(parameters.keys()):
+#        mdlfinal.rvShift(parameters['vshift'])
+#        mdltfinal.rvShift(parameters['vshift'])
+
+# timing check
+    timing.append(time.time())
+
 
 # return model
     mdlfinal.name = '{} model'.format(parameters['modelset1'])
     mdltfinal.name = '{} model x Atmosphere'.format(parameters['modelset1'])
+
+# print timing
+    if timecheck==True:
+        print('\n\n')
+        for i in range(len(timing)-1): print('Time for step {} = {} s'.format(i,timing[i+1]-timing[i]))
+        print('\n\n')
     if return_nontelluric == True:
         return mdltfinal,mdlfinal
     else:
@@ -1425,6 +1499,11 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
     chi0,scale = splat.compareSpectra(data,mdl)
     parameters = [param0]
     chis = [chi0]
+    if verbose == True:
+        l = 'Initial guess: chi={:.0f}, dof={}'.format(chis[-1],dof)
+        for k in list(param_var.keys()): 
+            if param_var[k] != 0.: l+=' , {}={:.2f}'.format(k,parameters[-1][k])
+        print(l)
     for i in range(nsteps):
         for k in list(param_var.keys()):
             if param_var[k] != 0.:
@@ -1434,7 +1513,10 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
                 if k in list(limits.keys()):
                     if param[k] < numpy.min(limits[k]): param[k] = numpy.min(limits[k])+numpy.random.uniform()*(numpy.min(limits[k])-param[k])
                     if param[k] > numpy.max(limits[k]): param[k] = numpy.max(limits[k])-numpy.random.uniform()*(param[k]-numpy.max(limits[k]))
+#                print(numpy.nanmin(data.wave.value),numpy.nanmax(data.wave.value))    
+#                if atm != None: print(numpy.nanmin(atm.wave.value),numpy.nanmax(atm.wave.value))    
                 mdl = makeForwardModel(param,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
+#                print(numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))    
                 chi,scale = splat.compareSpectra(data,mdl)            
 #            if stats.f.cdf(chi/chi0, dof, dof) < numpy.random.uniform(0,1):
                 if stats.f.cdf(chi/numpy.nanmin(chis), dof, dof) < numpy.random.uniform(0,1):
@@ -1734,7 +1816,7 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
 # summarize results to a text file
     if writeReport==True:
         f = open(file+'_report.txt','w')
-        f.write('Last Parameter Values:')
+        f.write('Last Parameter Values (step {}):'.format(len(chi)))
         for k in list(par.keys()): f.write('\n\t{} = {}'.format(k,par[k][-1]))
         f.write('\n\tchi^2 = {}'.format(chi[-1]))
         f.write('\n\nBest Parameter Values:')
@@ -1943,7 +2025,7 @@ def loadModel(modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,*
 # have we already read in? if so just return saved spectrum object
     if kwargs['filename'] in list(MODELS_READIN.keys()):
 #        if verbose: print('RUNFAST 2: {}'.format(kwargs['filename']))
-        return MODELS_READIN[kwargs['filename']]
+        return copy.deepcopy(MODELS_READIN[kwargs['filename']])
 
 
 # check that folder/set is present either locally or online
@@ -2419,7 +2501,7 @@ def _loadModelParameters(*args,**kwargs):
 
 
 
-def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transmission',folder=splat.SPLAT_PATH+'/reference/SolAtlas/',*args):
+def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transmission',source='eso',folder='./',*args):
     '''
     Purpose: 
 
@@ -2469,6 +2551,7 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
     '''
 
 # prep inputs
+    bibcode = ''
     if len(args)>0: 
         wave = args[0]
         ndata = len(wave)
@@ -2495,31 +2578,55 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
         wave = numpy.array(wave)
     if len(wave) < 2:
         raise ValueError('\nWavelength parameter {} should be a list of wavelengths'.format(wave))
-    
+
+# Livingston & Wallace (1991) spectrum
+    if source.lower()=='livingston' or source.lower()=='solar atlas':  
+        bibcode = '1991aass.book.....L'
+        folder=splat.SPLAT_PATH+'/reference/Telluric/SolAtlas/'
+
 # prep files
-    tfiles = glob.glob(folder+'wn*')
-    tfiles.reverse()
-    tfiles = numpy.array(tfiles)
-    tfwv = numpy.array([1.e4/float(f[len(folder+'wn'):]) for f in tfiles])
+        tfiles = glob.glob(folder+'wn*')
+        tfiles.reverse()
+        tfiles = numpy.array(tfiles)
+        tfwv = numpy.array([1.e4/float(f[len(folder+'wn'):]) for f in tfiles])
 # select only those files in the range of wavelengths
 #    tfiles = tfiles[
-    w = numpy.where(numpy.logical_and(tfwv > numpy.min(wave),tfwv < numpy.max(wave)))
-    tfiles_use = tfiles[w]
-    if w[0][0] > 0: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][0]-1])
-    if w[0][0] < len(tfiles)-1: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][-1]+1])
+        w = numpy.where(numpy.logical_and(tfwv > numpy.min(wave),tfwv < numpy.max(wave)))
+        tfiles_use = tfiles[w]
+        if w[0][0] > 0: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][0]-1])
+        if w[0][0] < len(tfiles)-1: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][-1]+1])
 
 # generate raw wavelength and transmission list
-    twave = []
-    trans = []
-    for f in tfiles_use:
-        dp = pandas.read_csv(f,delimiter='\s+',names=['wavenum','flux','atm','total'])
-        twave.extend([1.e4/w for w in dp['wavenum']])
-        trans.extend([float(x) for x in dp['atm']])
-    trans = numpy.array([x for (y,x) in sorted(zip(twave,trans))])
+        twave = []
+        trans = []
+        for f in tfiles_use:
+            dp = pandas.read_csv(f,delimiter='\s+',names=['wavenum','flux','atm','total'])
+            twave.extend([1.e4/w for w in dp['wavenum']])
+            trans.extend([float(x) for x in dp['atm']])
+        trans = numpy.array([x for (y,x) in sorted(zip(twave,trans))])
 #    trans = numpy.array(trans)
-    twave = numpy.array(sorted(twave))
-#    plt.plot(twave,trans)
-#    plt.xlim([2.292,2.33])
+        twave = numpy.array(sorted(twave))
+
+# NEED CODE HERE TO REMOVE DUPLICATES
+
+# Moehler et al. (2014) Paranal spectrum R = 60,000
+    elif source.lower()=='eso' or source.lower()=='moehler' or source.lower()=='paranal':  
+        bibcode = '2014A&A...568A...9M'
+        folder=splat.SPLAT_PATH+'/reference/Telluric/ESO/'
+        tfiles=glob.glob(folder+'*.fits')
+
+# COULD PUT A CHOICE HERE OF TELLURIC SPECTRA        
+        hdu = fits.open(tfiles[0])
+        tbl = hdu[1].data
+        hdu.close()
+        twave = tbl['lam']
+        trans = tbl['plstrans']
+        trans = numpy.array([x for (y,x) in sorted(zip(twave,trans))])
+        twave = numpy.array(sorted(twave))
+
+# NEED TO PUT IN OPTION FOR USER SUPPLIED TELLURIC TRANSMISSION HERE        
+    else:
+        raise ValueError('\nNeed to provide source for telluric transmission of "ESO" or "Solar Atlas"')
 
 # resample onto desired wavelength scale via numerical integration
     if ndata == None:
@@ -2528,8 +2635,8 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
 # something bad is happening at this step
     else:
         wave = numpy.array(sorted(wave))
-        trans_sampled = integralResample(twave,trans,wave)
-    trans_sampled*=(u.m/u.m)
+        trans_sampled = reMap(twave,trans,wave)
+    trans_sampled=trans_sampled*(u.m/u.m)
 
 # return data
     if 'spec' in output.lower():
@@ -2540,9 +2647,9 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
         'name': 'Telluric transmission',
         'funit': u.m/u.m,
         'wunit': DEFAULT_WAVE_UNIT,
-        'bibcode': '1991aass.book.....L',
         'istransmission': True
-        } 
+        }
+        if bibcode != '': mkwargs['bibcode'] = bibcode
         atm = Spectrum(**mkwargs)
         atm.funit = u.m/u.m
         return atm

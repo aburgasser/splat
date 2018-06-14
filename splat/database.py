@@ -30,7 +30,7 @@ from astroquery.simbad import Simbad
 from astroquery.vizier import Vizier
 from astroquery.nist import Nist
 from astroquery.xmatch import XMatch
-from astroquery.gaia import Gaia
+#from astroquery.gaia import Gaia
 
 # splat requirements
 import splat
@@ -49,6 +49,7 @@ except NameError: pass
 Simbad.TIMEOUT = 60
 Vizier.TIMEOUT = 60
 Nist.TIMEOUT = 60
+XMatch.TIMEOUT = 180
 
 
 #####################################################
@@ -346,6 +347,7 @@ def queryVizier(coordinate,**kwargs):
     '''
     return getPhotometry(coordinate,**kwargs)
 
+# NOTE: THIS IS NOT PROPERLY PASSING ON THE KEYWORDS
 
 def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arcsec,sort='sep',nearest=False,verbose=False,**kwargs):
     '''
@@ -414,41 +416,44 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
         print('\nYou are currently not online; cannot do a Vizier query')
         return Table()
 
+    VIZIER_REF = {
+        'SDSS': {'altname': ['SDSS'], 'catalog': u'V/147/out'},
+        '2MASS': {'altname': ['2MASS'], 'catalog': u'II/246/out'},
+        'USNO': {'altname': ['USNO','USNOB','USNO-B','USNOB1.0','USNO-B1.0'], 'catalog': u'I/284/out'},
+        'LSPM': {'altname': ['LSPM','LSPM-N','LSPM-NORTH'], 'catalog': u'I/298/lspm_n'},
+        'WISE': {'altname': ['WISE'], 'catalog': u'II/311/wise'},
+        'UKIDSS': {'altname': ['UKIDSS'], 'catalog': u'II/314'},
+        'CFHT': {'altname': ['CFHT','CFHTLAS'], 'catalog': u'II/317/sample'},
+        'UCAC': {'altname': ['UCAC'], 'catalog': u'I/322A/out'},
+        'ALLWISE': {'altname': ['ALLWISE'], 'catalog': u'II/328/allwise'},
+        'VISTA': {'altname': ['VISTA'], 'catalog': u'II/329/urat1'},
+        'GAIA-DR1': {'altname': ['GAIA1','GAIA-DR1','GAIADR1'], 'catalog': u'II/337/gaia'},
+        'GAIA': {'altname': ['GAIA','GAIA-DR2','GAIADR2','GAIA2'], 'catalog': u'I/345/gaia2'},
+        'PANSTARRS': {'altname': ['PAN-STARRS','PS1'], 'catalog': u'I/349/ps1'},
+        'DENIS': {'altname': ['DENIS'], 'catalog': u'B/denis'},
+        'LEHPM': {'altname': ['LEHPM'], 'catalog': u'J/A+A/421/763'},
+        'LEPINE': {'altname': ['LEPINE-MDWARFS'], 'catalog': u'J/AJ/142/138/Mdwarfs'},
+        'DESHPANDE2013': {'altname': ['DESHPANDE-2013','APOGEE_UCD'], 'catalog': u'J/AJ/146/156/table1'},
+        'DITTMAN2014': {'altname': ['DITTMAN-2014','DITTMAN-PARALLAX'], 'catalog': u'J/ApJ/784/156/table2'},
+        'NEWTON2016': {'altname': ['NEWTON-2016'], 'catalog': u'J/ApJ/821/93/table1'},
+        'KIRKPATRICK2016': {'altname': ['KIRKPATRICK-2016','ALLWISE-MOTION'], 'catalog': u'J/ApJS/224/36/motionobj'},
+        'SIPS': {'altname': ['SIPS'], 'catalog': u'J/A+A/435/363'},
+        'MOVERS': {'altname': ['MOVERS'], 'catalog': u'J/AJ/151/41'},
+        'GLIESE': {'altname': ['GJ'], 'catalog': u'J/PASP/122/885/table1'},
+        'LATEMOVERS': {'altname': ['LATEMOVERS','LATE-MOVERS'], 'catalog': u'J/AJ/153/92'},
+    }
+
+# is catalog one of pre-defined ones?
+    for c in list(VIZIER_REF.keys()): 
+        if kwargs.get(c,False): catalog = c
+
+    cat = checkDict(catalog,VIZIER_REF)
+    if cat == False: cat = catalog
+    else: cat = VIZIER_REF[cat]['catalog']
+
 # parameters
     if not isUnit(radius): radius = radius*u.arcsec
 
-# sort out what catalog to query
-    if kwargs.get('2MASS',False) or kwargs.get('2mass',False) or catalog.upper() == '2MASS':
-        catalog = u'II/246'
-    if kwargs.get('SDSS',False) or kwargs.get('sdss',False) or catalog.upper() == 'SDSS':
-        catalog = u'V/147'
-    if kwargs.get('WISE',False) or kwargs.get('wise',False) or catalog.upper() == 'WISE':
-        catalog = u'II/311'
-    if kwargs.get('ALLWISE',False) or kwargs.get('allwise',False) or catalog.upper() == 'ALLWISE':
-        catalog = u'II/328'
-    if kwargs.get('VISTA',False) or kwargs.get('vista',False) or catalog.upper() == 'VISTA':
-        catalog = u'II/329'
-    if kwargs.get('CFHT',False) or kwargs.get('cfht',False) or kwargs.get('CFHTLAS',False) or kwargs.get('cfhtlas',False) or catalog.upper() == 'CFHT':
-        catalog = u'II/317'
-    if kwargs.get('DENIS',False) or kwargs.get('denis',False) or catalog.upper() == 'DENIS':
-        catalog = u'B/denis'
-    if kwargs.get('UKIDSS',False) or kwargs.get('ukidss',False) or catalog.upper() == 'UKIDSS':
-        catalog = u'II/314'
-    if kwargs.get('LEHPM',False) or kwargs.get('lehpm',False) or catalog.upper() == 'LEHPM':
-        catalog = u'J/A+A/421/763'
-    if kwargs.get('SIPS',False) or kwargs.get('sips',False) or catalog.upper() == 'SIPS':
-        catalog = u'J/A+A/435/363'
-    if kwargs.get('UCAC',False) or kwargs.get('ucac',False) or kwargs.get('UCAC4',False) or kwargs.get('ucac4',False) or catalog.upper() == 'UCAC' or catalog.upper() == 'UCAC4':
-        catalog = u'I/322A'
-    if kwargs.get('USNO',False) or kwargs.get('usno',False) or kwargs.get('USNOB',False) or kwargs.get('usnob',False) or kwargs.get('USNOB1.0',False) or kwargs.get('usnob1.0',False) or catalog.upper() == 'USNO' or catalog.upper() == 'USNOB':
-        catalog = u'I/284'
-    if kwargs.get('LSPM',False) or kwargs.get('lspm',False) or kwargs.get('LSPM-NORTH',False) or kwargs.get('lspm-north',False) or kwargs.get('LSPM-N',False) or kwargs.get('lspm-n',False) or catalog.upper() == 'LSPM' or catalog.upper() == 'LSPMN' or catalog.upper() == 'LSPM-N':
-        catalog = u'I/298'
-    if kwargs.get('GAIA-DR1',False) or catalog.upper() == 'GAIA-DR1':
-        catalog = u'I/337'
-    if kwargs.get('GAIA',False) or kwargs.get('gaia',False) or kwargs.get('GAIA-DR2',False) or catalog.upper() == 'GAIA' or catalog.upper() == 'GAIA-DR2':
-        catalog = u'I/345/gaia2'
-        
 # convert coordinate if necessary
     if not isinstance(coordinate,SkyCoord):
         try:
@@ -460,13 +465,12 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
         c = copy.deepcopy(coordinate)
 
 # search Vizier, sort by separation        
-    v = Vizier(columns=["**", "+_r"], catalog=catalog)
+    v = Vizier(columns=["**", "+_r"], catalog=cat)
     t_vizier = v.query_region(c,radius=radius)
     tv = Table()
     if len(t_vizier) > 0:
         for k in list(t_vizier.keys()):
-            if catalog in k:
-                tv = t_vizier[k]
+            if cat in k: tv = t_vizier[k]
     else:
         tv = Table()
 
@@ -481,9 +485,12 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
                 print('\nCannot find sorting keyword {}; try using {}\n'.format(sort,list(tv.keys())))
 
 # return only nearest
+    print(kwargs.get('nearest',False))
     if kwargs.get('nearest',False) == True:
-        while len(tv) > 1:
-            tv.remove_row(1)
+#        tv = tv[0]
+#        while len(tv) > 1:
+#            tv.remove_row(1)
+        print(tv)
 
 # reformat to convert binary ascii data to text
     for s in list(tv.keys()):
@@ -903,7 +910,7 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
             * 'ALLWISE' (or set ``ALLWISE``=True): the AllWISE Data Release (`Cutri et al. 2014 <http://adsabs.harvard.edu/abs/2014yCat.2328....0C>`_), Vizier id II/328
             * 'DENIS' (or set ``DENIS``=True): the DENIS DR3 (DENIS Consortium 2005), Vizier id B/denis/denis
             * 'GAIA-DR1': the GAIA DR1 Catalog (`Gaia Collaboration et al. 2016 <http://adsabs.harvard.edu/abs/2016yCat.1337....0G>`_), Vizier id I/337
-            * 'GAIA' or 'GAIA-DR2': the GAIA DR2 Catalog (REF TBD), Vizier id I/345/gaia2, accessed using astroquery.gaia
+            * 'GAIA' or 'GAIA-DR2' (or set ``GAIA``=True): the GAIA DR2 Catalog (REF TBD), Vizier id I/345/gaia2, accessed using astroquery.gaia
             
         :param nearest: Set to True to return only the single nearest source to each coordinate (default = True)
         :param clean: Set to True to clean the SIMBAD output and reassign to a predefined set of parameters (default = True)
@@ -951,14 +958,41 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
     if not isUnit(radius): radius = radius*u.arcsec
         
 # assign entries to save
-    xmatch_catalogs = {
-        'SIMBAD': {'vref': u'simbad', 'select_columns': ['main_id','ra','dec','main_type','sp_type','plx','pmra','pmdec','radvel','B', 'V', 'R', 'J', 'H', 'K', 'u', 'g', 'r', 'i', 'z']},\
-        '2MASS': {'vref': u'vizier:II/246/out', 'select_columns': ['2MASS','RAJ2000','DEJ2000','Jmag','e_Jmag','Hmag','e_Hmag','Kmag','e_Kmag','MeasureJD']},\
-        'DENIS': {'vref': u'vizier:B/denis/denis', 'select_columns': ['DENIS','RAJ2000','DEJ2000','Imag','e_Imag','Jmag','e_Jmag','Kmag','e_Kmag','Obs.JD']},\
-        'SDSS': {'vref': u'vizier:V/147/sdss12', 'select_columns': ['SDSS12','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
-        'SDSS9': {'vref': u'vizier:V/139/sdss9', 'select_columns': ['SDSS9','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
-        'ALLWISE': {'vref': u'vizier:II/328/allwise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-        'GAIA': {'vref': u'vizier:I/337/gaia', 'select_columns': ['source_id','ra','dec','ref_epoch','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
+    # VIZIER_REF = {
+    #     'SDSS': {'altname': ['SDSS'], catalog=u'V/147'},
+    #     '2MASS': {'altname': ['2MASS'], catalog=u'II/246'},
+    #     'USNO': {'altname': ['USNO','USNOB','USNO-B','USNOB1.0','USNO-B1.0'], catalog=u'I/284'},
+    #     'LSPM': {'altname': ['LSPM','LSPM-N','LSPM-NORTH'], catalog=u'I/298'},
+    #     'WISE': {'altname': ['WISE'], catalog=u'II/311'},
+    #     'CFHT': {'altname': ['CFHT','CFHTLAS'], catalog=u'II/317'},
+    #     'UKIDSS': {'altname': ['UKIDSS','UKIDSS-DR9'], catalog=u'II/319'},
+    #     'UCAC': {'altname': ['UCAC'], catalog=u'I/322A'},
+    #     'ALLWISE': {'altname': ['ALLWISE'], catalog=u'II/328'},
+    #     'VISTA': {'altname': ['VISTA'], catalog=u'II/329'},
+    #     'GAIA-DR1': {'altname': ['GAIA1','GAIA-DR1','GAIADR1'], catalog=u'II/337'},
+    #     'GAIA': {'altname': ['GAIA','GAIA-DR2','GAIADR2','GAIA2'], catalog=u'I/345/gaia2'},
+    #     'DENIS': {'altname': ['DENIS'], catalog=u'B/denis'},
+    #     'LEHPM': {'altname': ['LEHPM'], catalog=u'J/A+A/421/763'},
+    #     'SIPS': {'altname': ['SIPS'], catalog=u'J/A+A/435/363'},
+    #     'MOVERS': {'altname': ['MOVERS'], catalog=u'J/AJ/151/41'},
+    #     'LATEMOVERS': {'altname': ['LATEMOVERS','LATE-MOVERS'], catalog=u'J/AJ/153/92'},
+    # }
+
+    XMATCH_CATALOGS = {
+        'SIMBAD': {'altname': ['SIMBAD'],'vref': u'simbad', 'select_columns': ['main_id','ra','dec','main_type','sp_type','plx','pmra','pmdec','radvel','B', 'V', 'R', 'J', 'H', 'K', 'u', 'g', 'r', 'i', 'z']},\
+        '2MASS': {'altname': ['2MASS'],'vref': u'vizier:II/246/out', 'select_columns': ['2MASS','RAJ2000','DEJ2000','Jmag','e_Jmag','Hmag','e_Hmag','Kmag','e_Kmag','MeasureJD']},\
+        'DENIS': {'altname': ['DENIS'],'vref': u'vizier:B/denis/denis', 'select_columns': ['DENIS','RAJ2000','DEJ2000','Imag','e_Imag','Jmag','e_Jmag','Kmag','e_Kmag','Obs.JD']},\
+        'SDSS': {'altname': ['SDSS','SDSS12'],'vref': u'vizier:V/147/sdss12', 'select_columns': ['SDSS12','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
+        'SDSS9': {'altname': ['SDSS9'],'vref': u'vizier:V/139/sdss9', 'select_columns': ['SDSS9','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
+        'ALLWISE': {'altname': ['ALLWISE'],'vref': u'vizier:II/328/allwise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+        'GAIA-DR1': {'altname': ['GAIADR1'],'vref': u'vizier:I/337/gaia', 'select_columns': ['source_id','ra','dec','ref_epoch','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
+        'GAIA-DR2': {'altname': ['GAIADR2','GAIA'],'vref': u'vizier:I/345/gaia2', 'select_columns': ['source_id','ra','dec','ref_epoch','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
+# probably broken
+        'WISE': {'altname': ['WISE'],'vref': u'vizier:II/311/wise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+        'UKIDSS': {'altname': ['UKIDSS'],'vref': u'vizier:II/319/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+        'UCAC': {'altname': ['UCAC'],'vref': u'vizier:II/322A/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+        'MOVERS': {'altname': ['MOVERS'],'vref': u'vizier:J/AJ/151/41/movers', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+        'LATEMOVERS': {'altname': ['LATEMOVERS','LATE-MOVERS'],'vref': u'vizier:J/AJ/153/92/lmovers', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
 #        'WISE': {'vref': u'II/311', 'select_columns': 
 #        'VISTA': {'vref': u'II/329', 'select_columns': 
 #        'CFHT': {'vref': u'II/317', 'select_columns': 
@@ -971,10 +1005,10 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
         }
     if len(args) > 0:
         catalog = args[0]
-    if catalog.upper() in list(xmatch_catalogs.keys()):
+    if catalog.upper() in list(XMATCH_CATALOGS.keys()):
         cat = catalog.upper()
-        vref = xmatch_catalogs[cat]['vref']
-        if use_select_columns == True: select_columns = xmatch_catalogs[cat]['select_columns']
+        vref = XMATCH_CATALOGS[cat]['vref']
+        if use_select_columns == True: select_columns = XMATCH_CATALOGS[cat]['select_columns']
     else:
         if XMatch.is_table_available(catalog) == False:
             print('\n{} is not one of the catalogs in astroquery.xmatch; try using queryVizer()'.format(catalog))
@@ -985,9 +1019,16 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
 
     if use_select_columns == False: select_columns = []
 
+
 # use XMatch
     t = Table()
     t = t.from_pandas(db[basecols])
+
+# special case for GAIA
+#    if cat == 'GAIA-DR2':
+        
+
+# use XMatch
     t_match = XMatch.query(t,vref,radius,colRA1=raCol,colDec1=decCol)
     db_match = t_match.to_pandas()
 
