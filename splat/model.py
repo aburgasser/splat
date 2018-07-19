@@ -1119,6 +1119,8 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         - **vinst**: instrument velocity broadening profile if instrkern not provided
         - **vshift**: instrument velocity shift
         - **continuum**: polynomial coefficients for continuum correction; if not provided, a smooth continuum will be fit out
+        - **offset**: additive flux offset, useful if there may be residual background continuum
+        - **offset_fraction**: additive flux offset as a fraction of the median flux, useful if there may be residual background continuum
     '''
 # check inputs
 
@@ -1198,7 +1200,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
 
 # timing check
     timing.append(time.time())
-    print('Reading',numpy.nanmin(mdl1.wave.value),numpy.nanmax(mdl1.wave.value))
+#    print('Reading',numpy.nanmin(mdl1.wave.value),numpy.nanmax(mdl1.wave.value))
 
 # add in secondary if desired
     if binary==True:
@@ -1216,7 +1218,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
             else:
                 try: 
                     mdl2 = getModel(**mparam)
-                    print(mparam)
+#                    print(mparam)
                     print('Model 2 original',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
                 except:
                     raise ValueError('\nError in creating secondary model with parameters {}'.format(mparam))
@@ -1255,13 +1257,13 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
     elif 'vsini1' in list(parameters.keys()):
         mdl1.broaden(parameters['vsini1'],method='rotation')
 
-    print('Shifted',numpy.nanmin(mdl1.wave.value),numpy.nanmax(mdl1.wave.value))
+#    print('Shifted',numpy.nanmin(mdl1.wave.value),numpy.nanmax(mdl1.wave.value))
 
 # timing check
     timing.append(time.time())
 
     if binary==True:
-        print('Model 2 original',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
+#        print('Model 2 original',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
         if 'f2' in list(parameters.keys()):
             mdl2.scale(parameters['f2'])
         if 'rv2' in list(parameters.keys()):
@@ -1276,14 +1278,14 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
             elif 'vsini1' in list(parameters.keys()):
                 mdl2.broaden(parameters['vsini1'],method='rotation')
 
-        print('Model 2 shifted',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
+#        print('Model 2 shifted',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
 
 # add primary and secondary back together
         mdl = mdl1+mdl2
+#        print('Combined',numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))
     else:
         mdl = mdl1
 
-    print('Combined',numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))
 
 # timing check
     timing.append(time.time())
@@ -1297,6 +1299,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         if len(atmapp.flux) != len(mdl.flux):
             funit = atmapp.flux.unit
 #            atmapp.flux = splat.integralResample(atmapp.wave.value,atmapp.flux.value,mdl.wave.value)
+#            print(numpy.nanmin(atmapp.wave.value),numpy.nanmax(atmapp.wave.value),numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value),)
             atmapp.flux = splat.reMap(atmapp.wave.value,atmapp.flux.value,mdl.wave.value)
             atmapp.flux = atmapp.flux*funit
             atmapp.wave = mdl.wave
@@ -1323,8 +1326,8 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
 # resample original and telluric corrected models onto data wavelength range
     funit = mdl.flux.unit
     mdlsamp = copy.deepcopy(mdl)
-    print(numpy.nanmin(data.wave.value),numpy.nanmax(data.wave.value))
-    print(numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))
+#    print(numpy.nanmin(data.wave.value),numpy.nanmax(data.wave.value))
+#    print(numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))
     mdlsamp.flux = splat.reMap(mdl.wave.value,mdl.flux.value,data.wave.value)
     mdlsamp.flux = mdlsamp.flux*funit
     mdlsamp.wave = data.wave
@@ -1429,7 +1432,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         
 
 # MCMC loop
-def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,nsteps=100,nsniffs=1,dof=0.,binary=False,duplicate=False,secondary_model=None,atm=None,report=True,report_index=10,report_each=False,file='tmp',output='all',verbose=True,**kwargs):
+def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,nsteps=100,method='standard',return_threshold=0.9,dof=0.,binary=False,duplicate=False,secondary_model=None,atm=None,report=True,report_index=10,report_each=False,file='tmp',output='all',verbose=True,**kwargs):
     '''
     :Purpose:
 
@@ -1493,12 +1496,16 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
     >>> spmdl.mcmcForwardModelReport(sp,mdl,pars,chis,file='fit',chiweights=True,plotParameters=['rv','vsini'])
 
     '''    
+# check method
+    if method not in ['standard','best','return']: method = 'standard'
+
 # generate first fit
     if dof == 0.: dof = int(len(data.wave)-len(list(param0.keys())))
     mdl = makeForwardModel(param0,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
     chi0,scale = splat.compareSpectra(data,mdl)
     parameters = [param0]
     chis = [chi0]
+    acceptance = [1]
     if verbose == True:
         l = 'Initial guess: chi={:.0f}, dof={}'.format(chis[-1],dof)
         for k in list(param_var.keys()): 
@@ -1517,11 +1524,25 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
 #                if atm != None: print(numpy.nanmin(atm.wave.value),numpy.nanmax(atm.wave.value))    
                 mdl = makeForwardModel(param,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
 #                print(numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))    
-                chi,scale = splat.compareSpectra(data,mdl)            
-#            if stats.f.cdf(chi/chi0, dof, dof) < numpy.random.uniform(0,1):
-                if stats.f.cdf(chi/numpy.nanmin(chis), dof, dof) < numpy.random.uniform(0,1):
+                chi,scale = splat.compareSpectra(data,mdl) 
+
+# different methods
+                test = 2.*(stats.f.cdf(chi/chi0, dof, dof)-0.5)
+                if method == 'best': test = 2.*(stats.f.cdf(chi/numpy.nanmin(chis), dof, dof)-0.5)
+                if verbose==True: print(chi,chi0,test)
+                if test < numpy.random.uniform(0,1):
                     param0 = copy.deepcopy(param)
                     chi0 = chi
+                    acceptance.append(1)
+                else: acceptance.append(0)  
+                if method == 'return':
+                    test = 2.*(stats.f.cdf(chi0/numpy.nanmin(chis), dof, dof)-0.5)
+                    if verbose==True: print(chi0,numpy.nanmin(chis),test)
+                    if test > return_threshold:
+                        param0 = copy.deepcopy(parameters[numpy.argmin(chis)])
+                        chi0 = numpy.min(chis)
+                        if verbose == True: print('Jump made back to chi = {}'.format(chi0))
+
                 parameters.append(param0)
                 chis.append(chi0)
                 if verbose == True:
@@ -1544,6 +1565,7 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
             for k in list(param0.keys()): 
                 if isinstance(best_parameters[k],float): l+=' , {}={:.2f}'.format(k,best_parameters[k])
                 else: l+=' , {}={}'.format(k,best_parameters[k])
+            l = '\nCumulative acceptance = {:.2f}%, Recent acceptance = {:.2f}%'.format(100.*numpy.sum(acceptance)/len(acceptance),100.*numpy.sum(acceptance[-1*report_index:])/len(acceptance[-1*report_index:]))    
             print(l)
 
             # mdl,mdlnt = makeForwardModel(parameters[-1],data,binary=binary,atm=atm,model=model,return_nontelluric=True)
@@ -1696,6 +1718,10 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
     par = copy.deepcopy(parameters)
     chi = copy.deepcopy(chis)
     nval = len(chis)
+    ns = copy.deepcopy(data)
+    ns.flux = ns.noise
+    ns2 = copy.deepcopy(data)
+    ns2.flux = -1.*ns.noise
 
 # burn first X% of chains
     if burn != 0. and burn < 1.:
@@ -1731,6 +1757,18 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
         print('\nBest Parameter Values:')
         for k in list(par.keys()): print('\t{} = {}'.format(k,best_parameters[k]))
         print('\tMinimum chi^2 = {}'.format(numpy.nanmin(chi)))
+
+# plot best model
+    if plotBest==True:
+        plt.clf()
+        mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atm=atm,model=model,model2=model2,duplicate=duplicate,return_nontelluric=True)
+        chi0,scale = splat.compareSpectra(data,mdl)
+        mdl.scale(scale)
+        mdlnt.scale(scale)
+        if atm == None:
+            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=['k','r','b','grey','grey'],linestyles=['-','-','-','--','--'],legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
+        else:
+            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=['k','r','r','b','grey','grey'],linestyles=['-','-','--','-','--','--'],legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
         
 # mean parameters
     mean_parameters = {}
@@ -1745,65 +1783,6 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
         print('\nMean Parameter Values:')
         for k in list(mean_parameters.keys()): print('\t{} = {}+/-{}'.format(k,mean_parameters[k],mean_parameters_unc[k]))
 
-# prep plotting
-    if plotParameters == None:
-        plotParameters = list(mean_parameters.keys())
-    toplot = {}
-    for k in plotParameters: 
-        if k in list(par.keys()): 
-            if numpy.nanstd(par[k]) > 0.: 
-                if k in list(mean_parameters.keys()):
-                    if numpy.isfinite(mean_parameters_unc[k]): 
-                        toplot[k] = par[k]
-        else:
-            print('\nWarning: parameter {} not in MCMC parameter list; ignoring'.format(k))
-
-#    print(plotParameters,toplot.keys(),best_parameters.keys(),mean_parameters.keys())
-
-# plot chains
-    if plotChains==True:
-        plt.clf()
-        plt.figure(figsize=(6,3*(len(list(toplot.keys()))+1)))
-        for i,k in enumerate(list(toplot.keys())):
-            plt.subplot(len(list(toplot.keys()))+1,1,i+1)
-            plt.plot(range(len(toplot[k])),toplot[k],'k-')
-            plt.plot([0,len(toplot[k])],[best_parameters[k],best_parameters[k]],'b-')
-            plt.plot([0,len(toplot[k])],[mean_parameters[k],mean_parameters[k]],'g--')
-            plt.ylabel(str(k))  
-            plt.xlim([0,len(toplot[k])])
-        plt.subplot(len(list(toplot.keys()))+1,1,i+2)
-        plt.plot(range(len(toplot[k])),chi)
-        plt.ylabel(r'$\chi^2$')    
-        plt.xlim([0,len(toplot[k])])
-        plt.savefig(file+'_chains.pdf')
-
-# plot corner
-    if plotCorner==True:
-        try:
-            import corner
-        except:
-            print('\nYou must install corner to make corner plots: https://github.com/dfm/corner.py')
-        else:
-            plt.clf()
-            pd = pandas.DataFrame(toplot)
-            for k in list(pd.columns):
-                if numpy.nanmin(pd[k])==numpy.nanmax(pd[k]): del pd[k]
-            if len(list(pd.columns)) > 0:
-                fig = corner.corner(pd, quantiles=[0.16, 0.5, 0.84], \
-                    labels=list(pd.columns), show_titles=True, weights=weights, \
-                    title_kwargs={"fontsize": 12})
-                plt.savefig(file+'_corner.pdf')
-
-
-# plot best model
-    if plotBest==True:
-        plt.clf()
-        mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atm=atm,model=model,model2=model2,duplicate=duplicate,return_nontelluric=True)
-        chi0,scale = splat.compareSpectra(data,mdl)
-        mdl.scale(scale)
-        mdlnt.scale(scale)
-        splot.plotSpectrum(data,mdl,mdlnt,data-mdl,colors=['k','r','g','b'],legend=['Data','Model x Telluric','Model','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_bestModel.pdf')
-
 # plot mean model
     if plotMean==True:
         plt.clf()
@@ -1811,7 +1790,12 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
         chi0,scale = splat.compareSpectra(data,mdl)
         mdl.scale(scale)
         mdlnt.scale(scale)
-        splot.plotSpectrum(data,mdl,mdlnt,data-mdl,colors=['k','r','g','b'],legend=['Data','Model x Telluric','Model','Difference\nChi={:.0f}'.format(chi0)],figsize=[15,5],file=file+'_meanModel.pdf')
+        if atm == None:
+            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=['k','r','b','grey','grey'],linestyles=['-','-','-','--','--'],legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
+        else:
+            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=['k','r','r','b','grey','grey'],linestyles=['-','-','--','-','--','--'],legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
+
+#    print(plotParameters,toplot.keys(),best_parameters.keys(),mean_parameters.keys())
 
 # summarize results to a text file
     if writeReport==True:
@@ -1825,6 +1809,73 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
         f.write('\n\nMean Parameter Values:')
         for k in list(mean_parameters.keys()): f.write('\n\t{} = {}+/-{}'.format(k,mean_parameters[k],mean_parameters_unc[k]))
         f.close()        
+
+# prep plotting
+    if plotParameters == None:
+        plotParameters = list(mean_parameters.keys())
+    toplot = {}
+    for k in plotParameters: 
+        if k in list(par.keys()): 
+            if numpy.nanstd(par[k]) > 0.: 
+                if k in list(mean_parameters.keys()):
+                    if numpy.isfinite(mean_parameters_unc[k]): 
+                        toplot[k] = par[k]
+        else:
+            print('\nWarning: parameter {} not in MCMC parameter list; ignoring'.format(k))
+
+# plot chains
+    if plotChains==True:
+        plt.clf()
+        plt.figure(figsize=(15,3*(len(list(toplot.keys()))+1)))
+        for i,k in enumerate(list(toplot.keys())):
+            # f,(ax1,ax2) = plt.subplots(1,2,sharey=True)
+            # ax1.plot(range(len(toplot[k])),toplot[k],'k-')
+            # ax1.plot([0,len(toplot[k])],[best_parameters[k],best_parameters[k]],'b-')
+            # ax1.plot([0,len(toplot[k])],[mean_parameters[k],mean_parameters[k]],'g--')
+            # ax1.set_ylabel(str(k))  
+            # ax1.set_xlim([0,len(toplot[k])])
+            # ax1.legend(['Best Value = {:.3f}'.format(best_parameters[k]),'Mean Value = {}'.format(mean_parameters[k])])
+            # ax2.hist(toplot[k], bins=numpy.min([20,int(numpy.sqrt(len(toplot[k])))]), orientation="horizontal")
+            # f.subplots_adjust(hspace=0)
+            # plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+            cplt = plt.subplot(len(list(toplot.keys()))+1,2,2*i+1)
+            plt.plot([0,len(toplot[k])],[best_parameters[k],best_parameters[k]],'b-')
+            plt.plot([0,len(toplot[k])],[mean_parameters[k],mean_parameters[k]],'g--')
+            plt.plot(range(len(toplot[k])),toplot[k],'k-')
+            plt.ylabel(str(k))  
+            plt.xlim([0,len(toplot[k])])
+            plt.legend(['Best Value = {:.3f}'.format(best_parameters[k]),'Mean Value = {:.3f}'.format(mean_parameters[k])+r'$\pm$'+'{:.3f}'.format(mean_parameters_unc[k])])
+            hplt = plt.subplot(len(list(toplot.keys()))+1,2,2*i+2)
+            n,bins,patches = hplt.hist(toplot[k], bins=20, orientation="horizontal")
+            plt.plot([0,numpy.max(n)],[mean_parameters[k],mean_parameters[k]],'k-')
+            plt.plot([0,numpy.max(n)],[mean_parameters[k]-mean_parameters_unc[k],mean_parameters[k]-mean_parameters_unc[k]],'k--')
+            plt.plot([0,numpy.max(n)],[mean_parameters[k]+mean_parameters_unc[k],mean_parameters[k]+mean_parameters_unc[k]],'k--')
+        plt.subplot(len(list(toplot.keys()))+1,1,i+2)
+        plt.plot([0,len(toplot[k])],[numpy.nanmin(chi),numpy.nanmin(chi)],'b--')
+        plt.plot(range(len(toplot[k])),chi,'k-')
+        plt.ylabel(r'$\chi^2$')    
+        plt.xlim([0,len(toplot[k])])
+        plt.legend(['Minimum chi2 = {:.1f}'.format(numpy.nanmin(chi))])
+        plt.savefig(file+'_chains.pdf')
+
+
+# plot corner
+    if plotCorner==True:
+        try:
+            import corner
+        except:
+            print('\n\n*** You must install corner to make corner plots: https://github.com/dfm/corner.py ***\n\n')
+        else:
+            plt.clf()
+            pd = pandas.DataFrame(toplot)
+#            for k in list(pd.columns):
+#                print(k,numpy.nanmin(numpy.array(pd[k])),numpy.nanmax(numpy.array(pd[k])))
+#                if numpy.nanmin(numpy.array(pd[k]))==numpy.nanmax(numpy.array(pd[k])): del pd[k]
+            if len(list(pd.columns)) > 0:
+                fig = corner.corner(pd, quantiles=[0.16, 0.5, 0.84], \
+                    labels=list(pd.columns), show_titles=True, weights=weights, \
+                    title_kwargs={"fontsize": 12})
+                plt.savefig(file+'_corner.pdf')
 
     return        
 
@@ -2471,7 +2522,7 @@ def _loadModelParameters(*args,**kwargs):
             if ms in list(parameters.keys()):
                 w = numpy.array([SPECTRAL_MODEL_PARAMETERS[ms]['prefix'] in l for l in sp])
                 val = sp[w][0][len(SPECTRAL_MODEL_PARAMETERS[ms]['prefix']):]
-                print(val)
+#                print(val)
                 if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous': val = float(val)
                 parameters[ms].append(val)
                 p[ms] = val
@@ -2976,7 +3027,7 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
         p['stat'] = chi
         p['scale'] = scl
         p['radius'] = ((scl*(10.*u.pc)**2)**0.5).to(u.Rsun)
-        print(p['radius'],scl)
+#        print(p['radius'],scl)
 
 # use radius as a constraint
         if constrain_radius == True:

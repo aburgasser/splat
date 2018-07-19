@@ -14,6 +14,7 @@ import os
 # imports: external
 from astropy.coordinates import Angle,SkyCoord      # coordinate conversion
 import astropy.units as u
+import matplotlib; matplotlib.use('agg')
 import matplotlib.cm as cm
 import matplotlib.colors as colmap
 import matplotlib.patches as patches

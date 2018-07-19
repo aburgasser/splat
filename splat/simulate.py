@@ -24,6 +24,7 @@ import astropy.constants as constants
 from astropy.cosmology import Planck15, z_at_value
 from astropy.io import ascii
 import pandas
+import matplotlib; matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy
 from scipy.interpolate import griddata, interp1d
@@ -660,7 +661,7 @@ def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],gamma=1.8,
         :param: distribution = 'uniform': set to one of the following to define the type of mass distribution to sample:
 
             * `uniform`: uniform distribution
-            * `powerlaw` or `power-law`: single power-law distribution, P(q) ~ q\^-gamma. You must specify the parameter `gamma` or set ``distribution`` to 'allen', 'burgasser', or 'reggiani'
+            * `powerlaw` or `power-law`: single power-law distribution, P(q) ~ q\^gamma. You must specify the parameter `gamma` or set ``distribution`` to 'allen', 'burgasser', or 'reggiani'
             * `allen`: power-law distribution with gamma = 1.8 based on `Allen (2007, ApJ 668, 492) <http://adsabs.harvard.edu/abs/2007ApJ...668..492A>`_
             * `burgasser`: power-law distribution with gamma = 4.2 based on `Burgasser et al (2006, ApJS 166, 585) <http://adsabs.harvard.edu/abs/2006ApJS..166..585B>`_
 
@@ -709,10 +710,10 @@ def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],gamma=1.8,
         if distribution.lower() == 'burgasser' or kwargs.get('burgasser',False) == True: parameters['gamma'] = 4.2
         if distribution.lower() == 'reggiani' or kwargs.get('reggiani',False) == True: parameters['gamma'] = 0.25
         x = numpy.linspace(numpy.min(q_range),numpy.max(q_range),num=10000)
-        if parameters['gamma'] == 1.:
+        if parameters['gamma'] == -1.:
             y = numpy.log(x)
         else:
-            y = x**(1.+parameters['gamma'])
+            y = x**(parameters['gamma']-1.)
 #        print(x,y)
         y = y-numpy.min(y)
         y = y/numpy.max(y)
@@ -732,7 +733,7 @@ def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],gamma=1.8,
 
 
 
-def simulateDistances(num,coordinate,model='juric',max_distance=[],magnitude=[],magnitude_limit=25.,magnitude_uncertainty=0.,center='sun',nsamp=1000,r0=8000.*u.pc,unit=u.pc,verbose=False,**kwargs):
+def simulateDistances(num,coordinate=properCoordinates([0.,0.]),model='uniform',max_distance=[],magnitude=[],magnitude_limit=25.,magnitude_uncertainty=0.,center='sun',nsamp=1000,r0=8000.*u.pc,unit=u.pc,verbose=False,**kwargs):
     '''
     :Purpose: 
 

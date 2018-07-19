@@ -1862,7 +1862,7 @@ class Spectrum(object):
 
         :Required Input:
 
-            :param mask: An array of booleans, ints or floats, where True or 1 means remove the element 
+            :param mask: An array of booleans, ints, or floats, where True or 1 means remove the element 
         
         :Optional Input:
 
@@ -1891,7 +1891,10 @@ class Spectrum(object):
         if not isinstance(msk[0],bool): print('\nWarning: cannot interpret mask {}; not removing any pixels'.format(mask))
 
 # invert mask
-        msk = [not x for x in msk]
+        msk = numpy.array([not x for x in msk])
+#        self.wave = (numpy.array(self.wave.value)[msk])*self.wave.unit
+#        self.flux = (numpy.array(self.flux.value)[msk])*self.flux.unit
+#        self.noise = (numpy.array(self.noise.value)[msk])*self.noise.unit
         self.wave = self.wave[msk]
         self.flux = self.flux[msk]
         self.noise = self.noise[msk]
@@ -2963,6 +2966,9 @@ def getStandard(spt, **kwargs):
     
     return stds[spt]
 
+
+def initializeStandards(**kwargs):
+    return(initiateStandards())
 
 
 def initiateStandards(**kwargs):

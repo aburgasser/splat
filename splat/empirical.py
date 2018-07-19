@@ -383,7 +383,7 @@ def typeToMag_old(spt, filt, **kwargs):
         return numpy.nan, numpy.nan
 
 
-def typeToMag(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,**kwargs):
+def typeToMag_old2(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,**kwargs):
     """
     :Purpose: 
 
@@ -488,6 +488,145 @@ def typeToMag(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,
         if verbose: sys.stderr.write('\nSpectral Type {} is out of range for {}\n'.format(typeToNum(sptn),refstring))
         return numpy.nan, numpy.nan
 
+
+def typeToMag(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,mask=True,mask_value=numpy.nan,**kwargs):
+    """
+    :Purpose: 
+
+    Takes a spectral type and a filter, and returns the expected absolute magnitude based on empirical relations
+
+    :Required Inputs: 
+
+        :param spt: string or integer of the spectral type
+        :param filter: filter for which to retrieve absolute magnitude, which must be defined for the given reference set.
+        You can check what filters are available by printing splat.SPT_ABSMAG_SETS[reference]['filters'].keys(), where reference is, e.g., 'filippazzo2015'
+
+    :Optional Inputs: 
+
+        :param reference: Abs Mag/SpT relation used to compute the absolute magnitude (also 'ref' and 'set'). These are defined in splat.SPT_ABSMAG_SETS and are currently as follows:
+
+            - *dahn2002*: Abs Mag/SpT relation from `Dahn et al. (2002) <http://adsabs.harvard.edu/abs/2002AJ....124.1170D>`_
+              Allowed spectral type range is M7 to L8, and allowed filters are 2MASS J
+            - *cruz2003*: Abs Mag/SpT relation from `Cruz et al. (2003) <http://adsabs.harvard.edu/abs/2003AJ....126.2421C>`_
+              Allowed spectral type range is M6 to L8, and allowed filters are 2MASS J
+            - *tinney2003*: Abs Mag/SpT relation from `Tinney et al. (2003) <http://adsabs.harvard.edu/abs/2003AJ....126..975T>`_.
+              Allowed spectral type range is L0 to T7.5, and allowed filters are Cousins I, UKIRT Z, J, K and 2MASS J, Ks
+            - *burgasser2007*: Abs Mag/SpT relation from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_.
+              Allowed spectral type range is L0 to T8, and allowed filters are MKO K.
+            - *looper2008*: Abs Mag/SpT relation from `Looper et al. (2008) <http://adsabs.harvard.edu/abs/2008ApJ...685.1183L>`_.
+              Allowed spectral type range is L0 to T8, and allowed filters are 2MASS J, H, Ks.
+            - *dupuy2012*: Abs Mag/SpT relation from `Dupuy & Liu (2012) <http://adsabs.harvard.edu/abs/2012ApJS..201...19D>`_.
+              Allowed spectral type range is M6 to T9, and allowed filters are MKO Y, J, H,K, LP, 2MASS J, H, Ks, and WISE W1, W2.
+            - *faherty2012*: Abs Mag/SpT relation from `Faherty et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...752...56F>`_.
+              Allowed spectral type range is L0 to T8, and allowed filters are MKO J, H, K.
+            - *tinney2014*: Abs Mag/SpT relation from `Tinney et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...796...39T>`_.
+              Allowed spectral type range is T6.5 to Y2, and allowed filters are MKO J, WISE W2
+            - *filippazzo2015* (default): Abs Mag/SpT relation from Filippazzo et al. (2015). 
+              Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J and WISE W2.
+            - *faherty2016*: Abs Mag/SpT relation for field dwarfs from `Faherty et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJS..225...10F>`_.
+              Allowed spectral type range is M6 to T9, and allowed filters are 2MASS J, H, Ks and WISE W1, W2, W3
+            - *faherty2016-group*: Abs Mag/SpT relation for "group" dwarfs from `Faherty et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJS..225...10F>`_.
+              Allowed spectral type range is M7 to L7, and allowed filters are 2MASS J, H, Ks and WISE W1, W2, W3
+            - *faherty2016-young*: Abs Mag/SpT relation for "young" dwarfs from `Faherty et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJS..225...10F>`_.
+              Allowed spectral type range is M7 to L7, and allowed filters are 2MASS J, H, Ks and WISE W1, W2, W3
+
+        :param unc: uncertainty of ``spt`` (default = 0)
+        :param nsamples: number of Monte Carlo samples for error computation (default = 100)
+
+    :Output: 
+    
+        2 element tuple providing the absolute magnitude and its uncertainty
+
+    :Example:
+        >>> import splat
+        >>> print splat.typeToMag('L3', '2MASS J')
+            (12.730064813273996, 0.4)
+        >>> print splat.typeToMag(21, 'MKO K', ref = 'burgasser')
+            (10.705292820099999, 0.26)
+        >>> print splat.typeToMag(24, '2MASS J', ref = 'faherty')
+            Invalid filter given for Abs Mag/SpT relation from Faherty et al. (2012)
+            (nan, nan)
+        >>> print splat.typeToMag('M0', '2MASS H', ref = 'dupuy')
+            Spectral Type is out of range for Abs Mag/SpT relation from Dupuy & Liu (2012) Abs Mag/SpT relation
+            (nan, nan)
+    """
+
+#Keywords alternatives
+    ref = kwargs.get('reference', ref)
+    ref = kwargs.get('set', ref)
+    unc = kwargs.get('uncertainty', unc)
+    unc = kwargs.get('error', unc)
+
+# Check and convert spectral type variable
+#    spt_type = type(spt)
+    sptn = copy.deepcopy(spt)
+    if isinstance(sptn,str): sptn = [sptn]
+    try:
+        sptn = list(sptn)
+    except:
+        sptn = [sptn]
+    if isinstance(sptn[0],str):
+        sptn = [typeToNum(s) for s in sptn]
+
+    try:
+        sptn = numpy.array(sptn)
+    except:
+        raise ValueError('\nInput spectral type {} must be a string, float, int, list or numpy array'.format(spt))
+
+# Check uncertainties
+    uncn = copy.deepcopy(unc)
+    if not isinstance(uncn,list) and not isinstance(uncn,numpy.ndarray): uncn = [uncn]
+    if len(uncn) == 1:
+        uncn = numpy.zeros(len(sptn))+float(uncn[0])
+
+    try:
+        uncn = numpy.array(uncn)
+    except:
+        raise ValueError('\nInput spectral type uncertainty {} must be a float, int, list or numpy array'.format(unc))
+    uncn = numpy.abs(uncn)
+
+# check that you can use the proscribed relation and filter
+    filtcheck = checkFilterName(filt,verbose=verbose)
+    if filtcheck == False: 
+        if verbose: print('\nDid not recognize filter {}'.format(filt))
+        return numpy.nan,numpy.nan
+    else: filt=filtcheck
+
+    refcheck = checkAbsMag(ref,filt=filt,verbose=verbose)
+    if refcheck == False: 
+        if verbose: print('\nDid not recognize relation {} or filter {} not in this relation'.format(ref,filt))
+        return numpy.nan,numpy.nan
+    else: ref=refcheck
+
+# read in relevant information
+    sptoffset = SPT_ABSMAG_SETS[ref]['sptoffset']
+    coeff = SPT_ABSMAG_SETS[ref]['filters'][filt]['coeff']
+    rng = SPT_ABSMAG_SETS[ref]['filters'][filt]['range']
+    fitunc = SPT_ABSMAG_SETS[ref]['filters'][filt]['fitunc']
+    refstring = 'Absolute {}/SpT relation from {}'.format(filt,shortRef(SPT_ABSMAG_SETS[ref]['bibcode']))
+    if verbose: print('\nUsing {}'.format(refstring))
+
+# compute absolute magnitudes
+    abs_mag = numpy.polyval(coeff, sptn-sptoffset)
+    abs_mag_error = numpy.zeros(len(sptn))+fitunc
+
+# mask out absolute magnitudes if they are outside spectral type range
+    if mask == True:
+        abs_mag[numpy.logical_or(sptn<rng[0],sptn>rng[1])] = mask_value
+        abs_mag_error[numpy.logical_or(sptn<rng[0],sptn>rng[1])] = mask_value
+        if verbose: print('{} values are outside relation range'.format(len(abs_mag[numpy.logical_or(sptn<rng[0],sptn>rng[1])])))
+
+# perform monte carlo error estimate (slow)
+    if numpy.nanmin(uncn) > 0.:
+        for i,u in enumerate(uncn):
+            if absmag[i] != mask_value and absmag[i] != numpy.nan:
+                vals = numpy.polyval(coeff, numpy.random.normal(sptn[i] - sptoffset, uncn, nsamples))
+#            abs_mag = numpy.nanmean(vals)
+                abs_mag_error[i] = (numpy.nanstd(vals)**2+fitunc**2)**0.5
+
+# return values in same dimension as input
+    if len(sptn) == 1: return float(abs_mag[0]),float(abs_mag_error[0])
+    else: return abs_mag, abs_mag_error
 
 
 def typeToTeff(inp, uncertainty=0.001, ref='stephens',nsamples=100, reverse=False, **kwargs):

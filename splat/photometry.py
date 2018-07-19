@@ -129,6 +129,7 @@ def filterMag(sp,filt,*args,**kwargs):
     ab = kwargs.get('ab',not vega)
     rsr = kwargs.get('rsr',False)
     nsamples = kwargs.get('nsamples',100)
+    verbose = kwargs.get('verbose',False)
 
 
 # check that requested filter is in list
@@ -180,11 +181,11 @@ def filterMag(sp,filt,*args,**kwargs):
 
 # check that spectrum and filter cover the same wavelength ranges
     if numpy.nanmax(fwave) < numpy.nanmin(sp.wave) or numpy.nanmin(fwave) > numpy.nanmax(sp.wave):
-        if kwargs.get('verbose',True): print('\nWarning: no overlap between spectrum for {} and filter {}'.format(sp.name,filt))
+        if verbose==True: print('\nWarning: no overlap between spectrum for {} and filter {}'.format(sp.name,filt))
         return numpy.nan, numpy.nan
 
     if numpy.nanmin(fwave) < numpy.nanmin(sp.wave) or numpy.nanmax(fwave) > numpy.nanmax(sp.wave):
-        if kwargs.get('verbose',True): print('\nWarning: spectrum for {} does not span full filter profile for {}'.format(sp.name,filt))
+        if verbose==True: print('\nWarning: spectrum for {} does not span full filter profile for {}'.format(sp.name,filt))
 
 # interpolate spectrum onto filter wavelength function
     wgood = numpy.where(~numpy.isnan(sp.noise))
@@ -193,7 +194,7 @@ def filterMag(sp,filt,*args,**kwargs):
         n = interp1d(sp.wave[wgood].value,sp.noise[wgood].value,bounds_error=False,fill_value=0)
 # catch for models
     else:
-        if kwargs.get('verbose',True): print('\nWarning: data values in range of filter {} have no uncertainties'.format(filt))
+        if verbose==True: print('\nWarning: data values in range of filter {} have no uncertainties'.format(filt))
         d = interp1d(sp.wave.value,sp.flux.value,bounds_error=False,fill_value=0.)
         n = interp1d(sp.wave.value,sp.flux.value*1.e-9,bounds_error=False,fill_value=0.)
 
