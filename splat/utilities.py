@@ -20,6 +20,7 @@ import astropy
 from astropy.coordinates import Angle,SkyCoord,EarthLocation      # coordinate conversion
 from astropy import units as u            # standard units
 from astropy.time import Time            # standard units
+import matplotlib; matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.patheffects
 import numpy
@@ -211,9 +212,9 @@ def checkDict(ref,refdict,altref='altname',verbose=False):
     Example:
 
     >>> import splat
-    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.SPT_LBOL_SETS))
+    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.SPT_LBOL_RELATIONS))
         filippazzo2015
-    >>> print(splat.checkEmpiricalRelation('burgasser',splat.SPT_BC_SETS))
+    >>> print(splat.checkEmpiricalRelation('burgasser',splat.SPT_BC_RELATIONS))
         False
     '''
     output = False
@@ -249,9 +250,9 @@ def checkEmpiricalRelation(ref,refdict,verbose=False):
     Example:
 
     >>> import splat
-    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.SPT_LBOL_SETS))
+    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.SPT_LBOL_RELATIONS))
         filippazzo2015
-    >>> print(splat.checkEmpiricalRelation('burgasser',splat.SPT_BC_SETS))
+    >>> print(splat.checkEmpiricalRelation('burgasser',splat.SPT_BC_RELATIONS))
         False
     '''
     output = False
@@ -420,7 +421,7 @@ def checkAbsMag(ref,filt='',verbose=False):
 
     Required Inputs:
         :param ref: A string containing the reference for absolute magnitude relation, 
-        among the keys and alternate names in splat.SPT_ABSMAG_SETS
+        among the keys and alternate names in splat.SPT_ABSMAG_RELATIONS
 
     Optional Inputs:
         :param filt: A string containing the filter name, to optionally check if this filter is among those defined in the reference set
@@ -441,11 +442,11 @@ def checkAbsMag(ref,filt='',verbose=False):
 # check reference    
     if not isinstance(ref,str):
         return output
-    for k in list(SPT_ABSMAG_SETS.keys()):
-        if ref.lower()==k.lower() or ref.lower() in SPT_ABSMAG_SETS[k]['altname']:
+    for k in list(SPT_ABSMAG_RELATIONS.keys()):
+        if ref.lower()==k.lower() or ref.lower() in SPT_ABSMAG_RELATIONS[k]['altname']:
             output = k
     if output == False:
-        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(SPT_ABSMAG_SETS.keys())))
+        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(SPT_ABSMAG_RELATIONS.keys())))
         return output
 
 # check filter
@@ -454,8 +455,8 @@ def checkAbsMag(ref,filt='',verbose=False):
         if filt == False:
             if verbose: print('\nFilter {} is not among the filters used in SPLAT; try: {}'.format(filt,list(FILTERS.keys())))
             return False
-        if filt not in list(SPT_ABSMAG_SETS[output]['filters'].keys()):
-            if verbose: print('\nFilter {} is not among the filters defined for the {} absolutel magnitude relation; try: {}'.format(filt,output,list(SPT_ABSMAG_SETS[output]['filters'].keys())))
+        if filt not in list(SPT_ABSMAG_RELATIONS[output]['filters'].keys()):
+            if verbose: print('\nFilter {} is not among the filters defined for the {} absolutel magnitude relation; try: {}'.format(filt,output,list(SPT_ABSMAG_RELATIONS[output]['filters'].keys())))
             return False
 
     return output
@@ -471,7 +472,7 @@ def checkBC(ref,filt='',verbose=False):
 
     Required Inputs:
         :param ref: A string containing the reference for absolute magnitude relation, 
-        among the keys and alternate names in splat.SPT_BC_SETS
+        among the keys and alternate names in splat.SPT_BC_RELATIONS
 
     Optional Inputs:
         :param filt: A string containing the filter name, to optionally check if this filter is among those defined in the reference set
@@ -492,11 +493,11 @@ def checkBC(ref,filt='',verbose=False):
 # check reference    
     if not isinstance(ref,str):
         return output
-    for k in list(SPT_BC_SETS.keys()):
-        if ref.lower()==k.lower() or ref.lower() in SPT_BC_SETS[k]['altname']:
+    for k in list(SPT_BC_RELATIONS.keys()):
+        if ref.lower()==k.lower() or ref.lower() in SPT_BC_RELATIONS[k]['altname']:
             output = k
     if output == False:
-        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(SPT_BC_SETS.keys())))
+        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(SPT_BC_RELATIONS.keys())))
         return output
 
 # check filter
@@ -505,8 +506,8 @@ def checkBC(ref,filt='',verbose=False):
         if filt == False:
             if verbose: print('\nFilter {} is not among the filters used in SPLAT; try: {}'.format(filt,list(FILTERS.keys())))
             return False
-        if filt not in list(SPT_BC_SETS[output]['filters'].keys()):
-            if verbose: print('\nFilter {} is not among the filters defined for the {} absolutel magnitude relation; try: {}'.format(filt,output,list(SPT_BC_SETS[output]['filters'].keys())))
+        if filt not in list(SPT_BC_RELATIONS[output]['filters'].keys()):
+            if verbose: print('\nFilter {} is not among the filters defined for the {} absolutel magnitude relation; try: {}'.format(filt,output,list(SPT_BC_RELATIONS[output]['filters'].keys())))
             return False
 
     return output
@@ -522,7 +523,7 @@ def checkLbol(ref,verbose=False):
 
     Required Inputs:
         :param ref: A string containing the reference for lumiosity/SpT relation, 
-        among the keys and alternate names in splat.SPT_LBOL_SETS
+        among the keys and alternate names in splat.SPT_LBOL_RELATIONS
 
     Optional Inputs:
         None
@@ -543,11 +544,11 @@ def checkLbol(ref,verbose=False):
 # check reference    
     if not isinstance(ref,str):
         return output
-    for k in list(SPT_LBOL_SETS.keys()):
-        if ref.lower()==k.lower() or ref.lower() in SPT_LBOL_SETS[k]['altname']:
+    for k in list(SPT_LBOL_RELATIONS.keys()):
+        if ref.lower()==k.lower() or ref.lower() in SPT_LBOL_RELATIONS[k]['altname']:
             output = k
     if output == False:
-        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(SPT_LBOL_SETS.keys())))
+        if verbose: print('\nReference {} is not among those used in SPLAT; try: {}'.format(ref,list(SPT_LBOL_RELATIONS.keys())))
         return output
 
     return output

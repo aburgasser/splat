@@ -237,7 +237,7 @@ def volumeCorrection(coordinate,dmax,model='juric',center='sun',nsamp=1000,unit=
 
 
 
-def simulateAges(num,age_range=[0.1,10.],distribution='uniform',parameters={},sfh=False,verbose=False,**kwargs):
+def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uniform',parameters={},sfh=False,verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -295,10 +295,11 @@ def simulateAges(num,age_range=[0.1,10.],distribution='uniform',parameters={},sf
 # initial parameters
 #    distribution = kwargs.get('distribution','uniform')
     allowed_distributions = ['uniform','flat','exponential','double-exponential','peaked','cosmic','aumer','aumer-double','aumer-peaked','just','just_exponential','just-peaked','just-peaked-a','just-peaked-b','miller','rujopakarn']
-    mn = kwargs.get('minage',0.1)
-    mn = kwargs.get('min',mn)
-    mx = kwargs.get('maxage',10.)
-    mx = kwargs.get('max',mx)
+    for f in ['ref','reference','set','method','relation','model']:
+        if f in list(kwargs.keys()): distribution = kwargs.get(f,distribution)
+
+    mn = kwargs.get('min',minage)
+    mx = kwargs.get('max',maxage)
 #    sfh = kwargs.get('sfh',False)
     age_range = kwargs.get('age_range',[mn,mx])
     age_range = kwargs.get('range',age_range)
@@ -429,7 +430,7 @@ def simulateAges(num,age_range=[0.1,10.],distribution='uniform',parameters={},sf
 
 
 
-def simulateMasses(num,mass_range = [0.01,0.1],distribution='powerlaw',parameters = {},verbose=False,**kwargs):
+def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribution='powerlaw',parameters = {},verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -480,11 +481,13 @@ def simulateMasses(num,mass_range = [0.01,0.1],distribution='powerlaw',parameter
 # initial parameters
 #    distribution = kwargs.get('distribution','powerlaw')
     allowed_distributions = ['uniform','flat','powerlaw','power-law','broken-powerlaw','broken-power-law','lognormal','log-normal','kroupa','chabrier','salpeter']
+    for f in ['ref','reference','set','method','relation','model']:
+        if f in list(kwargs.keys()): distribution = kwargs.get(f,distribution)
+
+    mn = kwargs.get('min',minmass)
+    mx = kwargs.get('max',maxmass)
+    mass_range = kwargs.get('mass_range',[minmass,maxmass])
     mass_range = kwargs.get('range',mass_range)
-    mn = kwargs.get('minmass',-1.)
-    mn = kwargs.get('min',mn)
-    mx = kwargs.get('maxmass',-1.)
-    mx = kwargs.get('max',mx)
 
 # protective offset
     if mass_range[0] == mass_range[1]:
@@ -646,7 +649,8 @@ def simulateMasses(num,mass_range = [0.01,0.1],distribution='powerlaw',parameter
     return masses
 
 
-def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],gamma=1.8,parameters = {},verbose=False,**kwargs):
+
+def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],minq=0.1,maxq=1.0,gamma=1.8,parameters = {},verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -688,13 +692,13 @@ def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],gamma=1.8,
 
 # initial parameters
     allowed_distributions = ['uniform','flat','powerlaw','power-law','allen','burgasser','reggiani']
-    mn = kwargs.get('minq',0.1)
-    mn = kwargs.get('min',mn)
-    mx = kwargs.get('maxq',1.)
-    mx = kwargs.get('max',mx)
+    for f in ['ref','reference','set','method','relation','model']:
+        if f in list(kwargs.keys()): distribution = kwargs.get(f,distribution)
+
+    mn = kwargs.get('min',minq)
+    mx = kwargs.get('max',maxq)
     q_range = kwargs.get('q_range',[mn,mx])
     q_range = kwargs.get('range',q_range)
-    verbose = kwargs.get('verbose',False)
 
 # protective offset
     if q_range[0] == q_range[1]:
@@ -713,7 +717,7 @@ def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],gamma=1.8,
         if parameters['gamma'] == -1.:
             y = numpy.log(x)
         else:
-            y = x**(parameters['gamma']-1.)
+            y = x**(parameters['gamma']+1.)
 #        print(x,y)
         y = y-numpy.min(y)
         y = y/numpy.max(y)
@@ -722,7 +726,7 @@ def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],gamma=1.8,
         q = f(numpy.random.uniform(size=num))
 
 # uniform distribution (default)
-    elif distribution.lower() == 'uniform' or distribution.lower() == 'flat':
+    elif distribution.lower() in ['uniform','flat']:
         q = numpy.random.uniform(numpy.min(q_range), numpy.max(q_range), size=num)
 
 # wrong distribution
@@ -733,7 +737,7 @@ def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],gamma=1.8,
 
 
 
-def simulateDistances(num,coordinate=properCoordinates([0.,0.]),model='uniform',max_distance=[],magnitude=[],magnitude_limit=25.,magnitude_uncertainty=0.,center='sun',nsamp=1000,r0=8000.*u.pc,unit=u.pc,verbose=False,**kwargs):
+def simulateDistances(num,model='uniform',max_distance=[10.*u.pc],min_distance=[0.*u.pc],coordinate=properCoordinates([0.,0.]),magnitude=[],magnitude_limit=25.,magnitude_uncertainty=0.,center='sun',nsamp=1000,r0=8000.*u.pc,unit=u.pc,verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -783,18 +787,15 @@ def simulateDistances(num,coordinate=properCoordinates([0.,0.]),model='uniform',
     '''
 # check inputs
     allowed_models = ['juric','uniform']
+    for f in ['ref','reference','set','method','relation','distribution']:
+        if f in list(kwargs.keys()): model = kwargs.get(f,model)
 
-    try: c = list(coordinate)
-    except: c = coordinate       
-    if not isinstance(c,list): c = [c]
-    if not isinstance(c[0],SkyCoord):
-        try:
-            c = [properCoordinates(cd) for cd in c]
-        except:
-            raise ValueError('{} is not a proper coordinate input'.format(coordinate))
+    alts = ['distribution','relation','model']
+    for a in alts:
+        if not isinstance(kwargs.get(a,False),bool): model = kwargs[a]
 
 # check maximum distance
-    alts = ['max_distances','maxd','dmax','d_max']
+    alts = ['max_distances','maxd','max_d','dmax','d_max']
     for a in alts:
         if not isinstance(kwargs.get(a,False),bool): max_distance = kwargs[a]
     if not isinstance(max_distance,list):
@@ -802,6 +803,16 @@ def simulateDistances(num,coordinate=properCoordinates([0.,0.]),model='uniform',
         except: dmax = max_distance
     else: dmax = max_distance
     if not isinstance(dmax,list): dmax = [dmax]
+
+# check minimum distance
+    alts = ['min_distances','mind','min_d','dmin','d_min']
+    for a in alts:
+        if not isinstance(kwargs.get(a,False),bool): min_distance = kwargs[a]
+    if not isinstance(min_distance,list):
+        try: dmin = list(min_distance)
+        except: dmin = min_distance
+    else: dmin = min_distance
+    if not isinstance(dmin,list): dmin = [dmin]
 
 # maximum distances not given - use magnitudes instead
     if len(dmax) == 0:
@@ -835,20 +846,58 @@ def simulateDistances(num,coordinate=properCoordinates([0.,0.]),model='uniform',
         dmax = 10.*(10.**(0.2*(l_mag-numpy.random.normal(mag,e_mag))))
         dmax = [d*u.pc for d in dmax] # explicitly make pc for proper conversion
 
+# check distance units
     if len(dmax) == 0:
-        raise ValueError('\nSomething went wrong in computing limiting distances: {}'.format(dmax))
+        raise ValueError('\nSomething went wrong in computing maximum distance(s): {}'.format(dmax))
     if isUnit(dmax[0]) == True: dmax = [d.to(unit).value for d in dmax]
 
-# galactic model - should take r,z as inputs and **kwargs
-    if model.lower()=='juric':
+    if len(dmin) == 0:
+        raise ValueError('\nSomething went wrong in computing minimum distance(s): {}'.format(dmin))
+    if isUnit(dmin[0]) == True: dmin = [d.to(unit).value for d in dmin]
+
+# uniform distribution
+    if model.lower() == 'uniform':
+
+# single min/max distance
+        if len(dmax) == 1 and len(dmin) == 1:  
+            x = numpy.linspace(dmin[0],dmax[0],num=num)
+            y = x**3
+            y = y-numpy.min(y)
+            y = y/numpy.max(y)
+            f = interp1d(y,x)
+            return f(numpy.random.uniform(size=num))*unit
+
+# multiple min/max distances
+        else:
+            while len(dmin) < num: dmin.append(dmin[-1])
+            while len(dmax) < num: dmax.append(dmin[-1])
+            distances = []
+            for i,dm in dmax:
+                x = numpy.linspace(dmin[i],dm,num=num)
+                y = x**3
+                y = y-numpy.min(y)
+                y = y/numpy.max(y)
+                f = interp1d(y,x)
+                distances.append(f(numpy.random.uniform()))
+            return distances*unit
+
+# galactic models - should take r,z as inputs and **kwargs
+    elif model.lower()=='juric':
         rho_function = galactic_density_juric
 #            rhod,rhotd,rhoh = galactic_density_juric(r,z,report='each')
-    elif model.lower() == 'uniform':
-        def __temp__(*args,**kwargs): return 1.
-        rho_function = __temp__
     else:
         raise ValueError('\nDo not recognize star count model {}; try {}'.format(model,allowed_models))
-            
+
+# check coordinate
+    try: c = list(coordinate)
+    except: c = coordinate       
+    if not isinstance(c,list): c = [c]
+    if not isinstance(c[0],SkyCoord):
+        try:
+            c = [properCoordinates(cd) for cd in c]
+        except:
+            raise ValueError('{} is not a proper coordinate input'.format(coordinate))
+
 # generate R,z vectors by different cases:
 # Case 1: single site line to single maximum distance - draw from a single distance distribution along this site line
     if len(c) == 1 and len(dmax) == 1: 
@@ -945,6 +994,8 @@ def simulateUVW(num,age,model='aumer',verbose=False,unit=u.km/u.s,**kwargs):
     ages = numpy.array(ages)
 
     allowed_models = ['aumer']
+    for f in ['ref','reference','set','method','relation','distribution']:
+        if f in list(kwargs.keys()): model = kwargs.get(f,model)
 
 # aumer model
     if model.lower() == 'aumer':

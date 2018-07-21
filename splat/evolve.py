@@ -23,6 +23,7 @@ import astropy.constants as constants
 from astropy.cosmology import Planck15, z_at_value
 from astropy.io import ascii
 import pandas
+import matplotlib; matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy
 from scipy.interpolate import griddata, interp1d
@@ -64,7 +65,7 @@ def loadEvolModel(*model,**kwargs):
         - `luminosity`: log10 of Solar luminosities
         - `radius`: Solar radii
 
-    Models are contained in SPLAT's reference/EvolutionaryModels folder.
+    Models are contained in SPLAT's EvolutionaryModels folder.
 
     Required Inputs:
 
@@ -181,6 +182,7 @@ def loadEvolModel(*model,**kwargs):
             dp=pandas.read_csv(os.path.normpath(f),comment='#',sep=',',header=0)
             for ep in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
                 mparam[ep].append(dp[ep].values)
+
 
 
 # this is done in case models are not local - NOTE: currently just throwing an error
@@ -373,7 +375,7 @@ def _modelParametersSingle(*args, **kwargs):
             f = interp1d(Ge, Ag)
             params['age'] = 10.**f(P[0][1])
         except: 
-            print('\nFailed in age + parameter determination\n')
+            if kwargs.get('verbose',False) == True: print('\nFailed in age + parameter determination\n')
             params['age'] = float('nan')
 
         if kwargs.get('debug',False) == True: print('\nMass known and Age unknown; determined age to be {}'.format(params['age']))
@@ -428,7 +430,7 @@ def _modelParametersSingle(*args, **kwargs):
                 f = interp1d(Ge, Ma)
                 params['mass'] = 10.**f(P[0][1])
             except:
-                print('\nFailed in mass + parameter determination\n')
+                if kwargs.get('verbose',False) == True: print('\nFailed in mass + parameter determination\n')
                 params['mass'] = numpy.nan
 
         if kwargs.get('debug',False) == True: print('\nMass unknown and Age known; determined mass to be {}'.format(params['mass']))
@@ -493,7 +495,8 @@ def _modelParametersSingle(*args, **kwargs):
 #        print(params)
         for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
             params[e] = numpy.nan
-        print('\nParameter set is not covered by model {}\n'.format(model['name']))
+        if kwargs.get('verbose',False) == True: 
+            print('\nParameter set is not covered by model {}\n'.format(model['name']))
         return params
       
 
@@ -547,6 +550,7 @@ def modelParameters(*model,**kwargs):
         else: model=kwargs.get('model')
     if type(model) is not dict: model = loadEvolModel(model,**kwargs)
     if type(model) is not dict: raise ValueError('Something went wrong in loading in models')
+    if kwargs.get('debug',False) == True: print(model)
 
     keywords = list(kwargs.keys())
 

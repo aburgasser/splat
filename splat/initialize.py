@@ -11,8 +11,8 @@ import sys
 from astropy import units as u
 
 
-# things that are constants
-VERSION = '2018.05.21'
+# program constants
+VERSION = '2018.07.11'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -21,15 +21,15 @@ BIBCODE = '2017arXiv170700062B'
 EMAIL = 'aburgasser@gmail.com'
 DB_SOURCES_FILE = 'source_data.txt'
 DB_SPECTRA_FILE = 'spectral_data.txt'
+# no longer used
 DB_PHOTOMETRY_FILE = 'photometry_data.txt'
 BIBFILE = 'splat_bibs.bib'
 TMPFILENAME = 'splattmpfile'
 HOME_FOLDER = os.path.expanduser('~')
-DATA_FOLDER = '/reference/Spectra/'
-DATA_FOLDERS = [DATA_FOLDER]
-FILTER_FOLDER = '/reference/Filters/'
-SPECTRAL_MODEL_FOLDER = '/reference/SpectralModels/'
-EVOLUTIONARY_MODEL_FOLDER = '/reference/EvolutionaryModels/'
+DATA_FOLDER = '/resources/Spectra/SPEX-PRISM/'
+FILTER_FOLDER = '/resources/Filters/'
+SPECTRAL_MODEL_FOLDER = '/resources/SpectralModels/'
+EVOLUTIONARY_MODEL_FOLDER = '/resources/EvolutionaryModels/'
 DOCS_FOLDER = '/docs/'
 DOCS_INDEX_HTML = '/docs/_build/html/index.html'
 WEB_HTML_BASE = '/docs/_templates/'
@@ -92,10 +92,6 @@ SPLAT_USER_MODELS = './'
 if os.environ.get('SPLAT_MODELS') != None:
     SPLAT_USER_MODELS = os.environ['SPLAT_MODELS']
 
-#set user SPLAT model path from environmental variable
-SPLAT_USER_DATA = './'
-if os.environ.get('SPLAT_DATA') != None:
-    SPLAT_USER_DATA = os.environ['SPLAT_DATA']
 
 # Unit standards
 DEFAULT_WAVE_UNIT = u.micron
@@ -572,18 +568,8 @@ EVOLUTIONARY_MODEL_PARAMETERS = {\
     'luminosity': {'unit': u.dex(u.solLum), 'default': -5., 'title': '$\log{L_{bol}/L_{\odot}}$'},\
     'radius': {'unit': u.solRad, 'default': 0.1, 'title': '$R_{\odot}$'}}
 
-SPT_COLORS_SETS = {
-    'skrzypek2015': {'altname': ['skrzypek','skrzypek15'], 'reference': 'Skrzypek et al. (2015)','bibcode': '2015A%26A...574A..78S','range': [15,38],'filters': ['i','z','y','j','h','k','w1','w2'],'scatter': 0.07,
-        'values': { 
-            'i-z': [0.91,1.45,1.77,1.93,1.99,2.01,2.02,2.04,2.1,2.2,2.33,2.51,2.71,2.93,3.15,3.36,3.55,3.7,3.82,3.9,3.95,3.98,4.01,4.08], \
-            'z-y': [0.47,0.6,0.7,0.77,0.82,0.86,0.88,0.9,0.92,0.94,0.97,1.0,1.04,1.09,1.16,1.23,1.33,1.43,1.55,1.68,1.81,1.96,2.11,2.26], \
-            'y-j': [0.55,0.67,0.78,0.87,0.96,1.04,1.11,1.18,1.23,1.27,1.31,1.33,1.35,1.21,1.2,1.19,1.19,1.18,1.18,1.17,1.16,1.16,1.15,1.15], \
-            'j-h': [0.45,0.53,0.56,0.58,0.6,0.63,0.67,0.73,0.79,0.86,0.91,0.96,0.97,0.96,0.9,0.8,0.65,0.46,0.25,0.02,-0.19,-0.35,-0.43,-0.36], \
-            'h-k': [0.32,0.39,0.44,0.47,0.51,0.54,0.58,0.63,0.67,0.71,0.74,0.75,0.75,0.71,0.65,0.56,0.45,0.31,0.16,0.01,-0.11,-0.19,-0.2,-0.09], \
-            'k-w1': [0.11,0.22,0.25,0.26,0.27,0.29,0.33,0.4,0.48,0.56,0.65,0.72,0.77,0.79,0.79,0.76,0.71,0.65,0.59,0.55,0.54,0.59,0.7,0.9], \
-            'w1-w2': [0.17,0.21,0.24,0.26,0.27,0.27,0.28,0.28,0.29,0.3,0.32,0.36,0.41,0.48,0.57,0.68,0.82,0.99,1.19,1.43,1.7,2.02,2.38,2.79]}
-        }
-    }
+
+# Empirical relation contants
 
 INDICES_SETS = {
     'allers': {'bibcode': '2013ApJ...772...79A'},
@@ -598,7 +584,38 @@ INDICES_SETS = {
     'tokunaga': {'bibcode': '1999AJ....117.1010T'},
 }    
 
-SPT_BC_SETS = {
+
+SPT_TEFF_RELATIONS = {
+    'golimowski': {'altname': ['golimowski04','golimowski2004','gol04'], 'reference': 'Golimowski et al. (2004)','bibcode': '2004AJ....127.3516G','sptoffset': 10.,'coeff': [9.5373e-4,-9.8598e-2,4.0323,-8.3099e1,9.0951e2,-5.1287e3,1.4322e4],'range': [16.,38.],'fitunc': 124.},
+    'looper': {'altname': ['looper08','looper2008','lop08'], 'reference': 'Looper et al. (2008)','bibcode': '2008ApJ...685.1183L','sptoffset': 20.,'coeff': [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92],'range': [20.,38.],'fitunc': 87.},
+    'stephens': {'altname': ['stephens09','stephens2009','ste09'], 'reference': 'Stephens et al. (2009)','bibcode': '2009ApJ...702..154S','sptoffset': 10.,'coeff': [-0.0025492,0.17667,-4.4727,54.67,-467.26,4400.],'range': [16.,38.],'fitunc': 100.},
+    'stephens-alt': {'altname': ['stephens09-alt','stephens2009-alt','ste09alt'], 'reference': 'Stephens et al. (2009)','bibcode': '2009ApJ...702..154S','sptoffset': 10.,'coeff': [-0.011997,1.2315,-50.472,1031.9,-10560.,44898.],'range': [23.,38.],'fitunc': 100.},
+    'marocco': {'altname': ['marocco13','marocco2013','mar13'], 'reference': 'Marocco et al. (2013)','bibcode': '2013AJ....146..161M','sptoffset': 10.,'coeff': [7.4211e-5,-8.43736e-3,3.90319e-1,-9.46896,129.141,-975.953,3561.47,-1613.82],'range': [17.,38.],'fitunc': 140.},
+    'filippazzo': {'altname': ['filippazzo15','filippazzo2015','fil15'], 'reference': 'Filippazzo et al. (2015)','bibcode': '2015ApJ...810..158F','sptoffset': 10.,'coeff': [1.546e-4, -1.606e-2, 6.318e-1, -1.191e1, 1.155e2, -7.005e2, 4.747e3], 'range': [16.,39.],'fitunc': 113.},
+    'faherty': {'altname': ['faherty16','faherty2016','fah16'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F','sptoffset': 10.,'coeff': [1.546e-4,-1.606e-2,6.318e-1,-1.191e1,1.155e2,-7.005e2,4.747e3], 'range': [17.,38.],'fitunc': 113.},
+    'faherty-young': {'altname': ['faherty16-young','faherty2016-young','fah16yng'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F','sptoffset': 10.,'coeff': [1.330,-6.68637e1,1.23542e3,-1.00688e4,3.27664e4], 'range': [17.,27.],'fitunc': 180.},
+    'faherty-young2': {'altname': ['faherty16-young2','faherty2016-young2','fah16yng2'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F','sptoffset': 10.,'coeff': [9.106e-4,-1.016e-1,4.578,-1.066e2,1.360e3,-9.183e3,2.795e4], 'range': [17.,27.],'fitunc': 198.},
+    'faherty-group': {'altname': ['faherty16-group','faherty2016-group','fah16grp'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F','sptoffset': 10.,'coeff': [7.383e0,-3.44522e2,4.87986e3], 'range': [17.,27.],'fitunc': 172.},
+    'dupuy-saumon': {'altname': ['dupuy','dupuy17','dupuy2017','dup17','dupuy17-saumon','dupuy2017-saumon','dup17-saumon'], 'reference': 'Dupuy et al. (2017)','bibcode': '','sptoffset': 10.,'coeff': [6.001,-284.52,4544.3], 'range': [21.5,35.],'fitunc': 80.},
+    'dupuy-lyon': {'altname': ['dupuy17-lyon','dupuy2017-lyon','dup17-lyon'], 'reference': 'Dupuy et al. (2017)','bibcode': '','sptoffset': 10.,'coeff': [4.582,-238.03,4251.0], 'range': [17.,35.],'fitunc': 90.},
+    }
+
+
+SPT_COLORS_RELATIONS = {
+    'skrzypek2015': {'altname': ['skrzypek','skrzypek15'], 'reference': 'Skrzypek et al. (2015)','bibcode': '2015A%26A...574A..78S','range': [15,38],'filters': ['i','z','y','j','h','k','w1','w2'],'scatter': 0.07,
+        'values': { 
+            'i-z': [0.91,1.45,1.77,1.93,1.99,2.01,2.02,2.04,2.1,2.2,2.33,2.51,2.71,2.93,3.15,3.36,3.55,3.7,3.82,3.9,3.95,3.98,4.01,4.08], \
+            'z-y': [0.47,0.6,0.7,0.77,0.82,0.86,0.88,0.9,0.92,0.94,0.97,1.0,1.04,1.09,1.16,1.23,1.33,1.43,1.55,1.68,1.81,1.96,2.11,2.26], \
+            'y-j': [0.55,0.67,0.78,0.87,0.96,1.04,1.11,1.18,1.23,1.27,1.31,1.33,1.35,1.21,1.2,1.19,1.19,1.18,1.18,1.17,1.16,1.16,1.15,1.15], \
+            'j-h': [0.45,0.53,0.56,0.58,0.6,0.63,0.67,0.73,0.79,0.86,0.91,0.96,0.97,0.96,0.9,0.8,0.65,0.46,0.25,0.02,-0.19,-0.35,-0.43,-0.36], \
+            'h-k': [0.32,0.39,0.44,0.47,0.51,0.54,0.58,0.63,0.67,0.71,0.74,0.75,0.75,0.71,0.65,0.56,0.45,0.31,0.16,0.01,-0.11,-0.19,-0.2,-0.09], \
+            'k-w1': [0.11,0.22,0.25,0.26,0.27,0.29,0.33,0.4,0.48,0.56,0.65,0.72,0.77,0.79,0.79,0.76,0.71,0.65,0.59,0.55,0.54,0.59,0.7,0.9], \
+            'w1-w2': [0.17,0.21,0.24,0.26,0.27,0.27,0.28,0.28,0.29,0.3,0.32,0.36,0.41,0.48,0.57,0.68,0.82,0.99,1.19,1.43,1.7,2.02,2.38,2.79]}
+        }
+    }
+
+
+SPT_BC_RELATIONS = {
     'liu2010': {'altname': ['liu10','liu'], 'bibcode': '2010ApJ...722..311L', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         'MKO_J': {'fitunc' : 0.14, 'range' : [16,38.5], 'coeff': [1.462266e-6,-1.558986e-4,6.540717e-3,-1.367605e-1,1.491738e0,-8.053993e0,1.890448e1]},
         'MKO_H': {'fitunc' : 0.07, 'range' : [16,38.5], 'coeff': [1.148133e-6,-1.171595e-4,4.733874e-3,-9.618535e-2,1.027185e0,-5.426683e0,1.366709e1]},
@@ -615,11 +632,11 @@ SPT_BC_SETS = {
         '2MASS_KS': {'fitunc' : 0.126, 'range' : [17,38], 'coeff': [2.742e-6,-2.633e-4,9.711e-3,-1.759e-1,1.565e0,-2.174e0]}}},
         }
 
-SPT_LBOL_SETS = {
+SPT_LBOL_RELATIONS = {
     'filippazzo2015': {'altname': ['filippazzo','filippazzo15','fillippazzo','filipazo','filippazo'], 'bibcode': '2015ApJ...810..158F', 'sptoffset': 10., 'method': 'polynomial', 'fitunc' : 0.133, 'range' : [16,39], 'coeff': [2.736e-7,-3.220e-5,1.449e-3,-3.207e-2,3.727e-1,-2.310e0,2.787e0]},
         }
 
-ABSMAG_LBOL_SETS = {
+ABSMAG_LBOL_RELATIONS = {
     'dupuy2017': {'altname': ['dupuy17','dupuy'], 'bibcode': '2017ApJS..231...15D',  'method': 'polynomial', 'filters': {
         'MKO_H': {'fitunc' : 0.023, 'range' : [9.6,13.3], 'coeff': [1.06200e-2,-3.51721e-1,3.46876e1,-1.3282e1]},
         'MKO_K': {'fitunc' : 0.05, 'range' : [9.1,17.8], 'coeff': [4.54547e-4,-3.068824e-2,8.162709e-1,-1.0671188e1,6.811147e1,-1.72188e2]},
@@ -627,7 +644,7 @@ ABSMAG_LBOL_SETS = {
         '2MASS_KS': {'fitunc' : 0.05, 'range' : [8.8,16.6], 'coeff': [9.8821e-5,-7.85837e-3,2.357643e-1,-3.364101e0,2.258776e1,-5.9877e1]}}},
         }
 
-SPT_ABSMAG_SETS = {
+SPT_ABSMAG_RELATIONS = {
     'dahn2002': {'altname': ['dahn','dahn02'], 'bibcode': '2002AJ....124.1170D', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.25, 'range' : [17.,28.], 'coeff': [0.341,8.38]}}},
     'cruz2003': {'altname': ['cruz','cruz03'], 'bibcode': '2003AJ....126.2421C', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
@@ -759,4 +776,226 @@ TELESCOPES = {
 #Lbol YNG 7.0<SpT <17.0 0.335 -6.514e-03 2.448e-01 -3.113e+00 9.492e+00 · · · · · · · · ·
 #Lbol YNG2 7.0<SpT <28.0 0.206 2.059e-01 9.585 -3.985 4.923e-01 -3.048e-02 9.134e-04 -1.056e-05
 #Lbol GRP 7.0<SpT <17.0 0.221 6.194e-03 -3.757e-01 2.728e-02 · · · · · · · · · · · ·
+
+
+###################################
+#### INIITALIZE SPECTRAL DATA  ####
+###################################
+
+#set user SPLAT data path from environmental variable
+SPLAT_USER_DATA = './'
+if os.environ.get('SPLAT_DATA') != None:
+    SPLAT_USER_DATA = os.environ['SPLAT_DATA']
+
+
+def addUserData(folders=[],default_info={},verbose=True):
+    '''
+    :Purpose:
+
+        Reads in list of folders with properly processed model sets, checks them, and adds them to the SPECTRAL_MODELS global variable
+
+    :Required Inputs:
+
+        None
+
+    :Optional Inputs:
+
+        * :param folders = []: By default model folders are set in the .splat_spectral_models file; 
+        alternately (or in addition) folders of models can be included as an input list.
+        * :param default_info = {}: default parameter set to use for models; superceded by 'info.txt' file if present in model folder 
+        * :param verbose = False: provide verbose feedback
+
+    :Outputs:
+        
+        None, simply adds new model sets to SPECTRAL_MODELS global variable
+
+    '''
+# default information dictionary
+    if len(default_info.keys()) == 0:
+        default_info = {
+            'folder': '', 
+            'name': '', 
+            'citation': '', 
+            'bibcode': '', 
+            'altname': [], 
+            'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
+
+# read in folders specified in .splat_spectral_models
+    if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
+        with open(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
+        folders.extend(x.split('\n'))
+        if '' in folders: folders.remove('')
+
+# check and read in the new folders in the SPECTRAL_MODELS dictionary
+    if len(folders) > 0:
+        for i,f in enumerate(folders):
+            flag = 0
+            minfo = copy.deepcopy(default_info)
+            if minfo['folder'] == '': minfo['folder'] = f
+            if minfo['name'] == '': minfo['name'] = os.path.normpath(f).split('/')[-1]
+            subfiles = os.listdir(minfo['folder'])
+# no duplicate models (for now)
+            if minfo['name'] in list(SPECTRAL_MODELS.keys()):
+                print('\nWarning: spectral model set {} already exists in SPECTRAL_MODELS library; ignoring this one'.format(minfo['name']))
+                flag = 1
+# make sure RAW directory exists (indicates models have been processed)
+            if 'RAW' not in subfiles:
+                print('\nWarning: did not find a RAW directory in {}; please process this model set using splat.model._processModels()'.format(minfo['folder']))
+                flag = 1
+# check for additional information file
+            if 'info.txt' not in subfiles:
+                print('\nWarning: did not find info.txt file in {}; using default values for model information'.format(minfo['folder']))
+            else:
+#                try:
+                f = minfo['folder']
+                with open(f+'/info.txt', 'r') as frd: x = frd.read()
+                lines = x.split('\n')
+                if '' in lines: lines.remove('')
+                lines = [x.split('\t') for x in lines]
+                minfo = dict(lines)
+                minfo['folder'] = f
+                for k in list(default_info.keys()):
+                    if k not in list(minfo.keys()): minfo[k] = default_info[k]
+                for k in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+                    if k in list(minfo.keys()): minfo['default'][k] = minfo[k]
+                    if 'default_'+k in list(minfo.keys()): minfo['default'][k] = minfo['default_'+k]
+                minfo['altnames'] = minfo['altnames'].split(',')
+#                except:
+#                    print('\nWarning: problem reading info.txt file in {}; using default values for model information'.format(minfo['folder']))
+            if flag == 0:
+                if verbose == True: print('Adding {} models to SPLAT model set'.format(minfo['name']))
+                SPECTRAL_MODELS[minfo['name']] = copy.deepcopy(minfo)
+                del minfo
+    return
+
+def _initializeData(verbose=False):
+    '''
+    :Purpose:
+
+        Initializes the spectral data available for analysis by adding to splat.SPECTRAL_DATA global variable
+
+    :Required Inputs:
+
+        None
+
+    :Optional Inputs:
+
+        * :param verbose = False: provide verbose feedback
+
+    :Outputs:
+        
+        None
+
+    '''
+    pass
+# # default information for a new model    
+# #    if len(default_info.keys()) == 0:
+#     default_info = {
+#         'instruments': {},
+#         'name': '', 
+#         'citation': '', 
+#         'bibcode': '', 
+#         'altname': [], 
+#         'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
+
+# # folders from which models are to be found
+#     mfolders = [SPLAT_PATH+SPECTRAL_MODEL_FOLDER]
+
+# # specified in .splat_spectral_models
+#     if os.path.exists(EXTERNAL_SPECTRAL_MODELS_FILE):
+#         with open(EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
+#         mfolders.extend(x.split('\n'))
+#     if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
+#         with open(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
+#         mfolders.extend(x.split('\n'))
+# # specified in environmental variable SPLAT_SPECTRAL_MODELS
+#     if os.environ.get('SPLAT_SPECTRAL_MODELS') != None:
+#         mfolders.extend(str(os.environ['SPLAT_SPECTRAL_MODELS']).split(':'))
+# # check the model folders
+#     if '' in mfolders: mfolders.remove('')
+#     rm = []
+#     for m in mfolders:
+#         if os.path.exists(m) == False: rm.append(m)
+#     if len(rm) > 0:
+#         for m in rm: mfolders.remove(m)
+#     if len(mfolders) == 0:
+#         print('\nNo folders containing spectral models were found to be present')
+#         return
+#     mfolders = list(set(mfolders))
+#     if verbose == True:
+#         print('Spectral model folders:')
+#         for m in mfolders: print('\t{}'.format(m))
+
+# # go through each model folder and check model names
+#     for i,f in enumerate(mfolders):
+#         mnames = os.listdir(f)
+#         rm = []
+#         for m in mnames:
+#             if os.path.isdir(os.path.join(f,m))==False: rm.append(m)
+#         if len(rm) > 0:
+#             for m in rm: mnames.remove(m)
+#         if len(mnames) > 0:
+#             for nm in mnames: 
+#                 fnm = os.path.join(f,nm)
+#                 instruments = os.listdir(fnm)
+#                 name = checkSpectralModelName(nm)
+# # new model name, add to global variable
+# # using info.txt data if available                    
+#                 if name == False:
+#                     name = nm
+#                     adddict = {'name': name}
+#                     definfo = copy.deepcopy(default_info)
+#                     if 'info.txt' in instruments:
+#                         with open(os.path.join(fnm,'info.txt'), 'r') as frd: x = frd.read()
+#                         lines = x.split('\n')
+#                         if '' in lines: lines.remove('')
+#                         lines = [x.split('\t') for x in lines]
+#                         adddict = dict(lines)
+#                         if 'altnames' in list(adddict.keys()): adddict['altnames'] = adddict['altnames'].split(',')
+# #                    for k in list(SPECTRAL_MODELS[list(SPECTRAL_MODELS.keys())[0]].keys()):
+# #                        if k not in list(adddict.keys()):
+# #                            if k in list(default_info.keys()): adddict[k] = definfo[k]
+# #                            else: adddict[k] = ''
+# #                    for k in list(default_info.keys()):
+# #                        if k not in list(minfo.keys()): minfo[k] = default_info[k]
+
+# #  this sets the default values - it would be better to just grab one file and set the defaults that way                    
+#                     if 'default' not in list(adddict.keys()): adddict['default'] = {}
+#                     for k in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+#                         if k in list(adddict.keys()): adddict['default'][k] = adddict[k]
+#                         if 'default_'+k in list(adddict.keys()): adddict['default'][k] = adddict['default_'+k]
+# #                        if k in list(adddict['default'].keys()): print(k,adddict['default'][k])
+# #                    print('\nWarning: did not find info.txt file in {}; using default values for model information'.format(minfo['folder']))
+# #                    adddict['name'] = nm
+#                     if 'name' not in list(adddict.keys()): adddict['name'] = name
+#                     if 'instruments' not in list(adddict.keys()): adddict['instruments'] = {}
+#                     if 'bibcode' not in list(adddict.keys()): adddict['bibcode'] = ''
+#                     SPECTRAL_MODELS[name] = adddict
+#                     if verbose==True: print('\nAdded a new model {} with parameters {}'.format(name,adddict))
+#                     del adddict, definfo
+# # go through instruments                
+#                 rm = []
+#                 for m in instruments:
+#                     if os.path.isdir(os.path.join(fnm,m))==False: rm.append(m)
+#                 if len(rm) > 0:
+#                     for m in rm: instruments.remove(m)
+#                 if len(instruments) > 0:
+#                     for inst in instruments:
+# # make sure there are files in this folder
+#                         fnmi = os.path.join(fnm,inst)
+#                         mfiles = os.listdir(fnmi)
+#                         if len(mfiles) > 0:
+#                             instrument = checkInstrument(inst)
+# # unknown instrument; just add for now
+#                             if instrument == False:
+#                                 instrument = (inst.replace(' ','-').replace('_','-')).upper()
+#                             if instrument not in list(SPECTRAL_MODELS[name]['instruments'].keys()):
+#                                 SPECTRAL_MODELS[name]['instruments'][instrument] = fnmi
+#                                 if verbose == True: print('\nAdding model {} and instrument {} from {}'.format(name,instrument,fnmi))
+#                             else:
+#                                 if verbose == True: print('\nModel {} and instrument {}: ignoring {} as these already exists in {}'.format(name,instrument,fnmi,SPECTRAL_MODELS[name]['instruments'][instrument]))
+
+#     return
+
+_initializeData()
 
