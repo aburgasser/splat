@@ -45,6 +45,112 @@ sys.ps1 = 'splat util> '
 ###########   SIMPLE HELPER FUNCTIONS   #############
 #####################################################
 
+
+def isNumber(s):
+    '''
+    :Purpose: Checks if something is a number.
+
+    :param s: object to be checked
+    :type s: required
+
+    :Output: True or False
+
+    :Example:
+    >>> import splat
+    >>> print splat.isNumber(3)
+        True
+    >>> print splat.isNumber('hello')
+        False
+    '''
+    s1 = copy.deepcopy(s)
+    if isinstance(s1,bool): return False
+    if isinstance(s1,u.quantity.Quantity): s1 = s1.value
+    if isinstance(s1,float): return (True and not numpy.isnan(s1))
+    if isinstance(s1,int): return (True and not numpy.isnan(s1))
+    try:
+        s1 = float(s1)
+        return (True and not numpy.isnan(s1))
+    except ValueError:
+        return False
+
+def isUnit(s):
+    '''
+    :Purpose: 
+        Checks if something is an astropy unit quantity; written in response to the 
+        many ways that astropy now codes unit quantities
+
+    :Required Inputs: 
+        :param s: quantity to be checked
+
+    :Optional Inputs: 
+        None
+
+    :Output: 
+        True or False
+
+    :Example:
+    >>> import splat
+    >>> import astropy.units as u
+    >>> print splat.isUnit(3)
+        False
+    >>> print splat.isUnit(3.*u.s)
+        True
+    >>> print splat.isUnit(3.*u.s/u.s)
+        True
+    >>> print splat.isUnit((3.*u.s/u.s).value)
+        False
+    '''
+    return isinstance(s,u.quantity.Quantity) or \
+        isinstance(s,u.core.Unit) or \
+        isinstance(s,u.core.CompositeUnit) or \
+        isinstance(s,u.core.IrreducibleUnit) or \
+        isinstance(s,u.core.NamedUnit) or \
+        isinstance(s,u.core.PrefixUnit)
+
+
+def numberList(numstr,sort=False):
+    '''
+    :Purpose: 
+
+        Convert a string listing of numbers into an array of numbers
+
+    :Required Input:
+
+        :param **numstr**: string indicating number list, e.g., '45,50-67,69,72-90'
+
+    :Optional Input:
+
+        :param **sort**: set to True to sort output list (default = False)
+
+    :Output:
+
+        list of integers specified by string
+
+    :Example:
+        >>> import splat
+        >>> a = splat.numberList('45,50-67,69,72-90')
+        >>> print(a)
+            [45, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 69, 
+            72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90]
+    '''
+# check inputs
+    if not isinstance(numstr,str): raise ValueError('\nInput to numberList {} must be a string'.format(numstr))
+
+    numlist = []
+    tmp1 = numstr.replace(' ','')
+    tmp2 = tmp1.split(',')
+    for a in tmp2:
+        tmp3 = a.split(';')
+        for b in tmp3:
+            tmp4 = b.split('-')
+            if len(tmp4) > 1:
+                numlist.extend(list(range(int(tmp4[0]),int(tmp4[1])+1)))
+            else:
+                numlist.append(int(tmp4[0]))
+    
+    if sort==True: numlist = sorted(numlist)
+    return numlist
+
 def padWhereArray(w,mx):
     '''
     Purpose:
@@ -55,6 +161,151 @@ def padWhereArray(w,mx):
     if w[0][0] > 0: w = (numpy.insert(w[0],0,w[0][0]-1),)
     if w[0][-1] < mx: w = (numpy.append(w[0],w[0][-1]+1),)
     return w
+
+
+def readDictFromFile(file,delim='\t',missing_value=None,data_type=[str],verbose=False,**kwargs):
+    '''
+    :Purpose:
+
+        Reads a simple text file into a series of key: value pairs and placed into a dictionary;
+        allows for assignment of variables to arrays
+
+    :Required Inputs:
+
+        :param: file: string containing full path to file to be read in; this file should be an ascii file with simple delimiters
+
+    :Optional Inputs:
+
+        :param: delim: delimiter to separate keys from values
+        :param: value_delim: delimiter to separate values; if not provided, defaults to ``delim``
+        :param: data_type: single or list of data type to apply to input data; must be str, int, float or complex
+        :param: missing_value: variable to replace missing values (keys without data)
+        :param: verbose: set to True to provide verbose feedback
+
+    :Outputs:
+
+        A dictionary of input file parameters
+
+    :Example:
+
+        Assume you have a data file of format:
+
+            this 5
+            that 5,6,7,8
+            other
+
+        >>> import splat
+        >>> readDictFromFile('input.txt',delim=' ',value_delim=',',data_type=[int,float])
+            {'this': 5, 'that': [6.0, 7.0, 8.0], 'other': None}
+    '''
+    list_delim = kwargs.get('list_delim',delim)
+    list_delim = kwargs.get('value_delim',list_delim)
+    
+    if os.path.exists(file) == False:
+        raise ValueError('\nFile {} cannot be found'.format(file))
+    try:
+        with open(file) as f: dat = f.read()
+        dat = dat.split('\n')
+    except:
+        raise ValueError('\nUnable to read in file {} as simple ascii file'.format(file))
+    if len(dat) == 0:
+        if verbose == True: print('\nNo data found in file {}'.format(file))
+        return {}
+    if len(dat[0].split(delim)) < 2:
+        if verbose == True: print('\nWarning: delimiter {} not found in first line of file {}'.format(file))
+
+# data types
+    try:
+        dtype = list(data_type)
+    except:
+        dtype = copy.deepcopy(data_type)
+    if not isinstance(dtype,list): dtype = [dtype]
+#        if verbose == True: print('\nWarning: could not intepret data type input {}, converting all to strings'.format(data_type))
+    while len(dtype) < len(dat): dtype.append(dtype[-1])
+
+# separate and convert        
+    output = {}
+    for i,line in enumerate(dat):
+        sp = line.split(delim)
+        ky = sp[0]
+        if len(sp) > 1:
+            val = sp[1:]
+            if list_delim != delim: val = sp[1].split(list_delim)
+            d = dtype[i]
+            if d not in [str,int,float,complex]: d = str
+            cval = []
+            for v in val:
+                try: cval.append(d(v))
+                except: pass
+            if len(cval) == 1: cval = cval[0]
+        else: cval = missing_value
+        output[ky] = cval
+
+    return output
+        
+
+def writeDictToFile(data,file,delim='\t',verbose=False,**kwargs):
+    '''
+    :Purpose:
+
+        Writes the contents of a dictionary to a simple ascii file into a series of key value pairs;
+        allows for writing of both individual variables and lists (but not nested dictionaries)
+
+    :Required Inputs:
+
+        :param: data: dictionary to be written out; cannot be a nested dictionary but can contain lists
+        :param: file: string containing full path to file to be written
+
+    :Optional Inputs:
+
+        :param: delim: delimiter to separate keys from values
+        :param: value_delim: delimiter to separate values; if not provided, defaults to ``delim``
+        :param: verbose: set to True to provide verbose feedback
+
+    :Outputs:
+
+        An output file
+
+    :Example:
+
+        >>> import splat
+        >>> d = {'this': 5., 'that': [4,6,8], 'other': 'something else'}
+        >>> writeDictToFile(d,'/Users/adam//Desktop/temp2.txt',delim='\t',value_delim=',')
+            True
+
+        Contents of file will be:
+
+            this    5.0
+            that    4,6,8
+            other   something else
+
+    '''
+    value_delim = kwargs.get('value_delim',delim)
+    value_delim = kwargs.get('list_delim',value_delim)
+
+    if isinstance(data,dict) == False: 
+        raise ValueError('\nInput data is not a dictionary'.format(file))
+    try:
+        f = open(file,'w')
+    except:
+        raise ValueError('\nCould not open file {} for writing'.format(file))
+
+    for k in list(data.keys()):
+        line = '{}{}'.format(k,delim)
+        val = data[k]
+        if isinstance(val,str): val = [val]
+        try:
+            val = list(val)
+        except:
+            val = [val]
+        line = line+'{}'.format(val[0])
+        if len(val) > 1:
+            for v in val[1:]: line = line+'{}{}'.format(value_delim,v)
+        f.write(line+'\n')
+    f.close()
+
+    return True
+    
 
 
 #####################################################
@@ -194,7 +445,7 @@ def checkOnlineFile(*args):
         return requests.get(SPLAT_URL).status_code == requests.codes.ok
 
 
-def checkDict(ref,refdict,altref='altname',verbose=False):
+def checkDict(ref,refdict,altref='altname',replace=[],verbose=False):
     '''
     Purpose: 
         General usage program to check if a key is present in a dictionary, with the option to look through alternate names
@@ -218,14 +469,18 @@ def checkDict(ref,refdict,altref='altname',verbose=False):
         False
     '''
     output = False
+    refc = copy.deepcopy(ref)
 
 # check reference    
-    if not isinstance(ref,str):
+    if not isinstance(refc,str):
         return output
+    if len(replace) > 0:
+        for rep in replace:
+            if isinstance(rep,list) == True and len(rep) > 0: refc = refc.replace(rep[0],rep[1])
     for k in list(refdict.keys()):
-        if ref.lower()==k.lower(): output = k
+        if refc.lower()==k.lower(): output = k
         if altref in list(refdict[k].keys()):
-            if ref.lower() in [x.lower() for x in list(refdict[k][altref])]: output = k
+            if refc.lower() in [x.lower() for x in list(refdict[k][altref])]: output = k
     if output == False:
         if verbose: print('\nCould not find item {} in input dictionary; try: {}'.format(ref,list(refdict.keys())))
 
@@ -283,25 +538,26 @@ def checkInstrument(instrument):
         None
 
     Output:
-        A string containing SPLAT's default name for a given model set, or False if that model set is not present
+        A string containing SPLAT's default name for a given instrument, or False if that instrument is not present
 
     Example:
 
     >>> import splat
-    >>> print(splat._checkModelName('burrows'))
+    >>> splat.checkInstrument('SPEX PRISM')
         burrows06
-    >>> print(splat._checkModelName('allard'))
+    >>> splat.checkInstrument('LRIS')
         BTSettl2008
-    >>> print(splat._checkModelName('somethingelse'))
+    >>> splat.checkInstrument('somethingelse')
         False
     '''
-    output = False
-    if not isinstance(instrument,str):
-        return output
-    for k in list(INSTRUMENTS.keys()):
-        if instrument.upper()==k.upper() or instrument.upper().replace(' ','_').replace('_','-')==k.upper() or instrument.upper() in [a.upper() for a in INSTRUMENTS[k]['altname']]:
-            output = k
-    return output
+    return checkDict(instrument,INSTRUMENTS,replace=[['_','-'],[' ','-']])
+    # output = False
+    # if not isinstance(instrument,str):
+    #     return output
+    # for k in list(INSTRUMENTS.keys()):
+    #     if instrument.upper()==k.upper() or instrument.upper().replace(' ','_').replace('_','-')==k.upper() or instrument.upper() in [a.upper() for a in INSTRUMENTS[k]['altname']]:
+    #         output = k
+    # return output
 
 
 def checkFilterName(f,verbose=False):
@@ -1728,110 +1984,6 @@ def integralResample(xh, yh, xl, nsamp=100,method='fast'):
 
 
 
-def isNumber(s):
-    '''
-    :Purpose: Checks if something is a number.
-
-    :param s: object to be checked
-    :type s: required
-
-    :Output: True or False
-
-    :Example:
-    >>> import splat
-    >>> print splat.isNumber(3)
-        True
-    >>> print splat.isNumber('hello')
-        False
-    '''
-    s1 = copy.deepcopy(s)
-    if isinstance(s1,bool): return False
-    if isinstance(s1,u.quantity.Quantity): s1 = s1.value
-    if isinstance(s1,float): return (True and not numpy.isnan(s1))
-    if isinstance(s1,int): return (True and not numpy.isnan(s1))
-    try:
-        s1 = float(s1)
-        return (True and not numpy.isnan(s1))
-    except ValueError:
-        return False
-
-def isUnit(s):
-    '''
-    :Purpose: 
-        Checks if something is an astropy unit quantity; written in response to the 
-        many ways that astropy now codes unit quantities
-
-    :Required Inputs: 
-        :param s: quantity to be checked
-
-    :Optional Inputs: 
-        None
-
-    :Output: 
-        True or False
-
-    :Example:
-    >>> import splat
-    >>> import astropy.units as u
-    >>> print splat.isUnit(3)
-        False
-    >>> print splat.isUnit(3.*u.s)
-        True
-    >>> print splat.isUnit(3.*u.s/u.s)
-        True
-    >>> print splat.isUnit((3.*u.s/u.s).value)
-        False
-    '''
-    return isinstance(s,u.quantity.Quantity) or \
-        isinstance(s,u.core.Unit) or \
-        isinstance(s,u.core.CompositeUnit) or \
-        isinstance(s,u.core.IrreducibleUnit) or \
-        isinstance(s,u.core.NamedUnit) or \
-        isinstance(s,u.core.PrefixUnit)
-
-
-def numberList(numstr,sort=False):
-    '''
-    :Purpose: 
-
-        Convert a string listing of numbers into an array of numbers
-
-    :Required Input:
-
-        :param **numstr**: string indicating number list, e.g., '45,50-67,69,72-90'
-
-    :Optional Input:
-
-        :param **sort**: set to True to sort output list (default = False)
-
-    :Output:
-
-        list of integers specified by string
-
-    :Example:
-        >>> import splat
-        >>> a = splat.numberList('45,50-67,69,72-90')
-        >>> print(a)
-            [45, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 69, 
-            72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90]
-    '''
-# check inputs
-    if not isinstance(numstr,str): raise ValueError('\nInput to numberList {} must be a string'.format(numstr))
-
-    numlist = []
-    tmp1 = numstr.replace(' ','')
-    tmp2 = tmp1.split(',')
-    for a in tmp2:
-        tmp3 = a.split(';')
-        for b in tmp3:
-            tmp4 = b.split('-')
-            if len(tmp4) > 1:
-                numlist.extend(list(range(int(tmp4[0]),int(tmp4[1])+1)))
-            else:
-                numlist.append(int(tmp4[0]))
-    
-    if sort==True: numlist = sorted(numlist)
-    return numlist
 
 
 def randomSphereAngles(num,longitude_range=[0,2*numpy.pi],latitude_range=[-0.5*numpy.pi,0.5*numpy.pi],exclude_longitude_range=[],exclude_latitude_range=[],degrees=False,**kwargs):

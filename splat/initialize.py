@@ -8,6 +8,7 @@ from __future__ import print_function, division
 
 import os
 import sys
+import numpy
 from astropy import units as u
 
 
@@ -21,6 +22,7 @@ BIBCODE = '2017arXiv170700062B'
 EMAIL = 'aburgasser@gmail.com'
 DB_SOURCES_FILE = 'source_data.txt'
 DB_SPECTRA_FILE = 'spectral_data.txt'
+INSTRUMENT_DEFINITION_FILE = 'instrument.txt'
 # no longer used
 DB_PHOTOMETRY_FILE = 'photometry_data.txt'
 BIBFILE = 'splat_bibs.bib'
@@ -368,33 +370,34 @@ FILTERS = { \
 VEGAFILE = 'vega_kurucz.txt'
 
 # some data formats (for future expansion)
+INSTRUMENT_DEFAULT_VALUES = {'instrument_name': 'UNKNOWN', 'altname': [], 'bibcode': '', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'resolution': numpy.nan, 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron}
 INSTRUMENTS = {
 #	'SPEX': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['']},
-    'UNKNOWN': {'instrument_name': 'UNKNOWN', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altname': ['UNK'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+#    'UNKNOWN': {'instrument_name': 'UNKNOWN', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altname': ['UNK'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
     'RAW': {'instrument_name': 'RAW', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altname': [], 'wunit': u.micron},
     'SED': {'instrument_name': 'SED', 'pixelscale': 1.*u.arcsec, 'wave_range': [0.1,100]*u.micron, 'slitwidth': 1.*u.arcsec, 'altname': ['SPECTRAL_ENERGY_DISTRIBUTION'], 'resolution': 100, 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['APO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['SDSS','BOSS','EBOSS'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
-    'DEIMOS': {'instrument_name': 'Keck DEIMOS', 'pixelscale': 0.1185*u.arcsec, 'wave_range': [5000,9700]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'disperser': '600 l/mm', 'resolution': 2000, 'norders': 1, 'readnoise': 2.5, 'darkcurrent': 0., 'gain': 1.2, 'altname': ['DEIMOS'], 'instrument_reference': '2003spie.4841.1657F', 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
-    'FIRE': {'instrument_name': 'Magellan FIRE', 'pixelscale': 0.18*u.arcsec, 'wave_range': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 6000, 'norders': 21, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['FIRE'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'IRS-SL': {'instrument_name': 'Spitzer IRS Short-Low', 'pixelscale': 1.8*u.arcsec, 'wave_range': [5.2,14.5]*u.micron, 'slitwidth': 1.8*u.arcsec, 'resolution': 100, 'norders': 1, 'readnoise': 30., 'darkcurrent': 10., 'gain': 4.6, 'altname': ['IRS','IRS Short Low'], 'wunit': u.micron, 'funit': u.Jy},
-    'IRS-LL': {'instrument_name': 'Spitzer IRS Short-Low', 'pixelscale': 5.1*u.arcsec, 'wave_range': [14,38.]*u.micron, 'slitwidth': 5.1*u.arcsec, 'resolution': 90, 'norders': 1, 'readnoise': 30., 'darkcurrent': 40., 'gain': 4.6, 'altname': ['IRS Long Low'], 'wunit': u.micron, 'funit': u.Jy},
+    'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['APO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2010SPIE.7735E..1CW'},
+    'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['SDSS','BOSS','EBOSS'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'bibcode': '2013AJ....146...32S'},
+    'DEIMOS': {'instrument_name': 'Keck DEIMOS', 'pixelscale': 0.1185*u.arcsec, 'wave_range': [5000,9700]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'disperser': '600 l/mm', 'resolution': 2000, 'norders': 1, 'readnoise': 2.5, 'darkcurrent': 0., 'gain': 1.2, 'altname': ['DEIMOS'], 'bibcode': '2003spie.4841.1657F', 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'FIRE': {'instrument_name': 'Magellan FIRE', 'pixelscale': 0.18*u.arcsec, 'wave_range': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 6000, 'norders': 21, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['FIRE'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2013PASP..125..270S'},
+    'IRS-SL': {'instrument_name': 'Spitzer IRS Short-Low', 'pixelscale': 1.8*u.arcsec, 'wave_range': [5.2,14.5]*u.micron, 'slitwidth': 1.8*u.arcsec, 'resolution': 100, 'norders': 1, 'readnoise': 30., 'darkcurrent': 10., 'gain': 4.6, 'altname': ['IRS','IRS Short Low'], 'wunit': u.micron, 'funit': u.Jy, 'bibcode': '2004ApJS..154...18H'},
+    'IRS-LL': {'instrument_name': 'Spitzer IRS Short-Low', 'pixelscale': 5.1*u.arcsec, 'wave_range': [14,38.]*u.micron, 'slitwidth': 5.1*u.arcsec, 'resolution': 90, 'norders': 1, 'readnoise': 30., 'darkcurrent': 40., 'gain': 4.6, 'altname': ['IRS Long Low'], 'wunit': u.micron, 'funit': u.Jy, 'bibcode': '2004ApJS..154...18H'},
     'KAST-RED': {'instrument_name': 'Lick KAST Red Channel', 'pixelscale': 0.43*u.arcsec, 'disperser': '600/7500', 'wave_range': [5700,9200]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 1200, 'norders': 1, 'readnoise': 3.8, 'darkcurrent': 0., 'gain': 1.9, 'altname': ['KAST','KAST-R'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
     'KAST-BLUE': {'instrument_name': 'Lick KAST Blue Channel', 'pixelscale': 0.43*u.arcsec, 'disperser': '600/4310', 'wave_range': [3300,5520]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 950, 'norders': 1, 'readnoise': 3.7, 'darkcurrent': 0., 'gain': 1.2, 'altname': ['KAST-B'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
-    'LDSS-3': {'instrument_name': 'Magellan LDSS-3', 'pixelscale': 0.189*u.arcsec, 'disperser': 'VPH-RED', 'wave_range': [6000,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1810, 'norders': 1, 'readnoise': 4.07, 'darkcurrent': 0., 'gain': 1, 'altname': ['LDSS3'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
-    'LRIS-RED': {'altname': ['LRIS','LRISR'], 'instrument_name': 'Keck LRIS red channel longslit', 'instrument_reference': '1995PASP..107..375O', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4.6, 'darkcurrent': 0., 'gain': 1.2, 'disperser': '400/8500', 'wave_range': [6300,10100]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 1200, 'norders': 1, 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
-    'LRIS-BLUE': {'altname': ['LRISB'], 'instrument_name': 'Keck LRIS blue channel longslit', 'instrument_reference': '1998SPIE.3355...81M', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4., 'darkcurrent': 0., 'gain': 1.6, 'disperser': '400/3400', 'wave_range': [1270,5740]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 530, 'norders': 1, 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
-    'MAGE': {'instrument_name': 'Magellan MAGE', 'pixelscale': 0.3*u.arcsec, 'wave_range': [3100,10000]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 4100, 'norders': 13, 'readnoise': 2.9, 'darkcurrent': 1.0, 'gain': 1.02, 'altname': ['MagE'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
-    'NIRI-J': {'instrument_name': 'Gemini NIRI J-band (G5202)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.05,1.41]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 610, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI','NIRI G5202'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'NIRI-H': {'instrument_name': 'Gemini NIRI J-band (G5203)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.43,1.96]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 825, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5203'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'NIRI-K': {'instrument_name': 'Gemini NIRI J-band (G5204)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.90,2.49]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 780, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5204'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'NIRI-L': {'instrument_name': 'Gemini NIRI J-band (G5205)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [2.99,4.15]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 690, 'norders': 1, 'readnoise': 50., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5205'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'wave_range': [0.95,5.5]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altname': ['NIRSPAO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'SPEX-PRISM': {'instrument_name': 'IRTF SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SPEX','PRISM'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'SPEX-SXD': {'instrument_name': 'IRTF SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'SPEX-LXD1.9': {'instrument_name': 'IRTF SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SPEX LXD','LXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'SPEX-LXD2.1': {'instrument_name': 'IRTF SpeX LXD 2.1 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'SPEX-LXD2.3': {'instrument_name': 'IRTF SpeX LXD 2.3 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'LDSS-3': {'instrument_name': 'Magellan LDSS-3', 'pixelscale': 0.189*u.arcsec, 'disperser': 'VPH-RED', 'wave_range': [6000,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1810, 'norders': 1, 'readnoise': 4.07, 'darkcurrent': 0., 'gain': 1, 'altname': ['LDSS3'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'bibcode': '1994PASP..106..983A'},
+    'LRIS-RED': {'altname': ['LRIS','LRISR'], 'instrument_name': 'Keck LRIS red channel longslit', 'bibcode': '1995PASP..107..375O', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4.6, 'darkcurrent': 0., 'gain': 1.2, 'disperser': '400/8500', 'wave_range': [6300,10100]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 1200, 'norders': 1, 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'bibcode': '1995PASP..107..375O'},
+    'LRIS-BLUE': {'altname': ['LRISB'], 'instrument_name': 'Keck LRIS blue channel longslit', 'bibcode': '1998SPIE.3355...81M', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4., 'darkcurrent': 0., 'gain': 1.6, 'disperser': '400/3400', 'wave_range': [1270,5740]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 530, 'norders': 1, 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'bibcode': '1995PASP..107..375O'},
+    'MAGE': {'instrument_name': 'Magellan MAGE', 'pixelscale': 0.3*u.arcsec, 'wave_range': [3100,10000]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 4100, 'norders': 13, 'readnoise': 2.9, 'darkcurrent': 1.0, 'gain': 1.02, 'altname': ['MagE'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'bibcode': '2008SPIE.7014E..54M'},
+    'NIRI-J': {'instrument_name': 'Gemini NIRI J-band (G5202)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.05,1.41]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 610, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI','NIRI G5202'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2003PASP..115.1388H'},
+    'NIRI-H': {'instrument_name': 'Gemini NIRI J-band (G5203)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.43,1.96]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 825, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5203'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2003PASP..115.1388H'},
+    'NIRI-K': {'instrument_name': 'Gemini NIRI J-band (G5204)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.90,2.49]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 780, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5204'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2003PASP..115.1388H'},
+    'NIRI-L': {'instrument_name': 'Gemini NIRI J-band (G5205)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [2.99,4.15]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 690, 'norders': 1, 'readnoise': 50., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5205'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2003PASP..115.1388H'},
+    'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'wave_range': [0.95,5.5]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altname': ['NIRSPAO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2000SPIE.4008.1048M'},
+    'SPEX-PRISM': {'instrument_name': 'IRTF SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SPEX','PRISM'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2003PASP..115..362R'},
+    'SPEX-SXD': {'instrument_name': 'IRTF SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2003PASP..115..362R'},
+    'SPEX-LXD1.9': {'instrument_name': 'IRTF SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SPEX LXD','LXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2003PASP..115..362R'},
+    'SPEX-LXD2.1': {'instrument_name': 'IRTF SpeX LXD 2.1 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2003PASP..115..362R'},
+    'SPEX-LXD2.3': {'instrument_name': 'IRTF SpeX LXD 2.3 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'bibcode': '2003PASP..115..362R'},
 #	'USPEX': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['']},
 #	'USPEX_PRISM': {'instrument_name': 'IRTF Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['USPEX','UPRISM'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
 #    'USPEX_SXD': {'instrument_name': 'IRTF Updated SpeX SXD', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.55]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['USXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
@@ -766,236 +769,4 @@ TELESCOPES = {
     'KECK': {'lat': 19.8263*u.deg, 'lon': -155.4783*u.deg, 'height': 4160*u.m, 'altname': ['MAUNA_KEA','SUBARU','IRTF','CHFT','UKIRT','GEMINI_N','GEMINI_NORTH']},
     'VLT': {'lat': -24.6275*u.deg, 'lon': -70.4044*u.deg, 'height': 2636*u.m, 'altname': ['PARANAL','CERRO_PARANAL','VERY_LARGE_TELESCOPE','ESA']},
 }
-
-# more faherty2016 relations
-#Teff FLD 6.0<SpT <29.0 113.431 4.747e+03 -7.005e+02 1.155e+02 -1.191e+01 6.318e-01 -1.606e-02 1.546e-04
-#Teff YNG 7.0<SpT <17.0 180.457 1.330e+00 -66.8637 1235.42 -10068.8 32766.4 · · · · · ·
-#Teff YNG2 7.0<SpT <28.0 197.737 2.795e+04 -9.183e+03 1.360e+03 -1.066e+02 4.578e+00 -1.016e-01 9.106e-04
-#Teff GRP 7.0<SpT <17.0 172.215 7.383e+00 -344.522 4879.86 · · · · · · · · · · · ·
-#Lbol FLD 7.0<SpT <28.0 0.133 2.787e+00 -2.310e+00 3.727e-01 -3.207e-02 1.449e-03 -3.220e-05 2.736e-07
-#Lbol YNG 7.0<SpT <17.0 0.335 -6.514e-03 2.448e-01 -3.113e+00 9.492e+00 · · · · · · · · ·
-#Lbol YNG2 7.0<SpT <28.0 0.206 2.059e-01 9.585 -3.985 4.923e-01 -3.048e-02 9.134e-04 -1.056e-05
-#Lbol GRP 7.0<SpT <17.0 0.221 6.194e-03 -3.757e-01 2.728e-02 · · · · · · · · · · · ·
-
-
-###################################
-#### INIITALIZE SPECTRAL DATA  ####
-###################################
-
-#set user SPLAT data path from environmental variable
-SPLAT_USER_DATA = './'
-if os.environ.get('SPLAT_DATA') != None:
-    SPLAT_USER_DATA = os.environ['SPLAT_DATA']
-
-
-def addUserData(folders=[],default_info={},verbose=True):
-    '''
-    :Purpose:
-
-        Reads in list of folders with properly processed model sets, checks them, and adds them to the SPECTRAL_MODELS global variable
-
-    :Required Inputs:
-
-        None
-
-    :Optional Inputs:
-
-        * :param folders = []: By default model folders are set in the .splat_spectral_models file; 
-        alternately (or in addition) folders of models can be included as an input list.
-        * :param default_info = {}: default parameter set to use for models; superceded by 'info.txt' file if present in model folder 
-        * :param verbose = False: provide verbose feedback
-
-    :Outputs:
-        
-        None, simply adds new model sets to SPECTRAL_MODELS global variable
-
-    '''
-# default information dictionary
-    if len(default_info.keys()) == 0:
-        default_info = {
-            'folder': '', 
-            'name': '', 
-            'citation': '', 
-            'bibcode': '', 
-            'altname': [], 
-            'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
-
-# read in folders specified in .splat_spectral_models
-    if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
-        with open(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
-        folders.extend(x.split('\n'))
-        if '' in folders: folders.remove('')
-
-# check and read in the new folders in the SPECTRAL_MODELS dictionary
-    if len(folders) > 0:
-        for i,f in enumerate(folders):
-            flag = 0
-            minfo = copy.deepcopy(default_info)
-            if minfo['folder'] == '': minfo['folder'] = f
-            if minfo['name'] == '': minfo['name'] = os.path.normpath(f).split('/')[-1]
-            subfiles = os.listdir(minfo['folder'])
-# no duplicate models (for now)
-            if minfo['name'] in list(SPECTRAL_MODELS.keys()):
-                print('\nWarning: spectral model set {} already exists in SPECTRAL_MODELS library; ignoring this one'.format(minfo['name']))
-                flag = 1
-# make sure RAW directory exists (indicates models have been processed)
-            if 'RAW' not in subfiles:
-                print('\nWarning: did not find a RAW directory in {}; please process this model set using splat.model._processModels()'.format(minfo['folder']))
-                flag = 1
-# check for additional information file
-            if 'info.txt' not in subfiles:
-                print('\nWarning: did not find info.txt file in {}; using default values for model information'.format(minfo['folder']))
-            else:
-#                try:
-                f = minfo['folder']
-                with open(f+'/info.txt', 'r') as frd: x = frd.read()
-                lines = x.split('\n')
-                if '' in lines: lines.remove('')
-                lines = [x.split('\t') for x in lines]
-                minfo = dict(lines)
-                minfo['folder'] = f
-                for k in list(default_info.keys()):
-                    if k not in list(minfo.keys()): minfo[k] = default_info[k]
-                for k in list(SPECTRAL_MODEL_PARAMETERS.keys()):
-                    if k in list(minfo.keys()): minfo['default'][k] = minfo[k]
-                    if 'default_'+k in list(minfo.keys()): minfo['default'][k] = minfo['default_'+k]
-                minfo['altnames'] = minfo['altnames'].split(',')
-#                except:
-#                    print('\nWarning: problem reading info.txt file in {}; using default values for model information'.format(minfo['folder']))
-            if flag == 0:
-                if verbose == True: print('Adding {} models to SPLAT model set'.format(minfo['name']))
-                SPECTRAL_MODELS[minfo['name']] = copy.deepcopy(minfo)
-                del minfo
-    return
-
-def _initializeData(verbose=False):
-    '''
-    :Purpose:
-
-        Initializes the spectral data available for analysis by adding to splat.SPECTRAL_DATA global variable
-
-    :Required Inputs:
-
-        None
-
-    :Optional Inputs:
-
-        * :param verbose = False: provide verbose feedback
-
-    :Outputs:
-        
-        None
-
-    '''
-    pass
-# # default information for a new model    
-# #    if len(default_info.keys()) == 0:
-#     default_info = {
-#         'instruments': {},
-#         'name': '', 
-#         'citation': '', 
-#         'bibcode': '', 
-#         'altname': [], 
-#         'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
-
-# # folders from which models are to be found
-#     mfolders = [SPLAT_PATH+SPECTRAL_MODEL_FOLDER]
-
-# # specified in .splat_spectral_models
-#     if os.path.exists(EXTERNAL_SPECTRAL_MODELS_FILE):
-#         with open(EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
-#         mfolders.extend(x.split('\n'))
-#     if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
-#         with open(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
-#         mfolders.extend(x.split('\n'))
-# # specified in environmental variable SPLAT_SPECTRAL_MODELS
-#     if os.environ.get('SPLAT_SPECTRAL_MODELS') != None:
-#         mfolders.extend(str(os.environ['SPLAT_SPECTRAL_MODELS']).split(':'))
-# # check the model folders
-#     if '' in mfolders: mfolders.remove('')
-#     rm = []
-#     for m in mfolders:
-#         if os.path.exists(m) == False: rm.append(m)
-#     if len(rm) > 0:
-#         for m in rm: mfolders.remove(m)
-#     if len(mfolders) == 0:
-#         print('\nNo folders containing spectral models were found to be present')
-#         return
-#     mfolders = list(set(mfolders))
-#     if verbose == True:
-#         print('Spectral model folders:')
-#         for m in mfolders: print('\t{}'.format(m))
-
-# # go through each model folder and check model names
-#     for i,f in enumerate(mfolders):
-#         mnames = os.listdir(f)
-#         rm = []
-#         for m in mnames:
-#             if os.path.isdir(os.path.join(f,m))==False: rm.append(m)
-#         if len(rm) > 0:
-#             for m in rm: mnames.remove(m)
-#         if len(mnames) > 0:
-#             for nm in mnames: 
-#                 fnm = os.path.join(f,nm)
-#                 instruments = os.listdir(fnm)
-#                 name = checkSpectralModelName(nm)
-# # new model name, add to global variable
-# # using info.txt data if available                    
-#                 if name == False:
-#                     name = nm
-#                     adddict = {'name': name}
-#                     definfo = copy.deepcopy(default_info)
-#                     if 'info.txt' in instruments:
-#                         with open(os.path.join(fnm,'info.txt'), 'r') as frd: x = frd.read()
-#                         lines = x.split('\n')
-#                         if '' in lines: lines.remove('')
-#                         lines = [x.split('\t') for x in lines]
-#                         adddict = dict(lines)
-#                         if 'altnames' in list(adddict.keys()): adddict['altnames'] = adddict['altnames'].split(',')
-# #                    for k in list(SPECTRAL_MODELS[list(SPECTRAL_MODELS.keys())[0]].keys()):
-# #                        if k not in list(adddict.keys()):
-# #                            if k in list(default_info.keys()): adddict[k] = definfo[k]
-# #                            else: adddict[k] = ''
-# #                    for k in list(default_info.keys()):
-# #                        if k not in list(minfo.keys()): minfo[k] = default_info[k]
-
-# #  this sets the default values - it would be better to just grab one file and set the defaults that way                    
-#                     if 'default' not in list(adddict.keys()): adddict['default'] = {}
-#                     for k in list(SPECTRAL_MODEL_PARAMETERS.keys()):
-#                         if k in list(adddict.keys()): adddict['default'][k] = adddict[k]
-#                         if 'default_'+k in list(adddict.keys()): adddict['default'][k] = adddict['default_'+k]
-# #                        if k in list(adddict['default'].keys()): print(k,adddict['default'][k])
-# #                    print('\nWarning: did not find info.txt file in {}; using default values for model information'.format(minfo['folder']))
-# #                    adddict['name'] = nm
-#                     if 'name' not in list(adddict.keys()): adddict['name'] = name
-#                     if 'instruments' not in list(adddict.keys()): adddict['instruments'] = {}
-#                     if 'bibcode' not in list(adddict.keys()): adddict['bibcode'] = ''
-#                     SPECTRAL_MODELS[name] = adddict
-#                     if verbose==True: print('\nAdded a new model {} with parameters {}'.format(name,adddict))
-#                     del adddict, definfo
-# # go through instruments                
-#                 rm = []
-#                 for m in instruments:
-#                     if os.path.isdir(os.path.join(fnm,m))==False: rm.append(m)
-#                 if len(rm) > 0:
-#                     for m in rm: instruments.remove(m)
-#                 if len(instruments) > 0:
-#                     for inst in instruments:
-# # make sure there are files in this folder
-#                         fnmi = os.path.join(fnm,inst)
-#                         mfiles = os.listdir(fnmi)
-#                         if len(mfiles) > 0:
-#                             instrument = checkInstrument(inst)
-# # unknown instrument; just add for now
-#                             if instrument == False:
-#                                 instrument = (inst.replace(' ','-').replace('_','-')).upper()
-#                             if instrument not in list(SPECTRAL_MODELS[name]['instruments'].keys()):
-#                                 SPECTRAL_MODELS[name]['instruments'][instrument] = fnmi
-#                                 if verbose == True: print('\nAdding model {} and instrument {} from {}'.format(name,instrument,fnmi))
-#                             else:
-#                                 if verbose == True: print('\nModel {} and instrument {}: ignoring {} as these already exists in {}'.format(name,instrument,fnmi,SPECTRAL_MODELS[name]['instruments'][instrument]))
-
-#     return
-
-_initializeData()
 
