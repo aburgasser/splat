@@ -188,21 +188,24 @@ def typeToColor(spt,color,reference='skrzypek2015',uncertainty=0.,nsamples=100,v
             (nan, nan)
     """
 
-# check inputs
-# Convert spectral type string to number
-    if isinstance(spt,str): sptn = typeToNum(spt)
-    else: sptn = copy.deepcopy(spt)
-
-    col = color.lower().replace(' ','').replace('2mass','').replace('sdss','').replace('wise','').replace('denis','')
-    uncertainty = kwargs.get('unc', uncertainty)
-
-    reference = kwargs.get('ref', reference)
-    reference = kwargs.get('set', reference)
+# Keywords alternatives
+    for f in ['unc','spt_e','error']:
+        if f in list(kwargs.keys()):
+            uncertainty = kwargs.get(f,uncertainty)
+    for f in ['ref','set','method','model','relation']:
+        if f in list(kwargs.keys()):
+            reference = kwargs.get(f,reference)
     ref = checkEmpiricalRelation(reference.lower().replace(' ',''),splat.SPT_COLORS_RELATIONS)
     if ref == False:
         print('\nColor set from {} has not be integrated into SPLAT\n\n'.format(reference))
         return numpy.nan, numpy.nan
     if verbose==True: print('\nUsing the SpT/color trends from {}\n'.format(ref))
+
+# Convert spectral type string to number
+    if isinstance(spt,str): sptn = typeToNum(spt)
+    else: sptn = copy.deepcopy(spt)
+
+    col = color.lower().replace(' ','').replace('2mass','').replace('sdss','').replace('wise','').replace('denis','')
 
 # check spt is in range
     if not (splat.SPT_COLORS_RELATIONS[ref]['range'][0] <= sptn <= splat.SPT_COLORS_RELATIONS[ref]['range'][1]):
@@ -554,12 +557,12 @@ def typeToMag(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False
 # Keywords alternatives
     for f in ['unc','spt_e','error']:
         if f in list(kwargs.keys()):
-            uncertainty = kwargs.get(f,ref)
-    unc = uncertainty
+            uncertainty = kwargs.get(f,uncertainty)
+    unc = copy.deepcopy(uncertainty)
     for f in ['ref','set','method','model','relation']:
         if f in list(kwargs.keys()):
-            ref = kwargs.get(f,ref)
-    ref = reference
+            reference = kwargs.get(f,reference)
+    ref = copy.deepcopy(reference)
 
 # Check and convert spectral type variable
 #    spt_type = type(spt)
@@ -680,15 +683,24 @@ def typeToTeff(var, uncertainty=[0.001], reference='stephens09', nsamples=100, r
         >>> print splat.typeToTeff(20, unc = 0.3, ref = 'golimowski')
             (2305.7500497902788, 127.62548366132124)
     '''
-# rematch keywords
+# Keywords alternatives
     for f in ['unc','spt_e','error']:
         if f in list(kwargs.keys()):
-            uncertainty = kwargs.get(f,ref)
-    ref = reference
- 
+            uncertainty = kwargs.get(f,uncertainty)
+    unc = copy.deepcopy(uncertainty)
+    for f in ['ref','set','method','model','relation']:
+        if f in list(kwargs.keys()):
+            reference = kwargs.get(f,reference)
+    ref = checkEmpiricalRelation(reference.lower().replace(' ',''),splat.SPT_TEFF_RELATIONS)
+    if ref == False:
+        print('\nSpT/Teff relation from {} has not be integrated into SPLAT\n\n'.format(reference))
+        return numpy.nan, numpy.nan
+    if verbose==True: print('\nUsing the SpT/Teff relation from {}\n'.format(ref))
+
 # Check and convert input variable
     inp = copy.deepcopy(var)
-    if type(inp) in [int,float,str]: inp = [inp]
+    if isUnit(inp): inp = inp.value
+    if type(inp) in [int,float,str,numpy.float64]: inp = [inp]
     try:
         inp = list(inp)
     except:
@@ -699,10 +711,6 @@ def typeToTeff(var, uncertainty=[0.001], reference='stephens09', nsamples=100, r
         inp = [typeToNum(i) for i in inp]
 
 # Check and convert uncertainty variable
-    unc = copy.deepcopy(uncertainty)
-    for f in ['ref','set','method','model','relation']:
-        if f in list(kwargs.keys()):
-            ref = kwargs.get(f,ref)
     if type(unc) in [int,float]: unc = [unc]
     try:
         unc = list(unc)
@@ -860,7 +868,7 @@ def redden(sp, **kwargs):
 def typeToLbol(*args,**kwargs):
     return typeToLuminosity(*args,**kwargs)
 
-def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,reverse=False,**kwargs):
+def typeToLuminosity(spt, uncertainty=0.,reference='filippazzo2015',verbose=False,nsamples=100,reverse=False,**kwargs):
     """
     :Purpose: 
 
@@ -877,7 +885,7 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
             - *filippazzo2015* (default): Lbol/SpT relation from `Filippazzo et al. (2015) <http://adsabs.harvard.edu/abs/2013Sci...341.1492D>`_
               Allowed spectral type range is M6 to T9
 
-        :param unc: uncertainty of ``spt`` (default = 0)
+        :param uncertainty: uncertainty of ``spt`` (default = 0)
         :param reverse: apply reverse approach: given BC, infer spectral type
         :param nsamples: number of Monte Carlo samples for error computation (default = 100)
 
@@ -890,18 +898,18 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
         >>> print splat.typeToLuminosity('L3')
     """
 
-#Keywords alternatives
-    ref = kwargs.get('reference', ref)
-    ref = kwargs.get('set', ref)
-    unc = kwargs.get('uncertainty', unc)
-    unc = kwargs.get('error', unc)
-
-
-# check that you can use the proscribed relation and filter
-    refcheck = checkEmpiricalRelation(ref,SPT_LBOL_RELATIONS,verbose=verbose)
-    if refcheck == False: return numpy.nan,numpy.nan
-    else: ref=refcheck
-
+# Keywords alternatives
+    for f in ['unc','spt_e','error']:
+        if f in list(kwargs.keys()):
+            uncertainty = kwargs.get(f,uncertainty)
+    unc = copy.deepcopy(uncertainty)
+    for f in ['ref','set','method','model','relation']:
+        if f in list(kwargs.keys()):
+            reference = kwargs.get(f,reference)
+    ref = checkEmpiricalRelation(reference.lower().replace(' ',''),splat.SPT_LBOL_RELATIONS)
+    if ref == False:
+        print('\nSpT/Lbol relation from {} has not be integrated into SPLAT\n\n'.format(reference))
+        return numpy.nan, numpy.nan
     refstring = 'Luminosity/SpT relation for from {}'.format(shortRef(SPT_LBOL_RELATIONS[ref]['bibcode']))
     if verbose: print('\nUsing {}'.format(refstring))
 
@@ -993,7 +1001,7 @@ def typeToLuminosity(spt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100
 
 
 
-def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,reverse=False,**kwargs):
+def typeToBC(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False,nsamples=100,reverse=False,**kwargs):
     """
     :Purpose: 
 
@@ -1018,7 +1026,7 @@ def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,r
             - *filippazzo2015-young*: BC/SpT relation for young sources from `Filippazzo et al. (2015) <http://adsabs.harvard.edu/abs/2013Sci...341.1492D>`_
               Allowed spectral type range is M7 to T8, and allowed filters are 2MASS J, Ks
 
-        :param unc: uncertainty of ``spt`` (default = 0)
+        :param uncertainty: uncertainty of ``spt`` (default = 0)
         :param reverse: apply reverse approach: given BC, infer spectral type
         :param nsamples: number of Monte Carlo samples for error computation (default = 100)
 
@@ -1031,11 +1039,15 @@ def typeToBC(spt, filt, unc=0.,ref='filippazzo2015',verbose=False,nsamples=100,r
         >>> print splat.typeToBC('L3', '2MASS J')
     """
 
-#Keywords alternatives
-    ref = kwargs.get('reference', ref)
-    ref = kwargs.get('set', ref)
-    unc = kwargs.get('uncertainty', unc)
-    unc = kwargs.get('error', unc)
+# Keywords alternatives
+    for f in ['unc','spt_e','error']:
+        if f in list(kwargs.keys()):
+            uncertainty = kwargs.get(f,uncertainty)
+    unc = copy.deepcopy(uncertainty)
+    for f in ['ref','set','method','model','relation']:
+        if f in list(kwargs.keys()):
+            reference = kwargs.get(f,reference)
+    ref = copy.deepcopy(reference)
 
 
 # check that you can use the proscribed relation and filter

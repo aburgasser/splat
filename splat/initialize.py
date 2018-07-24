@@ -9,6 +9,7 @@ from __future__ import print_function, division
 import os
 import sys
 import numpy
+import pandas
 from astropy import units as u
 
 
@@ -20,15 +21,12 @@ DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
 GITHUB_URL = 'https://github.com/aburgasser/splat/'
 BIBCODE = '2017arXiv170700062B'
 EMAIL = 'aburgasser@gmail.com'
-DB_SOURCES_FILE = 'source_data.txt'
-DB_SPECTRA_FILE = 'spectral_data.txt'
 INSTRUMENT_DEFINITION_FILE = 'instrument.txt'
 # no longer used
-DB_PHOTOMETRY_FILE = 'photometry_data.txt'
+#DB_PHOTOMETRY_FILE = 'photometry_data.txt'
 BIBFILE = 'splat_bibs.bib'
 TMPFILENAME = 'splattmpfile'
 HOME_FOLDER = os.path.expanduser('~')
-DATA_FOLDER = '/resources/Spectra/SPEX-PRISM/'
 FILTER_FOLDER = '/resources/Filters/'
 SPECTRAL_MODEL_FOLDER = '/resources/SpectralModels/'
 EVOLUTIONARY_MODEL_FOLDER = '/resources/EvolutionaryModels/'
@@ -39,7 +37,6 @@ DB_FOLDER = '/db/'
 ACCESS_FILE = '.splat_access'
 EXTERNAL_SPECTRAL_MODELS_FILE = '.splat_spectral_models'
 EXTERNAL_EVOLUTIONARY_MODELS_FILE = '.splat_evolutionary_models'
-EXTERNAL_DATA_FILE = '.splat_data'
 MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 # SPLAT authors
@@ -100,6 +97,30 @@ DEFAULT_WAVE_UNIT = u.micron
 DEFAULT_FLUX_UNIT = u.erg/u.s/u.cm/u.cm/u.micron
 DEFAULT_SED_UNIT = u.erg/u.s/u.cm/u.cm
 
+
+# Spectral data parameters
+DATA_FOLDER = '/resources/Spectra/SPEX-PRISM/'
+EXTERNAL_DATA_FILE = '.splat_data'
+DB_SOURCES_FILE = 'source_data.txt'
+DB_SPECTRA_FILE = 'spectral_data.txt'
+DB_SPECTRA_DEFAULT_PARAMETERS = {
+    'DATA_FILE': {'altname': ['FILE','FILENAME'], 'type': str},
+    'DATA_KEY': {'altname': [], 'type': int},
+    'INSTRUMENT': {'altname': [], 'type': str},
+    'BIBCODE': {'altname': ['DATA_BIBCODE','REFERENCE','REF','BIBCODE','BIB','DATA_REFERENCE','DATA_REF'], 'type': str},
+    'OBSERVATION_DATE': {'altname': ['OBSDATE','OBS_DATE','DATE'], 'type': str},
+    'OBSERVATION_MJD': {'altname': ['MJD','OBS_MJD','JULIAN_DATE'], 'type': float},
+    'PROGRAM': {'altname': [], 'type': str},
+    'OBSERVER': {'altname': [], 'type': str},
+    'AIRMASS': {'altname': ['Z'], 'type': float},
+    'INTEGRATION': {'altname': ['TINT','TIME','INT_TIME','INTEGRATION_TIME'], 'type': float},
+    'CONDITIONS': {'altname': ['WEATHER'], 'type': float},
+    'SOURCE_KEY': {'altname': [], 'type': int},
+    'NAME': {'altname': ['SOURCE_NAME'], 'type': str},
+    'DESIGNATION': {'altname': ['DESIG'], 'type': str},
+    'RA': {'altname': ['RIGHT_ASCENSION'], 'type': float},
+    'DEC': {'altname': ['DECLINATION'], 'type': float},
+}
 
 # dwarf spectral standards
 STDS_DWARF_SPEX_KEYS = { \
@@ -370,7 +391,15 @@ FILTERS = { \
 VEGAFILE = 'vega_kurucz.txt'
 
 # some data formats (for future expansion)
-INSTRUMENT_DEFAULT_VALUES = {'instrument_name': 'UNKNOWN', 'altname': [], 'bibcode': '', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'resolution': numpy.nan, 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron}
+INSTRUMENT_DEFAULT_PARAMETERS = {
+    'instrument_name': {'altname': ['name','instrument','inst'], 'type': str, 'default': 'UNKNOWN'},
+    'altname': {'altname': ['name','instrument','inst'], 'type': str, 'default': []},
+    'bibcode': {'altname': ['name','instrument','inst'], 'type': str, 'default': ''},
+    'resolution': {'altname': ['name','instrument','inst'], 'type': float, 'default': numpy.nan},
+    'wunit': {'altname': ['name','instrument','inst'], 'type': u.quantity.Quantity, 'default': u.micron},
+    'funit': {'altname': ['name','instrument','inst'], 'type': u.quantity.Quantity, 'default': u.erg/u.s/u.cm/u.cm/u.micron}
+    }
+
 INSTRUMENTS = {
 #	'SPEX': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['']},
 #    'UNKNOWN': {'instrument_name': 'UNKNOWN', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altname': ['UNK'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},

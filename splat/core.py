@@ -92,14 +92,17 @@ max_snr = 1.e6                # maximum S/N ratio permitted
 
 #######################################################
 #######################################################
-##################   MODEL LOADING  ###################
+##################   DATA LOADING  ####################
 #######################################################
 #######################################################
+
+DB_ALL_SPECTRA = pandas.DataFrame()
+for k in (DB_SPECTRA_DEFAULT_PARAMETERS.keys()): DB_ALL_SPECTRA[k] = []
 
 def _processNewData(verbose=True,**kwargs):
     pass
 
-def _initializeAllData(override=False,verbose=True,**kwargs):
+def _initializeAllData(override=False,verbose=False,**kwargs):
     '''
     :Purpose:
 
@@ -118,26 +121,10 @@ def _initializeAllData(override=False,verbose=True,**kwargs):
         None
 
     '''
-# default information for a new data set    
-    default_info = {
-        'DATA_FILE': {'alt_name': ['FILE','FILENAME'], 'type': str},
-        'DATA_KEY': {'alt_name': [], 'type': int},
-        'DATA_BIBCODE': {'alt_name': ['REFERENCE','REF','BIBCODE','BIB'], 'type': str},
-        'INSTRUMENT': {'alt_name': [], 'type': str},
-        'OBSERVATION_DATE': {'alt_name': ['OBSDATE','OBS_DATE','DATE'], 'type': str},
-        'OBSERVATION_MJD': {'alt_name': ['MJD','OBS_MJD'], 'type': float},
-        'PROGRAM': {'alt_name': [], 'type': str},
-        'OBSERVER': {'alt_name': ['PI','PROGRAM_PI'], 'type': str},
-        'AIRMASS': {'alt_name': ['Z'], 'type': float},
-        'INTEGRATION': {'alt_name': ['TINT','TIME','INT_TIME','INTEGRATION_TIME'], 'type': float},
-        'CONDITIONS': {'alt_name': ['TINT','TIME','INT_TIME','INTEGRATION_TIME'], 'type': float},
-        'SOURCE_KEY': {'alt_name': [], 'type': int},
-        'NAME': {'alt_name': ['SOURCE_NAME'], 'type': str},
-        'DESIGNATION': {'alt_name': ['DESIG'], 'type': str},
-        'RA': {'alt_name': ['RIGHT_ASCENSION'], 'type': float},
-        'DEC': {'alt_name': ['DECLINATION'], 'type': float}
-    }
+##### ISSUES #####
+# need to figure out how to properly read in quantities
 
+# default information for a new data set    
     DATA_FOLDERS = []
 # structure:
 #   instrument name
@@ -186,7 +173,7 @@ def _initializeAllData(override=False,verbose=True,**kwargs):
                 if instcheck == False:
                     ikey = (inst.upper()).replace(' ','-').replace('_','-')
                     idict = {}
-                    for k in list(INSTRUMENT_DEFAULT_VALUES.keys()): idict[k] = kwargs.get(k,INSTRUMENT_DEFAULT_VALUES[k])
+                    for k in list(INSTRUMENT_DEFAULT_PARAMETERS.keys()): idict[k] = kwargs.get(k,INSTRUMENT_DEFAULT_PARAMETERS[k]['default'])
                     if INSTRUMENT_DEFINITION_FILE in os.listdir(DATA_FOLDERS[-1]):
                         idict_read = readDictFromFile(os.path.join(DATA_FOLDERS[-1],INSTRUMENT_DEFINITION_FILE))
                         for k in list(idict_read.keys()): idict[k] = idict_read[k]

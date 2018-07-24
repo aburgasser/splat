@@ -160,7 +160,7 @@ def galactic_density_juric(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun'
     else: return rho
 
 
-def volumeCorrection(coordinate,dmax,model='juric',center='sun',nsamp=1000,unit=u.pc):
+def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=1000,unit=u.pc):
     '''
     :Purpose: 
 
@@ -206,10 +206,14 @@ def volumeCorrection(coordinate,dmax,model='juric',center='sun',nsamp=1000,unit=
 # check inputs
     if not isUnit(unit): unit = u.pc
 
-    if not isinstance(coordinate,SkyCoord):
-        try: c = properCoordinates(cd)
-        except: raise ValueError('{} is not a proper coordinate'.format(coordinate))
-    else: c = coordinate
+    try:
+        c = splat.properCoordinates(coordinate)
+    except: 
+        raise ValueError('Input variable {} is not a proper coordinate or list of coordinates'.format(coordinate))
+    try:
+        x = len(c)
+    except:
+        c = [c]
 
     dmx = copy.deepcopy(dmax)
     if isUnit(dmx): dmx = dmx.to(unit).value
@@ -217,6 +221,12 @@ def volumeCorrection(coordinate,dmax,model='juric',center='sun',nsamp=1000,unit=
         try: dmx = float(dmx)
         except: raise ValueError('{} is not a proper distance value'.format(dmax))
     if dmx == 0.: return 1.
+
+    dmn = copy.deepcopy(dmin)
+    if isUnit(dmn): dmn = dmn.to(unit).value
+    if not isinstance(dmn,float): 
+        try: dmn = float(dmn)
+        except: raise ValueError('{} is not a proper distance value'.format(dmin))
 
 # galactic number density function
     if model.lower() == 'juric':
@@ -228,12 +238,17 @@ def volumeCorrection(coordinate,dmax,model='juric',center='sun',nsamp=1000,unit=
 
 # generate R,z vectors
 # single sight line & distance
-    d = numpy.linspace(0,dmx,nsamp)
-    x,y,z = xyz(c,distance=d,center=center,unit=unit)
-    r = (x**2+y**2)**0.5
-    rho = rho_function(r,z,rho0=1.,center=center,unit=unit)
+    d = numpy.linspace(dmn,dmx,nsamp)
+    rho = []
+    for crd in c:
+        x,y,z = splat.xyz(crd,distance=d,center=center,unit=unit)
+        r = (x**2+y**2)**0.5
+        rho.append(rho_function(r,z,rho0=1.,center=center,unit=unit))
 
-    return float(integrate.trapz(rho*(d**2),x=d)/integrate.trapz(d**2,x=d))
+    if len(rho) == 1:
+        return float(integrate.trapz(rho[0]*(d**2),x=d)/integrate.trapz(d**2,x=d))
+    else:
+        return [float(integrate.trapz(r*(d**2),x=d)/integrate.trapz(d**2,x=d)) for r in rho]
 
 
 

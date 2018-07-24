@@ -226,20 +226,21 @@ def readDictFromFile(file,delim='\t',missing_value=None,data_type=[str],verbose=
 # separate and convert        
     output = {}
     for i,line in enumerate(dat):
-        sp = line.split(delim)
-        ky = sp[0]
-        if len(sp) > 1:
-            val = sp[1:]
-            if list_delim != delim: val = sp[1].split(list_delim)
-            d = dtype[i]
-            if d not in [str,int,float,complex]: d = str
-            cval = []
-            for v in val:
-                try: cval.append(d(v))
-                except: pass
-            if len(cval) == 1: cval = cval[0]
-        else: cval = missing_value
-        output[ky] = cval
+        if line != '':
+            sp = line.split(delim)
+            ky = sp[0]
+            if len(sp) > 1:
+                val = sp[1:]
+                if list_delim != delim: val = sp[1].split(list_delim)
+                d = dtype[i]
+                if d not in [str,int,float,complex]: d = str
+                cval = []
+                for v in val:
+                    try: cval.append(d(v))
+                    except: pass
+                if len(cval) == 1: cval = cval[0]
+            else: cval = missing_value
+            output[ky] = cval
 
     return output
         
@@ -1533,7 +1534,7 @@ def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.):
     return uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance),numpy.random.normal(mu[0],e_mu[0]),numpy.random.normal(mu[1],e_mu[1]),numpy.random.normal(rv,e_rv))
 
 
-def XYZ(coordinate,center='sun',r0=8000*u.pc,z0=25*u.pc,unit=u.pc,**kwargs):
+def xyz(coordinate,center='sun',r0=8000*u.pc,z0=25*u.pc,unit=u.pc,**kwargs):
     '''
     :Purpose:
 
