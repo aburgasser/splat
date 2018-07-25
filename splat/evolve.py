@@ -214,7 +214,7 @@ def _modelParametersSingle(*args, **kwargs):
     try: model = args[0]
     except IndexError: 
         model = loadEvolModel('baraffe03')
-        print('\nWarning: model error; using Baraffe et al. (2003) models by default\n')
+        print('\nWarning: using Baraffe et al. (2003) models by default\n')
 
 # retool models to allow for logarithmic interpolation
     lmodel = copy.deepcopy(model)
@@ -346,8 +346,7 @@ def _modelParametersSingle(*args, **kwargs):
 # interpolate second parameter as a function of mass for each of the age models and evaluate for known mass
 # interpolate the model ages as a fucntion of these parameters and evaluate for known parameter
 ###############################################################################
-    if params['age'] == 0. and params['mass'] != 0. and \
-        not numpy.isnan(params['mass']):
+    if params['age'] == 0. and params['mass'] != 0. and not numpy.isnan(params['mass']):
 
         if input_type != 'two_params': 
             input_type = 'one_param'
@@ -383,13 +382,12 @@ def _modelParametersSingle(*args, **kwargs):
         Ge, Ag = [], []
 
 
-################ KNOWN AGE BUT KNOWN MASS AND ONE OTHER PARAMETER ###########
+################ UNKNOWN AGE BUT KNOWN MASS AND ONE OTHER PARAMETER ###########
 # generate mass as function of second parameter interpolated between two closest age models
 # evaluate mass(parameter) (resulting in both mass and age as knowns)
 ###############################################################################
 
-    if params['age'] != 0. and params['mass'] == 0. and \
-        not numpy.isnan(params['age']):
+    if params['age'] != 0. and params['mass'] == 0. and not numpy.isnan(params['age']):
 
         if kwargs.get('debug',False) == True: print(params)
 
@@ -417,14 +415,14 @@ def _modelParametersSingle(*args, **kwargs):
         else:
             adiff = [numpy.log10(params['age'])-a for a in lmodel['age']]
             ai = numpy.argmin(numpy.abs(adiff))
-            if adiff[ai] < 0:
-                ai=ai-1
+            if adiff[ai] < 0: ai=ai-1
+            aii = numpy.nanmin([ai+1,len(lmodel['mass'])-1])
             for i,m in enumerate(lmodel['mass'][ai]):
-                if m in lmodel['mass'][ai+1]:
+                if m in lmodel['mass'][aii]:
                     Ma.append(m)
-                    aj = numpy.argmin(numpy.abs([a-m for a in lmodel['mass'][ai+1]]))
-                    vals = [lmodel[P[0][0]][ai][i],lmodel[P[0][0]][ai+1][aj]]
-                    f = interp1d(lmodel['age'][ai:ai+2],vals)
+                    aj = numpy.argmin(numpy.abs([a-m for a in lmodel['mass'][aii]]))
+                    vals = [lmodel[P[0][0]][ai][i],lmodel[P[0][0]][aii][aj]]
+                    f = interp1d([lmodel['age'][ai],lmodel['age'][aii]],vals)
                     Ge.append(f(numpy.log10(params['age'])))
             try:
                 f = interp1d(Ge, Ma)
