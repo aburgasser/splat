@@ -252,7 +252,7 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
 
 
 
-def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uniform',parameters={},sfh=False,verbose=False,**kwargs):
+def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uniform',parameters={},sfh=False,nsamp=1000,verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -354,14 +354,14 @@ def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uni
 
 # use CDF sampling
         if parameters['beta'] != 0.:
-            x = numpy.linspace(numpy.min(age_range),numpy.max(age_range),num=10000)
+            x = numpy.linspace(numpy.min(age_range),numpy.max(age_range),num=int(nsamp))
             y = numpy.exp(parameters['beta']*x)
             y -= numpy.min(y)
             y /= numpy.max(y)
             f = interp1d(y,x)
-            ages = f(numpy.random.uniform(size=num))
+            ages = f(numpy.random.uniform(size=int(num)))
         else:
-            ages = numpy.random.uniform(numpy.min(age_range), numpy.max(age_range), size=num)
+            ages = numpy.random.uniform(numpy.min(age_range), numpy.max(age_range), size=int(num))
 
 # double exponential
     elif distribution.lower() == 'double_exponential' or distribution.lower() == 'aumer_double':
@@ -372,12 +372,12 @@ def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uni
             parameters['a'] = 1.e-8
 
 # use CDF sampling
-        x = numpy.linspace(numpy.min(age_range),numpy.max(age_range),num=10000)
+        x = numpy.linspace(numpy.min(age_range),numpy.max(age_range),num=int(nsamp))
         y = parameters['a']*numpy.exp(parameters['lambda']*x) + numpy.exp(parameters['beta']*x)
         y -= numpy.min(y)
         y /= numpy.max(y)
         f = interp1d(y,x)
-        ages = f(numpy.random.uniform(size=num))
+        ages = f(numpy.random.uniform(size=int(num)))
 
 # peaked distribution
     elif distribution.lower() == 'peaked' or distribution.lower() == 'just_peaked' or distribution.lower() == 'just_peaked_a' or distribution.lower() == 'just_peaked_b' or distribution.lower() == 'aumer_peaked':
@@ -399,7 +399,7 @@ def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uni
 
 # generate CDF by integration and then do CDF sampling
 # note that function is slightly different for the two forms
-        x = numpy.linspace(numpy.min(age_range),numpy.max(age_range),num=10000)
+        x = numpy.linspace(numpy.min(age_range),numpy.max(age_range),num=int(nsamp))
         if 'just' in distribution:
             y = (x+parameters['t0'])/((x**2+parameters['t1']**2)**2)
 #            print(2./3.*(t0**2+0.75*t1**2)**0.5 - 2./3.*t0)
@@ -410,7 +410,7 @@ def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uni
         yc -= numpy.min(yc)
         yc /= numpy.max(yc)
         f = interp1d(yc,x)
-        ages = f(numpy.random.uniform(size=num))
+        ages = f(numpy.random.uniform(size=int(num)))
 
 # cosmic star formation rate
     elif distribution.lower() == 'cosmic' or distribution.lower() == 'rujopakarn': 
@@ -421,18 +421,18 @@ def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uni
         cosmo = Planck15    # in case we want to change later
         zrng = [z_at_value(cosmo.lookback_time,numpy.min(age_range)*u.Gyr),z_at_value(cosmo.lookback_time,numpy.max(age_range)*u.Gyr)]
 # use CDF sampling
-        x = numpy.linspace(numpy.min(zrng),numpy.max(zrng),num=10000)
+        x = numpy.linspace(numpy.min(zrng),numpy.max(zrng),num=int(nsamp))
         y = (x+1.)**parameters['alpha']
         y -= numpy.min(y)
         y /= numpy.max(y)
         f = interp1d(y,x)
-        z = f(numpy.random.uniform(size=num))
+        z = f(numpy.random.uniform(size=int(num)))
         ages = cosmo.lookback_time(z)
 
 # uniform distribution (default)
     elif distribution.lower() == 'uniform' or distribution.lower() == 'flat': 
         if verbose: print('using uniform distribution')
-        ages = numpy.random.uniform(numpy.min(age_range), numpy.max(age_range), size=num)
+        ages = numpy.random.uniform(numpy.min(age_range), numpy.max(age_range), size=int(num))
 
     else:
         return ValueError('Did not recognize distribution {}'.format(distribution))
@@ -445,7 +445,7 @@ def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uni
 
 
 
-def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribution='powerlaw',parameters = {},verbose=False,**kwargs):
+def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribution='powerlaw',parameters = {},nsamp=1000,verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -527,7 +527,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribu
 # power-law - sample from CDF
     if distribution.lower() == 'power-law' or distribution.lower() == 'powerlaw' or distribution.lower() == 'salpeter':
         if distribution.lower() == 'salpeter': parameters['alpha'] = 2.35
-        x = numpy.linspace(numpy.min(mass_range),numpy.max(mass_range),num=10000)
+        x = numpy.linspace(numpy.min(mass_range),numpy.max(mass_range),num=int(nsamp))
         if parameters['alpha'] == 1.:
             y = numpy.log(x)
         else:
@@ -537,11 +537,11 @@ def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribu
         y = y/numpy.max(y)
         f = interp1d(y,x)
 #        plt.plot(x,y)
-        masses = f(numpy.random.uniform(size=num))
+        masses = f(numpy.random.uniform(size=int(num)))
 
 # lognormal - this doesn't quite work?
     elif distribution.lower() == 'lognormal' or distribution.lower() == 'log-normal':
-        masses = numpy.random.lognormal(parameters['log-mu'], parameters['log-sigma'], num)
+        masses = numpy.random.lognormal(parameters['log-mu'], parameters['log-sigma'], int(num))
 
 
 # broken power law
@@ -563,7 +563,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribu
         for i,mb in enumerate(mbs):
             if mlow < mb and mlow < numpy.max(mass_range):
 #                print(mb,mlow,numpy.min([mb,numpy.max(mass_range)]))
-                x = numpy.linspace(mlow,numpy.min([mb,numpy.max(mass_range)]),num=10000)
+                x = numpy.linspace(mlow,numpy.min([mb,numpy.max(mass_range)]),num=int(nsamp))
                 y = x**(-1.*alphas[i])
                 if len(yfull) > 0: y *= yfull[-1]/y[0]
                 yfull.extend(y)
@@ -572,7 +572,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribu
 # last mass range                
         if mlow < numpy.max(mass_range):
 #            print(mlow,numpy.max(mass_range))
-            x = numpy.linspace(mlow,numpy.max(mass_range),num=10000)
+            x = numpy.linspace(mlow,numpy.max(mass_range),num=int(nsamp))
             y = x**(-1.*alphas[-1])
             if len(yfull) > 0: y *= yfull[-1]/y[0]
             yfull.extend(y)
@@ -580,7 +580,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribu
 #        plt.loglog(xfull,[a+10 for a in yfull])
 #        plt.ylim([7,10])
 #        plt.show()
-        xf = numpy.linspace(mass_range[0],mass_range[1],num=10000)
+        xf = numpy.linspace(mass_range[0],mass_range[1],num=int(nsamp))
         f = interp1d(xfull,yfull)
         yf = f(xf)
         yf = yf-numpy.min(yf)
@@ -591,7 +591,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribu
 #        plt.ylim([7,10])
 #        plt.show()
         f = interp1d(yc,xf)
-        masses = f(numpy.random.uniform(size=num))
+        masses = f(numpy.random.uniform(size=int(num)))
 
 # Chabrier (2003) distribution
     elif 'chabrier' in distribution.lower():
@@ -599,7 +599,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribu
         yfull = []
         xfull = []
         if numpy.min(mass_range) < 1.0:
-            xfull = numpy.linspace(numpy.min(mass_range),numpy.min([numpy.max(mass_range),1.0]),num=10000)
+            xfull = numpy.linspace(numpy.min(mass_range),numpy.min([numpy.max(mass_range),1.0]),num=int(nsamp))
 # default
             yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.079))/0.69)**2)/xfull
             mcut = 1.0
@@ -634,7 +634,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribu
                 else:
                     mbs[-1] = numpy.max(mass_range)
             for iii in range(len(mbs)-1):
-                x = numpy.linspace(mbs[iii],mbs[iii+1],num=10000)
+                x = numpy.linspace(mbs[iii],mbs[iii+1],num=int(nsamp))
                 y = numpy.array(x**(-1.*alphas[iii]))
                 if len(yfull) > 0:
                     y = y*yfull[-1]/y[0]
@@ -644,18 +644,18 @@ def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribu
                     yfull = y
                     xfull = x
         f = interp1d(xfull,yfull)
-        xf = numpy.linspace(mass_range[0],mass_range[1],num=10000)
+        xf = numpy.linspace(mass_range[0],mass_range[1],num=int(nsamp))
         yf = f(xf)
         yf = yf-numpy.min(yf)
         yc = numpy.cumsum(yf)
         yc = yc-numpy.min(yc)
         yc = yc/numpy.max(yc)
         f = interp1d(yc,xf)
-        masses = f(numpy.random.uniform(size=num))
+        masses = f(numpy.random.uniform(size=int(num)))
 
 # uniform distribution (default)
     elif distribution.lower() == 'uniform' or distribution.lower() == 'flat':
-        masses = numpy.random.uniform(numpy.min(mass_range), numpy.max(mass_range), size=num)
+        masses = numpy.random.uniform(numpy.min(mass_range), numpy.max(mass_range), size=int(num))
 
 # wrong distribution
     else:
@@ -665,7 +665,7 @@ def simulateMasses(num,mass_range = [0.01,0.1],minmass=0.01,maxmass=0.1,distribu
 
 
 
-def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],minq=0.1,maxq=1.0,gamma=1.8,parameters = {},verbose=False,**kwargs):
+def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],minq=0.1,maxq=1.0,gamma=1.8,parameters = {},nsamp=1000,verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -728,7 +728,7 @@ def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],minq=0.1,m
         if distribution.lower() == 'allen' or kwargs.get('allen',False) == True: parameters['gamma'] = 1.8
         if distribution.lower() == 'burgasser' or kwargs.get('burgasser',False) == True: parameters['gamma'] = 4.2
         if distribution.lower() == 'reggiani' or kwargs.get('reggiani',False) == True: parameters['gamma'] = 0.25
-        x = numpy.linspace(numpy.min(q_range),numpy.max(q_range),num=10000)
+        x = numpy.linspace(numpy.min(q_range),numpy.max(q_range),num=int(nsamp))
         if parameters['gamma'] == -1.:
             y = numpy.log(x)
         else:
@@ -738,11 +738,11 @@ def simulateMassRatios(num,distribution='power-law',q_range=[0.1,1.0],minq=0.1,m
         y = y/numpy.max(y)
         f = interp1d(y,x)
 #        plt.plot(x,y)
-        q = f(numpy.random.uniform(size=num))
+        q = f(numpy.random.uniform(size=int(num)))
 
 # uniform distribution (default)
     elif distribution.lower() in ['uniform','flat']:
-        q = numpy.random.uniform(numpy.min(q_range), numpy.max(q_range), size=num)
+        q = numpy.random.uniform(numpy.min(q_range), numpy.max(q_range), size=int(num))
 
 # wrong distribution
     else:
@@ -875,12 +875,12 @@ def simulateDistances(num,model='uniform',max_distance=[10.*u.pc],min_distance=[
 
 # single min/max distance
         if len(dmax) == 1 and len(dmin) == 1:  
-            x = numpy.linspace(dmin[0],dmax[0],num=num)
+            x = numpy.linspace(dmin[0],dmax[0],num=int(num))
             y = x**3
             y = y-numpy.min(y)
             y = y/numpy.max(y)
             f = interp1d(y,x)
-            return f(numpy.random.uniform(size=num))*unit
+            return f(numpy.random.uniform(size=int(num)))*unit
 
 # multiple min/max distances
         else:
@@ -888,7 +888,7 @@ def simulateDistances(num,model='uniform',max_distance=[10.*u.pc],min_distance=[
             while len(dmax) < num: dmax.append(dmin[-1])
             distances = []
             for i,dm in dmax:
-                x = numpy.linspace(dmin[i],dm,num=num)
+                x = numpy.linspace(dmin[i],dm,num=int(num))
                 y = x**3
                 y = y-numpy.min(y)
                 y = y/numpy.max(y)
@@ -926,7 +926,7 @@ def simulateDistances(num,model='uniform',max_distance=[10.*u.pc],min_distance=[
         cdf = cdf-numpy.nanmin(cdf)
         cdf = cdf/numpy.nanmax(cdf)
         f = interp1d(cdf,d)
-        distances = f(numpy.random.uniform(0,1,num))
+        distances = f(numpy.random.uniform(0,1,int(num)))
         
 # single site line to multiple maximum distances - draw from multiple distance distributions along this site line
     elif len(c) == 1 and len(dmax) > 1: 
