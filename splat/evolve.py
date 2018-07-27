@@ -118,7 +118,7 @@ def loadEvolModel(*model,**kwargs):
     except IndexError: model = 'baraffe15'
 
     m = checkEvolutionaryModelName(model)
-    if m == False: raise ValueError('\nDid not recognize model name {}'.format(model))
+    if m == False: raise ValueError('\nDid not recognize model name {}; try {}'.format(model,list(EVOLUTIONARY_MODELS.keys())))
     model = m
     if kwargs.get('verbose',False): print('You are using evolutionary models from {}'.format(EVOLUTIONARY_MODELS[model]['name']))
 

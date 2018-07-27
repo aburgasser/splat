@@ -3900,6 +3900,7 @@ def readSpectrum(verbose=False,*args,**kwargs):
     if inst != False: instrument = inst
 #    local = kwargs.get('local',True)
     online = False
+    dnldflag = False
 #    local = not online
     url = kwargs.get('url',SPLAT_URL+DATA_FOLDER)
 
@@ -3931,18 +3932,19 @@ def readSpectrum(verbose=False,*args,**kwargs):
 # second pass: download file if necessary
 #    online = not local
     if online == True:
-       if checkOnline(url+file) == '':
-           file = folder+os.path.basename(file)
-           if checkOnline(url+file) == '':
-               raise ValueError('\nCannot find file '+kwargs['filename']+' on SPLAT website\n\n')
+        if checkOnline(url+file) == '':
+            file = folder+os.path.basename(file)
+            if checkOnline(url+file) == '':
+                raise ValueError('\nCannot find file '+kwargs['filename']+' on SPLAT website\n\n')
 # read in online file
 #           file = kwargs['filename']
-       try:
-           if os.path.exists(os.path.normpath(os.path.basename(kwargs['filename']))):
-               os.remove(os.path.normpath(os.path.basename(kwargs['filename'])))
-           open(os.path.normpath(os.path.basename(kwargs['filename'])), 'wb').write(requests.get(url+file).content)
-       except:
-           raise NameError('\nProblem reading in {} from SPLAT website'.format(kwargs['filename']))
+        try:
+            if os.path.exists(os.path.normpath(os.path.basename(kwargs['filename']))):
+                os.remove(os.path.normpath(os.path.basename(kwargs['filename'])))
+            open(os.path.normpath(os.path.basename(kwargs['filename'])), 'wb').write(requests.get(url+file).content)
+            dnldflag = True
+        except:
+            raise NameError('\nProblem reading in {} from SPLAT website'.format(kwargs['filename']))
 
 # instrument specific reads
     if instrument.upper()=='APOGEE': output = _readAPOGEE(file,**kwargs)
@@ -4074,8 +4076,9 @@ def readSpectrum(verbose=False,*args,**kwargs):
         for k in list(INSTRUMENTS[inst].keys()): output[k] = INSTRUMENTS[inst][k]  
 
 # clean up
-#    if url != '' and not local:
-#        os.remove(os.path.basename(TMPFILENAME))
+    print(online,dnldflag)
+    if online==True and dnldflag == True:
+        os.remove(os.path.normpath(os.path.basename(kwargs['filename'])))
     if 'wunit' not in list(output.keys()): output['wunit'] = kwargs.get('wunit',DEFAULT_WAVE_UNIT)
     if 'funit' not in list(output.keys()): output['funit'] = kwargs.get('funit',DEFAULT_FLUX_UNIT)
     return output
