@@ -4076,7 +4076,6 @@ def readSpectrum(verbose=False,*args,**kwargs):
         for k in list(INSTRUMENTS[inst].keys()): output[k] = INSTRUMENTS[inst][k]  
 
 # clean up
-    print(online,dnldflag)
     if online==True and dnldflag == True:
         os.remove(os.path.normpath(os.path.basename(kwargs['filename'])))
     if 'wunit' not in list(output.keys()): output['wunit'] = kwargs.get('wunit',DEFAULT_WAVE_UNIT)
