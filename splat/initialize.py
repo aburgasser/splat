@@ -587,10 +587,13 @@ SPECTRAL_MODEL_PARAMETERS = {\
 
 # evolutionary model information
 EVOLUTIONARY_MODELS = {\
-    'baraffe03': {'name': 'Barraffe 2003','citation': 'Baraffe et al. (2003)', 'bibcode': '2003A&A...402..701B', 'altname': ['bar03','baraffe2003']},\
-    'baraffe15': {'name': 'Barraffe 2015','citation': 'Baraffe et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altname': ['baraffe','bar15','baraffe2015']},\
-    'burrows01': {'name': 'Burrows 2001','citation': 'Burrows et al. (2001)', 'bibcode': '2015A&A...577A..42B', 'altname': ['burrows','bur01','burrows2001']},\
-    'saumon08': {'name': 'Saumon 2008','citation': 'Saumon et al. (2008)', 'bibcode': '2015A&A...577A..42B', 'altname': ['saumon','sau08','saumon2008']}}
+    'baraffe1997': {'name': 'baraffe1997','citation': 'Baraffe et al. (1997)', 'bibcode': '1997A&A...327.1054B', 'altname': ['bar97','baraffe97'], 'default': {'metallicity': 0.}},\
+    'baraffe1998': {'name': 'baraffe1998','citation': 'Baraffe et al. (1998)', 'bibcode': '1998A&A...337..403B', 'altname': ['bar98','baraffe98'], 'default': {'metallicity': 0., 'y': 0.275, 'l_mix': 1.}},\
+    'baraffe2003': {'name': 'baraffe2003','citation': 'Baraffe et al. (2003)', 'bibcode': '2003A&A...402..701B', 'altname': ['bar03','baraffe03'], 'default': {}},\
+    'baraffe2015': {'name': 'baraffe2015','citation': 'Baraffe et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altname': ['baraffe','bar15','baraffe15'], 'default': {}},\
+    'burrows2001': {'name': 'burrows2001','citation': 'Burrows et al. (2001)', 'bibcode': '2001RvMP...73..719B', 'altname': ['burrows','bur01','burrows01'], 'default': {}},\
+    'chabrier1997': {'name': 'chabrier1997','citation': 'Chabrier & Baraffe (1997)', 'bibcode': '1997A&A...328...83C', 'altname': ['chabrier','cha97','chabrier97'], 'default': {'metallicity': 0., 'y': 0.275}},\
+    'saumon2008': {'name': 'saumon2008','citation': 'Saumon et al. (2008)', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','sau08','saumon08']}, 'default': {'metallicity': 0., 'cloud': 'hybrid'}}
 
 EVOLUTIONARY_MODEL_PARAMETERS = {\
     'mass': {'unit': u.solMass, 'default': 0.05, 'title': '$M$'},\
@@ -630,7 +633,8 @@ SPT_TEFF_RELATIONS = {
     'faherty-group': {'altname': ['faherty16-group','faherty2016-group','fah16grp'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F','sptoffset': 10.,'coeff': [7.383e0,-3.44522e2,4.87986e3], 'range': [17.,27.],'fitunc': 172.},
     'dupuy-saumon': {'altname': ['dupuy','dupuy17','dupuy2017','dup17','dupuy17-saumon','dupuy2017-saumon','dup17-saumon'], 'reference': 'Dupuy et al. (2017)','bibcode': '','sptoffset': 10.,'coeff': [6.001,-284.52,4544.3], 'range': [21.5,35.],'fitunc': 80.},
     'dupuy-lyon': {'altname': ['dupuy17-lyon','dupuy2017-lyon','dup17-lyon'], 'reference': 'Dupuy et al. (2017)','bibcode': '','sptoffset': 10.,'coeff': [4.582,-238.03,4251.0], 'range': [17.,35.],'fitunc': 90.},
-    }
+    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'reference': 'Gonzales et al. (2018)','bibcode': 'TBD', 'sptoffset': 10., 'fitunc': 108, 'range' : [17., 27.], 'coeff': [-117,3721.]},
+}
 
 
 SPT_COLORS_RELATIONS = {
@@ -666,6 +670,7 @@ SPT_BC_RELATIONS = {
 
 SPT_LBOL_RELATIONS = {
     'filippazzo2015': {'altname': ['filippazzo','filippazzo15','fillippazzo','filipazo','filippazo'], 'bibcode': '2015ApJ...810..158F', 'sptoffset': 10., 'method': 'polynomial', 'fitunc' : 0.133, 'range' : [16,39], 'coeff': [2.736e-7,-3.220e-5,1.449e-3,-3.207e-2,3.727e-1,-2.310e0,2.787e0]},
+    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'bibcode': 'TBD', 'sptoffset': 10., 'method': 'polynomial', 'fitunc': 0.144, 'range' : [17., 27.], 'coeff': [-0.125,-2.10]},
         }
 
 ABSMAG_LBOL_RELATIONS = {
@@ -791,6 +796,12 @@ SPT_ABSMAG_RELATIONS = {
         '2MASS_KS': {'fitunc' : 0.36, 'range' : [20., 27.], 'coeff': [0.356,6.573]},
         'WISE_W1': {'fitunc' : 0.13, 'range' : [20., 27.], 'coeff': [0.237,7.436]},
         'WISE_W2': {'fitunc' : 0.18, 'range' : [20., 27.], 'coeff': [0.193,7.561]}}},
+    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'bibcode': 'TBD', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc' : 0.26, 'range' : [17., 27.], 'coeff': [0.263,8.49]},
+        '2MASS_H': {'fitunc' : 0.24, 'range' : [17., 27.], 'coeff': [0.304,7.77]},
+        '2MASS_KS': {'fitunc' : 0.21, 'range' : [17., 27.], 'coeff': [0.344,7.29]},
+        'WISE_W1': {'fitunc' : 0.27, 'range' : [17., 27.], 'coeff': [0.241,7.72]},
+        'WISE_W2': {'fitunc' : 0.24, 'range' : [17., 27.], 'coeff': [0.228,7.62]}}},
 }
 
 # telscope locations

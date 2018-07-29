@@ -40,7 +40,124 @@ from splat.utilities import *
 #                               #
 #################################
 
-def loadEvolModel(*model,**kwargs):
+def loadEvolModel(*args,model='baraffe2003',returnpandas=False,verbose=True,**kwargs):
+    '''
+    :Purpose: 
+        Reads in the evolutionary model parameters for the models listed below, which are used to interpolate parameters in `modelParameters()`_. 
+
+
+        Available models are:
+
+            - **baraffe1997** : Models from `Baraffe et al. (1997) <http://adsabs.harvard.edu/abs/1997A&A...327.1054B>`_ for 5 Gyr and 10 Gyr, 0.06 Msol < mass < 0.15 Msol, and [M/H] = -2 to 0 (COND dust prescription)
+            - **baraffe1998** : Models from `Baraffe et al. (1998) <http://adsabs.harvard.edu/abs/1998A&A...337..403B>`_ for 1 Myr < age < 10 Gyr, 0.005 Msol < mass < 0.1 Msol, Teff > 1700 K, [M/H] = -0.5 and 1.0, and variations in mixing length and He abundance (COND dust prescription)
+            - **baraffe2015** : Models from `Baraffe et al. (2015) <http://adsabs.harvard.edu/abs/2015A&A...577A..42B>`_ for 1 Myr < age < 10 Gyr, 0.01 Msol < mass < 1.4 Msol, and solar metallicity
+            - **burrows2001** : Models from `Burrows et al. (2001) <http://adsabs.harvard.edu/abs/2001RvMP...73..719B>`_ for 1 Myr < age < 10 Gyr, 0.01 Msol < mass < 0.2 Msol, and solar metallicity
+            - **chabrier1997** : Models from `Chabrier & Baraffe (1997) <http://adsabs.harvard.edu/abs/1997A&A...328...83C>`_ for 1 Myr < age < 10 Gyr, 0.075 Msol < mass < 0.8 Msol, and [M/H] = -2.0 to 0.0 (COND dust prescription) 
+            - **saumon2008** : Models from `Saumon et al. (2008) <http://adsabs.harvard.edu/abs/2008ApJ...689.1327S>`_ for 3 Myr < age < 10 Gyr, 0.002 Msol < mass < 0.085 Msol, Teff < 2500 K, -0.3 < [M/H] < 0.3, and various cloud prescriptions.
+            
+        Parameter units (in astropy convention) are: 
+
+            - `masses`: Solar masses
+            - `ages`: Gyr
+            - `temperature`: K
+            - `gravity`: log10 of cm/s/s
+            - `luminosity`: log10 of Solar luminosities
+            - `radius`: Solar radii
+
+        Models are contained in SPLAT's EvolutionaryModels folder.
+
+    Required Inputs:
+
+        :param: model: string of the name of the evolutionary model set to be used; can be `baraffe` (default), `burrows`, or `saumon`
+
+    Optional Inputs:
+
+        :param: metallicity: metallicity assumed for evolutionary models; can be either a single value or a list specifying a range. Be sure the given metallicity is included in the model
+        :param: cloud: cloud property in Saumon & Marley (2008) models; must be a string and equal to 'nc', 'f2' or 'hybrid' (default).
+        :param: y: He fraction in Baraffe et al. (1998) and Chabrier & Baraffe (1997) models.  Be sure the value is included in the model
+        :param: l_mix: mixing length parameter in Baraffe et al. (1998) models.  Be sure the value is included in the model
+
+    Output: 
+
+    Dictionary containing keywords mass, age, temperature, luminosity, gravity, and radius, each linked to the evolutionary parameters retrieved. 
+
+    :Example:
+    >>> import splat
+    >>> p = splat.loadEvolModel('saumon',metallicity=-0.3,cloud='nc')
+    You are using saumon's models.
+    >>> for k in list(p.keys()): print('{}: {}'.format(k, p[k][12]))
+    age: 0.15
+    mass: [ 0.002  0.003  0.004  0.005  0.006  0.007  0.008  0.009  0.01   0.011
+      0.012  0.013  0.014  0.015  0.016  0.017  0.018  0.019  0.02   0.022
+      0.024  0.026  0.028  0.03   0.033  0.035  0.038  0.04   0.043  0.045
+      0.048  0.05   0.053]
+    temperature: [  353.   418.   471.   523.   585.   642.   695.   748.   806.   893.
+      1146.  1228.  1114.  1113.  1148.  1183.  1227.  1270.  1316.  1402.
+      1489.  1572.  1654.  1739.  1853.  1930.  2030.  2096.  2187.  2240.
+      2316.  2362.  2426.] 
+    gravity: [ 3.576  3.746  3.871  3.972  4.056  4.128  4.191  4.246  4.296  4.335
+      4.337  4.368  4.437  4.479  4.512  4.543  4.571  4.597  4.621  4.665
+      4.704  4.74   4.772  4.8    4.839  4.861  4.892  4.909  4.931  4.947
+      4.966  4.978  4.996]
+    luminosity: [-6.691 -6.393 -6.185 -6.006 -5.815 -5.658 -5.527 -5.404 -5.277 -5.098
+     -4.628 -4.505 -4.709 -4.724 -4.675 -4.627 -4.568 -4.51  -4.45  -4.342
+     -4.24  -4.146 -4.058 -3.969 -3.856 -3.781 -3.69  -3.628 -3.546 -3.5   -3.432
+     -3.393 -3.34 ]
+    radius: [ 0.1206  0.1214  0.1214  0.1209  0.1202  0.1195  0.1189  0.1182  0.1178
+      0.1181  0.123   0.1235  0.1184  0.1167  0.1161  0.1154  0.1151  0.1148
+      0.1146  0.1142  0.1139  0.1139  0.1138  0.1141  0.1144  0.115   0.1155
+      0.1163  0.1174  0.118   0.1193  0.12    0.121 ]
+
+.. _`modelParameters()` : api.html#splat_evolve.modelParameters
+
+    '''
+
+# check model
+    if len(args) > 0: model = args[0].lower()
+
+#    m = checkEvolutionaryModelName(model)
+    m = checkDict(model,EVOLUTIONARY_MODELS)
+    if m == False: raise ValueError('\nDid not recognize model name {}; try {}'.format(model,list(EVOLUTIONARY_MODELS.keys())))
+    model = m
+    if kwargs.get('verbose',False): print('You are using evolutionary models from {}'.format(EVOLUTIONARY_MODELS[model]['name']))
+
+# read in full models
+    dp = pandas.read_csv(os.path.normpath('{}/{}/{}.csv'.format(SPLAT_PATH,EVOLUTIONARY_MODEL_FOLDER,model)),comment='#',sep=',',header=0)
+
+# restrict models if desired
+    dpsel = copy.deepcopy(dp)
+    dpselbck = copy.deepcopy(dp)
+    for k in list(EVOLUTIONARY_MODELS[model]['default'].keys()):
+        if kwargs.get(k,False) != False:
+            if isinstance(kwargs[k],list) == True:
+                if len(kwargs[k]) > 1 and type(EVOLUTIONARY_MODELS[model]['default'][k]) in [int,float]:
+                    dpsel = dpsel[dpsel[k] >= kwargs[k][0]]
+                    dpsel = dpsel[dpsel[k] <= kwargs[k][-1]]
+                else:
+                    for x in kwargs[k]:
+                        dpsel = dpsel[dpsel[k] == x]
+            else:
+                dpsel = dpsel[dpsel[k] == kwargs[k]]
+        else:
+            dpsel = dpsel[dpsel[k] == EVOLUTIONARY_MODELS[model]['default'][k]]
+        if len(dpsel) == 0:
+            if verbose==True: print('Warning: problem with selecting on {} with constraint {}; ignoring'.format(k,kwargs[k]))
+            dpsel = copy.deepcopy(dpselbck)
+        else:
+            dpselbck = copy.deepcopy(dpsel)
+
+# convert into dictionary
+    if returnpandas==True:
+        return dpsel
+    else:
+        mparam = copy.deepcopy(EVOLUTIONARY_MODELS[model])
+        for k in dp.columns:
+            mparam[k] = numpy.array(dpsel[k])
+        return mparam
+
+
+
+def loadEvolModel_old(*model,**kwargs):
     '''
     :Purpose: Reads in the evolutionary model parameters for the models listed below, which are used to interpolate parameters in `modelParameters()`_. 
 
@@ -199,8 +316,231 @@ def loadEvolModel(*model,**kwargs):
     return mparam
 
 
-
 def _modelParametersSingle(*args, **kwargs):
+    '''
+    :Purpose: Driver function for modelParameters_, performs actual interpolation of evolutionary models. See SPLAT API for `modelParameters()`_ for details.
+
+    .. _`modelParameters()` : api.html#splat_evolve.modelParameters
+
+    '''
+
+    keywords = list(kwargs.keys())
+
+# check that model is passed correctly
+    try: model = args[0]
+    except IndexError: 
+        model = loadEvolModel('baraffe03')
+        print('\nWarning: using Baraffe et al. (2003) models by default\n')
+
+# retool models to allow for logarithmic interpolation
+    lmodel = copy.deepcopy(model)
+# convert to logarithmic values
+    for k in ['age','mass','temperature','radius']:
+        lmodel[k] = numpy.array([numpy.log10(m) for m in lmodel[k]])
+    ages = list(set(lmodel['age']))
+    ages.sort()
+    ages = numpy.array(ages)
+
+# prep output parameters
+    params = {}
+
+    for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
+        params[e] = 0.
+        if e in keywords:
+            try: f = float(kwargs[e])
+            except: raise ValueError('\nInput parameter {} must be a single number, not {}\n'.format(e,kwargs[e]))
+            finally: params[e] = f
+
+# set some to log
+    for k in ['mass','temperature','age','radius']:
+        if k in keywords: params[k] = numpy.log10(params[k])
+
+    input_type = 'mass_age'
+    Ag, Ma, Te, Le, Ge, Re, P = [],[],[],[],[],[],[]
+
+
+    if kwargs.get('debug',False) == True: print(lmodel)
+
+############### UNKNOWN MASS AND AGE - INTERPOLATE AGE FROM OTHER PARAMETERS #################
+# for each age, interpolate mass as a function of first parameter 
+# then interpolate second parameter as a function of mass
+# obtain second parameter as a function of age; then interpolate the model ages as a function of 
+# the second parameter and evaluate for known parameter to get age
+###############################################################################
+
+
+# REVISED METHOD USING GRIDDATA    
+    if (params['mass'] == 0.) and (params['age'] == 0.):
+
+        input_type = 'two_params'
+        for k in ['temperature','gravity','radius','luminosity']:
+            if params[k] != 0.: P.append([k, params[k]])
+
+# create a grid to extract the mass and age
+        points = []
+        Ag, Ma = [], []
+
+        for i,age in enumerate(ages):
+            lmodelpar1 = lmodel[P[0][0]][lmodel['age'] == age]
+            lmodelpar2 = lmodel[P[1][0]][lmodel['age'] == age]
+            lmodelmass = list(lmodel['mass'][lmodel['age'] == age])
+            if numpy.nanmin(lmodelpar1) <= P[0][1] <= numpy.nanmax(lmodelpar1) \
+                and numpy.nanmin(lmodelpar2) <= P[1][1] <= numpy.nanmax(lmodelpar2):
+                for j,m in enumerate(lmodelpar1): 
+                    points.append((lmodelpar1[j],lmodelpar2[j]))
+                    Ag.append(age)
+                Ma.extend(lmodelmass)
+
+        if kwargs.get('debug',False) == True:
+            pts = numpy.array(points)
+            print('\n')
+            print(pts,pts.shape)
+            print('\n')
+            print(Ag,len(Ag))
+            print('\n')
+            print(Ma,len(Ma))
+            print('\n')
+            print(P[0][1],P[1][1])
+
+        try: 
+            params['age'] = griddata(numpy.array(points),Ag,numpy.array((P[0][1],P[1][1])),method='linear')[0]
+        except: 
+            if kwargs.get('verbose',False) == True: print('\nFailed in 2 parameter determination\n')
+            params['age'] = float('nan')
+        try: 
+            params['mass'] = griddata(numpy.array(points),Ma,numpy.array((P[0][1],P[1][1])),method='linear')[0]
+        except: 
+            if kwargs.get('verbose',False) == True: print('\nFailed in 2 parameter determination\n')
+            params['mass'] = float('nan')
+
+
+        if kwargs.get('debug',False) == True: print('\nMass and Age unknown; determined age to be {} and mass to be {}'.format(params['age'],params['mass']))
+        Ge, Ag, Ma = [], [], []
+
+
+################ UNKNOWN AGE BUT KNOWN MASS AND ONE OTHER PARAMETER ###########
+# interpolate second parameter as a function of mass for each of the age models and evaluate for known mass
+# interpolate the model ages as a fucntion of these parameters and evaluate for known parameter
+###############################################################################
+    if params['age'] == 0. and params['mass'] != 0. and not numpy.isnan(params['mass']):
+
+        if input_type != 'two_params': 
+            input_type = 'one_param'
+            for k in ['temperature','gravity','radius','luminosity']:
+                if params[k] != 0.: P.append([k, params[k]])
+            if len(P) == 0 or len(P) > 1:
+                for k in list(params.keys()):
+                    print('{}: {}'.format(k,params[k]))
+                print(P)
+                raise ValueError('\nProblem with one_param interpolation\n')
+
+        for i,age in enumerate(ages):
+            lmodelmass = list(lmodel['mass'][lmodel['age'] == age])
+            lmodelpar1 = lmodel[P[0][0]][lmodel['age'] == age]
+            if numpy.nanmin(lmodelmass) <= params['mass'] <= numpy.nanmax(lmodelmass):
+                Ag.append(age)
+                f = interp1d(lmodelmass, lmodelpar1)
+                Ge.append(f(params['mass']))
+
+        try: 
+            f = interp1d(Ge, Ag)
+            params['age'] = f(P[0][1])
+        except: 
+            if kwargs.get('verbose',False) == True: print('\nFailed in age + parameter determination\n')
+            params['age'] = float('nan')
+
+        if kwargs.get('debug',False) == True: print('\nMass known and Age unknown; determined age to be {}'.format(10.**params['age']))
+
+        Ge, Ag = [], []
+
+
+################ UNKNOWN AGE BUT KNOWN MASS AND ONE OTHER PARAMETER ###########
+# generate mass as function of second parameter interpolated between two closest age models
+# evaluate mass(parameter) (resulting in both mass and age as knowns)
+###############################################################################
+
+    if params['age'] != 0. and params['mass'] == 0. and not numpy.isnan(params['age']):
+
+        if kwargs.get('debug',False) == True: print(params)
+
+        if input_type != 'two_params' and input_type != 'one_param': 
+            input_type = 'one_param'
+            for k in ['temperature','gravity','radius','luminosity']:
+                if params[k] != 0.: P.append([k, params[k]])
+            if len(P) == 0 or len(P) > 1:
+                for k in list(params.keys()):
+                    print('{}: {}'.format(k,params[k]))
+                print(P)
+                raise ValueError('\nProblem with one_param interpolation\n')
+
+
+        if params['age'] < numpy.nanmin(ages) or params['age'] > numpy.nanmax(ages):
+                if kwargs.get('verbose',False)==True: print('\nAge of {} is outside range of models, {} to {}\n'.format(10.**params['age'],10.**numpy.min(ages),10**numpy.max(ages)))
+                params['mass'] = numpy.nan
+
+        else:
+            adiff = [params['age']-a for a in ages]
+            ai = numpy.argmin(numpy.abs(adiff))
+            if adiff[ai] < 0: ai=ai-1
+            aii = numpy.nanmin([ai+1,len(ages)-1])
+            lmodelmass1 = list(lmodel['mass'][lmodel['age'] == ages[ai]])
+            lmodelmass2 = list(lmodel['mass'][lmodel['age'] == ages[aii]])
+            lmodelpar1 = lmodel[P[0][0]][lmodel['age'] == ages[ai]]
+            lmodelpar2 = lmodel[P[0][0]][lmodel['age'] == ages[aii]]
+            for i,m in enumerate(lmodelmass1):
+                if m in lmodelmass2:
+                    Ma.append(m)
+                    aj = numpy.argmin(numpy.abs([a-m for a in lmodelmass2]))
+                    vals = [lmodelpar1[i],lmodelpar2[aj]]
+                    f = interp1d([ages[ai],ages[aii]],vals)
+                    Ge.append(f(params['age']))
+            try:
+                f = interp1d(Ge, Ma)
+                params['mass'] = f(P[0][1])
+            except:
+                if kwargs.get('verbose',False) == True: print('\nFailed in mass + parameter determination\n')
+                params['mass'] = numpy.nan
+
+        if kwargs.get('debug',False) == True: print('\nMass unknown and Age known; determined mass to be {}'.format(10.**params['mass']))
+
+        Ma, Ge = [],[]
+
+
+###################### KNOWN MASS AND AGE #####################################
+# use a simple grid interpolation
+###############################################################################
+    if params['mass'] != 0. and params['age'] != 0. and \
+        not numpy.isnan(params['age']) and not numpy.isnan(params['mass']):
+
+        if kwargs.get('debug',False) == True: print(params)
+  
+        for k in ['temperature','radius','gravity','luminosity']:
+            if params[k] == 0.:
+                params[k] = griddata(numpy.transpose([lmodel['mass'],lmodel['age']]),lmodel[k],(params['mass'],params['age']),method='linear')
+#                if numpy.isfinite(params[k]) == True: 
+#                    params[k] = params[k]*EVOLUTIONARY_MODEL_PARAMETERS[k]['unit']
+  
+        if kwargs.get('debug',False) == True: print('\nDetermined parameters: {}'.format(params))
+
+# return to linear
+        for k in ['mass','temperature','age','radius']:
+            params[k] = 10**(params[k])
+
+        return params
+
+
+# something failed	  
+    else:
+#        print(params)
+        for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
+            params[e] = numpy.nan
+        if kwargs.get('verbose',False) == True: 
+            print('\nParameter set is not covered by model {}\n'.format(model['name']))
+        return params
+      
+
+
+def _modelParametersSingle_old(*args, **kwargs):
     '''
     :Purpose: Driver function for modelParameters_, performs actual interpolation of evolutionary models. See SPLAT API for `modelParameters()`_ for details.
 
@@ -488,7 +828,7 @@ def _modelParametersSingle(*args, **kwargs):
         return params
 
 
-# something failed	  
+# something failed    
     else:
 #        print(params)
         for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
@@ -497,7 +837,6 @@ def _modelParametersSingle(*args, **kwargs):
             print('\nParameter set is not covered by model {}\n'.format(model['name']))
         return params
       
-
 
 def modelParameters(*model,**kwargs):
     '''
