@@ -596,7 +596,7 @@ def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=T
             mparam['logg'] = [float((f.split('/'))[-1][9:12]) for f in files]
             mparam['z'] = [float((f.split('/'))[-1][12:16]) for f in files]
     # Morley et al. 2012: no metallicity, fsed, kzz or clouds
-        elif modelset == 'morley12':
+        elif modelset == 'morley12' or modelset == 'sonora18':
             readfxn = _readSaumon12
             files = glob.glob(os.path.join(folder,'sp*'))
             mparam = {}
@@ -745,7 +745,7 @@ def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=T
     return
 
 
-def processModelsToInstrument(instrument_parameters={},wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,*args,**kwargs):
+def processModelsToInstrument(*args,instrument_parameters={},wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,**kwargs):
     '''
     :Purpose:
 
@@ -893,40 +893,44 @@ def processModelsToInstrument(instrument_parameters={},wunit=DEFAULT_WAVE_UNIT,f
         if not os.path.exists(noutputfile) or (os.path.exists(noutputfile) and overwrite==True):
 
 # read in the model
-            spmodel = Spectrum(f,ismodel=True)
+            spmodel = Spectrum(f,ismodel=True,instrument='RAW')
 
 # NOTE THAT THE FOLLOWING COULD BE REPLACED BY spmodel.toInstrument()
 
-            spmodel.toWaveUnit(instrument_parameters['wunit'])
-            spmodel.toFluxUnit(instrument_parameters['funit'])
+            spmodel.toInstrument(instr)
 
-# trim relevant piece of spectrum 
-            dw = overscan*(numpy.nanmax(instrument_parameters['wave'])-numpy.nanmin(instrument_parameters['wave']))
-            wrng = [numpy.nanmax([numpy.nanmin(instrument_parameters['wave']-dw),numpy.nanmin(spmodel.wave.value)])*instrument_parameters['wunit'],\
-                    numpy.nanmin([numpy.nanmax(instrument_parameters['wave']+dw),numpy.nanmax(spmodel.wave.value)])*instrument_parameters['wunit']]
-            spmodel.trim(wrng)
-#            print(instrument_parameters['wave'])
+#             spmodel.toWaveUnit(instrument_parameters['wunit'])
+#             spmodel.toFluxUnit(instrument_parameters['funit'])
 
-# map onto oversampled grid and smooth; if model is lower resolution, interpolate; otherwise integrate & resample
-            if len(spmodel.wave) <= len(wave_oversample):
-                fflux = interp1d(spmodel.wave.value,spmodel.flux.value,bounds_error=False,fill_value=0.)
-                flux_oversample = fflux(wave_oversample)
-            else:
-                flux_oversample = integralResample(spmodel.wave.value,spmodel.flux.value,wave_oversample)
-            spmodel.wave = wave_oversample*instrument_parameters['wunit']
-            spmodel.flux = flux_oversample*spmodel.funit
-            spmodel.noise = [numpy.nan for x in spmodel.wave]*spmodel.funit
-            spmodel.variance = [numpy.nan for x in spmodel.wave]*(spmodel.funit**2)
+# # trim relevant piece of spectrum 
+#             dw = overscan*(numpy.nanmax(instrument_parameters['wave'])-numpy.nanmin(instrument_parameters['wave']))
+#             wrng = [numpy.nanmax([numpy.nanmin(instrument_parameters['wave']-dw),numpy.nanmin(spmodel.wave.value)])*instrument_parameters['wunit'],\
+#                     numpy.nanmin([numpy.nanmax(instrument_parameters['wave']+dw),numpy.nanmax(spmodel.wave.value)])*instrument_parameters['wunit']]
+#             spmodel.trim(wrng)
+# #            print(instrument_parameters['wave'])
 
-# smooth this in pixel space including oversample       
-            spmodel._smoothToSlitPixelWidth(pixel_resolution*oversample,method=method)
+# # map onto oversampled grid and smooth; if model is lower resolution, interpolate; otherwise integrate & resample
+#             if len(spmodel.wave) <= len(wave_oversample):
+#                 fflux = interp1d(spmodel.wave.value,spmodel.flux.value,bounds_error=False,fill_value=0.)
+#                 flux_oversample = fflux(wave_oversample)
+#             else:
+#                 flux_oversample = integralResample(spmodel.wave.value,spmodel.flux.value,wave_oversample)
+#             spmodel.wave = wave_oversample*instrument_parameters['wunit']
+#             spmodel.flux = flux_oversample*spmodel.funit
+#             spmodel.noise = [numpy.nan for x in spmodel.wave]*spmodel.funit
+#             spmodel.variance = [numpy.nan for x in spmodel.wave]*(spmodel.funit**2)
 
-# resample down to final wavelength scale
-            fluxsm = integralResample(spmodel.wave.value,spmodel.flux.value,instrument_parameters['wave'])
+# # smooth this in pixel space including oversample       
+#             spmodel._smoothToSlitPixelWidth(pixel_resolution*oversample,method=method)
 
-# output
-            t = Table([instrument_parameters['wave'],fluxsm],names=['#wavelength ({})'.format(spmodel.wave.unit),'surface_flux ({})'.format(spmodel.flux.unit)])
+# # resample down to final wavelength scale
+#             fluxsm = integralResample(spmodel.wave.value,spmodel.flux.value,instrument_parameters['wave'])
+
+# # output
+
+            t = Table([spmodel.wave.value,spmodel.flux.value],names=['#wavelength ({})'.format(spmodel.wave.unit),'surface_flux ({})'.format(spmodel.flux.unit)])
             t.write(noutputfile,format='ascii.tab')
+#            spmodel.export(noutputfile)
         else:
             if verbose == True: print('\tfile {} already exists; skipping'.format(noutputfile))
 
@@ -2054,6 +2058,7 @@ def loadModel(modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,*
             filename=filename+kstr
     kwargs['filename'] = filename+'_{}.txt'.format(kwargs['instrument'])
 
+    print(kwargs['filename'])
 #    kwargs['filename'] = os.path.normpath(kwargs['folder'])+'{}_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.\
 #        format(kwargs['model'],float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],kwargs['instrument']))
 

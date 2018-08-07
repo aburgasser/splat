@@ -17,7 +17,7 @@ from splat.initialize import VERSION
 
 setup(
   name = "SPLAT",
-  version = '0.32',
+  version = VERSION,
   packages = find_packages(),
 #  packages = find_packages(exclude=['docs','tests']),
 

@@ -345,7 +345,7 @@ def _modelParametersSingle(*args, **kwargs):
     params = {}
 
     for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
-        params[e] = 0.
+        params[e] = numpy.nan
         if e in keywords:
             try: f = float(kwargs[e])
             except: raise ValueError('\nInput parameter {} must be a single number, not {}\n'.format(e,kwargs[e]))
@@ -370,11 +370,11 @@ def _modelParametersSingle(*args, **kwargs):
 
 
 # REVISED METHOD USING GRIDDATA    
-    if (params['mass'] == 0.) and (params['age'] == 0.):
+    if numpy.isnan(params['mass']) == True and numpy.isnan(params['age']) == True:
 
         input_type = 'two_params'
         for k in ['temperature','gravity','radius','luminosity']:
-            if params[k] != 0.: P.append([k, params[k]])
+            if numpy.isnan(params[k]) == False: P.append([k, params[k]])
 
 # create a grid to extract the mass and age
         points = []
@@ -406,12 +406,12 @@ def _modelParametersSingle(*args, **kwargs):
             params['age'] = griddata(numpy.array(points),Ag,numpy.array((P[0][1],P[1][1])),method='linear')[0]
         except: 
             if kwargs.get('verbose',False) == True: print('\nFailed in 2 parameter determination\n')
-            params['age'] = float('nan')
+            params['age'] = numpy.nan
         try: 
             params['mass'] = griddata(numpy.array(points),Ma,numpy.array((P[0][1],P[1][1])),method='linear')[0]
         except: 
             if kwargs.get('verbose',False) == True: print('\nFailed in 2 parameter determination\n')
-            params['mass'] = float('nan')
+            params['mass'] = numpy.nan
 
 
         if kwargs.get('debug',False) == True: print('\nMass and Age unknown; determined age to be {} and mass to be {}'.format(params['age'],params['mass']))
@@ -422,12 +422,13 @@ def _modelParametersSingle(*args, **kwargs):
 # interpolate second parameter as a function of mass for each of the age models and evaluate for known mass
 # interpolate the model ages as a fucntion of these parameters and evaluate for known parameter
 ###############################################################################
-    if params['age'] == 0. and params['mass'] != 0. and not numpy.isnan(params['mass']):
+#    if params['age'] == 0. and params['mass'] != 0. and not numpy.isnan(params['mass']):
+    if numpy.isnan(params['age']) == True and numpy.isnan(params['mass']) == False:
 
         if input_type != 'two_params': 
             input_type = 'one_param'
             for k in ['temperature','gravity','radius','luminosity']:
-                if params[k] != 0.: P.append([k, params[k]])
+                if numpy.isnan(params[k]) == False: P.append([k, params[k]])
             if len(P) == 0 or len(P) > 1:
                 for k in list(params.keys()):
                     print('{}: {}'.format(k,params[k]))
@@ -447,26 +448,26 @@ def _modelParametersSingle(*args, **kwargs):
             params['age'] = f(P[0][1])
         except: 
             if kwargs.get('verbose',False) == True: print('\nFailed in age + parameter determination\n')
-            params['age'] = float('nan')
+            params['age'] = numpy.nan
 
         if kwargs.get('debug',False) == True: print('\nMass known and Age unknown; determined age to be {}'.format(10.**params['age']))
 
         Ge, Ag = [], []
 
 
-################ UNKNOWN AGE BUT KNOWN MASS AND ONE OTHER PARAMETER ###########
+################ KNOWN AGE BUT UNKNOWN MASS AND ONE OTHER PARAMETER ###########
 # generate mass as function of second parameter interpolated between two closest age models
 # evaluate mass(parameter) (resulting in both mass and age as knowns)
 ###############################################################################
 
-    if params['age'] != 0. and params['mass'] == 0. and not numpy.isnan(params['age']):
-
+#    if params['age'] != 0. and params['mass'] == 0. and not numpy.isnan(params['age']):
+    if numpy.isnan(params['age']) == False and numpy.isnan(params['mass']) == True:
         if kwargs.get('debug',False) == True: print(params)
 
         if input_type != 'two_params' and input_type != 'one_param': 
             input_type = 'one_param'
             for k in ['temperature','gravity','radius','luminosity']:
-                if params[k] != 0.: P.append([k, params[k]])
+                if numpy.isnan(params[k]) == False: P.append([k, params[k]])
             if len(P) == 0 or len(P) > 1:
                 for k in list(params.keys()):
                     print('{}: {}'.format(k,params[k]))
@@ -509,13 +510,12 @@ def _modelParametersSingle(*args, **kwargs):
 ###################### KNOWN MASS AND AGE #####################################
 # use a simple grid interpolation
 ###############################################################################
-    if params['mass'] != 0. and params['age'] != 0. and \
-        not numpy.isnan(params['age']) and not numpy.isnan(params['mass']):
+    if numpy.isnan(params['age']) == False and numpy.isnan(params['mass']) == False:
 
         if kwargs.get('debug',False) == True: print(params)
   
         for k in ['temperature','radius','gravity','luminosity']:
-            if params[k] == 0.:
+            if numpy.isnan(params[k]) == True:
                 params[k] = griddata(numpy.transpose([lmodel['mass'],lmodel['age']]),lmodel[k],(params['mass'],params['age']),method='linear')
 #                if numpy.isfinite(params[k]) == True: 
 #                    params[k] = params[k]*EVOLUTIONARY_MODEL_PARAMETERS[k]['unit']

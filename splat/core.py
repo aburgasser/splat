@@ -1584,12 +1584,18 @@ class Spectrum(object):
 # map onto oversampled grid and smooth; if model is lower resolution, interpolate; otherwise integrate & resample
         if len(self.wave) <= len(wave_oversample):
             f = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
-            v = interp1d(self.wave.value,self.variance.value,bounds_error=False,fill_value=0.)
             flux_oversample = f(wave_oversample)
-            var_oversample = v(wave_oversample)
+            if numpy.isnan(self.variance.value[0]) == False:
+                v = interp1d(self.wave.value,self.variance.value,bounds_error=False,fill_value=0.)
+                var_oversample = v(wave_oversample)
+            else:
+                var_oversample = [numpy.nan for f in flux_oversample]
         else:
             flux_oversample = integralResample(self.wave.value,self.flux.value,wave_oversample)
-            var_oversample = integralResample(self.wave.value,self.variance.value,wave_oversample)
+            if numpy.isnan(self.variance.value[0]) == False:
+                var_oversample = integralResample(self.wave.value,self.variance.value,wave_oversample)
+            else:
+                var_oversample = [numpy.nan for f in flux_oversample]
         self.wave = wave_oversample*wunit
         self.flux = flux_oversample*funit
         self.variance = var_oversample*(funit**2)
@@ -1600,7 +1606,10 @@ class Spectrum(object):
 
 # resample down to final wavelength scale
         flux_smooth = integralResample(self.wave.value,self.flux.value,wave_out)
-        var_smooth = integralResample(self.wave.value,self.variance.value,wave_out)
+        if numpy.isnan(self.variance.value[0]) == False:
+            var_smooth = integralResample(self.wave.value,self.variance.value,wave_out)
+        else:
+            var_smooth = [numpy.nan for f in flux_smooth]
         self.wave = wave_out*wunit
         self.flux = flux_smooth*funit
         self.variance = var_smooth*(funit**2)
@@ -2538,7 +2547,7 @@ class Spectrum(object):
 # do nothing if requested resolution is higher than current resolution
         if width > 2.:
 # convolve a function to smooth spectrum
-            window = signal.get_window(method,numpy.round(width))
+            window = signal.get_window(method,int(numpy.round(width)))
             neff = numpy.sum(window)/numpy.nanmax(window)        # effective number of pixels
             self.flux = signal.convolve(self.flux.value, window/numpy.sum(window), mode='same')*self.funit
             self.variance = signal.convolve(self.variance.value, window/numpy.sum(window), mode='same')/neff*(self.funit**2)
@@ -3979,7 +3988,7 @@ def readSpectrum(verbose=False,*args,**kwargs):
 #        df = fits.open(file)
 #        with fits.open(file, ignore_missing_end=True) as data:
             with fits.open(os.path.normpath(file),ignore_missing_end=True) as data:
-                data.verify('silentfix+warn')
+                data.verify('silentfix+ignore')
                 if 'NAXIS3' in list(data[0].header.keys()):
                     d = numpy.copy(data[0].data[0,:,:])
                 else:
@@ -4718,9 +4727,9 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
     if std_class == 'dwarf':
         initiateStandards()
         stds = STDS_DWARF_SPEX
-        subclass = 'sd'
-        stdtype = 'Subdwarf'
-        if verbose==True: print('Using subdwarf standards')
+        subclass = ''
+        stdtype = 'Dwarf'
+        if verbose==True: print('Using dwarf standards')
     elif std_class == 'sd' or std_class == 'subdwarf':
         initiateStandards(sd=True)
         stds = STDS_SD_SPEX
@@ -4731,7 +4740,7 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
         initiateStandards(dsd=True)
         stds = STDS_DSD_SPEX
         subclass = ''
-        stdtype = 'Dwarf'
+        stdtype = 'Mild subdwarf'
         if verbose == True: print('Using dwarf standards')
     elif std_class == 'esd':
         initiateStandards(esd=True)
