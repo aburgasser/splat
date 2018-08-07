@@ -607,6 +607,7 @@ class Spectrum(object):
 #            print(self.model,mset)
             if mset != False:
                 self.model = mset
+                self.modelset = mset
                 for k in list(SPECTRAL_MODELS[mset].keys()):
 #                    print(k,SPECTRAL_MODELS[mset][k])
                     setattr(self,k.lower(),SPECTRAL_MODELS[mset][k])

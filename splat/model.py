@@ -2007,7 +2007,9 @@ def loadModel(modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,*
     modelset = kwargs.get('set',modelset)
     mset = checkSpectralModelName(modelset)
     if mset == False: raise ValueError('Could not find model set {}; possible options are {}'.format(modelset,list(SPECTRAL_MODELS.keys())))
-    kwargs['modelset'] = mset
+    modelset = mset
+    kwargs['modelset'] = modelset
+    kwargs['model'] = modelset
 
 #    kwargs['instrument'] = kwargs.get('instrument','SPEX-PRISM')
     instrument = kwargs.get('instr',instrument)
@@ -2058,7 +2060,6 @@ def loadModel(modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,*
             filename=filename+kstr
     kwargs['filename'] = filename+'_{}.txt'.format(kwargs['instrument'])
 
-    print(kwargs['filename'])
 #    kwargs['filename'] = os.path.normpath(kwargs['folder'])+'{}_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.\
 #        format(kwargs['model'],float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],kwargs['instrument']))
 
@@ -2114,7 +2115,9 @@ def loadModel(modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,*
         file = checkLocal(kwargs['filename']+'.gz')
         if file=='':
             if kwargs['force']: raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
-            else: sp = _loadInterpolatedModel(**kwargs)
+            else: 
+#                print('calling _loadInterpolatedModel with {}'.format(kwargs))
+                sp = _loadInterpolatedModel(**kwargs)
         else: kwargs['filename'] = kwargs['filename']+'.gz'
 #                kwargs['local']=False
 #                kwargs['online']=True
@@ -2126,6 +2129,7 @@ def loadModel(modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,*
 
 # populate model parameters
     setattr(sp,'modelset',kwargs['modelset'])
+    setattr(sp,'model',kwargs['modelset'])
     setattr(sp,'instrument',kwargs['instrument'])
     for k in list(SPECTRAL_MODELS[kwargs['modelset']]['default'].keys()):
         if k in list(mparam.keys()): setattr(sp,k,mparam[k])
@@ -2194,7 +2198,7 @@ def _checkModelParametersInRange(mparam):
     return flag
 
 
-def _loadInterpolatedModel(*args,**kwargs):
+def _loadInterpolatedModel(*args,fast=True,**kwargs):
     '''
     Purpose: 
         Generates as spectral model with is interpolated between model parameter grid points. This routine is called by `loadModel()`_, or it can be called on its own.
@@ -2272,15 +2276,16 @@ def _loadInterpolatedModel(*args,**kwargs):
 
 
 # FAST METHOD - just calculate a simple weight factor that linearly interpolates between grid points (all logarithmic)
-
-    if kwargs.get('fast',True) == True:
-        parameters = _loadModelParameters(mkwargs['model'],mkwargs['instrument'],pandas=True)
+#    print('_loadInterpolatedModel called with mkwargs {}'.format(mkwargs))
+    if fast == True:
+        parameters = _loadModelParameters(mkwargs['modelset'],mkwargs['instrument'],pandas=True)
         mparams = {}
         mweights = {}
         mgrid = []
         pgrid = []
         plin = []
         for ms in list(SPECTRAL_MODEL_PARAMETERS.keys()):
+#            print(ms)
             if ms in list(parameters.keys()):
                 if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'discrete': 
                     mparams[ms] = mkwargs[ms]
@@ -2508,6 +2513,8 @@ def _loadModelParameters(*args,**kwargs):
     parameters = {'model': mset, 'instrument': instrument, 'parameter_sets': []}
     for ms in list(SPECTRAL_MODELS[mset]['default'].keys()):
         parameters[ms] = []
+#    print('_loadModelParameters called with model {} and instrument {}'.format(mset,instrument))
+#    print(SPECTRAL_MODELS[mset]['default'].keys())
 #    print(parameters.keys())
 
 # establish parameters from list of filenames
