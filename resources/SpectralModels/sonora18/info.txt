@@ -1,0 +1,8 @@
+name	Sonora 2018
+citation	Marley et al. (in prep.)
+bibcode	marley_mark_2018_1309035
+altname	marley,marley18,marley2018,sonora,sonora2018
+teff	1000
+logg	5.0
+z	0.0
+cld	nc

@@ -2646,7 +2646,7 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
 # Livingston & Wallace (1991) spectrum
     if source.lower()=='livingston' or source.lower()=='solar atlas':  
         bibcode = '1991aass.book.....L'
-        folder=splat.SPLAT_PATH+'/reference/Telluric/SolAtlas/'
+        folder=splat.SPLAT_PATH+splat.TELLURIC_MODEL_FOLDER+'/SolAtlas/'
 
 # prep files
         tfiles = glob.glob(folder+'wn*')
@@ -2676,10 +2676,10 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
 # Moehler et al. (2014) Paranal spectrum R = 60,000
     elif source.lower()=='eso' or source.lower()=='moehler' or source.lower()=='paranal':  
         bibcode = '2014A&A...568A...9M'
-        folder=splat.SPLAT_PATH+'/reference/Telluric/ESO/'
+        folder=splat.SPLAT_PATH+splat.TELLURIC_MODEL_FOLDER+'/ESO/'
         tfiles=glob.glob(folder+'*.fits')
 
-# COULD PUT A CHOICE HERE OF TELLURIC SPECTRA        
+# COULD PUT A CHOICE HERE OF TELLURIC SPECTRA IF WE DOWNLOAD MORE        
         hdu = fits.open(tfiles[0])
         tbl = hdu[1].data
         hdu.close()

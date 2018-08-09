@@ -1564,11 +1564,16 @@ class Spectrum(object):
             wave_range = wave_range*wunit
         wave_range.to(self.wave.unit)
         wave_range = wave_range.value
+# limit to range of data
+        wave_range[0] = numpy.nanmax([wave_range[0],numpy.nanmin(self.wave.value)])        
+        wave_range[1] = numpy.nanmin([wave_range[1],numpy.nanmax(self.wave.value)])        
 
 # generate output wave vector
         effres = resolution*pixel_resolution
         npix = numpy.floor(numpy.log(numpy.nanmax(wave_range)/numpy.nanmin(wave_range))/numpy.log(1.+1./effres))
         wave_out = numpy.array([numpy.nanmin(wave_range)*(1.+1./effres)**i for i in numpy.arange(npix)])
+        wave_out = wave_out[wave_out>numpy.nanmin(self.wave.value)]
+        wave_out = wave_out[wave_out<numpy.nanmax(self.wave.value)]
 
 # generate smoothing wavelength vector
         a = numpy.linspace(0.,len(wave_out)-1,len(wave_out))
@@ -5409,7 +5414,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
 #    mask_standard = kwargs.get('mask_standard',False)
 #    mask_telluric = kwargs.get('mask_telluric',mask_standard)
     var_flag = novar2
-    if numpy.isnan(numpy.nanmax(sp1.variance.value)): var_flag = False
+    if numpy.isnan(numpy.max(sp1.variance.value)) == True: var_flag = False
     statistic = kwargs.get('stat',statistic)
     minreturn = 1.e-60
     scale_factor = 1.
