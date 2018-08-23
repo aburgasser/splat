@@ -699,7 +699,7 @@ SPT_ABSMAG_RELATIONS = {
     'dahn2002': {'altname': ['dahn','dahn02'], 'bibcode': '2002AJ....124.1170D', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.25, 'range' : [17.,28.], 'coeff': [0.341,8.38]}}},
     'hawley2002': {'altname': ['hawley02','hawley'], 'bibcode': '2002AJ....123.3409H', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
-        '2MASS_J': {'spt': numpy.arange(10.,36.1,1.), 'values': [6.45,6.72,6.98,7.24,8.34,9.44,10.18,10.92,11.14,11.43,11.72,12.,12.29,12.58,12.87,13.16,14.31,14.45,14.58,14.72,14.86,14.99,15.13,15.27,15.4,15.54,15.68], 'rms': numpy.zeros(27)}}}, 
+        '2MASS_J': {'spt': numpy.arange(10.,36.1,1.), 'values': [6.45,6.72,6.98,7.24,8.34,9.44,10.18,10.92,11.14,11.43,11.72,12.,12.29,12.58,12.87,13.16,14.31,14.45,14.58,14.72,14.86,14.99,15.13,15.27,15.4,15.54,15.68], 'rms': numpy.zeros(27)+0.4}}}, 
     'cruz2003': {'altname': ['cruz','cruz03'], 'bibcode': '2003AJ....126.2421C', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.30, 'range' : [16.,28.], 'coeff': [-6.892e-4,3.453e-2,-6.193e-1,5.043,-4.410]}}},
     'burgasser2007': {'altname': ['burgasser','burgasser07'], 'bibcode': '2007ApJ...659..655B', 'sptoffset': 20, 'method': 'polynomial', 'filters': {
