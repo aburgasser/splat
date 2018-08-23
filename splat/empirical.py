@@ -157,7 +157,193 @@ def estimateDistance(*args, **kwargs):
 
 
 
-def typeToColor(spt,color,reference='skrzypek2015',uncertainty=0.,nsamples=100,verbose=False,**kwargs):
+def typeToColor(spt,color,reference='skrzypek2015',uncertainty=0.,nsamples=100,verbose=False,forgiving=True,**kwargs):
+    """
+    :Purpose: 
+
+        Takes a spectral type and optionally a color (string) and returns the typical color of the source. 
+
+    :Required Inputs:
+
+        :param spt: string, integer, float, list or numpy array specify the spectral type(s) to be evaluated
+        :param color: string indicating color; e.g., color='SDSS_I-SDSS_Z'; filter names are checked against splat.FILTERS structure
+
+    :Optional Inputs:
+
+        :param reference: Abs Mag/SpT relation used to compute the absolute magnitude. Options are:
+
+            - *skrzypek* (default): Color trends from `Skryzpek et al. (2015) <http://adsabs.harvard.edu/abs/2015A%26A...574A..78S>`_.
+              Spectral type range is M5 to T8
+              Colors include SDSS_I-SDSS_Z, SDSS_Z-UKIDSS_Y, UKIDSS_Y-MKO_J, MKO_J-MKO_H, MKO_H-MKO_K, MKO_K-WISE_W1, WISE_W1-WISE_W2, and combinations therein.
+            - *leggett*: Color trends from `Leggett et al. (2017) <http://adsabs.harvard.edu/abs/2017ApJ...842..118L>`_.
+              Spectral type range is T7.5 to Y2
+              Colors include MKO_Y-WFC3_F105W, MKO_J-WFC3_F125W, MKO_J-WFC3_F127M, MKO_H-WFC3_F160W, MKO_H-WIRC_CH4S
+
+        :param uncertainty: uncertainty on input spectral types, should be float, list of floats or numpy array (default = 0)
+        :param nsamples: number of Monte Carlo samples for error computation (default = 100)
+        :param verbose: Give feedback while in operation (default = False)
+
+    :Output:
+        A tuple containing the value and uncertainty (including systematic) of the resulting color.
+        If more than one spectral type is given, this tuple contains two numpy arrays
+
+    :Example:
+        >>> import splat
+        >>> import splat.empirical as spem
+        >>> spem.typeToColor('L3', 'MKO_J-MKO_K')
+            (1.4266666666666665, 0.07)
+        >>> spem.typeToColor(['M5','M6','M7'], 'SDSS_I-SDSS_Z', reference = 'skrzypek', uncertainty=0.5)
+            (array([0.91      , 1.4275    , 1.74333333]),
+             array([0.5624636 , 0.27662768, 0.13987478]))
+        >>> spem.typeToColor('M0', 'SDSS_I-SDSS_Z', ref = 'skrzypek', verbose=True)
+            Using the SpT/color trends from skrzypek2015
+            Rejected 1 spectral type(s) for being outside relation range
+            (nan, nan)
+    """
+
+# Keywords alternatives
+    for f in ['unc','spt_e','error']:
+        if f in list(kwargs.keys()):
+            uncertainty = kwargs.get(f,uncertainty)
+    for f in ['ref','set','method','model','relation']:
+        if f in list(kwargs.keys()):
+            reference = kwargs.get(f,reference)
+    ref = checkEmpiricalRelation(reference.lower().replace(' ',''),splat.SPT_COLORS_RELATIONS)
+    if ref == False:
+        print('\nColor set from {} has not be integrated into SPLAT\n\n'.format(reference))
+        return numpy.nan, numpy.nan
+    if verbose==True: print('\nUsing the SpT/color trends from {}\n'.format(ref))
+
+
+# Check and convert spectral type variable to an array
+#    spt_type = type(spt)
+    sptn = copy.deepcopy(spt)
+    if isinstance(sptn,str): sptn = [sptn]
+    try:
+        sptn = list(sptn)
+    except:
+        sptn = [sptn]
+    if isinstance(sptn[0],str):
+        sptn = [typeToNum(s) for s in sptn]
+    try:
+        sptn = numpy.array(sptn)
+    except:
+        raise ValueError('\nInput spectral type {} must be a string, float, int, list or numpy array'.format(spt))
+
+# Check uncertainties
+    uncn = copy.deepcopy(uncertainty)
+    if not isinstance(uncn,list) and not isinstance(uncn,numpy.ndarray): uncn = [uncn]
+    if len(uncn) == 1:
+        uncn = numpy.zeros(len(sptn))+float(uncn[0])
+
+    try:
+        uncn = numpy.array(uncn)
+    except:
+        raise ValueError('\nInput spectral type uncertainty {} must be a float, int, list or numpy array'.format(unc))
+    uncn = numpy.abs(uncn)
+
+# Process color requested
+    cfilts = (color.upper()).split('-')
+    cfilts = [c.strip().replace(' ','_') for c in cfilts]
+    cfilts_use = []
+    for i,c in enumerate(cfilts):
+        filtcheck = checkFilterName(c,verbose=verbose)
+        if filtcheck == False: 
+            print('\nDid not recognize filter {} in color {} requested'.format(c,color))
+            return numpy.nan,numpy.nan
+        else: cfilts_use.append(filtcheck)
+    col = '{}-{}'.format(cfilts_use[0],cfilts_use[1])
+
+#    cols = .replace('2mass','').replace('sdss','').replace('wise','').replace('denis','')
+
+# NEED TO PUT IN CODE FOR "FORGIVING" FILTER NAMES: MKO_J,2MASS_J -> J ETC.
+# AND ALSO INTELLIGENCE TO REVERSE COLOR
+
+# fill in extra colors if request color is not present - a little inefficient right now  
+    if col not in list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys()) and splat.SPT_COLORS_RELATIONS[ref]['method'] == 'interpolate':
+# base color 
+        c1 = (col.split('-'))[0]
+        refcol = ''
+        for x in list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys()):
+            if x.split('-')[0] == c1: refcol = x
+        if refcol == '': 
+            print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys())))
+            return numpy.nan, numpy.nan
+        refcolors = numpy.array(splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol]['values'])
+# now run through colors until you create the correct match
+        cntr = 0
+        maxcntr = len(list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys()))
+        while refcol != col and cntr < maxcntr:
+            refadd = ''
+            for x in list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys()):
+                if x.split('-')[0] == (refcol.split('-'))[-1]: refadd = x
+            if refadd == '': 
+                print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys())))
+                return numpy.nan, numpy.nan
+            refcol='{}-{}'.format((refcol.split('-'))[0],(refadd.split('-'))[-1])
+            refcolors = refcolors+numpy.array(splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd]['values'])
+            splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol] = {}
+            for k in list(splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd].keys()): splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol][k] = splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd][k]
+            splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol]['values'] = refcolors
+            cntr=cntr+1
+        if cntr >= maxcntr:
+            print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys())))
+            return numpy.nan, numpy.nan
+
+# still not there? quit
+    if col not in list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys()):
+        print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys())))
+        return numpy.nan, numpy.nan
+
+# conduct calculation for interpolating
+
+    if splat.SPT_COLORS_RELATIONS[ref]['method'] == 'interpolate':
+        f = interp1d(numpy.linspace(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][0],splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][1]+1,num=len(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['values'])),splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['values'],bounds_error=False,fill_value=0.)
+        output = f(sptn)
+        errors = [splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['fitunc'] for x in sptn]
+        if uncn[0] > 0.:
+            errors = []
+            for i,s in enumerate(sptn):
+                vals = f(numpy.random.normal(s, uncn[i], nsamples))
+                try:
+                    std = numpy.nanstd(vals)
+                    errors.append((std**2+splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['fitunc']**2)**0.5)
+                except:
+                    pass
+    elif splat.SPT_COLORS_RELATIONS[ref]['method'] == 'polynomial':
+        s = [x-splat.SPT_COLORS_RELATIONS[ref]['sptoffset'] for x in sptn]
+        output = numpy.polyval(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['coeff'],s)
+        errors = [splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['fitunc'] for x in sptn]
+        if uncn[0] > 0.:
+            errors = []
+            for i,s in enumerate(sptn):
+                vals = numpy.polyval(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['coeff'],numpy.random.normal(s, uncn[i], nsamples))
+                try:
+                    std = numpy.nanstd(vals)
+                    errors.append((std**2+splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['fitunc']**2)**0.5)
+                except:
+                    pass
+    else:
+        print('\nInterpolation method {} not allowed for typeToColor()\n'.format(color,ref,list(splat.SPT_COLORS_RELATIONS[ref]['method'])))
+        return numpy.nan, numpy.nan
+
+# cover out of range values
+    output[sptn < splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][0]] = numpy.nan
+    output[sptn > splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][1]] = numpy.nan
+    errors = numpy.array(errors)
+    errors[sptn < splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][0]] = numpy.nan
+    errors[sptn > splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][1]] = numpy.nan
+    rej = [int(numpy.isnan(x)) for x in output]
+    if verbose == True and numpy.nansum(rej) > 0:
+        print('Rejected {} spectral type(s) for being outside relation range'.format(numpy.nansum(rej)))
+
+    if len(sptn) == 1:
+        return output[0],errors[0]
+    else:
+        return output, errors
+
+
+def typeToColor_old(spt,color,reference='skrzypek2015',uncertainty=0.,nsamples=100,verbose=False,**kwargs):
     """
     :Purpose: Takes a spectral type and optionally a color (string) and returns the typical color of the source. 
     :param spt: string or integer of the spectral type
@@ -251,7 +437,6 @@ def typeToColor(spt,color,reference='skrzypek2015',uncertainty=0.,nsamples=100,v
     else:
         print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_RELATIONS[ref]['values'].keys())))
         return numpy.nan, numpy.nan
-
 
 
 
@@ -510,6 +695,8 @@ def typeToMag(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False
 
             - *dahn2002*: Abs Mag/SpT relation from `Dahn et al. (2002) <http://adsabs.harvard.edu/abs/2002AJ....124.1170D>`_
               Allowed spectral type range is M7 to L8, and allowed filters are 2MASS J
+            - *hawley2002*: Abs Mag/SpT relation from `Hawley et al. (2002) <http://adsabs.harvard.edu/abs/2002AJ....123.3409H>`_
+              Allowed spectral type range is M0 to T6, and allowed filters are 2MASS J
             - *cruz2003*: Abs Mag/SpT relation from `Cruz et al. (2003) <http://adsabs.harvard.edu/abs/2003AJ....126.2421C>`_
               Allowed spectral type range is M6 to L8, and allowed filters are 2MASS J
             - *tinney2003*: Abs Mag/SpT relation from `Tinney et al. (2003) <http://adsabs.harvard.edu/abs/2003AJ....126..975T>`_.
@@ -606,30 +793,68 @@ def typeToMag(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False
     else: ref=refcheck
 
 # read in relevant information
-    sptoffset = SPT_ABSMAG_RELATIONS[ref]['sptoffset']
-    coeff = SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['coeff']
-    rng = SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['range']
-    fitunc = SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['fitunc']
     refstring = 'Absolute {}/SpT relation from {}'.format(filt,shortRef(SPT_ABSMAG_RELATIONS[ref]['bibcode']))
     if verbose: print('\nUsing {}'.format(refstring))
 
-# compute absolute magnitudes
-    abs_mag = numpy.polyval(coeff, sptn-sptoffset)
-    abs_mag_error = numpy.zeros(len(sptn))+fitunc
+# polynomial method
+    if SPT_ABSMAG_RELATIONS[ref]['method'] == 'polynomial':
 
+# compute values
+        abs_mag = numpy.polyval(SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['coeff'], sptn-SPT_ABSMAG_RELATIONS[ref]['sptoffset'])
+        abs_mag_error = numpy.zeros(len(sptn))+SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['fitunc']
 # mask out absolute magnitudes if they are outside spectral type range
-    if mask == True:
-        abs_mag[numpy.logical_or(sptn<rng[0],sptn>rng[1])] = mask_value
-        abs_mag_error[numpy.logical_or(sptn<rng[0],sptn>rng[1])] = mask_value
-        if verbose: print('{} values are outside relation range'.format(len(abs_mag[numpy.logical_or(sptn<rng[0],sptn>rng[1])])))
-
+        if mask == True:
+            abs_mag[numpy.logical_or(sptn<SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['range'][0],sptn>SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['range'][1])] = mask_value
+            abs_mag_error[numpy.logical_or(sptn<SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['range'][0],sptn>SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['range'][1])] = mask_value
+            if verbose: print('{} values are outside relation range'.format(len(abs_mag[numpy.logical_or(sptn<SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['range'][0],sptn>SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['range'][1])])))
 # perform monte carlo error estimate (slow)
-    if numpy.nanmin(uncn) > 0.:
-        for i,u in enumerate(uncn):
-            if absmag[i] != mask_value and absmag[i] != numpy.nan:
-                vals = numpy.polyval(coeff, numpy.random.normal(sptn[i] - sptoffset, uncn, nsamples))
-#            abs_mag = numpy.nanmean(vals)
-                abs_mag_error[i] = (numpy.nanstd(vals)**2+fitunc**2)**0.5
+        if numpy.nanmin(uncn) > 0.:
+            for i,u in enumerate(uncn):
+                if absmag[i] != mask_value and absmag[i] != numpy.nan:
+                    vals = numpy.polyval(SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['coeff'], numpy.random.normal(sptn[i] - SPT_ABSMAG_RELATIONS[ref]['sptoffset'], uncn, nsamples))
+                    abs_mag_error[i] = (numpy.nanstd(vals)**2+SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['fitunc']**2)**0.5
+
+# interpolation method
+    elif SPT_ABSMAG_RELATIONS[ref]['method'] == 'interpolate':
+        rng = [numpy.nanmin(SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['spt']),numpy.nanmax(SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['spt'])]
+
+# compute values
+        f = interp1d(SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['spt'],SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['values'],bounds_error=False,fill_value=numpy.nan)
+        fe = interp1d(SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['spt'],SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['rms'],bounds_error=False,fill_value=numpy.nan)
+        abs_mag = f(sptn)
+        abs_mag_error = fe(sptn)
+# mask out absolute magnitudes if they are outside spectral type range
+        if mask == True:
+            abs_mag[numpy.logical_or(sptn<rng[0],sptn>rng[1])] = mask_value
+            abs_mag_error[numpy.logical_or(sptn<rng[0],sptn>rng[1])] = mask_value
+            if verbose: print('{} values are outside relation range'.format(len(abs_mag[numpy.logical_or(sptn<rng[0],sptn>rng[1])])))
+# perform monte carlo error estimate (slow)
+        if numpy.nanmin(uncn) > 0.:
+            for i,u in enumerate(uncn):
+                if absmag[i] != mask_value and absmag[i] != numpy.nan:
+                    vals = f(numpy.random.normal(sptn[i], uncn, nsamples))
+                    abs_mag_error[i] = (numpy.nanstd(vals)**2+abs_mag_error[i]**2)**0.5
+    else:
+        raise ValueError('Unknown method {} for {}'.format(SPT_ABSMAG_RELATIONS[ref]['method'],refstring))
+
+
+# # compute absolute magnitudes
+#     abs_mag = numpy.polyval(coeff, sptn-sptoffset)
+#     abs_mag_error = numpy.zeros(len(sptn))+fitunc
+
+# # mask out absolute magnitudes if they are outside spectral type range
+#     if mask == True:
+#         abs_mag[numpy.logical_or(sptn<rng[0],sptn>rng[1])] = mask_value
+#         abs_mag_error[numpy.logical_or(sptn<rng[0],sptn>rng[1])] = mask_value
+#         if verbose: print('{} values are outside relation range'.format(len(abs_mag[numpy.logical_or(sptn<rng[0],sptn>rng[1])])))
+
+# # perform monte carlo error estimate (slow)
+#     if numpy.nanmin(uncn) > 0.:
+#         for i,u in enumerate(uncn):
+#             if absmag[i] != mask_value and absmag[i] != numpy.nan:
+#                 vals = numpy.polyval(coeff, numpy.random.normal(sptn[i] - sptoffset, uncn, nsamples))
+# #            abs_mag = numpy.nanmean(vals)
+#                 abs_mag_error[i] = (numpy.nanstd(vals)**2+fitunc**2)**0.5
 
 # return values in same dimension as input
     if len(sptn) == 1: return float(abs_mag[0]),float(abs_mag_error[0])

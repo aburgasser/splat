@@ -259,6 +259,8 @@ FILTERS = { \
     'MKO_J_ATM': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'MKO_H_ATM': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'MKO_K_ATM': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
+# this needs to be added!
+#    'MKO_Y': {'file': 'mko_j.txt', 'description': 'MKO Y-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': ['Y']}, \
     'MKO_J': {'file': 'mko_j.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'MKO_H': {'file': 'mko_h.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'MKO_K': {'file': 'mko_ks.txt', 'description': 'MKO K-band', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
@@ -270,12 +272,12 @@ FILTERS = { \
     'NICMOS_F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N', 'zeropoint': 2275.4, 'method': 'vega', 'rsr': False, 'altname': ['F097N']}, \
     'NICMOS_F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N', 'zeropoint': 1937.3, 'method': 'vega', 'rsr': False, 'altname': ['F108N']}, \
     'NICMOS_F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M', 'zeropoint': 1871.8, 'method': 'vega', 'rsr': False, 'altname': ['F110M']}, \
-    'NICMOS_F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W', 'zeropoint': 1768.5, 'method': 'vega', 'rsr': False, 'altname': ['F110W']}, \
+    'NICMOS_F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W', 'zeropoint': 1768.5, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
     'NICMOS_F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N', 'zeropoint': 1821.0, 'method': 'vega', 'rsr': False, 'altname': ['F113N']}, \
-    'NICMOS_F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W', 'zeropoint': 1277.1, 'method': 'vega', 'rsr': False, 'altname': ['F140W']}, \
+    'NICMOS_F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W', 'zeropoint': 1277.1, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
     'NICMOS_F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M', 'zeropoint': 1242.0, 'method': 'vega', 'rsr': False, 'altname': ['F145M']}, \
-    'NICMOS_F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W', 'zeropoint': 1071.7, 'method': 'vega', 'rsr': False, 'altname': ['F160W']}, \
-    'NICMOS_F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N', 'zeropoint': 1003.0, 'method': 'vega', 'rsr': False, 'altname': ['F164N']}, \
+    'NICMOS_F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W', 'zeropoint': 1071.7, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
+    'NICMOS_F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N', 'zeropoint': 1003.0, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
     'NICMOS_F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M', 'zeropoint': 1023.6, 'method': 'vega', 'rsr': False, 'altname': ['F165M']}, \
     'NICMOS_F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N', 'zeropoint': 1047.7, 'method': 'vega', 'rsr': False, 'altname': ['F166N']}, \
     'NICMOS_F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M', 'zeropoint': 979.1, 'method': 'vega', 'rsr': False, 'altname': ['F170M']}, \
@@ -342,21 +344,21 @@ FILTERS = { \
     'VISTA_J': {'file': 'vista_j.txt', 'description': 'VISTA J-band', 'zeropoint': 1554.03, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'VISTA_H': {'file': 'vista_h.txt', 'description': 'VISTA H-band', 'zeropoint': 1030.40, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'VISTA_KS': {'file': 'vista_ks.txt', 'description': 'VISTA Ks-band', 'zeropoint': 674.83, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F098M': {'file': 'HST-WFC3_IR_F098M.txt', 'description': 'WFC3 F098M', 'zeropoint': 2154.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F105W': {'file': 'HST-WFC3_IR_F105W.txt', 'description': 'WFC3 F105W', 'zeropoint': 1975.2, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 y']}, \
-    'WFC3_F110W': {'file': 'HST-WFC3_IR_F110W.txt', 'description': 'WFC3 F110W', 'zeropoint': 1738.4, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 yj']}, \
-    'WFC3_F125W': {'file': 'HST-WFC3_IR_F125W.txt', 'description': 'WFC3 F125W', 'zeropoint': 1564.3, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 j']}, \
-    'WFC3_F126N': {'file': 'HST-WFC3_IR_F126N.txt', 'description': 'WFC3 F126N', 'zeropoint': 1552.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F127M': {'file': 'HST-WFC3_IR_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 1496.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F128N': {'file': 'HST-WFC3_IR_F128N.txt', 'description': 'WFC3 F128N', 'zeropoint': 1392.6, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F130N': {'file': 'HST-WFC3_IR_F130N.txt', 'description': 'WFC3 F130N', 'zeropoint': 1475.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F132N': {'file': 'HST-WFC3_IR_F132N.txt', 'description': 'WFC3 F132N', 'zeropoint': 1466.6, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F139M': {'file': 'HST-WFC3_IR_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 1342.8, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F140W': {'file': 'HST-WFC3_IR_F140W.txt', 'description': 'WFC3 F140W', 'zeropoint': 1324.8, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F153M': {'file': 'HST-WFC3_IR_F153M.txt', 'description': 'WFC3 F153M', 'zeropoint': 1142.0, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F160W': {'file': 'HST-WFC3_IR_F160W.txt', 'description': 'WFC3 F160W', 'zeropoint': 1138.1, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 h']}, \
-    'WFC3_F164N': {'file': 'HST-WFC3_IR_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 1005.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F167N': {'file': 'HST-WFC3_IR_F167N.txt', 'description': 'WFC3 F167N', 'zeropoint': 1030.0, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WFC3_F098M': {'file': 'HST-WFC3_IR_F098M.txt', 'description': 'WFC3 F098M', 'zeropoint': 2154.5, 'method': 'vega', 'rsr': False, 'altname': ['F098M']}, \
+    'WFC3_F105W': {'file': 'HST-WFC3_IR_F105W.txt', 'description': 'WFC3 F105W', 'zeropoint': 1975.2, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 y','F105W']}, \
+    'WFC3_F110W': {'file': 'HST-WFC3_IR_F110W.txt', 'description': 'WFC3 F110W', 'zeropoint': 1738.4, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 yj','F110W']}, \
+    'WFC3_F125W': {'file': 'HST-WFC3_IR_F125W.txt', 'description': 'WFC3 F125W', 'zeropoint': 1564.3, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 j','F125W']}, \
+    'WFC3_F126N': {'file': 'HST-WFC3_IR_F126N.txt', 'description': 'WFC3 F126N', 'zeropoint': 1552.5, 'method': 'vega', 'rsr': False, 'altname': ['F126N']}, \
+    'WFC3_F127M': {'file': 'HST-WFC3_IR_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 1496.5, 'method': 'vega', 'rsr': False, 'altname': ['F127M']}, \
+    'WFC3_F128N': {'file': 'HST-WFC3_IR_F128N.txt', 'description': 'WFC3 F128N', 'zeropoint': 1392.6, 'method': 'vega', 'rsr': False, 'altname': ['F128N']}, \
+    'WFC3_F130N': {'file': 'HST-WFC3_IR_F130N.txt', 'description': 'WFC3 F130N', 'zeropoint': 1475.9, 'method': 'vega', 'rsr': False, 'altname': ['F130N']}, \
+    'WFC3_F132N': {'file': 'HST-WFC3_IR_F132N.txt', 'description': 'WFC3 F132N', 'zeropoint': 1466.6, 'method': 'vega', 'rsr': False, 'altname': ['F132N']}, \
+    'WFC3_F139M': {'file': 'HST-WFC3_IR_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 1342.8, 'method': 'vega', 'rsr': False, 'altname': ['F139M']}, \
+    'WFC3_F140W': {'file': 'HST-WFC3_IR_F140W.txt', 'description': 'WFC3 F140W', 'zeropoint': 1324.8, 'method': 'vega', 'rsr': False, 'altname': ['F140W']}, \
+    'WFC3_F153M': {'file': 'HST-WFC3_IR_F153M.txt', 'description': 'WFC3 F153M', 'zeropoint': 1142.0, 'method': 'vega', 'rsr': False, 'altname': ['F153M']}, \
+    'WFC3_F160W': {'file': 'HST-WFC3_IR_F160W.txt', 'description': 'WFC3 F160W', 'zeropoint': 1138.1, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 h','F160W']}, \
+    'WFC3_F164N': {'file': 'HST-WFC3_IR_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 1005.5, 'method': 'vega', 'rsr': False, 'altname': ['F164N']}, \
+    'WFC3_F167N': {'file': 'HST-WFC3_IR_F167N.txt', 'description': 'WFC3 F167N', 'zeropoint': 1030.0, 'method': 'vega', 'rsr': False, 'altname': ['F167N']}, \
 #    'WFC3_F127M': {'file': 'wfc3_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
 #    'WFC3_F139M': {'file': 'wfc3_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
 #    'WFC3_F164N': {'file': 'wfc3_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
@@ -640,16 +642,26 @@ SPT_TEFF_RELATIONS = {
 
 
 SPT_COLORS_RELATIONS = {
-    'skrzypek2015': {'altname': ['skrzypek','skrzypek15'], 'reference': 'Skrzypek et al. (2015)','bibcode': '2015A%26A...574A..78S','range': [15,38],'filters': ['i','z','y','j','h','k','w1','w2'],'scatter': 0.07,
-        'values': { 
-            'i-z': [0.91,1.45,1.77,1.93,1.99,2.01,2.02,2.04,2.1,2.2,2.33,2.51,2.71,2.93,3.15,3.36,3.55,3.7,3.82,3.9,3.95,3.98,4.01,4.08], \
-            'z-y': [0.47,0.6,0.7,0.77,0.82,0.86,0.88,0.9,0.92,0.94,0.97,1.0,1.04,1.09,1.16,1.23,1.33,1.43,1.55,1.68,1.81,1.96,2.11,2.26], \
-            'y-j': [0.55,0.67,0.78,0.87,0.96,1.04,1.11,1.18,1.23,1.27,1.31,1.33,1.35,1.21,1.2,1.19,1.19,1.18,1.18,1.17,1.16,1.16,1.15,1.15], \
-            'j-h': [0.45,0.53,0.56,0.58,0.6,0.63,0.67,0.73,0.79,0.86,0.91,0.96,0.97,0.96,0.9,0.8,0.65,0.46,0.25,0.02,-0.19,-0.35,-0.43,-0.36], \
-            'h-k': [0.32,0.39,0.44,0.47,0.51,0.54,0.58,0.63,0.67,0.71,0.74,0.75,0.75,0.71,0.65,0.56,0.45,0.31,0.16,0.01,-0.11,-0.19,-0.2,-0.09], \
-            'k-w1': [0.11,0.22,0.25,0.26,0.27,0.29,0.33,0.4,0.48,0.56,0.65,0.72,0.77,0.79,0.79,0.76,0.71,0.65,0.59,0.55,0.54,0.59,0.7,0.9], \
-            'w1-w2': [0.17,0.21,0.24,0.26,0.27,0.27,0.28,0.28,0.29,0.3,0.32,0.36,0.41,0.48,0.57,0.68,0.82,0.99,1.19,1.43,1.7,2.02,2.38,2.79]}
-        }
+    'skrzypek2015': {'altname': ['skrzypek','skrzypek15'], 'reference': 'Skrzypek et al. (2015)','bibcode': '2015A%26A...574A..78S','range': [15,38], 'method': 'interpolate', 'filters': ['i','z','y','j','h','k','w1','w2'],'scatter': 0.07,
+        'colors': { 
+            'SDSS_I-SDSS_Z': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.91,1.45,1.77,1.93,1.99,2.01,2.02,2.04,2.1,2.2,2.33,2.51,2.71,2.93,3.15,3.36,3.55,3.7,3.82,3.9,3.95,3.98,4.01,4.08]}, \
+            'SDSS_Z-UKIDSS_Y': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.47,0.6,0.7,0.77,0.82,0.86,0.88,0.9,0.92,0.94,0.97,1.0,1.04,1.09,1.16,1.23,1.33,1.43,1.55,1.68,1.81,1.96,2.11,2.26]}, \
+            'UKIDSS_Y-MKO_J': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.55,0.67,0.78,0.87,0.96,1.04,1.11,1.18,1.23,1.27,1.31,1.33,1.35,1.21,1.2,1.19,1.19,1.18,1.18,1.17,1.16,1.16,1.15,1.15]}, \
+            'MKO_J-MKO_H': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.45,0.53,0.56,0.58,0.6,0.63,0.67,0.73,0.79,0.86,0.91,0.96,0.97,0.96,0.9,0.8,0.65,0.46,0.25,0.02,-0.19,-0.35,-0.43,-0.36]}, \
+            'MKO_H-MKO_K': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.32,0.39,0.44,0.47,0.51,0.54,0.58,0.63,0.67,0.71,0.74,0.75,0.75,0.71,0.65,0.56,0.45,0.31,0.16,0.01,-0.11,-0.19,-0.2,-0.09]}, \
+            'MKO_K-W1': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.11,0.22,0.25,0.26,0.27,0.29,0.33,0.4,0.48,0.56,0.65,0.72,0.77,0.79,0.79,0.76,0.71,0.65,0.59,0.55,0.54,0.59,0.7,0.9]}, \
+            'W1-W2': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.17,0.21,0.24,0.26,0.27,0.27,0.28,0.28,0.29,0.3,0.32,0.36,0.41,0.48,0.57,0.68,0.82,0.99,1.19,1.43,1.7,2.02,2.38,2.79]}
+            },
+        },
+    'leggett2017': {'altname': ['leggett','ydwarf','leggett17'], 'reference': 'Leggett et al. (2017)','bibcode': '2017ApJ...842..118L','sptoffset': 30,'method': 'polynomial', 'range' : [37.5,42], 'fitunc': 0.1, 
+        'colors': {
+            'MKO_Y-WFC3_F105W': {'fitunc' : 0.1, 'range' : [37.5,42], 'coeff': [0.027813,-0.601128,2.42719]}, \
+            'MKO_J-WFC3_F125W': {'fitunc' : 0.1, 'range' : [37.5,42], 'coeff': [0.020710,-0.398120,1.228187]}, \
+            'MKO_J-WFC3_F127M': {'fitunc' : 0.1, 'range' : [37.5,42], 'coeff': [0.014005,-0.1183161,1.092170]}, \
+            'MKO_H-WFC3_F160W': {'fitunc' : 0.1, 'range' : [37.5,42], 'coeff': [0.001134,-0.008060,-0.21659]}, \
+            'MKO_H-WIRC_CH4S': {'fitunc' : 0.1, 'range' : [37.5,42], 'coeff': [-0.006130,0.204865,-0.679045]}
+            },
+        } 
     }
 
 
@@ -686,6 +698,8 @@ ABSMAG_LBOL_RELATIONS = {
 SPT_ABSMAG_RELATIONS = {
     'dahn2002': {'altname': ['dahn','dahn02'], 'bibcode': '2002AJ....124.1170D', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.25, 'range' : [17.,28.], 'coeff': [0.341,8.38]}}},
+    'hawley2002': {'altname': ['hawley02','hawley'], 'bibcode': '2002AJ....123.3409H', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
+        '2MASS_J': {'spt': numpy.arange(10.,36.1,1.), 'values': [6.45,6.72,6.98,7.24,8.34,9.44,10.18,10.92,11.14,11.43,11.72,12.,12.29,12.58,12.87,13.16,14.31,14.45,14.58,14.72,14.86,14.99,15.13,15.27,15.4,15.54,15.68], 'rms': numpy.zeros(27)}}}, 
     'cruz2003': {'altname': ['cruz','cruz03'], 'bibcode': '2003AJ....126.2421C', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.30, 'range' : [16.,28.], 'coeff': [-6.892e-4,3.453e-2,-6.193e-1,5.043,-4.410]}}},
     'burgasser2007': {'altname': ['burgasser','burgasser07'], 'bibcode': '2007ApJ...659..655B', 'sptoffset': 20, 'method': 'polynomial', 'filters': {
@@ -718,12 +732,12 @@ SPT_ABSMAG_RELATIONS = {
         'WISE_W3': {'fitunc': 0.43, 'range':[16., 39.], 'coeff': [2.37656e-5,-1.28563e-3,2.01740e-2,6.64242e-2,7.81181e0]},
         'WISE_W4': {'fitunc': 0.76, 'range':[16., 39.], 'coeff': [-2.16042e-3,1.14630e-1,7.78974e0]}}},
     'dupuy2013': {'altname': ['dupuy13'], 'bibcode': '2013Sci...341.1492D', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
-        'MKO_Y': {'spt': [38,38.5,39,40.], 'absmag': [17.4,18.81,19.26,20.24], 'rms': [0.25,0.51,0.88,0.17]}, 
-        'MKO_J': {'spt': [38,38.5,39,39.5,40.], 'absmag': [16.43,17.87,18.39,17.68,20.09], 'rms': [0.46,0.44,0.95,0.37,0.25]}, 
-        'MKO_H': {'spt': [38,38.5,39,39.5,40.], 'absmag': [16.82,18.2,18.77,18.08,20.6], 'rms': [0.43,0.45,1.08,0.39,0.25]}, 
-        'MKO_K': {'spt': [38,38.5,39,40.], 'absmag': [16.93,18.27,18.89,20.7], 'rms': [0.8,0.4,0.57,0.18]}, 
-        'IRAC_CH1': {'spt': [38,38.5,39,39.5,40.], 'absmag': [15.11,15.83,16.17,15.58,16.99], 'rms': [0.15,0.22,0.23,0.41,0.21]}, 
-        'IRAC_CH2': {'spt': [38,38.5,39,39.5,40.], 'absmag': [13.4,13.79,14.09,13.51,14.66], 'rms': [0.21,0.12,0.2,0.43,0.28]}}}, 
+        'MKO_Y': {'spt': [38,38.5,39,40.], 'values': [17.4,18.81,19.26,20.24], 'rms': [0.25,0.51,0.88,0.17]}, 
+        'MKO_J': {'spt': [38,38.5,39,39.5,40.], 'values': [16.43,17.87,18.39,17.68,20.09], 'rms': [0.46,0.44,0.95,0.37,0.25]}, 
+        'MKO_H': {'spt': [38,38.5,39,39.5,40.], 'values': [16.82,18.2,18.77,18.08,20.6], 'rms': [0.43,0.45,1.08,0.39,0.25]}, 
+        'MKO_K': {'spt': [38,38.5,39,40.], 'values': [16.93,18.27,18.89,20.7], 'rms': [0.8,0.4,0.57,0.18]}, 
+        'IRAC_CH1': {'spt': [38,38.5,39,39.5,40.], 'values': [15.11,15.83,16.17,15.58,16.99], 'rms': [0.15,0.22,0.23,0.41,0.21]}, 
+        'IRAC_CH2': {'spt': [38,38.5,39,39.5,40.], 'values': [13.4,13.79,14.09,13.51,14.66], 'rms': [0.21,0.12,0.2,0.43,0.28]}}}, 
     'tinney2003': {'altname': ['tinney','tinney03'],'bibcode': '2003AJ....126..975T', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         'COUSINS_I': {'fitunc' : 0.37, 'range' : [20., 37.5], 'coeff': [-2.49821e-6,1.04398e-3,-6.49719e-2,1.56038,-1.58296e1,7.22089e1]},
         'UKIRT_Z': {'fitunc' : 0.29, 'range' : [20., 37.5], 'coeff': [-9.97226e-7,1.05950e-4,-4.57019e-3,1.02898e-1,-1.29357e0,8.96822e0,-3.08010e1,4.99447e1]},
@@ -732,8 +746,8 @@ SPT_ABSMAG_RELATIONS = {
         'UKIRT_J': {'fitunc' : 0.30, 'range' : [20., 37.5], 'coeff': [-9.91110e-7,1.05811e-4,-4.58399e-3,1.03572e-1,-1.30526e0,9.06701e0,-3.13411e1,5.04642e1]},
         '2MASS_J': {'fitunc' : 0.36, 'range' : [20., 37.5], 'coeff': [-2.80824e-6,3.41146e-4,-1.73848e-2,4.82120e-1,-7.86911,7.57222e1,-3.98105e2,8.94012e2]}}},
     'tinney2014': {'altname': ['tinney14'],'bibcode': '2014ApJ...796...39T', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
-        'MKO_J': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'absmag': [15.22,15.49,16.39,16.66,17.9,18.35,19.08,20.32,22.39,22.18,25.76], 'rms': [0.31,0.37,0.72,0.36,0.46,0.9,0.97,1.25,1.,0.76,3.52]}, 
-        'WISE_W2': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'absmag': [12.86,13.28,13.39,13.44,13.75,13.92,14.28,14.65,15.2,14.78,15.76], 'rms': [0.17,0.48,0.27,0.23,0.22,0.24,0.46,0.35,1.,0.77,2.15]}}}, 
+        'MKO_J': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'values': [15.22,15.49,16.39,16.66,17.9,18.35,19.08,20.32,22.39,22.18,25.76], 'rms': [0.31,0.37,0.72,0.36,0.46,0.9,0.97,1.25,1.,0.76,3.52]}, 
+        'WISE_W2': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'values': [12.86,13.28,13.39,13.44,13.75,13.92,14.28,14.65,15.2,14.78,15.76], 'rms': [0.17,0.48,0.27,0.23,0.22,0.24,0.46,0.35,1.,0.77,2.15]}}}, 
     'filippazzo2015': {'altname': ['filippazzo','filippazzo15','fillippazzo','filipazo','filippazo'],'bibcode': '2015ApJ...810..158F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [3.478e-5, -2.684e-3, 7.771e-2, -1.058, 7.157, -8.350]}, 
         'WISE_W2': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [8.190e-6, -6.938e-4, 2.283e-2, -3.655e-1, 3.032, -5.043e-1]}}},

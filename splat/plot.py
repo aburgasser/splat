@@ -100,6 +100,8 @@ def plotMap(*args,**kwargs):
     file = kwargs.get('file','')
     file = kwargs.get('output',file)
     file = kwargs.get('filename',file)
+    if isinstance(symsizes,float) or isinstance(symsizes,int):
+        symsizes = [symsizes for i in range(len(args))]
 
 
     fig = plt.figure(figsize=figsize)
