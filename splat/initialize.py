@@ -231,6 +231,19 @@ FILTERS = { \
 #    '2MASS_Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
     'BESSEL_I': {'file': 'bessel_i.txt', 'description': 'Bessel I-band', 'zeropoint': 2405.3, 'method': 'vega', 'rsr': False, 'altname': ['I']}, \
     'COUSINS_I': {'file': 'i_cousins.txt', 'description': 'Cousins I-band', 'zeropoint': 2405.3, 'method': 'vega', 'rsr': False, 'altname': ['IC']}, \
+    'DECAM_U': {'file': 'DECam_u.txt', 'description': 'DECam u-band', 'zeropoint': 1568.5, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_U','DEC_U']}, \
+    'DECAM_G': {'file': 'DECam_g.txt', 'description': 'DECam g-band', 'zeropoint': 3909.11, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_G','DEC_G']}, \
+    'DECAM_R': {'file': 'DECam_r.txt', 'description': 'DECam r-band', 'zeropoint': 3151.44, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_R','DEC_R']}, \
+    'DECAM_I': {'file': 'DECam_i.txt', 'description': 'DECam i-band', 'zeropoint': 2584.6, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_I','DEC_I']}, \
+    'DECAM_Z': {'file': 'DECam_z.txt', 'description': 'DECam z-band', 'zeropoint': 2273.09, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_Z','DEC_Z']}, \
+    'DECAM_Y': {'file': 'DECam_y.txt', 'description': 'DECam y-band', 'zeropoint': 2205.95, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_Y','DEC_Y']}, \
+    'DECAM_VR': {'file': 'DECam_vr.txt', 'description': 'DECam z-band', 'zeropoint': 4000., 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_VR','DEC_VR']}, \
+    'DES_U': {'file': 'DES_u.txt', 'description': 'DES u-band (filter + atm)', 'zeropoint': 1568.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'DES_G': {'file': 'DES_g.txt', 'description': 'DES g-band (filter + atm)', 'zeropoint': 3909.11, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'DES_R': {'file': 'DES_r.txt', 'description': 'DES r-band (filter + atm)', 'zeropoint': 3151.44, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'DES_I': {'file': 'DES_i.txt', 'description': 'DES i-band (filter + atm)', 'zeropoint': 2584.6, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'DES_Z': {'file': 'DES_z.txt', 'description': 'DES z-band (filter + atm)', 'zeropoint': 2273.09, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'DES_Y': {'file': 'DES_y.txt', 'description': 'DES y-band (filter + atm)', 'zeropoint': 2205.95, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'FOURSTAR_J': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR J-band', 'zeropoint': 1581.2, 'method': 'vega', 'rsr': False, 'altname': ['4star j']}, \
     'FOURSTAR_J1': {'file': 'fourstar-j1.txt', 'description': 'FOURSTAR J1-band', 'zeropoint': 1978.7, 'method': 'vega', 'rsr': False, 'altname': ['4star j1']}, \
     'FOURSTAR_J2': {'file': 'fourstar-j2.txt', 'description': 'FOURSTAR J2-band', 'zeropoint': 1774.5, 'method': 'vega', 'rsr': False, 'altname': ['4star j2']}, \
@@ -649,8 +662,8 @@ SPT_COLORS_RELATIONS = {
             'UKIDSS_Y-MKO_J': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.55,0.67,0.78,0.87,0.96,1.04,1.11,1.18,1.23,1.27,1.31,1.33,1.35,1.21,1.2,1.19,1.19,1.18,1.18,1.17,1.16,1.16,1.15,1.15]}, \
             'MKO_J-MKO_H': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.45,0.53,0.56,0.58,0.6,0.63,0.67,0.73,0.79,0.86,0.91,0.96,0.97,0.96,0.9,0.8,0.65,0.46,0.25,0.02,-0.19,-0.35,-0.43,-0.36]}, \
             'MKO_H-MKO_K': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.32,0.39,0.44,0.47,0.51,0.54,0.58,0.63,0.67,0.71,0.74,0.75,0.75,0.71,0.65,0.56,0.45,0.31,0.16,0.01,-0.11,-0.19,-0.2,-0.09]}, \
-            'MKO_K-W1': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.11,0.22,0.25,0.26,0.27,0.29,0.33,0.4,0.48,0.56,0.65,0.72,0.77,0.79,0.79,0.76,0.71,0.65,0.59,0.55,0.54,0.59,0.7,0.9]}, \
-            'W1-W2': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.17,0.21,0.24,0.26,0.27,0.27,0.28,0.28,0.29,0.3,0.32,0.36,0.41,0.48,0.57,0.68,0.82,0.99,1.19,1.43,1.7,2.02,2.38,2.79]}
+            'MKO_K-WISE_W1': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.11,0.22,0.25,0.26,0.27,0.29,0.33,0.4,0.48,0.56,0.65,0.72,0.77,0.79,0.79,0.76,0.71,0.65,0.59,0.55,0.54,0.59,0.7,0.9]}, \
+            'WISE_W1-WISE_W2': {'fitunc' : 0.07, 'range' : [15,38], 'values': [0.17,0.21,0.24,0.26,0.27,0.27,0.28,0.28,0.29,0.3,0.32,0.36,0.41,0.48,0.57,0.68,0.82,0.99,1.19,1.43,1.7,2.02,2.38,2.79]}
             },
         },
     'leggett2017': {'altname': ['leggett','ydwarf','leggett17'], 'reference': 'Leggett et al. (2017)','bibcode': '2017ApJ...842..118L','sptoffset': 30,'method': 'polynomial', 'range' : [37.5,42], 'fitunc': 0.1, 
