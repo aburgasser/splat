@@ -611,7 +611,7 @@ EVOLUTIONARY_MODELS = {\
     'burrows2001': {'file': 'burrows2001.csv','citation': 'Burrows et al. (2001)', 'bibcode': '2001RvMP...73..719B', 'altname': ['burrows','bur01','burrows01'], 'default': {}},\
     'chabrier1997': {'file': 'chabrier1997.csv','citation': 'Chabrier & Baraffe (1997)', 'bibcode': '1997A&A...328...83C', 'altname': ['chabrier','cha97','chabrier97'], 'default': {'metallicity': 0., 'y': 0.275}},\
     'saumon2008': {'file': 'saumon2008.csv','citation': 'Saumon et al. (2008)', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','sau08','saumon08'], 'default': {'metallicity': 0., 'cloud': 'hybrid'}},\
-    'marley2019': {'file': 'marley2019.csv','citation': 'Marley et al. (2019)', 'bibcode': 'marley2019', 'altname': ['marley','sonora'], 'default': {}},\
+    'marley2019': {'file': 'marley2019.csv','citation': 'Marley et al. (2019)', 'bibcode': 'marley2019', 'url': 'https://zenodo.org/record/1405206#.W4bNhmQzrq0', 'altname': ['marley','sonora'], 'default': {}},\
     }
 
 EVOLUTIONARY_MODEL_PARAMETERS = {\
