@@ -1977,6 +1977,7 @@ def integralResample(xh, yh, xl, nsamp=100,method='fast'):
 #    plt.plot(xl,ys,color='r')
 
     elif method == 'fast':
+        print(xh,yh)
         baseline = numpy.polynomial.Polynomial.fit(xh, yh, 4)
         ip       = InterpolatedUnivariateSpline(xh, yh/baseline(xh), k=3)
         ys       = baseline(xl)*ip(xl)

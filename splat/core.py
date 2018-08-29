@@ -3302,14 +3302,15 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', *args, **kwargs):
     '''
     :Purpose: 
 
-    Searches the SpeX database based on a series of keywords; 
-    returns an astropy Table with the source and spectral information corresponding to the selected sources
+        Searches the SpeX database based on a series of keywords; 
+        returns an astropy Table with the source and spectral information corresponding to the selected sources
 
     :Required Parameters:
 
-    None
+        None
 
     :Optional Parameters:
+
         * :param name: search by source name (e.g., ``name = 'Gliese 570D'``); default = None
         * :param shortname: search be short name or list of short names (e.g. ``shortname = 'J1457-2124'``); default = None 
         * :param exclude_shortname: exclude a list of short names (e.g. ``excludeshortname = 'J1457-2124'``); default = None 
@@ -5401,8 +5402,8 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
     sp2 = copy.deepcopy(s2)
     
 # make sure spectra are on the same wavelength and flux unit scales
-    sp2.toWaveUnit(sp1.wave.unit)
-    sp2.toFluxUnit(sp1.flux.unit)
+    if sp1.wave.unit != sp2.wave.unit: sp2.toWaveUnit(sp1.wave.unit)
+    if sp1.flux.unit != sp2.flux.unit: sp2.toFluxUnit(sp1.flux.unit)
 
     fit_ranges = kwargs.get('fit_ranges',[[numpy.nanmin(sp1.wave),numpy.nanmax(sp1.wave)]])
     fit_ranges = kwargs.get('fit_range',fit_ranges)
@@ -5437,7 +5438,8 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
     fit_mask = kwargs.get('fit_mask',1.-generateMask(sp1.wave,mask_ranges=fit_ranges))
 
 # generate masking array and combine with fit mask
-    reject_mask = numpy.array(kwargs.get('mask',generateMask(sp1.wave,**kwargs)))
+#    reject_mask = numpy.array(kwargs.get('mask',generateMask(sp1.wave,**kwargs)))
+    reject_mask = numpy.array(kwargs.get('mask',numpy.zeros(len(sp1.wave))))
 # mask flux < 0
     reject_mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
     mask = numpy.clip(fit_mask+reject_mask,0,1)

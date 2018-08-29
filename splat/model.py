@@ -1223,7 +1223,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
                 try: 
                     mdl2 = getModel(**mparam)
 #                    print(mparam)
-                    print('Model 2 original',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
+#                    print('Model 2 original',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
                 except:
                     raise ValueError('\nError in creating secondary model with parameters {}'.format(mparam))
 #        mdl2.info()
@@ -1303,8 +1303,8 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         if len(atmapp.flux) != len(mdl.flux):
             funit = atmapp.flux.unit
 #            atmapp.flux = splat.integralResample(atmapp.wave.value,atmapp.flux.value,mdl.wave.value)
-#            print(numpy.nanmin(atmapp.wave.value),numpy.nanmax(atmapp.wave.value),numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value),)
             atmapp.flux = splat.reMap(atmapp.wave.value,atmapp.flux.value,mdl.wave.value)
+            atmapp.flux[atmapp.flux<0] = 0
             atmapp.flux = atmapp.flux*funit
             atmapp.wave = mdl.wave
             atmapp.noise = [numpy.nan for f in atmapp.flux]*funit
@@ -1341,6 +1341,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
     funit = mdlt.flux.unit
     mdltsamp = copy.deepcopy(mdlt)
 #    mdltsamp.flux = splat.integralResample(mdlt.wave.value,mdlt.flux.value,data.wave.value)
+#    print(mdlt.flux.value[numpy.isfinite(mdlt.flux.value)==False],len(mdlt.flux.value))
     mdltsamp.flux = splat.reMap(mdlt.wave.value,mdlt.flux.value,data.wave.value)
     mdltsamp.flux = mdltsamp.flux*funit
     mdltsamp.wave = data.wave
@@ -1436,7 +1437,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         
 
 # MCMC loop
-def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,nsteps=100,method='standard',return_threshold=0.9,dof=0.,binary=False,duplicate=False,secondary_model=None,atm=None,report=True,report_index=10,report_each=False,file='tmp',output='all',verbose=True,**kwargs):
+def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,nsteps=100,method='standard',outlier_sigma=0.,return_threshold=0.9,dof=0.,binary=False,duplicate=False,secondary_model=None,atm=None,report=True,report_index=10,report_each=False,file='tmp',output='all',verbose=True,**kwargs):
     '''
     :Purpose:
 
@@ -1503,15 +1504,19 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
 # check method
     if method not in ['standard','best','return']: method = 'standard'
 
+# generate mask
+    mask = kwargs.get('mask',numpy.zeros(len(data.wave)))
+
 # generate first fit
     if dof == 0.: dof = int(len(data.wave)-len(list(param0.keys())))
+    dofc = int(dof-numpy.sum(mask))
     mdl = makeForwardModel(param0,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
     chi0,scale = splat.compareSpectra(data,mdl)
     parameters = [param0]
     chis = [chi0]
     acceptance = [1]
     if verbose == True:
-        l = 'Initial guess: chi={:.0f}, dof={}'.format(chis[-1],dof)
+        l = 'Initial guess: chi={:.0f}, dof={}'.format(chis[-1],dofc)
         for k in list(param_var.keys()): 
             if param_var[k] != 0.: l+=' , {}={:.2f}'.format(k,parameters[-1][k])
         print(l)
@@ -1528,19 +1533,27 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
 #                if atm != None: print(numpy.nanmin(atm.wave.value),numpy.nanmax(atm.wave.value))    
                 mdl = makeForwardModel(param,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
 #                print(numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))    
-                chi,scale = splat.compareSpectra(data,mdl) 
+                chi,scale = splat.compareSpectra(data,mdl,mask=mask)
+                if outlier_sigma > 0.:
+                    mask2 = numpy.zeros(len(data.wave))
+                    diff = numpy.array(data.flux.value)-numpy.array(mdl.flux.value)
+                    std = numpy.std(diff)
+                    mask2[numpy.absolute(diff)>outlier_sigma*std] = 1
+                    mask = numpy.clip(mask+mask2,0,1)
+                    chi,scale = splat.compareSpectra(data,mdl,mask=mask)
+                    dofc = dof-numpy.sum(mask)
 
 # different methods
-                test = 2.*(stats.f.cdf(chi/chi0, dof, dof)-0.5)
-                if method == 'best': test = 2.*(stats.f.cdf(chi/numpy.nanmin(chis), dof, dof)-0.5)
+                test = 2.*(stats.f.cdf(chi/chi0, dofc, dofc)-0.5)
+                if method == 'best': test = 2.*(stats.f.cdf(chi/numpy.nanmin(chis), dofc, dofc)-0.5)
                 if verbose==True: print(chi,chi0,test)
                 if test < numpy.random.uniform(0,1):
                     param0 = copy.deepcopy(param)
                     chi0 = chi
                     acceptance.append(1)
-                else: acceptance.append(0)  
+                else: acceptance.append(0)
                 if method == 'return':
-                    test = 2.*(stats.f.cdf(chi0/numpy.nanmin(chis), dof, dof)-0.5)
+                    test = 2.*(stats.f.cdf(chi0/numpy.nanmin(chis), dofc, dofc)-0.5)
                     if verbose==True: print(chi0,numpy.nanmin(chis),test)
                     if test > return_threshold:
                         param0 = copy.deepcopy(parameters[numpy.argmin(chis)])
@@ -1550,7 +1563,7 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
                 parameters.append(param0)
                 chis.append(chi0)
                 if verbose == True:
-                    l = 'Step {}: varied {}, chi={:.0f}, dof={}'.format(i,k,chis[-1],dof)
+                    l = 'Step {}: varied {}, chi={:.0f}, dof={}'.format(i,k,chis[-1],dofc)
                     for k in list(param_var.keys()): 
                         if param_var[k] != 0.: l+=' , {}={:.2f}'.format(k,parameters[-1][k])
                     print(l)
@@ -1565,7 +1578,7 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
 
             ibest = numpy.argmin(chis)
             best_parameters = parameters[ibest]
-            l = '\nBest chi={:.0f}, dof={}'.format(chis[ibest],dof)
+            l = '\nBest chi={:.0f}, dof={}'.format(chis[ibest],dofc)
             for k in list(param0.keys()): 
                 if isinstance(best_parameters[k],float): l+=' , {}={:.2f}'.format(k,best_parameters[k])
                 else: l+=' , {}={}'.format(k,best_parameters[k])
@@ -1597,7 +1610,7 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
                 for i in range(len(parameters)): vals.append(parameters[i][k])
                 final_parameters[k] = vals
 
-            mcmcForwardModelReport(data,final_parameters,chis,dof=dof,atm=atm,file=file,binary=binary,duplicate=duplicate,verbose=verbose,**kwargs)
+            mcmcForwardModelReport(data,final_parameters,chis,mask=mask,dof=dofc,atm=atm,file=file,binary=binary,duplicate=duplicate,outlier_sigma=outlier_sigma,verbose=verbose,**kwargs)
 
 # identify best model
     ibest = numpy.argmin(chis)
@@ -1612,13 +1625,13 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
         final_parameters[k] = vals
 
     if report == True:
-        l = 'Best chi={:.0f}, dof={}'.format(best_chi,dof)
+        l = 'Best chi={:.0f}, dof={}'.format(best_chi,dofc)
         for k in list(best_parameters.keys()): 
             if isinstance(best_parameters[k],float): l+=' , {}={:.2f}'.format(k,best_parameters[k])
             else: l+=' , {}={}'.format(k,best_parameters[k])
         print(l)
 
-        mcmcForwardModelReport(data,final_parameters,chis,dof=dof,atm=atm,file=file,binary=binary,duplicate=duplicate,verbose=verbose,**kwargs)
+        mcmcForwardModelReport(data,final_parameters,chis,mask=mask,dof=dofc,atm=atm,file=file,binary=binary,duplicate=duplicate,verbose=verbose,**kwargs)
 
         # mdl,mdlnt = makeForwardModel(best_parameters,data,binary=binary,atm=atm,model=model,return_nontelluric=True)
         # chi0,scale = splat.compareSpectra(data,mdl)
@@ -1657,7 +1670,7 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
         return final_parameters, chis
 
 
-def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,plotBest=True,plotMean=True,plotCorner=True,plotParameters=None,writeReport=True,vbary=0.,file='tmp',atm=None,model=None,model2=None,chiweights=False,binary=False,duplicate=False,verbose=True):
+def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=True,plotBest=True,plotMean=True,plotCorner=True,plotParameters=None,writeReport=True,vbary=0.,file='tmp',atm=None,model=None,model2=None,chiweights=False,binary=False,duplicate=False,verbose=True,**kwargs):
     '''
     :Purpose:
 
@@ -1719,6 +1732,7 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
     >>> spmdl.mcmcForwardModelReport(sp,mdl,pars,chis,file='fit',chiweights=True,plotParameters=['rv','vsini'])
 
     '''    
+    data = copy.deepcopy(datain)
     par = copy.deepcopy(parameters)
     chi = copy.deepcopy(chis)
     nval = len(chis)
@@ -1726,6 +1740,10 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
     ns.flux = ns.noise
     ns2 = copy.deepcopy(data)
     ns2.flux = -1.*ns.noise
+
+# mask poor data
+    mask = kwargs.get('mask',numpy.zeros(len(data.wave)))
+    data.remove(mask)
 
 # burn first X% of chains
     if burn != 0. and burn < 1.:
@@ -1772,7 +1790,7 @@ def mcmcForwardModelReport(data,parameters,chis,burn=0.25,dof=0,plotChains=True,
         if atm == None:
             splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=['k','r','b','grey','grey'],linestyles=['-','-','-','--','--'],legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
         else:
-            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=['k','r','r','b','grey','grey'],linestyles=['-','-','--','-','--','--'],legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
+            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=['k','r','magenta','g','grey','grey'],linestyles=['-','-','-','-','--','--'],legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
         
 # mean parameters
     mean_parameters = {}
