@@ -410,7 +410,7 @@ def getBibTex(bibcode,**kwargs):
         return bibTexParser(bib_tex)
 
 
-def getBibTexOnline(bibcode):
+def getBibTexOnline(bibcode,verbose=False):
     '''
     Purpose
         Takes a bibcode and searches for the bibtex information online through NASA ADS; requires user to be online.
@@ -441,7 +441,7 @@ def getBibTexOnline(bibcode):
     if isinstance(bib_tex,bytes):
         bib_tex = bib_tex.decode()
     if "<HTML>" in bib_tex:
-        print('{} is not a valid online bib code.'.format(bibcode))
+        if verbose==True: print('{} is not a valid online bib code.'.format(bibcode))
         return False       
         
     # Cut off extraneous info from website before the bibtex code

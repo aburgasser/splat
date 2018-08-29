@@ -32,6 +32,7 @@ import scipy.stats as stats
 # imports: splat
 from splat.initialize import *
 from splat.utilities import *
+from splat.citations import shortRef
 
 
 #################################
@@ -154,6 +155,34 @@ def loadEvolModel(*args,model='baraffe2003',returnpandas=False,verbose=True,**kw
         for k in dp.columns:
             mparam[k] = numpy.array(dpsel[k])
         return mparam
+
+
+def modelInfo(mdl):
+    # check model
+    if not isinstance(mdl,str):
+        raise ValueError('Input parameter should be a string (name of model); you entered {}'.format(mdl))
+
+    model = copy.deepcopy(mdl)
+    model.lower()
+
+#    m = checkEvolutionaryModelName(model)
+    m = checkDict(model,EVOLUTIONARY_MODELS)
+    if m == False: raise ValueError('\nDid not recognize model name {}; try {}'.format(model,list(EVOLUTIONARY_MODELS.keys())))
+    model = m
+
+# share out model information
+    cite = shortRef(EVOLUTIONARY_MODELS[model]['bibcode'])
+    if cite == '': cite = EVOLUTIONARY_MODELS[model]['citation']
+    print('Evolutionary models from {}'.format(cite))
+    if 'url' in list(EVOLUTIONARY_MODELS[model].keys()):
+        print('Download the original models at {}'.format(EVOLUTIONARY_MODELS[model]['url']))
+    print('')
+# read in full models
+    dp = pandas.read_csv(os.path.normpath('{}/{}/{}'.format(SPLAT_PATH,EVOLUTIONARY_MODEL_FOLDER,EVOLUTIONARY_MODELS[model]['file'])),comment='#',sep=',',header=0)
+    for k in list(dp.keys()):
+        print('Range in {}: {:.3f} to {:.3f}'.format(k,numpy.nanmin(dp[k])*EVOLUTIONARY_MODEL_PARAMETERS[k]['unit'],numpy.nanmax(dp[k])*EVOLUTIONARY_MODEL_PARAMETERS[k]['unit']))
+
+    return 
 
 
 
