@@ -604,13 +604,15 @@ SPECTRAL_MODEL_PARAMETERS = {\
 
 # evolutionary model information
 EVOLUTIONARY_MODELS = {\
-    'baraffe1997': {'name': 'baraffe1997','citation': 'Baraffe et al. (1997)', 'bibcode': '1997A&A...327.1054B', 'altname': ['bar97','baraffe97'], 'default': {'metallicity': 0.}},\
-    'baraffe1998': {'name': 'baraffe1998','citation': 'Baraffe et al. (1998)', 'bibcode': '1998A&A...337..403B', 'altname': ['bar98','baraffe98'], 'default': {'metallicity': 0., 'y': 0.275, 'l_mix': 1.}},\
-    'baraffe2003': {'name': 'baraffe2003','citation': 'Baraffe et al. (2003)', 'bibcode': '2003A&A...402..701B', 'altname': ['bar03','baraffe03'], 'default': {}},\
-    'baraffe2015': {'name': 'baraffe2015','citation': 'Baraffe et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altname': ['baraffe','bar15','baraffe15'], 'default': {}},\
-    'burrows2001': {'name': 'burrows2001','citation': 'Burrows et al. (2001)', 'bibcode': '2001RvMP...73..719B', 'altname': ['burrows','bur01','burrows01'], 'default': {}},\
-    'chabrier1997': {'name': 'chabrier1997','citation': 'Chabrier & Baraffe (1997)', 'bibcode': '1997A&A...328...83C', 'altname': ['chabrier','cha97','chabrier97'], 'default': {'metallicity': 0., 'y': 0.275}},\
-    'saumon2008': {'name': 'saumon2008','citation': 'Saumon et al. (2008)', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','sau08','saumon08']}, 'default': {'metallicity': 0., 'cloud': 'hybrid'}}
+    'baraffe1997': {'file': 'baraffe1997.csv','citation': 'Baraffe et al. (1997)', 'bibcode': '1997A&A...327.1054B', 'altname': ['bar97','baraffe97'], 'default': {'metallicity': 0.}},\
+    'baraffe1998': {'file': 'baraffe1998.csv','citation': 'Baraffe et al. (1998)', 'bibcode': '1998A&A...337..403B', 'altname': ['bar98','baraffe98'], 'default': {'metallicity': 0., 'y': 0.275, 'l_mix': 1.}},\
+    'baraffe2003': {'file': 'baraffe2003.csv','citation': 'Baraffe et al. (2003)', 'bibcode': '2003A&A...402..701B', 'altname': ['bar03','baraffe03'], 'default': {}},\
+    'baraffe2015': {'file': 'baraffe2015.csv','citation': 'Baraffe et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altname': ['baraffe','bar15','baraffe15'], 'default': {}},\
+    'burrows2001': {'file': 'burrows2001.csv','citation': 'Burrows et al. (2001)', 'bibcode': '2001RvMP...73..719B', 'altname': ['burrows','bur01','burrows01'], 'default': {}},\
+    'chabrier1997': {'file': 'chabrier1997.csv','citation': 'Chabrier & Baraffe (1997)', 'bibcode': '1997A&A...328...83C', 'altname': ['chabrier','cha97','chabrier97'], 'default': {'metallicity': 0., 'y': 0.275}},\
+    'saumon2008': {'file': 'saumon2008.csv','citation': 'Saumon et al. (2008)', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','sau08','saumon08'], 'default': {'metallicity': 0., 'cloud': 'hybrid'}},\
+    'marley2019': {'file': 'marley2019.csv','citation': 'Marley et al. (2019)', 'bibcode': 'marley2019', 'altname': ['marley','sonora'], 'default': {}},\
+    }
 
 EVOLUTIONARY_MODEL_PARAMETERS = {\
     'mass': {'unit': u.solMass, 'default': 0.05, 'title': '$M$'},\

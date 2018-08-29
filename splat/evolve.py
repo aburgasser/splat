@@ -119,10 +119,10 @@ def loadEvolModel(*args,model='baraffe2003',returnpandas=False,verbose=True,**kw
     m = checkDict(model,EVOLUTIONARY_MODELS)
     if m == False: raise ValueError('\nDid not recognize model name {}; try {}'.format(model,list(EVOLUTIONARY_MODELS.keys())))
     model = m
-    if kwargs.get('verbose',False): print('You are using evolutionary models from {}'.format(EVOLUTIONARY_MODELS[model]['name']))
+    if kwargs.get('verbose',False): print('You are using evolutionary models from {}'.format(EVOLUTIONARY_MODELS[model]['citation']))
 
 # read in full models
-    dp = pandas.read_csv(os.path.normpath('{}/{}/{}.csv'.format(SPLAT_PATH,EVOLUTIONARY_MODEL_FOLDER,model)),comment='#',sep=',',header=0)
+    dp = pandas.read_csv(os.path.normpath('{}/{}/{}'.format(SPLAT_PATH,EVOLUTIONARY_MODEL_FOLDER,EVOLUTIONARY_MODELS[model]['file'])),comment='#',sep=',',header=0)
 
 # restrict models if desired
     dpsel = copy.deepcopy(dp)
