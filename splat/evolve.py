@@ -564,7 +564,7 @@ def _modelParametersSingle(*args, **kwargs):
         for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
             params[e] = numpy.nan
         if kwargs.get('verbose',False) == True: 
-            print('\nParameter set is not covered by model {}\n'.format(model['name']))
+            print('\nParameter set is not covered by input model\n')
         return params
       
 
@@ -909,15 +909,12 @@ def modelParameters(*model,**kwargs):
     '''
 
 # read in model
-    try: model = model[0]
-    except IndexError: 
-        if kwargs.get('model',False)==False:
-            model = loadEvolModel('baraffe03')
-        else: model=kwargs.get('model')
+    if len(model) > 0: model=model[0]
+    else: model='baraffe03'
+    for k in ['model','set','ref','reference']: model=kwargs.get(k,model)
     if type(model) is not dict: model = loadEvolModel(model,**kwargs)
     if type(model) is not dict: raise ValueError('Something went wrong in loading in models')
     if kwargs.get('debug',False) == True: print(model)
-
     keywords = list(kwargs.keys())
 
 # do some key word replacement

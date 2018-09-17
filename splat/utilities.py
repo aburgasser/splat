@@ -590,7 +590,7 @@ def checkFilterName(f,verbose=False):
     if not isinstance(f,str):
         return output
     for k in list(FILTERS.keys()):
-        if f.lower().replace(' ','_') == k.lower().replace(' ','_') or f.lower().replace(' ','_') in [x.lower().replace(' ','_') for x in FILTERS[k]['altname']]:
+        if f.lower().replace(' ','_').replace('-','_') == k.lower() or f.lower().replace(' ','_') in [x.lower() for x in FILTERS[k]['altname']]:
             output = k
     if verbose==True and output==False:
         print('\nSPLAT does not contain the filter {}'.format(f))
@@ -1977,7 +1977,7 @@ def integralResample(xh, yh, xl, nsamp=100,method='fast'):
 #    plt.plot(xl,ys,color='r')
 
     elif method == 'fast':
-        print(xh,yh)
+#        print(xh,yh)
         baseline = numpy.polynomial.Polynomial.fit(xh, yh, 4)
         ip       = InterpolatedUnivariateSpline(xh, yh/baseline(xh), k=3)
         ys       = baseline(xl)*ip(xl)

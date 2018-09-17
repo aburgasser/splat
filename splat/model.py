@@ -745,7 +745,7 @@ def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=T
     return
 
 
-def processModelsToInstrument(*args,instrument_parameters={},wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,**kwargs):
+def processModelsToInstrument(*args,instrument_parameters={},instrument='SPEX-PRISM',wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,**kwargs):
     '''
     :Purpose:
 
@@ -792,15 +792,13 @@ def processModelsToInstrument(*args,instrument_parameters={},wunit=DEFAULT_WAVE_
         raise ValueError('\nInvalid model set {}'.format(modelset))
 
 # instrument
-    instrument = 'SPEX-PRISM'
     if len(args) >= 2: instrument = args[1]
-    instrument = kwargs.get('instrument',instrument)
     instrument = kwargs.get('instr',instrument)
     instr = checkInstrument(instrument)
 
 # set up parameters for making model
     if instr != False:
-        for r in ['resolution','wave_range','wunit','funit']:
+        for r in list(INSTRUMENTS[instr].keys()):
             instrument_parameters[r] = INSTRUMENTS[instr][r]
     else:
         instr = instrument.upper()
@@ -851,21 +849,14 @@ def processModelsToInstrument(*args,instrument_parameters={},wunit=DEFAULT_WAVE_
     if 'resolution' not in list(instrument_parameters.keys()):
         instrument_parameters['resolution'] = resolution
 
-# generate wavelength vector if just range and resolution given
-    if len(instrument_parameters['wave']) <= 1 and instrument_parameters['resolution'] != None and len(instrument_parameters['wave_range']) >= 2:
-        effres = instrument_parameters['resolution']*pixel_resolution
-        npix = numpy.floor(numpy.log(numpy.nanmax(instrument_parameters['wave_range'])/numpy.nanmin(instrument_parameters['wave_range']))/numpy.log(1.+1./effres))
-    #                    print(instr,npix)
-        instrument_parameters['wave'] = [numpy.nanmin(instrument_parameters['wave_range'])*(1.+1./effres)**i for i in numpy.arange(npix)]
-# final error check
-    if len(instrument_parameters['wave']) <= 1:
-        raise ValueError('\nCould not set up instrument parameters {}'.format(instrument_parameters))
+# set number of orders
+    if 'norders' not in list(instrument_parameters.keys()):
+        instrument_parameters['norders'] = 1
 
-# generate smoothing wavelength vector
-    a = numpy.linspace(0.,len(instrument_parameters['wave'])-1,len(instrument_parameters['wave']))
-    b = numpy.linspace(0.,len(instrument_parameters['wave'])-1.,oversample*len(instrument_parameters['wave']))
-    f = interp1d(a,instrument_parameters['wave'])
-    wave_oversample = f(b)
+# override pixel scale
+    if 'pixelscale' in list(instrument_parameters.keys()) and 'slitwidth' in list(instrument_parameters.keys()):
+        pixel_resolution = instrument_parameters['slitwidth']/instrument_parameters['pixelscale']
+        if isUnit(pixel_resolution): pixel_resolution = pixel_resolution.value
 
 # grab the raw files
     inputfolder = kwargs.get('inputfolder',os.path.normpath(SPECTRAL_MODELS[mset]['instruments']['RAW']))
@@ -875,67 +866,124 @@ def processModelsToInstrument(*args,instrument_parameters={},wunit=DEFAULT_WAVE_
         if len(files) == 0:
             raise ValueError('\nCould not find model files in {}'.format(inputfolder))
 
-# set and create folder if it don't exist
-    outputfolder = kwargs.get('outputfolder',inputfolder.replace('RAW',instr))
-#    if os.path.exists(outputfolder) == True and overwrite==False:
- #       raise ValueError('\nModel output folder {} already exists; set overwrite=True to overwrite'.format(outputfolder))
-    if not os.path.exists(outputfolder):
-        try:
-            os.makedirs(outputfolder)
-        except:
-            raise OSError('\nCould not create output folder {}'.format(outputfolder))
-
     if verbose == True: print('Processing model set {} to instrument {}'.format(mset,instr))
 
-    for i,f in enumerate(files):
-        if verbose == True: print('{}: Processing model {}'.format(i,f))
-        noutputfile = f.replace('RAW',instr).replace('.gz','')
-        if not os.path.exists(noutputfile) or (os.path.exists(noutputfile) and overwrite==True):
+# run separately for instruments with a single order and those with multiple orders
+    if instrument_parameters['norders'] == 1:
+
+# generate wavelength vector if just range and resolution given
+        if len(instrument_parameters['wave']) <= 1 and instrument_parameters['resolution'] != None and len(instrument_parameters['wave_range']) >= 2:
+            effres = instrument_parameters['resolution']*pixel_resolution
+            npix = numpy.floor(numpy.log(numpy.nanmax(instrument_parameters['wave_range'])/numpy.nanmin(instrument_parameters['wave_range']))/numpy.log(1.+1./effres))
+            instrument_parameters['wave'] = [numpy.nanmin(instrument_parameters['wave_range'])*(1.+1./effres)**i for i in numpy.arange(npix)]
+# final error check
+        if len(instrument_parameters['wave']) <= 1:
+            raise ValueError('\nCould not set up instrument parameters {}'.format(instrument_parameters))
+
+# generate smoothing wavelength vector
+        a = numpy.linspace(0.,len(instrument_parameters['wave'])-1,len(instrument_parameters['wave']))
+        b = numpy.linspace(0.,len(instrument_parameters['wave'])-1.,oversample*len(instrument_parameters['wave']))
+        f = interp1d(a,instrument_parameters['wave'])
+        wave_oversample = f(b)
+
+# set and create folder if it don't exist
+        outputfolder = kwargs.get('outputfolder',inputfolder.replace('RAW',instr))
+#    if os.path.exists(outputfolder) == True and overwrite==False:
+ #       raise ValueError('\nModel output folder {} already exists; set overwrite=True to overwrite'.format(outputfolder))
+        if not os.path.exists(outputfolder):
+            try:
+                os.makedirs(outputfolder)
+            except:
+                raise OSError('\nCould not create output folder {}'.format(outputfolder))
+
+        for i,f in enumerate(files):
+            if verbose == True: print('{}: Processing model {}'.format(i,f))
+            noutputfile = outputfolder+'/'+(os.path.basename(f)).replace('RAW',instr).replace('.gz','')
+            if not os.path.exists(noutputfile) or (os.path.exists(noutputfile) and overwrite==True):
 
 # read in the model
-            spmodel = Spectrum(f,ismodel=True,instrument='RAW')
+                spmodel = Spectrum(f,ismodel=True,instrument='RAW')
+                spmodel.toInstrument(instr)
 
-# NOTE THAT THE FOLLOWING COULD BE REPLACED BY spmodel.toInstrument()
-
-            spmodel.toInstrument(instr)
-
-#             spmodel.toWaveUnit(instrument_parameters['wunit'])
-#             spmodel.toFluxUnit(instrument_parameters['funit'])
-
-# # trim relevant piece of spectrum 
-#             dw = overscan*(numpy.nanmax(instrument_parameters['wave'])-numpy.nanmin(instrument_parameters['wave']))
-#             wrng = [numpy.nanmax([numpy.nanmin(instrument_parameters['wave']-dw),numpy.nanmin(spmodel.wave.value)])*instrument_parameters['wunit'],\
-#                     numpy.nanmin([numpy.nanmax(instrument_parameters['wave']+dw),numpy.nanmax(spmodel.wave.value)])*instrument_parameters['wunit']]
-#             spmodel.trim(wrng)
-# #            print(instrument_parameters['wave'])
-
-# # map onto oversampled grid and smooth; if model is lower resolution, interpolate; otherwise integrate & resample
-#             if len(spmodel.wave) <= len(wave_oversample):
-#                 fflux = interp1d(spmodel.wave.value,spmodel.flux.value,bounds_error=False,fill_value=0.)
-#                 flux_oversample = fflux(wave_oversample)
-#             else:
-#                 flux_oversample = integralResample(spmodel.wave.value,spmodel.flux.value,wave_oversample)
-#             spmodel.wave = wave_oversample*instrument_parameters['wunit']
-#             spmodel.flux = flux_oversample*spmodel.funit
-#             spmodel.noise = [numpy.nan for x in spmodel.wave]*spmodel.funit
-#             spmodel.variance = [numpy.nan for x in spmodel.wave]*(spmodel.funit**2)
-
-# # smooth this in pixel space including oversample       
-#             spmodel._smoothToSlitPixelWidth(pixel_resolution*oversample,method=method)
-
-# # resample down to final wavelength scale
-#             fluxsm = integralResample(spmodel.wave.value,spmodel.flux.value,instrument_parameters['wave'])
-
-# # output
-
-            t = Table([spmodel.wave.value,spmodel.flux.value],names=['#wavelength ({})'.format(spmodel.wave.unit),'surface_flux ({})'.format(spmodel.flux.unit)])
-            t.write(noutputfile,format='ascii.tab')
-#            spmodel.export(noutputfile)
-        else:
-            if verbose == True: print('\tfile {} already exists; skipping'.format(noutputfile))
+                t = Table([spmodel.wave.value,spmodel.flux.value],names=['#wavelength ({})'.format(spmodel.wave.unit),'surface_flux ({})'.format(spmodel.flux.unit)])
+                t.write(noutputfile,format='ascii.tab')
+            else:
+                if verbose == True: print('\tfile {} already exists; skipping'.format(noutputfile))
 
 # if successful, add this instrument to SPECTRAL_MODELS global variable
-    SPECTRAL_MODELS[mset]['instruments'][instr] = outputfolder
+        SPECTRAL_MODELS[mset]['instruments'][instr] = outputfolder
+
+# multiple orders
+    else:
+# set order numbers
+        if 'orders' not in list(instrument_parameters.keys()):
+            instrument_parameters['orders'] = numpy.linspace(instrument_parameters['norders'])+1
+
+# set wavelength ranges of individual orders
+        if 'order_wave_range' not in list(instrument_parameters.keys()):
+            if instrument_parameters['norders'] == 1: instrument_parameters['order_wave_range'] = [instrument_parameters['wave_range']]
+            else: raise ValueError('Instrument {} is specified to have {} orders, please specify wavelength range in each order using the order_wave_range parameter'.format(instr,instrument_parameters['norders']))
+
+# loop through model files
+        for ii,f in enumerate(files):
+            if verbose == True: print('{}: Processing model {}'.format(ii,f))
+            spmodel = Spectrum(f,ismodel=True,instrument='RAW')
+
+# now loop over orders
+            for jj,order in enumerate(instrument_parameters['orders']):
+                instr_name = instr+'-O{:.0f}'.format(order)
+                if verbose==True: print('\tProcessing order {:.0f}'.format(order))
+                wrange = instrument_parameters['order_wave_range'][jj]
+
+# output folder and filename
+                outputfolder = kwargs.get('outputfolder',inputfolder.replace('RAW',instr_name))
+                if not os.path.exists(outputfolder):
+                    try:
+                        os.makedirs(outputfolder)
+                    except:
+                        raise OSError('\nCould not create output folder {}'.format(outputfolder))
+                noutputfile = '{}/{}'.format(outputfolder,os.path.basename(f))
+                noutputfile = noutputfile.replace('RAW',instr_name).replace('.gz','')
+
+# generate output file and continue only if file is missing or allowed to overwrite
+                if not os.path.exists(noutputfile) or (os.path.exists(noutputfile) and overwrite==True):
+
+# add this order to the list of instruments
+                    if instr_name not in list(INSTRUMENTS.keys()):
+                        INSTRUMENTS[instr_name] = {}
+                        for k in list(INSTRUMENTS[instr].keys()): INSTRUMENTS[instr_name][k] = INSTRUMENTS[instr][k]
+                        INSTRUMENTS[instr_name]['instrument_name'] = '{} order {:.0f}'.format(instr,order)
+                        INSTRUMENTS[instr_name]['norders'] = 1
+                        INSTRUMENTS[instr_name]['wave_range'] = wrange
+                        INSTRUMENTS[instr_name]['order_wave_range'] = [wrange]
+
+# generate wavelength vector if just range and resolution given
+                    effres = instrument_parameters['resolution']*pixel_resolution
+                    npix = numpy.floor(numpy.log(numpy.nanmax(wrange)/numpy.nanmin(wrange))/numpy.log(1.+1./effres))
+                    instrument_parameters['wave'] = [numpy.nanmin(wrange)*(1.+1./effres)**i for i in numpy.arange(npix)]
+# final error check
+                    if len(instrument_parameters['wave']) <= 1:
+                        raise ValueError('\nCould not set up instrument parameters {}'.format(instrument_parameters))
+
+# generate smoothing wavelength vector
+                    a = numpy.linspace(0.,len(instrument_parameters['wave'])-1,len(instrument_parameters['wave']))
+                    b = numpy.linspace(0.,len(instrument_parameters['wave'])-1.,oversample*len(instrument_parameters['wave']))
+                    fi = interp1d(a,instrument_parameters['wave'])
+                    wave_oversample = fi(b)
+
+# copy and convert raw spectrum to order specific
+                    sptmp = copy.deepcopy(spmodel)
+                    sptmp.toInstrument(instr_name)
+
+                    t = Table([sptmp.wave.value,sptmp.flux.value],names=['#wavelength ({})'.format(sptmp.wave.unit),'surface_flux ({})'.format(sptmp.flux.unit)])
+                    t.write(noutputfile,format='ascii.tab')
+
+# if successful, add this instrument to SPECTRAL_MODELS global variable
+                    SPECTRAL_MODELS[mset]['instruments'][instr_name] = outputfolder
+                else:
+                    if verbose == True: print('\tfile {} already exists; skipping'.format(noutputfile))
+
+
     return   
 
 

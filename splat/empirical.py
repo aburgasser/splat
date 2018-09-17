@@ -12,7 +12,8 @@ import sys
 
 # imports - external
 import numpy
-#from astropy import units as u            # standard units
+
+from astropy import units as u            # standard units
 #from astropy import constants as const        # physical constants in SI units
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
@@ -810,7 +811,7 @@ def typeToMag(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False
 # perform monte carlo error estimate (slow)
         if numpy.nanmin(uncn) > 0.:
             for i,u in enumerate(uncn):
-                if absmag[i] != mask_value and absmag[i] != numpy.nan:
+                if abs_mag[i] != mask_value and abs_mag[i] != numpy.nan:
                     vals = numpy.polyval(SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['coeff'], numpy.random.normal(sptn[i] - SPT_ABSMAG_RELATIONS[ref]['sptoffset'], uncn, nsamples))
                     abs_mag_error[i] = (numpy.nanstd(vals)**2+SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['fitunc']**2)**0.5
 
@@ -861,7 +862,7 @@ def typeToMag(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False
     else: return abs_mag, abs_mag_error
 
 
-def typeToTeff(var, uncertainty=[0.001], reference='stephens09', nsamples=100, reverse=False, string=False,verbose=False, **kwargs):
+def typeToTeff(var, uncertainty=[0.], reference='stephens09', nsamples=100, reverse=False, string=False,verbose=False, mask=True, mask_value=numpy.nan, **kwargs):
     '''
     :Purpose: 
 
@@ -955,50 +956,71 @@ def typeToTeff(var, uncertainty=[0.001], reference='stephens09', nsamples=100, r
     else: pass
 
 # check that you can use the proscribed relation and filter
-    refcheck = checkDict(ref,SPT_TEFF_RELATIONS,verbose=verbose)
+    refcheck = checkDict(ref,SPT_TEFF_RELATIONS,replace=[[' ','_'],['-','_']],verbose=verbose)
     if refcheck == False: 
         raise ValueError(print('\nDid not recognize relation reference {}; try {}'.format(reference,list(SPT_TEFF_RELATIONS.keys()))))
-#        raise ValueError: print('\nDid not recognize relation reference {}'.format(reference))
     else: ref=refcheck
 
 # read in relevant information
-    sptoffset = SPT_TEFF_RELATIONS[ref]['sptoffset']
-    coeff = numpy.array(SPT_TEFF_RELATIONS[ref]['coeff'])
-    sptrange = SPT_TEFF_RELATIONS[ref]['range']
-    fitunc = SPT_TEFF_RELATIONS[ref]['fitunc']
-    refstr = shortRef(SPT_TEFF_RELATIONS[ref]['bibcode'])
-    if refstr == '': refstr = SPT_TEFF_RELATIONS[ref]['reference']
+#    refstr = shortRef(SPT_TEFF_RELATIONS[ref]['bibcode'])
+    refstr = SPT_TEFF_RELATIONS[ref]['reference']
     refstring = 'Teff/SpT relation from {}'.format(refstr)
     if verbose: print('\nUsing {}'.format(refstring))
 
 # convert teff into spt
     if reverse == True:
-#        if numpy.min(numpy.polyval(coeff,[r-sptoffset for r in sptrange])) <= teff <= numpy.max(numpy.polyval(coeff,[r-sptoffset for r in sptrange])):
-        x = numpy.linspace(sptrange[1]-sptoffset,sptrange[0]-sptoffset,nsamples)
-        f = interp1d(numpy.polyval(coeff,x),x,bounds_error=False)
-        spto = f(inp)+sptoffset
+# polynomial method      
+        if SPT_TEFF_RELATIONS[ref]['method'] == 'polynomial':
+            sptoffset = SPT_TEFF_RELATIONS[ref]['sptoffset']
+            fitunc = SPT_TEFF_RELATIONS[ref]['fitunc']
+            rng = numpy.array(SPT_TEFF_RELATIONS[ref]['range'])
+            coeff = numpy.array(SPT_TEFF_RELATIONS[ref]['coeff'])
+
+            x = numpy.linspace(rng[0]-sptoffset,rng[1]-sptoffset,nsamples)
+            rng = numpy.array([numpy.nanmin(numpy.polyval(coeff,x)),numpy.nanmax(numpy.polyval(coeff,x))])
+            f = interp1d(numpy.polyval(coeff,x),x,bounds_error=False)
+            spto = f(inp)+sptoffset
+            spto_e = 0.5*numpy.absolute(f(numpy.array(inp)+fitunc)-f(numpy.array(inp)-fitunc))
+
+# interpolation method
+        elif SPT_TEFF_RELATIONS[ref]['method'] == 'interpolate':
+            rng = [numpy.nanmin(SPT_TEFF_RELATIONS[ref]['values']),numpy.nanmax(SPT_TEFF_RELATIONS[ref]['values'])]
+            xspt = SPT_TEFF_RELATIONS[ref]['spt']
+            xval = SPT_TEFF_RELATIONS[ref]['values']
+            xrms = SPT_TEFF_RELATIONS[ref]['rms']
+            sptoffset = 0.
+
+            f = interp1d(xval,xspt,bounds_error=False)
+            n = interp1d(xval,xrms,bounds_error=False)
+            spto = f(inp)
+            fitunc = numpy.nanmedian(n(inp))
 # estimate a relation uncertainty from average scatter for all measures
-        sys_unc = 0.5*numpy.absolute(numpy.nanmedian(f(numpy.array(inp)+fitunc)-f(numpy.array(inp)-fitunc)))
+            spto_e = 0.5*numpy.absolute(f(numpy.array(inp)+n(inp))-f(numpy.array(inp)-n(inp)))
+
 # FAIL: estimate a single relation uncertainty from first measure (for single temperature)
-        if not numpy.isfinite(sys_unc):
-            sys_unc = 0.5*numpy.absolute(f(inp[0]+fitunc)-f(inp[0]-fitunc))
+        if numpy.isfinite(spto_e).all() == False:
+            spto_e = numpy.zeros(len(spto))+0.5*numpy.absolute(f(inp[0]+fitunc)-f(inp[0]-fitunc))
             if verbose==True: print('using sysunc from first measure')
 # FAIL: estimate a single relation uncertainty from middle of relation (for many temperatues)
-        if not numpy.isfinite(sys_unc):
-            mid_temp = numpy.nanmedian(numpy.polyval(coeff,x))
-            sys_unc = 0.5*numpy.absolute(f(mid_temp+fitunc)-f(mid_temp-fitunc))      
+        if numpy.isfinite(spto_e).all() == False:
+            spto_e = numpy.zeros(len(spto))+0.5*numpy.absolute(f(numpy.nanmedian(inp)+fitunc)-f(numpy.nanmedian(inp)-fitunc))      
             if verbose==True: print('using sysunc from middle')
 # FAIL: just use a 0.5 subtype error
-        if not numpy.isfinite(sys_unc): 
-            sys_unc = 0.5
+        if numpy.isfinite(spto_e).all() == False: 
+            spto_e = numpy.zeros(len(spto))+0.5
             if verbose==True: print('using fixed sysunc')
-        spto_e = numpy.zeros(len(spto))+sys_unc
+            
 # fold in uncertainty of measurement along with relation error
         if unc[0] > 0.:
             for i,t in enumerate(inp):
-                x = numpy.random.normal(t,unc[i],nsamples)+numpy.random.normal(0.,fitunc,nsamples)
+                x = numpy.random.normal(t,unc[i],nsamples)
                 vals = f(x)+sptoffset
-                spto_e[i] = numpy.nanstd(vals)
+                spto_e[i] = (spto_e[i]**2+numpy.nanstd(vals)**2)**0.5
+# mask out of range
+        if mask == True:
+            spto[numpy.logical_or(inp<rng[0],inp>rng[1])] = mask_value
+            spto_e[numpy.logical_or(inp<rng[0],inp>rng[1])] = mask_value
+            if verbose: print('{} values are outside relation range'.format(len(spto[numpy.logical_or(inp<rng[0],inp>rng[1])])))
 
 # convert to strings if desired
         if string == True: spto = [typeToNum(s) for s in spto]
@@ -1026,15 +1048,56 @@ def typeToTeff(var, uncertainty=[0.001], reference='stephens09', nsamples=100, r
 
 # convert spt into teff
     else:
+# polynomial method
+        if SPT_TEFF_RELATIONS[ref]['method'] == 'polynomial':
+            sptoffset = SPT_TEFF_RELATIONS[ref]['sptoffset']
+            rng = numpy.array(SPT_TEFF_RELATIONS[ref]['range'])
+            fitunc = SPT_TEFF_RELATIONS[ref]['fitunc']
+            coeff = numpy.array(SPT_TEFF_RELATIONS[ref]['coeff'])
 
-        teff = numpy.polyval(coeff,numpy.array(inp)-sptoffset)
-        teff_e = numpy.zeros(len(teff))+fitunc
-# add in measurement uncertainties
-        if unc[0] > 0.:
-            for i,s in enumerate(inp):
-                x = numpy.random.normal(s,unc[i],nsamples)
-                vals = numpy.polyval(coeff,x-sptoffset)
-                teff_e[i] = (numpy.nanstd(vals)**2+fitunc**2)**0.5
+# compute values
+            teff = numpy.polyval(coeff, numpy.array(inp)-sptoffset)
+            teff_e = numpy.zeros(len(inp))+fitunc
+# mask out temperatures if they are outside spectral type range
+            if mask == True:
+                teff[numpy.logical_or(inp<rng[0],inp>rng[1])] = mask_value
+                teff_e[numpy.logical_or(inp<rng[0],inp>rng[1])] = mask_value
+                if verbose == True: print('{} values are outside relation range'.format(len(teff[numpy.logical_or(inp<rng[0],inp>rng[1])])))
+# perform monte carlo error estimate (slow)
+            if numpy.nanmin(unc) > 0.:
+                for i,err in enumerate(unc):
+                    if teff[i] != mask_value and teff[i] != numpy.nan:
+                        vals = numpy.polyval(coeff, numpy.random.normal(inp[i]-sptoffset, err, nsamples))
+                        teff_e[i] = (numpy.nanstd(vals)**2+fitunc**2)**0.5
+
+# interpolation method
+        elif SPT_TEFF_RELATIONS[ref]['method'] == 'interpolate':
+            rng = [numpy.nanmin(SPT_TEFF_RELATIONS[ref]['spt']),numpy.nanmax(SPT_TEFF_RELATIONS[ref]['spt'])]
+            xspt = SPT_TEFF_RELATIONS[ref]['spt']
+            xval = SPT_TEFF_RELATIONS[ref]['values']
+            xrms = SPT_TEFF_RELATIONS[ref]['rms']
+            sptoffset = 0.
+
+# compute values
+            f = interp1d(xspt,xval,bounds_error=False,fill_value=numpy.nan)
+            fe = interp1d(xspt,xrms,bounds_error=False,fill_value=numpy.nan)
+            teff = f(inp)
+            teff_e = fe(inp)
+# mask out absolute magnitudes if they are outside spectral type range
+            if mask == True:
+                teff[numpy.logical_or(inp<rng[0],inp>rng[1])] = mask_value
+                teff_e[numpy.logical_or(inp<rng[0],inp>rng[1])] = mask_value
+                if verbose: print('{} values are outside relation range'.format(len(teff[numpy.logical_or(inp<rng[0],inp>rng[1])])))
+# perform monte carlo error estimate (slow)
+            if numpy.nanmin(unc) > 0.:
+                for i,err in enumerate(unc):
+                    if teff[i] != mask_value and teff[i] != numpy.nan:
+                        vals = f(numpy.random.normal(inp[i], err, nsamples))
+                        teff_e[i] = (numpy.nanstd(vals)**2+teff_e[i]**2)**0.5
+        else:
+            raise ValueError('Unknown method {} for {}'.format(SPT_TEFF_RELATIONS[ref]['method'],refstring))
+
+
 # return values
         if len(inp) == 1: return teff[0]*u.K,teff_e[0]*u.K
         else: return teff*u.K,teff_e*u.K

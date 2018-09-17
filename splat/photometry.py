@@ -439,13 +439,15 @@ def magToFlux(mag,filt,**kwargs):
 # notch filter
     elif isinstance(custom,bool) and isinstance(notch,list):
         dn = (notch[1]-notch[0])/1000
-        fwave = numpy.arange(notch[0]-5.*dn,notch[1]+5.*dn,dn)
+        fwave = numpy.arange(notch[0]-5.*dn,notch[1]+5.*dn,dn)*u.micron
         ftrans = numpy.zeros(len(fwave))
         ftrans[numpy.where(numpy.logical_and(fwave >= notch[0],fwave <= notch[1]))] = 1.
 # custom filter
     else:
         fwave,ftrans = custom[0],custom[1]
-    fwave = fwave[~numpy.isnan(ftrans)]*u.micron   # temporary fix
+    if isinstance(fwave,u.quantity.Quantity) == False: fwave=fwave*u.micron
+    if isinstance(ftrans,u.quantity.Quantity) == True: ftrans=ftrans.value
+    fwave = fwave[~numpy.isnan(ftrans)]
     ftrans = ftrans[~numpy.isnan(ftrans)]
 
     result = []
@@ -453,7 +455,7 @@ def magToFlux(mag,filt,**kwargs):
 # magnitude -> energy
     if kwargs.get('reverse',False) == False:
         
-        if vega:
+        if vega == True:
     # Read in Vega spectrum
             vwave,vflux = numpy.genfromtxt(os.path.normpath(filterFolder+vegaFile), comments='#', unpack=True, \
                 missing_values = ('NaN','nan'), filling_values = (numpy.nan))
@@ -469,11 +471,11 @@ def magToFlux(mag,filt,**kwargs):
                 for i in numpy.arange(nsamples): result.append(10.**(-0.4*(mag.value+numpy.random.normal(0,1.)*e_mag.value))*fact)
                 err = (numpy.nanstd(result))*u.erg/(u.cm**2 * u.s)
             else: err = 0.*u.erg/(u.cm**2 * u.s)
-        elif ab:
+        elif ab == True:
             fconst = 3631*u.jansky
             ftrans = (ftrans*fconst).to(u.erg/(u.cm**2 * u.s * u.micron),equivalencies=u.spectral_density(fwave))
-            if rsr: fact = trapz(ftrans*fwave.value,fwave.value)
-            else: fact = trapz(ftrans,fwave.value)
+            if rsr: fact = trapz(ftrans.value*fwave.value,fwave.value)
+            else: fact = trapz(ftrans.value,fwave.value)
             val = (10.**(-0.4*mag.value)*fact)*u.erg/(u.cm**2 * u.s)
     # calculate uncertainty        
             if e_mag.value > 0.:

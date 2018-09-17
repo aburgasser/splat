@@ -445,16 +445,12 @@ class Spectrum(object):
             self.wave = numpy.array(self.wave)
             self.flux = numpy.array(self.flux)
             self.noise = numpy.array(self.noise)
+            self.noise = numpy.absolute(self.noise)
 # enforce positivity and non-nan
 # THESE HAVE BEEN REMOVED
 #            if (numpy.nanmin(self.flux) < 0):
 #                self.flux[numpy.where(self.flux < 0)] = 0.
 #            self.flux[numpy.isnan(self.flux)] = 0.
-            try:
-                if numpy.nanmin(self.noise) < 0.:
-                    self.noise[numpy.where(self.noise < 0.)] = 0.
-            except:
-                pass
 # check on noise being too low - a problem with old SpeX files
 # THIS HAS BEEN REMOVED
 #            if (numpy.nanmax(self.flux/self.noise) > max_snr):
@@ -2188,9 +2184,12 @@ class Spectrum(object):
            >>> sp.fluxMax()
            <Quantity 4.561630292384622e-15 erg / (cm2 micron s)>
         '''
-        for k in self.original.__dict__.keys():
+        for k in list(self.original.__dict__.keys()):
             if k != 'history':
-                setattr(self,k,getattr(self.original,k))
+                try:
+                    setattr(self,k,getattr(self.original,k))
+                except:
+                    pass
 
         self.history.append('Returned to original state')
         self.original = copy.deepcopy(self)
@@ -2469,30 +2468,38 @@ class Spectrum(object):
 
             if len(self.wave) <= len(wave_sample):
                 f = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
-                v = interp1d(self.wave.value,self.variance.value,bounds_error=False,fill_value=0.)
                 flx_sample = f(wave_sample)
-                var_sample = v(wave_sample)
+                if numpy.isfinite(self.variance.value).any() == True:
+                    v = interp1d(self.wave.value,self.variance.value,bounds_error=False,fill_value=0.)
+                    var_sample = v(wave_sample)
             else:
                 flx_sample = integralResample(self.wave.value,self.flux.value,wave_sample)
-                var_sample = integralResample(self.wave.value,self.variance.value,wave_sample)
+                if numpy.isfinite(self.variance.value).any() == True:
+                    var_sample = integralResample(self.wave.value,self.variance.value,wave_sample)
 
 # now convolve a function to smooth resampled spectrum
-            window = signal.get_window(method,2.*numpy.round(oversample))
+            window = signal.get_window(method,int(2.*numpy.round(oversample)))
             neff = numpy.sum(window)/numpy.nanmax(window)        # effective number of pixels
             flx_smooth = signal.convolve(flx_sample, window/numpy.sum(window), mode='same')
-            var_smooth = signal.convolve(var_sample, window/numpy.sum(window), mode='same')/neff
+            if numpy.isfinite(self.variance.value).any() == True:
+                var_smooth = signal.convolve(var_sample, window/numpy.sum(window), mode='same')/neff
 # resample back to original wavelength grid
             wave_final = numpy.array(self.wave.value)
             wave_final = wave_final[wave_final <= numpy.max(wave_sample)]
             wave_final = wave_final[wave_final >= numpy.min(wave_sample)]
             if len(wave_final) >= len(wave_sample):
                 f = interp1d(wave_sample,flx_smooth,bounds_error=False,fill_value=0.)
-                v = interp1d(wave_sample,var_smooth,bounds_error=False,fill_value=0.)
                 flx_final = f(wave_final)
-                var_final = v(wave_final)
+                if numpy.isfinite(self.variance.value).any() == True:
+                    v = interp1d(wave_sample,var_smooth,bounds_error=False,fill_value=0.)
+                    var_final = v(wave_final)
+                else:
+                    var_final = numpy.ones(len(wave_final))*numpy.nan
             else:
                 flx_final = integralResample(wave_sample,flx_smooth,wave_final)
-                var_final = integralResample(wave_sample,var_smooth,wave_final)
+                if numpy.isfinite(self.variance.value).any() == True:
+                    var_final = integralResample(wave_sample,var_smooth,wave_final)
+                    var_final = numpy.ones(len(wave_final))*numpy.nan
 
 #            f = interp1d(wave_sample,flx_smooth,bounds_error=False,fill_value=0.)
 #            v = interp1d(wave_sample,var_smooth,bounds_error=False,fill_value=0.)
@@ -4007,9 +4014,9 @@ def readSpectrum(verbose=False,*args,**kwargs):
             try:
                 d = numpy.genfromtxt(os.path.normpath(file), comments='#', unpack=False, \
                     missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
-            except ValueError:
-                d = numpy.genfromtxt(os.path.normpath(file), comments=';', unpack=False, \
-                     missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
+            except: raise ValueError('\nCould not read data from file {}'.format(file))
+#                d = numpy.genfromtxt(os.path.normpath(file), comments=';', unpack=False, \
+#                     missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
             header = fits.Header()      # blank header
 
 # delete file if this was an online read
