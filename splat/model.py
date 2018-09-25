@@ -1836,9 +1836,9 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
         mdl.scale(scale)
         mdlnt.scale(scale)
         if atm == None:
-            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=['k','r','b','grey','grey'],linestyles=['-','-','-','--','--'],legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
+            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=['k','b','magenta','grey','grey'],linestyles=['-','-','-','--','--'],legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
         else:
-            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=['k','r','magenta','g','grey','grey'],linestyles=['-','-','-','-','--','--'],legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
+            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=['k','b','g','magenta','grey','grey'],linestyles=['-','-','-','-','--','--'],legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
         
 # mean parameters
     mean_parameters = {}
@@ -1861,9 +1861,9 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
         mdl.scale(scale)
         mdlnt.scale(scale)
         if atm == None:
-            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=['k','r','b','grey','grey'],linestyles=['-','-','-','--','--'],legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
+            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=['k','b','magenta','grey','grey'],linestyles=['-','-','-','--','--'],legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
         else:
-            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=['k','r','r','b','grey','grey'],linestyles=['-','-','--','-','--','--'],legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
+            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=['k','b','g','magenta','grey','grey'],linestyles=['-','-','--','-','--','--'],legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
 
 #    print(plotParameters,toplot.keys(),best_parameters.keys(),mean_parameters.keys())
 
