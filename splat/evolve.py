@@ -984,7 +984,11 @@ def modelParameters(*model,**kwargs):
     for p in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         outparams[p] = []
         if p in pkeys:
-            if isinstance(mkwargs[p],float) or isinstance(mkwargs[p],int):
+            print(p,type(mkwargs[p]))
+            if isUnit(mkwargs[p]):
+                unit = mkwargs[p].unit
+                mkwargs[p] = mkwargs[p].value
+            if not isinstance(mkwargs[p],list) and not isinstance(mkwargs[p],numpy.ndarray):
                 mkwargs[p] = [mkwargs[p]]
             if isUnit(mkwargs[p]):
                 unit = mkwargs[p].unit
