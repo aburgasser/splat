@@ -14,7 +14,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2018.07.29'
+VERSION = '2018.10.08'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -622,12 +622,12 @@ EVOLUTIONARY_MODELS = {\
     }
 
 EVOLUTIONARY_MODEL_PARAMETERS = {\
-    'mass': {'unit': u.solMass, 'default': 0.05, 'title': '$M$'},\
-    'age': {'unit': u.Gyr, 'default': 5., 'title': '$\tau$'},\
-    'temperature': {'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$'},\
-    'gravity': {'unit': u.dex(u.cm / u.s**2), 'default': 5.0, 'title': '$\log{g}'},\
-    'luminosity': {'unit': u.dex(u.solLum), 'default': -5., 'title': '$\log{L_{bol}/L_{\odot}}$'},\
-    'radius': {'unit': u.solRad, 'default': 0.1, 'title': '$R_{\odot}$'}}
+    'mass': {'unit': u.solMass, 'default': 0.05, 'title': '$M$', 'altname': ['m','masses']},\
+    'age': {'unit': u.Gyr, 'default': 5., 'title': '$\tau$', 'altname': ['a','time','ages']},\
+    'temperature': {'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$', 'altname': ['t','teff','temp','temperatures']},\
+    'gravity': {'unit': u.dex(u.cm / u.s**2), 'default': 5.0, 'title': '$\log{g}', 'altname': ['g','logg','gravities','grav']},\
+    'luminosity': {'unit': u.dex(u.solLum), 'default': -5., 'title': '$\log{L_{bol}/L_{\odot}}$', 'altname': ['l','lbol','lum','luminosities']},\
+    'radius': {'unit': u.solRad, 'default': 0.1, 'title': '$R_{\odot}$', 'altname': ['r','rad','radii','radiuses']}}
 
 
 # Empirical relation contants

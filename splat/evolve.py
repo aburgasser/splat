@@ -353,6 +353,7 @@ def _modelParametersSingle(*args, **kwargs):
 
     '''
 
+    verbose = kwargs.get('verbose',False)
     keywords = list(kwargs.keys())
 
 # check that model is passed correctly
@@ -383,6 +384,14 @@ def _modelParametersSingle(*args, **kwargs):
 # set some to log
     for k in ['mass','temperature','age','radius']:
         if k in keywords: params[k] = numpy.log10(params[k])
+
+# check that you have at least 2 non-nan values
+    nparam = 0
+    for k in params.keys():
+        if numpy.isnan(params[k]) == False: nparam=nparam+1
+    if nparam < 2: 
+        if verbose==True: print('Warning: need at least 2 finite parameters; you passed {}'.format(params))
+        return params
 
     input_type = 'mass_age'
     Ag, Ma, Te, Le, Ge, Re, P = [],[],[],[],[],[],[]
@@ -919,57 +928,61 @@ def modelParameters(*model,**kwargs):
 
 # do some key word replacement
     mkwargs = {}
-    for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
-        if e in keywords:
-            mkwargs[e] = kwargs[e]
-    if 'temperature' not in keywords:
-        if 't' in keywords:
-            mkwargs['temperature'] = kwargs['t']
-        if 'teff' in keywords:
-            mkwargs['temperature'] = kwargs['teff']
-        if 'temp' in keywords:
-            mkwargs['temperature'] = kwargs['temp']
-        if 'temperatures' in keywords:
-            mkwargs['temperature'] = kwargs['temperatures']
-    if 'gravity' not in keywords:
-        if 'g' in keywords:
-            mkwargs['gravity'] = kwargs['g']
-        if 'logg' in keywords:
-            mkwargs['gravity'] = kwargs['logg']
-        if 'grav' in keywords:
-            mkwargs['gravity'] = kwargs['grav']
-        if 'gravities' in keywords:
-            mkwargs['gravity'] = kwargs['gravities']
-    if 'mass' not in keywords:
-        if 'm' in keywords:
-            mkwargs['mass'] = kwargs['m']
-        if 'masses' in keywords:
-            mkwargs['mass'] = kwargs['masses']
-    if 'age' not in keywords:
-        if 'time' in keywords:
-            mkwargs['age'] = kwargs['time']
-        if 'a' in keywords:
-            mkwargs['age'] = kwargs['a']
-        if 'ages' in keywords:
-            mkwargs['age'] = kwargs['ages']
-    if 'radius' not in keywords:
-        if 'r' in keywords:
-            mkwargs['radius'] = kwargs['r']
-        if 'rad' in keywords:
-            mkwargs['radius'] = kwargs['rad']
-        if 'radii' in keywords:
-            mkwargs['radius'] = kwargs['radii']
-        if 'radiuses' in keywords:
-            mkwargs['radius'] = kwargs['radiuses']
-    if 'luminosity' not in keywords:
-        if 'l' in keywords:
-            mkwargs['luminosity'] = kwargs['l']
-        if 'lum' in keywords:
-            mkwargs['luminosity'] = kwargs['lum']
-        if 'lbol' in keywords:
-            mkwargs['luminosity'] = kwargs['lbol']
-        if 'luminosities' in keywords:
-            mkwargs['luminosity'] = kwargs['luminosities']
+    for k in keywords:
+        if k.lower() in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
+            mkwargs[k.lower()] = kwargs[k]
+        for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
+            if k.lower() in EVOLUTIONARY_MODEL_PARAMETERS[e]['altname']:
+                mkwargs[e] = kwargs[k]
+
+    # if 'temperature' not in keywords:
+    #     if 't' in keywords:
+    #         mkwargs['temperature'] = kwargs['t']
+    #     if 'teff' in keywords:
+    #         mkwargs['temperature'] = kwargs['teff']
+    #     if 'temp' in keywords:
+    #         mkwargs['temperature'] = kwargs['temp']
+    #     if 'temperatures' in keywords:
+    #         mkwargs['temperature'] = kwargs['temperatures']
+    # if 'gravity' not in keywords:
+    #     if 'g' in keywords:
+    #         mkwargs['gravity'] = kwargs['g']
+    #     if 'logg' in keywords:
+    #         mkwargs['gravity'] = kwargs['logg']
+    #     if 'grav' in keywords:
+    #         mkwargs['gravity'] = kwargs['grav']
+    #     if 'gravities' in keywords:
+    #         mkwargs['gravity'] = kwargs['gravities']
+    # if 'mass' not in keywords:
+    #     if 'm' in keywords:
+    #         mkwargs['mass'] = kwargs['m']
+    #     if 'masses' in keywords:
+    #         mkwargs['mass'] = kwargs['masses']
+    # if 'age' not in keywords:
+    #     if 'time' in keywords:
+    #         mkwargs['age'] = kwargs['time']
+    #     if 'a' in keywords:
+    #         mkwargs['age'] = kwargs['a']
+    #     if 'ages' in keywords:
+    #         mkwargs['age'] = kwargs['ages']
+    # if 'radius' not in keywords:
+    #     if 'r' in keywords:
+    #         mkwargs['radius'] = kwargs['r']
+    #     if 'rad' in keywords:
+    #         mkwargs['radius'] = kwargs['rad']
+    #     if 'radii' in keywords:
+    #         mkwargs['radius'] = kwargs['radii']
+    #     if 'radiuses' in keywords:
+    #         mkwargs['radius'] = kwargs['radiuses']
+    # if 'luminosity' not in keywords:
+    #     if 'l' in keywords:
+    #         mkwargs['luminosity'] = kwargs['l']
+    #     if 'lum' in keywords:
+    #         mkwargs['luminosity'] = kwargs['lum']
+    #     if 'lbol' in keywords:
+    #         mkwargs['luminosity'] = kwargs['lbol']
+    #     if 'luminosities' in keywords:
+    #         mkwargs['luminosity'] = kwargs['luminosities']
 
 
 # determine length of input arrays and assert they must be pure numbers 
@@ -984,7 +997,7 @@ def modelParameters(*model,**kwargs):
     for p in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         outparams[p] = []
         if p in pkeys:
-            print(p,type(mkwargs[p]))
+#            print(p,type(mkwargs[p]))
             if isUnit(mkwargs[p]):
                 unit = mkwargs[p].unit
                 mkwargs[p] = mkwargs[p].value
@@ -995,7 +1008,12 @@ def modelParameters(*model,**kwargs):
                 mkwargs[p] = mkwargs[p].value
             if isUnit(mkwargs[p][0]):
                 mkwargs[p] = [x*value for x in mkwargs[p]]
-            numberValues = len(mkwargs[p])
+            
+
+# fill in extra parameters if the number provided is unequal (i.e., default to "most" parameters)            
+    numberValues = numpy.max([len(mkwargs[p]) for p in list(mkwargs.keys())])
+    for p in list(mkwargs.keys()):
+        while len(mkwargs[p]) < numberValues: mkwargs[p].append(mkwargs[p][-1])
 
 # now loop through each parameter set to determine remaining parameters
     for i in range(numberValues):
