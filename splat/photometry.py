@@ -275,6 +275,8 @@ def filterInfo(*args,**kwargs):
     :Purpose: Prints out the current list of filters in the SPLAT reference library.
     '''
 
+    verbose = kwargs.get('verbose',True)
+
     if len(args) > 0: 
         fname = list(args)
     elif kwargs.get('filter',False) != False: 
@@ -284,34 +286,40 @@ def filterInfo(*args,**kwargs):
     if isinstance(fname,list) == False: 
         fname = [fname]
 
+    output = {}
     for k in fname:
         f = checkFilterName(k)
         if f != False:
-            print(f.replace('_',' ')+': '+FILTERS[f]['description'])
-            if kwargs.get('verbose',False) == True or kwargs.get('long',False) == True:
-                fwave,ftrans = filterProfile(f,**kwargs)
-                try:
-                    fwave = fwave.to(u.micron)
-                except:
-                    fwave = fwave*u.micron
-                fw = fwave[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
-                ft = ftrans[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
-                fw05 = fwave[numpy.where(ftrans > 0.5*numpy.nanmax(ftrans))]
-                lambda_mean = trapz(ft*fw,fw)/trapz(ft,fw)
-                lambda_pivot = numpy.sqrt(trapz(fw*ft,fw)/trapz(ft/fw,fw))
-                lambda_central = 0.5*(numpy.max(fw)+numpy.min(fw))
-                lambda_fwhm = numpy.max(fw05)-numpy.min(fw05)
-                lambda_min = numpy.min(fw)
-                lambda_max = numpy.max(fw)
-                print('Zeropoint = {} Jy'.format(FILTERS[f]['zeropoint']))
-                print('Central wavelength: = {:.3f}'.format(lambda_central))
-                print('Mean wavelength: = {:.3f}'.format(lambda_mean))
-                print('Pivot point: = {:.3f}'.format(lambda_pivot))
-                print('FWHM = {:.3f}'.format(lambda_fwhm))
-                print('Wavelength range = {:.3f} to {:.3f}\n'.format(lambda_min,lambda_max))             
+            output[f] = {}
+            output[f]['description'] = FILTERS[f]['description']
+            output[f]['zeropoint'] = FILTERS[f]['zeropoint']
+            fwave,ftrans = filterProfile(f,**kwargs)
+            try:
+                fwave = fwave.to(u.micron)
+            except:
+                fwave = fwave*u.micron
+            fw = fwave[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
+            ft = ftrans[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
+            fw05 = fwave[numpy.where(ftrans > 0.5*numpy.nanmax(ftrans))]
+            output[f]['lambda_mean'] = trapz(ft*fw,fw)/trapz(ft,fw)
+            output[f]['lambda_pivot'] = numpy.sqrt(trapz(fw*ft,fw)/trapz(ft/fw,fw))
+            output[f]['lambda_central'] = 0.5*(numpy.max(fw)+numpy.min(fw))
+            output[f]['lambda_fwhm'] = numpy.max(fw05)-numpy.min(fw05)
+            output[f]['lambda_min'] = numpy.min(fw)
+            output[f]['lambda_max'] = numpy.max(fw)
+            if verbose ==True: 
+                print(f.replace('_',' ')+': '+output[f]['zeropoint'])
+                print('Zeropoint = {} Jy'.format(output[f]['zeropoint']))
+                print('Central wavelength: = {:.3f}'.format(output[f]['lambda_central']))
+                print('Mean wavelength: = {:.3f}'.format(output[f]['lambda_mean']))
+                print('Pivot point: = {:.3f}'.format(output[f]['lambda_pivot']))
+                print('FWHM = {:.3f}'.format(output[f]['lambda_fwhm']))
+                print('Wavelength range = {:.3f} to {:.3f}\n'.format(output[f]['lambda_min'],output[f]['lambda_max']))             
         else:
-        	print('  Filter {} not in SPLAT filter list'.format(k))
-    return
+        	if verbose ==True: print('  Filter {} not in SPLAT filter list'.format(k))
+    kys = list(output.keys())
+    if len(kys) == 1: return output[kys[0]]
+    else: return output
 
 
 def filterProperties(filt,**kwargs):
@@ -354,6 +362,7 @@ def filterProperties(filt,**kwargs):
     report['name'] = filt
     report['description'] = FILTERS[filt]['description']
     report['zeropoint'] = FILTERS[filt]['zeropoint']
+    report['method'] = FILTERS[filt]['method']
     report['rsr'] = FILTERS[filt]['rsr']
     fwave,ftrans = filterProfile(filt,**kwargs)
     try:
@@ -608,5 +617,233 @@ def visualizeFilter(filters,verbose=True,xra=[],yra=[0,1.2],**kwargs):
     if file != '': plt.savefig(file)
     
     return fig
+
+
+#########################################
+########   SED FITTING TOOLS    #########
+### WARNING: THESE ARE EXPERIMENTAL!! ###
+#########################################
+
+# plan:
+
+def modelMagnitudes(verbose=True):
+    '''
+    this will be a code that calculates a set of magnitudes for a model set's SED models
+    saves to file that could be uploaded
+    pre-save some model magnitudes
+    '''
+    pass
+
+
+def interpolateMagnitudes(verbose=True):
+    '''
+    produces an interpolated value for a grid set of model magnitudes
+    '''
+    pass
+
+def compareMagnitudes(mags1,mags2,unc=None,unc2=None,ignore=[],verbose=True):
+    '''
+    this code compares a set of magnitudes using one of several statistics
+    '''
+    chi = 0.
+    dm,em = [],[]
+    for f in list(mags1.keys()):
+        if f in list(mags2.keys()) and f in list(unc.keys()) and f not in ignore: 
+            dm.append(mags1[f]-mags2[f])
+            em.append(unc[f])
+# find best scale factor
+    dm = numpy.array(dm)
+    em = numpy.array(em)
+    offset = numpy.sum(dm/em**2)/numpy.sum (1./em**2)
+    dmo = numpy.array([m-offset for m in dm])
+    return numpy.sum((dmo/em)**2), offset
+
+def SEDFitGrid(verbose=True):
+    '''
+    this code will compare a set of magnitudes to a grid of model magnitudes and choose the
+    closest match based on various statistics
+    '''
+    pass
+
+def SEDFitMCMC(verbose=True):
+    '''
+    this code will conduct a comparison of a set of magnitudes to model magnitudes using an
+    MCMC wrapper, and choose best/average/distribution of parameters
+    '''
+    pass
+
+def SEDFitAmoeba(verbose=True):
+    '''
+    this code will conduct a comparison of a set of magnitudes to model magnitudes using an
+    Amoeba (Nelder-Mead) wrapper, and choose the closest match
+    '''
+    pass
+
+def SEDVisualize(*args,e_mag=None,spectrum=None,file='',verbose=True):
+    '''
+    Visualizes magnitudes on SED scale (flux = lam x F_lam), with option of also comparing to SED spectrum
+    '''
+
+
+
+
+#####################################################
+###############    MAGNITUDE CLASS    ###############
+#####################################################
+
+class Magnitude(object):
+    '''
+    :Description: 
+
+        This is a class data structure for a magnitude value
+
+    '''
+
+    def __init__(self, magnitude, filt, uncertainty=0., magtype='apparent', verbose=False,**kwargs):
+        self.magnitude = magnitude
+        self.uncertainty = uncertainty
+        self.type = magtype
+
+# check filter and rename if necessary
+        self.knownfilter = True
+        fflag = checkFilterName(filt,verbose=verbose)
+        if fflag == False:
+            if verbose== True: print('filter {} is not a standard filter; some functions may not work'.format(filt))
+            self.knownfilter = False
+        else: filt = fflag
+        self.filter = filt
+
+# some things that are based on presets
+        if self.knownfilter == True:
+            self.wave,self.transmission = filterProfile(self.filter)
+            info = filterProperties(self.filter)
+            for k in info.keys(): setattr(self,k,info[k])
+
+    def __copy__(self):
+        '''
+        :Purpose: Make a copy of a Magnitude object
+        '''
+        s = type(self)(self.magnitude,self.filter,uncertainty=self.uncertainty)
+        s.__dict__.update(self.__dict__)
+        return s
+
+# backup version
+    def copy(self):
+        '''
+        :Purpose: Make a copy of a Magnitude object
+        '''
+        s = type(self)(self.magnitude,self.filter,uncertainty=self.uncertainty)
+        s.__dict__.update(self.__dict__)
+        return s
+
+    def __repr__(self):
+        '''
+        :Purpose: A simple representation of the Spectrum object
+        '''
+        if self.uncertainty != 0. and numpy.isfinite(self.uncertainty):
+            return '{} magnitude of {}+/-{}'.format(self.filter,self.magnitude,self.uncertainty)
+        else:
+            return '{} magnitude of {}'.format(self.filter,self.magnitude)
+
+    def __add__(self,other,samp=1000):
+        '''
+        :Purpose: 
+
+            A representation of addition for Magnitude classes that takes into account uncertainties
+
+        :Output: 
+
+            A new Magnitude object equal to the sum of values
+        '''
+
+# make a copy and fill in combined magnitude
+        out = copy.deepcopy(self)
+        out.magnitude = self.magnitude+other.magnitude
+        out.uncertainty = self.uncertainty+other.uncertainty
+
+# combine noises
+        if self.uncertainty != 0 and other.uncertainty != 0:
+            m1 = numpy.random.normal(self.magnitude,self.uncertainty,samp)
+            m2 = numpy.random.normal(other.magnitude,other.uncertainty,samp)
+            val = m1+m2
+            out.uncertainty = numpy.nanstd(val)
+
+# check filter agreement
+        if self.filter != other.filter:
+            out.filter = '{}+{}'.format(self.filter,other.filter)
+
+        return out
+
+    def __sub__(self,other,samp=1000):
+        '''
+        :Purpose: 
+
+            A representation of subtraction for Magnitude classes that takes into account uncertainties
+
+        :Output: 
+
+            A new Magnitude object equal to the diffence of values
+        '''
+
+# make a copy and fill in combined magnitude
+        out = copy.deepcopy(self)
+        out.magnitude = self.magnitude-other.magnitude
+        out.uncertainty = self.uncertainty+other.uncertainty
+
+# combine noises
+        if self.uncertainty != 0 and other.uncertainty != 0:
+            m1 = numpy.random.normal(self.magnitude,self.uncertainty,samp)
+            m2 = numpy.random.normal(other.magnitude,other.uncertainty,samp)
+            val = m1-m2
+            out.uncertainty = numpy.nanstd(val)
+
+# check filter agreement
+        if self.filter != other.filter:
+            out.filter = '{}-{}'.format(self.filter,other.filter)
+
+        return out
+
+    def flux(self,type='fnu',samp=1000):
+        '''
+        :Purpose: 
+
+            Report the equivalent flux density of a magnitude
+
+        :Output: 
+
+            astropy quantity in flux density units (default = erg/cm2/s/micron)
+
+        '''
+        pass
+
+
+    def addFlux(self,other,samp=1000):
+        '''
+        :Purpose: 
+
+            A representation of addition for magnitudes (addition of fluxes)
+
+        :Output: 
+
+            A new magnitude object equal to the equivalent sum of fluxes
+
+        '''
+# check filter agreement
+        if self.filter != other.filter:
+            raise ValueError('magnitudes filters {} and {} are not the same'.format(self.filter,other.filter))
+
+# make a copy and fill in combined magnitude
+        out = copy.deepcopy(self)
+        out.magnitude = self.magnitude-2.5*numpy.log10(1.+10.**(-0.4*(other.magnitude-self.magnitude)))
+        out.uncertainty = self.uncertainty+other.uncertainty
+
+# combine noises
+        if self.uncertainty != 0 and other.uncertainty != 0:
+            m1 = numpy.random.normal(self.magnitude,self.uncertainty,samp)
+            m2 = numpy.random.normal(other.magnitude,other.uncertainty,samp)
+            val = m1-2.5*numpy.log10(1.+10.**(-0.4*(m2-m1)))
+            out.uncertainty = numpy.nanstd(val)
+
+        return out
 
 

@@ -31,6 +31,7 @@ FILTER_FOLDER = '/resources/Filters/'
 SPECTRAL_MODEL_FOLDER = '/resources/SpectralModels/'
 EVOLUTIONARY_MODEL_FOLDER = '/resources/EvolutionaryModels/'
 TELLURIC_MODEL_FOLDER = '/resources/Telluric/'
+CITATION_RESOURCES_FOLDER = '/resources/Citations/'
 DOCS_FOLDER = '/docs/'
 DOCS_INDEX_HTML = '/docs/_build/html/index.html'
 WEB_HTML_BASE = '/docs/_templates/'
@@ -658,7 +659,7 @@ SPT_TEFF_RELATIONS = {
     'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'reference': 'Gonzales et al. (2018)','bibcode': 'TBD', 'method': 'polynomial', 'sptoffset': 10., 'fitunc': 108, 'range' : [17., 27.], 'coeff': [-117,3721.]},
     'looper': {'altname': ['looper08','looper2008','lop08'], 'reference': 'Looper et al. (2008)','bibcode': '2008ApJ...685.1183L','method': 'polynomial', 'sptoffset': 20.,'coeff': [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92],'range': [20.,38.],'fitunc': 87.},
     'pecaut': {'altname': ['mamajek','pecaut13','pecaut2013'], 'reference': 'Pecaut & Mamajek (2013)','bibcode':'2013ApJS..208....9P', 'url': 'http://www.pas.rochester.edu/~emamajek/EEM_dwarf_UBVIJHK_colors_Teff.txt', 'method': 'interpolate','range': [0.,29.],'fitunc': 108.,\
-        'spt': [0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,6.5,8.,8.,9.,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20.,21.,22.,23.,24.,25.,26.,27.,28.,29.,30.,31.,32.,33.,34.,34.5,35.,35.5,36.,37.,37.5,38.,38.5,39.,39.5,40.,40.5,41.,41.5,42.], \
+        'spt': [0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,6.5,7.,8.,9.,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20.,21.,22.,23.,24.,25.,26.,27.,28.,29.,30.,31.,32.,33.,34.,34.5,35.,35.5,36.,37.,37.5,38.,38.5,39.,39.5,40.,40.5,41.,41.5,42.], \
         'values': [5280.,5240.,5170.,5140.,5040.,4990.,4830.,4700.,4600.,4540.,4410.,4330.,4230.,4190.,4070.,4000.,3940.,3870.,3800.,3700.,3650.,3550.,3500.,3410.,3250.,3200.,3100.,3030.,3000.,2850.,2710.,2650.,2600.,2500.,2440.,2400.,2320.,2250.,2100.,1960.,1830.,1700.,1590.,1490.,1410.,1350.,1300.,1260.,1230.,1200.,1160.,1120.,1090.,1050.,1010.,960.,840.,770.,700.,610.,530.,475.,420.,390.,350.,325.,250.],\
         'rms': numpy.zeros(67)+108.},
     'marocco': {'altname': ['marocco13','marocco2013','mar13'], 'reference': 'Marocco et al. (2013)','bibcode': '2013AJ....146..161M','method': 'polynomial', 'sptoffset': 10.,'coeff': [7.4211e-5,-8.43736e-3,3.90319e-1,-9.46896,129.141,-975.953,3561.47,-1613.82],'range': [17.,38.],'fitunc': 140.},
@@ -851,4 +852,25 @@ TELESCOPES = {
     'KECK': {'lat': 19.8263*u.deg, 'lon': -155.4783*u.deg, 'height': 4160*u.m, 'altname': ['MAUNA_KEA','SUBARU','IRTF','CHFT','UKIRT','GEMINI_N','GEMINI_NORTH']},
     'VLT': {'lat': -24.6275*u.deg, 'lon': -70.4044*u.deg, 'height': 2636*u.m, 'altname': ['PARANAL','CERRO_PARANAL','VERY_LARGE_TELESCOPE','ESA']},
 }
+
+# journal swaps
+
+JOURNALS_LONGNAMES = {\
+    'aap': 'Astronomy & Astrophysics',\
+    'actaa': 'Acta Astronomica',\
+    'aj': 'Astronomical Journal',\
+    'apj': 'Astrophysical Journal',\
+    'apjl': 'Astrophysical Journal Letters',\
+    'apjs': 'Astrophysical Journal Supplement',\
+    'araa': 'Annual Reviews of Astronomy & Astrophysics',\
+    'icarus': 'Icarus',\
+    'mnras': 'Monthly Notices of the Royal Astronomical Society',\
+    'nat': 'Nature',\
+    'natas': 'Nature Astronomy',\
+    'pasp': 'Proceedings of the Astronomical Society of the Pacific',\
+    'pnas': 'Proceedings of the National Academy of Sciences',\
+    'rnaas': 'Research Notes of the American Astronomical Society',\
+    'sci': 'Science',\
+    'solphys': 'Solar Physics',\
+    }
 

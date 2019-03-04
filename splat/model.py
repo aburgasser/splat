@@ -1441,7 +1441,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         mdltcont.flux = mdlcont.flux*numpy.polyval(parameters['continuum'],mdltcont.wave.value)
     else:
         mdldiv = data/mdltsamp
-        mdldiv.smooth(pixels=20)
+        mdldiv.smooth(20)
 # NOTE: this fails if there are any nans around    
 
         pcont = numpy.polyfit(mdldiv.wave.value,mdldiv.flux.value,contfitdeg)
@@ -1485,7 +1485,10 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         
 
 # MCMC loop
-def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,nsteps=100,method='standard',outlier_sigma=0.,return_threshold=0.9,dof=0.,binary=False,duplicate=False,secondary_model=None,atm=None,report=True,report_index=10,report_each=False,file='tmp',output='all',verbose=True,**kwargs):
+def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,nsteps=100,
+    method='standard',outlier_sigma=0.,return_threshold=0.9,dof=0.,binary=False,duplicate=False,
+    secondary_model=None,atm=None,report=True,report_index=10,report_each=False,file='tmp',
+    output='all',verbose=True,**kwargs):
     '''
     :Purpose:
 
@@ -1558,6 +1561,9 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
 # generate first fit
     if dof == 0.: dof = int(len(data.wave)-len(list(param0.keys())))
     dofc = int(dof-numpy.sum(mask))
+    if binary == True and duplicate == True and 'modelset2' in list(param0.keys()):
+        for m in list(splat.SPECTRAL_MODELS[param0['modelset2']]['default'].keys()):
+            if '{}2'.format(m) in list(param0.keys()): param0['{}2'.format(m)] = param0['{}1'.format(m)]
     mdl = makeForwardModel(param0,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
     chi0,scale = splat.compareSpectra(data,mdl)
     parameters = [param0]
@@ -1579,6 +1585,9 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
                     if param[k] > numpy.max(limits[k]): param[k] = numpy.max(limits[k])-numpy.random.uniform()*(param[k]-numpy.max(limits[k]))
 #                print(numpy.nanmin(data.wave.value),numpy.nanmax(data.wave.value))    
 #                if atm != None: print(numpy.nanmin(atm.wave.value),numpy.nanmax(atm.wave.value))    
+                if binary == True and duplicate == True and 'modelset2' in list(param.keys()):
+                    for m in list(splat.SPECTRAL_MODELS[param['modelset2']]['default'].keys()):
+                        if '{}2'.format(m) in list(param.keys()): param['{}2'.format(m)] = param['{}1'.format(m)]
                 mdl = makeForwardModel(param,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
 #                print(numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))    
                 chi,scale = splat.compareSpectra(data,mdl,mask=mask)
@@ -1718,7 +1727,10 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
         return final_parameters, chis
 
 
-def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=True,plotBest=True,plotMean=True,plotCorner=True,plotParameters=None,writeReport=True,vbary=0.,file='tmp',atm=None,model=None,model2=None,chiweights=False,binary=False,duplicate=False,verbose=True,**kwargs):
+def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=True,plotBest=True,
+    plotMean=True,plotCorner=True,saveParameters=True,plotParameters=None,writeReport=True,vbary=0.,
+    file='tmp',atm=None,model=None,model2=None,chiweights=False,binary=False,duplicate=False,
+    plotColors=['k','magenta','r','b','grey','grey'],plotLines=['-','-','-','-','--','--'],verbose=True,**kwargs):
     '''
     :Purpose:
 
@@ -1745,8 +1757,11 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
         :param: plotChains = True: set to True to plot the parameter & chi-square value chains
         :param: plotBest = True: set to True to plot the best fit model
         :param: plotMean = True: set to True to plot the mean parameter model
+        :param: plotColors = ['k','b','g','magenta','grey','grey']: colors for spectral plot, in order of data, model, model without telluric, difference, upper noise, lower noise
+        :param: plotLines = ['-','-','-','-','--','--']: linestyles for spectral plot, in order of data, model, model without telluric, difference, upper noise, lower noise
         :param: plotCorner = True: set to True to plot a corner plot of parameters (requires corner.py package)
         :param: writeReport = True: set to True to write out best and average parameters to a file
+        :param: saveParameters = True: save parameters to an excel file
 
         :param: chiweights = False: apply chi-square weighting for determining mean parameter values
         :param: file = 'tmp': file prefix for outputs; should include full path unless in operating in desired folder
@@ -1836,9 +1851,13 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
         mdl.scale(scale)
         mdlnt.scale(scale)
         if atm == None:
-            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=['k','b','magenta','grey','grey'],linestyles=['-','-','-','--','--'],legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
+            pcl = copy.deepcopy(plotColors)
+            pcl.pop(1)
+            pln = copy.deepcopy(plotLines)
+            pln.pop(1)
+            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=pcl,linestyles=pln,legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
         else:
-            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=['k','b','g','magenta','grey','grey'],linestyles=['-','-','-','-','--','--'],legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
+            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
         
 # mean parameters
     mean_parameters = {}
@@ -1861,9 +1880,9 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
         mdl.scale(scale)
         mdlnt.scale(scale)
         if atm == None:
-            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=['k','b','magenta','grey','grey'],linestyles=['-','-','-','--','--'],legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
+            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
         else:
-            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=['k','b','g','magenta','grey','grey'],linestyles=['-','-','--','-','--','--'],legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
+            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
 
 #    print(plotParameters,toplot.keys(),best_parameters.keys(),mean_parameters.keys())
 
@@ -1879,6 +1898,14 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
         f.write('\n\nMean Parameter Values:')
         for k in list(mean_parameters.keys()): f.write('\n\t{} = {}+/-{}'.format(k,mean_parameters[k],mean_parameters_unc[k]))
         f.close()        
+
+# save parameters to excel file
+    if saveParameters==True:
+        dp = pandas.DataFrame(parameters)
+        dp['chi'] = chis
+#        dp['rv1'] = [r+vbary for r in dp['rv1']]
+#        dp['rv2'] = [r+vbary for r in dp['rv2']]
+        dp.to_excel(file+'_parameters.xlsx',index=False)       
 
 # prep plotting
     if plotParameters == None:
@@ -2586,7 +2613,8 @@ def _loadModelParameters(*args,**kwargs):
 # establish parameters from list of filenames
 #    if kwargs.get('old',False) == False:
     mfiles = glob.glob(mfolder+'/*.txt')
-    if instr == 'RAW' or len(mfiles) == 0: mfiles = glob.glob(mfolder+'/*.gz')
+    mfiles.extend(glob.glob(mfolder+'/*.gz'))
+#    if instr == 'RAW' or len(mfiles) == 0: mfiles = glob.glob(mfolder+'/*.gz')
     if len(mfiles) == 0:
         raise ValueError('\nCould not find any model files in {}'.format(mfolder))
     for mf in mfiles:
@@ -2617,8 +2645,9 @@ def _loadModelParameters(*args,**kwargs):
 #        if ms=='teff' or ms =='logg' or ms=='z':
 #            parameters[ms] = [float(x) for x in parameters[ms]]
         if ms in list(parameters.keys()):
-            parameters[ms].sort()
-            parameters[ms] = numpy.array(parameters[ms])
+            p = list(set(parameters[ms]))
+            p.sort()
+            parameters[ms] = numpy.array(p)
 
 #    print(parameters.keys(),parameters)
 

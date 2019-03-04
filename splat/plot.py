@@ -12,9 +12,10 @@ import glob
 import os
 
 # imports: external
-from astropy.coordinates import Angle,SkyCoord      # coordinate conversion
+from astropy.coordinates import Angle,SkyCoord,Galactic,BarycentricTrueEcliptic      # coordinate conversion
 import astropy.units as u
-import matplotlib; matplotlib.use('agg')
+import matplotlib
+#matplotlib.use('agg')
 import matplotlib.cm as cm
 import matplotlib.colors as colmap
 import matplotlib.patches as patches
@@ -100,13 +101,26 @@ def plotMap(*args,**kwargs):
     file = kwargs.get('file','')
     file = kwargs.get('output',file)
     file = kwargs.get('filename',file)
-    if isinstance(symsizes,float) or isinstance(symsizes,int):
-        symsizes = [symsizes for i in range(len(args))]
+    fontsize = kwargs.get('fontsize',14)
+    fontsize = kwargs.get('charsize',fontsize)
+
+# process markers
+#    if isinstance(symsizes,float) or isinstance(symsizes,int):
+#        symsizes = [symsizes for i in range(len(args))]
+    if not isinstance(colors,list): colors = [colors]
+    if not isinstance(alphas,list): alphas = [alphas]
+    if not isinstance(symsizes,list): symsizes = [symsizes]
+    if not isinstance(markers,list): markers = [markers]
+    while len(colors) < len(args): colors.append(colors[-1])
+    while len(alphas) < len(args): alphas.append(alphas[-1])
+    while len(symsizes) < len(args): symsizes.append(symsizes[-1])
+    while len(markers) < len(args): markers.append(markers[-1])
 
 
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection=projection)
-    ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
+    ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'],fontsize=fontsize)
+    ax.set_yticklabels([r'-75$\degree$',r'-60$\degree$',r'-45$\degree$',r'-30$\degree$',r'-15$\degree$','0$\degree$','15$\degree$','30$\degree$','45$\degree$','60$\degree$','75$\degree$'],fontsize=fontsize)
     ax.grid(kwargs.get('grid',True))
 
     for i,pcoords in enumerate(args):
@@ -141,21 +155,37 @@ def plotMap(*args,**kwargs):
 
 # plot galactic plane - need to figure this out
     if kwargs.get('galactic',False) != False:
-        print('\nHave not set up galactic coordinate format yet')
-        pass
+        lng = Angle(numpy.arange(-180.,180.,1.)*u.degree)
+        lat = Angle(numpy.zeros(len(lng))*u.degree)
+        s = SkyCoord(Galactic,l=lng,b=lat)
+        mra = s.icrs.ra
+        mra = [c.wrap_at(180*u.degree) for c in mra]
+        mra = [c.radian for c in mra]
+        mdec = s.icrs.dec.radian
+        mdecp = [x for y, x in sorted(zip(mra, mdec))]
+        mrap = sorted(mra)
+        p = ax.plot(mrap, mdecp,color='k',alpha=1,ls='--')
 
 # plot ecliptic plane - need to figure this out
     if kwargs.get('ecliptic',False) != False:
-        print('\nHave not set up ecliptic coordinate format yet')
-        pass
+        lng = Angle(numpy.arange(-180.,180.,1.)*u.degree)
+        lat = Angle(numpy.zeros(len(lng))*u.degree)
+        s = SkyCoord(BarycentricTrueEcliptic,lon=lng,lat=lat)
+        mra = s.icrs.ra
+        mra = [c.wrap_at(180*u.degree) for c in mra]
+        mra = [c.radian for c in mra]
+        mdec = s.icrs.dec.radian
+        mdecp = [x for y, x in sorted(zip(mra, mdec))]
+        mrap = sorted(mra)
+        p = ax.plot(mrap, mdecp,color='k',alpha=1,ls=':')
 
 # plot legend
     if kwargs.get('legend',None) != None:
-        plt.legend(kwargs['legend'],bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
+        plt.legend(kwargs['legend'],bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure,fontsize=fontsize)
 
 # plot legend
     if file != None:
-        if kwargs.get('tight') == True:
+        if kwargs.get('tight',True) == True:
             plt.savefig(file, bbox_inches='tight')
         else:
             plt.savefig(file)

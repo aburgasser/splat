@@ -20,7 +20,9 @@ from splat.utilities import *
 import splat
 
 
-def bibTexParser(bib_tex,**kwargs):
+
+
+def bibTexParser(bib_input,**kwargs):
     '''
     :Purpose:
         Parses a bibtex segment and returns a dictionary of parameter fields
@@ -35,56 +37,32 @@ def bibTexParser(bib_tex,**kwargs):
         A dictionary containing the parsed bibtex information
 
     '''
-    bib_dict = {"bib_tex": bib_tex}
-    bib_tex.strip('\n')
+    bib_dict = {'bib_tex': bib_input}
+    bib_tex = bib_input.split(',\n')
     # get bib code
-    begin = bib_tex.find('{')  
-    end = bib_tex.find(',')
-    bib_dict["bibcode"] = bib_tex[begin+1:end]
-    bib_tex = bib_tex[end+1:]   # remove bib code line
+    bib_dict['type'] = bib_tex[0][1:bib_tex[0].find('{')]
+    bib_dict['bibcode'] = bib_tex[0][bib_tex[0].find('{')+1:]
+#    begin = bib_tex.find('{')  
+#    end = bib_tex.find(',')
+#    bib_dict['bibcode'] = bib_tex[begin+1:end]
+#    bib_tex = bib_tex[end+1:]   # remove bib code line
     
-    bib_tex =  bib_tex.split(',\n')  # this moght not always work for author lists
+#    bib_tex =  bib_tex.split(',\n')  # this moght not always work for author lists
     
-    for line in bib_tex:
+    for line in bib_tex[1:]:
         line = line.strip()
-        line = line.replace('{','').replace('}','').replace('\"','').replace('\n','').replace('\t','') 
+        line = line.replace('{','').replace('}','').replace('\"','').replace('\n@','').replace('\n','').replace('\t','') 
         line = line.split('=')
         line[0] = line[0].strip().lower()
         line[1] = line[1].strip()
         bib_dict[line[0]] = line[1]
 
-# Journal massaging
+# Journal massaging: look up table
     if 'journal' in list(bib_dict.keys()):
-        if bib_dict['journal'] == '\\apj':
-            bib_dict['journal'] = 'ApJ'
-        elif bib_dict['journal'] == '\\apjl':
-            bib_dict['journal'] = 'ApJ Letters'
-        elif bib_dict['journal'] == '\\apjs':
-            bib_dict['journal'] = 'ApJS'
-        elif bib_dict['journal'] == '\\aj':
-            bib_dict['journal'] = 'AJ'
-        elif bib_dict['journal'] == '\\actaa':
-            bib_dict['journal'] = 'Acta Astronomica'
-        elif bib_dict['journal'] == '\\araa':
-            bib_dict['journal'] = 'AR&A'
-        elif bib_dict['journal'] == '\\aap':
-            bib_dict['journal'] = 'A&A'
-        elif bib_dict['journal'] == '\\icarus':
-            bib_dict['journal'] = 'Icarus'
-        elif bib_dict['journal'] == '\\mnras':
-            bib_dict['journal'] = 'MNRAS'
-        elif bib_dict['journal'] == '\\nat':
-            bib_dict['journal'] = 'Nature'
-        elif bib_dict['journal'] == '\\pasp':
-            bib_dict['journal'] = 'PASP'
-        elif bib_dict['journal'] == '\\solphys':
-            bib_dict['journal'] = 'Solar Physics'
-        elif bib_dict['journal'] == '\\pnas':
-            bib_dict['journal'] = 'PNAS'
-        else:
-            pass
-    else: 
-        bib_dict['journal'] = 'UNKNOWN'
+        if bib_dict['journal'][1:].lower() in list(JOURNALS_LONGNAMES.keys()): bib_dict['journal'] = JOURNALS_LONGNAMES[bib_dict['journal'][1:].lower()]
+        elif bib_dict['journal'][2:].lower() in list(JOURNALS_LONGNAMES.keys()): bib_dict['journal'] = JOURNALS_LONGNAMES[bib_dict['journal'][2:].lower()]
+        else: pass
+
         
     return bib_dict
 
@@ -337,12 +315,11 @@ def processBiblibrary(biblibrary,verbose=False):
 
 # find all of the bibtex codes
     output = {}
-    in_lib = re.search('@[A-Z]+{', text)
+    in_lib = re.search('@[a-z]+{', text)
     while in_lib != None:
-        in_lib = re.search('@[A-Z]+{', text)
+        in_lib = re.search('@[a-z]+{', text)
         asc = text[in_lib.start():]
         in_lib = re.search('\n@', asc)
-#        print(in_lib)
         if in_lib != None:
             text = asc[(in_lib.start()-2):]
             asc = asc[:in_lib.end()]
@@ -449,5 +426,69 @@ def getBibTexOnline(bibcode,verbose=False):
         begin = bib_tex.find('@')
         bib_tex = bib_tex[begin:]
         return bib_tex
+
+def nsfbib(biblibrary,file=''):
+    '''
+    Purpose
+        Takes a biblibrary and generates an NSF-formatted reference list, based on the following requirements:
+        "Each reference must include the names of all authors (in the same sequence in which they 
+        appear in the publication), the article and journal title, book title, volume number, page numbers, a
+        and year of publication. If the proposer has a website 
+        address readily available, that information should be included in the citation."
+
+    :Required parameters:
+
+        :param biblibrary: .bib file containing the bibtex entries
+
+    :Optional parameters:
+        :param file: Filename to save latex output (default='citations.tex') 
+
+    :Output:
+        A latex file containing relevant bibliographic information
+
+    '''
+
+    try:
+        cites = processBiblibrary(biblibrary,verbose=True)
+    except:
+        raise ValueError('Could not parse biblibrary input {}; make sure this a full path to the .bib file'.format(biblibrary))
+
+# process into a set of strings
+    output = []
+    for c in list(cites.keys()):
+        line = cites[c]['author']
+        li = line.rsplit(' and ',1)
+        line = ', & '.join(li)
+        line = line.replace(' and ',', ').replace('~','')
+        line = line+' "'+cites[c]['title']+'." '+cites[c]['year']
+# article?  
+        if cites[c]['type'] == 'article':
+            if 'journal' in list(cites[c].keys()): line=line+', '+cites[c]['journal']
+            if 'volume' in list(cites[c].keys()): line=line+', '+cites[c]['volume']
+            if 'pages' in list(cites[c].keys()): line=line+', '+cites[c]['pages']
+# book?  
+        if cites[c]['type'] == 'book':
+            if 'publisher' in list(cites[c].keys()): line=line+', '+cites[c]['publisher']
+# add url
+        if 'adsurl' in list(cites[c].keys()): line=line+' ('+cites[c]['adsurl']+')'
+        elif 'bdsk-url-1' in list(cites[c].keys()): line=line+' ('+cites[c]['bdsk-url-1']+')'
+        else: pass
+        output.append(line)
+    output.sort()
+
+# save to file if provided
+    if file != '':
+        try:
+            f = open(os.path.normpath(file),'w')
+            for o in output: f.write(o+'\n')
+            f.close()
+            return True
+        except:
+            print('Warning: problem saving to output file {}'.format(file))
+
+    line = ''
+    for o in output: line=line+o+'\n'
+    return line
+
 
 

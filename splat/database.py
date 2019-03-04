@@ -722,7 +722,7 @@ def querySimbad(variable,radius=30.*u.arcsec,sort='sep',reject_type=None,nearest
 
 
 
-def _querySimbad2(t_src,**kwargs):
+def _querySimbad2(t_src,designation='DESIGNATION',**kwargs):
     '''
     Purpose
         Internal function that queries Simbad and populates data for source table.
@@ -743,8 +743,8 @@ def _querySimbad2(t_src,**kwargs):
     simbad_radius = kwargs.get('simbad_radius',30.*u.arcsec)
     verbose = kwargs.get('verbose',True)
 # checks
-    if 'DESIGNATION' not in t_src.keys():
-        raise NameError('\nDESIGNATION column is required for input table to querySimbad\n')
+    if designation not in t_src.keys():
+        raise NameError('\nDesigation column {} is required for input table to querySimbad\n'.format(designation))
     if 'SIMBAD_SEP' not in t_src.keys():
         t_src['SIMBAD_SEP'] = Column(numpy.zeros(len(t_src)),dtype='float')
 # must be online
@@ -944,17 +944,17 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
     callloop = 5
 
 # check db has DESIGNATION and fill in columns
-    if 'DESIGNATION' not in list(db.columns):
+    if desigCol not in list(db.columns):
         db = prepDB(db)
-    if 'DESIGNATION' not in list(db.columns):
-        raise ValueError('\nInput database must have at least a DESIGNATION column; this one has {}'.format(db.columns))
+    if desigCol not in list(db.columns):
+        raise ValueError('\nInput database must have at least the designation column {}; this one has {}'.format(desigCol,db.columns))
 
 # add RA and DEC if needed
     if raCol not in list(db.columns) or decCol not in list(db.columns):
-        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db['DESIGNATION']]
+        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
         db[raCol] = [c.ra.degree for c in db['COORDINATES']]
         db[decCol] = [c.dec.degree for c in db['COORDINATES']]
-    basecols = ['DESIGNATION',raCol,decCol]
+    basecols = [desigCol,raCol,decCol]
     if not isUnit(radius): radius = radius*u.arcsec
         
 # assign entries to save
@@ -1034,7 +1034,7 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
 
 # reject repeats if desired
     if drop_repeats == True:
-        db_match.drop_duplicates(subset='DESIGNATION',keep='first',inplace=True)
+        db_match.drop_duplicates(subset=desigCol,keep='first',inplace=True)
         db_match.reset_index(drop=True,inplace=True)
             
 # constrain columns and rename
@@ -1055,7 +1055,7 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
         db_match = db_match.rename(index=str,columns=rename)
 
 # merge and drop redundant columns
-    db_merge = pandas.merge(db,db_match,how='left',on='DESIGNATION',suffixes=('','_DROP'))
+    db_merge = pandas.merge(db,db_match,how='left',on=desigCol,suffixes=('','_DROP'))
     for c in list(db_merge.columns):
         if '_DROP' in c: del db_merge[c]
 

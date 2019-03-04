@@ -160,7 +160,7 @@ def galactic_density_juric(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun'
     else: return rho
 
 
-def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=1000,unit=u.pc):
+def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10000,unit=u.pc,population='all'):
     '''
     :Purpose: 
 
@@ -172,7 +172,8 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
     :Required Inputs:
 
         :param coordinate: a variable that can be converted to an astropy SkyCoord value with `splat.properCoordinates()`_
-        :param dmax: the maximum distance to compute to, assumed in units of parsec
+        :param dmax: the maximum distance to compute to, or an array of distances, assumed in units of parsec.
+            In the case of an array, the result is the cumulative volume correction up to the corresponding maximum distance
 
     :Optional Inputs:
 
@@ -180,6 +181,8 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
 
             * 'juric': (default) `Juric et al. (2008, ApJ, 673, 864) <http://adsabs.harvard.edu/abs/2008ApJ...673..864J>`_ called by `splat.simulate.galactic_density_juric()`_
 
+        :param: population = 'all': depending on model, specifies what population to return.
+            For example, model='juric' can take population='thin disk','thick disk','halo','bulge' or 'all'
         :param: center = 'sun': assumed center point, by default 'sun' but could also be 'galaxy'
         :param: nsamp = number of samples for sampling line of sight
         :param: unit = astropy.units.pc: preferred unit for positional arguments
@@ -202,57 +205,85 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
     .. _`splat.properCoordinates()` : api.html#splat.utilities.properCoordinates
     .. _`splat.simulate.galactic_density_juric()` : api.html#splat.simulate.galactic_density_juric
 
+    :TBD:
+
+        * flag to return the integrated correction function as a function of distance (cumulative distribution)
+        * flag to just integrate parts of a density distribution (e.g., "thin disk", "halo")
+        * fix error at r = 0
+
     '''    
 # check inputs
     if not isUnit(unit): unit = u.pc
 
-    try:
-        c = splat.properCoordinates(coordinate)
-    except: 
-        raise ValueError('Input variable {} is not a proper coordinate or list of coordinates'.format(coordinate))
-    try:
-        x = len(c)
-    except:
-        c = [c]
+# coordinate - can be a single coordinate or array of coordinates - THIS IS PROVING MESSY SO COMMENTING OUT
+#    c = copy.deepcopy(coordinate)
+#    if not isinstance(c,list) and not isinstance(c,numpy.ndarray): c = [c]
+#    c = numpy.array(c)
+#    try:
+#        c = numpy.array([splat.properCoordinates(x) for x in c])
+#    except: 
+#        raise ValueError('Input variable {} is not a proper coordinate or list of coordinates'.format(coordinate))
 
+# single coordinate
+    c = copy.deepcopy(coordinate)
+    try:
+        c = splat.properCoordinates(c)
+    except: 
+        raise ValueError('Input variable {} is not a proper coordinate'.format(coordinate))
+
+# convert dmx into array
     dmx = copy.deepcopy(dmax)
     if isUnit(dmx): dmx = dmx.to(unit).value
-    if not isinstance(dmx,float): 
-        try: dmx = float(dmx)
+    if not isinstance(dmx,list) and not isinstance(dmx,numpy.ndarray): dmx = [dmx]
+    dmx = numpy.array(dmx)
+    if not isinstance(dmx[0],float): 
+        try: dmx = numpy.array([float(x) for x in dmx])
         except: raise ValueError('{} is not a proper distance value'.format(dmax))
-    if dmx == 0.: return 1.
+    if numpy.nanmin(dmx) == 0.: raise ValueError('Outer distance limit(s) must be greater than 0; you entered {}'.format(dmax))
+    nsamp = numpy.nanmax([nsamp,3.*len(dmx)])
 
+# single minimum distance (for now)
     dmn = copy.deepcopy(dmin)
     if isUnit(dmn): dmn = dmn.to(unit).value
     if not isinstance(dmn,float): 
         try: dmn = float(dmn)
         except: raise ValueError('{} is not a proper distance value'.format(dmin))
 
-# galactic number density function
+# galactic number density function with population options
+    mkwargs = {'unit': unit, 'center': center, 'rho0': 1.}
     if model.lower() == 'juric':
         rho_function = galactic_density_juric
+        if population.lower() == 'disk' or 'thin' in population.lower(): mkwargs['report'] = 'thin disk'
+        elif 'thick' in population.lower(): mkwargs['report'] = 'thick disk'
+        elif 'halo' in population.lower(): mkwargs['report'] = 'halo'
+        else: mkwargs['report'] = 'total'
     elif model.lower() == 'uniform':
         return 1.
     else:
         raise ValueError('\nDo not have galatic model {} for volumeCorrection'.format(model))
 
+
 # generate R,z vectors
 # single sight line & distance
-    d = numpy.linspace(dmn,dmx,nsamp)
-    rho = []
-    for crd in c:
-        x,y,z = splat.xyz(crd,distance=d,center=center,unit=unit)
-        r = (x**2+y**2)**0.5
-        rho.append(rho_function(r,z,rho0=1.,center=center,unit=unit))
+    d = numpy.linspace(dmn,numpy.nanmax(dmx),nsamp)
+# replace this with built in galactic XYZ from SkyCoord
+    x,y,z = splat.xyz(c,distance=d,center=center,unit=unit)
+    r = (x**2+y**2)**0.5
+    rho = rho_function(r,z,**mkwargs)
 
-    if len(rho) == 1:
-        return float(integrate.trapz(rho[0]*(d**2),x=d)/integrate.trapz(d**2,x=d))
+    if len(dmx) == 1:
+        return float(integrate.trapz(rho*(d**2),x=d)/integrate.trapz(d**2,x=d))
     else:
-        return [float(integrate.trapz(r*(d**2),x=d)/integrate.trapz(d**2,x=d)) for r in rho]
+        rinterp = interp1d(d,rho,bounds_error=False)
+        val = []
+        for dm in dmx:
+            dx = numpy.linspace(dmn,dm,nsamp)
+            val.append(float(integrate.trapz(rinterp(dx)*(dx**2),x=dx)/integrate.trapz(dx**2,x=dx)))
+        return numpy.array(val)
 
 
 
-def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uniform',parameters={},sfh=False,nsamp=1000,verbose=False,**kwargs):
+def simulateAges(num,age_range=[0.1,10.],distribution='uniform',parameters={},sfh=False,nsamp=1000,verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -313,12 +344,11 @@ def simulateAges(num,age_range=[0.1,10.],minage=0.1,maxage=10.,distribution='uni
     for f in ['ref','reference','set','method','relation','model']:
         if f in list(kwargs.keys()): distribution = kwargs.get(f,distribution)
 
-    mn = kwargs.get('min',minage)
-    mx = kwargs.get('max',maxage)
-#    sfh = kwargs.get('sfh',False)
-    age_range = kwargs.get('age_range',[mn,mx])
-    age_range = kwargs.get('range',age_range)
-#    verbose = kwargs.get('verbose',False)
+# alts for minage, maxage
+    for k in ['range','agerange']: age_range = kwargs.get(k,age_range)    
+    for k in ['min','min_age','minage','minimum']: minage = kwargs.get(k,age_range[0])    
+    for k in ['max','max_age','maxage','maximum']: maxage = kwargs.get(k,age_range[1])    
+    age_range = [minage,maxage]
     if distribution.lower() not in allowed_distributions:
         raise ValueError('No distribution named {} in code; try one of the following: {}'.format(distribution,allowed_distributions))
 

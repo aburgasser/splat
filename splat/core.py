@@ -41,7 +41,9 @@ import sys
 import warnings
 
 # imports - external
-import matplotlib; matplotlib.use('agg')
+import matplotlib
+#try: matplotlib.use('agg')
+#except: pass
 import matplotlib.pyplot as plt
 import numpy
 import pandas
@@ -1856,7 +1858,7 @@ class Spectrum(object):
 
 
 # determine maximum flux, by default in non telluric regions
-    def fluxMax(self,maskTelluric=True,**kwargs):
+    def fluxMax(self,wrange=[],maskTelluric=True,**kwargs):
         '''
         :Purpose: Reports the maximum flux of a Spectrum object ignoring nan's.
 
@@ -1876,12 +1878,22 @@ class Spectrum(object):
             print('\nWarning: spectrum object has a flux vector of zero length - maybe empty?')
             return numpy.nan
 
+        if len(wrange) < 2:
+            wrange = [numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value)]*self.wave.unit
+        if isUnit(wrange): wrange = wrange.to(u.micron).value
+        if isUnit(wrange[0]): wrange = [x.to(u.micron).value for x in wrange]
+
+        fl = self.flux.value[numpy.logical_and(self.wave.to(u.micron).value > numpy.nanmin(wrange),self.wave.to(u.micron).value < numpy.nanmax(wrange))]
+        wv = self.wave.to(u.micron).value[numpy.logical_and(self.wave.to(u.micron).value > numpy.nanmin(wrange),self.wave.to(u.micron).value < numpy.nanmax(wrange))]
+
         if maskTelluric == True:            
             try:
-                fl = self.flux.value[numpy.where(numpy.logical_or(\
-                    numpy.logical_and(self.wave.to(u.micron) > 0.9*u.micron,self.wave.to(u.micron) < 1.35*u.micron),
-                    numpy.logical_and(self.wave.to(u.micron) > 1.42*u.micron,self.wave.to(u.micron) < 1.8*u.micron),
-                    numpy.logical_and(self.wave.to(u.micron) > 1.92*u.micron,self.wave.to(u.micron) < 2.3*u.micron)))]
+                msk = numpy.zeros(len(fl))
+                msk[numpy.where(numpy.logical_or(\
+                    numpy.logical_and(wv > 1.35,wv < 1.42),
+                    numpy.logical_and(wv > 1.8,wv < 1.95),
+                    wv > 2.45))] = 1
+                fl = fl[msk == 0]
                 if len(fl) > 0: return numpy.nanmax(fl)*self.funit
 #                if isUnit(fl[0]): fl = [f.value for f in fl]
             except:
@@ -1890,7 +1902,7 @@ class Spectrum(object):
 #        fl = self.flux.value[numpy.where(\
 #                numpy.logical_and(self.wave > numpy.nanmin(self.wave.value)+0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave)),self.wave < numpy.nanmax(self.wave)-0.1*(numpy.nanmax(self.wave)-numpy.nanmin(self.wave))))]
 #        if isUnit(fl[0]): fl = [f.value for f in fl]
-        return numpy.nanmax(self.flux.value)*self.flux.unit
+        return numpy.nanmax(fl)*self.flux.unit
 
 
     def normalize(self,*args,**kwargs):
@@ -2049,7 +2061,8 @@ class Spectrum(object):
 
         :Required Input:
 
-            :param mask: An array of booleans, ints, or floats, where True or 1 means remove the element 
+            :param mask: Either a mask array (an array of booleans, ints, or floats, where True or 1 removes the element)
+                or a 2-element array that defines the wavelegnth range to mask 
         
         :Optional Input:
 
@@ -2070,6 +2083,13 @@ class Spectrum(object):
                 Mask applied to remove 32 pixels
         '''
         msk = copy.deepcopy(mask)
+
+# wavelength range given
+        if len(msk) == 2:
+            if not isUnit(msk): msk = msk*self.wave.unit
+            msk.to(self.wave.unit)
+            msk = generateMask(self.wave,mask_range=msk)
+
         if len(msk) != len(self.flux):
             print('\nWarning: mask must be same length ({}) as wave/flux arrays ({}); not removing any pixels'.format(len(msk),len(self.wave)))
             return
@@ -2130,6 +2150,13 @@ class Spectrum(object):
                 Mask applied to remove 32 pixels
         '''
         msk = copy.deepcopy(mask)
+
+# wavelength range given
+        if len(msk) == 2:
+            if not isUnit(msk): msk = msk*self.wave.unit
+            msk.to(self.wave.unit)
+            msk = generateMask(self.wave,mask_range=msk)
+
         if len(msk) != len(self.flux):
             print('\nWarning: mask must be same length ({}) as flux arrays ({}); not removing any pixels'.format(len(msk),len(self.flux)))
             return
@@ -2349,7 +2376,7 @@ class Spectrum(object):
             print(h)
         return
 
-    def smooth(self,**kwargs):
+    def smooth(self,smv,resolution=False,slitwidth=False,**kwargs):
         '''
         :Purpose: 
 
@@ -2386,28 +2413,55 @@ class Spectrum(object):
         method = kwargs.get('method','hanning')
         kwargs['method'] = method
         swargs = copy.deepcopy(kwargs)
-        smv = kwargs.get('slitPixelWidth',None)
+
+# smooth by resolution        
+        if isinstance(resolution,bool):
+            if resolution == True: 
+                self._smoothToResolution(smv,**swargs)
+                return
+        else:
+            self._smoothToResolution(resolution,**swargs)
+            return
+
+# smooth by slit width (arcseconds)        
+        if isinstance(slitwidth,bool):
+            if slitwidth == True: 
+                self._smoothToSlitWidth(smv,**swargs)
+                return
+        else:
+            self._smoothToSlitWidth(slitwidth,**swargs)
+            return
+
+# smooth by slit pixel width (default)        
+        if isinstance(slitwidth,bool):
+            if slitwidth == True: 
+                self._smoothToSlitWidth(smv,**swargs)
+                return
+        else:
+            self._smoothToSlitWidth(slitwidth,**swargs)
+            return
+            
+
+        smv = kwargs.get('slitPixelWidth',smv)
         smv = kwargs.get('slitpixelwidth',smv)
         smv = kwargs.get('pixelwidth',smv)
         smv = kwargs.get('pixel',smv)
-        if smv != None:
-#            del swargs['slitPixelWidth']
-            self._smoothToSlitPixelWidth(smv,**swargs)
-            return
-        smv = kwargs.get('slitWidth',None)
-        smv = kwargs.get('slitwidth',smv)
-        smv = kwargs.get('slit',smv)
-        if smv != None:
-#            del swargs['slitWidth']
-            self._smoothToSlitWidth(smv,**swargs)
-            return
-        smv = kwargs.get('resolution',None)
-        smv = kwargs.get('res',smv)
-        if smv != None:
-#            del swargs['resolution']
-            self._smoothToResolution(smv,**swargs)
-            return
+        self._smoothToSlitPixelWidth(smv,**swargs)
         return
+
+# old
+        # smv = kwargs.get('resolution',None)
+        # smv = kwargs.get('res',smv)
+        # if smv != None:
+
+        # smv = kwargs.get('slitWidth',None)
+        # smv = kwargs.get('slitwidth',smv)
+        # smv = kwargs.get('slit',smv)
+        # if smv != None:
+        #     self._smoothToSlitWidth(smv,**swargs)
+        #     return
+        # return
+
 
     def _smoothToResolution(self,res,oversample=10.,method='hamming',**kwargs):
         '''
@@ -2499,6 +2553,7 @@ class Spectrum(object):
                 flx_final = integralResample(wave_sample,flx_smooth,wave_final)
                 if numpy.isfinite(self.variance.value).any() == True:
                     var_final = integralResample(wave_sample,var_smooth,wave_final)
+                else:
                     var_final = numpy.ones(len(wave_final))*numpy.nan
 
 #            f = interp1d(wave_sample,flx_smooth,bounds_error=False,fill_value=0.)

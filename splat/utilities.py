@@ -20,7 +20,8 @@ import astropy
 from astropy.coordinates import Angle,SkyCoord,EarthLocation      # coordinate conversion
 from astropy import units as u            # standard units
 from astropy.time import Time            # standard units
-import matplotlib; matplotlib.use('agg')
+import matplotlib
+#matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.patheffects
 import numpy
