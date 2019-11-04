@@ -794,7 +794,7 @@ def typeToMag(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False
     else: ref=refcheck
 
 # read in relevant information
-    refstring = 'Absolute {}/SpT relation from {}'.format(filt,shortRef(SPT_ABSMAG_RELATIONS[ref]['bibcode']))
+    refstring = 'Absolute {}/SpT relation from {}'.format(filt,SPT_ABSMAG_RELATIONS[ref]['bibcode'])
     if verbose: print('\nUsing {}'.format(refstring))
 
 # polynomial method
@@ -821,16 +821,27 @@ def typeToMag(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False
 
 # compute values
         f = interp1d(SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['spt'],SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['values'],bounds_error=False,fill_value=numpy.nan)
-        fe = interp1d(SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['spt'],SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['rms'],bounds_error=False,fill_value=numpy.nan)
         abs_mag = f(sptn)
-        abs_mag_error = fe(sptn)
+
+# compute uncertainties
+        if 'rms' in list(SPT_ABSMAG_RELATIONS[ref]['filters'][filt].keys()):
+            fe = interp1d(SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['spt'],SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['rms'],bounds_error=False,fill_value=numpy.nan)
+            abs_mag_error = fe(sptn)
+        elif 'scatter' in list(SPT_ABSMAG_RELATIONS[ref]['filters'][filt].keys()):
+            abs_mag_error = numpy.zeros(len(sptn))+SPT_ABSMAG_RELATIONS[ref]['filters'][filt]['scatter']
+        elif 'scatter' in list(SPT_ABSMAG_RELATIONS[ref].keys()):
+            abs_mag_error = numpy.zeros(len(sptn))+SPT_ABSMAG_RELATIONS[ref]['scatter']
+        else: 
+            abs_mag_error = numpy.zeros(len(sptn))
+        
 # mask out absolute magnitudes if they are outside spectral type range
         if mask == True:
             abs_mag[numpy.logical_or(sptn<rng[0],sptn>rng[1])] = mask_value
             abs_mag_error[numpy.logical_or(sptn<rng[0],sptn>rng[1])] = mask_value
             if verbose: print('{} values are outside relation range'.format(len(abs_mag[numpy.logical_or(sptn<rng[0],sptn>rng[1])])))
 # perform monte carlo error estimate (slow)
-        if numpy.nanmin(uncn) > 0.:
+        if numpy.nanmin(uncn) > 0. and nsamples>1:
+            print('doing error calc')
             for i,u in enumerate(uncn):
                 if absmag[i] != mask_value and absmag[i] != numpy.nan:
                     vals = f(numpy.random.normal(sptn[i], uncn, nsamples))

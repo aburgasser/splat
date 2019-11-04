@@ -1,0 +1,6 @@
+instrument_name	UNKNOWN
+altname	Filters	Spectra	Citations	Telluric	EvolutionaryModels
+bibcode	
+resolution	nan
+wunit	micron
+funit	erg / (cm2 micron s)

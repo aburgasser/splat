@@ -2,13 +2,13 @@ Installation and Dependencies
 ===============================================
 
 SPLAT is best forked from the github site https://github.com/aburgasser/splat/, 
-which is updated on a regular basis. There is a possibility of ``pip`` installation, but this is not working quite yet.
+which is updated on a regular basis. The command is:
 
-There are two additional steps to complete to get full functionality:
+>> git clone https://github.com/aburgasser/splat.git
 
-- Copy the file ``.splat_access`` into your home directory - this is your access key if you have priveleged access to unpublished data. 
+Note that ``pip`` installation IS NOT CURRENTLY WORKING, so best to install from github.
 
-- Set up your environment variables to find the SPLAT code; this can be done in three ways (in the order of which the code looks for this directory):
+There is one additional step to complete to get full functionality: Set up your environment variables to find the SPLAT code; this can be done in three ways (in the order for which the code looks for this directory):
 
 	- Best: create an environment variable called SPLAT_PATH and set it to the root directory of the SPLAT code (in bsh environment, add the line ``export SPLAT_PATH=/Users/adam/projects/splat`` to your .bashrc or .bash_profile)
 

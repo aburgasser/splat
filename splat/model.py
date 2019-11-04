@@ -745,7 +745,7 @@ def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=T
     return
 
 
-def processModelsToInstrument(*args,instrument_parameters={},instrument='SPEX-PRISM',wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,**kwargs):
+def processModelsToInstrument(instrument_parameters={},instrument='SPEX-PRISM',wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,*args,**kwargs):
     '''
     :Purpose:
 
@@ -1850,14 +1850,15 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
         chi0,scale = splat.compareSpectra(data,mdl)
         mdl.scale(scale)
         mdlnt.scale(scale)
+        diff = data-mdl
         if atm == None:
             pcl = copy.deepcopy(plotColors)
             pcl.pop(1)
             pln = copy.deepcopy(plotLines)
             pln.pop(1)
-            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=pcl,linestyles=pln,legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
+            splot.plotSpectrum(data,mdl,diff,ns,ns2,colors=pcl,linestyles=pln,legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_bestModel.pdf')
         else:
-            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_bestModel.pdf')
+            splot.plotSpectrum(data,mdl,mdlnt,diff,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_bestModel.pdf')
         
 # mean parameters
     mean_parameters = {}
@@ -1879,10 +1880,11 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
         chi0,scale = splat.compareSpectra(data,mdl)
         mdl.scale(scale)
         mdlnt.scale(scale)
+        diff = data-mdl
         if atm == None:
-            splot.plotSpectrum(data,mdl,data-mdl,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-2.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
+            splot.plotSpectrum(data,mdl,diff,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_meanModel.pdf')
         else:
-            splot.plotSpectrum(data,mdl,mdlnt,data-mdl,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[-3.*numpy.nanmedian(ns.flux.value),1.5*numpy.nanmax(mdl.flux.value)],file=file+'_meanModel.pdf')
+            splot.plotSpectrum(data,mdl,mdlnt,diff,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_meanModel.pdf')
 
 #    print(plotParameters,toplot.keys(),best_parameters.keys(),mean_parameters.keys())
 
@@ -2291,7 +2293,7 @@ def _checkModelParametersInRange(mparam):
     return flag
 
 
-def _loadInterpolatedModel(*args,fast=True,**kwargs):
+def _loadInterpolatedModel(fast=True,**kwargs):
     '''
     Purpose: 
         Generates as spectral model with is interpolated between model parameter grid points. This routine is called by `loadModel()`_, or it can be called on its own.

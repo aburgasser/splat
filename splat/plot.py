@@ -212,9 +212,9 @@ def plotSpectrum(*args, **kwargs):
     yrange = [-0.02,1.2]*fluxMax:
         plot range for wavelength axis
     xlabel:
-        wavelength axis label; by default set by wlabel and wunit keywords in first spectrum object
+        wavelength axis label; by default set by wlabel keywords and wave.unit in first spectrum object
     ylabel:
-        flux axis label; by default set by fscale, flabel and funit keywords in first spectrum object
+        flux axis label; by default set by fscale, flabel and flux.unit in first spectrum object
     xlog = False:
         set the x (wavelength) axis to plot as a log scale
     ylog = False:
@@ -388,14 +388,18 @@ def plotSpectrum(*args, **kwargs):
 
 # features to label on spectra
     feature_labels = { \
-        'h2o': {'label': r'H$_2$O', 'type': 'band', 'wavelengths': [[0.92,0.95],[1.08,1.20],[1.325,1.550],[1.72,2.14]]}, \
+        'h2o': {'label': r'H$_2$O', 'type': 'band', 'wavelengths': [[0.925,0.95],[1.08,1.20],[1.325,1.550],[1.72,2.14]]}, \
         'ch4': {'label': r'CH$_4$', 'type': 'band', 'wavelengths': [[1.1,1.24],[1.28,1.44],[1.6,1.76],[2.2,2.35]]}, \
         'co': {'label': r'CO', 'type': 'band', 'wavelengths': [[2.29,2.39]]}, \
-        'tio': {'label': r'TiO', 'type': 'band', 'wavelengths': [[0.76,0.80],[0.825,0.831]]}, \
+        'tio': {'label': r'TiO', 'type': 'band', 'wavelengths': [[0.6569,0.6852],[0.705,0.727],[0.76,0.80],[0.825,0.831],[0.845,0.86]]}, \
+#        'tio': {'label': r'TiO', 'type': 'band', 'wavelengths': [[0.76,0.80],[0.825,0.831]]}, \
+        'vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.04,1.08]]}, \
         'vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.04,1.08]]}, \
         'young vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.17,1.20]]}, \
 #        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.86,0.90],[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
-        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
+        'cah': {'label': r'CaH', 'type': 'band', 'wavelengths': [[0.6346,0.639],[0.675,0.705]]}, \
+        'crh': {'label': r'CrH', 'type': 'band', 'wavelengths': [[0.8611,0.8681]]}, \
+        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.8692,0.875],[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
         'h2': {'label': r'H$_2$', 'type': 'band', 'wavelengths': [[1.5,2.4]]}, \
         'sb': {'label': r'*', 'type': 'band', 'wavelengths': [[1.6,1.64]]}, \
         'h': {'label': r'H I', 'type': 'line', 'wavelengths': [[1.004,1.005],[1.093,1.094],[1.281,1.282],[1.944,1.945],[2.166,2.166]]},\
@@ -404,12 +408,18 @@ def plotSpectrum(*args, **kwargs):
         'na': {'label': r'Na I', 'type': 'line', 'wavelengths': [[0.8186,0.8195],[1.136,1.137],[2.206,2.209]]}, \
         'nai': {'label': r'Na I', 'type': 'line', 'wavelengths': [[0.8186,0.8195],[1.136,1.137],[2.206,2.209]]}, \
         'na1': {'label': r'Na I', 'type': 'line', 'wavelengths': [[0.8186,0.8195],[1.136,1.137],[2.206,2.209]]}, \
+        'cs': {'label': r'Cs I', 'type': 'line', 'wavelengths': [[0.8521,0.8521],[0.8943,0.8943]]}, \
+        'csi': {'label': r'Cs I', 'type': 'line', 'wavelengths': [[0.8521,0.8521],[0.8943,0.8943]]}, \
+        'cs1': {'label': r'Cs I', 'type': 'line', 'wavelengths': [[0.8521,0.8521],[0.8943,0.8943]]}, \
+        'rb': {'label': r'Rb I', 'type': 'line', 'wavelengths': [[0.78,0.78],[0.7948,0.7948]]}, \
+        'rbi': {'label': r'Rb I', 'type': 'line', 'wavelengths': [[0.78,0.78],[0.7948,0.7948]]}, \
+        'rb1': {'label': r'Rb I', 'type': 'line', 'wavelengths': [[0.78,0.78],[0.7948,0.7948]]}, \
         'mg': {'label': r'Mg I', 'type': 'line', 'wavelengths': [[1.7113336,1.7113336],[1.5745017,1.5770150],[1.4881595,1.4881847,1.5029098,1.5044356],[1.1831422,1.2086969],]}, \
         'mgi': {'label': r'Mg I', 'type': 'line', 'wavelengths': [[1.7113336,1.7113336],[1.5745017,1.5770150],[1.4881595,1.4881847,1.5029098,1.5044356],[1.1831422,1.2086969],]}, \
         'mg1': {'label': r'Mg I', 'type': 'line', 'wavelengths': [[1.7113336,1.7113336],[1.5745017,1.5770150],[1.4881595,1.4881847,1.5029098,1.5044356],[1.1831422,1.2086969],]}, \
-        'ca': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
-        'cai': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
-        'ca1': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
+        'ca': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[0.6573,0.6573],[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
+        'cai': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[0.6573,0.6573],[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
+        'ca1': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[0.6573,0.6573],[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
         'caii': {'label': r'Ca II', 'type': 'line', 'wavelengths': [[1.184224,1.195301],[0.985746,0.993409]]}, \
         'ca2': {'label': r'Ca II', 'type': 'line', 'wavelengths': [[1.184224,1.195301],[0.985746,0.993409]]}, \
         'al': {'label': r'Al I', 'type': 'line', 'wavelengths': [[1.672351,1.675511],[1.3127006,1.3154345]]}, \
@@ -525,11 +535,11 @@ def plotSpectrum(*args, **kwargs):
 
 # settings that work if the spectrum was read in as legitmate Spectrum object
         try:
-            xlabel = kwargs.get('xlabel','{} ({})'.format(sp[0].wlabel,sp[0].wunit))
-            ylabel = kwargs.get('ylabel','{} {} ({})'.format(sp[0].fscale,sp[0].flabel,sp[0].funit))
+            xlabel = kwargs.get('xlabel','{} ({})'.format(sp[0].wlabel,sp[0].wave.unit))
+            ylabel = kwargs.get('ylabel','{} {} ({})'.format(sp[0].fscale,sp[0].flabel,sp[0].flux.unit))
         except:
-            xlabel = kwargs.get('xlabel','Wavelength (unknown units)')
-            ylabel = kwargs.get('ylabel','Flux (unknown units)')
+            xlabel = kwargs.get('xlabel','Wavelength')
+            ylabel = kwargs.get('ylabel','Flux')
         xrng = kwargs.get('xrange',[numpy.nanmin(sp[0].wave.value),numpy.nanmax(sp[0].wave.value)])
         if isUnit(xrng[0]): xrng = [x.value for x in xrng]
         bound = []
@@ -685,31 +695,37 @@ def plotSpectrum(*args, **kwargs):
 # label features
 # THIS NEEDS TO BE FIXED WITH GRETEL'S STUFF
         yoff = 0.02*(bound[3]-bound[2])
+        dbx = 0.01*(bound[1]-bound[0])
         fontsize = 10-numpy.min([(multilayout[0]*multilayout[1]-1),6])
         for ftr in features:
             ftr = ftr.lower()
             if ftr in feature_labels:
                 for ii,waveRng in enumerate(feature_labels[ftr]['wavelengths']):
-                    if (numpy.min(waveRng) > bound[0] and numpy.max(waveRng) < bound[1]):
-                        x = (numpy.arange(0,nsamples+1.0)/nsamples)* \
-                            (numpy.nanmax(waveRng)-numpy.nanmin(waveRng)+0.04)+numpy.nanmin(waveRng)-0.02
-                        f = interp1d(wvmax,flxmax,bounds_error=False,fill_value=0.)
-                        y = numpy.nanmax(f(x))+0.5*yoff
+                    wRng = ((waveRng*u.micron).to(sp[0].wave.unit)).value
+                    if (numpy.min(wRng) > bound[0] and numpy.max(wRng) < bound[1]):
+                        dwrng = numpy.nanmax(wRng)-numpy.nanmin(wRng)
+#                        if dwrng == 0.: wRng = [wRng[0]-0.01*(bound[1]-bound[0]),wRng[0]+0.01*(bound[1]-bound[0])]
+                        if dwrng < dbx: dwrng = dbx
+                        x = (numpy.arange(0,nsamples+1.0)/nsamples)*dwrng*1.1+numpy.nanmin(wRng)-dwrng*0.05
+#                        print(ftr,wRng,numpy.nanmin(x),numpy.nanmax(x))
+                        wfeature = numpy.where(numpy.logical_and(wvmax >= x[0],wvmax <= x[-1]))
+                        f = interp1d(numpy.array(wvmax)[wfeature],numpy.array(flxmax)[wfeature],bounds_error=False,fill_value=0.)
+                        y = numpy.nanmax(f(x))+1.*yoff
 
                         if feature_labels[ftr]['type'] == 'band':
-                            ax.plot(waveRng,[y+yoff]*2,color='k',linestyle='-')
-                            ax.plot([waveRng[0]]*2,[y,y+yoff],color='k',linestyle='-')
-                            ax.text(numpy.mean(waveRng),y+1.5*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=fontsize)
+                            ax.plot(wRng,[y+yoff]*2,color='k',linestyle='-')
+                            ax.plot([wRng[0]]*2,[y,y+yoff],color='k',linestyle='-')
+                            ax.text(numpy.mean(wRng),y+1.5*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=fontsize)
                         else:
-                            for w in waveRng:
-                                ax.plot([w]*2,[y,y+yoff],color='k',linestyle='-')
-                            ax.text(numpy.mean(waveRng),y+1.5*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=fontsize)
-                            waveRng = [waveRng[0]-0.02,waveRng[1]+0.02]   # for overlap
+                            for w in wRng: ax.plot([w]*2,[y,y+yoff],color='k',linestyle='-')
+                            ax.text(numpy.mean(wRng),y+1.5*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=fontsize)
+#                            wRng = [wRng[0]-0.02,wRng[1]+0.02]   # for overlap
+#                        print(ftr,y,y+yoff,len(wfeature))
 
-# update offset
-                        foff = [y+3*yoff if (w >= waveRng[0] and w <= waveRng[1]) else 0 for w in wvmax]
-                        flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
-        bound[3] = numpy.nanmax([numpy.nanmax(flxmax)+1.*yoff,bound[3]])
+                        foff = numpy.zeros(len(flxmax))
+                        foff[wfeature] = 3.*yoff
+                        flxmax = list(numpy.array(flxmax)+foff)
+        bound[3] = numpy.nanmax([numpy.nanmax(flxmax)+2.*yoff,bound[3]])
 
 
 # grid
@@ -745,9 +761,10 @@ def plotSpectrum(*args, **kwargs):
         if (kwargs.get('telluric',False) == True):
             twv = [[1.1,1.2],[1.3,1.5],[1.75,2.0]]
             for waveRng in twv:
-                rect = patches.Rectangle((waveRng[0],bound[2]),waveRng[1]-waveRng[0],bound[3]-bound[2],facecolor='0.95',alpha=0.2,color='0.95')
+                wR = ((waveRng*u.micron).to(sp[0].wave.unit)).value
+                rect = patches.Rectangle((wR[0],bound[2]),wR[1]-wR[0],bound[3]-bound[2],facecolor='0.95',alpha=0.2,color='0.95')
                 ax.add_patch(rect)
-                ax.text(numpy.mean(waveRng),bound[2]+3*yoff,r'$\oplus$',horizontalalignment='center',fontsize=fontsize)
+                ax.text(numpy.mean(wR),bound[2]+3*yoff,r'$\oplus$',horizontalalignment='center',fontsize=fontsize)
 
 # overplot color swaths for pre-specified bands
         bands = kwargs.get('bands',[])
@@ -828,24 +845,25 @@ def plotSpectrum(*args, **kwargs):
                     ftr = ftr.lower()
                     if ftr in feature_labels:
                         for ii,waveRng in enumerate(feature_labels[ftr]['wavelengths']):
-                            if (numpy.min(waveRng) > bound2[0] and numpy.max(waveRng) < bound2[1]):
+                            wR = ((waveRng*u.micron).to(sp[0].wave.unit)).value
+                            if (numpy.min(wR) > bound2[0] and numpy.max(wR) < bound2[1]):
                                 x = (numpy.arange(0,nsamples+1.0)/nsamples)* \
-                                    (numpy.nanmax(waveRng)-numpy.nanmin(waveRng)+0.04)+numpy.nanmin(waveRng)-0.02
+                                    (numpy.nanmax(wR)-numpy.nanmin(wR)+0.04)+numpy.nanmin(wR)-0.02
                                 f = interp1d(wvmax,flxmax,bounds_error=False,fill_value=0.)
                                 y = numpy.nanmax(f(x))+0.5*yoff
         
                                 if feature_labels[ftr]['type'] == 'band':
-                                    ax_inset.plot(waveRng,[y+yoff]*2,color='k',linestyle='-')
-                                    ax_inset.plot([waveRng[0]]*2,[y,y+yoff],color='k',linestyle='-')
-                                    ax_inset.text(numpy.mean(waveRng),y+2*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=inset_fontsize)
+                                    ax_inset.plot(wR,[y+yoff]*2,color='k',linestyle='-')
+                                    ax_inset.plot([wR[0]]*2,[y,y+yoff],color='k',linestyle='-')
+                                    ax_inset.text(numpy.mean(wR),y+2*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=inset_fontsize)
                                 else:
                                     for w in waveRng:
                                         ax_inset.plot([w]*2,[y,y+yoff],color='k',linestyle='-')
-                                    ax_inset.text(numpy.mean(waveRng),y+2*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=inset_fontsize)
-                                    waveRng = [waveRng[0]-0.02,waveRng[1]+0.02]   # for overlap
+                                    ax_inset.text(numpy.mean(wR),y+2*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=inset_fontsize)
+                                    waveRng = [wR[0]-0.02,wR[1]+0.02]   # for overlap
         
 # update offset
-                                foff = [y+3*yoff if (w >= waveRng[0] and w <= waveRng[1]) else 0 for w in wvmax]
+                                foff = [y+3*yoff if (w >= wR[0] and w <= wR[1]) else 0 for w in wvmax]
                                 flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
                 bound2[3] = numpy.max([bound2[3],numpy.max(flxmax)+5.*yoff])
                 ax_inset.axis(bound2)

@@ -169,27 +169,31 @@ def _initializeAllData(override=False,verbose=False,**kwargs):
             for m in rm: instruments.remove(m)
         if len(instruments) > 0:
             for inst in instruments:
-                DATA_FOLDERS.append(os.path.join(f,inst))
                 instcheck = checkInstrument(inst)
-# new instrument; set defaults, then drew from kwargs or instrument definition file                
-                if instcheck == False:
-                    ikey = (inst.upper()).replace(' ','-').replace('_','-')
-                    idict = {}
-                    for k in list(INSTRUMENT_DEFAULT_PARAMETERS.keys()): idict[k] = kwargs.get(k,INSTRUMENT_DEFAULT_PARAMETERS[k]['default'])
-                    if INSTRUMENT_DEFINITION_FILE in os.listdir(DATA_FOLDERS[-1]):
-                        idict_read = readDictFromFile(os.path.join(DATA_FOLDERS[-1],INSTRUMENT_DEFINITION_FILE))
-                        for k in list(idict_read.keys()): idict[k] = idict_read[k]
-                    idict['altname'].append(inst)
-                    INSTRUMENTS[ikey] = idict
-                    if verbose == True:
-                        print('Instrument {} was not one of the SPLAT defaults; added as a new instrument with following parameters:'.format(inst))
-                        for k in list(idict.keys()): print('\t{} = {}'.format(k,idict[k]))
-                else: 
-                    inst = instcheck
-                    idict = INSTRUMENTS[inst]
+# new instrument; IN CURRENT SETTING, IGNORE THIS FOLDER
+                if instcheck == False: instruments.remove(inst)
+                else: instruments[instruments.index(inst)] = instcheck
+        if len(instruments) > 0:
+            for inst in instruments:
+                DATA_FOLDERS.append(os.path.join(f,inst))
+# set defaults, then drew from kwargs or instrument definition file                
+                    # ikey = (inst.upper()).replace(' ','-').replace('_','-')
+                    # idict = {}
+                    # for k in list(INSTRUMENT_DEFAULT_PARAMETERS.keys()): idict[k] = INSTRUMENT_DEFAULT_PARAMETERS[k]['default']
+                    # if INSTRUMENT_DEFINITION_FILE in os.listdir(DATA_FOLDERS[-1]):
+                    #     idict_read = readDictFromFile(os.path.join(DATA_FOLDERS[-1],INSTRUMENT_DEFINITION_FILE))
+                    #     for k in list(idict_read.keys()): idict[k] = idict_read[k]
+# SOME PROBLEMS HERE (WILL GO AWAY WITH NEW STRUCTURE)
+#                    print(ikey,idict['altname'],inst)
+#                    idict['altname'].append(inst)
+                    # INSTRUMENTS[ikey] = idict
+                    # if verbose == True:
+                    #     print('Instrument {} was not one of the SPLAT defaults; added as a new instrument with following parameters:'.format(inst))
+                    #     for k in list(idict.keys()): print('\t{} = {}'.format(k,idict[k]))
 # save instrument information if not present
-                if INSTRUMENT_DEFINITION_FILE not in os.listdir(DATA_FOLDERS[-1]) or override == True:
-                    writeDictToFile(idict,os.path.join(DATA_FOLDERS[-1],INSTRUMENT_DEFINITION_FILE))
+#                idict = INSTRUMENTS[inst]
+#                if INSTRUMENT_DEFINITION_FILE not in os.listdir(DATA_FOLDERS[-1]) or override == True:
+#                    writeDictToFile(idict,os.path.join(DATA_FOLDERS[-1],INSTRUMENT_DEFINITION_FILE))
 
 # read in or generate spectral_data.txt file, and integrate into a "super" database
         if len(DATA_FOLDERS) == 0:
@@ -266,6 +270,7 @@ def _initializeAllData(override=False,verbose=False,**kwargs):
         for d in DATA_FOLDERS: print('\t{}'.format(d))
     pass
 
+# BE SURE TO TURN THIS BACK ON LATER
 _initializeAllData()
 
 
@@ -330,7 +335,6 @@ class Spectrum(object):
         self.instrument = kwargs.get('instrument','')
         inst = checkInstrument(self.instrument) 
         if inst != False: 
-            self.instrument = inst
             for k in list(INSTRUMENTS[inst].keys()): setattr(self,k,kwargs.get(k,INSTRUMENTS[inst][k]))
         self.instrument_mode = kwargs.get('instrument_mode','')
 #        self.runfast = kwargs.get('runfast',True)
@@ -375,7 +379,7 @@ class Spectrum(object):
             else:
                 self.noise = numpy.zeros(len(self.wave))
 # some extras
-            others = ['pixel','mask','flag','flags','model']
+            others = ['pixel','mask','flag','flags','model','background']
             for o in others:
                 if len(kwargs.get(o,'')) > 0:
                     setattr(self,o,kwargs[o])
@@ -387,7 +391,9 @@ class Spectrum(object):
             mkwargs = {}
             mkwargs['instrument']=self.instrument
             mkwargs['instrument_mode']=self.instrument_mode
+            mkwargs['file_type']=kwargs.get('file_type','')
             mkwargs['filename']=self.filename
+            mkwargs['comment']=kwargs.get('comment','#')
             self.simplefilename = os.path.basename(self.filename)
 #            self.file = self.filename
             self.name = kwargs.get('name',self.simplefilename)
@@ -433,7 +439,10 @@ class Spectrum(object):
 
             else:
                 rs = readSpectrum(self.filename,**mkwargs)
-            for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
+            for k in list(rs.keys()): 
+#                print(k,rs[k])
+                if k not in list(kwargs.keys()): setattr(self,k.lower(),rs[k])
+#            print(self.wunit)
 
 
 # None of this worked; create an empty Spectrum object (used for copying)
@@ -460,10 +469,12 @@ class Spectrum(object):
 # convert to astropy quantities with units
             if not isUnit(self.wave):
                 self.wave = numpy.array(self.wave)*self.wunit
+#                print(self.wave.unit)
             if not isUnit(self.flux):
                 self.flux = numpy.array(self.flux)*self.funit
             if not isUnit(self.noise):
                 self.noise = numpy.array(self.noise)*self.funit
+#            print(self.wave.unit)
 
 # some conversions
             self.flam = self.flux
@@ -1471,7 +1482,7 @@ class Spectrum(object):
         return
 
 
-    def toWavelengths(self,wave):
+    def toWavelengths(self,wave,force=True,verbose=False):
         '''
         :Purpose: 
             Maps a spectrum onto a new wavelength grid via interpolation or integral resampling
@@ -1480,7 +1491,8 @@ class Spectrum(object):
             :param wave: wavelengths to map to
 
         :Optional Inputs:
-            None
+            :param force = True: proceed with conversion even if wavelength ranges are not perfectly in range
+            :param verbose = False: provide verbose feedback
         
         :Outputs:
             None; Spectrum object is changed
@@ -1492,10 +1504,18 @@ class Spectrum(object):
         if not isUnit(wave):
             wave = wave*self.wave.unit
 
+        flag = 0
         if numpy.nanmin(((self.wave).to(wave.unit)).value) > numpy.nanmin(wave.value) or \
             numpy.nanmax(((self.wave).to(wave.unit)).value) < numpy.nanmax(wave.value):
-            print('\nWarning: input wavelength range {} to {} outside spectrum wavelength range {} to {}'.format(numpy.nanmin(wave.value),numpy.nanmax(wave.value),numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value)))
-        else:
+            if force is not True: 
+                print('\nWarning: input wavelength range {} to {} is partially outside spectrum wavelength range {} to {}'.format(numpy.nanmin(wave.value),numpy.nanmax(wave.value),numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value)))
+                flag = 1
+        elif numpy.nanmin(((self.wave).to(wave.unit)).value) > numpy.nanmax(wave.value) or \
+            numpy.nanmax(((self.wave).to(wave.unit)).value) < numpy.nanmin(wave.value):
+            print('\nWarning: input wavelength range {} to {} is completely outside spectrum wavelength range {} to {}'.format(numpy.nanmin(wave.value),numpy.nanmax(wave.value),numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value)))
+            flag = 1
+
+        if flag==0:
             self.toWaveUnit(wave.unit)
             self.trim([numpy.nanmin(wave),numpy.nanmax(wave)])
 
@@ -1513,7 +1533,9 @@ class Spectrum(object):
             self.variance = self.noise**2
             self.history.append('Resampled to new wavelength grid')
             self.snr = self.computeSN()
-
+            if verbose: print('\nSpectrum resampled onto input wavelength grid')
+        else: 
+            print('\nNo change made to spectrum')
         return
 
 
@@ -1891,8 +1913,7 @@ class Spectrum(object):
                 msk = numpy.zeros(len(fl))
                 msk[numpy.where(numpy.logical_or(\
                     numpy.logical_and(wv > 1.35,wv < 1.42),
-                    numpy.logical_and(wv > 1.8,wv < 1.95),
-                    wv > 2.45))] = 1
+                    numpy.logical_and(wv > 1.8,wv < 1.95)))] = 1
                 fl = fl[msk == 0]
                 if len(fl) > 0: return numpy.nanmax(fl)*self.funit
 #                if isUnit(fl[0]): fl = [f.value for f in fl]
@@ -2095,7 +2116,7 @@ class Spectrum(object):
             return
         if isinstance(msk[0],float): msk = [int(x) for x in msk]
         if isinstance(msk[0],int): msk = [True if x==1 else False for x in msk]
-        if not isinstance(msk[0],bool): print('\nWarning: cannot interpret mask {}; not removing any pixels'.format(mask))
+        if not isinstance(msk[0],bool) and not isinstance(msk[0],numpy.bool_): print('\nWarning: cannot interpret mask {}; not removing any pixels'.format(mask))
 
 # invert mask
         msk = numpy.array([not x for x in msk])
@@ -2121,7 +2142,119 @@ class Spectrum(object):
         return
 
 
-    def maskFlux(self,mask,others=[]):
+    def replace(self,mask,replace_value,replace_noise=True,replace_flux=True):
+        '''
+        :Purpose: 
+
+            Replaces flux and noise values using a mask and specified value
+
+        :Required Inputs:
+
+            :param mask: Either a mask array (an array of booleans, ints, or floats, where True or 1 removes the element)
+                or a 2-element array that defines the wavelength range to replace 
+            :param replace_value: value with which the masked elements should be replaced
+        
+        :Optional Inputs:
+
+            :param replace_flux = True: replace elements in the noise array
+            :param replace_noise = True: replace elements in the flux array
+
+        :Output:
+
+            Spectrum object has the flagged pixels replaced in flux, noise arrays, and optional vectors
+
+        :Example:
+           >>> import splat, numpy
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> num = splat.numberList('1-10,18,30-50')
+           >>> mask = [not(p in num) for p in numpy.arange(len(sp.wave))]
+           >>> sp.replace(mask,numpy.nan)
+           >>> sp.showHistory()
+                SPEX_PRISM spectrum successfully loaded
+                Mask applied to replace 32 pixels with value nan
+        '''
+        msk = copy.deepcopy(mask)
+
+# wavelength range given
+        if len(msk) == 2:
+            if not isUnit(msk): msk = msk*self.wave.unit
+            msk.to(self.wave.unit)
+            msk = generateMask(self.wave,mask_range=msk)
+
+        if len(msk) != len(self.flux):
+            print('\nWarning: mask must be same length ({}) as wave/flux arrays ({}); not removing any pixels'.format(len(msk),len(self.wave)))
+            return
+        if isinstance(msk[0],float): msk = [int(x) for x in msk]
+        if isinstance(msk[0],int): msk = [True if x==1 else False for x in msk]
+        if not isinstance(msk[0],bool): print('\nWarning: cannot interpret mask {}; not removing any pixels'.format(mask))
+
+# check units of replacement value
+        if not isUnit(replace_value) and not numpy.isnan(replace_value): 
+            replace_value = replace_value*self.flux.unit
+        if isUnit(replace_value):
+            if replace_value.unit != self.flux.unit:
+                try:
+                    replace_value = replace_value.to(self.flux.unit)
+                except:
+                    replace_value = replace_value.value*self.flux.unit
+
+# invert mask
+        msk = numpy.array([not x for x in msk])
+#        self.wave = (numpy.array(self.wave.value)[msk])*self.wave.unit
+#        self.flux = (numpy.array(self.flux.value)[msk])*self.flux.unit
+#        self.noise = (numpy.array(self.noise.value)[msk])*self.noise.unit
+        if replace_flux: self.flux[msk] = replace_value
+        if replace_noise: self.noise[msk] = replace_value
+        self.variance = self.noise**2
+        self.snr = self.computeSN()
+
+        cnt = numpy.sum([1 if x == False else 0 for x in msk])
+        self.history.append('Mask applied to replace {} pixels'.format(cnt))
+        return
+
+
+
+    def clean(self,action='remove',replace_value=0.):
+        '''
+        :Purpose: 
+
+            Cleans a spectrum by either removing or replacing nan values
+
+        :Required Inputs:
+
+            None
+        
+        :Optional Inputs:
+
+            :param action = 'remove': specify as either 'remove' or 'replace'
+            :param replace_value = 0.: for replace, what value to replace with
+
+        :Output:
+
+            Spectrum object is modified to have nan pixels "cleaned"
+
+        :Example:
+           >>> import splat,numpy
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> sp.flux[0] = numpy.nan
+           >>> sp.clean()
+           >>> sp.remove(mask)
+           >>> sp.showHistory()
+                SPEX_PRISM spectrum successfully loaded
+                Mask applied to remove 1 pixels
+        '''
+# clean out data points with nans in flux
+        msk = [numpy.isnan(x) for x in self.flux.value]
+# clean out data points with nans in noise
+        msk2 = [numpy.isnan(x) for x in self.noise.value]
+        msk = msk or msk2
+        if action=='remove': self.remove(msk)
+        elif action=='replace': self.replace(msk,replace_value)
+        else: print('\nWarning: ambiguous action {} for clean; no action taken'.format(action))
+        return
+
+
+    def maskFlux(self,mask,replace_noise=True,others=[]):
         '''
         :Purpose: 
 
@@ -2166,6 +2299,7 @@ class Spectrum(object):
 
 # mask pixels
         self.flux[msk] = numpy.nan
+        if replace_noise: self.flux[msk] = numpy.nan
 
         if len(others) > 0:
             for k in others:
@@ -2257,7 +2391,7 @@ class Spectrum(object):
         else: raise ValueError('\nCould not interpret method = {}'.format(method))
 
 
-    def scale(self,factor):
+    def scale(self,factor,noiseonly=False):
         '''
         :Purpose: 
 
@@ -2270,7 +2404,7 @@ class Spectrum(object):
 
         :Optional Inputs:
 
-            None
+            :param noiseonly = False: scale only the noise and variance, useful when uncertainty is under/over estimated
 
         :Output: 
 
@@ -2289,11 +2423,13 @@ class Spectrum(object):
            >>> sp.computeSN()
            124.51981
         '''
-        self.flux = self.flux*factor
+        if noiseonly == False: 
+            self.flux = self.flux*factor
+            self.fscale = 'Scaled'
         self.noise = self.noise*factor
         self.variance = self.noise**2
-        self.fscale = 'Scaled'
-        self.history.append('Spectrum scaled by a factor of {}'.format(factor))
+        if noiseonly == True: self.history.append('Spectrum noise scaled by a factor of {}'.format(factor))
+        else: self.history.append('Spectrum scaled by a factor of {}'.format(factor))
         return
 
     def setNoise(self,rng=[],floor=0.):
@@ -2941,6 +3077,7 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
 
 # parameters
     scaleflag = kwargs.get('scaleflag',scale)
+    vflag = True
 
 # generate copies of spectrum objects
     sp1 = copy.deepcopy(s1)
@@ -2994,7 +3131,6 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
             chi,scl = compareSpectra(sp1mid,sp2mid)
 
             vtot = numpy.zeros(len(wv12))
-            vflag = True
             if not numpy.isnan(numpy.nanmedian(var12)): vtot=var12
             if not numpy.isnan(numpy.nanmedian(v2r(wv12))): vtot=vtot+v2r(wv12)
 
@@ -3220,11 +3356,14 @@ def getStandard(spt, **kwargs):
     return stds[spt]
 
 
-def initializeStandards(**kwargs):
-    return(initiateStandards())
+def initializeStandards(*args,**kwargs):
+    '''
+    See initiateStandards()
+    '''
+    return initiateStandards(*args,**kwargs)
 
 
-def initiateStandards(**kwargs):
+def initiateStandards(*args,**kwargs):
     '''
     :Purpose: Initiates the spectral standards in the SpeX library. By default this loads the dwarfs standards, but you can also specify loading of subdwarf and extreme subdwarf standards as well. Once loaded, these standards remain in memory.
 
@@ -3248,28 +3387,38 @@ def initiateStandards(**kwargs):
         initiateStandards()
         initiateStandards(sd=True)
         initiateStandards(esd=True)
+        initiateStandards(intg=True)
+        initiateStandards(vlg=True)
         return
 
     elif kwargs.get('sd',False):
         stds = STDS_SD_SPEX
-        kys = STDS_SD_SPEX_KEYS
+        kys = copy.deepcopy(STDS_SD_SPEX_KEYS)
     elif kwargs.get('dsd',False):
         stds = STDS_DSD_SPEX
-        kys = STDS_DSD_SPEX_KEYS
+        kys = copy.deepcopy(STDS_DSD_SPEX_KEYS)
     elif kwargs.get('esd',False):
         stds = STDS_ESD_SPEX
-        kys = STDS_ESD_SPEX_KEYS
+        kys = copy.deepcopy(STDS_ESD_SPEX_KEYS)
     elif kwargs.get('vlg',False):
         stds = STDS_VLG_SPEX
-        kys = STDS_VLG_SPEX_KEYS
+        kys = copy.deepcopy(STDS_VLG_SPEX_KEYS)
     elif kwargs.get('intg',False):
         stds = STDS_INTG_SPEX
-        kys = STDS_INTG_SPEX_KEYS
+        kys = copy.deepcopy(STDS_INTG_SPEX_KEYS)
     else:
         stds = STDS_DWARF_SPEX
-        kys = STDS_DWARF_SPEX_KEYS
+        kys = copy.deepcopy(STDS_DWARF_SPEX_KEYS)
+    if len(args)>0:
+        newkys = {}
+        spt = copy.deepcopy(args[0])
+        if isinstance(spt,float) == True or isinstance(spt,int) == True: spt = typeToNum(spt)
+        if isinstance(spt,str) == True or isinstance(spt,list) == False: spt = [spt]
+        for t in spt:
+            if t in kys: newkys[t] = kys[t]
+        kys = copy.deepcopy(newkys)
     for t in list(kys.keys()):
-        if t not in list(stds.keys()):
+        if t not in list(stds.keys()) or kwargs.get('reset',False):
             stds[t] = Spectrum(kys[t])
             stds[t].normalize()
             stds[t].name += ' ({})'.format(t)
@@ -3535,7 +3684,7 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', *args, **kwargs):
             source_db['COORDSEPR'] = [numpy.abs((cc.ra.degree-r)*numpy.cos(cc.dec.degree*numpy.pi/180.)*3600.) for r in source_db['RA']]
             source_db['COORDSEPD'] = [numpy.abs((cc.dec.degree-d)*3600.) for d in source_db['DEC']]
             r = (source_db['COORDSEPR']**2+source_db['COORDSEPD']**2)**0.5
-            print(radius,numpy.nanmin(r),source_db['DESIGNATION'].iloc[numpy.argmin(r)])
+#            print(radius,numpy.nanmin(r),source_db['DESIGNATION'].iloc[numpy.argmin(r)])
             chk = source_db[source_db['COORDSEPR'] <= radius]
             chk = chk[chk['COORDSEPD'] <= radius]
             if len(chk) > 0:
@@ -3965,15 +4114,17 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', *args, **kwargs):
 
 
 
-def readSpectrum(verbose=False,*args,**kwargs):
+def readSpectrum(*args,**kwargs):
     '''
     .. DOCS: will come back to this one
     '''
 # keyword parameters
+    verbose = kwargs.get('verbose',False)
     folder = kwargs.get('folder','')
     catchSN = kwargs.get('catchSN',True)
     kwargs['model'] = False
     instrument = kwargs.get('instrument','')
+    file_type = kwargs.get('file_type','')
     inst = checkInstrument(instrument)
     if inst != False: instrument = inst
 #    local = kwargs.get('local',True)
@@ -4067,7 +4218,7 @@ def readSpectrum(verbose=False,*args,**kwargs):
 # ascii file
         else:
             try:
-                d = numpy.genfromtxt(os.path.normpath(file), comments='#', unpack=False, \
+                d = numpy.genfromtxt(os.path.normpath(file), comments=kwargs.get('comment','#'), unpack=False, \
                     missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
             except: raise ValueError('\nCould not read data from file {}'.format(file))
 #                d = numpy.genfromtxt(os.path.normpath(file), comments=';', unpack=False, \
@@ -4086,7 +4237,7 @@ def readSpectrum(verbose=False,*args,**kwargs):
         if len(d[:,0]) > len(d[0,:]): d = d.transpose()  # array is oriented wrong
 
 # SDSS format for wavelength scale - in header and log format
-        if kwargs.get('sdss',False) == True or (kwargs.get('waveheader',False) == True and kwargs.get('wavelog',False) == True):
+        if kwargs.get('sdss',False) == True or file_type=='wavelog':
             flux = d[0,:]
             if 'CRVAL1' in list(data[0].header.keys()) and 'CDELT1' in list(data[0].header.keys()):
                 wave = 10.**(numpy.linspace(float(data[0].header['CRVAL1']),float(data[0].header['CRVAL1'])+len(flux)*float(data[0].header['CDELT1']),num=len(flux)))
@@ -4097,7 +4248,7 @@ def readSpectrum(verbose=False,*args,**kwargs):
                 noise = numpy.zeros(len(flux))
                 noise[:] = numpy.nan
 #  wavelength scale in header and linear format
-        elif (kwargs.get('waveheader',False) == True and kwargs.get('wavelinear',False) == True):
+        elif file_type=='wavelinear':
             flux = d[0,:]
             if 'CRVAL1' in list(data[0].header.keys()) and 'CDELT1' in list(data[0].header.keys()):
                 wave = numpy.linspace(float(data[0].header['CRVAL1']),float(data[0].header['CRVAL1'])+len(flux)*float(data[0].header['CDELT1']),num=len(flux))
@@ -5477,6 +5628,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
 #    mask_standard = kwargs.get('mask_standard',False)
 #    mask_telluric = kwargs.get('mask_telluric',mask_standard)
     var_flag = novar2
+    if numpy.isnan(numpy.max(sp2.variance.value)) == True: var_flag = True
     if numpy.isnan(numpy.max(sp1.variance.value)) == True: var_flag = False
     statistic = kwargs.get('stat',statistic)
     minreturn = 1.e-60
@@ -5845,27 +5997,23 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
                 output is index value and uncertainty
     .. will also come back to this one
 
-# NOTE: NOISE FLAG ERROR IS BACKWARDS HERE    '''
+# NOTE: NOISE FLAG ERROR IS BACKWARDS HERE
+    '''
 
 # error checking on number of arguments provided
     if len(ranges) == 0:
-        print('\nmeasureIndex needs at least 1 sample region')
-        return numpy.nan, numpy.nan
+        raise ValueError('measureIndex needs at least 1 sample region; zero given')
     if len(ranges) == 1:
         method = 'single'
     if not isinstance(ranges[0],list) and not isinstance(ranges[0],numpy.ndarray) and not isinstance(ranges[0],tuple) and not isinstance(ranges[0],set):
-        print('\nmeasureIndex needs a list of wavelength ranges, you entered {} which has types {}'.format(ranges,type(ranges[0])))
-        return numpy.nan, numpy.nan
+        raise ValueError('measureIndex needs a list of wavelength ranges, you entered {} which has type {}'.format(ranges,type(ranges[0])))
     for r in ranges:
         if len(r) != 2:
-            print('\nProblem with range {} in input ranges {}: must be 2-element array'.format(r,ranges))
-            return numpy.nan, numpy.nan
+            raise ValueError('Problem with range {} in input ranges {}: must be 2-element array'.format(r,ranges))
     if (len(ranges) < 2 and (method == 'ratio' or method == 'change')):
-        print('\nIndex method {} needs at least 2 sample regions'.format(method))
-        return numpy.nan, numpy.nan
+        raise ValueError('Index method {} needs at least 2 sample regions'.format(method))
     if (len(ranges) < 3 and (method == 'line' or method == 'allers' or method == 'inverse_line'  or method == 'sumnum' or method == 'sumdenom')):
-        print('\nIndex method {} needs at least 3 sample regions'.format(method))
-        return numpy.nan, numpy.nan
+        raise ValueError('Index method {} needs at least 3 sample regions'.format(method))
 
 
 # define the sample vectors
@@ -5914,7 +6062,7 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
         elif (sample == 'average'):
             value[i] = numpy.nanmean(yNum)
         elif (sample == 'sum'):
-            value[i,j] = numpy.nansum(yNum)
+            value[i] = numpy.nansum(yNum)
         elif (sample == 'median'):
             value[i] = numpy.median(yNum)
         elif (sample == 'maximum'):
@@ -6007,208 +6155,113 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
 
 
 
-def measureIndexSet(sp,ref='burgasser',verbose=False,**kwargs):
+def measureIndexSet(sp,ref='burgasser',index_info={},info=False,verbose=False,indices_keyword='indices',range_keyword='ranges',method_keyword='method',sample_keyword='sample',**kwargs):
     '''
-    :Purpose: Measures indices of ``sp`` from specified sets. Returns dictionary of indices.
-    :param sp: Spectrum class object, which should contain wave, flux and noise array elements
-    :param set: string defining which indices set you want to use; options include:
+    :Purpose: 
 
-            - *bardalez*: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J, H-dip, K-slope, J-slope, J-curve, H-bump, H2O-Y from `Bardalez Gagliuffi et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...794..143B>`_
-            - *burgasser*: H2O-J, CH4-J, H2O-H, CH4-H, H2O-K, CH4-K, K-J from `Burgasser et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...637.1067B>`_
-            - *tokunaga*: K1, K2 from `Tokunaga & Kobayashi (1999) <http://adsabs.harvard.edu/abs/1999AJ....117.1010T>`_
-            - *reid*: H2O-A, H2O-B from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_
-            - *geballe*: H2O-1.2, H2O-1.5, CH4-2.2, Color-d2 from `Geballe et al. (2002) <http://adsabs.harvard.edu/abs/2002ApJ...564..466G>`_
-            - *allers*: H2O, FeH-z, VO-z, FeH-J, KI-J, H-cont from `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_, `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_
-            - *testi*: sHJ, sKJ, sH2O-J, sH2O-H1, sH2O-H2, sH2O-K from `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_
-            - *slesnick*: H2O-1, H2O-2, FeH from `Slesnick et al. (2004) <http://adsabs.harvard.edu/abs/2004ApJ...610.1045S>`_
-            - *mclean*: H2OD from `McLean et al. (2003) <http://adsabs.harvard.edu/abs/2003ApJ...596..561M>`_
-            - *rojas*: H2O-K2 from `Rojas-Ayala et al.(2012) <http://adsabs.harvard.edu/abs/2012ApJ...748...93R>`_
+        Measures indices of ``sp`` from specified sets. Returns dictionary of indices.
 
-    :type ref: optional, default = 'burgasser'
+    :Required Inputs:
+    
+        * :param sp: Spectrum class object, which should contain wave, flux and noise array elements
+
+    :Optional Inputs:
+    
+        * :param ref='burgasser': string identifying the index set you want to measure, as contained in the variable splat.INDEX_SETS
+        * :param index_info={}: a dictionary defining the index set to measure; this dictionary should contain within it:
+
+            * 'indices': points to a dictionary containing the index definitions, each of which are also a dictionary containing the 
+            keywords 'range' (the wavelength range),'sample' (spectrum sampling), and 'method'(index calculation method)
+            * alternately, a set of individual dictionaries containing 'range','sample', and 'method' keywords 
+            * 'bibcode': optional bibcode citation, if 'indices' keyword is present
+
+        * :param info=False: set to True to give the list of avaialble index sets in SPLAT
+        * :param indices_keyword='indices': alternate keyword name convection for indices 
+        * :param range_keyword='ranges': alternate keyword name convection for index wavelength ranges
+        * :param method_keyword='method': alternate keyword name convection for spectral sampling 
+        * :param sample_keyword='sample': alternate keyword name convection for index measurement method
+        * :param verbose=False: set to True to give extra feedback
+
+        Additional keyword options for measureIndex()_ can also be supplied
+
+    :Output:
+
+        A dictionary containing the names of each index pointed to tuple of (measurement,uncertainty)
 
     :Example:
-    >>> import splat
-    >>> sp = splat.getSpectrum(shortname='1555+0954')[0]
-    >>> print splat.measureIndexSet(sp, ref = 'reid')
-        {'H2O-B': (1.0531856077273236, 0.0045092074790538221), 'H2O-A': (0.89673318593633422, 0.0031278302105038594)}
+
+        >>> import splat
+        >>> sp = splat.getSpectrum(shortname='1555+0954')[0]
+        >>> splat.measureIndexSet(sp, ref = 'reid')
+             {'H2O-A': (0.896763035762751, 0.0009482437569842745),
+             'H2O-B': (1.0534404728276665, 0.001329359465953495)}
+
+    .. _measureIndex() : api.html#splat.core.measureIndex
+
     '''
+
 # keyword parameters
+    for k in ['reference','set']:
+        ref = kwargs.get(k,ref)
+    for k in ['indices','index','index_dict']:
+        index_info = kwargs.get(k,index_info)
+    for k in ['option','options','information','available']:
+        info = kwargs.get(k,info)
 
-    ref = kwargs.get('set',ref)
+# just return information on available sets
+    if info==True:
+        tmp = checkDict(ref,INDEX_SETS)
+        if tmp==False: 
+            print('Reference {} IS NOT in the available set of indices, which are as follows:\n'.format(ref))
+            for k in list(INDEX_SETS.keys()):
+                inds = list(INDEX_SETS[k]['indices'].keys())
+                bibref = ''
+                if 'bibcode' in list(INDEX_SETS[k].keys()): bibref = INDEX_SETS[k]['bibcode']
+                r = inds[0]
+                for i in inds[1:]: r=r+','+i
+                print('{} ({}): indices: {}'.format(k,bibref,r))
+        else:
+            print('Reference {} IS in the available set of indices'.format(ref))
+            if 'bibcode' in list(INDEX_SETS[tmp].keys()): print('Bibcode: {}'.format(INDEX_SETS[tmp]['bibcode']))
+            inds = list(INDEX_SETS[tmp]['indices'].keys())
+            r = inds[0]
+            for i in inds[1:]: r=r+','+i
+            print('Indices: {}'.format(r))
+        return
 
-    if ('allers' in ref.lower()):
-        reference = 'Indices from Allers et al. (2007), Allers & Liu (2013)'
-        refcode = '2013ApJ...772...79A'
-        names = ['H2O','FeH-z','VO-z','FeH-J','KI-J','H-cont']
-        ranges = [([1.55,1.56],[1.492,1.502]),\
-            ([0.99135,1.00465],[0.97335,0.98665],[1.01535,1.02865]),\
-            ([1.05095,1.06505],[1.02795,1.04205],[1.07995,1.09405]),\
-            ([1.19880,1.20120],[1.19080,1.19320],[1.20680,1.20920]),\
-            ([1.23570,1.25230],[1.21170,1.22830],[1.26170,1.27830]),\
-            ([1.54960,1.57040],[1.45960,1.48040],[1.65960,1.68040])]
-        methods = ['ratio','allers','allers','allers','allers','allers']
-        samples = ['average']*len(names)
-    elif ('bardalez' in ref.lower()):
-        reference = 'Indices from Bardalez Gagliuffi et al. (2014)'
-        refcode = '2014ApJ...794..143B'
-        names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J','H-dip','K-slope','J-slope','J-curve','H-bump','H2O-Y']
-        ranges = [([1.14,1.165],[1.26,1.285]),\
-            ([1.315,1.335],[1.26,1.285]),\
-            ([1.48,1.52],[1.56,1.60]),\
-            ([1.635,1.675],[1.56,1.60]),\
-            ([1.975,1.995],[2.08,2.12]),\
-            ([2.215,2.255],[2.08,2.12]),\
-            ([2.06,2.10],[1.25,1.29]),\
-            ([1.61,1.64],[1.56,1.59],[1.66,1.69]),\
-            ([2.06,2.10],[2.10,2.14]),\
-            ([1.27,1.30],[1.30,1.33]),\
-            ([1.04,1.07],[1.26,1.29],[1.14,1.17]),\
-            ([1.54,1.57],[1.66,1.69]),\
-            ([1.04,1.07],[1.14,1.17])]
-        methods = ['ratio','ratio','ratio','ratio','ratio','ratio','ratio','inverse_line','ratio','ratio','line','ratio','ratio',]
-        samples = ['integrate']*len(names)
-    elif ('burgasser' in ref.lower()):
-        reference = 'Indices from Burgasser et al. (2006)'
-        refcode = '2006ApJ...637.1067B'
-        names = ['H2O-J','CH4-J','H2O-H','CH4-H','H2O-K','CH4-K','K-J']
-        ranges = [([1.14,1.165],[1.26,1.285]),\
-            ([1.315,1.335],[1.26,1.285]),\
-            ([1.48,1.52],[1.56,1.60]),\
-            ([1.635,1.675],[1.56,1.60]),\
-            ([1.975,1.995],[2.08,2.12]),\
-            ([2.215,2.255],[2.08,2.12]),\
-            ([2.06,2.10],[1.25,1.29])]
-        methods = ['ratio']*len(names)
-        samples = ['integrate']*len(names)
-    elif ('geballe' in ref.lower()):
-        reference = 'Indices from Geballe et al. (2002)'
-        refcode = '2002ApJ...564..466G'
-        names = ['Color-d2','Cont-1.0','H2O-1.2','H2O-1.5','H2O-2.2','CH4-1.6','CH4-2.2']
-        ranges = [\
-            ([0.96,0.98],[0.735,0.755]),\
-            ([1.04,1.05],[0.875,0.885]),\
-            ([1.26,1.29],[1.13,1.16]),\
-            ([1.57,1.59],[1.46,1.48]),\
-            ([2.09,2.11],[1.975,1.995]),\
-            ([1.56,1.6],[1.635,1.675]),\
-            ([2.08,2.12],[2.215,2.255]),\
-            ]
-        methods = ['ratio']*len(names)
-        samples = ['integrate']*len(names)
-    elif ('kirkpatrick' in ref.lower()):
-        reference = 'Indices from Kirkpatrick et al. (1999)'
-        refcode = '1999ApJ...519..802K'
-        names = ['Rb-a','Rb-b','Na-a','Na-b','Cs-a','Cs-b','TiO-a','TiO-b','VO-a','VO-b','CrH-a','CrH-b','FeH-a','FeH-b','Color-a','Color-b','Color-c','Color-d']
-        ranges = [\
-            ([.77752,.77852],[.78152,.78252],[.77952,.78052]),\
-            ([.79226,.79326],[.79626,.79726],[.79426,.79526]),\
-            ([.81533,.81633],[.81783,.81883]),\
-            ([.81533,.81633],[.81898,.81998]),\
-            ([.84961,.85061],[.85361,.85461],[.85161,.85261]),\
-            ([.89185,.89285],[.89583,.89683],[.89385,.89485]),\
-            ([.7033,.7048],[.7058,.7073]),\
-            ([.8400,.8415],[.8435,.8470]),\
-            ([.7350,.7370],[.7550,.7570],[.7430,.7470]),\
-            ([.7860,.7880],[.8080,.8100],[.7960,.8000]),\
-            ([.8580,.8600],[.8621,.8641]),\
-            ([.9940,.9960],[.9970,.9990]),\
-            ([.8660,.8680],[.8700,.8720]),\
-            ([.9863,.9883],[.9908,.9928]),\
-            ([.9800,.9850],[.7300,.7350]),\
-            ([.9800,.9850],[.7000,.7050]),\
-            ([.9800,.9850],[.8100,.8150]),\
-            ([.9675,.9850],[.7350,.7550]),\
-        ]
-        methods = ['line','line','ratio','ratio','line','line','ratio','ratio','sumnum','sumnum','ratio','ratio','ratio','ratio','ratio','ratio','ratio','ratio']
-        samples = ['sum']*len(names)
-    elif ('martin' in ref.lower()):
-        reference = 'Indices from Martin et al. (1999)'
-        refcode = '1999AJ....118.2466M'
-        names = ['PC3','PC6','CrH1','CrH2','FeH1','FeH2','H2O1','TiO1','TiO2','VO1','VO2']
-        ranges = [\
-            ([.823,.827],[.754,.758]),\
-            ([.909,.913],[.650,.654]),\
-            ([.856,.860],[.861,.865]),\
-            ([.984,.988],[.997,1.001]),\
-            ([.856,.860],[.8685,.8725]),\
-            ([.984,.988],[.990,.994]),\
-            ([.919,.923],[.928,.932]),\
-            ([.700,.704],[.706,.710]),\
-            ([.838,.842],[.844,.848]),\
-            ([.754,.758],[.742,.746]),\
-            ([.799,.803],[.790,.794]),\
-        ]
-        methods = ['ratio']*len(names)
-        samples = ['integrate']*len(names)
-    elif ('mclean' in ref.lower()):
-        reference = 'Indices from McLean et al. (2003)'
-        refcode = '2003ApJ...596..561M'
-        names = ['H2OD']
-        ranges = [([1.951,1.977],[2.062,2.088])]
-        methods = ['ratio']
-        samples = ['average']
-    elif ('reid' in ref.lower()):
-        reference = 'Indices from Reid et al. (2001)'
-        refcode = '2001AJ....121.1710R'
-        names = ['H2O-A','H2O-B']
-        ranges = [([1.33,1.35],[1.28,1.30]),([1.47,1.49],[1.59,1.61])]
-        methods = ['ratio']*len(names)
-        samples = ['average']*len(names)
-    elif ('rojas' in ref.lower()):
-        reference = 'Indices from Rojas-Ayala et al.(2012)'
-        refcode = '2012ApJ...748...93R'
-        names = ['H2O-K2num','H2O-K2den']
-        ranges = [([2.070,2.090],[2.235,2.255]),\
-            ([2.235,2.255],[2.360,2.380])]
-        methods = ['ratio']*len(names)
-        samples = ['average']*len(names)
-    elif ('slesnick' in ref.lower()):
-        reference = 'Indices from Slesnick et al. (2004)'
-        refcode = '2004ApJ...610.1045S'
-        names = ['H2O-1','H2O-2','FeH']
-        ranges = [([1.335,1.345],[1.295,1.305]),\
-            ([2.035,2.045],[2.145,2.155]),\
-            ([1.1935,1.2065],[1.2235,1.2365])]
-        methods = ['ratio']*len(names)
-        samples = ['average']*len(names)
-    elif ('testi' in ref.lower()):
-        reference = 'Indices from Testi et al. (2001)'
-        refcode = '2001ApJ...552L.147T'
-        names = ['sHJ','sKJ','sH2O_J','sH2O_H1','sH2O_H2','sH2O_K']
-        ranges = [([1.265,1.305],[1.6,1.7]),\
-            ([1.265,1.305],[2.12,2.16]),\
-            ([1.265,1.305],[1.09,1.13]),\
-            ([1.60,1.70],[1.45,1.48]),\
-            ([1.60,1.70],[1.77,1.81]),\
-            ([2.12,2.16],[1.96,1.99])]
-        methods = ['change']*len(names)
-        samples = ['average']*len(names)
-    elif ('tokunaga' in ref.lower()):
-        reference = 'Indices from Tokunaga & Kobayashi (1999)'
-        refcode = '1999AJ....117.1010T'
-        names = ['K1','K2']
-        ranges = [([2.1,2.18],[1.96,2.04]),([2.2,2.28],[2.1,2.18])]
-        methods = ['change']*len(names)
-        samples = ['average']*len(names)
-#        inds = numpy.zeros(len(names))
-#        errs = numpy.zeros(len(names))
-#        inds[0],errs[0] = measureIndex(sp,[2.1,2.18],[1.96,2.04],method='change',sample='average',**kwargs)
-#        inds[1],errs[1] = measureIndex(sp,[2.2,2.28],[2.1,2.18],method='change',sample='average',**kwargs)
-    else:
-        print('{} is not one of the sets used for measureIndexSet'.format(ref))
-        return numpy.nan
+# if index information is not passed, then check with INDEX_SET
+    if len(index_info) == 0:
+        tmp = checkDict(ref,INDEX_SETS)
+        if tmp==False: raise ValueError('Index set {} is not currently available'.format(ref))
+        ref = copy.deepcopy(tmp)
+        index_info = copy.deepcopy(INDEX_SETS[ref])
 
-    result = {'ref': ref, 'bibcode': refcode}
-    pkwargs = copy.deepcopy(kwargs) 
-    if 'method' in list(pkwargs.keys()): del pkwargs['method']
-    if 'sample' in list(pkwargs.keys()): del pkwargs['sample']
-    for i,n in enumerate(names):
-        ind,err = measureIndex(sp,ranges[i],method=methods[i],sample=samples[i],verbose=verbose,**pkwargs)
+# check that the relevant keywords are in the index dictionary
+    dkeys = list(index_info.keys())
+    if indices_keyword not in dkeys:
+        for n in dkeys:
+            for k in [range_keyword,method_keyword,sample_keyword]:
+                if k not in list(index_info[indices_keyword][n].keys()):
+                    raise ValueError('Keyword "{}" is missing from top level of dictionary, or keyword "{}" is missing for index {}'.format(indices_keyword,n))
+        tmp = {}
+        tmp[indices_keyword] = index_info
+        index_info = copy.deepcopy(tmp)
+
+    names = list(index_info[indices_keyword])
+    for n in names:
+        for k in [range_keyword,method_keyword,sample_keyword]:
+            if k not in list(index_info[indices_keyword][n].keys()):
+                raise ValueError('Keyword "{}" must be present for each defined index in input index dictionary, but is missing for index {}'.format(k,n))
+
+# measure indices
+    result = {}
+    for n in names:
+        ind,err = measureIndex(sp,index_info[indices_keyword][n][range_keyword],method=index_info[indices_keyword][n][method_keyword],sample=index_info[indices_keyword][n][sample_keyword],verbose=verbose,**kwargs)
         result[n] = (ind,err)
         if verbose == True: print('Index {}: {:.3f}+/-{:.3f}'.format(n,ind,err))
 
-# some exceptions
-    if 'bardalez' in ref.lower():
+# some modifications
+    if ref=='bardalez':
         result['H-dip'] = tuple([i*0.5 for i in result['H-dip']])
         result['J-curve'] = tuple([i*2. for i in result['J-curve']])
     elif 'rojas' in ref.lower():
@@ -6217,29 +6270,39 @@ def measureIndexSet(sp,ref='burgasser',verbose=False,**kwargs):
         result['H2O-K2'] = (ind,err)
         del result['H2O-K2num'], result['H2O-K2den']
 
-
-# output dictionary of indices
-#    result = {names[i]: (inds[i],errs[i]) for i in numpy.arange(len(names))}
-#    result['reference'] = reference
-#    return inds,errs,names
-
     return result
 
 
-def metallicity(sp,**kwargs):
+
+def metallicity(sp,nsamples=100,**kwargs):
     '''
-    :Purpose: Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in `Rojas-Ayala et al.(2012) <http://adsabs.harvard.edu/abs/2012ApJ...748...93R>`_
-    :param sp: Spectrum class object, which should contain wave, flux and noise array elements
-    :param nsamples: number of Monte Carlo samples for error computation
-    :type nsamples: optional, default = 100
+    :Purpose: 
+
+        Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in 
+        `Rojas-Ayala et al.(2012) <http://adsabs.harvard.edu/abs/2012ApJ...748...93R>`_
+        Requires higher resolution data than SpeX prism mode. 
+        Includes calls to measureIndexSet()_ and measureEWSet()_
+
+    :Required Inputs: 
+
+        :param sp: Spectrum class object, which should contain wave, flux and noise array elements
+
+    :Optional Inputs: 
+
+        :param nsamples=100: number of Monte Carlo samples for error computation
+
+    :Output: 
+
+        Estimated metallicity and uncertainty
 
     :Example:
-    >>> import splat
-    >>> sp = splat.getSpectrum(shortname='0559-1404')[0]
-    >>> print splat.metallicity(sp)
-        (-0.50726104530066363, 0.24844773591243882)
+
+        TBD
+
+    .. _measureIndexSet() : api.html#splat.core.measureIndexSet
+    .. _measureEWSet() : api.html#splat.core.measureEWSet
+
     '''
-    nsamples = kwargs.get('nsamples',1000)
 
     coeff_feh = [-1.039,0.092,0.119]
     coeff_feh_e = [0.17,0.023,0.033]

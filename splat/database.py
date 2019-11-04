@@ -986,7 +986,7 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
         'SDSS9': {'altname': ['SDSS9'],'vref': u'vizier:V/139/sdss9', 'select_columns': ['SDSS9','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
         'ALLWISE': {'altname': ['ALLWISE'],'vref': u'vizier:II/328/allwise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
         'GAIA-DR1': {'altname': ['GAIADR1'],'vref': u'vizier:I/337/gaia', 'select_columns': ['source_id','ra','dec','ref_epoch','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
-        'GAIA-DR2': {'altname': ['GAIADR2','GAIA'],'vref': u'vizier:I/345/gaia2', 'select_columns': ['source_id','ra','dec','ref_epoch','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
+        'GAIA-DR2': {'altname': ['GAIADR2','GAIA'],'vref': u'vizier:I/345/gaia2', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
 # probably broken
         'WISE': {'altname': ['WISE'],'vref': u'vizier:II/311/wise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
         'UKIDSS': {'altname': ['UKIDSS'],'vref': u'vizier:II/319/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
@@ -1003,22 +1003,23 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
 #        'USNO': {'vref': u'I/284', 'select_columns': 
 #        'LSPM': {'vref': u'I/298', 'select_columns': 
         }
-    if len(args) > 0:
-        catalog = args[0]
-    if catalog.upper() in list(XMATCH_CATALOGS.keys()):
-        cat = catalog.upper()
-        vref = XMATCH_CATALOGS[cat]['vref']
-        if use_select_columns == True: select_columns = XMATCH_CATALOGS[cat]['select_columns']
-    else:
-        if XMatch.is_table_available(catalog) == False:
-            print('\n{} is not one of the catalogs in astroquery.xmatch; try using queryVizer()'.format(catalog))
-            return db
+    if len(args) > 0: catalog = args[0]
+    cat = checkDict(catalog,XMATCH_CATALOGS)
+    if cat == False: 
         cat = catalog.upper()
         vref = 'vizier:'+catalog
+    else: 
+        vref = XMATCH_CATALOGS[cat]['vref']
+#    if catalog.upper() in list(XMATCH_CATALOGS.keys()):
+#        cat = catalog.upper()
+#        vref = XMATCH_CATALOGS[cat]['vref']
+        if use_select_columns == True: select_columns = XMATCH_CATALOGS[cat]['select_columns']
+    if XMatch.is_table_available(vref) == False:
+        print('\n{} is not one of the catalogs in astroquery.xmatch; try using queryVizer()'.format(catalog))
+        return db
     if prefix == None: prefix = cat
 
-    if use_select_columns == False: select_columns = []
-
+#    if use_select_columns == False: select_columns = []
 
 # use XMatch
     t = Table()
@@ -1027,7 +1028,6 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
 # special case for GAIA
 #    if cat == 'GAIA-DR2':
         
-
 # use XMatch
     t_match = XMatch.query(t,vref,radius,colRA1=raCol,colDec1=decCol)
     db_match = t_match.to_pandas()

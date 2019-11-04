@@ -86,7 +86,7 @@ def veryShortRef(bib_dict,**kwargs):
         if type(bib_dict) is numpy.str:
             bib_dict = str(bib_dict)
         if type(bib_dict) is str:
-            bib_dict = getBibTex(bib_dict,**kwargs)
+            bib_dict = getBibTeX(bib_dict,**kwargs)
             if isinstance(bib_dict,dict) == False: return ''
         else:
             if kwargs.get('verbose',False): print('Input to shortRef is neither a bibcode nor a bibTex dictionary')
@@ -125,7 +125,7 @@ def shortRef(bib_dict,**kwargs):
         if type(bib_dict) is numpy.str:
             bib_dict = str(bib_dict)
         if type(bib_dict) is str:
-            bib_dict = getBibTex(bib_dict,**kwargs)
+            bib_dict = getBibTeX(bib_dict,**kwargs)
             if isinstance(bib_dict,dict) == False: return ''
         else:
             if kwargs.get('verbose',False): print('Input to shortRef is neither a bibcode nor a bibTex dictionary')
@@ -176,7 +176,7 @@ def longRef(bib_dict,**kwargs):
         if type(bib_dict) is numpy.str:
             bib_dict = str(bib_dict)
         if type(bib_dict) is str:
-            bib_dict = getBibTex(bib_dict,**kwargs)
+            bib_dict = getBibTeX(bib_dict,**kwargs)
             if isinstance(bib_dict,dict) == False: return ''
         else:
             if kwargs.get('verbose',False): print('Input to longRef is neither a bibcode nor a bibTex dictionary')
@@ -227,7 +227,7 @@ def veryLongRef(bib_dict,**kwargs):
         if type(bib_dict) is numpy.str:
             bib_dict = str(bib_dict)
         if type(bib_dict) is str:
-            bib_dict = getBibTex(bib_dict,**kwargs)
+            bib_dict = getBibTeX(bib_dict,**kwargs)
             if isinstance(bib_dict,dict) == False: return ''
         else:
             if kwargs.get('verbose',False): print('Input to verylongRef is neither a bibcode nor a bibTex dictionary')
@@ -280,13 +280,13 @@ def citeURL(bib_dict,**kwargs):
             bib_dict = str(bib_dict)
         if type(bib_dict) is str:
 # assume this is a bibcode
-            return 'http://adsabs.harvard.edu/abs/{}'.format(bib_dict)
+            return '{}{}/abstract'.format(CITATION_URL_BASE,bib_dict)
         else:
             raise NameError('Input to citeURL is neither a bibcode nor a bibTex dictionary')
 
     else:
         if 'bibcode' in list(bib_dict.keys()):
-            return 'http://adsabs.harvard.edu/abs/{}'.format(bib_dict['bibcode'])
+            return '{}{}/abstract'.format(CITATION_URL_BASE,bib_dict['bibcode'])
         else:
             raise NameError('BibTex dictionary does not contain a bibcode')
 
@@ -328,7 +328,7 @@ def processBiblibrary(biblibrary,verbose=False):
     return output
 
 
-def getBibTex(bibcode,**kwargs):
+def getBibTeX(bibcode,**kwargs):
     '''
     Purpose
         Takes a bibcode and returns a dictionary containing the bibtex information; looks either in internal SPLAT
@@ -353,7 +353,7 @@ def getBibTex(bibcode,**kwargs):
 
 # go online first if directed to do so
     if kwargs.get('online',False) and checkOnline():
-        bib_tex = getBibTexOnline(bibcode)
+        bib_tex = getBibTeXOnline(bibcode)
 
 # read locally first
     else:
@@ -374,7 +374,7 @@ def getBibTex(bibcode,**kwargs):
             if in_lib == None:  
                 if kwargs.get('force',False): return False
                 if kwargs.get('verbose',False) == True: print('Bibcode {} not in bibtex library {}; checking online'.format(bibcode,biblibrary))
-                bib_tex = getBibTexOnline(bibcode)
+                bib_tex = getBibTeXOnline(bibcode)
             else:
                 begin = text.find(re.search('@[a-z]+{' + bibcode, text).group(0))
                 text = text[begin:]
@@ -387,7 +387,7 @@ def getBibTex(bibcode,**kwargs):
         return bibTexParser(bib_tex)
 
 
-def getBibTexOnline(bibcode,verbose=False):
+def getBibTeXOnline(bibcode,verbose=False):
     '''
     Purpose
         Takes a bibcode and searches for the bibtex information online through NASA ADS; requires user to be online.

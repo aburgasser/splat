@@ -41,7 +41,7 @@ from splat.citations import shortRef
 #                               #
 #################################
 
-def loadEvolModel(*args,model='baraffe2003',returnpandas=False,verbose=True,**kwargs):
+def loadEvolModel(model='baraffe2003',returnpandas=False,verbose=True,*args,**kwargs):
     '''
     :Purpose: 
         Reads in the evolutionary model parameters for the models listed below, which are used to interpolate parameters in `modelParameters()`_. 
@@ -921,7 +921,7 @@ def modelParameters(*model,**kwargs):
     if len(model) > 0: model=model[0]
     else: model='baraffe03'
     for k in ['model','set','ref','reference']: model=kwargs.get(k,model)
-    if type(model) is not dict: model = loadEvolModel(model,**kwargs)
+    if type(model) is not dict: model = loadEvolModel(**kwargs)
     if type(model) is not dict: raise ValueError('Something went wrong in loading in models')
     if kwargs.get('debug',False) == True: print(model)
     keywords = list(kwargs.keys())

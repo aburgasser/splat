@@ -546,9 +546,9 @@ def checkInstrument(instrument):
 
     >>> import splat
     >>> splat.checkInstrument('SPEX PRISM')
-        burrows06
+        SPEX-PRISM
     >>> splat.checkInstrument('LRIS')
-        BTSettl2008
+        LRIS-RED
     >>> splat.checkInstrument('somethingelse')
         False
     '''
@@ -935,8 +935,11 @@ def properDate(din,**kwargs):
 
     dformat = kwargs.get('format','')
     oformat = kwargs.get('output','YYYY-MM-DD')
+    if numpy.isnan(din):
+        print('\nCould not determine format of input date {}; please provide a format string\n'.format(din))
+        return ''        
     d = copy.deepcopy(din)
-    if not isinstance(d,str): d = str(d)
+    if not isinstance(d,str): d = str(int(d))
 
 # some defaults
     if '/' in d and dformat == '':       # default American style
@@ -959,8 +962,8 @@ def properDate(din,**kwargs):
 
 # no idea
     if dformat == '':
-        print('\nCould not determine format of input date; please provide a format string\n')
-        return d
+        print('\nCould not determine format of input date {}; please provide a format string\n'.format(din))
+        return ''
 
 # case statement for conversion to YYYY-MM-DD
     if dformat == 'YYYYMMDD':
@@ -1514,7 +1517,7 @@ def typeToNum(inp, subclass='dwarf', error='', uncertainty=0., luminosity_class 
         return inp
 
 
-def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.):
+def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.,nsamp=100,full=False,verbose=False):
     '''
     THIS FUNCTION NEEDS CLEANING
     '''
@@ -1532,7 +1535,14 @@ def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.):
     if not isinstance(e_mu,list) and not isinstance(e_mu,numpy.ndarray): 
         raise ValueError('\nProper motion uncertainty input {} must be a 2-element list'.format(e_mu))
 
-    return uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance),numpy.random.normal(mu[0],e_mu[0]),numpy.random.normal(mu[1],e_mu[1]),numpy.random.normal(rv,e_rv))
+    if e_distance==0 and e_mu[0]==0 and e_mu[1]==0 and e_rv==0:
+        return uvwcalc(c.ra.degree,c.dec.degree,numpy.distance,mu[0],mu[1],rv),numpy.null
+    else:
+        if full==False:
+            us,vs,ws = uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance,nsamp),numpy.random.normal(mu[0],e_mu[0],nsamp),numpy.random.normal(mu[1],e_mu[1],nsamp),numpy.random.normal(rv,e_rv,nsamp))
+            return [numpy.median(us),numpy.std(us)],[numpy.median(vs),numpy.std(vs)],[numpy.median(ws),numpy.std(ws)]
+        else:
+            return uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance,nsamp),numpy.random.normal(mu[0],e_mu[0],nsamp),numpy.random.normal(mu[1],e_mu[1],nsamp),numpy.random.normal(rv,e_rv,nsamp))
 
 
 def xyz(coordinate,center='sun',r0=8000*u.pc,z0=25*u.pc,unit=u.pc,**kwargs):
