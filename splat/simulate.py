@@ -36,7 +36,7 @@ from splat.evolve import modelParameters
 #####################################
 
 
-def galactic_density_juric_old(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun',unit=u.pc,**kwargs):
+def galacticDensityJuric_old(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun',unit=u.pc,**kwargs):
 	'''
 	:Purpose: 
 
@@ -151,7 +151,7 @@ def galactic_density_juric_old(rc,zc,rho0 = 1./(u.pc**3),report='total',center='
 
 
 
-def galactic_density_juric(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun',unit=u.pc,**kwargs):
+def galacticDensityJuric(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun',unit=u.pc,**kwargs):
 	'''
 	:Purpose: 
 
@@ -203,10 +203,10 @@ def galactic_density_juric(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun'
 	r0 = (8000.*u.pc).to(unit).value # radial offset from galactic center to Sun
 	z0 = (25.*u.pc).to(unit).value  # vertical offset from galactic plane to Sun
 	r1 = (2600.*u.pc).to(unit).value # radial length scale of exponential thin disk 
-	h1 = (300.*u.pc).to(unit).value # vertical length scale of exponential thin disk 
+	z1 = (300.*u.pc).to(unit).value # vertical length scale of exponential thin disk 
 	ftd = 0.12 # relative number of thick disk to thin disk star counts
 	r2 = (3600.*u.pc).to(unit).value # radial length scale of exponential thick disk 
-	h2 = (900.*u.pc).to(unit).value # vertical length scale of exponential thick disk 
+	z2 = (900.*u.pc).to(unit).value # vertical length scale of exponential thick disk 
 	fh = 0.0051 # relative number of halo to thin disk star counts
 	qh = 0.64 # halo axial ratio
 	nh = 2.77 # halo power law index
@@ -234,9 +234,9 @@ def galactic_density_juric(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun'
 	rhod0 = rho0/(1.+ftd+fh)
 
 # compute number densities of different components
-	rhod = galactic_density_disk(r,z,r0=r0,z0=z0,r1=r1,h1=h1,rho0=rhod0,center=center,unit=unit)
-	rhotd = galactic_density_disk(r,z,r0=r0,z0=z0,r1=r2,h1=h2,rho0=ftd*rhod0,center=center,unit=unit)
-	rhoh = galactic_density_spheroid(r,z,r0=r0,z0=z0,q=qh,n=nh,rho0=fh*rhod0,center=center,unit=unit)
+	rhod = galacticDensityExponentialDisk(r,z,r0=r0,z0=z0,r1=r1,z1=z1,rho0=rhod0,center=center,unit=unit)
+	rhotd = galacticDensityExponentialDisk(r,z,r0=r0,z0=z0,r1=r2,z1=z2,rho0=ftd*rhod0,center=center,unit=unit)
+	rhoh = galacticDensitySpheroid(r,z,r0=r0,z0=z0,q=qh,n=nh,rho0=fh*rhod0,center=center,unit=unit)
 
 # return single value
 	if len(r) == 1:
@@ -253,7 +253,7 @@ def galactic_density_juric(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun'
 	else: return rho
 
 
-def galactic_density_disk(rc,zc,r0=8000*u.pc,z0=25*u.pc,r1=2600*u.pc,h1=300*u.pc,rho0 = 1./(u.pc**3),center='sun',unit=u.pc,**kwargs):
+def galacticDensityExponentialDisk(rc,zc,r0=8000*u.pc,z0=25*u.pc,r1=2600*u.pc,z1=300*u.pc,rho0 = 1./(u.pc**3),center='sun',unit=u.pc,**kwargs):
 	'''
 	:Purpose: 
 
@@ -270,7 +270,7 @@ def galactic_density_disk(rc,zc,r0=8000*u.pc,z0=25*u.pc,r1=2600*u.pc,h1=300*u.pc
 		:param: r0 = 8000 pc: solar radial position
 		:param: h0 = 25 pc: solar vertical scale
 		:param: r1 = 2600 pc: exponential radial scale
-		:param: h1 = 300 pc: exponential vertical scale
+		:param: z1 = 300 pc: exponential vertical scale
 		:param: rho0 = 1./pc^3: local number density
 		:param: center = 'sun': assumed center point, by default 'sun' but could also be 'galaxy'
 		:param: unit = astropy.units.pc: preferred unit for positional arguments
@@ -308,28 +308,28 @@ def galactic_density_disk(rc,zc,r0=8000*u.pc,z0=25*u.pc,r1=2600*u.pc,h1=300*u.pc
 	z = numpy.array(z)
 
 # convert constants
-	r0=r0.to(unit).value
-	z0=z0.to(unit).value
-	r1=r1.to(unit).value
-	h1=h1.to(unit).value
+	r0v=r0.to(unit).value
+	z0v=z0.to(unit).value
+	r1v=r1.to(unit).value
+	z1v=z1.to(unit).value
 
 # centering offsets
 	if center.lower() == 'sun': 
-		r = r+r0
-		z = z+z0
+		r = r+r0v
+		z = z+z0v
 
 # compute number densities
-	rho = rho0*numpy.exp(-1.*(r-r0)/r1)*numpy.exp(-1.*numpy.absolute(z)/h1)
+	rho = rho0*numpy.exp(-1.*(r-r0v)/r1v)*numpy.exp(-1.*numpy.absolute(z)/z1v)
 
 # compensate for fact that we measure local density at the sun's position	
-	if center.lower() == 'sun': rho = rho*numpy.exp(z0/h1)
+	if center.lower() == 'sun': rho = rho*numpy.exp(z0v/z1v)
 
 # return single value
 	if len(r) == 1: return rho[0]
 	else: return rho
 
 
-def galactic_density_spheroid(rc,zc,r0=8000*u.pc,z0=25*u.pc,q=0.64,n=2.77,rho0 = 1./(u.pc**3),center='sun',unit=u.pc,**kwargs):
+def galacticDensitySpheroid(rc,zc,r0=8000*u.pc,z0=25*u.pc,q=0.64,n=2.77,rho0 = 1./(u.pc**3),center='sun',unit=u.pc,**kwargs):
 	'''
 	:Purpose: 
 
@@ -400,7 +400,7 @@ def galactic_density_spheroid(rc,zc,r0=8000*u.pc,z0=25*u.pc,q=0.64,n=2.77,rho0 =
 	else: return rho
 
 
-def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10000,unit=u.pc,population='all',**kwargs):
+def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=1000,unit=u.pc,population='all',**kwargs):
 	'''
 	:Purpose: 
 
@@ -497,7 +497,7 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
 	if 'rho0' not in list(kwargs.keys()): kwargs['rho0'] = 1./u.pc**3
 
 	if model.lower() == 'juric':
-		rho_function = galactic_density_juric
+		rho_function = galacticDensityJuric
 		if population.lower() == 'disk' or 'thin' in population.lower(): kwargs['report'] = 'thin disk'
 		elif 'thick' in population.lower(): kwargs['report'] = 'thick disk'
 		elif 'halo' in population.lower(): kwargs['report'] = 'halo'
@@ -532,7 +532,264 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
 		return numpy.array(val)
 
 
-def effectiveVolumeDisk(coordinate,dmax,dmin=0.*u.pc,area=1.*u.deg**2,r0=8000*u.pc,z0=25*u.pc,r1=2600.*u.pc,z1=300*u.pc,reference='heliocentric',unit=u.pc):
+def effectiveVolume(coordinate,dmax,dmin=0.,model='juric',area=1.*u.deg**2,center='sun',nsamp=1000,unit=u.pc,population='all',**kwargs):
+    '''
+    :Purpose: 
+
+        Computes the correction between the effective volume searched given an underly stellar density 
+        model and the geometric volume. This program computes the value of the ratio:
+
+        $\int_0^{x_{max}}{rho(x)x^2dx} / \int_0^{x_{max}}{rho(0)x^2dx}$
+
+    :Required Inputs:
+
+        :param coordinate: a variable that can be converted to an astropy SkyCoord value with `splat.properCoordinates()`_
+        :param dmax: the maximum distance to compute to, or an array of distances, assumed in units of parsec.
+            In the case of an array, the result is the cumulative volume correction up to the corresponding maximum distance
+
+    :Optional Inputs:
+
+        :param: model = 'juric': the galactic number density model; currently available:
+
+            * 'juric': (default) `Juric et al. (2008, ApJ, 673, 864) <http://adsabs.harvard.edu/abs/2008ApJ...673..864J>`_ called by `splat.simulate.galacticDensityJuric()`_
+            * 'disk': exponential disk model parameterized by r1 and z1 called by `splat.simulate.galacticDensityExponentialDisk()`_
+            * 'spheroid' or 'halo': spheroid model parameterized by q and n called by `splat.simulate.galacticDensitySpheroid()`_
+
+        :param: population = 'all': depending on model, specifies what population to return.
+            For example, model='juric' can take population='thin disk','thick disk','halo','bulge' or 'all'
+        :param: center = 'sun': assumed center point, by default 'sun' but could also be 'galaxy'
+        :param: nsamp = number of samples for sampling line of sight
+        :param: unit = astropy.units.pc: preferred unit for positional arguments
+
+    :Output: 
+
+        Estimate of the correction factor for the effective volume
+
+    :Example:
+
+        >>> import splat
+        >>> import splat.simulate as spsim
+        >>> c = splat.properCoordinates('J05591914-1404488')
+        >>> spsim.volumeCorrection(c,10.)
+            1.0044083458899131 # note: slightly larger than 1 because we are going toward Galactic disk
+        >>> spsim.volumeCorrection(c,10000.)
+            0.0060593740293862081
+
+    .. _`modelParameters()` : api.html#splat.evolve.modelParameters
+    .. _`splat.properCoordinates()` : api.html#splat.utilities.properCoordinates
+    .. _`splat.simulate.galacticDensityJuric()` : api.html#splat.simulate.galacticDensityJuric
+    .. _`splat.simulate.galacticDensityExponentialDisk()` : api.html#splat.simulate.galacticDensityExponentialDisk
+    .. _`splat.simulate.galacticDensitySpheroid()` : api.html#splat.simulate.galacticDensitySpheroid
+
+    :TBD:
+
+        * flag to return the integrated correction function as a function of distance (cumulative distribution)
+        * flag to just integrate parts of a density distribution (e.g., "thin disk", "halo")
+        * fix error at r = 0
+
+    ''' 
+# check inputs
+    if not isUnit(unit): unit = u.pc
+    if not splat.isUnit(area): area = area*u.steradian
+    ar = area.to(u.steradian).value
+
+# coordinate - can be a single coordinate or array of coordinates - THIS IS PROVING MESSY SO COMMENTING OUT
+#   c = copy.deepcopy(coordinate)
+#   if not isinstance(c,list) and not isinstance(c,numpy.ndarray): c = [c]
+#   c = numpy.array(c)
+#   try:
+#       c = numpy.array([splat.properCoordinates(x) for x in c])
+#   except: 
+#       raise ValueError('Input variable {} is not a proper coordinate or list of coordinates'.format(coordinate))
+
+# single coordinate
+    c = copy.deepcopy(coordinate)
+    try:
+        c = splat.properCoordinates(c)
+    except: 
+        raise ValueError('Input variable {} is not a proper coordinate'.format(coordinate))
+
+# convert dmx into array
+    dmx = copy.deepcopy(dmax)
+    if isUnit(dmx): dmx = dmx.to(unit).value
+    if not isinstance(dmx,list) and not isinstance(dmx,numpy.ndarray): dmx = [dmx]
+    dmx = numpy.array(dmx)
+    if not isinstance(dmx[0],float): 
+        try: dmx = numpy.array([float(x) for x in dmx])
+        except: raise ValueError('{} is not a proper distance value'.format(dmax))
+    if numpy.nanmin(dmx) == 0.: raise ValueError('Outer distance limit(s) must be greater than 0; you entered {}'.format(dmax))
+    nsamp = numpy.nanmax([nsamp,3.*len(dmx)])
+
+# single minimum distance (for now)
+    dmn = copy.deepcopy(dmin)
+    if isUnit(dmn): dmn = dmn.to(unit).value
+    if not isinstance(dmn,float): 
+        try: dmn = float(dmn)
+        except: raise ValueError('{} is not a proper distance value'.format(dmin))
+
+# galactic number density function with population options
+    if 'unit' not in list(kwargs.keys()): kwargs['unit'] = unit
+    if 'center' not in list(kwargs.keys()): kwargs['center'] = center
+    if 'rho0' not in list(kwargs.keys()): kwargs['rho0'] = 1./u.pc**3
+
+    if model.lower() == 'juric':
+        rho_function = galacticDensityJuric
+        if population.lower() == 'disk' or 'thin' in population.lower(): kwargs['report'] = 'thin disk'
+        elif 'thick' in population.lower(): kwargs['report'] = 'thick disk'
+        elif 'halo' in population.lower(): kwargs['report'] = 'halo'
+        else: kwargs['report'] = 'total'
+    elif model.lower() == 'disk':
+        rho_function = galacticDensityExponentialDisk
+    elif model.lower() == 'spheroid' or model.lower() == 'halo':
+        rho_function = galacticDensitySpheroid
+    elif model.lower() == 'uniform':
+        return 1.
+    else:
+        raise ValueError('\nDo not have galatic model {} for effectiveVolume()'.format(model))
+
+
+# generate R,z vectors
+# single sight line & distance
+    d = numpy.linspace(dmn,numpy.nanmax(dmx),nsamp)
+# replace this with built in galactic XYZ from SkyCoord
+    x,y,z = splat.xyz(c,distance=d,center=center,unit=unit)
+    r = (x**2+y**2)**0.5
+    rho = rho_function(r,z,**kwargs)
+    rho = rho.to(unit**(-3)).value
+
+    if len(dmx) == 1:
+        return float(integrate.trapz(rho*(d**2),x=d))*ar*(unit**3)
+    else:
+        rinterp = interp1d(d,rho,bounds_error=False)
+        val = []
+        for dm in dmx:
+            dx = numpy.linspace(dmn,dm,nsamp)
+            val.append(float(integrate.trapz(rinterp(dx)*(dx**2),x=dx)/integrate.trapz(dx**2,x=dx)))
+        return numpy.array(val*(unit**3))*ar
+
+
+def effectiveVolumeExponentialDiskFast(coordinate,dmax,dmin=0.*u.pc,area=1.*u.deg**2,r0=8000*u.pc,z0=25*u.pc,r1=2600.*u.pc,z1=300*u.pc,reference='heliocentric',unit=u.pc):
+    '''
+    :Purpose: 
+
+        Computes the effective volume toward a given coordinate given an underlying stellar density model
+        assumed to be defined by a radial exponential disk:
+
+        $\rho(R,Z) = \rho_0\exp{-R/R_1}\exp{-|Z|/Z_1}$
+
+        where $\rho_0$ is the stellar number density measured at coordiante (R,Z) = (0,0),
+        and $R_1$ and $Z_1$ are e-folding lengths. If measurements are measured relative to the Sun 
+        (reference = 'heliocentric') then the density model takes the form:
+
+        $\rho(R,Z) = \rho_{\odot}\exp{-R/R_1}\exp{-|Z-Z_{\odot}|/Z_1}$
+
+        Note that $R_{\odot}$ is explicitly assumed to be zero since R is measured relative to the 
+        Solar radial position; howeverm $Z_{\odot}$ is not zero to account for increased stellar number
+        density from the (offset) Sun toward the plane.
+
+        This function is faster than `splat.simulate.effectiveVolume()`_ for a disk population as the cumulative volume is already explicitly integrated 
+
+    :Required Inputs:
+
+        :param coordinate: a variable that can be converted to an astropy SkyCoord value with `splat.properCoordinates()`_
+        :param dmax: the maximum distance to compute to, assumed in units of parsec.
+
+    :Optional Inputs:
+
+        :param: dmin = 0 pc: the minimum distance to start computing volume.
+        :param: area = 1 deg^2: the assumed area on the sky in which volume is computed
+        :param: r0 = 8000 pc: assumed radial coordinate of the Sun, based on XXX
+        :param: z0 = 25 pc: assumed vertical coordinate of the Sun, based on XXX
+        :param: r1 = 2600 pc: radial scalelength; this value is based on`Juric et al. (2008, ApJ, 673, 864) <http://adsabs.harvard.edu/abs/2008ApJ...673..864J>`_
+        :param: z1 = 300 pc: vertical scalelength; this value is based on`Juric et al. (2008, ApJ, 673, 864) <http://adsabs.harvard.edu/abs/2008ApJ...673..864J>`_
+        :param: reference = 'heliocentric': reference point for input coordinates; choices are:
+
+            * 'heliocentric' or 'sun': assumes R,Z measured relative to Sun, so $R_{\odot}$ = 0
+            * 'plane': assumes R,Z measured relative to Sun, so $R_{\odot}$ = 0
+        :param: unit = astropy.units.pc: preferred unit for positional arguments
+
+    :Output: 
+
+        Estimate of the effective volume toward a given coordinate direction and up to a given distance
+
+    :Example:
+
+        >>> import splat
+        >>> import splat.simulate as spsim
+        >>> c = splat.properCoordinates('J05591914-1404488')
+        >>> spsim.effectiveVolumeDisk(c,10.)
+            1.0044083458899131 # note: slightly larger than 1 because we are going toward Galactic disk
+        >>> spsim.volumeCorrection(c,10000.)
+            0.0060593740293862081
+
+    .. _`splat.properCoordinates()` : api.html#splat.utilities.properCoordinates
+    .. _`splat.simulate.effectiveVolume()` : api.html#splat.simulate.effectiveVolume
+
+    ''' 
+# check inputs
+    if not isUnit(unit): unit = u.pc
+    try:
+        tmp = unit.to(u.pc)
+    except: 
+        raise ValueError('Unit variable {} must be a unit of length'.format(unit))
+
+    c = copy.deepcopy(coordinate)
+    try:
+        c = splat.properCoordinates(c)
+    except: 
+        raise ValueError('Input variable {} is not a proper coordinate'.format(coordinate))
+
+    if not splat.isUnit(r0): r0 = r0*unit
+    rref = r0.to(unit).value
+    if not splat.isUnit(r1): r1 = r1*unit
+    rscl = r1.to(unit).value
+    if not splat.isUnit(z0): z0 = z0*unit
+    zref = z0.to(unit).value
+    if not splat.isUnit(z1): z1 = z1*unit
+    zscl = z1.to(unit).value
+    if not splat.isUnit(dmin): dmin = dmin*unit
+    dl = dmin.to(unit).value
+    if not splat.isUnit(dmax): dmax = dmax*unit
+    dh = dmax.to(unit).value
+    if not splat.isUnit(area): area = area*u.steradian
+    ar = area.to(u.steradian).value
+
+    b = c.galactic.b.radian
+    l = c.galactic.l.radian
+
+# check that this form is a good approximation
+    scl = numpy.absolute((rref*numpy.cos(l))/(dh*numpy.cos(b)*(0.5-numpy.cos(l))))
+#    scl = numpy.absolute((numpy.cos(b)*(0.5-numpy.cos(l))*dh**2)/(rref*rscl))
+    if scl <3.:
+#        print('Warning: this function is a poor estimate of effective volume (2nd order radial exponential term = exp(+/-{:.1f})'.format(scl))
+        print('Warning: this function is a poor estimate of effective volume (radial terms 1st order/2nd order ratio = {:.1f}'.format(scl))
+
+# explicit integration
+    a = -1.*numpy.cos(l)*numpy.cos(b)/rscl + numpy.absolute(numpy.sin(b)/zscl)
+    if (zref > 0 and numpy.sin(b) > 0) or (zref < 0 and numpy.sin(b) < 0):
+        veff = (((dl**2)/a+2*dl/(a**2)+2./(a**3))*numpy.exp(-1.*a*dl))-(((dh**2)/a+2*dh/(a**2)+2./(a**3))*numpy.exp(-1.*a*dh))
+    else:
+        ap = -1.*numpy.cos(l)*numpy.cos(b)/rscl - numpy.absolute(numpy.sin(b)/zscl)
+        cp = numpy.exp(2.*numpy.absolute(zref)/zscl)
+        veff = 0.
+        if dl < numpy.absolute(zref) and dh < numpy.absolute(zref):
+            veff = (((dl**2)/ap+2*dl/(ap**2)+2./(ap**3))*numpy.exp(-1.*ap*dl))-(((dh**2)/ap+2*dh/(ap**2)+2./(ap**3))*numpy.exp(-1.*ap*dh))
+        elif dl < numpy.absolute(zref) and dh >= numpy.absolute(zref):
+            veff = (((dl**2)/ap+2*dl/(ap**2)+2./(ap**3))*numpy.exp(-1.*ap*dl))-(((numpy.absolute(zref)**2)/ap+2*numpy.absolute(zref)/(ap**2)+2./(ap**3))*numpy.exp(-1.*ap*numpy.absolute(zref)))
+            veff = veff+cp*((((numpy.absolute(zref)**2)/a+2*numpy.absolute(zref)/(a**2)+2./(a**3))*numpy.exp(-1.*a*numpy.absolute(zref)))-(((dh**2)/a+2*dh/(a**2)+2./(a**3))*numpy.exp(-1.*a*dh)))
+        elif dl >= numpy.absolute(zref) and dh >= numpy.absolute(zref):
+            veff = veff+cp*((((dl**2)/a+2*dl/(a**2)+2./(a**3))*numpy.exp(-1.*a*dl))-(((dh**2)/a+2*dh/(a**2)+2./(a**3))*numpy.exp(-1.*a*dh)))
+        else: 
+            raise ValueError('Inner distance limit {} should not be larger than outer distance limit {}'.format(dmin,dmax))
+    veff = veff*ar
+
+# adjust for offset position
+    if reference=='plane': veff = veff*numpy.exp(zref/zscl)
+        
+    return veff*unit**3
+
+
+def effectiveVolumeExponentialDisk(coordinate,dmax,dmin=0.*u.pc,area=1.*u.deg**2,r0=8000*u.pc,z0=25*u.pc,r1=2600.*u.pc,z1=300*u.pc,nsamp=100,reference='heliocentric',unit=u.pc):
     '''
     :Purpose: 
 

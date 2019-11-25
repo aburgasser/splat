@@ -935,7 +935,7 @@ def properDate(din,**kwargs):
 
     dformat = kwargs.get('format','')
     oformat = kwargs.get('output','YYYY-MM-DD')
-    if numpy.isnan(din):
+    if len(din)==0:
         print('\nCould not determine format of input date {}; please provide a format string\n'.format(din))
         return ''        
     d = copy.deepcopy(din)
@@ -1543,6 +1543,28 @@ def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.,nsamp=100,
             return [numpy.median(us),numpy.std(us)],[numpy.median(vs),numpy.std(vs)],[numpy.median(ws),numpy.std(ws)]
         else:
             return uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance,nsamp),numpy.random.normal(mu[0],e_mu[0],nsamp),numpy.random.normal(mu[1],e_mu[1],nsamp),numpy.random.normal(rv,e_rv,nsamp))
+
+def lbolToMbol(lbol,err=None,scale='log',sun_scale=True,reverse=False):
+    l0 = 3.0128e28*u.Watt # in watts
+    lsun = u.Lsun
+
+    lb = copy.deepcopy(lbol)
+    le = copy.deepcopy(err)
+    if scale=='linear':
+        if not isUnit(lb): 
+            if sun_scale==True: lb=lb*lsun
+            else: lb=lb*(l0.unit)
+        lb = numpy.log10(lb/lsun)
+        if le != None:
+            if not isUnit(le): 
+                if sun_scale==True: le=le*lsun
+                else: le=le*(l0.unit)
+            le = numpy.log10(le/lsun)
+        
+    if err == None:
+        return -2.5*lb-2.5*numpy.log10(lsun/l0)
+    else:
+        return -2.5*lb-2.5*numpy.log10(lsun/l0),2.5*le
 
 
 def xyz(coordinate,center='sun',r0=8000*u.pc,z0=25*u.pc,unit=u.pc,**kwargs):

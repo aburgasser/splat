@@ -270,6 +270,53 @@ def filterMag(sp,filt,*args,**kwargs):
     return val*outunit,err*outunit
 
 
+def vegaToAB(filt,vegafile=VEGAFILE,filterfolder=SPLAT_PATH+FILTER_FOLDER,custom=False,notch=False,rsr=False,**kwargs):
+
+# check that requested filter is in list
+    if isinstance(custom,bool) and isinstance(notch,bool):
+        f0 = checkFilterName(filt,verbose=True)
+        if f0 == False: 
+            return numpy.nan, numpy.nan
+        filt = f0
+        rsr = FILTERS[filt]['rsr']
+
+# Read in filter
+    if isinstance(custom,bool) and isinstance(notch,bool):
+        fwave,ftrans = filterProfile(filt,**kwargs)
+# notch filter
+    elif isinstance(custom,bool) and isinstance(notch,list):
+        dn = (notch[1]-notch[0])/1000
+        fwave = numpy.arange(notch[0]-5.*dn,notch[1]+5.*dn,dn)
+        ftrans = numpy.zeros(len(fwave))
+        ftrans[numpy.where(numpy.logical_and(fwave >= notch[0],fwave <= notch[1]))] = 1.
+# custom filter
+    else:
+        fwave,ftrans = custom[0],custom[1]
+
+
+# Read in Vega spectrum
+    vwave,vflux = numpy.genfromtxt(os.path.normpath(filterfolder+vegafile), comments='#', unpack=True, \
+        missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+    vwave = vwave[~numpy.isnan(vflux)]*u.micron
+    vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))
+
+# trim spectrum
+    vflux = vflux[vwave>=numpy.nanmin(fwave)]
+    vwave = vwave[vwave>=numpy.nanmin(fwave)]
+    vflux = vflux[vwave<=numpy.nanmax(fwave)]
+    vwave = vwave[vwave<=numpy.nanmax(fwave)]
+
+# convert to fnu
+    nu = vwave.to('Hz',equivalencies=u.spectral())
+    fnu = vflux.to('Jy',equivalencies=u.spectral_density(vwave))
+    filtnu = fwave.to('Hz',equivalencies=u.spectral())
+    fconst = 3631*u.jansky
+    d = interp1d(nu.value,fnu.value,bounds_error=False,fill_value=0.)
+    b = trapz((ftrans/filtnu.value)*fconst.value,filtnu.value)
+    return -2.5*numpy.log10(trapz(ftrans*d(filtnu.value)/filtnu.value,filtnu.value)/b)
+
+
+
 def filterInfo(*args,**kwargs):
     '''
     :Purpose: Prints out the current list of filters in the SPLAT reference library.

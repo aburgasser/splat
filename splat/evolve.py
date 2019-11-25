@@ -935,56 +935,6 @@ def modelParameters(*model,**kwargs):
             if k.lower() in EVOLUTIONARY_MODEL_PARAMETERS[e]['altname']:
                 mkwargs[e] = kwargs[k]
 
-    # if 'temperature' not in keywords:
-    #     if 't' in keywords:
-    #         mkwargs['temperature'] = kwargs['t']
-    #     if 'teff' in keywords:
-    #         mkwargs['temperature'] = kwargs['teff']
-    #     if 'temp' in keywords:
-    #         mkwargs['temperature'] = kwargs['temp']
-    #     if 'temperatures' in keywords:
-    #         mkwargs['temperature'] = kwargs['temperatures']
-    # if 'gravity' not in keywords:
-    #     if 'g' in keywords:
-    #         mkwargs['gravity'] = kwargs['g']
-    #     if 'logg' in keywords:
-    #         mkwargs['gravity'] = kwargs['logg']
-    #     if 'grav' in keywords:
-    #         mkwargs['gravity'] = kwargs['grav']
-    #     if 'gravities' in keywords:
-    #         mkwargs['gravity'] = kwargs['gravities']
-    # if 'mass' not in keywords:
-    #     if 'm' in keywords:
-    #         mkwargs['mass'] = kwargs['m']
-    #     if 'masses' in keywords:
-    #         mkwargs['mass'] = kwargs['masses']
-    # if 'age' not in keywords:
-    #     if 'time' in keywords:
-    #         mkwargs['age'] = kwargs['time']
-    #     if 'a' in keywords:
-    #         mkwargs['age'] = kwargs['a']
-    #     if 'ages' in keywords:
-    #         mkwargs['age'] = kwargs['ages']
-    # if 'radius' not in keywords:
-    #     if 'r' in keywords:
-    #         mkwargs['radius'] = kwargs['r']
-    #     if 'rad' in keywords:
-    #         mkwargs['radius'] = kwargs['rad']
-    #     if 'radii' in keywords:
-    #         mkwargs['radius'] = kwargs['radii']
-    #     if 'radiuses' in keywords:
-    #         mkwargs['radius'] = kwargs['radiuses']
-    # if 'luminosity' not in keywords:
-    #     if 'l' in keywords:
-    #         mkwargs['luminosity'] = kwargs['l']
-    #     if 'lum' in keywords:
-    #         mkwargs['luminosity'] = kwargs['lum']
-    #     if 'lbol' in keywords:
-    #         mkwargs['luminosity'] = kwargs['lbol']
-    #     if 'luminosities' in keywords:
-    #         mkwargs['luminosity'] = kwargs['luminosities']
-
-
 # determine length of input arrays and assert they must be pure numbers 
     inparams = {}
     inparams['debug'] = kwargs.get('debug',False)

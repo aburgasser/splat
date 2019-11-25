@@ -315,9 +315,16 @@ def processBiblibrary(biblibrary,verbose=False):
 
 # find all of the bibtex codes
     output = {}
-    in_lib = re.search('@[a-z]+{', text)
-    while in_lib != None:
+    flg = 'upper'
+    in_lib = re.search('@[A-Z]+{', text)
+    if in_lib==None:
+        flg = 'lower'
         in_lib = re.search('@[a-z]+{', text)
+        if in_lib==None:
+            raise ValueError('Cannot find any bib entries in text {}'.format(text[:1000]))
+    while in_lib != None:
+        if flg=='upper': in_lib = re.search('@[A-Z]+{', text)
+        else: in_lib = re.search('@[a-z]+{', text)
         asc = text[in_lib.start():]
         in_lib = re.search('\n@', asc)
         if in_lib != None:

@@ -1358,8 +1358,9 @@ def typeToBC(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False,
     if refcheck == False: return numpy.nan,numpy.nan
     else: ref=refcheck
 
-    refstring = 'BC/SpT relation for filter {} from {}'.format(filt,shortRef(SPT_BC_RELATIONS[ref]['bibcode']))
-    if verbose: print('\nUsing {}'.format(refstring))
+    if verbose: 
+        refstring = 'BC/SpT relation for filter {} from {}'.format(filt,shortRef(SPT_BC_RELATIONS[ref]['bibcode']))
+        print('\nUsing {}'.format(refstring))
 
 # normal approach: SpT -> BC
     if reverse == False:
@@ -1390,7 +1391,7 @@ def typeToBC(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False,
         elif SPT_BC_RELATIONS[ref]['method'] == 'interpolate':
             rng = [numpy.nanmin(SPT_BC_RELATIONS[ref]['filters'][filt]['spt']),numpy.nanmax(SPT_BC_RELATIONS[ref]['filters'][filt]['spt'])]
             if (rng[0] <= sptn <= rng[1]):
-                f = interp1d(SPT_BC_RELATIONS[ref]['filters'][filt]['spt'],SPT_BC_RELATIONS[ref]['filters'][filt]['bc'])
+                f = interp1d(SPT_BC_RELATIONS[ref]['filters'][filt]['spt'],SPT_BC_RELATIONS[ref]['filters'][filt]['values'])
                 fe = interp1d(SPT_BC_RELATIONS[ref]['filters'][filt]['spt'],SPT_BC_RELATIONS[ref]['filters'][filt]['rms'])
                 bc = float(f(sptn))
                 bc_error = float(fe(sptn))
