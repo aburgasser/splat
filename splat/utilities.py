@@ -307,6 +307,40 @@ def writeDictToFile(data,file,delim='\t',verbose=False,**kwargs):
     f.close()
 
     return True
+
+def directoryTree(folder,verbose=True):
+    '''
+    :Purpose:
+
+        Finds the lowest level directories within a given folder and returns the full paths for these
+
+    :Required Inputs:
+
+        :param: folder: directory to search
+
+    :Optional Inputs:
+
+        :param: verbose: set to True to provide verbose feedback
+
+    :Outputs:
+
+        A list of directory paths
+
+    :Example:
+
+        >>> import splat
+        >>> directoryTree(splat.LIBRARY_PUBLIC_FOLDER)
+            ['/Users/adam/projects/splat/code/splat//resources/Data/Public/MAGE/',
+             '/Users/adam/projects/splat/code/splat//resources/Data/Public/SPEX-PRISM/',
+             '/Users/adam/projects/splat/code/splat//resources/Data/Public/LRIS-RED/']
+    '''
+    paths = []
+    if os.path.exists(folder)==False:
+        if verbose==True: print('Warning: folder {} cannot be found'.format(folder))
+    else:
+        for p,d,r in os.walk(folder):
+            if not d: paths.append(p+'/')
+    return paths
     
 
 
@@ -465,9 +499,9 @@ def checkDict(ref,refdict,altref='altname',replace=[],verbose=False):
     Example:
 
     >>> import splat
-    >>> print(splat.checkEmpiricalRelation('filippazzo',splat.SPT_LBOL_RELATIONS))
+    >>> print(splat.checkDict('filippazzo',splat.SPT_LBOL_RELATIONS))
         filippazzo2015
-    >>> print(splat.checkEmpiricalRelation('burgasser',splat.SPT_BC_RELATIONS))
+    >>> print(splat.checkDict('burgasser',splat.SPT_BC_RELATIONS))
         False
     '''
     output = False
@@ -1544,27 +1578,46 @@ def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.,nsamp=100,
         else:
             return uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance,nsamp),numpy.random.normal(mu[0],e_mu[0],nsamp),numpy.random.normal(mu[1],e_mu[1],nsamp),numpy.random.normal(rv,e_rv,nsamp))
 
-def lbolToMbol(lbol,err=None,scale='log',sun_scale=True,reverse=False):
+def lbolToMbol(lbol,err=0.,scale='log',sun_scale=True,reverse=False):
     l0 = 3.0128e28*u.Watt # in watts
     lsun = u.Lsun
 
-    lb = copy.deepcopy(lbol)
-    le = copy.deepcopy(err)
-    if scale=='linear':
-        if not isUnit(lb): 
-            if sun_scale==True: lb=lb*lsun
-            else: lb=lb*(l0.unit)
-        lb = numpy.log10(lb/lsun)
-        if le != None:
+# Lbol -> Mbol
+    if reverse==False:
+        lb = copy.deepcopy(lbol)
+        le = copy.deepcopy(err)
+        if scale=='linear':
+            if not isUnit(lb): 
+                if sun_scale==True: lb=lb*lsun
+                else: lb=lb*(l0.unit)
+            lb = numpy.log10((lb/lsun).decompose())
             if not isUnit(le): 
                 if sun_scale==True: le=le*lsun
                 else: le=le*(l0.unit)
-            le = numpy.log10(le/lsun)
-        
-    if err == None:
-        return -2.5*lb-2.5*numpy.log10(lsun/l0)
+            le = numpy.log10((le/lsun).decompose())
+        mout = -2.5*lb-2.5*numpy.log10((lsun/l0).decompse())
+        mout_e = 2.5*le
+        if err == 0.:
+            return mout
+        else:
+            return mout,mout_e
+    
+# Mbol -> Lbol
     else:
-        return -2.5*lb-2.5*numpy.log10(lsun/l0),2.5*le
+        mb = copy.deepcopy(lbol)
+        mbe = copy.deepcopy(err)
+        lout = l0*10.**(-0.4*mb)
+        lout_e = lout*0.4*numpy.log(10)*mbe
+        if scale=='linear':
+            if err == 0.:
+                return lout
+            else:
+                return lout,lout_e
+        else:
+            lout_e = ((lout_e/lout).decompose())/numpy.log(10.)
+            lout = numpy.log10((lout/lsun).decompose())
+            if err == 0.: return lout
+            else: return lout.value,lout_e.value
 
 
 def xyz(coordinate,center='sun',r0=8000*u.pc,z0=25*u.pc,unit=u.pc,**kwargs):

@@ -776,6 +776,9 @@ def processModelsToInstrument(instrument_parameters={},instrument='SPEX-PRISM',w
         
         If necessary, creates a folder in the splat.SPECTRAL_MODEL_FOLDER/[modelset]/[instrument] and outputs the model files
 
+    :WARNINGS:
+        there is currently a problem with "extraneaous pixels" for some conversions
+
     '''
     method = kwargs.get('method','hamming')
     oversample = kwargs.get('oversample',5.)
@@ -1317,7 +1320,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
     if binary==True:
 #        print('Model 2 original',numpy.nanmin(mdl2.wave.value),numpy.nanmax(mdl2.wave.value))
         if 'f2' in list(parameters.keys()):
-            mdl2.scale(parameters['f2'])
+            mdl2.scale(numpy.nanmedian(mdl1.flux.value)*parameters['f2']/numpy.nanmedian(mdl2.flux.value))
         if 'rv2' in list(parameters.keys()):
             mdl2.rvShift(parameters['rv2'])
         if 'vshift' in list(parameters.keys()):
@@ -2328,6 +2331,7 @@ def _loadInterpolatedModel(fast=True,**kwargs):
 # attempt to generalize models to extra dimensions
     mkwargs = kwargs.copy()
     mkwargs['force'] = True
+    readin = []
 #    mkwargs['local'] = kwargs.get('local',True)
 
 # set up the model set
@@ -2415,6 +2419,8 @@ def _loadInterpolatedModel(fast=True,**kwargs):
 
 # read in models
         models = []
+        mparams = []
+        bmodels = {}
         for i in numpy.arange(len(weights)):
             mparam = copy.deepcopy(mkwargs)
             for ms in list(SPECTRAL_MODEL_PARAMETERS.keys()):
@@ -2424,11 +2430,19 @@ def _loadInterpolatedModel(fast=True,**kwargs):
                     else:
                         mparam[ms] = a[ms][i]
             del mparam['filename']
-            models.append(loadModel(**mparam))
+            mstr = '{:.0f}{:.1f}{:.1f}'.format(mparam['teff'],mparam['logg'],mparam['z'])
+            if mstr not in list(bmodels.keys()):
+                m = loadModel(**mparam)
+                if i==0: mwave = m.wave
+                else: m.toWavelengths(mwave)
+                bmodels[mstr] = m
+            models.append(bmodels[mstr])
+            mparams.append(mparam)
 
 # create interpolation
         mflx = []
-        for i,w in enumerate(models[0].wave):
+#        for i,m in enumerate(models): print(i,mparams[i],len(m.flux),len(mwave))
+        for i,w in enumerate(mwave):
             val = numpy.array([numpy.log10(m.flux.value[i]) for m in models])
             mflx.append(10.**(numpy.sum(val*weights)/numpy.sum(weights)))
 
@@ -2499,8 +2513,13 @@ def _loadInterpolatedModel(fast=True,**kwargs):
             mp['z'] = mz.flatten()[i]
             mstr = '{:d}{:.1f}{:.1f}'.format(mp['teff'],mp['logg'],mp['z'])
             if mstr not in list(bmodels.keys()):
-                bmodels[mstr] = loadModel(instrument=mkwargs['instrument'],force=True,**mp)
+                m = loadModel(**mp)
+                if i==0: mwave = m.wave
+                else: m.toWavelengths(mwave)
+                bmodels[mstr] = m
+#                bmodels[mstr] = loadModel(instrument=mkwargs['instrument'],force=True,**mp)
             models.append(bmodels[mstr])
+
 
 
 #    mpsmall = [dict(y) for y in set(tuple(x.items()) for x in mparams)]
@@ -2543,12 +2562,12 @@ def _loadInterpolatedModel(fast=True,**kwargs):
 
 # final interpolation
         mflx = []
-        for i,w in enumerate(models[0].wave):
+        for i,w in enumerate(mwave):
             val = numpy.array([numpy.log10(m.flux.value[i]) for m in models])
             mflx.append(10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),\
                 val,(numpy.log10(float(mkwargs['teff'])),float(mkwargs['logg']),float(mkwargs['z'])),'linear')))
 
-    return Spectrum(wave=models[0].wave,flux=mflx*models[0].funit,**mkwargs)
+    return Spectrum(wave=mwave,flux=mflx*models[0].funit,**mkwargs)
 
 
 

@@ -1,0 +1,12 @@
+instrument_name	IRTF SpeX prism
+pixelscale	0.15 arcsec
+wave_range	0.7 micron	2.5 micron
+slitwidth	0.3 arcsec
+resolution	200
+norders	1
+readnoise	12
+darkcurrent	0.2
+gain	12
+altname	SPEX	PRISM
+wunit	micron
+funit	erg / (cm2 micron s)

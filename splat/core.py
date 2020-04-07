@@ -1,39 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-# WORKING COPY OF SPLAT CODE LIBRARY
-# based on routines developed by:
-#    Christian Aganze
-#    Daniella Bardalez Gagliuffi
-#    Jessica Birky
-#    Adam Burgasser
-#    Caleb Choban
-#    Andrew Davis
-#    Ivanna Escala
-#    Joshua Hazlett
-#    Carolina Herrara Hernandez
-#    Elizabeth Moreno Hilario
-#    Aishwarya Iyer
-#    Yuhui Jin
-#    Michael Lopez
-#    Ryan Low
-#    Dorsa Majidi
-#    Diego Octavio Talavera Maya
-#    Alex Mendez
-#    Gretel Mercado
-#    Niana Mohammed
-#    Jonathan Parra
-#    Maitrayee Sahi
-#    Adrian Suarez
-#    Melisa Tallis
-#    Chris Theissen
-#    Tomoki Tamiya
-#    Steven Truong
-#    Russell van Linge
-
 # imports - internal
 import copy
 import bz2
+import glob
 import gzip
 import os
 import shutil
@@ -98,13 +69,58 @@ max_snr = 1.e6                # maximum S/N ratio permitted
 #######################################################
 #######################################################
 
-DB_ALL_SPECTRA = pandas.DataFrame()
-for k in (DB_SPECTRA_DEFAULT_PARAMETERS.keys()): DB_ALL_SPECTRA[k] = []
+#DB_ALL_SPECTRA = 
+#for k in list(DB_SPECTRA_DEFAULT_PARAMETERS.keys()): DB_ALL_SPECTRA[k] = []
 
 def _processNewData(verbose=True,**kwargs):
     pass
 
-def _initializeAllData(override=False,verbose=False,**kwargs):
+def _addData(folder,database=pandas.DataFrame(),input_file=DB_SPECTRA_INPUT_FILE,default_parameters=DB_SPECTRA_DEFAULT_PARAMETERS,allowed_file_extensions=SPECTRA_FILES_EXTENSIONS,verbose=True):
+    '''
+    '''
+    sfile = '{}/{}'.format(folder,input_file)
+    if os.path.exists(sfile) == True:
+        try: pd = pandas.read_csv(sfile)
+        except: 
+            if verbose==True: print('Error reading in {} in folder {}; ignoring this folder'.format(input_file,folder))
+            return database
+        for k in list(pd.columns):
+            tmp = checkDict(k,default_parameters)
+            if tmp!=False: pd.rename({k: tmp},axis='columns',inplace=True)
+    else:
+        pd = pandas.DataFrame()
+        files = []
+        for k in allowed_file_extensions:
+            files.extend(glob.glob('{}/*.{}'.format(folder,k)))
+        if len(files) == 0:
+            if verbose==True: print('Warning: no spectral data files in folder {}; ignoring this folder'.format(folder))
+            return database
+        files = list(set(files))
+        pd['FILENAME'] = [os.path.basename(f) for f in files]
+    for k in list(default_parameters.keys()):
+        if k not in list(pd.columns):
+            if default_parameters[k]['initialize'] == 'required':
+                print('Warning: required keyword {} is not in database file {} in folder {}; ignoring this folder'.format(k,input_file,folder))
+                return database
+            elif default_parameters[k]['initialize'] == 'create':
+                if k=='FOLDER': pd[k] = [folder]*len(pd)
+                else: pd[k] = [default_parameters[k]['default']]*len(pd)
+            elif default_parameters[k]['initialize'] == 'default':
+                pd[k] = [default_parameters[k]['default']]*len(pd)
+            else:
+                raise ValueError('Unexpected initialize command {} for parameter {}'.format(default_parameters[k]['initialize'],k))
+    if os.path.exists(sfile) == False and len(pd) > 0: 
+#            shutil.copy2(sfile,sfile.replace('.csv','_old.csv'))
+        pd.to_csv(sfile,index=False)
+        if verbose==True: print('Created database file {} in folder {}; you may want to update with relevant data'.format(input_file,folder))
+    if len(pd) > 0:
+        if verbose==True: print('Adding {} sources from {} to spectral database'.format(len(pd),folder))
+        if len(database) == 0: database = copy.deepcopy(pd)
+        else: database = pandas.concat([database,pd],axis=0,ignore_index=True,sort=False)
+    return database
+
+
+def _initializeAllData(database=pandas.DataFrame(),override=False,verbose=True,**kwargs):
     '''
     :Purpose:
 
@@ -127,156 +143,55 @@ def _initializeAllData(override=False,verbose=False,**kwargs):
 # need to figure out how to properly read in quantities
 
 # default information for a new data set    
-    DATA_FOLDERS = []
-# structure:
-#   instrument name
-#       folder
-
-# folders from which data are to be found
-    mfolders = [SPLAT_PATH+DATA_FOLDER+'../']
-
+    DATA_FOLDERS = directoryTree(PUBLIC_DATA_FOLDER)
 # as specified in .splat_spectral_data
     if os.path.exists(EXTERNAL_DATA_FILE):
         with open(EXTERNAL_DATA_FILE, 'r') as frd: x = frd.read()
-        mfolders.extend(x.split('\n'))
+        mfolders = x.split('\n')
+        if len(mfolders) > 0:
+            for m in mfolders: DATA_FOLDERS.extend(directoryTree(m))
     if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_DATA_FILE):
         with open(HOME_FOLDER+'/'+EXTERNAL_DATA_FILE, 'r') as frd: x = frd.read()
-        mfolders.extend(x.split('\n'))
-# specified in environmental variable SPLAT_DATA
+        mfolders = x.split('\n')
+        if len(mfolders) > 0:
+            for m in mfolders: DATA_FOLDERS.extend(directoryTree(m))
+# specified in environmental variable SPLAT_DATA as folder1:folder2:...
     if os.environ.get('SPLAT_DATA') != None:
-        mfolders.extend(str(os.environ['SPLAT_DATA']).split(':'))
+        mfolders = str(os.environ['SPLAT_DATA']).split(':')
+        if len(mfolders) > 0:
+            for m in mfolders: DATA_FOLDERS.extend(directoryTree(m))
 
-# check the folders
-    if '' in mfolders: mfolders.remove('')
+# check that the folders exist
+    DATA_FOLDERS = list(set(DATA_FOLDERS))
+    if '' in DATA_FOLDERS: DATA_FOLDERS.remove('')
     rm = []
-    for m in mfolders:
+    for m in DATA_FOLDERS:
         if os.path.exists(m) == False: rm.append(m)
     if len(rm) > 0:
-        for m in rm: mfolders.remove(m)
-    if len(mfolders) == 0:
+        for m in rm: DATA_FOLDERS.remove(m)
+    if len(DATA_FOLDERS) == 0:
         if verbose == True: print('\nNo folders containing spectral data were found to be present')
         return
-    mfolders = list(set(mfolders))
 
-# go through each folder and check for subfolders = instrument names
-    for i,f in enumerate(mfolders):
-        instruments = os.listdir(f)
-# only folders
-        rm = []
-        for m in instruments: 
-            if os.path.isdir(os.path.join(f,m))==False: rm.append(m)
-        if len(rm) > 0: 
-            for m in rm: instruments.remove(m)
-        if len(instruments) > 0:
-            for inst in instruments:
-                instcheck = checkInstrument(inst)
-# new instrument; IN CURRENT SETTING, IGNORE THIS FOLDER
-                if instcheck == False: instruments.remove(inst)
-                else: instruments[instruments.index(inst)] = instcheck
-        if len(instruments) > 0:
-            for inst in instruments:
-                DATA_FOLDERS.append(os.path.join(f,inst))
-# set defaults, then drew from kwargs or instrument definition file                
-                    # ikey = (inst.upper()).replace(' ','-').replace('_','-')
-                    # idict = {}
-                    # for k in list(INSTRUMENT_DEFAULT_PARAMETERS.keys()): idict[k] = INSTRUMENT_DEFAULT_PARAMETERS[k]['default']
-                    # if INSTRUMENT_DEFINITION_FILE in os.listdir(DATA_FOLDERS[-1]):
-                    #     idict_read = readDictFromFile(os.path.join(DATA_FOLDERS[-1],INSTRUMENT_DEFINITION_FILE))
-                    #     for k in list(idict_read.keys()): idict[k] = idict_read[k]
-# SOME PROBLEMS HERE (WILL GO AWAY WITH NEW STRUCTURE)
-#                    print(ikey,idict['altname'],inst)
-#                    idict['altname'].append(inst)
-                    # INSTRUMENTS[ikey] = idict
-                    # if verbose == True:
-                    #     print('Instrument {} was not one of the SPLAT defaults; added as a new instrument with following parameters:'.format(inst))
-                    #     for k in list(idict.keys()): print('\t{} = {}'.format(k,idict[k]))
-# save instrument information if not present
-#                idict = INSTRUMENTS[inst]
-#                if INSTRUMENT_DEFINITION_FILE not in os.listdir(DATA_FOLDERS[-1]) or override == True:
-#                    writeDictToFile(idict,os.path.join(DATA_FOLDERS[-1],INSTRUMENT_DEFINITION_FILE))
+# go through each folder and load in the relavant spectra.csv files, or create them
+    for d in DATA_FOLDERS: database = _addData(d,database=database,verbose=verbose)
 
-# read in or generate spectral_data.txt file, and integrate into a "super" database
-        if len(DATA_FOLDERS) == 0:
-            if verbose == True: print('No data uploaded')
-            return
+# drop duplicate file names
+    if len(database)>0:
+        ln = len(database)
+        database.drop_duplicates(subset='FILENAME',keep='first',inplace=True)
+        if len(database) != ln and verbose==True:
+            print('Dropped {} duplicates; {} remaining'.format(ln-len(database),len(database)))
 
-# STOPPED HERE
-#         for i,inst in enumerate(list(SPLAT_DATA_INVENTORY.keys()))
+    return DATA_FOLDERS,database
 
-
-# # now go through all data folders and add data
-#                 fnm = os.path.join(f,nm)
-#                 instruments = os.listdir(fnm)
-#                 name = checkSpectralModelName(nm)
-# # new model name, add to global variable
-# # using info.txt data if available                    
-#                 if name == False:
-#                     name = nm
-#                     adddict = {'name': name}
-#                     definfo = copy.deepcopy(default_info)
-#                     if 'info.txt' in instruments:
-#                         with open(os.path.join(fnm,'info.txt'), 'r') as frd: x = frd.read()
-#                         lines = x.split('\n')
-#                         if '' in lines: lines.remove('')
-#                         lines = [x.split('\t') for x in lines]
-#                         adddict = dict(lines)
-#                         if 'altnames' in list(adddict.keys()): adddict['altnames'] = adddict['altnames'].split(',')
-#                    for k in list(SPECTRAL_MODELS[list(SPECTRAL_MODELS.keys())[0]].keys()):
-#                        if k not in list(adddict.keys()):
-#                            if k in list(default_info.keys()): adddict[k] = definfo[k]
-#                            else: adddict[k] = ''
-#                    for k in list(default_info.keys()):
-#                        if k not in list(minfo.keys()): minfo[k] = default_info[k]
-
-# #  this sets the default values - it would be better to just grab one file and set the defaults that way                    
-#                     if 'default' not in list(adddict.keys()): adddict['default'] = {}
-#                     for k in list(SPECTRAL_MODEL_PARAMETERS.keys()):
-#                         if k in list(adddict.keys()): adddict['default'][k] = adddict[k]
-#                         if 'default_'+k in list(adddict.keys()): adddict['default'][k] = adddict['default_'+k]
-# #                        if k in list(adddict['default'].keys()): print(k,adddict['default'][k])
-# #                    print('\nWarning: did not find info.txt file in {}; using default values for model information'.format(minfo['folder']))
-# #                    adddict['name'] = nm
-#                     if 'name' not in list(adddict.keys()): adddict['name'] = name
-#                     if 'instruments' not in list(adddict.keys()): adddict['instruments'] = {}
-#                     if 'bibcode' not in list(adddict.keys()): adddict['bibcode'] = ''
-#                     SPECTRAL_MODELS[name] = adddict
-#                     if verbose==True: print('\nAdded a new model {} with parameters {}'.format(name,adddict))
-#                     del adddict, definfo
-# # go through instruments                
-#                 rm = []
-#                 for m in instruments:
-#                     if os.path.isdir(os.path.join(fnm,m))==False: rm.append(m)
-#                 if len(rm) > 0:
-#                     for m in rm: instruments.remove(m)
-#                 if len(instruments) > 0:
-#                     for inst in instruments:
-# # make sure there are files in this folder
-#                         fnmi = os.path.join(fnm,inst)
-#                         mfiles = os.listdir(fnmi)
-#                         if len(mfiles) > 0:
-#                             instrument = checkInstrument(inst)
-# # unknown instrument; just add for now
-#                             if instrument == False:
-#                                 instrument = (inst.replace(' ','-').replace('_','-')).upper()
-#                             if instrument not in list(SPECTRAL_MODELS[name]['instruments'].keys()):
-#                                 SPECTRAL_MODELS[name]['instruments'][instrument] = fnmi
-#                                 if verbose == True: print('\nAdding model {} and instrument {} from {}'.format(name,instrument,fnmi))
-#                             else:
-#                                 if verbose == True: print('\nModel {} and instrument {}: ignoring {} as these already exists in {}'.format(name,instrument,fnmi,SPECTRAL_MODELS[name]['instruments'][instrument]))
-
-#     return
-    if verbose == True:
-        print('Imported spectral data folders:')
-        for d in DATA_FOLDERS: print('\t{}'.format(d))
-    pass
-
-# BE SURE TO TURN THIS BACK ON LATER
-_initializeAllData()
+DATA_FOLDERS,DB_ALL_SPECTRA = _initializeAllData()
 
 
 #####################################################
 ###############   Spectrum class   ##################
 #####################################################
+
 
 class Spectrum(object):
     '''
@@ -1090,12 +1005,13 @@ class Spectrum(object):
             if hasattr(self,'designation'): f+='\nSource designation = {}'.format(self.designation)
             if hasattr(self,'median_snr'): f+='\nMedian S/N = {}'.format(self.median_snr)
             if hasattr(self,'spex_type'): f+='\nSpeX Classification = {}'.format(self.spex_type)
-            if hasattr(self,'lit_type'): 
-                if isinstance(self.lit_type,list):
-                    for i in range(len(self.lit_type)):
-                        f+='\nLiterature Classification = {} from {}'.format(self.lit_type[i],spbib.shortRef(self.lit_type_ref[i]))
-                else:
-                    f+='\nLiterature Classification = {} from {}'.format(self.lit_type,spbib.shortRef(self.lit_type_ref))
+# these lines are currently broken
+            # if hasattr(self,'lit_type'): 
+            #     if isinstance(self.lit_type,list):
+            #         for i in range(len(self.lit_type)):
+            #             f+='\nLiterature Classification = {} from {}'.format(self.lit_type[i],spbib.shortRef(self.lit_type_ref[i]))
+            #     else:
+            #         f+='\nLiterature Classification = {} from {}'.format(self.lit_type,spbib.shortRef(self.lit_type_ref))
             if hasattr(self,'source_key') and hasattr(self,'data_key'): 
                 if isinstance(self.source_key,list):
                     for i in range(len(self.source_key)):
@@ -1119,6 +1035,7 @@ class Spectrum(object):
             f+='\n\t{}'.format(h)
         print(f)
         return
+
 
     def export(self,filename='',clobber=True,csv=False,tab=True,delimiter='\t',save_header=True,save_noise=True,comment='#',*args,**kwargs):
         '''
@@ -3044,6 +2961,921 @@ class Spectrum(object):
         return [numpy.nanmin(self.wave[ii]), numpy.nanmax(self.wave[ii])]
 
 
+
+class NewSpectrum(object):
+    '''
+    :Description: 
+        (Updated) class for spectral data in SPLAT.
+        This is a temporary structure until astropy.specutils is completed
+
+    WORK IN PROGRESS    
+    '''
+    def __init__(self,*args,**kwargs):
+        core_attributes = {
+            'instrument': {'default': DEFAULT_INSTRUMENT, 'altname': ['INST','INSTR']},
+            'name': {'default': 'Unknown source', 'altname': ['SOURCE','SOURCE_NAME']},
+            'wave': {'default': [], 'altname': ['WAVELENGTH','W','LAM','LAMBDA']},
+            'flux': {'default': [], 'altname': ['FLX','FLUX_DENSITY']},
+            'noise': {'default': [], 'altname': ['UNCERTAINTY','UNC','ERROR','ERR','NS']},
+            'wave_unit': {'default': DEFAULT_WAVE_UNIT, 'altname': ['WUNIT','WAVELENGTH_UNIT','LAM_UNIT','LAMBDA_UNIT']},
+            'flux_unit': {'default': DEFAULT_FLUX_UNIT, 'altname': ['FUNIT','FLX_UNIT','FLUX_DENSITY_UNIT']},
+            'header': {'default': {}, 'altname': ['HD','HEAD']},
+            'filename': {'default': '', 'altname': ['FILE','FILE_NAME']},
+            'folder': {'default': '', 'altname': ['FILE','FILE_NAME']},
+            }
+
+# set all inputs
+        for k in list(core_attributes.keys()): 
+            setattr(self,k,core_attributes[k]['default'])
+            if k in list(kwargs.keys()): setattr(self,k,kwargs[k])
+            if k.lower() in list(kwargs.keys()): setattr(self,k,kwargs[k.lower()])
+            if k.upper() in list(kwargs.keys()): setattr(self,k,kwargs[k.upper()])
+            for kk in core_attributes[k]['altname']:
+                if kk in list(kwargs.keys()): setattr(self,k,kwargs[kk])
+                if kk.lower() in list(kwargs.keys()): setattr(self,k,kwargs[kk.lower()])
+                if kk.upper() in list(kwargs.keys()): setattr(self,k,kwargs[kk.upper()])
+        for k in list(kwargs.keys()): setattr(self,k.lower(),kwargs[k])
+
+# check if filename is given
+        if len(args) > 0:
+            if isinstance(args[0],str): self.filename = args[0]
+
+# read in file
+        if self.filename != '':
+            if os.path.exists(self.filename)==False:
+                if os.path.exists(self.folder+self.filename)==False:
+                    raise ValueError('Could not find file {} or {}'.format(self.filename,self.folder+self.filename))
+                else:
+                    self.filename = self.folder+self.filename
+# Have we already read this in? if so, just copy
+# NOTE: THIS IS NOT WORKING SO COMMENTED OUT
+#            if self.filename in list(SPECTRA_READIN.keys()):
+#                self = copy.deepcopy(SPECTRA_READIN[self.filename])
+#                return
+
+# read in spectrum
+# NOTE: NEED TO PUT IN SOME CONTEXT HERE FOR READING DIFFERENT TYPES OF FILES
+# THIS WILL BE CONTAINED IN READSPECTRUM CALL
+            if 'file_type' not in list(self.__dict__.keys()): self.file_type=''
+            rs = readSpectrum(self.filename,file_type=self.file_type)
+            for k in list(rs.keys()): 
+                setattr(self,k.lower(),rs[k])
+                for kk in list(core_attributes.keys()):
+                    if k in core_attributes[kk]['altname']: setattr(self,kk,rs[k])
+                    if k.lower() in core_attributes[kk]['altname']: setattr(self,kk,rs[k])
+                    if k.upper() in core_attributes[kk]['altname']: setattr(self,kk,rs[k])
+
+# let's make sure we have what we need (error checking)
+        for k in ['wave','flux','noise']: 
+            if not isinstance(getattr(self,k),numpy.ndarray): setattr(self,k,numpy.array(getattr(self,k)))
+        if len(self.wave) == 0: raise ValueError('Spectrum object must be initiated with a wave array or this must be in read in file')
+        if len(self.flux) == 0: raise ValueError('Spectrum object must be initiated with a flux array or this must be in read in file')
+        if len(self.noise) == 0: self.noise = numpy.array([numpy.nan]*len(self.flux))
+        if len(self.wave) != len(self.flux): raise ValueError('Input error: wavelength array has length {} while flux array has length {}'.format(len(self.wave),len(self.flux)))
+        if len(self.wave) != len(self.noise): raise ValueError('Input error: wavelength array has length {} while unc array has length {}'.format(len(self.wave),len(self.noise)))
+
+# set units
+        if not isUnit(self.wave_unit): self.wave_unit = DEFAULT_WAVE_UNIT
+        if not isUnit(self.flux_unit): self.flux_unit = DEFAULT_FLUX_UNIT
+        tmp = checkDict(self.instrument,INSTRUMENTS)
+        if tmp!=False:
+            self.instrument=tmp
+            for k in list(INSTRUMENTS[tmp].keys()): setattr(self,k,INSTRUMENTS[tmp][k])
+        if isUnit(self.wave)==False: self.wave = self.wave*self.wave_unit
+        try: self.wave=self.wave.to(self.wave_unit)
+        except: pass
+        if isUnit(self.flux)==False: self.flux = self.flux*self.flux_unit
+        try: self.flux=self.flux.to(self.flux_unit)
+        except: pass
+        if isUnit(self.noise)==False: self.noise = self.noise*self.flux_unit
+        try: self.noise=self.noise.to(self.flux_unit)
+        except: pass
+
+# clean up
+        self.variance = self.noise**2
+        self.original = copy.deepcopy(self)
+        self.history = ['{} spectrum of {} successfully loaded'.format(self.instrument,self.name)]
+        return
+
+    def setbase(self):
+        '''
+        :Purpose: Sets the current state of spectrum as the default, eliminates prior original
+        '''
+        self.original = copy.deepcopy(self)
+        return
+
+    def reset(self):
+        '''
+        :Purpose: Reset a spectrum to its original state
+        '''
+        for k in list(self.original.__dict__.keys()):
+            if k != 'history':
+                try:
+                    setattr(self,k,getattr(self.original,k))
+                except:
+                    pass
+
+        self.history.append('Returned to original state')
+#        self.original = copy.deepcopy(self)
+        return
+
+    def clean(self):
+        '''
+        :Purpose: Cleans up spectrum elements to make sure they are properly configured
+        '''
+# set up units
+        try: self.wave_unit = self.wave.unit
+        except: self.wave_unit = DEFAULT_WAVE_UNIT
+        try: self.flux_unit = self.flux.unit
+        except: self.flux_unit = DEFAULT_FLUX_UNIT
+
+# clean wavelength vector
+        if isUnit(self.wave): self.wave = numpy.array(self.wave.value)*self.wave_unit
+        else: self.wave = numpy.array(self.wave)*self.wave_unit
+
+# clean flux vector
+        for k in ['flux','noise']:
+            if isUnit(getattr(self,k)): setattr(self,k,numpy.array(getattr(self,k).value)*self.flux_unit)
+            else: setattr(self,k,numpy.array(getattr(self,k))*self.flux_unit)
+# set variance
+        self.variance = self.noise**2
+# need to: 
+        self.history.append('Spectrum cleaned')
+        return
+
+    def __copy__(self):
+        '''
+        :Purpose: Make a copy of a Spectrum object
+        '''
+        s = type(self)()
+        s.__dict__.update(self.__dict__)
+        return s
+
+    def __repr__(self):
+        '''
+        :Purpose: A simple representation of the Spectrum object
+        '''
+        return '{} spectrum of {}'.format(self.instrument,self.name)
+
+    def __add__(self,other):
+        '''
+        :Purpose: 
+
+            A representation of addition for Spectrum objects which correctly interpolates 
+            as a function of wavelength and combines variances
+
+        :Output: 
+
+            A new Spectrum object equal to the spectral sum of the inputs
+        '''          
+        try: other.wave = other.wave.to(self.wave.unit)
+        except: raise ValueError('Cannot add spectra with wave units {} and {}'.format(self.wave.unit,other.wave.unit))
+        try: other.flux = other.flux.to(self.flux.unit)
+        except: raise ValueError('Cannot add spectra with flux units {} and {}'.format(self.flux.unit,other.flux.unit))
+
+# establish the baseline wavelength grid
+        out = copy.deepcopy(self)
+        wave = numpy.array(copy.deepcopy(self.wave.value))
+        wself = numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))
+        out.wave = wave[wself]
+        out.wave = out.wave*self.wave.unit
+#       wother = numpy.where(numpy.logical_and(other.wave.value <= numpy.nanmax(out.wave.value),other.wave.value >= numpy.nanmin(out.wave.value)))
+
+# do the math
+        fself = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+        fother = interp1d(other.wave.value,(other.flux.to(self.flux.unit)).value,bounds_error=False,fill_value=0.)
+        out.flux = (fself(out.wave.value)+fother(out.wave.value))*self.flux.unit
+# special for variance
+        fself = interp1d(self.wave.value,(self.noise.value)**2,bounds_error=False,fill_value=0.)
+        fother = interp1d(other.wave.value,((other.noise.to(self.flux.unit)).value)**2,bounds_error=False,fill_value=0.)
+        if numpy.random.choice(numpy.isfinite(self.noise.value))==True and numpy.random.choice(numpy.isfinite(other.noise.value))==True: 
+            out.variance = (fself(out.wave.value)+fother(out.wave.value))*(self.flux.unit**2)
+        elif numpy.random.choice(numpy.isfinite(self.noise.value))==True:
+            out.variance = fself(out.wave.value)*(self.flux.unit**2)
+        elif numpy.random.choice(numpy.isfinite(other.noise.value))==True:
+            out.variance = fother(out.wave.value)*(self.flux.unit**2)
+        else:
+            out.variance = numpy.array([numpy.nan]*len(out.wave))
+        out.noise = out.variance**0.5
+
+# update other information
+        out.name = self.name+' + '+other.name
+        out.history.append('Sum of {} and {}'.format(self.name,other.name))
+        out.original = copy.deepcopy(out)
+        return out
+    
+    def __sub__(self,other):
+        '''
+        :Purpose: 
+
+            A representation of subtraction for Spectrum objects which correctly interpolates 
+            as a function of wavelength and combines variances
+
+        :Output: 
+
+            A new Spectrum object equal to the spectral difference of the inputs
+        '''        
+        try: other.wave = other.wave.to(self.wave.unit)
+        except: raise ValueError('Cannot subtract spectra with wave units {} and {}'.format(self.wave.unit,other.wave.unit))
+        try: other.flux = other.flux.to(self.flux.unit)
+        except: raise ValueError('Cannot subtract spectra with flux units {} and {}'.format(self.flux.unit,other.flux.unit))
+
+# establish the baseline wavelength grid
+        out = copy.deepcopy(self)
+        wave = numpy.array(copy.deepcopy(self.wave.value))
+        wself = numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))
+        out.wave = wave[wself]
+        out.wave = out.wave*self.wave.unit
+#       wother = numpy.where(numpy.logical_and(other.wave.value <= numpy.nanmax(out.wave.value),other.wave.value >= numpy.nanmin(out.wave.value)))
+
+# do the math
+        fself = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+        fother = interp1d(other.wave.value,(other.flux.to(self.flux.unit)).value,bounds_error=False,fill_value=0.)
+        out.flux = (fself(out.wave.value)-fother(out.wave.value))*self.flux.unit
+# special for variance
+        fself = interp1d(self.wave.value,(self.noise.value)**2,bounds_error=False,fill_value=0.)
+        fother = interp1d(other.wave.value,((other.noise.to(self.flux.unit)).value)**2,bounds_error=False,fill_value=0.)
+        if numpy.random.choice(numpy.isfinite(self.noise.value))==True and numpy.random.choice(numpy.isfinite(other.noise.value))==True: 
+            out.variance = (fself(out.wave.value)+fother(out.wave.value))*(self.flux.unit**2)
+        elif numpy.random.choice(numpy.isfinite(self.noise.value))==True:
+            out.variance = fself(out.wave.value)*(self.flux.unit**2)
+        elif numpy.random.choice(numpy.isfinite(other.noise.value))==True:
+            out.variance = fother(out.wave.value)*(self.flux.unit**2)
+        else:
+            out.variance = numpy.array([numpy.nan]*len(out.wave))
+        out.noise = out.variance**0.5
+
+# update other information
+        out.name = self.name+' - '+other.name
+        out.history.append('Difference of {} and {}'.format(self.name,other.name))
+        out.original = copy.deepcopy(out)
+        return out
+
+
+    def __mul__(self,other):
+        '''
+        :Purpose: 
+
+            A representation of multiplication for Spectrum objects which correctly interpolates 
+            as a function of wavelength and combines variances
+
+        :Output: 
+
+            A new Spectrum object equal to the spectral product of the inputs
+        '''
+        try: other.wave = other.wave.to(self.wave.unit)
+        except: raise ValueError('Cannot multiply spectra with wave units {} and {}'.format(self.wave.unit,other.wave.unit))
+
+# establish the baseline wavelength grid
+        out = copy.deepcopy(self)
+        wave = numpy.array(copy.deepcopy(self.wave.value))
+        wself = numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))
+        out.wave = wave[wself]
+        out.wave = out.wave*self.wave.unit
+#       wother = numpy.where(numpy.logical_and(other.wave.value <= numpy.nanmax(out.wave.value),other.wave.value >= numpy.nanmin(out.wave.value)))
+
+# do the math
+        fself = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+        fother = interp1d(other.wave.value,other.flux.value,bounds_error=False,fill_value=0.)
+        out.flux = numpy.multiply(fself(out.wave.value),fother(out.wave.value))*self.flux.unit*other.flux.unit
+        out.flux = out.flux.decompose()
+# special for variance
+        fselfv = interp1d(self.wave.value,(self.noise.value)**2,bounds_error=False,fill_value=0.)
+        fotherv = interp1d(other.wave.value,(other.noise.value)**2,bounds_error=False,fill_value=0.)
+        if numpy.random.choice(numpy.isfinite(self.noise.value))==True and numpy.random.choice(numpy.isfinite(other.noise.value))==True: 
+            out.variance = numpy.multiply(out.flux.value**2,((numpy.divide(fselfv(out.wave.value),fself(out.wave.value))**2)+(numpy.divide(fotherv(out.wave.value),fother(out.wave.value))**2)))*(self.flux.unit**2)*(other.flux.unit**2)
+        elif numpy.random.choice(numpy.isfinite(self.noise.value))==True:
+            out.variance = numpy.multiply(out.flux.value**2,(numpy.multiply(fselfv(out.wave.value),fself(out.wave.value))**2))*(self.flux.unit**2)*(other.flux.unit**2)
+        elif numpy.random.choice(numpy.isfinite(other.noise.value))==True:
+            out.variance = numpy.multiply(out.flux.value**2,(numpy.multiply(flxs(out.wave.value),fother(out.wave.value))**2))*(self.flux.unit**2)*(other.flux.unit**2)
+        else:
+            out.variance = numpy.array([numpy.nan]*len(out.wave))
+        out.variance = out.variance.decompose()
+        out.noise = out.variance**0.5
+
+# update other information
+        out.name = self.name+' x '+other.name
+        out.history.append('Product of {} and {}'.format(self.name,other.name))
+        out.original = copy.deepcopy(out)
+        return out
+    
+
+    def __div__(self,other):
+        '''
+        :Purpose: 
+
+            A representation of division for Spectrum objects which correctly interpolates 
+            as a function of wavelength and combines variances
+
+        :Output: 
+
+            A new Spectrum object equal to the spectral division of the inputs
+        '''
+        try: other.wave = other.wave.to(self.wave.unit)
+        except: raise ValueError('Cannot divide spectra with wave units {} and {}'.format(self.wave.unit,other.wave.unit))
+
+# establish the baseline wavelength grid
+        out = copy.deepcopy(self)
+        wave = numpy.array(copy.deepcopy(self.wave.value))
+        wself = numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))
+        out.wave = wave[wself]
+        out.wave = out.wave*self.wave.unit
+#       wother = numpy.where(numpy.logical_and(other.wave.value <= numpy.nanmax(out.wave.value),other.wave.value >= numpy.nanmin(out.wave.value)))
+
+# do the math
+        fself = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+        fother = interp1d(other.wave.value,other.flux.value,bounds_error=False,fill_value=0.)
+        out.flux = numpy.divide(fself(out.wave.value),fother(out.wave.value))*self.flux.unit/other.flux.unit
+        out.flux = out.flux.decompose()
+# special for variance
+        fselfv = interp1d(self.wave.value,(self.noise.value)**2,bounds_error=False,fill_value=0.)
+        fotherv = interp1d(other.wave.value,(other.noise.value)**2,bounds_error=False,fill_value=0.)
+        if numpy.random.choice(numpy.isfinite(self.noise.value))==True and numpy.random.choice(numpy.isfinite(other.noise.value))==True: 
+            out.variance = numpy.multiply(out.flux.value**2,((numpy.divide(fselfv(out.wave.value),fself(out.wave.value))**2)+(numpy.divide(fotherv(out.wave.value),fother(out.wave.value))**2)))*(self.flux.unit**2)/(other.flux.unit**2)
+        elif numpy.random.choice(numpy.isfinite(self.noise.value))==True:
+            out.variance = numpy.multiply(out.flux.value**2,(numpy.multiply(fselfv(out.wave.value),fself(out.wave.value))**2))*(self.flux.unit**2)/(other.flux.unit**2)
+        elif numpy.random.choice(numpy.isfinite(other.noise.value))==True:
+            out.variance = numpy.multiply(out.flux.value**2,(numpy.multiply(flxs(out.wave.value),fother(out.wave.value))**2))*(self.flux.unit**2)/(other.flux.unit**2)
+        else:
+            out.variance = numpy.array([numpy.nan]*len(out.wave))
+        out.variance = out.variance.decompose()
+        out.noise = out.variance**0.5
+
+
+# update other information
+        out.name = self.name+' / '+other.name
+        out.history.append('Division of {} by {}'.format(self.name,other.name))
+        out.original = copy.deepcopy(out)
+        return out
+
+    def __truediv__(self,other):
+        return self.__div__(other)
+    
+    def scale(self,fact):
+        '''
+        Scale spectrum by a float value
+        '''
+        for k in ['flux','noise']:
+            if k in list(self.__dict__.keys()): setattr(self,k,getattr(self,k)*fact)
+        self.variance = self.noise**2
+        self.history.append('Spectrum scaled by factor {}'.format(fact))
+        return
+
+    def normalize(self,rng=[]):
+        '''
+        Normalize spectrum
+        '''
+        if len(rng)==0: 
+            rng=[numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value)]
+        if isUnit(rng[0]): rng = [r.to(self.wave.unit).value for r in rng]
+        if isUnit(rng): rng = rng.to(self.wave.unit).value
+        if numpy.nanmin(rng) > numpy.nanmax(self.wave.value) or numpy.nanmax(rng) < numpy.nanmin(self.wave.value):
+            print('Warning: normalization range {} is outside range of spectrum wave array ({}); ignoring'.format(rng,[numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value)]))
+            return
+        if numpy.nanmax(rng) > numpy.nanmax(self.wave.value): rng[1] = numpy.nanmax(self.wave.value)
+        if numpy.nanmin(rng) < numpy.nanmin(self.wave.value): rng[0] = numpy.nanmin(self.wave.value)
+
+        w = numpy.where(numpy.logical_and(self.wave.value>=numpy.nanmin(rng),self.wave.value<=numpy.nanmax(rng)))
+        factor = numpy.nanmax(self.flux.value[w])
+        if factor == 0.: 
+            print('\nWarning: normalize is attempting to divide by zero; ignoring')
+        elif numpy.isnan(factor) == True: 
+            print('\nWarning: normalize is attempting to divide by nan; ignoring')
+        else: 
+            self.scale(1./factor)
+            self.history.append('Spectrum normalized')
+        return
+
+    def smooth(self,scale,method='median'):
+        '''
+        Do a boxcar smooth
+        '''
+        xsamp = numpy.arange(0,len(self.wave)-scale,scale)
+        self.wave = numpy.array([self.wave.value[x+int(0.5*scale)] for x in xsamp])*self.wave.unit
+        for k in ['flux','noise']:
+            setattr(self,k,numpy.array([numpy.nanmedian(getattr(self,k).value[x:x+scale]) for x in xsamp])*getattr(self,k).unit)
+        self.variance = self.noise**2
+        self.history.append('Smoothed by a scale of {} pixels'.format(scale))
+    
+
+    def convertWave(self,wunit):
+        '''
+        Convert the wavelength to a new unit
+        '''
+        if not isUnit(wunit): raise ValueError('{} is not a unit'.format(wunit))
+        try:
+            self.wave = self.wave.to(wunit)
+            self.history.append('Spectrum wavelength converted to units of {}'.format(wunit))
+        except:
+            print('Cannot convert spectrum with wave units {} to {}'.format(self.wave.unit,wunit))
+        return
+
+    def convertFlux(self,funit):
+        '''
+        Convert the flux to a new unit
+        '''
+        if not isUnit(funit): raise ValueError('{} is not a unit'.format(funit))
+        for k in ['flux','noise']:
+            if k in list(self.__dict__.keys()):
+                try:
+                    setattr(self,k,(getattr(self,k).to(funit)))
+                except:
+                    print('Cannot convert spectrum element {} into flux units {}'.format(k,funit))
+        self.variance = self.noise**2
+        self.history.append('Spectrum flux converted to units of {}'.format(funit))
+        return
+
+    def clean(self,positive=True):
+        '''
+        Clean spectrum of nan, zero flux, and mask
+        '''
+        if 'mask' in list(self.__dict__.keys()): mask = copy.deepcopy(self.mask)
+        else: mask = numpy.zeros(len(self.wave))
+        mask[numpy.isnan(self.flux.value)==True] = 1
+        mask[numpy.isnan(self.noise.value)==True] = 1
+        if postive==True: mask[self.flux.value<=0] = 1
+        for k in ['wave','flux','noise']:
+            if k in list(self.__dict__.keys()):
+                setattr(self,k,(getattr(self,k).value[mask==0])*getattr(self,k).unit)
+        self.variance = self.noise**2
+        self.history.append('Spectrum cleaned of {:.0f} pixels'.format(numpy.total(mask)))
+        return
+
+    def plot(self,**kwargs):
+        '''
+        Plot the spectrum
+        '''
+        f,fig = plt.subplots(figsize=kwargs.get('figsize',[6,4]))
+        fig.plot(self.wave.value,self.flux.value,c=kwargs.get('color','k'),ls=kwargs.get('ls','-'),alpha=kwargs.get('alpha',1))
+        leg = [kwargs.get('label',self.name)]
+        fig.legend(leg)
+        if kwargs.get('plot_uncertainty',True)==True:
+            fig.plot(self.wave.value,self.noise.value,c=kwargs.get('unc_color','grey'),ls=kwargs.get('unc_ls','-'),alpha=kwargs.get('unc_alpha',1))
+        if kwargs.get('plot_zero',True)==True:
+            fig.plot(self.wave.value,numpy.zeros(len(self.wave)),c=kwargs.get('zero_color','k'),ls=kwargs.get('zero_ls','--'),alpha=kwargs.get('zero_alpha',1))
+        fig.set_xlim(kwargs.get('xlim',[numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value)]))
+        fig.set_ylim(kwargs.get('ylim',[-1.1*numpy.absolute(numpy.quantile(self.flux.value,0.05)),1.5*numpy.quantile(self.flux.value,0.95)]))
+        fig.set_xlabel(kwargs.get('xlabel',r'Wavelength ({})'.format(self.wave.unit)),fontsize=kwargs.get('fontsize',16))
+        fig.set_ylabel(kwargs.get('xlabel',r'Flux ({})'.format(self.flux.unit)),fontsize=kwargs.get('fontsize',16))
+        return fig
+
+    def toFile(self,file,clobber=True,csv=False,delimiter='\t',save_header=True,save_noise=False,save_background=False,save_mask=False,comment='#',**kwargs):
+        '''
+        Exports a spectrum to a file
+        '''
+# what are we saving?
+        output = [self.wave.value,self.flux.value,self.noise.value]
+        labels = ['Wave ({})'.format(self.wave.unit),'Flux ({})'.format(self.flux.unit),'Uncertainty ({})'.format(self.noise.unit),]
+# determine which type of file
+        ftype = file.split('.')[-1]
+# fits file
+        if (ftype == 'fit' or ftype == 'fits'):
+            output = tuple(output)
+            data = numpy.vstack(output)
+            hdu = fits.PrimaryHDU(data)
+            for k in list(self.header.keys()):
+                if k.upper() not in ['HISTORY','COMMENT','BITPIX','NAXIS','NAXIS1','NAXIS2','EXTEND'] and k.replace('#','') != '': # and k not in list(hdu.header.keys()):
+                    hdu.header[k] = str(self.header[k])
+            for k in list(self.__dict__.keys()):
+                if isinstance(getattr(self,k),str) == True or isinstance(getattr(self,k),int) == True or isinstance(getattr(self,k),bool) == True or (isinstance(getattr(self,k),float) == True and numpy.isnan(getattr(self,k)) == False):
+                    hdu.header[k.upper()] = str(getattr(self,k))
+            hdu.writeto(file,overwrite=clobber)
+
+# ascii file - by default tab delimited
+        else:
+            f = open(file,'w')
+            if save_header == True:
+                for k in list(self.header.keys()):
+                    if k.upper() not in ['HISTORY','COMMENT'] and k.replace('#','') != '':
+                        f.write('{}{} = {}\n'.format(comment,k.upper(),self.header[k]))
+                for k in list(self.__dict__.keys()):
+                    if isinstance(getattr(self,k),str) == True or isinstance(getattr(self,k),int) == True or isinstance(getattr(self,k),bool) == True or (isinstance(getattr(self,k),float) == True and numpy.isnan(getattr(self,k)) == False):
+                        f.write('{}{} = {}\n'.format(comment,k.upper(),getattr(self,k)))
+                lhead = '{}{}'.format(comment,labels[0])
+                for l in labels[1:]: lhead=lhead+'{}{}'.format(delimiter,l)
+                f.write('{}\n'.format(lhead))
+            for i in range(len(self.wave.value)): 
+                ln = '{}'.format(output[0][i])
+                for j in range(1,len(labels)): ln=ln+'{}{}'.format(delimiter,output[j][i])
+                f.write('{}\n'.format(ln))
+            f.close()
+
+        self.history.append('Spectrum saved to {}'.format(file))
+        return
+
+    def write(self,file,**kwargs): 
+        self.toFile(file,**kwargs)
+        return
+        
+    def save(self,file,**kwargs): 
+        self.toFile(file,**kwargs)
+        return
+
+    def remove(self,mask,others=[]):
+        '''
+        :Purpose: 
+
+            Removes elements of wave, flux, unc arrays as specified by a  mask array
+
+        :Required Input:
+
+            :param mask: Either a mask array (an array of booleans, ints, or floats, 
+                where True or 1 removes the element) or a 2-element array that defines 
+                the wavelegnth range to mask 
+        
+        :Optional Input:
+
+            :param others=[]: list of other attributes that mask should be applied to (e.g., 'pixel') 
+
+        :Output:
+
+            Spectrum object has the flagged pixels removed from wave, flux, unc arrays, 
+            and optional arrays
+
+        :Example:
+           >>> import splat, numpy
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> num = splat.numberList('1-10,18,30-50')
+           >>> mask = [not(p in num) for p in numpy.arange(len(sp.wave))]
+           >>> sp.remove(mask)
+           >>> sp.showHistory()
+                SPEX_PRISM spectrum successfully loaded
+                Mask applied to remove 32 pixels
+        '''
+        msk = copy.deepcopy(mask)
+
+# wavelength range given
+        if len(msk) == 2 and len(self.flux) != 2:
+            if not isUnit(msk): msk = msk*self.wave.unit
+            msk.to(self.wave.unit)
+            msk = generateMask(self.wave,mask_range=msk)
+
+        if len(msk) != len(self.flux):
+            print('\nWarning: mask must be same length ({}) as wave/flux arrays ({}); not removing any pixels'.format(len(msk),len(self.wave)))
+            return
+        if isinstance(msk[0],float): msk = [int(x) for x in msk]
+        if isinstance(msk[0],int): msk = [True if x==1 else False for x in msk]
+        if not isinstance(msk[0],bool) and not isinstance(msk[0],numpy.bool_): print('\nWarning: cannot interpret mask {}; not removing any pixels'.format(mask))
+
+# invert and apply mask
+        msk = numpy.array([not x for x in msk])
+        self.wave = self.wave[msk]
+        self.flux = self.flux[msk]
+        self.noise = self.noise[msk]
+        self.variance = self.noise**2
+
+        if len(others) > 0:
+            for k in others:
+                if k in self.__dict__.keys():
+                    if len(getattr(self,k)) == len(msk):
+                        try: setattr(self,k,getattr(self,k)[msk])
+                        except: pass
+
+        cnt = numpy.sum([1 if x == False else 0 for x in msk])
+        self.history.append('Mask applied to remove {} pixels'.format(cnt))
+        return
+
+
+    def replace(self,mask,replace_value,replace_flux=True,replace_noise=False,others=[]):
+        '''
+        :Purpose: 
+
+            Replaces flux and noise values using a mask and specified value
+
+        :Required Inputs:
+
+            :param mask: Either a mask array (an array of booleans, ints, or floats, where True or 1 removes the element)
+                or a 2-element array that defines the wavelength range to replace 
+            :param replace_value: value with which the masked elements should be replaced
+        
+        :Optional Inputs:
+
+            :param replace_flux = True: replace elements in the noise array
+            :param replace_noise = True: replace elements in the flux array
+
+        :Output:
+
+            Spectrum object has the flagged pixels replaced in flux, noise arrays, and optional vectors
+
+        :Example:
+           >>> import splat, numpy
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> num = splat.numberList('1-10,18,30-50')
+           >>> mask = [not(p in num) for p in numpy.arange(len(sp.wave))]
+           >>> sp.replace(mask,numpy.nan)
+           >>> sp.showHistory()
+                SPEX_PRISM spectrum successfully loaded
+                Mask applied to replace 32 pixels with value nan
+        '''
+        msk = copy.deepcopy(mask)
+
+# wavelength range given
+        if len(msk) == 2 and len(self.flux) != 2:
+            if not isUnit(msk): msk = msk*self.wave.unit
+            msk.to(self.wave.unit)
+            msk = generateMask(self.wave,mask_range=msk)
+
+        if len(msk) != len(self.flux):
+            print('\nWarning: mask must be same length ({}) as wave/flux arrays ({}); not removing any pixels'.format(len(msk),len(self.wave)))
+            return
+        if isinstance(msk[0],float): msk = [int(x) for x in msk]
+        if isinstance(msk[0],int): msk = [True if x==1 else False for x in msk]
+        if not isinstance(msk[0],bool): print('\nWarning: cannot interpret mask {}; not removing any pixels'.format(mask))
+
+# check units of replacement value
+        if not isUnit(replace_value) and not numpy.isnan(replace_value): 
+            replace_value = replace_value*self.flux.unit
+        if isUnit(replace_value):
+            try:
+                replace_value = replace_value.to(self.flux.unit)
+            except:
+                raise ValueError('replacement value {} does not have the same unit as flux or unc array ({})'.format(replace_value,self.flux.unit))
+
+# invert and apply mask
+        msk = numpy.array([not x for x in msk])
+        if replace_flux==True: self.flux[msk] = replace_value
+        if replace_noise==True: self.noise[msk] = replace_value
+        if len(others) > 0:
+            for k in others:
+                if k in self.__dict__.keys():
+                    if len(getattr(self,k)) == len(msk):
+                        try: 
+                            tmp = getattr(self,k)
+                            tmp[msk] = replace_value
+                            setattr(self,k,tmp)
+                        except: pass
+        self.variance = self.noise**2
+        self.snr = self.computeSN()
+
+        cnt = numpy.sum([1 if x == False else 0 for x in msk])
+        self.history.append('Mask applied to replace {} pixels'.format(cnt))
+        return
+
+
+
+    def clean(self,action='remove',replace_value=0.):
+        '''
+        :Purpose: 
+
+            Cleans a spectrum by either removing or replacing nan values
+
+        :Required Inputs:
+
+            None
+        
+        :Optional Inputs:
+
+            :param action = 'remove': specify as either 'remove' or 'replace'
+            :param replace_value = 0.: for replace, what value to replace with
+
+        :Output:
+
+            Spectrum object is modified to have nan pixels "cleaned"
+
+        :Example:
+           >>> import splat,numpy
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> sp.flux[0] = numpy.nan
+           >>> sp.clean()
+           >>> sp.remove(mask)
+           >>> sp.showHistory()
+                SPEX_PRISM spectrum successfully loaded
+                Mask applied to remove 1 pixels
+        '''
+# clean out data points with nans in flux
+        msk = [numpy.isnan(x) for x in self.flux.value]
+# clean out data points with nans in noise
+        msk2 = [numpy.isnan(x) for x in self.noise.value]
+        msk = msk or msk2
+        if action=='remove': self.remove(msk)
+        elif action=='replace': self.replace(msk,replace_value)
+        else: print('\nWarning: ambiguous action {} for clean; no action taken'.format(action))
+        return
+
+
+    def loadSourceInfo(self,verbose=True,radius=10.*u.arcsec,source_library=DB_SOURCES,**kwargs):
+        '''
+        WORK IN PROGRESS
+
+        :Purpose: 
+            Loads in source information for a spectrum object based on the SPLAT source database
+            It uses either the spectrum object's or user-supplied NAME, DESIGNATION, COORDINATE or RA & DEC
+            If none of these are supplied, no search is done
+
+        :Required Inputs:
+            None 
+
+        :Optional Inputs:
+            *name*: Name of source
+            *designation*: designation of source in format Jhhmmss[.]ss±ddmmss[.]ss
+            *shortname*: shortname desigation of source in format Jhhmm±ddmm
+            *coordinate*: coordinate of object, in astropy SkyCoord format or transferable via properCoordinates()
+            *ra*, *dec*: RA and Declination of source in degrees
+            *radius*: search radius (default = 10 arcseconds)
+            *verbose*: set to True to provide feedback
+
+        :Output:
+            Spectrum object will have source information keywords added or updated
+
+        THIS IS A WORK IN PROGRESS
+
+        :Example:
+
+        '''
+        search_parameters = {
+            'name': {'altname': ['SOURCE_NAME','SOURCE'], 'value': None},
+            'shortname': {'altname': ['SNAME','SHORT_NAME','SHNAME'], 'value': None},
+            'designation': {'altname': ['DESIG'], 'value': None},
+            'coordinate': {'altname': ['COORD','COO','POSITION'], 'value': None},
+            'ra': {'altname': ['RIGHT_ASCENSION','RIGHT ASCENSION','R'], 'value': None},
+            'dec': {'altname': ['DECLINATION','DECL','D'], 'value': None},
+        }
+
+# feed in possible search parameters
+        spattr = self.__dict__.keys()
+        spattr = [k.lower() for k in spattr]
+        for k in list(search_parameters.keys()):
+            if k in spattr: search_parameters[k]['value'] = getattr(self,k)
+            elif k in list(kwargs.keys()): search_parameters[k]['value'] = kwargs[k]
+            elif k.lower() in list(kwargs.keys()): search_parameters[k]['value'] = kwargs[k.lower()]
+            elif k.upper() in list(kwargs.keys()): search_parameters[k]['value'] = kwargs[k.upper()]
+            else:
+                for kk in search_parameters[k]['altname']:
+                    if kk.lower() in spattr: search_parameters[k]['value'] = getattr(self,kk.lower())
+                    elif kk.lower() in list(kwargs.keys()): search_parameters[k]['value'] = kwargs[kk.lower()]
+                    elif kk.upper() in list(kwargs.keys()): search_parameters[k]['value'] = kwargs[kk.upper()]
+                    else: pass
+
+# some checking
+        for k in ['name','shortname','designation']:
+            if not isinstance(search_parameters[k]['value'],str): search_parameters[k]['value'] = None
+        for k in ['ra','dec']:
+            if not isinstance(search_parameters[k]['value'],float) and not isinstance(search_parameters[k]['value'],numpy.float64): search_parameters[k]['value'] = None
+        if not isinstance(search_parameters['coordinate']['value'],SkyCoord): 
+            try: search_parameters['coordinate']['value'] = splat.properCoordinates(search_parameters['coordinate']['value'])
+            except: pass
+        if not isinstance(search_parameters['coordinate']['value'],SkyCoord): search_parameters['coordinate']['value'] = None
+
+# now do search
+        s = pandas.DataFrame()
+        cnt = 0
+        if search_parameters['name']['value'] != None:
+            if verbose==True: print('Searching name = {}'.format(search_parameters['name']['value']))
+            cnt+=1
+            s = searchLibrary(name=search_parameters['name']['value'])
+        if search_parameters['shortname']['value'] != None and len(s) == 0:
+            if verbose==True: print('Searching shortname = {}'.format(search_parameters['shortname']['value']))
+            cnt+=1
+            s = searchLibrary(shortname=search_parameters['shortname']['value'])
+        if search_parameters['designation']['value'] != None and len(s) == 0:
+            if verbose==True: print('Searching designation = {}'.format(search_parameters['designation']['value']))
+            cnt+=1
+            s = searchLibrary(designation=search_parameters['designation']['value'])
+            if len(s) == 0:
+                s = searchLibrary(coordinate=search_parameters['designation']['value'],radius=radius)
+        if search_parameters['coordinate']['value'] != None and len(s) == 0:
+            if verbose==True: print('Searching coordinate = {}'.format(search_parameters['coordinate']['value']))
+            cnt+=1
+            s = searchLibrary(coordinate=search_parameters['coordinate']['value'],radius=radius)
+        if search_parameters['ra']['value'] != None != False and search_parameters['dec']['value'] != None and len(s) == 0:
+            if verbose==True: print('Searching ra,dec = {},{}'.format(search_parameters['ra']['value'],search_parameters['dec']['value']))
+            cnt+=1
+            s = searchLibrary(coordinate=properCoordinates([search_parameters['ra']['value'],search_parameters['dec']['value']]),radius=radius)
+        if cnt==0:
+            print('\nThere are no search parameters (name, shortname, desigation, coordinate, ra/dec) provided to search on; no source information uploaded')
+            return
+
+        if len(s) == 0:
+            if verbose: print('\nNo objects found in the SPLAT source database')
+        else:
+            if verbose: print('\nMatched to source {}'.format(s['NAME'].iloc[0]))
+            for k in list(source_library.columns):
+                if k in list(s.columns):
+# NOTE: CURRENTLY RETURNING FIRST OBJECT IN LIST
+                    setattr(self,k.lower(),s[k].iloc[0])
+        return
+
+    def filterMag(self,filt,**kwargs):
+        '''
+        :Purpose: 
+
+            Wrapper for `filterMag()`_ function in splat.photometry
+
+        .. _`filterMag()` : api.html#splat.photometry.filterMag
+        
+        Required Inputs:
+
+            **filter**: string specifiying the name of the filter
+
+        Optional Inputs:
+
+            See `filterMag()`_
+
+        Outputs:
+
+            Returns tuple containing filter-based spectrophotometic magnitude and its uncertainty
+
+        :Example:
+           >>> import splat
+           >>> sp = splat.getSpectrum(lucky=True)[0]
+           >>> sp.fluxCalibrate('2MASS J',15.0)
+           >>> sp.filterMag(sp,'2MASS J')
+            (15.002545668628173, 0.017635234089677564)
+        '''
+
+        from .photometry import filterMag
+        return filterMag(self,filt,**kwargs)
+
+
+    def redden(self, av=0.0, rv=3.1, normalize=False, a=10., n=1.33, **kwargs):
+        '''
+        :Purpose:
+
+            Redden a spectrum based on an either Mie theory or a standard interstellar profile
+            using Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245)
+
+        :Required Inputs:
+
+            None
+
+        :Optional Inputs:
+
+            :param av: Magnitude of reddening A_V (default = 0.)
+            :param rv: Normalized extinction parameter, R_V = A(V)/E(B-V) (default = 3.1
+            :param normalized: Set to True to normalize reddening function (default = False)
+
+        :Outputs:
+
+            None; spectral flux is changed
+
+        :Example:
+
+           >>> import splat
+           >>> sp = splat.Spectrum(10001)                   # read in a source
+           >>> spr = splat.redden(sp,av=5.,rv=3.2)          # redden to equivalent of AV=5
+
+        **Note**
+          This routine is still in beta form; only the CCM89 currently works
+
+        '''
+        w = self.wave.to(DEFAULT_WAVE_UNIT).value                           # assuming in microns!
+
+        if kwargs.get('mie',False) == True:                 # NOT CURRENTLY FUNCTIONING
+            x = 2*numpy.pi*a/w
+            x0 = 2.*numpy.pi*a/0.55                 # for V-band
+            qabs = -4.*x*((n**2-1)/(n**2+2)).imag
+            qsca = (8./3.)*(x**4)*(((n**2-1)/(n**2+2))**2).real
+    #        tau = numpy.pi*(a**2)*(qabs+qsca)
+            tau = 1.5*(qabs+qsca)/a    # for constant mass
+            qabs0 = -4.*x0*((n**2-1)/(n**2+2)).imag
+            qsca0 = (8./3.)*(x0**4)*(((n**2-1)/(n**2+2))**2).real
+    #        tau0 = numpy.pi*(a**2)*(qabs0+qsca0)
+            tau0 = 1.5*(qabs0+qsca0)/a    # for constant mass
+            scale = (10.**(-0.4*av))
+            absfrac = scale*numpy.exp(numpy.max(tau)-tau)
+            report = 'Reddened by Mie scattering using grain size {} and index of refraction {}'.format(a,n)
+        else:
+            x = 1./w
+            a = 0.574*(x**1.61)
+            b = -0.527*(x**1.61)
+            absfrac = 10.**(-0.4*av*(a+b/rv))
+            report = 'Reddened following Cardelli, Clayton, and Mathis (1989) using A_V = {} and R_V = {}'.format(av,rv)
+
+        if normalize == True:
+            absfrac = absfrac/numpy.median(absfrac)
+            report = report+' and normalized'
+
+        self.flux = numpy.array(self.flux.value)*numpy.array(absfrac)*self.flux.unit
+        self.noise = numpy.array(self.noise.value)*numpy.array(absfrac)*self.noise.unit
+        self.variance = self.noise**2
+        self.history.append(report)
+
+        return
+
+    def mapTo(self,newwave,overhang=0.1):
+        '''
+        Purpose: maps spectrum onto the wavelength scale of another spectrum
+        THIS NEEDS TO BE UPDATED
+
+        '''
+        if not isUnit(newwave): newwave = newwave*self.wave.unit
+        wunit = self.wave.unit
+        try: self.convertWave(newwave.unit)
+        except: raise ValueError('Attempted to map spectrum with wavelength unit {} to wave grid with unit {}'.format(self.wave.unit,newwave.unit))
+        if numpy.nanmin(newwave.value) > numpy.nanmax(self.wave.value) or numpy.nanmax(newwave.value) < numpy.nanmin(self.wave.value):
+            self.convertWave(wunit)
+            raise ValueError('New wave range {} to {}{} is outside range of spectrum {} to {}{}'.format(numpy.nanmin(newwave.value),numpy.nanmax(newwave.value),newwave.unit,numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value),self.wave.unit))
+
+        funit = self.flux.unit
+        self.flux = reMap(self.wave.value,self.flux.value,newwave.value)*funit
+        self.noise = reMap(self.wave.value,self.noise.value,newwave.value)*funit
+        self.wave = newwave
+        self.variance = self.noise**2
+        self.history.append('Mapped onto wavelength grid of {}'.format(other))
+        return
+        
+
+
 # stitch spectrum
 def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
     '''
@@ -4324,7 +5156,7 @@ def _readAPOGEE(file,**kwargs):
 
 # assess data model to use:
     model = kwargs.get('datamodel','apstar').lower()
-    print(kwargs,model)
+#    print(kwargs,model)
     if kwargs.get('apstar',False) == True: model='apstar'
     if kwargs.get('apvisit',False) == True: model='apvisit'
     if kwargs.get('aspcap',False) == True: model='aspcap'
@@ -6357,7 +7189,7 @@ def addUserData(folders=[],default_info={},verbose=True):
     '''
 # default information dictionary
     if len(default_info.keys()) == 0:
-        default_info = {'folder': '', 'name': '', 'citation': '', 'bibcode': '', 'altnames': [], 'rawfolder': '', 'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
+        default_info = {'folder': '', 'name': '', 'citation': '', 'bibcode': '', 'altname': [], 'rawfolder': '', 'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
 
 # read in folders specified in .splat_spectral_models
     if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
@@ -6398,7 +7230,7 @@ def addUserData(folders=[],default_info={},verbose=True):
                 for k in list(SPECTRAL_MODEL_PARAMETERS.keys()):
                     if k in list(minfo.keys()): minfo['default'][k] = minfo[k]
                     if 'default_'+k in list(minfo.keys()): minfo['default'][k] = minfo['default_'+k]
-                minfo['altnames'] = minfo['altnames'].split(',')
+                minfo['altname'] = minfo['altname'].split(',')
 #                except:
 #                    print('\nWarning: problem reading info.txt file in {}; using default values for model information'.format(minfo['folder']))
             if flag == 0:

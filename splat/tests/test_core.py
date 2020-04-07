@@ -19,6 +19,7 @@ from splat.initialize import *
 from splat.initialize import *
 import splat.core as splat
 
+
 #####################
 # TESTING FUNCTIONS #
 #####################

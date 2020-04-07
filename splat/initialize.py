@@ -14,7 +14,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2019.11.04'
+VERSION = '2020.04.06'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -51,7 +51,7 @@ AUTHORS = [
     'Chris Theissen',
     'Tomoki Tamiya',
     'Steven Truong',
-    'Russell van Linge',
+    'Russell Van Linge',
 ]
 
 # Directory variables
@@ -61,7 +61,7 @@ DOCS_INDEX_HTML = '/docs/_build/html/index.html'
 WEB_HTML_BASE = '/docs/_templates/'
 HOME_FOLDER = os.path.expanduser('~')
 FILTER_FOLDER = '/resources/Filters/'
-SPECTRAL_MODEL_FOLDER = '/resources/SpectralModels/'
+SPECTRAL_MODEL_FOLDER = '/resources/Models/'
 EVOLUTIONARY_MODEL_FOLDER = '/resources/EvolutionaryModels/'
 TELLURIC_MODEL_FOLDER = '/resources/Telluric/'
 CITATION_RESOURCES_FOLDER = '/resources/Citations/'
@@ -97,67 +97,80 @@ DEFAULT_WAVE_UNIT = u.micron
 DEFAULT_FLUX_UNIT = u.erg/u.s/u.cm/u.cm/u.micron
 DEFAULT_SED_UNIT = u.erg/u.s/u.cm/u.cm
 DEFAULT_CROSSSECTION_UNIT = u.cm**2
+DEFAULT_INSTRUMENT = 'SPEX-PRISM'
 
-
-# Spectral data parameters - THIS MAY NOT BE NECESSARY ANYMORE
-DATA_FOLDER = '/resources/Spectra/SPEX-PRISM/'
-DB_SOURCES_FILE = 'source_data.txt'
+# OLD SPECTRAL LIBRARY PARAMETERS
+DATA_FOLDER = '/resources/Data/ORIGINAL/'
 DB_SPECTRA_FILE = 'spectral_data.txt'
+DB_SOURCES_FILE = 'source_data.txt'
+
+# NEW SPECTRAL LIBRARY PARAMETERS
+DB_SPECTRA_INPUT_FILE = 'spectra.csv'
 DB_SPECTRA_DEFAULT_PARAMETERS = {
-    'DATA_FILE': {'altname': ['FILE','FILENAME'], 'type': str},
-    'DATA_KEY': {'altname': [], 'type': int},
-    'INSTRUMENT': {'altname': [], 'type': str},
-    'BIBCODE': {'altname': ['DATA_BIBCODE','REFERENCE','REF','BIBCODE','BIB','DATA_REFERENCE','DATA_REF'], 'type': str},
-    'OBSERVATION_DATE': {'altname': ['OBSDATE','OBS_DATE','DATE'], 'type': str},
-    'OBSERVATION_MJD': {'altname': ['MJD','OBS_MJD','JULIAN_DATE'], 'type': float},
-    'PROGRAM': {'altname': [], 'type': str},
-    'OBSERVER': {'altname': [], 'type': str},
-    'AIRMASS': {'altname': ['Z'], 'type': float},
-    'INTEGRATION': {'altname': ['TINT','TIME','INT_TIME','INTEGRATION_TIME'], 'type': float},
-    'CONDITIONS': {'altname': ['WEATHER'], 'type': float},
-    'SOURCE_KEY': {'altname': [], 'type': int},
-    'NAME': {'altname': ['SOURCE_NAME'], 'type': str},
-    'DESIGNATION': {'altname': ['DESIG'], 'type': str},
-    'RA': {'altname': ['RIGHT_ASCENSION'], 'type': float},
-    'DEC': {'altname': ['DECLINATION'], 'type': float},
+    'FILENAME': {'altname': ['FILE','DATAFILE','DATA_FILE','FILE_NAME'], 'default': '', 'type': str, 'initialize': 'required'},
+#    'DATA_KEY': {'altname': [], 'type': int, 'required': False},
+    'FOLDER': {'altname': ['PATH','FOLD','DIR','DIRECTORY'], 'default': '', 'type': str, 'initialize': 'create'},
+    'INSTRUMENT': {'altname': [], 'default': DEFAULT_INSTRUMENT, 'type': str, 'initialize': 'default'},
+    'REFERENCE': {'altname': ['DATA_BIBCODE','REF','BIBCODE','BIB','DATA_REFERENCE','DATA_REF'], 'default': '', 'type': str, 'initialize': 'default'},
+    'OBSERVATION_DATE': {'altname': ['OBSDATE','OBS_DATE','DATE'], 'default': '', 'type': str, 'initialize': 'default'},
+    'OBSERVATION_TIME': {'altname': ['OBSTIME','OBS_TIME'], 'default': numpy.nan, 'type': float, 'initialize': 'default'},
+    'OBSERVATION_MJD': {'altname': ['MJD','OBS_MJD','JULIAN_DATE'], 'default': numpy.nan, 'type': float, 'initialize': 'default'},
+    'PROGRAM': {'altname': ['PROGRAM_ID','PROGRAM_NUMBER'], 'default': '', 'type': str, 'initialize': 'default'},
+    'OBSERVER': {'altname': ['PI'], 'default': '', 'type': str, 'initialize': 'default'},
+    'AIRMASS': {'altname': ['Z'], 'default': numpy.nan, 'type': float, 'initialize': 'default'},
+    'INTEGRATION': {'altname': ['TINT','TIME','INT_TIME','INTEGRATION_TIME','EXPOSURE','EXPTIME','EXP_TIME','ITIME'], 'default': numpy.nan, 'type': float, 'initialize': 'default'},
+    'CONDITIONS': {'altname': ['WEATHER'], 'default': '', 'type': str, 'initialize': 'default'},
+    'NAME': {'altname': ['SOURCE','SOURCE_NAME'], 'default': '', 'type': str, 'initialize': 'default'},
 }
+DB_SPECTRA_INPUT_FILE_KEY = 'FILENAME'
+SPECTRA_FILES_EXTENSIONS = ['txt','asc','fit','fits','dat','gz','bz2','zip']
+
+DB_SOURCES_INPUT_FILE = 'sources.csv'
+DB_SOURCES_DEFAULT_PARAMETERS = {
+    'NAME': {'altname': ['SOURCE_KEY','SOURCE_NAME'], 'type': int, 'required': False},
+    'DESIGNATION': {'altname': ['DESIG'], 'type': str, 'required': False},
+    'RA': {'altname': ['RIGHT_ASCENSION'], 'type': float, 'required': False},
+    'DEC': {'altname': ['DECLINATION'], 'type': float, 'required': False},
+}
+DB_SOURCES_INPUT_FILE_KEY = 'NAME'
+
+PUBLIC_DATA_FOLDER = SPLAT_PATH+'/resources/Data/Public/'
+
 
 # Library constants
-DEFAULT_INSTRUMENT = 'SPEX-PRISM'
-LIBRARY_PUBLIC_FOLDER = SPLAT_PATH+'/resources/Spectra/SPL/'
-LIBRARY_DATA_FOLDERS = [LIBRARY_PUBLIC_FOLDER]
-LIBRARY_DEFAULT_COLUMNS = {
-    'FILENAME': {'altname': ['FILE','FILES','FILENAMES','PATH','PATHS'], 'type': 'required', 'default': '', 'error': False},
-    'INSTRUMENT': {'altname': ['INST','INSTR','INSTRUMENTS'], 'type': 'add', 'default': DEFAULT_INSTRUMENT, 'error': False},
-    'LIBRARY': {'altname': ['LIB','LIBRARIES','CATALOG','CAT','CATALOGS'], 'type': 'add', 'default': '', 'error': False},
-    'DESIGNATION': {'altname': ['DES','DESIG','DESIGNATIONS'], 'type': 'optional', 'default': '', 'error': False},
-    'COORDINATE': {'altname': ['COORD','COORDINATES'], 'type': 'optional', 'default': '', 'error': False},
-    'RA': {'altname': ['RAS','R','RIGHT_ASCENSION'], 'type': 'optional', 'default': 0., 'error': True},
-    'DEC': {'altname': ['DECS','D','DECLINATION'], 'type': 'optional', 'default': 0., 'error': True},
-    'NAME': {'altname': ['NAMES'], 'type': 'optional', 'default': '', 'error': False},
-    'SHORTNAME': {'altname': ['SHORTNAMES','SNAME','SNAMES'], 'type': 'optional', 'default': '', 'error': False},
-    'SPECTRUM': {'altname': ['SPEC','SPECTRA'], 'type': 'add', 'default': None, 'error': False},
-    'BIBCODE': {'altname': ['DATA_BIBCODE','REFERENCE','REF','BIBCODE','BIB','DATA_REFERENCE','DATA_REF','CITE','CITATION'], 'type': 'optional', 'default': '', 'error': False},
-    'OBSERVATION_DATE': {'altname': ['OBSDATE','OBS_DATE','DATE'], 'type': 'optional', 'default': '', 'error': False},
-    'OBSERVATION_MJD': {'altname': ['JD','OBS_JD','JULIAN_DATE','JULIAN','MJD','MODIFIED_JULIAN_DATE','MODIFIED_JD','OBS_MJD','JDATE','MJDATE'], 'type': 'optional', 'default': 0., 'error': False},
-    'SOURCE_ID': {'altname': ['ID','SRC','SRC_ID','SOURCE'], 'type': 'optional', 'default': -1, 'error': False},
-    'SPT': {'altname': ['SPECTRAL_TYPE','TYPE','SPECTYPE','STYPE'], 'type': 'optional', 'default': 0., 'error': True},
-    'OSPT': {'altname': ['OPTICAL_SPECTRAL_TYPE','OPTICAL_TYPE','OPT_TYPE','OPT_SPT','TYPE_OPT','SPT_OPT','SPECTRAL_TYPE_OPT','SPECTRAL_TYPE_OPTICAL'], 'type': 'optional', 'default': 0., 'error': True},
-    'NSPT': {'altname': ['NIR_SPECTRAL_TYPE','NIR_TYPE','NIR_TYPE','NIR_SPT','TYPE_NIR','SPT_NIR','SPECTRAL_TYPE_NIR','IR_SPECTRAL_TYPE','IR_TYPE','IR_TYPE','IR_SPT','TYPE_IR','SPT_IR','SPECTRAL_TYPE_IR','SPECTRAL_TYPE_IR','IRSPT','INFRARED_SPECTRAL_TYPE','INFRARED_TYPE','INFRARED_TYPE','INFRARED_SPT','TYPE_INFRARED','SPT_INFRARED','SPECTRAL_TYPE_INFRARED','SPECTRAL_TYPE_INFRARED','INFRAREDSPT'], 'type': 'optional', 'default': 0., 'error': True},
-    'SSPT': {'altname': ['SIMBAD_SPECTRAL_TYPE','SIMBAD_TYPE','SIM_TYPE','SIM_SPT','TYPE_SIM','SPT_SIM','SPECTRAL_TYPE_SIM','SPECTRAL_TYPE_SIMBAD'], 'type': 'optional', 'default': 0., 'error': True},
-    # 'RV': {'altname': ['RADIAL_VELOCITY','VRAD','VR','RADVEL','RAD_VEL','RAD_V'], 'type': 'optional', 'default': 0., 'error': True},
-    # 'VSINI': {'altname': ['ROTATIONAL_VELOCITY','VROT','ROTVEL','ROT_VEL','ROT_V'], 'type': 'optional', 'default': 0., 'error': True},
-    # 'PLX': {'altname': ['PARALLAX','PI'], 'type': 'optional', 'default': 0., 'error': True},
-    # 'MU': {'altname': ['PROPER_MOTION','PM'], 'type': 'optional', 'default': 0., 'error': True},
-    # 'MU_RA': {'altname': ['RA_PROPER_MOTION','PROPER_MOTION_RA','MU_RA','MUR','MU_R'], 'type': 'optional', 'default': 0., 'error': True},
-    # 'MU_DEC': {'altname': ['DEC_PROPER_MOTION','PROPER_MOTION_DEC','MU_DEC','MUD','MU_D'], 'type': 'optional', 'default': 0., 'error': True},
-}
-# also magnitude convention: MAG_[FILTER] where filter is preferably one listed below
-LIBRARY_DEFAULT_DATABASE_FILE = 'spectra.csv'
-LIBRARY_DEFAULT_DATA_FOLDER = 'spectra/'
-LIBRARY = {}
-SOURCES_DEFAULT_DATABASE_FILE = 'sources.csv'
-SOURCES = {}
+# #LIBRARY_DATA_FOLDERS = [LIBRARY_PUBLIC_FOLDER]
+# LIBRARY_DEFAULT_COLUMNS = {
+#     'FILENAME': {'altname': ['FILE','FILES','FILENAMES','PATH','PATHS'], 'type': 'required', 'default': '', 'error': False},
+#     'INSTRUMENT': {'altname': ['INST','INSTR','INSTRUMENTS'], 'type': 'add', 'default': DEFAULT_INSTRUMENT, 'error': False},
+#     'LIBRARY': {'altname': ['LIB','LIBRARIES','CATALOG','CAT','CATALOGS'], 'type': 'add', 'default': '', 'error': False},
+#     'DESIGNATION': {'altname': ['DES','DESIG','DESIGNATIONS'], 'type': 'optional', 'default': '', 'error': False},
+#     'COORDINATE': {'altname': ['COORD','COORDINATES'], 'type': 'optional', 'default': '', 'error': False},
+#     'RA': {'altname': ['RAS','R','RIGHT_ASCENSION'], 'type': 'optional', 'default': 0., 'error': True},
+#     'DEC': {'altname': ['DECS','D','DECLINATION'], 'type': 'optional', 'default': 0., 'error': True},
+#     'NAME': {'altname': ['NAMES'], 'type': 'optional', 'default': '', 'error': False},
+#     'SHORTNAME': {'altname': ['SHORTNAMES','SNAME','SNAMES'], 'type': 'optional', 'default': '', 'error': False},
+#     'SPECTRUM': {'altname': ['SPEC','SPECTRA'], 'type': 'add', 'default': None, 'error': False},
+#     'BIBCODE': {'altname': ['DATA_BIBCODE','REFERENCE','REF','BIBCODE','BIB','DATA_REFERENCE','DATA_REF','CITE','CITATION'], 'type': 'optional', 'default': '', 'error': False},
+#     'OBSERVATION_DATE': {'altname': ['OBSDATE','OBS_DATE','DATE'], 'type': 'optional', 'default': '', 'error': False},
+#     'OBSERVATION_MJD': {'altname': ['JD','OBS_JD','JULIAN_DATE','JULIAN','MJD','MODIFIED_JULIAN_DATE','MODIFIED_JD','OBS_MJD','JDATE','MJDATE'], 'type': 'optional', 'default': 0., 'error': False},
+#     'SOURCE_ID': {'altname': ['ID','SRC','SRC_ID','SOURCE'], 'type': 'optional', 'default': -1, 'error': False},
+#     'SPT': {'altname': ['SPECTRAL_TYPE','TYPE','SPECTYPE','STYPE'], 'type': 'optional', 'default': 0., 'error': True},
+#     'OSPT': {'altname': ['OPTICAL_SPECTRAL_TYPE','OPTICAL_TYPE','OPT_TYPE','OPT_SPT','TYPE_OPT','SPT_OPT','SPECTRAL_TYPE_OPT','SPECTRAL_TYPE_OPTICAL'], 'type': 'optional', 'default': 0., 'error': True},
+#     'NSPT': {'altname': ['NIR_SPECTRAL_TYPE','NIR_TYPE','NIR_TYPE','NIR_SPT','TYPE_NIR','SPT_NIR','SPECTRAL_TYPE_NIR','IR_SPECTRAL_TYPE','IR_TYPE','IR_TYPE','IR_SPT','TYPE_IR','SPT_IR','SPECTRAL_TYPE_IR','SPECTRAL_TYPE_IR','IRSPT','INFRARED_SPECTRAL_TYPE','INFRARED_TYPE','INFRARED_TYPE','INFRARED_SPT','TYPE_INFRARED','SPT_INFRARED','SPECTRAL_TYPE_INFRARED','SPECTRAL_TYPE_INFRARED','INFRAREDSPT'], 'type': 'optional', 'default': 0., 'error': True},
+#     'SSPT': {'altname': ['SIMBAD_SPECTRAL_TYPE','SIMBAD_TYPE','SIM_TYPE','SIM_SPT','TYPE_SIM','SPT_SIM','SPECTRAL_TYPE_SIM','SPECTRAL_TYPE_SIMBAD'], 'type': 'optional', 'default': 0., 'error': True},
+#     # 'RV': {'altname': ['RADIAL_VELOCITY','VRAD','VR','RADVEL','RAD_VEL','RAD_V'], 'type': 'optional', 'default': 0., 'error': True},
+#     # 'VSINI': {'altname': ['ROTATIONAL_VELOCITY','VROT','ROTVEL','ROT_VEL','ROT_V'], 'type': 'optional', 'default': 0., 'error': True},
+#     # 'PLX': {'altname': ['PARALLAX','PI'], 'type': 'optional', 'default': 0., 'error': True},
+#     # 'MU': {'altname': ['PROPER_MOTION','PM'], 'type': 'optional', 'default': 0., 'error': True},
+#     # 'MU_RA': {'altname': ['RA_PROPER_MOTION','PROPER_MOTION_RA','MU_RA','MUR','MU_R'], 'type': 'optional', 'default': 0., 'error': True},
+#     # 'MU_DEC': {'altname': ['DEC_PROPER_MOTION','PROPER_MOTION_DEC','MU_DEC','MUD','MU_D'], 'type': 'optional', 'default': 0., 'error': True},
+# }
+# # also magnitude convention: MAG_[FILTER] where filter is preferably one listed below
+# LIBRARY_DEFAULT_DATABASE_FILE = 'spectra.csv'
+# LIBRARY_DEFAULT_DATA_FOLDER = 'spectra/'
+# LIBRARY = {}
+# SOURCES_DEFAULT_DATABASE_FILE = 'sources.csv'
+# SOURCES = {}
 
 
 # dwarf spectral standards
@@ -467,39 +480,39 @@ INSTRUMENT_DEFAULT_PARAMETERS = {
     }
 INSTRUMENTS = {
 #	'SPEX': {'instrument_name': 'SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['']},
-    'UNKNOWN': {'instrument_name': 'UNKNOWN', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altname': ['UNK'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'RAW': {'instrument_name': 'RAW', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altname': [], 'wunit': u.micron},
-    'SED': {'instrument_name': 'SED', 'pixelscale': 1.*u.arcsec, 'wave_range': [0.1,100]*u.micron, 'slitwidth': 1.*u.arcsec, 'altname': ['SPECTRAL_ENERGY_DISTRIBUTION'], 'resolution': 100, 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['APO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2010SPIE.7735E..1CW'},
-    'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['SDSS','BOSS','EBOSS'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'instrument_bibcode': '2013AJ....146...32S'},
-    'DEIMOS': {'instrument_name': 'Keck DEIMOS', 'pixelscale': 0.1185*u.arcsec, 'wave_range': [5000,9700]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'disperser': '600 l/mm', 'resolution': 2000, 'norders': 1, 'readnoise': 2.5, 'darkcurrent': 0., 'gain': 1.2, 'altname': ['DEIMOS'], 'instrument_bibcode': '2003spie.4841.1657F', 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
-    'FIRE': {'instrument_name': 'Magellan FIRE', 'pixelscale': 0.18*u.arcsec, 'wave_range': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 6000, 'norders': 21, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['FIRE'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2013PASP..125..270S'},
-    'IRS-SL': {'instrument_name': 'Spitzer IRS Short-Low', 'pixelscale': 1.8*u.arcsec, 'wave_range': [5.2,14.5]*u.micron, 'slitwidth': 1.8*u.arcsec, 'resolution': 100, 'norders': 1, 'readnoise': 30., 'darkcurrent': 10., 'gain': 4.6, 'altname': ['IRS','IRS Short Low'], 'wunit': u.micron, 'funit': u.Jy, 'instrument_bibcode': '2004ApJS..154...18H'},
-    'IRS-LL': {'instrument_name': 'Spitzer IRS Short-Low', 'pixelscale': 5.1*u.arcsec, 'wave_range': [14,38.]*u.micron, 'slitwidth': 5.1*u.arcsec, 'resolution': 90, 'norders': 1, 'readnoise': 30., 'darkcurrent': 40., 'gain': 4.6, 'altname': ['IRS Long Low'], 'wunit': u.micron, 'funit': u.Jy, 'instrument_bibcode': '2004ApJS..154...18H'},
-    'KAST-RED': {'instrument_name': 'Lick KAST Red Channel', 'pixelscale': 0.43*u.arcsec, 'disperser': '600/7500', 'wave_range': [5700,9200]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 1200, 'norders': 1, 'readnoise': 3.8, 'darkcurrent': 0., 'gain': 1.9, 'altname': ['KAST','KAST-R'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
-    'KAST-BLUE': {'instrument_name': 'Lick KAST Blue Channel', 'pixelscale': 0.43*u.arcsec, 'disperser': '600/4310', 'wave_range': [3300,5520]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 950, 'norders': 1, 'readnoise': 3.7, 'darkcurrent': 0., 'gain': 1.2, 'altname': ['KAST-B'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
-    'LDSS-3': {'instrument_name': 'Magellan LDSS-3', 'pixelscale': 0.189*u.arcsec, 'disperser': 'VPH-RED', 'wave_range': [6000,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1810, 'norders': 1, 'readnoise': 4.07, 'darkcurrent': 0., 'gain': 1, 'altname': ['LDSS3'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'instrument_bibcode': '1994PASP..106..983A'},
-    'LRIS-RED': {'altname': ['LRIS','LRISR'], 'instrument_name': 'Keck LRIS red channel longslit', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4.6, 'darkcurrent': 0., 'gain': 1.2, 'disperser': '400/8500', 'wave_range': [6300,10100]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 1200, 'norders': 1, 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'instrument_bibcode': '1995PASP..107..375O'},
-    'LRIS-BLUE': {'altname': ['LRISB'], 'instrument_name': 'Keck LRIS blue channel longslit', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4., 'darkcurrent': 0., 'gain': 1.6, 'disperser': '400/3400', 'wave_range': [1270,5740]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 530, 'norders': 1, 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'instrument_bibcode': '1995PASP..107..375O'},
-    'MAGE': {'instrument_name': 'Magellan MAGE', 'pixelscale': 0.3*u.arcsec, 'wave_range': [3100,10000]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 4100, 'norders': 13, 'readnoise': 2.9, 'darkcurrent': 1.0, 'gain': 1.02, 'altname': ['MagE'], 'wunit': u.Angstrom, 'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'instrument_bibcode': '2008SPIE.7014E..54M'},
-    'NIRI-J': {'instrument_name': 'Gemini NIRI J-band (G5202)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.05,1.41]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 610, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI','NIRI G5202'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115.1388H'},
-    'NIRI-H': {'instrument_name': 'Gemini NIRI J-band (G5203)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.43,1.96]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 825, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5203'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115.1388H'},
-    'NIRI-K': {'instrument_name': 'Gemini NIRI J-band (G5204)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.90,2.49]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 780, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5204'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115.1388H'},
-    'NIRI-L': {'instrument_name': 'Gemini NIRI J-band (G5205)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [2.99,4.15]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 690, 'norders': 1, 'readnoise': 50., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5205'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115.1388H'},
-    'NIRES': {'instrument_name': 'Keck NIRES', 'pixelscale': 0.123*u.arcsec, 'wave_range': [0.94,2.45]*u.micron, 'slitwidth': 0.55*u.arcsec, 'resolution': 2700, 'norders': 5, 'orders': [3,4,5,6,7], 'order_wave_range': [[0.94,1.06],[0.95,1.23],[1.13,1.48],[1.42,1.85],[1.88,2.46]],'readnoise': 15., 'darkcurrent': 0.13, 'gain': 3.8, 'altname': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2000SPIE.4008.1048M'},
-    'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'wave_range': [0.95,5.5]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altname': ['NIRSPAO'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2000SPIE.4008.1048M'},
-    'SPEX-PRISM': {'instrument_name': 'IRTF SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SPEX','PRISM'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115..362R'},
-    'SPEX-SXD': {'instrument_name': 'IRTF SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115..362R'},
-    'SPEX-LXD1.9': {'instrument_name': 'IRTF SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SPEX LXD','LXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115..362R'},
-    'SPEX-LXD2.1': {'instrument_name': 'IRTF SpeX LXD 2.1 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115..362R'},
-    'SPEX-LXD2.3': {'instrument_name': 'IRTF SpeX LXD 2.3 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': [], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115..362R'},
-#	'USPEX': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['']},
-#	'USPEX_PRISM': {'instrument_name': 'IRTF Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['USPEX','UPRISM'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-#    'USPEX_SXD': {'instrument_name': 'IRTF Updated SpeX SXD', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.55]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['USXD'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-#    'USPEX_LXD_SHORT': {'instrument_name': 'IRTF Updated SpeX LXD short', 'pixelscale': 0.10*u.arcsec, 'wave_range': [1.67,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500., 'norders': 8, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['ULXD','LXD_SHORT','LXDS'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-#    'USPEX_LXD_LONG': {'instrument_name': 'IRTF Updated SpeX LXD long', 'pixelscale': 0.10*u.arcsec, 'wave_range': [1.98,5.3]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500., 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['LXD_LONG','LXDL'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'WFC3-G102': {'instrument_name': 'HST WFC3 IR G102', 'pixelscale': 0.128*u.arcsec, 'wave_range': [0.8,1.15]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 210., 'norders': 7, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altname': ['G102'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
-    'WFC3-G141': {'instrument_name': 'HST WFC3 IR G141', 'pixelscale': 0.128*u.arcsec, 'wave_range': [1.075,1.70]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 130., 'norders': 7, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altname': ['WFC3','HST WFC3','HST WFC3 IR','WFC3 IR','G141'], 'wunit': u.micron, 'funit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'UNKNOWN': {'instrument_name': 'UNKNOWN', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altname': ['UNK'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'RAW': {'instrument_name': 'RAW', 'pixelscale': 1.*u.arcsec, 'slitwidth': 1.*u.arcsec, 'altname': [], 'wave_unit': u.micron},
+    'SED': {'instrument_name': 'SED', 'pixelscale': 1.*u.arcsec, 'wave_range': [0.1,100]*u.micron, 'slitwidth': 1.*u.arcsec, 'altname': ['SPECTRAL_ENERGY_DISTRIBUTION'], 'resolution': 100, 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'APOGEE': {'instrument_name': 'SDSS APOGEE', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [1.51,1.70]*u.micron, 'slitwidth': 2.*u.arcsec, 'resolution': 22500, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['APO'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2010SPIE.7735E..1CW'},
+    'BOSS': {'instrument_name': 'SDSS BOSS', 'pixelscale': 2./3.*u.arcsec, 'wave_range': [3700,10400]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 2000, 'norders': 1, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['SDSS','BOSS','EBOSS'], 'wave_unit': u.Angstrom, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'instrument_bibcode': '2013AJ....146...32S'},
+    'DEIMOS': {'instrument_name': 'Keck DEIMOS', 'pixelscale': 0.1185*u.arcsec, 'wave_range': [5000,9700]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'disperser': '600 l/mm', 'resolution': 2000, 'norders': 1, 'readnoise': 2.5, 'darkcurrent': 0., 'gain': 1.2, 'altname': ['DEIMOS'], 'instrument_bibcode': '2003spie.4841.1657F', 'wave_unit': u.Angstrom, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'FIRE': {'instrument_name': 'Magellan FIRE', 'pixelscale': 0.18*u.arcsec, 'wave_range': [0.82,2.51]*u.micron, 'slitwidth': 0.6*u.arcsec, 'resolution': 6000, 'norders': 21, 'readnoise': 0, 'darkcurrent': 0., 'gain': 1, 'altname': ['FIRE'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2013PASP..125..270S'},
+    'IRS-SL': {'instrument_name': 'Spitzer IRS Short-Low', 'pixelscale': 1.8*u.arcsec, 'wave_range': [5.2,14.5]*u.micron, 'slitwidth': 1.8*u.arcsec, 'resolution': 100, 'norders': 1, 'readnoise': 30., 'darkcurrent': 10., 'gain': 4.6, 'altname': ['IRS','IRS Short Low'], 'wave_unit': u.micron, 'flux_unit': u.Jy, 'instrument_bibcode': '2004ApJS..154...18H'},
+    'IRS-LL': {'instrument_name': 'Spitzer IRS Short-Low', 'pixelscale': 5.1*u.arcsec, 'wave_range': [14,38.]*u.micron, 'slitwidth': 5.1*u.arcsec, 'resolution': 90, 'norders': 1, 'readnoise': 30., 'darkcurrent': 40., 'gain': 4.6, 'altname': ['IRS Long Low'], 'wave_unit': u.micron, 'flux_unit': u.Jy, 'instrument_bibcode': '2004ApJS..154...18H'},
+    'KAST-RED': {'instrument_name': 'Lick KAST Red Channel', 'pixelscale': 0.43*u.arcsec, 'disperser': '600/7500', 'wave_range': [5700,9200]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 1200, 'norders': 1, 'readnoise': 3.8, 'darkcurrent': 0., 'gain': 1.9, 'altname': ['KAST','KAST-R'], 'wave_unit': u.Angstrom, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'KAST-BLUE': {'instrument_name': 'Lick KAST Blue Channel', 'pixelscale': 0.43*u.arcsec, 'disperser': '600/4310', 'wave_range': [3300,5520]*u.Angstrom, 'slitwidth': 2.*u.arcsec, 'resolution': 950, 'norders': 1, 'readnoise': 3.7, 'darkcurrent': 0., 'gain': 1.2, 'altname': ['KAST-B'], 'wave_unit': u.Angstrom, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom},
+    'LDSS-3': {'instrument_name': 'Magellan LDSS-3', 'pixelscale': 0.189*u.arcsec, 'disperser': 'VPH-RED', 'wave_range': [6000,10000]*u.Angstrom, 'slitwidth': 0.75*u.arcsec, 'resolution': 1810, 'norders': 1, 'readnoise': 4.07, 'darkcurrent': 0., 'gain': 1, 'altname': ['LDSS3'], 'wave_unit': u.Angstrom, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'instrument_bibcode': '1994PASP..106..983A'},
+    'LRIS-RED': {'altname': ['LRIS','LRISR'], 'instrument_name': 'Keck LRIS red channel longslit', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4.6, 'darkcurrent': 0., 'gain': 1.2, 'disperser': '400/8500', 'wave_range': [6300,10100]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 1200, 'norders': 1, 'wave_unit': u.Angstrom, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'instrument_bibcode': '1995PASP..107..375O'},
+    'LRIS-BLUE': {'altname': ['LRISB'], 'instrument_name': 'Keck LRIS blue channel longslit', 'pixelscale': 0.135*u.arcsec, 'readnoise': 4., 'darkcurrent': 0., 'gain': 1.6, 'disperser': '400/3400', 'wave_range': [1270,5740]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 530, 'norders': 1, 'wave_unit': u.Angstrom, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'instrument_bibcode': '1995PASP..107..375O'},
+    'MAGE': {'instrument_name': 'Magellan MAGE', 'pixelscale': 0.3*u.arcsec, 'wave_range': [3100,10000]*u.Angstrom, 'slitwidth': 1.*u.arcsec, 'resolution': 4100, 'norders': 13, 'readnoise': 2.9, 'darkcurrent': 1.0, 'gain': 1.02, 'altname': ['MagE'], 'wave_unit': u.Angstrom, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom, 'instrument_bibcode': '2008SPIE.7014E..54M'},
+    'NIRI-J': {'instrument_name': 'Gemini NIRI J-band (G5202)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.05,1.41]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 610, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI','NIRI G5202'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115.1388H'},
+    'NIRI-H': {'instrument_name': 'Gemini NIRI J-band (G5203)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.43,1.96]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 825, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5203'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115.1388H'},
+    'NIRI-K': {'instrument_name': 'Gemini NIRI J-band (G5204)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [1.90,2.49]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 780, 'norders': 1, 'readnoise': 13., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5204'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115.1388H'},
+    'NIRI-L': {'instrument_name': 'Gemini NIRI J-band (G5205)', 'pixelscale': 0.47/4.*u.arcsec, 'wave_range': [2.99,4.15]*u.micron, 'slitwidth': 0.47*u.arcsec, 'resolution': 690, 'norders': 1, 'readnoise': 50., 'darkcurrent': 0.25, 'gain': 12.3, 'altname': ['NIRI G5205'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115.1388H'},
+    'NIRES': {'instrument_name': 'Keck NIRES', 'pixelscale': 0.123*u.arcsec, 'wave_range': [0.94,2.45]*u.micron, 'slitwidth': 0.55*u.arcsec, 'resolution': 2700, 'norders': 5, 'orders': [3,4,5,6,7], 'order_wave_range': [[0.94,1.06],[0.95,1.23],[1.13,1.48],[1.42,1.85],[1.88,2.46]],'readnoise': 15., 'darkcurrent': 0.13, 'gain': 3.8, 'altname': [], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2000SPIE.4008.1048M'},
+    'NIRSPEC': {'instrument_name': 'Keck NIRSPEC', 'pixelscale': 0.43/3.*u.arcsec, 'wave_range': [0.95,5.5]*u.micron, 'slitwidth': 0.43*u.arcsec, 'resolution': 25000, 'norders': 8, 'readnoise': 23., 'darkcurrent': 0.8, 'gain': 5.8, 'altname': ['NIRSPAO'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2000SPIE.4008.1048M'},
+    'SPEX-PRISM': {'instrument_name': 'IRTF SpeX prism', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SPEX','PRISM'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115..362R'},
+    'SPEX-SXD': {'instrument_name': 'IRTF SpeX SXD', 'pixelscale': 0.15*u.arcsec, 'wave_range': [0.8,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SXD'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115..362R'},
+    'SPEX-LXD1.9': {'instrument_name': 'IRTF SpeX LXD 1.9 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [1.95,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': ['SPEX LXD','LXD'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115..362R'},
+    'SPEX-LXD2.1': {'instrument_name': 'IRTF SpeX LXD 2.1 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.15,5.0]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': [], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115..362R'},
+    'SPEX-LXD2.3': {'instrument_name': 'IRTF SpeX LXD 2.3 micron', 'pixelscale': 0.15*u.arcsec, 'wave_range': [2.25,5.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500, 'norders': 7, 'readnoise': 12, 'darkcurrent': 0.2, 'gain': 12, 'altname': [], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron, 'instrument_bibcode': '2003PASP..115..362R'},
+#   'USPEX': {'instrument_name': 'Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['']},
+#   'USPEX_PRISM': {'instrument_name': 'IRTF Updated SpeX prism', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.5]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 200, 'norders': 1, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['USPEX','UPRISM'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron},
+#    'USPEX_SXD': {'instrument_name': 'IRTF Updated SpeX SXD', 'pixelscale': 0.10*u.arcsec, 'wave_range': [0.7,2.55]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2000, 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['USXD'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron},
+#    'USPEX_LXD_SHORT': {'instrument_name': 'IRTF Updated SpeX LXD short', 'pixelscale': 0.10*u.arcsec, 'wave_range': [1.67,4.2]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500., 'norders': 8, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['ULXD','LXD_SHORT','LXDS'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron},
+#    'USPEX_LXD_LONG': {'instrument_name': 'IRTF Updated SpeX LXD long', 'pixelscale': 0.10*u.arcsec, 'wave_range': [1.98,5.3]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 2500., 'norders': 7, 'readnoise': 5, 'darkcurrent': 0.05, 'gain': 1.5, 'altname': ['LXD_LONG','LXDL'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'WFC3-G102': {'instrument_name': 'HST WFC3 IR G102', 'pixelscale': 0.128*u.arcsec, 'wave_range': [0.8,1.15]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 210., 'norders': 7, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altname': ['G102'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron},
+    'WFC3-G141': {'instrument_name': 'HST WFC3 IR G141', 'pixelscale': 0.128*u.arcsec, 'wave_range': [1.075,1.70]*u.micron, 'slitwidth': 0.3*u.arcsec, 'resolution': 130., 'norders': 7, 'readnoise': 0., 'darkcurrent': 0., 'gain': 1., 'altname': ['WFC3','HST WFC3','HST WFC3 IR','WFC3 IR','G141'], 'wave_unit': u.micron, 'flux_unit': u.erg/u.s/u.cm/u.cm/u.micron},
 }
 
 #experimental
@@ -595,6 +608,7 @@ SPECTRAL_MODEL_PARAMETERS = {\
     'zc': {'name': 'C enrichment', 'prefix': 'zc', 'unit': u.dex, 'default': 0., 'title': 'Carbon Enrichment', 'type': 'continuous'},\
     'zo': {'name': 'O enrichment', 'prefix': 'zo', 'unit': u.dex, 'default': 0., 'title': 'Oxygen Enrichment', 'type': 'continuous'},\
     'zn': {'name': 'N enrichment', 'prefix': 'zn', 'unit': u.dex, 'default': 0., 'title': 'Nitrogen Enrichment', 'type': 'continuous'},\
+    'co': {'name': 'C/O ratio', 'prefix': 'co', 'unit': u.dex, 'default': 0.54, 'title': 'C/O ratio', 'type': 'continuous'},\
     'fsed': {'name': 'rainout', 'prefix': 'f', 'unit': u.m/u.m, 'default': 'nc', 'title': '$f_{sed}$', 'type': 'discrete'}, \
     'cld': {'name': 'cloud', 'prefix': 'c', 'unit': u.m/u.m, 'default': 'nc', 'title': 'Cloud or Condensation Treatment', 'type': 'discrete'}, \
     'kzz': {'name': 'mixing', 'prefix': 'k', 'unit': u.m/u.m, 'default': 'eq', 'title': '$log\ \kappa_{zz}$ (cgs)', 'type': 'discrete'},\
@@ -619,7 +633,7 @@ SPECTRAL_MODELS = {\
     'nextgen99': {'instruments': {}, 'name': 'Phoenix NextGen', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altname': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
     'saumon08': {'instruments': {}, 'name': 'Saumon & Marley 2008', 'citation': 'Saumon & Marley 2008', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','saumon2008'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
     'sonora18': {'instruments': {}, 'name': 'Sonora 2018', 'citation': 'Marley et al. (2018)', 'bibcode': 'marley_mark_2018_1309035', 'altname': ['marley','marley18','marley2018','sonora','sonora2018'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
-    'gerasimov': {'instruments': {}, 'name': 'Gerasimov 2019', 'citation': 'Gerasimov et al. (in prep)', 'bibcode': 'gerasimovIP', 'altname': ['phxlowz'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'y': 0.27,'zn': 0,'zo': 0., 'zc': 0.}}, \
+    'gerasimov': {'instruments': {}, 'name': 'Gerasimov et al. (in prep)', 'citation': 'Gerasimov et al. (in prep)', 'bibcode': 'gerasimovIP', 'altname': ['phxlowz'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
 #    'btcond': {'instruments': {}, 'name': 'BT Cond', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['dusty-cond','bt-cond'], 'rawfolder': '/Volumes/splat/models/btcond/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0, 'enrich': 0.0}}, \
 #    'btdusty': {'instruments': {}, 'name': 'BT Dusty', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['dusty-bt','bt-dusty'], 'rawfolder': '/Volumes/splat/models/btdusty/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0}}, \
 }

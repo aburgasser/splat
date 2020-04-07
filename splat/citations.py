@@ -53,9 +53,11 @@ def bibTexParser(bib_input,**kwargs):
         line = line.strip()
         line = line.replace('{','').replace('}','').replace('\"','').replace('\n@','').replace('\n','').replace('\t','') 
         line = line.split('=')
-        line[0] = line[0].strip().lower()
-        line[1] = line[1].strip()
-        bib_dict[line[0]] = line[1]
+# TEMPORARY FIX AS THIS LINE ISN'T WORKING RIGHT
+        if len(line) > 1:
+            line[0] = line[0].strip().lower()
+            line[1] = line[1].strip()
+            bib_dict[line[0]] = line[1]
 
 # Journal massaging: look up table
     if 'journal' in list(bib_dict.keys()):
