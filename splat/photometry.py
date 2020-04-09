@@ -726,11 +726,11 @@ def SEDFitAmoeba(verbose=True):
     '''
     pass
 
-def SEDVisualize(*args,e_mag=None,spectrum=None,file='',verbose=True):
+def SEDVisualize(verbose=True):
     '''
     Visualizes magnitudes on SED scale (flux = lam x F_lam), with option of also comparing to SED spectrum
     '''
-
+    pass
 
 
 
