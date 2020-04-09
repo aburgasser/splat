@@ -1037,7 +1037,7 @@ class Spectrum(object):
         return
 
 
-    def export(self,filename='',clobber=True,csv=False,tab=True,delimiter='\t',save_header=True,save_noise=True,comment='#',*args,**kwargs):
+    def export(self,filename='',clobber=True,csv=False,tab=True,delimiter='\t',save_header=True,save_noise=True,comment='#',file_type='',*args,**kwargs):
         '''
         :Purpose: 
             Exports a Spectrum object to either a fits or ascii file, depending on file extension given.  
@@ -1099,10 +1099,10 @@ class Spectrum(object):
         self.simplefilename = self.filename
 
 # determine which type of file
-        ftype = filename.split('.')[-1]
+        if file_type == '': file_type = filename.split('.')[-1]
 
 # fits file
-        if (ftype == 'fit' or ftype == 'fits'):
+        if 'fit' in file_type:
 #            try:
             data = numpy.vstack((self.wave.value,self.flux.value,self.noise.value))
             hdu = fits.PrimaryHDU(data)
@@ -3419,7 +3419,7 @@ class NewSpectrum(object):
         fig.set_ylabel(kwargs.get('xlabel',r'Flux ({})'.format(self.flux.unit)),fontsize=kwargs.get('fontsize',16))
         return fig
 
-    def toFile(self,file,clobber=True,csv=False,delimiter='\t',save_header=True,save_noise=False,save_background=False,save_mask=False,comment='#',**kwargs):
+    def toFile(self,file,clobber=True,csv=False,delimiter='\t',save_header=True,save_noise=False,save_background=False,save_mask=False,comment='#',file_type='',**kwargs):
         '''
         Exports a spectrum to a file
         '''
@@ -3427,9 +3427,9 @@ class NewSpectrum(object):
         output = [self.wave.value,self.flux.value,self.noise.value]
         labels = ['Wave ({})'.format(self.wave.unit),'Flux ({})'.format(self.flux.unit),'Uncertainty ({})'.format(self.noise.unit),]
 # determine which type of file
-        ftype = file.split('.')[-1]
+        if file_type=='': file_type = file.split('.')[-1]
 # fits file
-        if (ftype == 'fit' or ftype == 'fits'):
+        if 'fit' in file_type:
             output = tuple(output)
             data = numpy.vstack(output)
             hdu = fits.PrimaryHDU(data)
@@ -5018,25 +5018,25 @@ def readSpectrum(*args,**kwargs):
     else:
 
 # determine which type of file
-        ftype = file.split('.')[-1]
+        if file_type == '': file_type = file.split('.')[-1]
         zipflag = ''
 
 # gzip compressed file - unzip and then rezip later
-        if ftype == 'gz':
-            zipflag = ftype
-            file = file.replace('.'+ftype,'')
+        if 'gz' in file_type:
+            zipflag = 'gz'
+            file = file.replace('.gz','')
             with open(os.path.normpath(file), 'wb') as f_out, gzip.open(os.path.normpath(file+'.gz'), 'rb') as f_in:
                 shutil.copyfileobj(f_in, f_out)
 
 # bz2 compressed file - unzip and then rezip later
-        if ftype == 'bz2':
-            zipflag = ftype
-            file = file.replace('.'+ftype,'')
+        if 'bz2' in file_type:
+            zipflag = 'bz2'
+            file = file.replace('.bz2','')
             with open(os.path.normpath(file), 'wb') as f_out, bz2.open(os.path.normpath(file+'.bz2'), 'rb') as f_in:
                 shutil.copyfileobj(f_in, f_out)
 
 # fits file
-        if (ftype == 'fit' or ftype == 'fits'):
+        if 'fit' in file_type:
 #        df = fits.open(file)
 #        with fits.open(file, ignore_missing_end=True) as data:
             with fits.open(os.path.normpath(file),ignore_missing_end=True) as data:
@@ -5069,7 +5069,7 @@ def readSpectrum(*args,**kwargs):
         if len(d[:,0]) > len(d[0,:]): d = d.transpose()  # array is oriented wrong
 
 # SDSS format for wavelength scale - in header and log format
-        if kwargs.get('sdss',False) == True or file_type=='wavelog':
+        if kwargs.get('sdss',False) == True or 'wavelog' in file_type:
             flux = d[0,:]
             if 'CRVAL1' in list(data[0].header.keys()) and 'CDELT1' in list(data[0].header.keys()):
                 wave = 10.**(numpy.linspace(float(data[0].header['CRVAL1']),float(data[0].header['CRVAL1'])+len(flux)*float(data[0].header['CDELT1']),num=len(flux)))
@@ -5080,7 +5080,7 @@ def readSpectrum(*args,**kwargs):
                 noise = numpy.zeros(len(flux))
                 noise[:] = numpy.nan
 #  wavelength scale in header and linear format
-        elif file_type=='wavelinear':
+        elif 'wavelinear' in file_type:
             flux = d[0,:]
             if 'CRVAL1' in list(data[0].header.keys()) and 'CDELT1' in list(data[0].header.keys()):
                 wave = numpy.linspace(float(data[0].header['CRVAL1']),float(data[0].header['CRVAL1'])+len(flux)*float(data[0].header['CDELT1']),num=len(flux))

@@ -1449,6 +1449,108 @@ def typeToBC(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False,
             raise ValueError('Unknown method {} for {}'.format(SPT_BC_RELATIONS[ref]['method'],refstring))
 
 
+#####################################################
+######   SUMMARIES OF EMPIRICAL RELATIONS   #########
+#####################################################
+
+
+def info_indices(*args):
+    if len(args)>0:
+        if isinstance(args[0],list) == True: sets = args[0]
+        else: sets = list(args)
+        print('\nChecking index sets {}:\n'.format(sets))
+    else:
+        sets = list(INDEX_SETS.keys())
+        print('\nIndex sets currently installed in SPLAT:\n')
+    flag=0
+    for ref in sets:
+        refch = checkDict(ref,INDEX_SETS)
+        if refch!=False: 
+            flag = 1
+            print('{}: {}'.format(refch,INDEX_SETS[refch]['bibcode']))
+            for i in INDEX_SETS[refch]['indices']:
+                if INDEX_SETS[refch]['indices'][i]['method']=='value':
+                    print('\t{}: [{}-{}]'.format(
+                        i,(INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[1],
+                        ))
+                elif INDEX_SETS[refch]['indices'][i]['method']=='ratio':
+                    print('\t{}: [{}-{}] / [{}-{}]'.format(
+                        i,(INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[1],
+                        ))
+                elif INDEX_SETS[refch]['indices'][i]['method']=='line':
+                    print('\t{}: 0.5 ([{}-{}] + [{}-{}]) / [{}-{}]'.format(
+                        i,(INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[1]
+                        ))
+                elif INDEX_SETS[refch]['indices'][i]['method']=='sumnum':
+                    print('\t{}: ([{}-{}] + [{}-{}]) / [{}-{}]'.format(
+                        i,(INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[1]
+                        ))
+                elif INDEX_SETS[refch]['indices'][i]['method']=='inverse_line':
+                    print('\t{}: 2 [{}-{}] / ([{}-{}] + [{}-{}])'.format(
+                        i,(INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[1]
+                        ))
+                elif INDEX_SETS[refch]['indices'][i]['method']=='sumdenum':
+                    print('\t{}: [{}-{}] / ([{}-{}] + [{}-{}])'.format(
+                        i,(INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[1]
+                        ))
+                elif INDEX_SETS[refch]['indices'][i]['method']=='change':
+                    print('\t{}: 2 ([{}-{}]-[{}-{}]) / ([{}-{}] + [{}-{}])'.format(
+                        i,(INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[1],
+                        ))
+                elif INDEX_SETS[refch]['indices'][i]['method']=='allers':
+                    print('\t{}: ([{}-{}] - [{}-{}]) / ([{}-{}] - [{}-{}]) + ([{}-{}] - [{}-{}]) / ([{}-{}] - [{}-{}]) + '.format(
+                        i,(INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][0].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][2].value)[1],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[0],
+                        (INDEX_SETS[refch]['indices'][i]['ranges'][1].value)[1],
+                        ))
+                else:
+                    print('\t{}: dunno'.format(i))
+    if flag==0: print('Index set(s) {} are not present in SPLAT'.format(sets))
+    return
 
 
 
