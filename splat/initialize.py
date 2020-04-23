@@ -100,7 +100,7 @@ DEFAULT_CROSSSECTION_UNIT = u.cm**2
 DEFAULT_INSTRUMENT = 'SPEX-PRISM'
 
 # OLD SPECTRAL LIBRARY PARAMETERS
-DATA_FOLDER = '/resources/Data/Public/'
+DATA_FOLDER = '/resources/Spectra/SPEX-PRISM/'
 DB_SPECTRA_FILE = 'spectral_data.txt'
 DB_SOURCES_FILE = 'source_data.txt'
 
