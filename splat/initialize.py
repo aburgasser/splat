@@ -14,7 +14,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2020.04.06'
+VERSION = '2020.04.23'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -100,7 +100,7 @@ DEFAULT_CROSSSECTION_UNIT = u.cm**2
 DEFAULT_INSTRUMENT = 'SPEX-PRISM'
 
 # OLD SPECTRAL LIBRARY PARAMETERS
-DATA_FOLDER = '/resources/Data/ORIGINAL/'
+DATA_FOLDER = '/resources/Spectra/'
 DB_SPECTRA_FILE = 'spectral_data.txt'
 DB_SOURCES_FILE = 'source_data.txt'
 

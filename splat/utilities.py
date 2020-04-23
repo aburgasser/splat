@@ -1878,7 +1878,7 @@ def distributionStats(x, q=[0.16,0.5,0.84], weights=None, sigma=None, **kwargs):
         idx = numpy.argsort(xd)
         xsorted = xd[idx]
         cdf = numpy.add.accumulate(wt[idx])
-        print(xsorted,cdf,wt[idx],type(xd),type(cdf))
+#        print(xsorted,cdf,wt[idx],type(xd),type(cdf))
         cdff = [float(c) for c in cdf]
         cdfn = [c/cdff[-1] for c in cdff]
         return numpy.interp(q, cdfn, xsorted).tolist()
@@ -2231,6 +2231,29 @@ def weightedMeanVar(vals, winp, *args, **kwargs):
     return mn,numpy.sqrt(var)
 
 
+#####################################################
+###############   DATABASE HELPERS   ################
+#####################################################
+
+def checkDBCoordinates(db,designation_keyword='DESIGNATION',ra_keyword='RA',dec_keyword='DEC',shortname_keyword='SHORTNAME'):
+# designation -> ra, dec
+    if designation_keyword in list(db.keys()):
+        if ra_keyword not in list(db.keys()) or dec_keyword not in list(db.keys()):
+            coord = [designationToCoordinate(d) for d in db[designation_keyword]]
+            db[ra_keyword] = [c.ra.deg for c in coord]
+            db[dec_keyword] = [c.dec.deg for c in coord]
+# ra,dec -> designation
+    else:
+        if ra_keyword not in list(db.keys()) or dec_keyword not in list(db.keys()):
+            print('Warning: cannot populate designation column {} without RA column {} and DEC column {}'.format(designation_keyword,ra_keyword,dec_keyword))
+        else:
+            db[designation_keyword] = [coordinateToDesignation([db[ra_keyword].iloc[i],db[dec_keyword].iloc[i]]) for i in range(len(db))]
+# designation -> shortname
+    if designation_keyword in list(db.keys()):
+        if shortname_keyword not in list(db.keys()):
+            db[shortname_keyword] = [designationToShortName(d) for d in db[designation_keyword]]
+    return db
+    
 
 #####################################################
 ################   CODE MANAGEMENT   ################
