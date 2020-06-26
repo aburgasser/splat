@@ -4341,7 +4341,7 @@ def keySpectrum(keys, **kwargs):
         return sdb
 
 
-def searchLibrary(radius=10., instrument='SPEX-PRISM', *args, **kwargs):
+def searchLibrary(radius=10., instrument='SPEX-PRISM', source_database=DB_SOURCES, spectra_database=DB_SPECTRA, *args, **kwargs):
     '''
     :Purpose: 
 
@@ -4406,12 +4406,25 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', *args, **kwargs):
     .. note:: Note that this is currently only and AND search - need to figure out how to a full SQL style search
     '''
 
+# check the input catalog
+#    source_db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t', fill_values='-99.', format='tab')
+#    source_db = fetchDatabase(SOURCES_DB)
+    source_db = copy.deepcopy(source_database)
+    spectra_db = copy.deepcopy(spectra_database)
+    required_keywords = ['SOURCE_KEY']
+    for k in required_keywords:
+        if k not in list(source_db.keys()): raise ValueError('Source database must include keyword {}'.format(k))
+
 # program parameters
     ref = kwargs.get('output','all')
-    object_classes = numpy.unique(numpy.sort(numpy.array([str(x) for x in splat.DB_SOURCES['OBJECT_TYPE']])))
+    verbose = kwargs.get('verbose',False)
+
+# prep object classes
+    object_classes = numpy.array([])
+    if 'OBJECT_TYPE' in list(source_db.keys()):
+        object_classes = numpy.unique(numpy.sort(numpy.array([str(x) for x in splat.DB_SOURCES['OBJECT_TYPE']])))
     object_classes = object_classes[numpy.where(object_classes != '0')]  # eliminate masked element
     object_classes = object_classes[numpy.where(object_classes != 'nan')]  # eliminate masked element
-    verbose = kwargs.get('verbose',False)
 
 # logic of search
     logic = 'and'         # default combination
@@ -4420,29 +4433,17 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', *args, **kwargs):
     if (logic != 'and' and logic != 'or'):
         raise ValueError('\nLogical operator '+logic+' not supported\n\n')
 
-# read in source database and add in shortnames and skycoords
-#    source_db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t', fill_values='-99.', format='tab')
-#    source_db = fetchDatabase(SOURCES_DB)
-    source_db = copy.deepcopy(DB_SOURCES)
-
 # first search by source parameters
     source_db['SELECT'] = numpy.zeros(len(source_db['SOURCE_KEY']))
     count = 0.
 
 # search by source key
-    idkey = kwargs.get('sourcekey',False)
-    idkey = kwargs.get('source_key',idkey)
-    idkey = kwargs.get('source',idkey)
-    idkey = kwargs.get('idkey',idkey)
-    idkey = kwargs.get('id_key',idkey)
-    idkey = kwargs.get('id',idkey)
+    idkey = False
+    for k in ['source_key','source','idkey','id_key','id']: idkey = kwargs.get(k,idkey)
     if idkey != False:
-        if not isinstance(idkey,list):
-            idkey = [idkey]
-        if isinstance(idkey[0],str):
-            idkey = [int(i) for i in idkey]
-        for s in idkey:
-            source_db['SELECT'][source_db['SOURCE_KEY'] == s] += 1
+        if not isinstance(idkey,list): idkey = [idkey]
+        if isinstance(idkey[0],str): idkey = [int(i) for i in idkey]
+        for s in idkey: source_db['SELECT'][source_db['SOURCE_KEY'] == s] += 1
         count+=1.
 
 # search by name
@@ -4473,7 +4474,10 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', *args, **kwargs):
 # exclude by shortname
     sname = kwargs.get('exclude_source',False)
     sname = kwargs.get('exclude_shortname',sname)
+    sname = kwargs.get('reject_shortname',sname)
     if sname != False and len(sname) > 0:
+        if 'SHORTNAME' not in source_db.keys():
+            source_db['SHORTNAME'] = [designationToShortName(x) for x in source_db['DESIGNATION']]
         if isinstance(sname,str):
             sname = [sname]
         for sn in sname:
@@ -7041,6 +7045,7 @@ def measureIndexSet(sp,ref='burgasser',index_info={},info=False,verbose=False,in
         info = kwargs.get(k,info)
 
 # just return information on available sets
+# NOTE THAT THIS HAS BEEN MOVED TO EMPIRICAL INFO FUNCTION
     if info==True:
         tmp = checkDict(ref,INDEX_SETS)
         if tmp==False: 

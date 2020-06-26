@@ -1733,7 +1733,8 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
 def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=True,plotBest=True,
     plotMean=True,plotCorner=True,saveParameters=True,plotParameters=None,writeReport=True,vbary=0.,
     file='tmp',atm=None,model=None,model2=None,chiweights=False,binary=False,duplicate=False,
-    plotColors=['k','magenta','r','b','grey','grey'],plotLines=['-','-','-','-','--','--'],verbose=True,**kwargs):
+    plotColors=['k','magenta','r','b','grey','grey'],plotLines=['-','-','-','-','--','--'],
+    figsize_compare=[15,5],verbose=True,corner_smooth=1.,**kwargs):
     '''
     :Purpose:
 
@@ -1859,9 +1860,9 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
             pcl.pop(1)
             pln = copy.deepcopy(plotLines)
             pln.pop(1)
-            splot.plotSpectrum(data,mdl,diff,ns,ns2,colors=pcl,linestyles=pln,legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_bestModel.pdf')
+            splot.plotSpectrum(data,mdl,diff,ns,ns2,colors=pcl,linestyles=pln,legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=figsize_compare,yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_bestModel.pdf')
         else:
-            splot.plotSpectrum(data,mdl,mdlnt,diff,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_bestModel.pdf')
+            splot.plotSpectrum(data,mdl,mdlnt,diff,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=figsize_compare,yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_bestModel.pdf')
         
 # mean parameters
     mean_parameters = {}
@@ -1885,9 +1886,9 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
         mdlnt.scale(scale)
         diff = data-mdl
         if atm == None:
-            splot.plotSpectrum(data,mdl,diff,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_meanModel.pdf')
+            splot.plotSpectrum(data,mdl,diff,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=figsize_compare,yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_meanModel.pdf')
         else:
-            splot.plotSpectrum(data,mdl,mdlnt,diff,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=[15,5],yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_meanModel.pdf')
+            splot.plotSpectrum(data,mdl,mdlnt,diff,ns,ns2,colors=plotColors,linestyles=plotLines,legend=['Data','Model x Telluric','Model',r'Difference $\chi^2$='+'{:.0f}'.format(chi0),'Noise'],figsize=figsize_compare,yrange=[numpy.nanmin([-1.2*numpy.nanmax(ns2.flux.value),-3.*numpy.nanstd(diff.flux.value)]),2.*numpy.nanmedian(mdl.flux.value)],file=file+'_meanModel.pdf')
 
 #    print(plotParameters,toplot.keys(),best_parameters.keys(),mean_parameters.keys())
 
@@ -1976,7 +1977,7 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
             if len(list(pd.columns)) > 0:
                 fig = corner.corner(pd, quantiles=[0.16, 0.5, 0.84], \
                     labels=list(pd.columns), show_titles=True, weights=weights, \
-                    title_kwargs={"fontsize": 12})
+                    title_kwargs={"fontsize": 12},smooth=corner_smooth)
                 plt.savefig(file+'_corner.pdf')
 
     return        

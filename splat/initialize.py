@@ -61,7 +61,7 @@ DOCS_INDEX_HTML = '/docs/_build/html/index.html'
 WEB_HTML_BASE = '/docs/_templates/'
 HOME_FOLDER = os.path.expanduser('~')
 FILTER_FOLDER = '/resources/Filters/'
-SPECTRAL_MODEL_FOLDER = '/resources/Models/'
+SPECTRAL_MODEL_FOLDER = '/resources/SpectralModels/'
 EVOLUTIONARY_MODEL_FOLDER = '/resources/EvolutionaryModels/'
 TELLURIC_MODEL_FOLDER = '/resources/Telluric/'
 CITATION_RESOURCES_FOLDER = '/resources/Citations/'
@@ -134,7 +134,7 @@ DB_SOURCES_DEFAULT_PARAMETERS = {
 }
 DB_SOURCES_INPUT_FILE_KEY = 'NAME'
 
-PUBLIC_DATA_FOLDER = SPLAT_PATH+'/resources/Data/Public/'
+PUBLIC_DATA_FOLDER = SPLAT_PATH+'/resources/Spectra/Public/'
 
 
 # Library constants

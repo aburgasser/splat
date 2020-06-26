@@ -664,7 +664,7 @@ def effectiveVolume(coordinate,dmax,dmin=0.,model='juric',area=1.*u.deg**2,cente
         val = []
         for dm in dmx:
             dx = numpy.linspace(dmn,dm,nsamp)
-            val.append(float(integrate.trapz(rinterp(dx)*(dx**2),x=dx)/integrate.trapz(dx**2,x=dx)))
+            val.append(float(integrate.trapz(rinterp(dx)*(dx**2),x=dx)))
         return numpy.array(val*(unit**3))*ar
 
 
@@ -1161,6 +1161,9 @@ def simulateMasses(num,mass_range=[0.01,0.1],minmass=0.01,maxmass=0.1,distributi
 		>>> masses = spsim.simulateMasses(10000,distribution='power-law',parameters={'alpha': 0.5},mass_range=[0.01,0.08])
 		>>> plt.hist(masses)
 		[histogram of masses in range 0.01-0.08 solar masses]	
+
+    ISSUES
+        parameters is not being used properly for powerlaw
 	'''
 
 # initial parameters
@@ -1283,7 +1286,7 @@ def simulateMasses(num,mass_range=[0.01,0.1],minmass=0.01,maxmass=0.1,distributi
 			if 'halo' in distribution.lower() or 'spheroid' in distribution.lower():
 				yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.22))/0.33)**2)/xfull
 				mcut = 0.7
-			if '2005' in distribution:
+			if '05' in distribution:
 				if 'system' in distribution.lower():
 					yfull = numpy.exp(-0.5*((numpy.log10(xfull)-numpy.log10(0.2))/0.55)**2)/xfull
 					mcut = 1.0
@@ -1295,7 +1298,7 @@ def simulateMasses(num,mass_range=[0.01,0.1],minmass=0.01,maxmass=0.1,distributi
 		if numpy.max(mass_range) > mcut:
 			mbs = [numpy.max([numpy.min(mass_range),mcut]),numpy.max(mass_range)]
 			alphas = [2.3]
-			if '2005' in distribution: alphas = [2.35]
+			if '05' in distribution: alphas = [2.35]
 			if 'broken' in distribution.lower():
 				mbs = numpy.array([numpy.max([numpy.min(mass_range),mcut]),10.**0.54,10.**1.26,10.**1.80])
 				alphas = numpy.array([5.37,4.53,3.11])
