@@ -678,7 +678,7 @@ INDEX_SETS = {
         'CH4-K': {'ranges': ([2.215,2.255]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H2O-H': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
-        'H2O-K': {'ranges': ([1.975,1.995]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
+        'H2O-K': {'ranges': ([1.975,1.995]*u.micron,[2.08,2.10]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'K-J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
     }},
     'bardalez': {'altname': ['bardalez2014','bardalez14','bar14'], 'bibcode': '2014ApJ...794..143B', 'indices': {\
