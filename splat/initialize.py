@@ -293,10 +293,10 @@ FILTERS = { \
     'DES_I': {'file': 'DES_i.txt', 'description': 'DES i-band (filter + atm)', 'zeropoint': 2584.6, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'DES_Z': {'file': 'DES_z.txt', 'description': 'DES z-band (filter + atm)', 'zeropoint': 2273.09, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'DES_Y': {'file': 'DES_y.txt', 'description': 'DES y-band (filter + atm)', 'zeropoint': 2205.95, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'EUCLID_VIS': {'file': 'Euclid_VIS.txt', 'description': 'Euclid VIS-band', 'zeropoint': 0., 'method': 'ab', 'rsr': False, 'altname': ['EVIS','E_VIS','EUC_VIS']}, \
-    'EUCLID_Y': {'file': 'Euclid_Y.txt', 'description': 'Euclid Y-band', 'zeropoint': 0., 'method': 'ab', 'rsr': False, 'altname': ['EY','E_Y','EUC_Y']}, \
-    'EUCLID_J': {'file': 'Euclid_J.txt', 'description': 'Euclid H-band', 'zeropoint': 0., 'method': 'ab', 'rsr': False, 'altname': ['EJ','E_J','EUC_J']}, \
-    'EUCLID_H': {'file': 'Euclid_H.txt', 'description': 'Euclid K-band', 'zeropoint': 0., 'method': 'ab', 'rsr': False, 'altname': ['EH','E_H','EUC_H']}, \
+    'EUCLID_VIS': {'file': 'Euclid_VIS.txt', 'description': 'Euclid VIS-band', 'zeropoint': 2666.99, 'method': 'ab', 'rsr': False, 'altname': ['EVIS','E_VIS','EUC_VIS']}, \
+    'EUCLID_Y': {'file': 'Euclid_Y.txt', 'description': 'Euclid Y-band', 'zeropoint': 1898.78, 'method': 'ab', 'rsr': False, 'altname': ['EY','E_Y','EUC_Y']}, \
+    'EUCLID_J': {'file': 'Euclid_J.txt', 'description': 'Euclid H-band', 'zeropoint': 1353.80, 'method': 'ab', 'rsr': False, 'altname': ['EJ','E_J','EUC_J']}, \
+    'EUCLID_H': {'file': 'Euclid_H.txt', 'description': 'Euclid K-band', 'zeropoint': 921.81, 'method': 'ab', 'rsr': False, 'altname': ['EH','E_H','EUC_H']}, \
     'FOURSTAR_J': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR J-band', 'zeropoint': 1581.2, 'method': 'vega', 'rsr': False, 'altname': ['4star j']}, \
     'FOURSTAR_J1': {'file': 'fourstar-j1.txt', 'description': 'FOURSTAR J1-band', 'zeropoint': 1978.7, 'method': 'vega', 'rsr': False, 'altname': ['4star j1']}, \
     'FOURSTAR_J2': {'file': 'fourstar-j2.txt', 'description': 'FOURSTAR J2-band', 'zeropoint': 1774.5, 'method': 'vega', 'rsr': False, 'altname': ['4star j2']}, \
@@ -408,6 +408,7 @@ FILTERS = { \
     'SKYMAPPER_R': {'file': 'skymapper-r.txt', 'description': 'SkyMapper r-band', 'zeropoint': 3186.0, 'method': 'ab', 'rsr': False, 'altname': ['skymapper r'], 'citation': '2011PASP..123..789B'}, \
     'SKYMAPPER_I': {'file': 'skymapper-i.txt', 'description': 'SkyMapper i-band', 'zeropoint': 2495.7, 'method': 'ab', 'rsr': False, 'altname': ['skymapper i'], 'citation': '2011PASP..123..789B'}, \
     'SKYMAPPER_Z': {'file': 'skymapper-z.txt', 'description': 'SkyMapper z-band', 'zeropoint': 2227.6, 'method': 'ab', 'rsr': False, 'altname': ['skymapper z'], 'citation': '2011PASP..123..789B'}, \
+    'SPECULOOS': {'file': 'SPECULOOS_iz.txt', 'description': 'SPECULOOS iz bandpass', 'zeropoint': 2317.40, 'method': 'vega', 'rsr': False, 'altname': ['speculoos_iz','iz']}, \
     'TESS': {'file': 'TESS.txt', 'description': 'TESS bandpass', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
     'UKIDSS_Z': {'file': 'ukidss-z.txt', 'description': 'UKIDSS Z-band', 'zeropoint': 2261.4, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'UKIDSS_Y': {'file': 'ukidss-y.txt', 'description': 'UKIDSS Y-band', 'zeropoint': 2057.2, 'method': 'vega', 'rsr': False, 'altname': []}, \
@@ -647,6 +648,10 @@ EVOLUTIONARY_MODEL_PARAMETERS = {\
     'gravity': {'unit': u.dex(u.cm / u.s**2), 'default': 5.0, 'title': '$\log{g}', 'altname': ['g','logg','gravities','grav']},\
     'luminosity': {'unit': u.dex(u.solLum), 'default': -5., 'title': '$\log{L_{bol}/L_{\odot}}$', 'altname': ['l','lbol','lum','luminosities']},\
     'radius': {'unit': u.solRad, 'default': 0.1, 'title': '$R_{\odot}$', 'altname': ['r','rad','radii','radiuses']},
+    'metallicity': {'unit': u.dex(), 'default': 0., 'title': '[M/H]', 'altname': ['z','metal','abundance']},
+    'y': {'unit': u.dex(), 'default': 0., 'title': 'Y', 'altname': ['he']},
+    'l_mix': {'unit': u.cm/u.cm, 'default': 1.0, 'title': 'Mixing Length', 'altname': ['alpha']},
+    'cloud': {'unit': u.dex(), 'default': '', 'title': 'Cloud parameter', 'altname': ['cld']},
 }
 EVOLUTIONARY_MODELS = {\
     'baraffe1997': {'file': 'baraffe1997.csv','citation': 'Baraffe et al. (1997)', 'bibcode': '1997A&A...327.1054B', 'altname': ['bar97','baraffe97'], 'default': {'metallicity': 0.}},\

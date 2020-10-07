@@ -75,10 +75,10 @@ def galacticDensityJuric_old(rc,zc,rho0 = 1./(u.pc**3),report='total',center='su
 		>>> import numpy
 		>>> c = splat.properCoordinates('J05591914-1404488',distance=10.2)
 		>>> x,y,z = splat.xyz(c)
-		>>> spsim.galactic_density_juric((x**2+y**2)**0.5,z,rho0=1.*(u.pc**(-3)),report='each')
+		>>> spsim.galacticDensityJuric((x**2+y**2)**0.5,z,rho0=1.*(u.pc**(-3)),report='each')
 			(<Quantity 0.8232035246365755 1 / pc3>, <Quantity 0.10381465877236985 1 / pc3>, <Quantity 0.004517719384500654 1 / pc3>)
 		>>> z = numpy.linspace(0,10,10)
-		>>> spsim.galactic_density_juric(z*0,z,unit=u.kpc)
+		>>> spsim.galacticDensityJuric(z*0,z,unit=u.kpc)
 			array([  9.26012756e-01,   5.45786748e-02,   1.28473366e-02,
 					 5.34605961e-03,   2.82616132e-03,   1.75923983e-03,
 					 1.21099173e-03,   8.82969121e-04,   6.66649153e-04,
@@ -190,10 +190,10 @@ def galacticDensityJuric(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun',u
 		>>> import numpy
 		>>> c = splat.properCoordinates('J05591914-1404488',distance=10.2)
 		>>> x,y,z = splat.xyz(c)
-		>>> spsim.galactic_density_juric((x**2+y**2)**0.5,z,rho0=1.*(u.pc**(-3)),report='each')
+		>>> spsim.galacticDensityJuric((x**2+y**2)**0.5,z,rho0=1.*(u.pc**(-3)),report='each')
 			(<Quantity 0.8232035246365755 1 / pc3>, <Quantity 0.10381465877236985 1 / pc3>, <Quantity 0.004517719384500654 1 / pc3>)
 		>>> z = numpy.linspace(0,10,10)
-		>>> spsim.galactic_density_juric(z*0,z,unit=u.kpc)
+		>>> spsim.galacticDensityJuric(z*0,z,unit=u.kpc)
 			array([  9.26012756e-01,   5.45786748e-02,   1.28473366e-02,
 					 5.34605961e-03,   2.82616132e-03,   1.75923983e-03,
 					 1.21099173e-03,   8.82969121e-04,   6.66649153e-04,
@@ -287,7 +287,7 @@ def galacticDensityExponentialDisk(rc,zc,r0=8000*u.pc,z0=25*u.pc,r1=2600*u.pc,z1
 		>>> import numpy
 		>>> c = splat.properCoordinates('J05591914-1404488',distance=10.2)
 		>>> x,y,z = splat.xyz(c)
-		>>> spsim.galactic_density_disk((x**2+y**2)**0.5,z,rho0=1.*(u.pc**(-3)))
+		>>> spsim.galacticDensityExponentialDisk((x**2+y**2)**0.5,z,rho0=1.*(u.pc**(-3)))
 			(<Quantity 0.8232035246365755 1 / pc3>
 	''' 
 # check inputs including unit conversion
@@ -363,7 +363,7 @@ def galacticDensitySpheroid(rc,zc,r0=8000*u.pc,z0=25*u.pc,q=0.64,n=2.77,rho0 = 1
 		>>> import numpy
 		>>> c = splat.properCoordinates('J05591914-1404488',distance=10.2)
 		>>> x,y,z = splat.xyz(c)
-		>>> spsim.galactic_density_disk((x**2+y**2)**0.5,z,rho0=1.*(u.pc**(-3)))
+		>>> spsim.galacticDensitySpheroid((x**2+y**2)**0.5,z,rho0=1.*(u.pc**(-3)))
 			(<Quantity 0.8232035246365755 1 / pc3>
 	'''	
 # check inputs including unit conversion
@@ -419,7 +419,7 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
 
 		:param: model = 'juric': the galactic number density model; currently available:
 
-			* 'juric': (default) `Juric et al. (2008, ApJ, 673, 864) <http://adsabs.harvard.edu/abs/2008ApJ...673..864J>`_ called by `splat.simulate.galactic_density_juric()`_
+			* 'juric': (default) `Juric et al. (2008, ApJ, 673, 864) <http://adsabs.harvard.edu/abs/2008ApJ...673..864J>`_ called by `splat.simulate.galacticDensityJuric()`_
 			* 'disk': exponential disk model parameterized by r1 and h1
 			* 'spheroid' or 'halo': spheroid model parameterized by q and n
 
@@ -445,7 +445,7 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
 
 	.. _`modelParameters()` : api.html#splat.evolve.modelParameters
 	.. _`splat.properCoordinates()` : api.html#splat.utilities.properCoordinates
-	.. _`splat.simulate.galactic_density_juric()` : api.html#splat.simulate.galactic_density_juric
+	.. _`splat.simulate.galacticDensityJuric()` : api.html#splat.simulate.galacticDensityJuric
 
 	:TBD:
 
@@ -503,9 +503,9 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
 		elif 'halo' in population.lower(): kwargs['report'] = 'halo'
 		else: kwargs['report'] = 'total'
 	elif model.lower() == 'disk':
-		rho_function = galactic_density_disk
+		rho_function = galacticDensityExponentialDisk
 	elif model.lower() == 'spheroid' or model.lower() == 'halo':
-		rho_function = galactic_density_spheroid
+		rho_function = galacticDensitySpheroid
 	elif model.lower() == 'uniform':
 		return 1.
 	else:
@@ -514,7 +514,7 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
 
 # generate R,z vectors
 # single sight line & distance
-	d = numpy.linspace(dmn,numpy.nanmax(dmx),nsamp)
+	d = numpy.linspace(dmn,numpy.nanmax(dmx),int(nsamp))
 # replace this with built in galactic XYZ from SkyCoord
 	x,y,z = splat.xyz(c,distance=d,center=center,unit=unit)
 	r = (x**2+y**2)**0.5
@@ -527,7 +527,7 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
 		rinterp = interp1d(d,rho,bounds_error=False)
 		val = []
 		for dm in dmx:
-			dx = numpy.linspace(dmn,dm,nsamp)
+			dx = numpy.linspace(dmn,dm,int(nsamp))
 			val.append(float(integrate.trapz(rinterp(dx)*(dx**2),x=dx)/integrate.trapz(dx**2,x=dx)))
 		return numpy.array(val)
 
@@ -1135,8 +1135,8 @@ def simulateMasses(num,mass_range=[0.01,0.1],minmass=0.01,maxmass=0.1,distributi
 			* `broken-powerlaw' or `broken-power-law: a broken power-law distribution; segments are specified by the parameters `alpha` (N array of numbers) for the slopes and `ranges` (N array of 2-element arrays) for the ranges over which these slopes occur; if the `scales` parameter is also included, the power-law segments are scaled by these factors; otherwise, the segments are forced to be continuous. You can also set ``distribution`` to `kroupa`
 			* 'lognormal` or `log-normal`: log normal distribution, P(M) ~ exp(-0.5*(M-M0)\^2/sigmaM^2). You must specify the parameters `M0` and `sigmaM` or set ``distribution`` to `chabrier` (default parameters)
 			* `kroupa`: broken power-law distribution with parameters from Kroupa (2001): `http://adsabs.harvard.edu/abs/2001MNRAS.322..231K`_
-			* `chabrier`: lognormal distribution with parameters from Chabrier (2003): `http://adsabs.harvard.edu/abs/2003PASP..115..763C`_
-			* `chabrier 2005`: lognormal distribution with parameters from Chabrier (2005): `http://adsabs.harvard.edu/abs/2005ASSL..327...41C`_
+            * `chabrier2003`: lognormal distribution of field with parameters from Chabrier (2003): `http://adsabs.harvard.edu/abs/2003PASP..115..763C`_
+			* `chabrier2005`: lognormal distribution with parameters from Chabrier (2005): `http://adsabs.harvard.edu/abs/2005ASSL..327...41C`_
 			* `pena-ramirez`: broken power-law distribution with parameters from Pena-Ramirez (2012, A&A, 754, 30): `http://adsabs.harvard.edu/abs/2015A%26A...574A.118P`_
 
 			`distribution` can also be set to a 2 x N array specifying the mass distribution; the first vector should be the masses for the distribution function and the second vector the distribution function itself
@@ -1168,7 +1168,7 @@ def simulateMasses(num,mass_range=[0.01,0.1],minmass=0.01,maxmass=0.1,distributi
 
 # initial parameters
 #	distribution = kwargs.get('distribution','powerlaw')
-	allowed_distributions = ['uniform','flat','powerlaw','power-law','broken-powerlaw','broken-power-law','lognormal','log-normal','kroupa','chabrier','salpeter']
+	allowed_distributions = ['uniform','flat','powerlaw','power-law','broken-powerlaw','broken-power-law','lognormal','log-normal','kroupa','chabrier2003','chabrier2003-halo','chabrier2005','salpeter']
 	for f in ['ref','reference','set','method','relation','model']:
 		if f in list(kwargs.keys()): distribution = kwargs.get(f,distribution)
 
@@ -1449,7 +1449,7 @@ def simulateDistances(num,model='uniform',max_distance=[10.*u.pc],min_distance=[
 			* 'uniform': uniform distribution (default)
 			* 'disk': eccentric disk distribution; must include r0, z0, r1 and h1 in kwargs
 			* 'spheroid': spheroid (halo) disk distribution; must include r0, z0, q and n in kwargs
-			* 'juric': from `Juric et al. (2008, ApJ, 673, 864) <http://adsabs.harvard.edu/abs/2008ApJ...673..864J>`_ called by `splat.simulate.galactic_density_juric()`_
+			* 'juric': from `Juric et al. (2008, ApJ, 673, 864) <http://adsabs.harvard.edu/abs/2008ApJ...673..864J>`_ called by `splat.simulate.galacticDensityJuric()`_
 
 		:param: center = 'sun': assumed center point, by default 'sun' but could also be 'galaxy'
 		:param: nsamp = number of samples for sampling line of sight
@@ -1472,7 +1472,7 @@ def simulateDistances(num,model='uniform',max_distance=[10.*u.pc],min_distance=[
 			[cumulative histogram of distances compared uniform density distribution]	
 
 .. _`splat.properCoordinates()` : api.html#splat.utilities.properCoordinates
-.. _`splat.simulate.galactic_density_juric()` : api.html#splat.simulate.galactic_density_juric
+.. _`splat.simulate.galacticDensityJuric()` : api.html#splat.simulate.galacticDensityJuric
 
 	'''
 # check inputs
@@ -1573,12 +1573,12 @@ def simulateDistances(num,model='uniform',max_distance=[10.*u.pc],min_distance=[
 
 # galactic models - should take r,z as inputs and **kwargs
 	elif model.lower()=='juric':
-		rho_function = galactic_density_juric
+		rho_function = galacticDensityJuric
 	elif model.lower()=='disk':
-		rho_function = galactic_density_disk
+		rho_function = galacticDensityExponentialDisk
 	elif model.lower()=='spheroid' or model.lower()=='halo':
-		rho_function = galactic_density_spheroid
-#			rhod,rhotd,rhoh = galactic_density_juric(r,z,report='each')
+		rho_function = galacticDensitySpheroid
+#			rhod,rhotd,rhoh = galacticDensityJuric(r,z,report='each')
 	else:
 		raise ValueError('\nDo not recognize star count model {}; try {}'.format(model,allowed_models))
 

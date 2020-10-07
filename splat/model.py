@@ -2837,6 +2837,9 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
     else: 
         return numpy.array(trans_sampled)
 
+def getTelluric(*args,**kwargs):
+    return loadTelluric(*args,**kwargs)
+
 
 
 def blackbody(temperature,**kwargs):
