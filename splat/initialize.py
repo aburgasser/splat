@@ -14,7 +14,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2020.04.23'
+VERSION = '2020.10.07'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -687,17 +687,19 @@ INDEX_SETS = {
         'K-J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
     }},
     'bardalez': {'altname': ['bardalez2014','bardalez14','bar14'], 'bibcode': '2014ApJ...794..143B', 'indices': {\
-        'CH4-H': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
-        'CH4-K': {'ranges': ([2.215,2.255]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
+        'CH4-J': {'ranges': ([1.315,1.335]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H2O-H': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
+        'CH4-H': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H2O-K': {'ranges': ([1.975,1.995]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
+        'CH4-K': {'ranges': ([2.215,2.255]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
+        'K/J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
+        'H-dip': {'ranges': ([1.61,1.64]*u.micron,[1.56,1.59]*u.micron,[1.66,1.69]*u.micron), 'method': 'inverse_line', 'sample': 'integrate'},\
+        'K-slope': {'ranges': ([2.06,2.10]*u.micron,[2.10,2.14]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'J-slope': {'ranges': ([1.27,1.30]*u.micron,[1.30,1.33]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'J-curve': {'ranges': ([1.04,1.07]*u.micron,[1.26,1.29]*u.micron,[1.14,1.17]*u.micron), 'method': 'line', 'sample': 'integrate'},\
         'H-bump': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
-        'H-dip': {'ranges': ([1.61,1.64]*u.micron,[1.56,1.59]*u.micron,[1.66,1.69]*u.micron), 'method': 'inverse_line', 'sample': 'integrate'},\
-        'K-slope': {'ranges': ([2.06,2.10]*u.micron,[2.10,2.14]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
-        'K-J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
+        'H2O-Y': {'ranges': ([1.04,1.07]*u.micron,[1.14,1.17]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
     }},
     'geballe': {'altname': ['geballe2002','geballe02','geb02'], 'bibcode': '2002ApJ...564..466G', 'indices': {\
         'Color-d2': {'ranges': ([0.96,0.98]*u.micron,[0.735,0.755]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
