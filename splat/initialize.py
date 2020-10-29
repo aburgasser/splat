@@ -747,7 +747,7 @@ INDEX_SETS = {
     'mclean2003': {'altname': ['mclean','mclean03','mcl03'], 'bibcode': '2003ApJ...596..561M', 'indices': {\
         'H2OD': {'ranges': ([1.951,1.977]*u.micron,[2.062,2.088]*u.micron), 'method': 'ratio', 'sample': 'average'},\
     }},
-    'reid2001': {'altname': ['reid','reid01','rei01'], 'bibcode': '2001ApJ...552L.147T', 'indices': {\
+    'reid2001': {'altname': ['reid','reid01','rei01'], 'bibcode': '2001AJ....121.1710R', 'indices': {\
         'H2O-A': {'ranges': ([1.33,1.35]*u.micron,[1.28,1.30]*u.micron), 'method': 'ratio', 'sample': 'average'},\
         'H2O-B': {'ranges': ([1.47,1.49]*u.micron,[1.59,1.61]*u.micron), 'method': 'ratio', 'sample': 'average'},\
     }},
@@ -776,12 +776,13 @@ INDEX_SETS = {
 
 
 # classification indices
+# need to add allers
 INDEX_CLASSIFICATION_RELATIONS = {
-    'reid2001': {'altname': ['reid','reid01','rei01'], 'bibcode': '2001ApJ...552L.147T', 'method': 'polynomial', 'sptoffset': 20., 'sets': ['reid2001'], 'indices' = { \
+    'reid2001': {'altname': ['reid','reid01','rei01'], 'bibcode': '2001AJ....121.1710R', 'method': 'polynomial', 'sptoffset': 20., 'sets': ['reid2001'], 'indices': { \
             'H2O-A': {'fitunc': 1.18, 'range': [18,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-32.1, 23.4]}, \
             'H2O-B': {'fitunc': 1.02, 'range': [18,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-24.9, 20.7]}}
     },
-    'testi2001': {'altname': ['testi','testi01','tes01'], 'bibcode': '2001ApJ...552L.147T', 'method': 'polynomial', 'sptoffset': 10., 'sets': ['testi2001'], 'indices' = { \
+    'testi2001': {'altname': ['testi','testi01','tes01'], 'bibcode': '2001ApJ...552L.147T', 'method': 'polynomial', 'sptoffset': 10., 'sets': ['testi2001'], 'indices': { \
             'sHJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-1.87, 1.67]}, \
             'sKJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-1.20, 2.01]}, \
             'sH2O_J': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [1.54, 0.98]}, \
@@ -789,14 +790,14 @@ INDEX_CLASSIFICATION_RELATIONS = {
             'sH2O_H2': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [2.11, 0.29]}, \
             'sH2O_K': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1.,  'coeff': [2.36, 0.60]}}
     },
-    'burgasser2006': {'altname': ['burgasser','burgasser06','bur06'], 'bibcode': '2006ApJ...637.1067B', 'method': 'polynomial', 'sptoffset': 20., 'sets': ['burgasser2006'], 'indices' = { \
+    'burgasser2006': {'altname': ['burgasser','burgasser06','bur06'], 'bibcode': '2006ApJ...637.1067B', 'method': 'polynomial', 'sptoffset': 20., 'sets': ['burgasser2006'], 'indices': { \
             'H2O-J': {'fitunc': 0.8, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
             'H2O-H': {'fitunc': 1.0, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [9.087e-1, -3.221e1, 2.527e1, -1.978e1, 2.098e1]}, \
             'CH4-J': {'fitunc': 0.7, 'range': [30,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [1.491e2, -3.381e2, 2.424e2, -8.450e1, 2.708e1]}, \
             'CH4-H': {'fitunc': 0.3, 'range': [31,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
             'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
     },
-    'geballe2002': {'altname': ['geballe','geballe02','geb02'], 'bibcode': '2002ApJ...564..466G', 'method': 'ranges', 'sptoffset': 20., 'sets': ['geballe2002','martin1999'], 'indices' = { \
+    'geballe2002': {'altname': ['geballe','geballe02','geb02'], 'bibcode': '2002ApJ...564..466G', 'method': 'ranges', 'sptoffset': 20., 'sets': ['geballe2002','martin1999'], 'indices': { \
             'PC3': [[2.4,2.6,20.],[2.6,2.86,21.],[2.85,3.25,22.],[3.25,4.25,23.],[4.25,6,24.]],\
             'Color-d2': [[4.5,5.5,20.],[5.5,6.5,21.],[6.5,7.5,22.],[7.5,10.,23.],[10,17,24.],[17.,23.,25.],[23.,25.,26.]],\
             'H2O-1.2': [[1.5,1.7,30.],[1.7,1.9,31.],[1.9,2.15,32.],[2.15,2.5,33.],[2.5,3.0,34.],[3.0,4.5,35.],[4.5,6.5,36.],[6.5,10.,37.],[10.,15.,38.]],\
