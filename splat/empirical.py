@@ -299,18 +299,28 @@ def typeToColor(spt,color,reference='skrzypek2015',uncertainty=0.,nsamples=100,v
 # conduct calculation for interpolating
 
     if splat.SPT_COLORS_RELATIONS[ref]['method'] == 'interpolate':
-        f = interp1d(numpy.linspace(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][0],splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][1]+1,num=len(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['values'])),splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['values'],bounds_error=False,fill_value=0.)
+#        f = interp1d(numpy.linspace(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][0],splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][1]+1,num=len(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['values'])),splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['values'],bounds_error=False,fill_value=0.)
+        f = interp1d(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['spt'],splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['values'],bounds_error=False,fill_value=numpy.nan)
         output = f(sptn)
-        errors = [splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['fitunc'] for x in sptn]
+# *******************
+# THIS NEEDS TO BE UPDATED SO THAT EMPIRICAL UNCERTAINTIES MAPPED TO SPECTRAL TYPES ARE INLCUDED
+# *******************
+        if 'error' not in list(splat.SPT_COLORS_RELATIONS[ref]['colors'][col].keys()): 
+            errors = numpy.zeros(len(output))+splat.SPT_COLORS_RELATIONS[ref]['scatter']
+            errors[numpy.isfinite(output)==False] = numpy.nan
+        else: 
+            g = interp1d(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['spt'],splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['values'],bounds_error=False,fill_value=numpy.nan)
+            errors = g(sptn)
+
         if uncn[0] > 0.:
-            errors = []
             for i,s in enumerate(sptn):
                 vals = f(numpy.random.normal(s, uncn[i], nsamples))
                 try:
                     std = numpy.nanstd(vals)
-                    errors.append((std**2+splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['fitunc']**2)**0.5)
+                    errors[i] = (errors[i]**2+std**2)**0.5
                 except:
                     pass
+                    
     elif splat.SPT_COLORS_RELATIONS[ref]['method'] == 'polynomial':
         s = [x-splat.SPT_COLORS_RELATIONS[ref]['sptoffset'] for x in sptn]
         output = numpy.polyval(splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['coeff'],s)
@@ -324,19 +334,21 @@ def typeToColor(spt,color,reference='skrzypek2015',uncertainty=0.,nsamples=100,v
                     errors.append((std**2+splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['fitunc']**2)**0.5)
                 except:
                     pass
+        output[sptn < splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][0]] = numpy.nan
+        output[sptn > splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][1]] = numpy.nan
+        errors = numpy.array(errors)
+        errors[sptn < splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][0]] = numpy.nan
+        errors[sptn > splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][1]] = numpy.nan
+
     else:
         print('\nInterpolation method {} not allowed for typeToColor()\n'.format(color,ref,list(splat.SPT_COLORS_RELATIONS[ref]['method'])))
         return numpy.nan, numpy.nan
 
 # cover out of range values
-    output[sptn < splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][0]] = numpy.nan
-    output[sptn > splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][1]] = numpy.nan
-    errors = numpy.array(errors)
-    errors[sptn < splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][0]] = numpy.nan
-    errors[sptn > splat.SPT_COLORS_RELATIONS[ref]['colors'][col]['range'][1]] = numpy.nan
-    rej = [int(numpy.isnan(x)) for x in output]
-    if verbose == True and numpy.nansum(rej) > 0:
-        print('Rejected {} spectral type(s) for being outside relation range'.format(numpy.nansum(rej)))
+    if verbose == True:
+        rej = [int(numpy.isnan(x)) for x in output]
+        if numpy.nansum(rej) > 0:
+            print('Rejected {} spectral type(s) for being outside relation range'.format(numpy.nansum(rej)))
 
     if len(sptn) == 1:
         return output[0],errors[0]
@@ -1463,6 +1475,7 @@ def info_indices(*args):
         sets = list(INDEX_SETS.keys())
         print('\nIndex sets currently installed in SPLAT:\n')
     flag=0
+
     for ref in sets:
         refch = checkDict(ref,INDEX_SETS)
         if refch!=False: 
@@ -1553,4 +1566,17 @@ def info_indices(*args):
     return
 
 
+def info_classifyByIndex(*args):
+    if len(args)>0:
+        if isinstance(args[0],list) == True: sets = args[0]
+        else: sets = list(args)
+        print('\nChecking index sets {}:\n'.format(sets))
+    else:
+        sets = list(INDEX_SETS.keys())
+        print('\nIndex sets currently installed in SPLAT:\n')
+    flag=0
 
+    for ref in sets:
+        refch = checkDict(ref,INDEX_SETS)
+        if refch!=False: 
+            flag = 1

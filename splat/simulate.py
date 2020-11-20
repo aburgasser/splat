@@ -618,7 +618,7 @@ def effectiveVolume(coordinate,dmax,dmin=0.,model='juric',area=1.*u.deg**2,cente
         try: dmx = numpy.array([float(x) for x in dmx])
         except: raise ValueError('{} is not a proper distance value'.format(dmax))
     if numpy.nanmin(dmx) == 0.: raise ValueError('Outer distance limit(s) must be greater than 0; you entered {}'.format(dmax))
-    nsamp = numpy.nanmax([nsamp,3.*len(dmx)])
+    nsamp = int(numpy.nanmax([nsamp,3.*len(dmx)]))
 
 # single minimum distance (for now)
     dmn = copy.deepcopy(dmin)
