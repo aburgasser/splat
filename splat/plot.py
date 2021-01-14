@@ -548,10 +548,10 @@ def plotSpectrum(*args, **kwargs):
         yrng = kwargs.get('yrange',numpy.array([-0.02,1.2])*numpy.nanmax(ymax)+numpy.nanmax(zeropoint))
         if isUnit(yrng[0]): yrng = [x.value for x in yrng]
         bound.extend(yrng)
-        linestyle = kwargs.get('linestyle',['steps-mid' for x in numpy.arange(len(sp))])
+        linestyle = kwargs.get('linestyle',['-' for x in numpy.arange(len(sp))])
         linestyle = kwargs.get('linestyles',linestyle)
         if (len(linestyle) < len(sp)):
-            linestyle.extend(['steps' for x in numpy.arange(len(sp)-len(linestyle))])
+            linestyle.extend(['-' for x in numpy.arange(len(sp)-len(linestyle))])
 
 # colors
 # by default all black lines
