@@ -664,6 +664,45 @@ EVOLUTIONARY_MODELS = {\
     'marley2019': {'file': 'marley2019.csv','citation': 'Marley et al. (2019)', 'bibcode': 'marley2019', 'url': 'https://zenodo.org/record/1405206#.W4bNhmQzrq0', 'altname': ['marley','sonora'], 'default': {}},\
 }
 
+EW_SETS = {
+    'rojas2012': {'altname': ['rojas','rojas12','roj12'], 'reference': 'Rojas et al. (2012)','bibcode': '2012ApJ...748...93R', 'continuum_fit_order': 1, 'features': {\
+        'nai': {'linecenter': 2.207*u.micron,'width': 0.005*u.micron,'continuum': [2.1965,2.201,2.2125,2.2175]*u.micron, 'recenter': False},\
+        'cai': {'linecenter': 2.2635*u.micron,'width': 0.0055*u.micron,'continuum': [2.251,2.258,2.2705,2.2760]*u.micron, 'recenter': False},\
+    }},
+    'terrien2012': {'altname': ['terrien','terrien12','ter12'], 'reference': 'Terrien et al. (2012)','bibcode': '2012ApJ...747L..38T', 'continuum_fit_order': 1, 'features': {\
+        'ki-h': {'linecenter': 1.5171*u.micron,'width': 0.0012*u.micron,'continuum': [1.4644,1.4710,1.5206,1.5368]*u.micron, 'recenter': False},\
+        'cai-h1': {'linecenter': 1.6159*u.micron,'width': 0.00125*u.micron,'continuum': [1.593,1.6056,1.6248,1.6421]*u.micron, 'recenter': False},\
+        'cai-h2': {'linecenter': 1.6203*u.micron,'width': 0.00165*u.micron,'continuum': [1.593,1.6056,1.6248,1.6421]*u.micron, 'recenter': False},\
+        'nai-k': {'linecenter': 2.2074*u.micron,'width': 0.00355*u.micron,'continuum': [2.1835,2.1875,2.2335,2.2529]*u.micron, 'recenter': False},\
+        'cai-k': {'linecenter': 2.2638*u.micron,'width': 0.0037*u.micron,'continuum': [2.2335,2.2529,2.2717,2.2781]*u.micron, 'recenter': False},\
+    }},
+    'mann2013': {'altname': ['mann','mann13','man13'], 'reference': 'Mann et al. (2013)', 'bibcode': '2013AJ....145...52M', 'continuum_fit_order': 1, 'features': {\
+        'f09': {'linecenter': 1.1396*u.micron,'width': 0.0013*u.micron, 'recenter': False,'continuum': [1.126,1.13,1.153,1.158]*u.micron},\
+        'f10': {'linecenter': 1.2698*u.micron,'width': 0.0049*u.micron,'recenter': False,'continuum': [1.255,1.2634,1.27,1.273]*u.micron},\
+        'f11': {'linecenter': 1.2908*u.micron,'width': 0.0010*u.micron, 'recenter': False,'continuum': [1.27,1.273,1.295,1.297]*u.micron},\
+        'f12': {'linecenter': 1.3148*u.micron,'width': 0.0025*u.micron, 'recenter': False,'continuum': [1.304,1.307,1.3214,1.327]*u.micron},\
+        'f13': {'linecenter': 1.3344*u.micron,'width': 0.00115*u.micron, 'recenter': False,'continuum': [1.3214,1.327,1.409,1.415]*u.micron},\
+        'f14': {'linecenter': 1.4766*u.micron,'width': 0.00205*u.micron, 'recenter': False,'continuum': [1.4644,1.471,1.4921,1.4965]*u.micron},\
+        'f15': {'linecenter': 1.4836*u.micron,'width': 0.00115*u.micron, 'recenter': False,'continuum': [1.4644,1.471,1.4921,1.4965]*u.micron},\
+        'f16': {'linecenter': 1.5172*u.micron,'width': 0.00165*u.micron, 'recenter': False,'continuum': [1.506,1.509,1.519,1.522]*u.micron},\
+        'f17': {'linecenter': 1.6158*u.micron,'width': 0.00125*u.micron, 'recenter': False,'continuum': [1.592,1.596,1.623,1.631]*u.micron},\
+        'f18': {'linecenter': 1.7261*u.micron,'width': 0.0016*u.micron, 'recenter': False,'continuum': [1.6935,1.698,1.753,1.757]*u.micron},\
+        'f19': {'linecenter': 2.2079*u.micron,'width': 0.0034*u.micron, 'recenter': False,'continuum': [2.194,2.1985,2.213,2.219]*u.micron},\
+        'f20': {'linecenter': 2.3242*u.micron,'width': 0.0019*u.micron, 'recenter': False,'continuum': [2.305,2.3105,2.36,2.364]*u.micron},\
+        'f21': {'linecenter': 2.3342*u.micron,'width': 0.00175*u.micron, 'recenter': False,'continuum': [2.305,2.3105,2.36,2.364]*u.micron},\
+        'f22': {'linecenter': 2.3844*u.micron,'width': 0.00175*u.micron, 'recenter': False,'continuum': [2.371,2.376,2.395,2.405]*u.micron},\
+    }},
+    'mann2014': {'altname': ['mann14','man14'], 'reference': 'Mann et al. (2014)','bibcode': '2014AJ....147..160M', 'continuum_fit_order': 1, 'features': {\
+        'nai': {'linecenter': 2.2079*u.micron,'width': 0.0034*u.micron,'continuum': [2.194,2.1985,2.213,2.219]*u.micron, 'recenter': False},\
+        'cai': {'linecenter': 2.264*u.micron,'width': 0.0030*u.micron,'continuum': [2.245,2.252,2.2717,2.2781]*u.micron, 'recenter': False},\
+    }},
+}
+
+# all Mann continuua:
+            # 'continuum': [[0.979,0.989],[1.061,1.065],[1.126,1.13],[1.153,1.158],[1.189,1.193],[1.214,1.218],[1.225,1.230],[1.255,1.2634],[1.27,1.273],[1.295,1.297],[1.304,1.307],[1.3214,1.327],[1.409,1.415]]*u.micron},\
+            # 'continuum': [[1.444,1.448],[1.4644,1.471],[1.4921,1.4965],[1.506,1.509],[1.519,1.522],[1.592,1.596],[1.623,1.631],[1.6935,1.698],[1.753,1.757]]*u.micron},\
+            # 'continuum': [[1.886,1.89],[1.935,1.94],[1.961,1.97],[2.05,2.054],[2.08,2.087],[2.133,2.1351],[2.153,2.159],[2.167,2.172],[2.194,2.1985],[2.213,2.219],[2.245,2.252],[2.2717,2.2781],[2.285,2.29],[2.305,2.3105],[2.36,2.364],[2.371,2.376],[2.395,2.405]]*u.micron},\
+
 
 # index definitions
 # NOTE: SOME OF THESE APPEAR TO BE INCOMPLETE, AND ROJAS IS ODDLY DEFINED
@@ -702,6 +741,10 @@ INDEX_SETS = {
         'H-bump': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H2O-Y': {'ranges': ([1.04,1.07]*u.micron,[1.14,1.17]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
     }},
+    'covey2010': {'altname': ['covey','covey10','cov10'], 'bibcode': '2010ApJ...722..971C', 'indices': {\
+        'H2O-H': {'ranges': ([1.595,1.615]*u.micron,[1.68,1.70]*u.micron,[1.76,1.78]*u.micron), 'method': 'doubleratio', 'sample': 'average'},\
+        'H2O-K': {'ranges': ([2.18,2.2]*u.micron,[2.27,2.29]*u.micron,[2.36,2.38]*u.micron), 'method': 'doubleratio', 'sample': 'average'},\
+    }},
     'geballe2002': {'altname': ['geballe','geballe02','geb02'], 'bibcode': '2002ApJ...564..466G', 'indices': {\
         'Color-d2': {'ranges': ([0.96,0.98]*u.micron,[0.735,0.755]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'Cont-1.0': {'ranges': ([1.04,1.05]*u.micron,[0.875,0.885]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
@@ -731,6 +774,9 @@ INDEX_SETS = {
         'Color-c': {'ranges': ([.9800,.9850]*u.micron,[.8100,.8150]*u.micron), 'method': 'ratio', 'sample': 'sum'},\
         'Color-d': {'ranges': ([.9675,.9850]*u.micron,[.7350,.7550]*u.micron), 'method': 'ratio', 'sample': 'sum'},\
     }},
+    'mann2013': {'altname': ['mann','mann13','man13'], 'bibcode': '2013AJ....145...52M', 'indices': {\
+        'H2O-J': {'ranges': ([1.210,1.230]*u.micron,[1.313,1.333]*u.micron,[1.311,1.351]*u.micron), 'method': 'doubleratio', 'sample': 'median'},\
+    }},
     'martin1999': {'altname': ['martin','martin99','mar99'], 'bibcode': '1999AJ....118.2466M', 'indices': {\
         'PC3': {'ranges': ([.823,.827]*u.micron,[.754,.758]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'PC6': {'ranges': ([.909,.913]*u.micron,[.650,.654]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
@@ -752,8 +798,7 @@ INDEX_SETS = {
         'H2O-B': {'ranges': ([1.47,1.49]*u.micron,[1.59,1.61]*u.micron), 'method': 'ratio', 'sample': 'average'},\
     }},
     'rojas2012': {'altname': ['rojas','rojas12','roj12'], 'bibcode': '2012ApJ...748...93R', 'indices': {\
-        'H2O-K2num': {'ranges': ([2.070,2.090]*u.micron,[2.235,2.255]*u.micron), 'method': 'ratio', 'sample': 'average'},\
-        'H2O-K2den': {'ranges': ([2.235,2.255]*u.micron,[2.360,2.380]*u.micron), 'method': 'ratio', 'sample': 'average'},\
+        'H2O-K2': {'ranges': ([2.070,2.090]*u.micron,[2.235,2.255]*u.micron,[2.360,2.380]*u.micron), 'method': 'doubleratio', 'sample': 'median'},\
     }},
     'slesnick2004': {'altname': ['slesnick','slesnick04','sle04'], 'bibcode': '2004ApJ...610.1045S', 'indices': {\
         'H2O-1': {'ranges': ([1.335,1.345]*u.micron,[1.295,1.305]*u.micron), 'method': 'ratio', 'sample': 'average'},\

@@ -56,33 +56,33 @@ XMatch.TIMEOUT = 180
 ###########   DATABASE QUERY AND ACCESS   ###########
 #####################################################
 
-def prepDB(db_init,force=False):
+def prepDB(db_init,raCol='RA',decCol='DEC',desigCol='DESIGNATION',force=False):
     '''
     Prep a pandas database for DESIGNATION join
     Populates RA, DEC, DESIGNATION and SHORTNAME columns if not present
     Requires RA, DEC or DESIGNATION to be present
     '''
     db = copy.deepcopy(db_init)
-    if 'RA' not in list(db.columns) or 'DEC' not in list(db.columns): 
+    if raCol not in list(db.columns) or decCol not in list(db.columns): 
         if 'DESIGNATION' not in list(db.columns):
-            raise ValueError('Database must have columns RA and DEC, or DESIGNATION')
+            raise ValueError('Database must have columns {} and {}, or {}'.format(raCol,decCol,desigCol))
         else:
-            db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db['DESIGNATION']]
-            if not isinstance(db['RA'].iloc[0],float):
-                db['RA'] = [c.ra.degree for c in db['COORDINATES']]
-                db['DEC'] = [c.dec.degree for c in db['COORDINATES']]
-    if 'DESIGNATION' not in list(db.columns):
-        db['DESIGNATION'] = [splat.coordinateToDesignation([db['RA'].iloc[i],db['DEC'].iloc[i]]) for i in range(len(db))]
+            db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
+            if not isinstance(db[raCol].iloc[0],float):
+                db[raCol] = [c.ra.degree for c in db['COORDINATES']]
+                db[decCol] = [c.dec.degree for c in db['COORDINATES']]
+    if desigCol not in list(db.columns):
+        db[desigCol] = [splat.coordinateToDesignation([db[raCol].iloc[i],db[decCol].iloc[i]]) for i in range(len(db))]
     if 'COORDINATES' not in list(db.columns):
-        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db['DESIGNATION']]
+        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
 #    if 'SHORTNAME' not in list(db.columns):
 #        db['SHORTNAME'] = [splat.designationToShortName(d) for d in db['DESIGNATION']]
 
 # force COORDINATES, RA, DEC if desired
     if force == True:
-        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db['DESIGNATION']]
-        db['RA'] = [c.ra.degree for c in db['COORDINATES']]
-        db['DEC'] = [c.dec.degree for c in db['COORDINATES']]
+        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
+        db[raCol] = [c.ra.degree for c in db['COORDINATES']]
+        db[decCol] = [c.dec.degree for c in db['COORDINATES']]
 #        db['SHORTNAME'] = [splat.designationToShortName(d) for d in db['DESIGNATION']]        
     return db   
 
@@ -944,16 +944,17 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
     callloop = 5
 
 # check db has DESIGNATION and fill in columns
-    if desigCol not in list(db.columns):
-        db = prepDB(db)
+#    print(db.columns,raCol in list(db.columns),decCol in list(db.columns))
+    if desigCol not in list(db.columns) or raCol not in list(db.columns) or decCol not in list(db.columns):
+        db = prepDB(db,raCol=raCol,decCol=decCol,desigCol=desigCol)
     if desigCol not in list(db.columns):
         raise ValueError('\nInput database must have at least the designation column {}; this one has {}'.format(desigCol,db.columns))
 
 # add RA and DEC if needed
-    if raCol not in list(db.columns) or decCol not in list(db.columns):
-        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
-        db[raCol] = [c.ra.degree for c in db['COORDINATES']]
-        db[decCol] = [c.dec.degree for c in db['COORDINATES']]
+    # if raCol not in list(db.columns) or decCol not in list(db.columns):
+    #     db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
+    #     db[raCol] = [c.ra.degree for c in db['COORDINATES']]
+    #     db[decCol] = [c.dec.degree for c in db['COORDINATES']]
     basecols = [desigCol,raCol,decCol]
     if not isUnit(radius): radius = radius*u.arcsec
         

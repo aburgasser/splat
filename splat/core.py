@@ -5894,7 +5894,7 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
             sptn = numpy.round(mean*2)*0.5
         else:
             sptn = numpy.round(mean)
-        sptn_e = (unc_sys**2+var)**0.5
+        sptn_e = (unc_sys**2+var**2)**0.5
         spt = typeToNum(sptn,uncertainty=sptn_e,subclass=subclass)
 
 # string or not?
@@ -6623,27 +6623,39 @@ def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_stan
 
 
 
-def measureEW(sp,line,width=[0.,0.],continuum=[0.,0.],plot=False,file='',output_unit=u.Angstrom,nsamp=100,verbose=True,recenter=True,absorption=True,name=''):
+def measureEW(sp,lc,width=0.,continuum=[0.,0.],plot=False,file='',continuum_width=False,output_unit=u.Angstrom,nsamp=100,nmc=100,verbose=True,recenter=True,absorption=True,name='',continuum_fit_order=1,debug=False):
 
 # input checks
-    if isUnit(line):
-        line_center = line.to(sp.wave.unit).value
-    else: line_center = copy.deepcopy(line)
+    if isUnit(lc):
+        line_center = lc.to(sp.wave.unit).value
+    else: line_center = copy.deepcopy(lc)
+    if not isinstance(line_center,int) and not isinstance(line_center,float):
+        raise ValueError('Second input value should be a single float number; you entered {}'.format(lc))        
     if numpy.nanmin(sp.wave.value) > line_center or numpy.nanmax(sp.wave.value) < line_center:
         raise ValueError('\nLine {} is outside spectral data limits of {} to {}'.format(line_center*sp.wave.unit,numpy.nanmin(sp.wave),numpy.nanmax(sp.wave)))
-    if isinstance(width,int) or isinstance(width,float):
-        line_width = [numpy.abs(width),numpy.abs(width)]
-    else: line_width = copy.deepcopy(width) 
-    if line_width[0] == 0.:
+
+    if isUnit(width):
+        line_width = width.to(sp.wave.unit).value
+    else: line_width = copy.deepcopy(width)
+    if not isinstance(line_width,int) and not isinstance(line_width,float):
+        raise ValueError('Second input value should be a single float number; you entered {}'.format(width))        
+    if float(line_width) == 0.:
         ic = numpy.nanargmin(numpy.array([numpy.abs(a-line_center) for a in sp.wave.value]))
-        width = numpy.nanmax([line_center/6.e2,numpy.array(sp.wave.value)[ic+5]-line_center])
-        line_width = [numpy.abs(width),numpy.abs(width)]
-    if isinstance(continuum,int) or isinstance(continuum,float):
-        continuum_width = [numpy.abs(continuum),2.*numpy.abs(continuum)]
-    else: continuum_width = copy.deepcopy(continuum) 
-    if continuum_width[0] == 0.:
-        continuum_width = [line_width[0]*2.,line_width[0]*3.]
-        
+        line_width = numpy.absolute(sp.wave.value[ic+2]-sp.wave.value[ic-2])
+
+    if isUnit(continuum):
+        cont = continuum.to(sp.wave.unit).value
+    else: cont = copy.deepcopy(continuum)
+    if isinstance(cont,int) or isinstance(cont,float):
+        cont = [line_width,line_width+numpy.abs(cont)]
+    if cont[0] == cont[1]:
+        cont = [line_width,line_width*2.]
+    if numpy.nanmax(cont) < line_center:
+        cont = [c+line_center for c in cont]
+    if len(cont) < 4:
+        cont = [2*line_center-cont[-1],2*line_center-cont[-2],cont[-1],cont[-2]]
+    if debug==True: print('Line center = {}, Line width = {}, Continuum = {}'.format(line_center,line_width,cont))
+
 # preset fail condition
     ew = numpy.nan
     ew_unc = numpy.nan
@@ -6653,81 +6665,85 @@ def measureEW(sp,line,width=[0.,0.],continuum=[0.,0.],plot=False,file='',output_
     rv_unc = numpy.nan
     
 # first compute value
-    if numpy.nanmin(sp.wave.value) <= line_center-continuum_width[1] and numpy.nanmax(sp.wave.value) >= line_center+continuum_width[1]:
+    samplerng = [numpy.nanmin(cont)-0.1*(numpy.nanmax(cont)-numpy.nanmin(cont)),numpy.nanmax(cont)+0.1*(numpy.nanmax(cont)-numpy.nanmin(cont))]
+    if numpy.nanmin(sp.wave.value) <= samplerng[0] and numpy.nanmax(sp.wave.value) >= samplerng[1]:
 
 # refine line centering
         line_center_measure = line_center
         if recenter == True:    
             for i in range(5):
-                wc = numpy.where(numpy.logical_and(sp.wave.value >= line_center_measure-line_width[0],sp.wave.value <= line_center_measure+line_width[1]))
+                wc = numpy.where(numpy.logical_and(sp.wave.value >= line_center_measure-line_width,sp.wave.value <= line_center_measure+line_width))
                 wv = numpy.array(sp.wave.value[wc])
                 fl = numpy.array(sp.flux.value[wc])
                 if absorption == True: line_center_measure = wv[numpy.nanargmin(fl)]
                 else: line_center_measure = wv[numpy.nanargmax(fl)]
         rv = ((line_center_measure-line_center)/line_center)*const.c.to(u.km/u.s)
 
-        w = numpy.where(numpy.logical_and(sp.wave.value >= line_center_measure-continuum_width[1],sp.wave.value <= line_center_measure+continuum_width[1]))
+        w = numpy.where(numpy.logical_and(sp.wave.value >= samplerng[0],sp.wave.value <= samplerng[1]))
         if len(w[0]) > 0:
             f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=0.)
-            wline = numpy.linspace(line_center_measure-line_width[0],line_center_measure+line_width[1],nsamp)
-# either fit over a range or fit specific wavelengths
-            if len(continuum_width) == 2:
-                wcont = numpy.append(numpy.linspace(line_center_measure-continuum_width[1],line_center_measure-continuum_width[0],nsamp),numpy.linspace(line_center_measure+continuum_width[0],line_center_measure+continuum_width[1],nsamp))        
-            else:
-                wcont = continuum_width
+            wline = numpy.linspace(line_center_measure-line_width,line_center_measure+line_width,nsamp)
+            wcont = numpy.append(numpy.linspace(cont[0],cont[1],nsamp),numpy.linspace(cont[-2],cont[-1],nsamp))        
             fline = f(wline)
             fcont = f(wcont)
-            pcont = numpy.poly1d(numpy.polyfit(wcont,fcont,1))
+            pcont = numpy.poly1d(numpy.polyfit(wcont,fcont,continuum_fit_order))
             fcontfit = pcont(wline)
-#            print(wline,fline)
-#            print(wcont,fcont)
+            # print(wline,fline)
+            # print(wcont,fcont)
             ew = (trapz((numpy.ones(len(wline))-(fline/fcontfit)), wline)*sp.wave.unit).to(output_unit)
             if plot == True:
                 plt.clf()
-                plt.plot(sp.wave,sp.flux,'k-')
-                plt.plot(wline,fline,'r-')
+                plt.plot(sp.wave.value,sp.flux.value,'k-')
+                plt.fill_between(sp.wave.value,sp.flux.value-sp.noise.value,sp.flux.value+sp.noise.value,color='grey',alpha=0.2)
+                plt.plot(wline,fline,'m-')
+                plt.plot(wcont[wcont<line_center_measure],fcont[wcont<line_center_measure],'b-')
+                plt.plot(wcont[wcont>line_center_measure],fcont[wcont>line_center_measure],'b-')
                 plt.plot(wline,fcontfit,'b-')
                 plt.plot([line_center_measure,line_center_measure],[numpy.nanmin(sp.flux.value[w]),numpy.nanmax(sp.flux.value[w])],'k--')
-                plt.xlim([numpy.nanmin(wcont),numpy.nanmax(wcont)])
+                plt.xlim(samplerng)
                 plt.ylim([numpy.nanmin(sp.flux.value[w]),numpy.nanmax(sp.flux.value[w])])
                 plt.title(name+' {:.4f}'.format(line_center_measure))
+                plt.xlabel('Wavelength ({})'.format(sp.wave.unit))
+                plt.ylabel('Flux Density ({})'.format(sp.flux.unit))
                 if file != '': plt.savefig(file)
-            
-            if sp.noise.value[0] != numpy.nan:
-# default uncertainty = 2 x median uncertainty
+
+
+# MC for errors            
+            if numpy.median(sp.noise.value[w]) != numpy.nan and numpy.median(sp.noise.value[w]) != 0.:
+# default uncertainty = 2 x median uncertainty --> NOT USING
                 ew_unc = (2.*numpy.nanmedian(sp.noise.value[w])/pcont(line_center_measure)*(numpy.nanmax(wline)-numpy.nanmin(wline))*sp.wave.unit).to(output_unit)
-# MC for errors
-                ews = []
-                lns = []
-                rvs = []
-                spvar = copy.deepcopy(sp)
-                for i in range(nsamp):
-                    spvar.flux = numpy.random.normal(sp.flux.value,sp.noise.value)*sp.flux.unit
+                ews,lns,rvs = [],[],[]
+                for i in range(nmc):
+                    wvv = sp.wave.value[w]
+                    flxv = numpy.random.normal(sp.flux.value[w],sp.noise.value[w])
+#                    spvar.flux = numpy.random.normal(sp.flux.value,sp.noise.value)*sp.flux.unit
                     line_center_measure_var = line_center
                     if recenter == True:    
                         for i in range(5):
-                            wc = numpy.where(numpy.logical_and(sp.wave.value >= line_center_measure_var-line_width[0],sp.wave.value <= line_center_measure_var+line_width[1]))
-                            wv = numpy.array(sp.wave.value[wc])
-                            fl = numpy.array(spvar.flux.value[wc])
+                            wc = numpy.where(numpy.logical_and(wvv >= line_center_measure_var-line_width,wvv <= line_center_measure_var+line_width))
+                            wc = numpy.where(numpy.logical_and(wvv >= line_center_measure_var-line_width,wvv <= line_center_measure_var+line_width))
+                            wv = numpy.array(wvv[wc])
+                            fl = numpy.array(flxv[wc])
                             if absorption == True: line_center_measure_var = wv[numpy.nanargmin(fl)]
                             else: line_center_measure_var = wv[numpy.nanargmax(fl)]
                     lns.append(line_center_measure_var)
                     rvs.append((((line_center_measure_var-line_center)/line_center)*const.c.to(u.km/u.s)).value)
 
-                    f = interp1d(sp.wave.value[w],spvar.flux.value[w],bounds_error=False,fill_value=0.)
-                    wline = numpy.linspace(line_center_measure_var-line_width[0],line_center_measure_var+line_width[1],nsamp)
-                    if len(continuum_width) == 2:
-                        wcont = numpy.append(numpy.linspace(line_center_measure_var-continuum_width[1],line_center_measure_var-continuum_width[0],nsamp),numpy.linspace(line_center_measure_var+continuum_width[0],line_center_measure_var+continuum_width[1],nsamp))        
-                    else:
-                        wcont = continuum_width
+                    f = interp1d(wvv,flxv,bounds_error=False,fill_value=0.)
+                    wline = numpy.linspace(line_center_measure_var-line_width,line_center_measure_var+line_width,nsamp)
+                    wcont = numpy.append(numpy.linspace(cont[0],cont[1],nsamp),numpy.linspace(cont[-2],cont[-1],nsamp))        
                     fline = f(wline)
                     fcont = f(wcont)
-                    pcont = numpy.poly1d(numpy.polyfit(wcont,fcont,1))
+                    pcont = numpy.poly1d(numpy.polyfit(wcont,fcont,continuum_fit_order))
                     fcontfit = pcont(wline)
                     ews.append(((trapz((numpy.ones(len(wline))-(fline/fcontfit)), wline)*sp.wave.unit).to(output_unit)).value)
                 rv_unc = numpy.std(rvs)*u.km/u.s
-                ew_unc = numpy.sqrt(ew_unc**2+(numpy.std(ews)*output_unit)**2)
+#                ew_unc = numpy.sqrt(ew_unc**2+(numpy.std(ews)*output_unit)**2)
+                ew_unc = (numpy.std(ews)*output_unit)
                 line_center_measure_unc = numpy.std(lns)
+
+    else:
+        print('Spectral range {} to {} does not cover measurement region for EW {} to {}'.format(numpy.nanmin(sp.wave.value),numpy.nanmax(sp.wave.value),samplerng[0],samplerng[1]))
                             
     return {'ew': ew, 
             'ew_unc': ew_unc,
@@ -6780,7 +6796,7 @@ def measureEWElement(sp,element,wave_range=[0.,0.],getNist=False,**kwargs):
         
 
 
-def measureEWSet(sp,ref='rojas',*args,**kwargs):
+def measureEWSet(sp,ref='rojas',**kwargs):
     '''
     :Purpose: Measures equivalent widths (EWs) of lines from specified sets. Returns dictionary of indices.
     :param sp: Spectrum class object, which should contain wave, flux and noise array elements
@@ -6797,30 +6813,42 @@ def measureEWSet(sp,ref='rojas',*args,**kwargs):
     >>> print splat.measureEWSet(sp, set = 'rojas')
         {'Na I 2.206/2.209': (1.7484002652013144, 0.23332441577025356), 'Ca I 2.26': (1.3742491939667159, 0.24867705962337672), 'names': ['Na I 2.206/2.209', 'Ca I 2.26'], 'reference': 'EW measures from Rojas-Ayala et al. (2012)'}
     '''
-    ref = kwargs.get('set',ref)
+    for alts in ['set','ref']: ref = kwargs.get(alts,ref)
 
-# determine combine method
-    if ('rojas' in ref.lower()):
-        reference = 'EW measures from Rojas-Ayala et al. (2012)'
-        names = ['Na I 2.206/2.209','Ca I 2.26']
-        ews = numpy.zeros(len(names))
-        errs = numpy.zeros(len(names))
-        tmp = measureEW(sp,2.206,width=[2.2020, 2.2120],continuum=[2.1965, 2.2125, 2.2175],recenter=False,**kwargs)
-        ews[0] = tmp['ew']
-        errs[0] = tmp['ew_unc']
-        tmp = measureEW(sp,2.2635,width=[2.2580, 2.2690],continuum=[2.2510, 2.2580, 2.2705, 2.2760],recenter=False,**kwargs)
-        ews[0] = tmp['ew']
-        errs[0] = tmp['ew_unc']
-    else:
-        print('{} is not one of the sets used for measureIndexSet'.format(set))
-        return numpy.nan
+# if index information is not passed, then check with INDEX_SET
+    tmp = checkDict(ref,EW_SETS)
+    if tmp==False: raise ValueError('Index set {} is not currently available'.format(ref))
+    ref = copy.deepcopy(tmp)
+    info = copy.deepcopy(EW_SETS[ref])
 
-# output dictionary of indices
-    result = {names[i]: (ews[i],errs[i]) for i in numpy.arange(len(names))}
-    result['reference'] = reference
-    result['names'] = names
-#    result['reference'] = reference
-#    return inds,errs,names
+    result = {'reference': info['reference'],'bibcode': info['bibcode']}
+    for ftr in list(info['features'].keys()):
+        tmp = measureEW(sp,info['features'][ftr]['linecenter'],width=info['features'][ftr]['width'],continuum=info['features'][ftr]['continuum'],continuum_fit_order=info['continuum_fit_order'],recenter=info['features'][ftr]['recenter'],**kwargs)
+        result[ftr] = tmp
+
+
+# # determine combine method
+#     if ('rojas' in ref.lower()):
+#         reference = 'EW measures from Rojas-Ayala et al. (2012)'
+#         names = ['Na I 2.206/2.209','Ca I 2.26']
+#         ews = numpy.zeros(len(names))
+#         errs = numpy.zeros(len(names))
+#         tmp = measureEW(sp,2.206,width=[2.2020, 2.2120],continuum=[2.1965, 2.2125, 2.2175],recenter=False,**kwargs)
+#         ews[0] = tmp['ew']
+#         errs[0] = tmp['ew_unc']
+#         tmp = measureEW(sp,2.2635,width=[2.2580, 2.2690],continuum=[2.2510, 2.2580, 2.2705, 2.2760],recenter=False,**kwargs)
+#         ews[0] = tmp['ew']
+#         errs[0] = tmp['ew_unc']
+#     else:
+#         print('{} is not one of the sets used for measureIndexSet'.format(set))
+#         return numpy.nan
+
+# # output dictionary of indices
+#     result = {names[i]: (ews[i],errs[i]) for i in numpy.arange(len(names))}
+#     result['reference'] = reference
+#     result['names'] = names
+# #    result['reference'] = reference
+# #    return inds,errs,names
 
     return result
 
@@ -6962,6 +6990,9 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
         elif (method == 'sumdenom'):
             val = value[0]/(value[1]+value[2])
             vals = value_sim[0,:]/(value_sim[1,:]+value_sim[2,:])
+        elif (method == 'doubleratio'):
+            val = (value[0]/value[1])/(value[1]/value[2])
+            vals = (value_sim[0,:]/value_sim[1,:])/(value_sim[1,:]/value_sim[2,:])
         elif (method == 'allers'):
             val = (((numpy.mean(ranges[0])-numpy.mean(ranges[1]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value[2] \
                 + ((numpy.mean(ranges[2])-numpy.mean(ranges[0]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value[1]) \
@@ -7101,19 +7132,21 @@ def measureIndexSet(sp,ref='burgasser',index_info={},info=False,verbose=False,in
     if ref=='bardalez':
         result['H-dip'] = tuple([i*0.5 for i in result['H-dip']])
         result['J-curve'] = tuple([i*2. for i in result['J-curve']])
-    elif 'rojas' in ref.lower():
-        ind = result['H2O-K2num'][0]/result['H2O-K2den'][0]
-        err = [ind*numpy.sqrt((result['H2O-K2num'][1]/result['H2O-K2num'][0])**2+(result['H2O-K2den'][1]/result['H2O-K2den'][0])**2)]
-        result['H2O-K2'] = (ind,err)
-        del result['H2O-K2num'], result['H2O-K2den']
+    # elif 'rojas' in ref.lower():
+    #     ind = result['H2O-K2num'][0]/result['H2O-K2den'][0]
+    #     err = [ind*numpy.sqrt((result['H2O-K2num'][1]/result['H2O-K2num'][0])**2+(result['H2O-K2den'][1]/result['H2O-K2den'][0])**2)]
+    #     result['H2O-K2'] = (ind,err)
+    #     del result['H2O-K2num'], result['H2O-K2den']
 
     return result
 
 
 
-def metallicity(sp,nsamples=100,**kwargs):
+def metallicity(sp,nsamples=100,ref='rojas',output='all',verbose=False,**kwargs):
     '''
     :Purpose: 
+
+        THIS IS OUT OF DATE
 
         Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in 
         `Rojas-Ayala et al.(2012) <http://adsabs.harvard.edu/abs/2012ApJ...748...93R>`_
@@ -7141,33 +7174,255 @@ def metallicity(sp,nsamples=100,**kwargs):
 
     '''
 
-    coeff_feh = [-1.039,0.092,0.119]
-    coeff_feh_e = [0.17,0.023,0.033]
-    feh_unc = 0.100
-    coeff_mh = [-0.731,0.066,0.083]
-    coeff_mh_e = [0.12,0.016,0.023]
-    mh_unc = 0.100
+    allowed_refs = ['rojas2012','terrien2012','mann2013','mann2014','newton2014']
 
-    h2ok2,h2ok2_e = measureIndexSet(sp, ref='rojas')['H2O-K2']
-    ew = measureEWSet(sp,ref='rojas')
-    nai = kwargs.get('nai',False)
-    nai_e = kwargs.get('nai_e',0.)
-    if nai is False:
-        nai, nai_e = ew['Na I 2.206/2.209']
-    cai = kwargs.get('cai',False)
-    cai_e = kwargs.get('cai_e',0.)
-    if cai is False:
-        cai, cai_e = ew['Ca I 2.26']
+    if 'rojas' in ref.lower():
+        reference = 'Rojas et al. (2012)'
+        bibcode = '2012ApJ...748...93R'
+        result = {'reference': reference, 'bibcode': bibcode, 'measures': {}}
+        if verbose==True: print('Computing [Fe/H] from {} ({}), valid for M0-M5, ??? < [Fe/H] < ???'.format(reference,bibcode))
 
-    mh = coeff_mh[0]+(nai/h2ok2)*coeff_mh[1]+(cai/h2ok2)*coeff_mh[2]
+        coeff_feh = [-1.039,0.092,0.119]
+        coeff_feh_e = [0.17,0.023,0.033]
+        feh_unc = 0.100
+        coeff_mh = [-0.731,0.066,0.083]
+        coeff_mh_e = [0.12,0.016,0.023]
+        mh_unc = 0.100
 
-# simulate uncertainties
-    mhsim = numpy.ones(nsamples)*coeff_mh[0]+\
-        (numpy.random.normal(nai,nai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[1]+\
-        (numpy.random.normal(cai,cai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))*coeff_mh[2]
+        ews = splat.measureEWSet(sp,ref='rojas2012')
+        nai,nai_e = ews['nai']['ew'].to(u.Angstrom).value,ews['nai']['ew_unc'].to(u.Angstrom).value
+        cai,cai_e = ews['cai']['ew'].to(u.Angstrom).value,ews['cai']['ew_unc'].to(u.Angstrom).value
+        h2ok2,h2ok2_e = measureIndexSet(sp, ref='rojas')['H2O-K2']
 
-    return mh, numpy.sqrt(numpy.nanstd(mhsim)**2+mh_unc**2)
+        feh = coeff_feh[0]+coeff_feh[1]*nai/h2ok2+coeff_feh[2]*cai/h2ok2
+        feh_e = numpy.sqrt(feh_unc**2+numpy.nanstd(
+            coeff_feh[0]+\
+            coeff_feh[1]*(numpy.random.normal(nai,nai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))+\
+            coeff_feh[2]*(numpy.random.normal(cai,cai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples)))**2)
+        result['measures']['feh'] = [feh,feh_e]
+        if verbose==True: print('K-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh,feh_e))
 
+        mh = coeff_mh[0]+coeff_mh[1]*nai/h2ok2+coeff_mh[2]*cai/h2ok2
+        mh_e = numpy.sqrt(feh_unc**2+numpy.nanstd(
+            coeff_mh[0]+\
+            coeff_mh[1]*(numpy.random.normal(nai,nai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))+\
+            coeff_mh[2]*(numpy.random.normal(cai,cai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples)))**2)
+        result['measures']['mh'] = [mh,mh_e]
+        if verbose==True: print('K-band [M/H] = {:.2f}+/-{:.2f}'.format(mh,mh_e))
+
+
+# Terrien et al. 2012
+    elif 'terrien' in ref.lower():
+        reference = 'Terrrien et al. (2012)'
+        bibcode = '2012ApJ...747L..38T'
+        result = {'reference': reference, 'bibcode': bibcode, 'measures': {}}
+        if verbose==True: print('Computing [Fe/H] from {} ({}), valid for M0--M5, -0.25 < [Fe/H] < +0.3'.format(reference,bibcode))
+
+        coeff_feh_h = [0.340,0.407,0.436,-1.485]
+        feh_k_unc = 0.12
+        coeff_feh_k = [0.132,0.083,-0.403,-0.616]
+        feh_h_unc = 0.12
+
+        ews = splat.measureEWSet(sp,ref='terrien2012')
+        caih = ews['cai-h1']['ew'].to(u.Angstrom).value+ews['cai-h2']['ew'].to(u.Angstrom).value
+        caih_e = numpy.sqrt((ews['cai-h1']['ew_unc'].to(u.Angstrom).value)**2+(ews['cai-h1']['ew_unc'].to(u.Angstrom).value)**2)
+        ind = measureIndexSet(sp, ref='covey')
+        h2oh,h2oh_e =ind['H2O-H']
+        h2ok,h2ok_e = ind['H2O-K']
+
+        feh_k = coeff_feh_k[0]*ews['nai-k']['ew'].to(u.Angstrom).value+\
+            coeff_feh_k[1]*ews['cai-k']['ew'].to(u.Angstrom).value+\
+            coeff_feh_k[2]*ind['H2O-K'][0]+coeff_feh_k[3]
+        feh_k_e = numpy.sqrt(feh_k_unc**2+numpy.nanstd(
+            coeff_feh_k[0]*numpy.random.normal(ews['nai-k']['ew'].to(u.Angstrom).value,ews['nai-k']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_k[1]*numpy.random.normal(ews['cai-k']['ew'].to(u.Angstrom).value,ews['cai-k']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_k[2]*numpy.random.normal(ind['H2O-K'][0],ind['H2O-K'][1],nsamples)+coeff_feh_k[3])**2)
+        result['measures']['feh_k'] = [feh_k,feh_k_e]
+        if verbose==True: print('K-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh_k,feh_k_e))
+
+        feh_h = coeff_feh_h[0]*caih+\
+            coeff_feh_h[1]*ews['ki-h']['ew'].to(u.Angstrom).value+\
+            coeff_feh_h[2]*ind['H2O-H'][0]+coeff_feh_h[3]
+        feh_h_e = numpy.sqrt(feh_h_unc**2+numpy.nanstd(
+            coeff_feh_h[0]*numpy.random.normal(caih,caih_e,nsamples)+\
+            coeff_feh_h[1]*numpy.random.normal(ews['ki-h']['ew'].to(u.Angstrom).value,ews['ki-h']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_h[2]*numpy.random.normal(ind['H2O-H'][0],ind['H2O-H'][1],nsamples)+coeff_feh_h[3])**2)
+        result['measures']['feh_h'] = [feh_h,feh_h_e]
+        if verbose==True: print('H-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh_h,feh_h_e))
+
+
+# Mann et al. 2013
+    elif 'mann' in ref.lower() and '14' not in ref.lower():
+        reference = 'Mann et al. (2013)'
+        bibcode = '2013AJ....145...52M'
+        result = {'reference': reference, 'bibcode': bibcode, 'measures': {}}
+        if verbose==True: print('Computing [Fe/H] from {} ({}), valid for K5--M5, -1.04 < [Fe/H] < +0.56'.format(reference,bibcode))
+
+        coeff_feh_j = [0.29,0.21,0.26,-0.26,-0.190,-1.03]
+        feh_unc_j = 0.07
+        coeff_mh_j = [0.32,0.46,0.076,1.213,-1.97]
+        mh_unc_j = 0.08
+        coeff_feh_h = [0.40,0.51,-0.28,-1.460,0.71]
+        feh_unc_h = 0.07
+        coeff_mh_h = [0.38,0.40,0.41,0.194,-0.76]
+        mh_unc_h = 0.06
+        coeff_feh_k = [0.19,0.069,0.083,0.218,-1.55]
+        feh_unc_k = 0.06
+        coeff_mh_k = [0.12,0.086,0.13,0.245,-1.18]
+        mh_unc_k = 0.05
+
+        ews = splat.measureEWSet(sp,ref='mann2013')
+        ind = measureIndexSet(sp, ref='mann')
+        h2oj,h2oj_e =ind['H2O-J']
+        ind = measureIndexSet(sp, ref='covey')
+        h2oh,h2oh_e =ind['H2O-H']
+        ind = measureIndexSet(sp, ref='rojas')
+        h2ok,h2ok_e =ind['H2O-K2']
+
+
+        feh_j = coeff_feh_j[0]*ews['f10']['ew'].to(u.Angstrom).value+\
+            coeff_feh_j[1]*ews['f09']['ew'].to(u.Angstrom).value+\
+            coeff_feh_j[2]*ews['f12']['ew'].to(u.Angstrom).value+\
+            coeff_feh_j[3]*ews['f13']['ew'].to(u.Angstrom).value+\
+            coeff_feh_j[4]*h2oj+coeff_feh_j[5]
+        feh_j_e = numpy.sqrt(feh_unc_j**2+numpy.nanstd(\
+            coeff_feh_j[0]*numpy.random.normal(ews['f10']['ew'].to(u.Angstrom).value,ews['f10']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_j[1]*numpy.random.normal(ews['f09']['ew'].to(u.Angstrom).value,ews['f09']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_j[2]*numpy.random.normal(ews['f12']['ew'].to(u.Angstrom).value,ews['f12']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_j[3]*numpy.random.normal(ews['f13']['ew'].to(u.Angstrom).value,ews['f13']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_j[4]*numpy.random.normal(h2oj,h2oj_e,nsamples)+coeff_feh_j[5])**2)
+        result['measures']['feh_j'] = [feh_j,feh_j_e]
+        if verbose==True: print('J-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh_j,feh_j_e))
+
+        mh_j = coeff_mh_j[0]*ews['f10']['ew'].to(u.Angstrom).value+\
+            coeff_mh_j[1]*ews['f11']['ew'].to(u.Angstrom).value+\
+            coeff_mh_j[2]*ews['f09']['ew'].to(u.Angstrom).value+\
+            coeff_mh_j[3]*h2oj+coeff_mh_j[4]
+        mh_j_e = numpy.sqrt(mh_unc_j**2+numpy.nanstd(\
+            coeff_mh_j[0]*numpy.random.normal(ews['f10']['ew'].to(u.Angstrom).value,ews['f10']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_mh_j[1]*numpy.random.normal(ews['f11']['ew'].to(u.Angstrom).value,ews['f11']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_mh_j[2]*numpy.random.normal(ews['f09']['ew'].to(u.Angstrom).value,ews['f09']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_mh_j[3]*numpy.random.normal(h2oj,h2oj_e,nsamples)+coeff_mh_j[4])**2)
+        result['measures']['mh_j'] = [mh_j,mh_j_e]
+        if verbose==True: print('J-band [M/H] = {:.2f}+/-{:.2f}'.format(mh_j,mh_j_e))
+
+        feh_h = coeff_feh_h[0]*ews['f17']['ew'].to(u.Angstrom).value+\
+            coeff_feh_h[1]*ews['f14']['ew'].to(u.Angstrom).value+\
+            coeff_feh_h[2]*ews['f18']['ew'].to(u.Angstrom).value+\
+            coeff_feh_h[3]*h2oh+coeff_feh_h[4]
+        feh_h_e = numpy.sqrt(feh_unc_h**2+numpy.nanstd(\
+            coeff_feh_h[0]*numpy.random.normal(ews['f17']['ew'].to(u.Angstrom).value,ews['f17']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_h[1]*numpy.random.normal(ews['f14']['ew'].to(u.Angstrom).value,ews['f14']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_h[2]*numpy.random.normal(ews['f18']['ew'].to(u.Angstrom).value,ews['f18']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_h[3]*numpy.random.normal(h2oh,h2oh_e,nsamples)+coeff_feh_h[4])**2)
+        result['measures']['feh_h'] = [feh_h,feh_h_e]
+        if verbose==True: print('H-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh_h,feh_h_e))
+
+        mh_h = coeff_mh_h[0]*ews['f17']['ew'].to(u.Angstrom).value+\
+            coeff_mh_h[1]*ews['f16']['ew'].to(u.Angstrom).value+\
+            coeff_mh_h[2]*ews['f15']['ew'].to(u.Angstrom).value+\
+            coeff_mh_h[3]*h2oh+coeff_mh_h[4]
+        mh_h_e = numpy.sqrt(mh_unc_j**2+numpy.nanstd(\
+            coeff_mh_h[0]*numpy.random.normal(ews['f17']['ew'].to(u.Angstrom).value,ews['f17']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_mh_h[1]*numpy.random.normal(ews['f16']['ew'].to(u.Angstrom).value,ews['f16']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_mh_h[2]*numpy.random.normal(ews['f15']['ew'].to(u.Angstrom).value,ews['f15']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_mh_h[3]*numpy.random.normal(h2oh,h2oh_e,nsamples)+coeff_mh_h[4])**2)
+        result['measures']['mh_h'] = [mh_h,mh_h_e]
+        if verbose==True: print('H-band [M/H] = {:.2f}+/-{:.2f}'.format(mh_h,mh_h_e))
+
+        feh_k = coeff_feh_k[0]*ews['f19']['ew'].to(u.Angstrom).value+\
+            coeff_feh_k[1]*ews['f22']['ew'].to(u.Angstrom).value+\
+            coeff_feh_k[2]*ews['f20']['ew'].to(u.Angstrom).value+\
+            coeff_feh_k[3]*h2ok+coeff_feh_k[4]
+        feh_k_e = numpy.sqrt(feh_unc_h**2+numpy.nanstd(\
+            coeff_feh_k[0]*numpy.random.normal(ews['f19']['ew'].to(u.Angstrom).value,ews['f19']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_k[1]*numpy.random.normal(ews['f22']['ew'].to(u.Angstrom).value,ews['f22']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_k[2]*numpy.random.normal(ews['f20']['ew'].to(u.Angstrom).value,ews['f20']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh_k[3]*numpy.random.normal(h2ok,h2ok_e,nsamples)+coeff_feh_k[4])**2)
+        result['measures']['feh_k'] = [feh_k,feh_k_e]
+        if verbose==True: print('K-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh_k,feh_k_e))
+
+        mh_k = coeff_mh_k[0]*ews['f19']['ew'].to(u.Angstrom).value+\
+            coeff_mh_k[1]*ews['f22']['ew'].to(u.Angstrom).value+\
+            coeff_mh_k[2]*ews['f21']['ew'].to(u.Angstrom).value+\
+            coeff_mh_k[3]*h2ok+coeff_mh_k[4]
+        mh_k_e = numpy.sqrt(mh_unc_j**2+numpy.nanstd(\
+            coeff_mh_k[0]*numpy.random.normal(ews['f19']['ew'].to(u.Angstrom).value,ews['f19']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_mh_k[1]*numpy.random.normal(ews['f22']['ew'].to(u.Angstrom).value,ews['f22']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_mh_k[2]*numpy.random.normal(ews['f21']['ew'].to(u.Angstrom).value,ews['f21']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_mh_k[3]*numpy.random.normal(h2ok,h2ok_e,nsamples)+coeff_mh_k[4])**2)
+        result['measures']['mh_k'] = [mh_k,mh_k_e]
+        if verbose==True: print('K-band [M/H] = {:.2f}+/-{:.2f}'.format(mh_k,mh_k_e))
+
+
+
+# Newton et al. 2014
+    elif 'newton' in ref.lower():
+        reference = 'Newton et al. (2014)'
+        bibcode = '2014AJ....147...20N'
+        result = {'reference': reference, 'bibcode': bibcode, 'measures': {}}
+        if verbose==True: print('Computing [Fe/H] from {} ({}), valid for M1--M5, -1.0 < [Fe/H] < +0.35'.format(reference,bibcode))
+
+        coeff_feh = [0.596,-0.0392,-1.96]
+        feh_unc = 0.12
+
+        ews = splat.measureEWSet(sp,ref='rojas2012')
+
+        feh = coeff_feh[0]*ews['nai']['ew'].to(u.Angstrom).value+\
+            coeff_feh[1]*ews['nai']['ew'].to(u.Angstrom).value**2+coeff_feh[2]
+        nais = numpy.random.normal(ews['nai']['ew'].to(u.Angstrom).value,ews['nai']['ew_unc'].to(u.Angstrom).value,nsamples)
+        feh_e = numpy.sqrt(feh_unc**2+numpy.nanstd(coeff_feh[0]*nais+coeff_feh[1]*nais**2+coeff_feh[2])**2)
+        result['measures']['feh'] = [feh,feh_e]
+        if verbose==True: print('K-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh,feh_e))
+
+# Mann et al. 2014
+    elif 'mann' in ref.lower() and '14' in ref.lower():
+        reference = 'Mann et al. (2014)'
+        bibcode = '2014AJ....147..160M'
+        result = {'reference': reference, 'bibcode': bibcode, 'measures': {}}
+        if verbose==True: print('Computing [Fe/H] from {} ({}), valid for M4.5--M9.5, -0.58 < [Fe/H] < +0.56'.format(reference,bibcode))
+
+        coeff_feh = [0.131,0.210,-3.07,1.341]
+        feh_unc = 0.07
+
+        ews = splat.measureEWSet(sp,ref='mann2014')
+        ind = measureIndexSet(sp, ref='rojas')
+#        h2ok,h2ok_e =ind['H2O-K2']
+
+        feh = coeff_feh[0]*ews['nai']['ew'].to(u.Angstrom).value+\
+            coeff_feh[1]*ews['cai']['ew'].to(u.Angstrom).value+\
+            coeff_feh[2]*ind['H2O-K2'][0]+coeff_feh[3]
+        feh_e = numpy.sqrt(feh_unc**2+numpy.nanstd(\
+            coeff_feh[0]*numpy.random.normal(ews['nai']['ew'].to(u.Angstrom).value,ews['nai']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh[1]*numpy.random.normal(ews['cai']['ew'].to(u.Angstrom).value,ews['cai']['ew_unc'].to(u.Angstrom).value,nsamples)+\
+            coeff_feh[2]*numpy.random.normal(ind['H2O-K2'][0],ind['H2O-K2'][1],nsamples)+coeff_feh[3])**2)
+        result['measures']['feh'] = [feh,feh_e]
+        if verbose==True: print('K-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh,feh_e))
+
+    else:
+        raise ValueError('Reference {} not recognized as one of the metallicity relations currently in SPLAT; try {}'.format(ref,allowed_refs))
+
+# return
+    if output=='feh': 
+        if 'rojas' in ref.lower() or 'newton' in ref.lower() or ('mann' in ref.lower() and '14' in ref.lower()): 
+            return result['measures']['feh']
+        elif 'mann' in ref.lower(): 
+            if verbose==True: print('Returning {} K-band [Fe/H] measurement and uncertainty'.format(result['reference']))
+            return result['measures']['feh_k']
+        elif 'terrien' in ref.lower(): 
+            if verbose==True: print('Returning {} H-band [Fe/H] measurement and uncertainty'.format(result['reference']))
+            return result['measures']['feh_h']
+        else: return result
+
+    elif output=='mh': 
+        if 'rojas' in ref.lower(): return result['measures']['mh']
+        elif 'mann' in ref.lower() and '14' not in ref.lower(): 
+            if verbose==True: print('Returning {} K-band [M/H] measurement and uncertainty'.format(result['reference']))
+            return result['measures']['mh_k']
+        else: return result
+
+    else: return result
+        
 
 
 def addUserData(folders=[],default_info={},verbose=True):
