@@ -270,6 +270,7 @@ def typeToColor(spt,color,reference='skrzypek2015',uncertainty=0.,nsamples=100,v
         if refcol == '': 
             print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys())))
             return numpy.nan, numpy.nan
+        refspt = numpy.array(splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol]['spt'])
         refcolors = numpy.array(splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol]['values'])
 # now run through colors until you create the correct match
         cntr = 0
@@ -282,10 +283,17 @@ def typeToColor(spt,color,reference='skrzypek2015',uncertainty=0.,nsamples=100,v
                 print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys())))
                 return numpy.nan, numpy.nan
             refcol='{}-{}'.format((refcol.split('-'))[0],(refadd.split('-'))[-1])
-            refcolors = refcolors+numpy.array(splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd]['values'])
-            splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol] = {}
-            for k in list(splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd].keys()): splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol][k] = splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd][k]
-            splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol]['values'] = refcolors
+# select subset of spts that overlap
+            refcolors2 = numpy.array([numpy.nan]*len(refspt))
+            for i,s in enumerate(refspt):
+                if s in splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd]['spt']:
+                    refcolors2[i] = splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd]['values'][splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd]['spt'].index(s)]
+
+
+            refcolors = refcolors+refcolors2
+            splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol] = {'spt': refspt, 'values': refcolors}
+            # for k in list(splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd].keys()): splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol][k] = splat.SPT_COLORS_RELATIONS[ref]['colors'][refadd][k]
+            # splat.SPT_COLORS_RELATIONS[ref]['colors'][refcol]['values'] = refcolors
             cntr=cntr+1
         if cntr >= maxcntr:
             print('\nUnable to constuct color {} for reference set {} which has colors {}\n'.format(color,ref,list(splat.SPT_COLORS_RELATIONS[ref]['colors'].keys())))
