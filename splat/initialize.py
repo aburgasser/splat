@@ -856,24 +856,45 @@ INDEX_CLASSIFICATION_RELATIONS = {
 
 # Empirical relations - SpT to Teff
 SPT_TEFF_RELATIONS = {
-    'dupuy_saumon': {'altname': ['dupuy','dupuy17','dupuy2017','dup17','dupuy17_saumon','dupuy2017_saumon','dup17-saumon'], 'reference': 'Dupuy et al. (2017)','bibcode': '','method': 'polynomial', 'sptoffset': 10.,'coeff': [6.001,-284.52,4544.3], 'range': [21.5,35.],'fitunc': 80.},
-    'dupuy_lyon': {'altname': ['dupuy17_lyon','dupuy2017_lyon','dup17_lyon'], 'reference': 'Dupuy et al. (2017)','bibcode': '','method': 'polynomial', 'sptoffset': 10.,'coeff': [4.582,-238.03,4251.0], 'range': [17.,35.],'fitunc': 90.},
-    'faherty': {'altname': ['faherty16','faherty2016','fah16'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F','method': 'polynomial', 'sptoffset': 10.,'coeff': [1.546e-4,-1.606e-2,6.318e-1,-1.191e1,1.155e2,-7.005e2,4.747e3], 'range': [17.,38.],'fitunc': 113.},
-    'faherty_young': {'altname': ['faherty16_young','faherty2016_young','fah16yng'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F','method': 'polynomial', 'sptoffset': 10.,'coeff': [1.330,-6.68637e1,1.23542e3,-1.00688e4,3.27664e4], 'range': [17.,27.],'fitunc': 180.},
-    'faherty_young2': {'altname': ['faherty16_young2','faherty2016_young2','fah16yng2'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F','method': 'polynomial', 'sptoffset': 10.,'coeff': [9.106e-4,-1.016e-1,4.578,-1.066e2,1.360e3,-9.183e3,2.795e4], 'range': [17.,27.],'fitunc': 198.},
-    'faherty_group': {'altname': ['faherty16_group','faherty2016_group','fah16grp'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F','method': 'polynomial', 'sptoffset': 10.,'coeff': [7.383e0,-3.44522e2,4.87986e3], 'range': [17.,27.],'fitunc': 172.},
-    'filippazzo': {'altname': ['filippazzo15','filippazzo2015','fil15'], 'reference': 'Filippazzo et al. (2015)','bibcode': '2015ApJ...810..158F','method': 'polynomial', 'sptoffset': 10.,'coeff': [1.546e-4, -1.606e-2, 6.318e-1, -1.191e1, 1.155e2, -7.005e2, 4.747e3], 'range': [16.,39.],'fitunc': 113.},
-    'golimowski': {'altname': ['golimowski04','golimowski2004','gol04'], 'reference': 'Golimowski et al. (2004)','bibcode': '2004AJ....127.3516G','method': 'polynomial', 'sptoffset': 10.,'coeff': [9.5373e-4,-9.8598e-2,4.0323,-8.3099e1,9.0951e2,-5.1287e3,1.4322e4],'range': [16.,38.],'fitunc': 124.},
-    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'reference': 'Gonzales et al. (2018)','bibcode': 'TBD', 'method': 'polynomial', 'sptoffset': 10., 'fitunc': 108, 'range' : [17., 27.], 'coeff': [-117,3721.]},
-    'kirkpatrick2019': {'altname': ['kirkpatrick','kirkpatrick19','kirk19','kir19'], 'reference': 'Kirkpartick et al. (2019)','bibcode': '2019ApJS..240...19K', 'sptoffset': 30, 'method': 'polynomial', 'coeff': [9.89240,-286.401,2335.64],'range': [36.,44.],'fitunc': 68.},
-    'looper': {'altname': ['looper08','looper2008','lop08'], 'reference': 'Looper et al. (2008)','bibcode': '2008ApJ...685.1183L','method': 'polynomial', 'sptoffset': 20.,'coeff': [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92],'range': [20.,38.],'fitunc': 87.},
-    'pecaut': {'altname': ['mamajek','pecaut13','pecaut2013'], 'reference': 'Pecaut & Mamajek (2013)','bibcode':'2013ApJS..208....9P', 'url': 'http://www.pas.rochester.edu/~emamajek/EEM_dwarf_UBVIJHK_colors_Teff.txt', 'method': 'interpolate','range': [0.,29.],'fitunc': 108.,\
+    'dupuy_saumon': {'altname': ['dupuy','dupuy17','dupuy2017','dup17','dupuy17_saumon','dupuy2017_saumon','dup17-saumon'], 'reference': 'Dupuy et al. (2017)','bibcode': '',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [6.001,-284.52,4544.3], 'range': [21.5,35.],'fitunc': 80.},
+    'dupuy_lyon': {'altname': ['dupuy17_lyon','dupuy2017_lyon','dup17_lyon'], 'reference': 'Dupuy et al. (2017)','bibcode': '',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [4.582,-238.03,4251.0], 'range': [17.,35.],'fitunc': 90.},
+    'faherty': {'altname': ['faherty16','faherty2016','fah16'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [1.546e-4,-1.606e-2,6.318e-1,-1.191e1,1.155e2,-7.005e2,4.747e3], 'range': [17.,38.],'fitunc': 113.},
+    'faherty_young': {'altname': ['faherty16_young','faherty2016_young','fah16yng'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [1.330,-6.68637e1,1.23542e3,-1.00688e4,3.27664e4], 'range': [17.,27.],'fitunc': 180.},
+    'faherty_young2': {'altname': ['faherty16_young2','faherty2016_young2','fah16yng2'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [9.106e-4,-1.016e-1,4.578,-1.066e2,1.360e3,-9.183e3,2.795e4], 'range': [17.,27.],'fitunc': 198.},
+    'faherty_group': {'altname': ['faherty16_group','faherty2016_group','fah16grp'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [7.383e0,-3.44522e2,4.87986e3], 'range': [17.,27.],'fitunc': 172.},
+    'filippazzo': {'altname': ['filippazzo15','filippazzo2015','fil15'], 'reference': 'Filippazzo et al. (2015)','bibcode': '2015ApJ...810..158F',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [1.546e-4, -1.606e-2, 6.318e-1, -1.191e1, 1.155e2, -7.005e2, 4.747e3], 'range': [16.,39.],'fitunc': 113.},
+    'golimowski': {'altname': ['golimowski04','golimowski2004','gol04'], 'reference': 'Golimowski et al. (2004)','bibcode': '2004AJ....127.3516G',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [9.5373e-4,-9.8598e-2,4.0323,-8.3099e1,9.0951e2,-5.1287e3,1.4322e4],'range': [16.,38.],'fitunc': 124.},
+    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'reference': 'Gonzales et al. (2018)','bibcode': 'TBD', 
+        'method': 'polynomial', 'sptoffset': 10., 'fitunc': 108, 'range' : [17., 27.], 'coeff': [-117,3721.]},
+    'kirkpatrick2019': {'altname': ['kirkpatrick','kirkpatrick19','kirk19','kir19'], 'reference': 'Kirkpartick et al. (2019)','bibcode': '2019ApJS..240...19K',
+        'method': 'polynomial', 'sptoffset': 30, 'coeff': [9.89240,-286.401,2335.64],'range': [36.,44.],'fitunc': 68.},
+    'kirkpatrick2021-l': {'altname': ['kirkpatrick-l','kirkpatrick21-l','kirk21-l','kir21-l'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2020arXiv201111616K',
+        'method': 'polynomial', 'sptoffset': 20, 'coeff': [4.0301e0,-1.4496e2,2.2375e3],'range': [20,28.75.],'fitunc': 134.},
+    'kirkpatrick2021-lt': {'altname': ['kirkpatrick-lt','kirkpatrick21-lt','kirk21-lt','kir21-lt'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2020arXiv201111616K',
+        'method': 'polynomial', 'sptoffset': 20, 'coeff': [-1.8309e1,1.4379e3],'range': [28.75,34.75],'fitunc': 79.},
+    'kirkpatrick2021-ty': {'altname': ['kirkpatrick-ty','kirkpatrick21-ty','kirk21-ty','kir21-ty'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2020arXiv201111616K',
+        'method': 'polynomial', 'sptoffset': 20, 'coeff': [6.3701e0,-3.6865e2,5.1413e3],'range': [34.75,42],'fitunc': 79.},
+    'looper': {'altname': ['looper08','looper2008','lop08'], 'reference': 'Looper et al. (2008)','bibcode': '2008ApJ...685.1183L',
+        'method': 'polynomial', 'sptoffset': 20.,'coeff': [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92],'range': [20.,38.],'fitunc': 87.},
+    'pecaut': {'altname': ['mamajek','pecaut13','pecaut2013'], 'reference': 'Pecaut & Mamajek (2013)','bibcode':'2013ApJS..208....9P', 'url': 'http://www.pas.rochester.edu/~emamajek/EEM_dwarf_UBVIJHK_colors_Teff.txt',
+        'method': 'interpolate','range': [0.,29.],'fitunc': 108.,
         'spt': [0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,6.5,7.,8.,9.,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20.,21.,22.,23.,24.,25.,26.,27.,28.,29.,30.,31.,32.,33.,34.,34.5,35.,35.5,36.,37.,37.5,38.,38.5,39.,39.5,40.,40.5,41.,41.5,42.], \
         'values': [5280.,5240.,5170.,5140.,5040.,4990.,4830.,4700.,4600.,4540.,4410.,4330.,4230.,4190.,4070.,4000.,3940.,3870.,3800.,3700.,3650.,3550.,3500.,3410.,3250.,3200.,3100.,3030.,3000.,2850.,2710.,2650.,2600.,2500.,2440.,2400.,2320.,2250.,2100.,1960.,1830.,1700.,1590.,1490.,1410.,1350.,1300.,1260.,1230.,1200.,1160.,1120.,1090.,1050.,1010.,960.,840.,770.,700.,610.,530.,475.,420.,390.,350.,325.,250.],\
         'rms': numpy.zeros(67)+108.},
-    'marocco': {'altname': ['marocco13','marocco2013','mar13'], 'reference': 'Marocco et al. (2013)','bibcode': '2013AJ....146..161M','method': 'polynomial', 'sptoffset': 10.,'coeff': [7.4211e-5,-8.43736e-3,3.90319e-1,-9.46896,129.141,-975.953,3561.47,-1613.82],'range': [17.,38.],'fitunc': 140.},
-    'stephens': {'altname': ['stephens09','stephens2009','ste09'], 'reference': 'Stephens et al. (2009)','bibcode': '2009ApJ...702..154S','method': 'polynomial', 'sptoffset': 10.,'coeff': [-0.0025492,0.17667,-4.4727,54.67,-467.26,4400.],'range': [16.,38.],'fitunc': 100.},
-    'stephens_alt': {'altname': ['stephens09_alt','stephens2009_alt','ste09alt'], 'reference': 'Stephens et al. (2009)','bibcode': '2009ApJ...702..154S','method': 'polynomial', 'sptoffset': 10.,'coeff': [-0.011997,1.2315,-50.472,1031.9,-10560.,44898.],'range': [23.,38.],'fitunc': 100.},
+    'marocco': {'altname': ['marocco13','marocco2013','mar13'], 'reference': 'Marocco et al. (2013)','bibcode': '2013AJ....146..161M',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [7.4211e-5,-8.43736e-3,3.90319e-1,-9.46896,129.141,-975.953,3561.47,-1613.82],'range': [17.,38.],'fitunc': 140.},
+    'stephens': {'altname': ['stephens09','stephens2009','ste09'], 'reference': 'Stephens et al. (2009)','bibcode': '2009ApJ...702..154S',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [-0.0025492,0.17667,-4.4727,54.67,-467.26,4400.],'range': [16.,38.],'fitunc': 100.},
+    'stephens_alt': {'altname': ['stephens09_alt','stephens2009_alt','ste09alt'], 'reference': 'Stephens et al. (2009)','bibcode': '2009ApJ...702..154S',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [-0.011997,1.2315,-50.472,1031.9,-10560.,44898.],'range': [23.,38.],'fitunc': 100.},
 }
 
 
@@ -913,12 +934,20 @@ SPT_COLORS_RELATIONS = {
                 'values': [0.21,0.25,0.32,0.35,0.44,0.51,0.46,0.55,0.50,0.64,0.65,0.76,0.96,1.12,0.88,0.92,1.41,1.44,1.30,1.21,1.35,1.40,1.82]},
             },
         },
-    'kirkpatrick2019': {'altname': ['kirkpatrick','kirkpatrick19','kirk19','kir19'], 'bibcode': '2019ApJS..240...19K', 'sptoffset': 30, 'method': 'polynomial', 
+    'kirkpatrick2019': {'altname': ['kirkpatrick19','kirk19','kir19'], 'bibcode': '2019ApJS..240...19K', 'sptoffset': 30, 'method': 'polynomial', 
         'colors': {
             '2MASS_H-WISE_W2': {'fitunc': 0.51, 'range': [36,44], 'coeff': [-0.0264937,0.806149,-6.76528,19.7444]},\
             'WISE_W1-WISE_W2': {'fitunc': 0.39, 'range': [36,44], 'coeff': [0.0290939,-0.0609403,0.812400,-1.29441]},\
             '2MASS_H-IRAC_CH1': {'fitunc': 0.51, 'range': [36,44], 'coeff': [-0.0291438,0.876955,-7.36894,21.3744]},\
             'IRAC_CH1-IRAC_CH2': {'fitunc': 0.19, 'range': [36,44], 'coeff': [-0.00245289,0.0645336,-0.229115,0.769877]},\
+            },
+        },
+    'kirkpatrick2021': {'altname': ['kirkpatrick','kirkpatrick121','kirk21','kir21'], 'bibcode': '2020arXiv201111616K', 'sptoffset': 20, 'method': 'polynomial', 
+        'colors': {
+            'MKO_J-IRAC_CH2': {'fitunc': 0.44, 'range': [30,42.], 'coeff': [3.6779e-7,-2.7663e-5,8.1335e-4,-1.1351e-2,7.2989e-2,-1.7678e-1,1.8527e-1,1.8153e0]},\
+            '2MASS_H-IRAC_CH2': {'fitunc': 0.42, 'range': [30,42.], 'coeff': [3.211e-7,-2.1740e-5,5.7149e-4,-7.1625e-3,4.0283e-2,-7.3996e-2,6.2704e-2,1.1150e0]},\
+            'IRAC_CH1-IRAC_CH2': {'fitunc': 0.19, 'range': [30,42.], 'coeff': [3.2520e-4,8.1897e-4,-2.6015e-2,2.6662e-2]},\
+            'WISE_W1-WISE_W2': {'fitunc': 0.28, 'range': [30,42.], 'coeff': [5.7825e-4,-4.6379e-3,2.9069e-2,2.2668e-2]},\
             },
         },
     'leggett2017': {'altname': ['leggett','ydwarf','leggett17'], 'reference': 'Leggett et al. (2017)','bibcode': '2017ApJ...842..118L','sptoffset': 30,'method': 'polynomial', 'range' : [37.5,42], 'fitunc': 0.1, 
@@ -1205,13 +1234,19 @@ SPT_ABSMAG_RELATIONS = {
         'MKO_J': {'fitunc' : 0.40, 'range' : [21., 39.], 'coeff' : [-7.923e-5,3.986e-3,-6.848e-2,4.500e-1,-6.278e-1,12.03]}, 
         'MKO_K': {'fitunc': 0.30, 'range' : [21., 39.], 'coeff': [-7.351e-5,3.524e-3,-5.819e-2,3.876e-1,-6.485e-1,10.93]}}, 
     },
-    'kirkpatrick2019': {'altname': ['kirkpatrick','kirkpatrick19','kirk19','kir19'], 'bibcode': '2019ApJS..240...19K', 'sptoffset': 30, 'method': 'polynomial', 'filters': {
+    'kirkpatrick2019': {'altname': ['kirkpatrick19','kirk19','kir19'], 'bibcode': '2019ApJS..240...19K', 'sptoffset': 30, 'method': 'polynomial', 'filters': {
         '2MASS_H': {'fitunc' : 0.67, 'range' : [36,44.], 'coeff' : [-0.0344809,1.05122,-8.66856,36.9714]}, 
         'WISE_W1': {'fitunc' : 0.50, 'range' : [36,44.], 'coeff' : [-0.00124337,0.0844831,-0.276439,13.8175]}, 
         'WISE_W2': {'fitunc' : 0.29, 'range' : [36,44.], 'coeff' : [-0.00682090,0.211474,-1.59820,16.3585]}, 
         'WISE_W3': {'fitunc' : 0.41, 'range' : [36,44.], 'coeff' : [0.0159426,0.0319455,10.7315]}, 
         'IRAC_CH1': {'fitunc' : 0.39, 'range' : [36,44.], 'coeff' : [-0.00878279,0.267153,-1.78453,17.0849]}, 
         'IRAC_CH2': {'fitunc' : 0.28, 'range' : [36,44.], 'coeff' : [-0.00635074,0.203183,-1.56047,16.3304]}, 
+    }},
+    'kirkpatrick2021': {'altname': ['kirkpatrick','kirkpatrick21','kirk21','kir21'], 'bibcode': '2020arXiv201111616K', 'sptoffset': 20, 'method': 'polynomial', 'filters': {
+        'MKO_J': {'fitunc' : 0.60, 'range' : [30.,42.], 'coeff' : [2.1526e-7,-1.8672e-5,6.3147e-4,-9.98929e-3,7.1759e-2,-1.9013e-1,3.3790e-1,1.1808e1]}, 
+        '2MASS_H': {'fitunc' : 0.57, 'range' : [30.,42.], 'coeff' : [5.4808e-7,-4.0259e-5,1.1719e-3,-1.6688e-2,1.1696e-1,-3.5467e-1,6.0330e-1,1.0966e1]}, 
+        'IRAC_CH1': {'fitunc' : 0.38, 'range' : [36,42.], 'coeff' : [-9.9981e-8,4.7761e-6,-5.0487e-5,-7.1402e-4,1.7669e-2,-1.0725e-1,3.4919e-1,9.9424e0]}, 
+        'IRAC_CH2': {'fitunc' : 0.21, 'range' : [36,42.], 'coeff' : [2.9971e-8,-3.3136e-6,1.3230e-4,-2.3844e-3,1.9711e-2,-6.2186e-2,1.8897e-1,1.0071e1]}, 
     }},
     'liu2016-ir': {'altname': ['liu','liu-ir','liu2016','liu2016-ir','liu16-ir','liu16-field','liu16-field-ir','liu-field','liu-field-ir'],'bibcode': '2016ApJ...833...96L', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
         'MKO_Y': {'fitunc' : 0.35, 'range' : [16., 28.], 'coeff': [0.402,8.437]},
@@ -1310,10 +1345,15 @@ SPT_ABSMAG_RELATIONS = {
 
 # Empirical relations - SpT to chi value (Halpha EW to LHa/Lbol)
 SPT_CHI_RELATIONS = {
-    'schmidt2014': {'altname': ['schmidt','schmidt14'], 'reference': 'Schmidt et al. (2014)','bibcode':'2014PASP..126..642S', 'sptoffset': 0, 'method': 'interpolate',
+    'schmidt2014': {'altname': ['schmidt','schmidt14'], 'reference': 'Schmidt et al. (2014)','bibcode':'2014PASP..126..642S', 'sptoffset': 0, 'method': 'interpolate', 'scale': 1.e-4,
         'spt': [17,18,19,20,21,22,23,24,25,26,27], \
         'values': [10.28,4.26,2.52,1.98,2.25,2.11,1.67,1.16,1.46,1.23,0.73],\
         'scatter': [3.13,1.18,0.58,0.27,0.11,0.36,0.22,0.3,0.28,0.3,0.3],\
+        },
+    'douglas2014': {'altname': ['douglas','douglas14'], 'reference': 'Douglas et al. (2014)','bibcode':'2014ApJ...795..161D', 'sptoffset': 0, 'method': 'interpolate', 'scale': 1.e-5,
+        'spt': [10,11,12,13,14,15,16,17,18,19], \
+        'values': [6.6453,6.0334,5.2658,4.4872,3.5926,2.4768,1.7363,1.2057,0.6122,0.3522],\
+        'scatter': [0.6207,0.5326,0.5963,0.4967,0.5297,0.4860,0.3475,0.3267,0.2053,0.1432],\
         },
 }
 

@@ -1469,6 +1469,61 @@ def typeToBC(spt, filt, uncertainty=0.,reference='filippazzo2015',verbose=False,
             raise ValueError('Unknown method {} for {}'.format(SPT_BC_RELATIONS[ref]['method'],refstring))
 
 
+def typeToChi(spt,spt_e = 0.,set='douglas2014',nsamples=100):
+    '''
+    :Purpose: 
+
+        Computes the chi correction factor to convert from Halpha equivalent width to LHa/Lbol
+        TO BE COMPLETED
+
+    :Required Inputs: 
+
+        :param spt: spectral type, either string or numerical
+
+    :Optional Inputs: 
+
+        :param spt_e=0.: uncertainty in spectral type; if zero, not monte carlo is done
+        :param set='douglas2014': reference for parameters to use for calculatino
+        :param nsamples=100: number of Monte Carlo samples for error computation
+
+    :Output: 
+
+        Estimated chi correction factor and uncertainty
+
+    :Example:
+
+        TBD
+
+    '''
+    pass
+
+def magToMass(magnitude,set='mann2019',mag_e = 0,nsamples=100):
+    '''
+    :Purpose: 
+
+        Computes the mass based on a given absolute magnitude and magnitude/mass relation
+        TO BE COMPLETED
+
+    :Required Inputs: 
+
+        :param mag: magnitude to use in computation; should be in the filter defined by the relation
+
+    :Optional Inputs: 
+
+        :param set='douglas2014': reference for parameters to use for calculation
+        :param mag_e=0.: uncertainty in magnitude; if zero, not monte carlo is done
+        :param nsamples=100: number of Monte Carlo samples for error computation
+
+    :Output: 
+
+        Estimated mass in solar mass units and uncertainty
+
+    :Example:
+
+        TBD
+
+    '''
+    pass
 
 #####################################################
 ######   SUMMARIES OF EMPIRICAL RELATIONS   #########
