@@ -877,7 +877,7 @@ SPT_TEFF_RELATIONS = {
     'kirkpatrick2019': {'altname': ['kirkpatrick','kirkpatrick19','kirk19','kir19'], 'reference': 'Kirkpartick et al. (2019)','bibcode': '2019ApJS..240...19K',
         'method': 'polynomial', 'sptoffset': 30, 'coeff': [9.89240,-286.401,2335.64],'range': [36.,44.],'fitunc': 68.},
     'kirkpatrick2021-l': {'altname': ['kirkpatrick-l','kirkpatrick21-l','kirk21-l','kir21-l'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2020arXiv201111616K',
-        'method': 'polynomial', 'sptoffset': 20, 'coeff': [4.0301e0,-1.4496e2,2.2375e3],'range': [20,28.75.],'fitunc': 134.},
+        'method': 'polynomial', 'sptoffset': 20, 'coeff': [4.0301e0,-1.4496e2,2.2375e3],'range': [20,28.75],'fitunc': 134.},
     'kirkpatrick2021-lt': {'altname': ['kirkpatrick-lt','kirkpatrick21-lt','kirk21-lt','kir21-lt'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2020arXiv201111616K',
         'method': 'polynomial', 'sptoffset': 20, 'coeff': [-1.8309e1,1.4379e3],'range': [28.75,34.75],'fitunc': 79.},
     'kirkpatrick2021-ty': {'altname': ['kirkpatrick-ty','kirkpatrick21-ty','kirk21-ty','kir21-ty'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2020arXiv201111616K',
