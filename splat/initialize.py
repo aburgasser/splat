@@ -14,12 +14,12 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2020.10.07'
+VERSION = '2021.02.11'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
 GITHUB_URL = 'https://github.com/aburgasser/splat/'
-BIBCODE = '2017arXiv170700062B'
+BIBCODE = '2017ASInC..14....7B'
 EMAIL = 'aburgasser@gmail.com'
 TMPFILENAME = 'splattmpfile'
 MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
