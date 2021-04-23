@@ -2170,6 +2170,10 @@ class Spectrum(object):
         else: print('\nWarning: ambiguous action {} for clean; no action taken'.format(action))
         return
 
+    def mask(self,mask,replace_noise=True,others=[]):
+        self.maskFlux(mask,replace_noise=replace_noise,others=others)
+        return
+
 
     def maskFlux(self,mask,replace_noise=True,others=[]):
         '''
@@ -2216,7 +2220,7 @@ class Spectrum(object):
 
 # mask pixels
         self.flux[msk] = numpy.nan
-        if replace_noise: self.flux[msk] = numpy.nan
+        if replace_noise == True: self.noise[msk] = numpy.nan
 
         if len(others) > 0:
             for k in others:
@@ -6779,6 +6783,10 @@ def measureEWElement(sp,element,wave_range=[0.,0.],getNist=False,**kwargs):
             lines = [0.941697,1.977679,2.261410,2.263110,2.265741]
         elif el == 'ca ii':
             lines = [0.849802,0.854209,0.866214]
+        elif el == 'fe i':
+            lines = [1.0340886]
+        elif el == 'al i':
+            lines = [1.3123416,1.3150753,1.6718974,1.6750520]
         else:
             print('\nHave not curated lines set for {}'.format(element))
             return {}
@@ -7141,288 +7149,6 @@ def measureIndexSet(sp,ref='burgasser',index_info={},info=False,verbose=False,in
     return result
 
 
-
-def metallicity(sp,nsamples=100,ref='rojas',output='all',verbose=False,**kwargs):
-    '''
-    :Purpose: 
-
-        THIS IS OUT OF DATE
-
-        Metallicity measurement using Na I and Ca I lines and H2O-K2 index as described in 
-        `Rojas-Ayala et al.(2012) <http://adsabs.harvard.edu/abs/2012ApJ...748...93R>`_
-        Requires higher resolution data than SpeX prism mode. 
-        Includes calls to measureIndexSet()_ and measureEWSet()_
-
-    :Required Inputs: 
-
-        :param sp: Spectrum class object, which should contain wave, flux and noise array elements
-
-    :Optional Inputs: 
-
-        :param nsamples=100: number of Monte Carlo samples for error computation
-
-    :Output: 
-
-        Estimated metallicity and uncertainty
-
-    :Example:
-
-        TBD
-
-    .. _measureIndexSet() : api.html#splat.core.measureIndexSet
-    .. _measureEWSet() : api.html#splat.core.measureEWSet
-
-    '''
-
-    allowed_refs = ['rojas2012','terrien2012','mann2013','mann2014','newton2014']
-
-    if 'rojas' in ref.lower():
-        reference = 'Rojas et al. (2012)'
-        bibcode = '2012ApJ...748...93R'
-        result = {'reference': reference, 'bibcode': bibcode, 'measures': {}}
-        if verbose==True: print('Computing [Fe/H] from {} ({}), valid for M0-M5, ??? < [Fe/H] < ???'.format(reference,bibcode))
-
-        coeff_feh = [-1.039,0.092,0.119]
-        coeff_feh_e = [0.17,0.023,0.033]
-        feh_unc = 0.100
-        coeff_mh = [-0.731,0.066,0.083]
-        coeff_mh_e = [0.12,0.016,0.023]
-        mh_unc = 0.100
-
-        ews = splat.measureEWSet(sp,ref='rojas2012')
-        nai,nai_e = ews['nai']['ew'].to(u.Angstrom).value,ews['nai']['ew_unc'].to(u.Angstrom).value
-        cai,cai_e = ews['cai']['ew'].to(u.Angstrom).value,ews['cai']['ew_unc'].to(u.Angstrom).value
-        h2ok2,h2ok2_e = measureIndexSet(sp, ref='rojas')['H2O-K2']
-
-        feh = coeff_feh[0]+coeff_feh[1]*nai/h2ok2+coeff_feh[2]*cai/h2ok2
-        feh_e = numpy.sqrt(feh_unc**2+numpy.nanstd(
-            coeff_feh[0]+\
-            coeff_feh[1]*(numpy.random.normal(nai,nai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))+\
-            coeff_feh[2]*(numpy.random.normal(cai,cai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples)))**2)
-        result['measures']['feh'] = [feh,feh_e]
-        if verbose==True: print('K-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh,feh_e))
-
-        mh = coeff_mh[0]+coeff_mh[1]*nai/h2ok2+coeff_mh[2]*cai/h2ok2
-        mh_e = numpy.sqrt(feh_unc**2+numpy.nanstd(
-            coeff_mh[0]+\
-            coeff_mh[1]*(numpy.random.normal(nai,nai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples))+\
-            coeff_mh[2]*(numpy.random.normal(cai,cai_e,nsamples)/numpy.random.normal(h2ok2,h2ok2_e,nsamples)))**2)
-        result['measures']['mh'] = [mh,mh_e]
-        if verbose==True: print('K-band [M/H] = {:.2f}+/-{:.2f}'.format(mh,mh_e))
-
-
-# Terrien et al. 2012
-    elif 'terrien' in ref.lower():
-        reference = 'Terrrien et al. (2012)'
-        bibcode = '2012ApJ...747L..38T'
-        result = {'reference': reference, 'bibcode': bibcode, 'measures': {}}
-        if verbose==True: print('Computing [Fe/H] from {} ({}), valid for M0--M5, -0.25 < [Fe/H] < +0.3'.format(reference,bibcode))
-
-        coeff_feh_h = [0.340,0.407,0.436,-1.485]
-        feh_k_unc = 0.12
-        coeff_feh_k = [0.132,0.083,-0.403,-0.616]
-        feh_h_unc = 0.12
-
-        ews = splat.measureEWSet(sp,ref='terrien2012')
-        caih = ews['cai-h1']['ew'].to(u.Angstrom).value+ews['cai-h2']['ew'].to(u.Angstrom).value
-        caih_e = numpy.sqrt((ews['cai-h1']['ew_unc'].to(u.Angstrom).value)**2+(ews['cai-h1']['ew_unc'].to(u.Angstrom).value)**2)
-        ind = measureIndexSet(sp, ref='covey')
-        h2oh,h2oh_e =ind['H2O-H']
-        h2ok,h2ok_e = ind['H2O-K']
-
-        feh_k = coeff_feh_k[0]*ews['nai-k']['ew'].to(u.Angstrom).value+\
-            coeff_feh_k[1]*ews['cai-k']['ew'].to(u.Angstrom).value+\
-            coeff_feh_k[2]*ind['H2O-K'][0]+coeff_feh_k[3]
-        feh_k_e = numpy.sqrt(feh_k_unc**2+numpy.nanstd(
-            coeff_feh_k[0]*numpy.random.normal(ews['nai-k']['ew'].to(u.Angstrom).value,ews['nai-k']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_k[1]*numpy.random.normal(ews['cai-k']['ew'].to(u.Angstrom).value,ews['cai-k']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_k[2]*numpy.random.normal(ind['H2O-K'][0],ind['H2O-K'][1],nsamples)+coeff_feh_k[3])**2)
-        result['measures']['feh_k'] = [feh_k,feh_k_e]
-        if verbose==True: print('K-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh_k,feh_k_e))
-
-        feh_h = coeff_feh_h[0]*caih+\
-            coeff_feh_h[1]*ews['ki-h']['ew'].to(u.Angstrom).value+\
-            coeff_feh_h[2]*ind['H2O-H'][0]+coeff_feh_h[3]
-        feh_h_e = numpy.sqrt(feh_h_unc**2+numpy.nanstd(
-            coeff_feh_h[0]*numpy.random.normal(caih,caih_e,nsamples)+\
-            coeff_feh_h[1]*numpy.random.normal(ews['ki-h']['ew'].to(u.Angstrom).value,ews['ki-h']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_h[2]*numpy.random.normal(ind['H2O-H'][0],ind['H2O-H'][1],nsamples)+coeff_feh_h[3])**2)
-        result['measures']['feh_h'] = [feh_h,feh_h_e]
-        if verbose==True: print('H-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh_h,feh_h_e))
-
-
-# Mann et al. 2013
-    elif 'mann' in ref.lower() and '14' not in ref.lower():
-        reference = 'Mann et al. (2013)'
-        bibcode = '2013AJ....145...52M'
-        result = {'reference': reference, 'bibcode': bibcode, 'measures': {}}
-        if verbose==True: print('Computing [Fe/H] from {} ({}), valid for K5--M5, -1.04 < [Fe/H] < +0.56'.format(reference,bibcode))
-
-        coeff_feh_j = [0.29,0.21,0.26,-0.26,-0.190,-1.03]
-        feh_unc_j = 0.07
-        coeff_mh_j = [0.32,0.46,0.076,1.213,-1.97]
-        mh_unc_j = 0.08
-        coeff_feh_h = [0.40,0.51,-0.28,-1.460,0.71]
-        feh_unc_h = 0.07
-        coeff_mh_h = [0.38,0.40,0.41,0.194,-0.76]
-        mh_unc_h = 0.06
-        coeff_feh_k = [0.19,0.069,0.083,0.218,-1.55]
-        feh_unc_k = 0.06
-        coeff_mh_k = [0.12,0.086,0.13,0.245,-1.18]
-        mh_unc_k = 0.05
-
-        ews = splat.measureEWSet(sp,ref='mann2013')
-        ind = measureIndexSet(sp, ref='mann')
-        h2oj,h2oj_e =ind['H2O-J']
-        ind = measureIndexSet(sp, ref='covey')
-        h2oh,h2oh_e =ind['H2O-H']
-        ind = measureIndexSet(sp, ref='rojas')
-        h2ok,h2ok_e =ind['H2O-K2']
-
-
-        feh_j = coeff_feh_j[0]*ews['f10']['ew'].to(u.Angstrom).value+\
-            coeff_feh_j[1]*ews['f09']['ew'].to(u.Angstrom).value+\
-            coeff_feh_j[2]*ews['f12']['ew'].to(u.Angstrom).value+\
-            coeff_feh_j[3]*ews['f13']['ew'].to(u.Angstrom).value+\
-            coeff_feh_j[4]*h2oj+coeff_feh_j[5]
-        feh_j_e = numpy.sqrt(feh_unc_j**2+numpy.nanstd(\
-            coeff_feh_j[0]*numpy.random.normal(ews['f10']['ew'].to(u.Angstrom).value,ews['f10']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_j[1]*numpy.random.normal(ews['f09']['ew'].to(u.Angstrom).value,ews['f09']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_j[2]*numpy.random.normal(ews['f12']['ew'].to(u.Angstrom).value,ews['f12']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_j[3]*numpy.random.normal(ews['f13']['ew'].to(u.Angstrom).value,ews['f13']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_j[4]*numpy.random.normal(h2oj,h2oj_e,nsamples)+coeff_feh_j[5])**2)
-        result['measures']['feh_j'] = [feh_j,feh_j_e]
-        if verbose==True: print('J-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh_j,feh_j_e))
-
-        mh_j = coeff_mh_j[0]*ews['f10']['ew'].to(u.Angstrom).value+\
-            coeff_mh_j[1]*ews['f11']['ew'].to(u.Angstrom).value+\
-            coeff_mh_j[2]*ews['f09']['ew'].to(u.Angstrom).value+\
-            coeff_mh_j[3]*h2oj+coeff_mh_j[4]
-        mh_j_e = numpy.sqrt(mh_unc_j**2+numpy.nanstd(\
-            coeff_mh_j[0]*numpy.random.normal(ews['f10']['ew'].to(u.Angstrom).value,ews['f10']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_mh_j[1]*numpy.random.normal(ews['f11']['ew'].to(u.Angstrom).value,ews['f11']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_mh_j[2]*numpy.random.normal(ews['f09']['ew'].to(u.Angstrom).value,ews['f09']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_mh_j[3]*numpy.random.normal(h2oj,h2oj_e,nsamples)+coeff_mh_j[4])**2)
-        result['measures']['mh_j'] = [mh_j,mh_j_e]
-        if verbose==True: print('J-band [M/H] = {:.2f}+/-{:.2f}'.format(mh_j,mh_j_e))
-
-        feh_h = coeff_feh_h[0]*ews['f17']['ew'].to(u.Angstrom).value+\
-            coeff_feh_h[1]*ews['f14']['ew'].to(u.Angstrom).value+\
-            coeff_feh_h[2]*ews['f18']['ew'].to(u.Angstrom).value+\
-            coeff_feh_h[3]*h2oh+coeff_feh_h[4]
-        feh_h_e = numpy.sqrt(feh_unc_h**2+numpy.nanstd(\
-            coeff_feh_h[0]*numpy.random.normal(ews['f17']['ew'].to(u.Angstrom).value,ews['f17']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_h[1]*numpy.random.normal(ews['f14']['ew'].to(u.Angstrom).value,ews['f14']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_h[2]*numpy.random.normal(ews['f18']['ew'].to(u.Angstrom).value,ews['f18']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_h[3]*numpy.random.normal(h2oh,h2oh_e,nsamples)+coeff_feh_h[4])**2)
-        result['measures']['feh_h'] = [feh_h,feh_h_e]
-        if verbose==True: print('H-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh_h,feh_h_e))
-
-        mh_h = coeff_mh_h[0]*ews['f17']['ew'].to(u.Angstrom).value+\
-            coeff_mh_h[1]*ews['f16']['ew'].to(u.Angstrom).value+\
-            coeff_mh_h[2]*ews['f15']['ew'].to(u.Angstrom).value+\
-            coeff_mh_h[3]*h2oh+coeff_mh_h[4]
-        mh_h_e = numpy.sqrt(mh_unc_j**2+numpy.nanstd(\
-            coeff_mh_h[0]*numpy.random.normal(ews['f17']['ew'].to(u.Angstrom).value,ews['f17']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_mh_h[1]*numpy.random.normal(ews['f16']['ew'].to(u.Angstrom).value,ews['f16']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_mh_h[2]*numpy.random.normal(ews['f15']['ew'].to(u.Angstrom).value,ews['f15']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_mh_h[3]*numpy.random.normal(h2oh,h2oh_e,nsamples)+coeff_mh_h[4])**2)
-        result['measures']['mh_h'] = [mh_h,mh_h_e]
-        if verbose==True: print('H-band [M/H] = {:.2f}+/-{:.2f}'.format(mh_h,mh_h_e))
-
-        feh_k = coeff_feh_k[0]*ews['f19']['ew'].to(u.Angstrom).value+\
-            coeff_feh_k[1]*ews['f22']['ew'].to(u.Angstrom).value+\
-            coeff_feh_k[2]*ews['f20']['ew'].to(u.Angstrom).value+\
-            coeff_feh_k[3]*h2ok+coeff_feh_k[4]
-        feh_k_e = numpy.sqrt(feh_unc_h**2+numpy.nanstd(\
-            coeff_feh_k[0]*numpy.random.normal(ews['f19']['ew'].to(u.Angstrom).value,ews['f19']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_k[1]*numpy.random.normal(ews['f22']['ew'].to(u.Angstrom).value,ews['f22']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_k[2]*numpy.random.normal(ews['f20']['ew'].to(u.Angstrom).value,ews['f20']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh_k[3]*numpy.random.normal(h2ok,h2ok_e,nsamples)+coeff_feh_k[4])**2)
-        result['measures']['feh_k'] = [feh_k,feh_k_e]
-        if verbose==True: print('K-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh_k,feh_k_e))
-
-        mh_k = coeff_mh_k[0]*ews['f19']['ew'].to(u.Angstrom).value+\
-            coeff_mh_k[1]*ews['f22']['ew'].to(u.Angstrom).value+\
-            coeff_mh_k[2]*ews['f21']['ew'].to(u.Angstrom).value+\
-            coeff_mh_k[3]*h2ok+coeff_mh_k[4]
-        mh_k_e = numpy.sqrt(mh_unc_j**2+numpy.nanstd(\
-            coeff_mh_k[0]*numpy.random.normal(ews['f19']['ew'].to(u.Angstrom).value,ews['f19']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_mh_k[1]*numpy.random.normal(ews['f22']['ew'].to(u.Angstrom).value,ews['f22']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_mh_k[2]*numpy.random.normal(ews['f21']['ew'].to(u.Angstrom).value,ews['f21']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_mh_k[3]*numpy.random.normal(h2ok,h2ok_e,nsamples)+coeff_mh_k[4])**2)
-        result['measures']['mh_k'] = [mh_k,mh_k_e]
-        if verbose==True: print('K-band [M/H] = {:.2f}+/-{:.2f}'.format(mh_k,mh_k_e))
-
-
-
-# Newton et al. 2014
-    elif 'newton' in ref.lower():
-        reference = 'Newton et al. (2014)'
-        bibcode = '2014AJ....147...20N'
-        result = {'reference': reference, 'bibcode': bibcode, 'measures': {}}
-        if verbose==True: print('Computing [Fe/H] from {} ({}), valid for M1--M5, -1.0 < [Fe/H] < +0.35'.format(reference,bibcode))
-
-        coeff_feh = [0.596,-0.0392,-1.96]
-        feh_unc = 0.12
-
-        ews = splat.measureEWSet(sp,ref='rojas2012')
-
-        feh = coeff_feh[0]*ews['nai']['ew'].to(u.Angstrom).value+\
-            coeff_feh[1]*ews['nai']['ew'].to(u.Angstrom).value**2+coeff_feh[2]
-        nais = numpy.random.normal(ews['nai']['ew'].to(u.Angstrom).value,ews['nai']['ew_unc'].to(u.Angstrom).value,nsamples)
-        feh_e = numpy.sqrt(feh_unc**2+numpy.nanstd(coeff_feh[0]*nais+coeff_feh[1]*nais**2+coeff_feh[2])**2)
-        result['measures']['feh'] = [feh,feh_e]
-        if verbose==True: print('K-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh,feh_e))
-
-# Mann et al. 2014
-    elif 'mann' in ref.lower() and '14' in ref.lower():
-        reference = 'Mann et al. (2014)'
-        bibcode = '2014AJ....147..160M'
-        result = {'reference': reference, 'bibcode': bibcode, 'measures': {}}
-        if verbose==True: print('Computing [Fe/H] from {} ({}), valid for M4.5--M9.5, -0.58 < [Fe/H] < +0.56'.format(reference,bibcode))
-
-        coeff_feh = [0.131,0.210,-3.07,1.341]
-        feh_unc = 0.07
-
-        ews = splat.measureEWSet(sp,ref='mann2014')
-        ind = measureIndexSet(sp, ref='rojas')
-#        h2ok,h2ok_e =ind['H2O-K2']
-
-        feh = coeff_feh[0]*ews['nai']['ew'].to(u.Angstrom).value+\
-            coeff_feh[1]*ews['cai']['ew'].to(u.Angstrom).value+\
-            coeff_feh[2]*ind['H2O-K2'][0]+coeff_feh[3]
-        feh_e = numpy.sqrt(feh_unc**2+numpy.nanstd(\
-            coeff_feh[0]*numpy.random.normal(ews['nai']['ew'].to(u.Angstrom).value,ews['nai']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh[1]*numpy.random.normal(ews['cai']['ew'].to(u.Angstrom).value,ews['cai']['ew_unc'].to(u.Angstrom).value,nsamples)+\
-            coeff_feh[2]*numpy.random.normal(ind['H2O-K2'][0],ind['H2O-K2'][1],nsamples)+coeff_feh[3])**2)
-        result['measures']['feh'] = [feh,feh_e]
-        if verbose==True: print('K-band [Fe/H] = {:.2f}+/-{:.2f}'.format(feh,feh_e))
-
-    else:
-        raise ValueError('Reference {} not recognized as one of the metallicity relations currently in SPLAT; try {}'.format(ref,allowed_refs))
-
-# return
-    if output=='feh': 
-        if 'rojas' in ref.lower() or 'newton' in ref.lower() or ('mann' in ref.lower() and '14' in ref.lower()): 
-            return result['measures']['feh']
-        elif 'mann' in ref.lower(): 
-            if verbose==True: print('Returning {} K-band [Fe/H] measurement and uncertainty'.format(result['reference']))
-            return result['measures']['feh_k']
-        elif 'terrien' in ref.lower(): 
-            if verbose==True: print('Returning {} H-band [Fe/H] measurement and uncertainty'.format(result['reference']))
-            return result['measures']['feh_h']
-        else: return result
-
-    elif output=='mh': 
-        if 'rojas' in ref.lower(): return result['measures']['mh']
-        elif 'mann' in ref.lower() and '14' not in ref.lower(): 
-            if verbose==True: print('Returning {} K-band [M/H] measurement and uncertainty'.format(result['reference']))
-            return result['measures']['mh_k']
-        else: return result
-
-    else: return result
-        
 
 
 def addUserData(folders=[],default_info={},verbose=True):

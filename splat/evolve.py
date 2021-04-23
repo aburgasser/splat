@@ -180,8 +180,11 @@ def modelInfo(mdl):
 # read in full models
     dp = pandas.read_csv(os.path.normpath('{}/{}/{}'.format(SPLAT_PATH,EVOLUTIONARY_MODEL_FOLDER,EVOLUTIONARY_MODELS[model]['file'])),comment='#',sep=',',header=0)
     for k in list(dp.keys()):
-        print('Range in {}: {:.3f} to {:.3f}'.format(k,numpy.nanmin(dp[k])*EVOLUTIONARY_MODEL_PARAMETERS[k]['unit'],numpy.nanmax(dp[k])*EVOLUTIONARY_MODEL_PARAMETERS[k]['unit']))
-
+        if k in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
+            print('Range in {}: {:.3f} to {:.3f}'.format(k,numpy.nanmin(dp[k])*EVOLUTIONARY_MODEL_PARAMETERS[k]['unit'],numpy.nanmax(dp[k])*EVOLUTIONARY_MODEL_PARAMETERS[k]['unit']))
+        # else:
+        #     print(k)
+        #     print('Range in {}: {:.3f} to {:.3f}'.format(k,numpy.nanmin(dp[k],numpy.nanmax(dp[k]))))
     return 
 
 

@@ -652,6 +652,7 @@ EVOLUTIONARY_MODEL_PARAMETERS = {\
     'y': {'unit': u.dex(), 'default': 0., 'title': 'Y', 'altname': ['he']},
     'l_mix': {'unit': u.cm/u.cm, 'default': 1.0, 'title': 'Mixing Length', 'altname': ['alpha']},
     'cloud': {'unit': u.dex(), 'default': '', 'title': 'Cloud parameter', 'altname': ['cld']},
+    'Mv': {'unit': u.dex(), 'default': '', 'title': 'Absolute V', 'altname': ['mv']},
 }
 EVOLUTIONARY_MODELS = {\
     'baraffe1997': {'file': 'baraffe1997.csv','citation': 'Baraffe et al. (1997)', 'bibcode': '1997A&A...327.1054B', 'altname': ['bar97','baraffe97'], 'default': {'metallicity': 0.}},\

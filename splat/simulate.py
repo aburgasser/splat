@@ -1097,7 +1097,7 @@ def simulateAges(num,age_range=[0.1,10.],distribution='uniform',parameters={},sf
 		y /= numpy.max(y)
 		f = interp1d(y,x)
 		z = f(numpy.random.uniform(size=int(num)))
-		ages = cosmo.lookback_time(z)
+		ages = cosmo.lookback_time(z).value
 
 # uniform distribution (default)
 	elif distribution.lower() == 'uniform' or distribution.lower() == 'flat': 

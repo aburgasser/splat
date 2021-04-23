@@ -1152,7 +1152,7 @@ def checkKeys(input,parameters,**kwargs):
             print('Valid keywords are {}\n'.format(parameters))
 
 
-def coordinateToDesignation(c):
+def coordinateToDesignation(c,prefix='J',sep='',split='',decimal=False):
     '''
     :Purpose: Converts right ascension and declination into a designation string
 
@@ -1174,23 +1174,28 @@ def coordinateToDesignation(c):
         J15552640+0954000
     '''
 # input is ICRS
+    # decreplace = ''
+    # if decimal==True: decreplace='.'
     if isinstance(c,SkyCoord):
         cc = copy.deepcopy(c)
     else:
         cc = properCoordinates(c)
 # input is [RA,Dec] pair in degrees
-    if sys.version_info.major == 2:
-        return string.replace('J{0}{1}'.format(cc.ra.to_string(unit=u.hour, sep='', precision=2, pad=True), \
-        cc.dec.to_string(unit=u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
-    else:
-        return str.replace('J{0}{1}'.format(cc.ra.to_string(unit=u.hour, sep='', precision=2, pad=True), \
-        cc.dec.to_string(unit=u.degree, sep='', precision=1, alwayssign=True, pad=True)),'.','')
-
+    output = '{}{}{}{}'.format(prefix, cc.ra.to_string(unit=u.hour, sep=sep, precision=2, pad=True), \
+        split , cc.dec.to_string(unit=u.degree, sep=sep, precision=1, alwayssign=True, pad=True))
+    if decimal==False: output = output.replace('.','')
+    # if sys.version_info.major == 2:
+    #     return string.replace('{}{0}{}{1}'.format(prefix,cc.ra.to_string(unit=u.hour, sep=sep, precision=2, pad=True), \
+    #     splitstr, cc.dec.to_string(unit=u.degree, sep=sep, precision=1, alwayssign=True, pad=True)),'.',decreplace)
+    # else:
+    #     return str.replace('{}{0}{}{1}'.format(prefix,cc.ra.to_string(unit=u.hour, sep=sep, precision=2, pad=True), \
+    #     splitstr, cc.dec.to_string(unit=u.degree, sep=sep, precision=1, alwayssign=True, pad=True)),'.',decreplace)
+    return output
 
 
 def designationToCoordinate(value, **kwargs):
     '''
-    :Purpose: Convert a designation srtring into a RA, Dec tuple or ICRS SkyCoord objects (default)
+    :Purpose: Convert a designation string into a RA, Dec tuple or ICRS SkyCoord objects (default)
 
     :param value: Designation string with RA measured in hour angles and Dec in degrees
     :type value: required
