@@ -1434,7 +1434,7 @@ class Spectrum(object):
 
         if flag==0:
             self.toWaveUnit(wave.unit)
-            self.trim([numpy.nanmin(wave),numpy.nanmax(wave)])
+            self.trim([numpy.nanmin(wave)-0.05*(numpy.nanmax(wave)-numpy.nanmin(wave)),numpy.nanmax(wave)+0.05*(numpy.nanmax(wave)-numpy.nanmin(wave))])
 
 # map onto wavelength grid; if spectrum has lower resolution, interpolate; otherwise integrate & resample
             funit = self.flux.unit
