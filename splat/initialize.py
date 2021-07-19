@@ -14,7 +14,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2021.02.24'
+VERSION = '2021.06.24'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -662,7 +662,7 @@ EVOLUTIONARY_MODELS = {\
     'burrows2001': {'file': 'burrows2001.csv','citation': 'Burrows et al. (2001)', 'bibcode': '2001RvMP...73..719B', 'altname': ['burrows','bur01','burrows01'], 'default': {}},\
     'chabrier1997': {'file': 'chabrier1997.csv','citation': 'Chabrier & Baraffe (1997)', 'bibcode': '1997A&A...328...83C', 'altname': ['chabrier','cha97','chabrier97'], 'default': {'metallicity': 0., 'y': 0.275}},\
     'saumon2008': {'file': 'saumon2008.csv','citation': 'Saumon et al. (2008)', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','sau08','saumon08'], 'default': {'metallicity': 0., 'cloud': 'hybrid'}},\
-    'marley2019': {'file': 'marley2019.csv','citation': 'Marley et al. (2019)', 'bibcode': 'marley2019', 'url': 'https://zenodo.org/record/1405206#.W4bNhmQzrq0', 'altname': ['marley','sonora'], 'default': {}},\
+    'marley2019': {'file': 'marley2019.csv','citation': 'Marley et al. (2019)', 'bibcode': 'marley2019', 'url': 'https://zenodo.org/record/1405206#.W4bNhmQzrq0', 'altname': ['marley','sonora','marley19','bobcat'], 'default': {}},\
 }
 
 EW_SETS = {
@@ -1040,6 +1040,13 @@ SPT_COLORS_RELATIONS = {
             'MKO_H-MKO_K': {'fitunc' : 0.07, 'spt' : numpy.arange(15,38.1), 'values': [0.32,0.39,0.44,0.47,0.51,0.54,0.58,0.63,0.67,0.71,0.74,0.75,0.75,0.71,0.65,0.56,0.45,0.31,0.16,0.01,-0.11,-0.19,-0.2,-0.09]}, \
             'MKO_K-WISE_W1': {'fitunc' : 0.07, 'spt' : numpy.arange(15,38.1), 'values': [0.11,0.22,0.25,0.26,0.27,0.29,0.33,0.4,0.48,0.56,0.65,0.72,0.77,0.79,0.79,0.76,0.71,0.65,0.59,0.55,0.54,0.59,0.7,0.9]}, \
             'WISE_W1-WISE_W2': {'fitunc' : 0.07, 'spt' : numpy.arange(15,38.1), 'values': [0.17,0.21,0.24,0.26,0.27,0.27,0.28,0.28,0.29,0.3,0.32,0.36,0.41,0.48,0.57,0.68,0.82,0.99,1.19,1.43,1.7,2.02,2.38,2.79]}
+            },
+        },
+    'theissen2017': {'altname': ['theissen','theissen17','the17'], 'reference': 'Theissen et al. (2017)','bibcode':'2017AJ....153...92T', 'sptoffset': 0, 'method': 'interpolate', 'scatter': 0.1, 'filters': {'SDSS_I','SDSS_Z'},
+        'colors': {
+            'SDSS_I-SDSS_Z': {
+                'spt': [15,16,17,18,19,20,21,22,23,24,25,26,27,28], \
+                'values': [0.86,1.06,1.17,1.48,1.66,1.85,1.86,1.85,1.88,2.13,2.16,2.43,2.59,2.81]},
             },
         },
     }

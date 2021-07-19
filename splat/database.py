@@ -68,7 +68,7 @@ def prepDB(db_init,raCol='RA',decCol='DEC',desigCol='DESIGNATION',force=False):
             raise ValueError('Database must have columns {} and {}, or {}'.format(raCol,decCol,desigCol))
         else:
             db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
-            if not isinstance(db[raCol].iloc[0],float):
+            if raCol not in list(db.columns) or decCol not in list(db.columns): 
                 db[raCol] = [c.ra.degree for c in db['COORDINATES']]
                 db[decCol] = [c.dec.degree for c in db['COORDINATES']]
     if desigCol not in list(db.columns):
@@ -429,7 +429,7 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
         'VISTA': {'altname': ['VISTA'], 'catalog': u'II/329/urat1'},
         'GAIA-DR1': {'altname': ['GAIA1','GAIA-DR1','GAIADR1'], 'catalog': u'II/337/gaia'},
         'GAIA': {'altname': ['GAIA','GAIA-DR2','GAIADR2','GAIA2'], 'catalog': u'I/345/gaia2'},
-        'PANSTARRS': {'altname': ['PAN-STARRS','PS1'], 'catalog': u'I/349/ps1'},
+        'PANSTARRS': {'altname': ['PAN-STARRS','PANSTARRS','PS1'], 'catalog': u'II/349/ps1'},
         'DENIS': {'altname': ['DENIS'], 'catalog': u'B/denis'},
         'LEHPM': {'altname': ['LEHPM'], 'catalog': u'J/A+A/421/763'},
         'LEPINE': {'altname': ['LEPINE-MDWARFS'], 'catalog': u'J/AJ/142/138/Mdwarfs'},
@@ -989,12 +989,13 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
         'GAIA-DR1': {'altname': ['GAIADR1','GAIA1'],'vref': u'vizier:I/337/gaia', 'select_columns': ['source_id','ra','dec','ref_epoch','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
         'GAIA-DR2': {'altname': ['GAIADR2','GAIA2'],'vref': u'vizier:I/345/gaia2', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
         'GAIA-EDR3': {'altname': ['GAIA-DR3','GAIAEDR3','GAIA3','GAIA'],'vref': u'vizier:I/350/gaiaedr3', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
-# probably broken
-        'WISE': {'altname': ['WISE'],'vref': u'vizier:II/311/wise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-        'UKIDSS': {'altname': ['UKIDSS'],'vref': u'vizier:II/319/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-        'UCAC': {'altname': ['UCAC'],'vref': u'vizier:II/322A/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-        'MOVERS': {'altname': ['MOVERS'],'vref': u'vizier:J/AJ/151/41/movers', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-        'LATEMOVERS': {'altname': ['LATEMOVERS','LATE-MOVERS'],'vref': u'vizier:J/AJ/153/92/lmovers', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+        'PANSTARRS': {'altname': ['PAN-STARRS','PANSTARRS','PS1'], 'vref': u'vizier:II/349/ps1', 'select_columns': ['objID','RAJ2000','DEJ2000','Epoch','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','ymag','e_ymag']},
+# not yet integrated
+#        'WISE': {'altname': ['WISE'],'vref': u'vizier:II/311/wise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+#        'UKIDSS': {'altname': ['UKIDSS'],'vref': u'vizier:II/319/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+#        'UCAC': {'altname': ['UCAC'],'vref': u'vizier:II/322A/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+#        'MOVERS': {'altname': ['MOVERS'],'vref': u'vizier:J/AJ/151/41/movers', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+#        'LATEMOVERS': {'altname': ['LATEMOVERS','LATE-MOVERS'],'vref': u'vizier:J/AJ/153/92/lmovers', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
 #        'WISE': {'vref': u'II/311', 'select_columns': 
 #        'VISTA': {'vref': u'II/329', 'select_columns': 
 #        'CFHT': {'vref': u'II/317', 'select_columns': 
@@ -1015,7 +1016,9 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
 #    if catalog.upper() in list(XMATCH_CATALOGS.keys()):
 #        cat = catalog.upper()
 #        vref = XMATCH_CATALOGS[cat]['vref']
-        if use_select_columns == True: select_columns = XMATCH_CATALOGS[cat]['select_columns']
+        if use_select_columns == True and len(XMATCH_CATALOGS[cat]['select_columns']) > 0: 
+            select_columns = XMATCH_CATALOGS[cat]['select_columns']
+        else: select_columns = False
     if XMatch.is_table_available(vref) == False:
         print('\n{} is not one of the catalogs in astroquery.xmatch; try using queryVizer()'.format(catalog))
         return db

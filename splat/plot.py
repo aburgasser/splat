@@ -153,7 +153,7 @@ def plotMap(*args,**kwargs):
         for d in rdec:
             pref = ax.plot(raref.radian,Angle([d]*len(raref)*u.degree).radian,'k--')
 
-# plot galactic plane - need to figure this out
+# plot galactic plane
     if kwargs.get('galactic',False) != False:
         lng = Angle(numpy.arange(-180.,180.,1.)*u.degree)
         lat = Angle(numpy.zeros(len(lng))*u.degree)
@@ -166,7 +166,7 @@ def plotMap(*args,**kwargs):
         mrap = sorted(mra)
         p = ax.plot(mrap, mdecp,color='k',alpha=1,ls='--')
 
-# plot ecliptic plane - need to figure this out
+# plot ecliptic plane
     if kwargs.get('ecliptic',False) != False:
         lng = Angle(numpy.arange(-180.,180.,1.)*u.degree)
         lat = Angle(numpy.zeros(len(lng))*u.degree)
@@ -938,10 +938,11 @@ def plotBatch(*args, **kwargs):
     '''
 
 # keyword check
-    parameters = ['output','comparisons','classify','normalize','legend']
+    parameters = ['output','comparisons','classify','normalize','normrange','legend']
     checkKeys(kwargs,parameters,forcekey=False)
     kwargs['layout']=kwargs.get('layout',[2,2])
     kwargs['fontscale']=kwargs.get('fontscale',0.7)
+    kwargs['normrange']=kwargs.get('normrange',[0.9,1.4])
 
 # input check
     if len(args) == 0:
@@ -1008,9 +1009,9 @@ def plotBatch(*args, **kwargs):
 
 # normalize if desired
     if kwargs.get('normalize',False):
-        tmp = [sp.normalize() for sp in splist]
+        tmp = [sp.normalize(kwargs['normrange']) for sp in splist]
         if compflag == True:
-            tmp = [sp.normalize() for sp in complist]
+            tmp = [sp.normalize(kwargs['normrange']) for sp in complist]
 
 # prep for plotting
     plotlist = []
