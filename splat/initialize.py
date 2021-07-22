@@ -14,7 +14,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2021.06.24'
+VERSION = '2021.07.22'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -57,6 +57,7 @@ AUTHORS = [
 # Directory variables
 DB_FOLDER = '/db/'
 DOCS_FOLDER = '/docs/'
+TUTORIAL_FOLDER = '/tutorials/'
 DOCS_INDEX_HTML = '/docs/_build/html/index.html'
 WEB_HTML_BASE = '/docs/_templates/'
 HOME_FOLDER = os.path.expanduser('~')
