@@ -349,7 +349,7 @@ def queryVizier(coordinate,**kwargs):
 
 # NOTE: THIS IS NOT PROPERLY PASSING ON THE KEYWORDS
 
-def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arcsec,sort='sep',nearest=False,verbose=False,**kwargs):
+def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arcsec,sort='sep',info=False,nearest=False,verbose=False,**kwargs):
     '''
     Purpose
         Downloads photometry for a single source coordinate using astroquery.
@@ -417,31 +417,52 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
         return Table()
 
     VIZIER_REF = {
-        'SDSS': {'altname': ['SDSS'], 'catalog': u'V/147/out'},
-        '2MASS': {'altname': ['2MASS'], 'catalog': u'II/246/out'},
-        'USNO': {'altname': ['USNO','USNOB','USNO-B','USNOB1.0','USNO-B1.0'], 'catalog': u'I/284/out'},
-        'LSPM': {'altname': ['LSPM','LSPM-N','LSPM-NORTH'], 'catalog': u'I/298/lspm_n'},
-        'WISE': {'altname': ['WISE'], 'catalog': u'II/311/wise'},
-        'UKIDSS': {'altname': ['UKIDSS'], 'catalog': u'II/314'},
-        'CFHT': {'altname': ['CFHT','CFHTLAS'], 'catalog': u'II/317/sample'},
-        'UCAC': {'altname': ['UCAC'], 'catalog': u'I/322A/out'},
-        'ALLWISE': {'altname': ['ALLWISE'], 'catalog': u'II/328/allwise'},
-        'VISTA': {'altname': ['VISTA'], 'catalog': u'II/329/urat1'},
-        'GAIA-DR1': {'altname': ['GAIA1','GAIA-DR1','GAIADR1'], 'catalog': u'II/337/gaia'},
-        'GAIA': {'altname': ['GAIA','GAIA-DR2','GAIADR2','GAIA2'], 'catalog': u'I/345/gaia2'},
-        'PANSTARRS': {'altname': ['PAN-STARRS','PANSTARRS','PS1'], 'catalog': u'II/349/ps1'},
-        'DENIS': {'altname': ['DENIS'], 'catalog': u'B/denis'},
-        'LEHPM': {'altname': ['LEHPM'], 'catalog': u'J/A+A/421/763'},
+        'SDSS': {'altname': [], 'catalog': u'V/147/out'},
+        '2MASS': {'altname': [], 'catalog': u'II/246/out'},
+        'USNO': {'altname': ['USNOB','USNO-B','USNOB1.0','USNO-B1.0'], 'catalog': u'I/284/out'},
+        'LSPM': {'altname': ['LSPM-N','LSPM-NORTH'], 'catalog': u'I/298/lspm_n'},
+        'WISE': {'altname': [], 'catalog': u'II/311/wise'},
+        'ALLWISE': {'altname': [], 'catalog': u'II/328/allwise'},
+        'CATWISE': {'altname': [], 'catalog': u'II/365/catwise'},
+        'UKIDSS': {'altname': [], 'catalog': u'II/314'},
+        'CFHT': {'altname': ['CFHTLAS'], 'catalog': u'II/317/sample'},
+        'UCAC': {'altname': [], 'catalog': u'I/322A/out'},
+        'VISTA': {'altname': [], 'catalog': u'II/329/urat1'},
+        'GAIA-DR1': {'altname': ['GAIA1','GAIADR1'], 'catalog': u'II/337/gaia'},
+        'GAIA-DR2': {'altname': ['GAIA2','GAIADR2'], 'catalog': u'I/345/gaia2'},
+        'GAIA-EDR3': {'altname': ['GAIA','GAIA3','GAIADR3'], 'catalog': u'I/350/gaiaedr3'},
+        'PANSTARRS': {'altname': ['PAN-STARRS','PS1'], 'catalog': u'II/349/ps1'},
+        'DENIS': {'altname': [], 'catalog': u'B/denis'},
+        'LEHPM': {'altname': [], 'catalog': u'J/A+A/421/763'},
         'LEPINE': {'altname': ['LEPINE-MDWARFS'], 'catalog': u'J/AJ/142/138/Mdwarfs'},
-        'DESHPANDE2013': {'altname': ['DESHPANDE-2013','APOGEE_UCD'], 'catalog': u'J/AJ/146/156/table1'},
-        'DITTMAN2014': {'altname': ['DITTMAN-2014','DITTMAN-PARALLAX'], 'catalog': u'J/ApJ/784/156/table2'},
-        'NEWTON2016': {'altname': ['NEWTON-2016'], 'catalog': u'J/ApJ/821/93/table1'},
-        'KIRKPATRICK2016': {'altname': ['KIRKPATRICK-2016','ALLWISE-MOTION'], 'catalog': u'J/ApJS/224/36/motionobj'},
-        'SIPS': {'altname': ['SIPS'], 'catalog': u'J/A+A/435/363'},
-        'MOVERS': {'altname': ['MOVERS'], 'catalog': u'J/AJ/151/41'},
+        'SIPS': {'altname': [], 'catalog': u'J/A+A/435/363'},
+        'MOVERS': {'altname': [], 'catalog': u'J/AJ/151/41'},
+        'LATEMOVERS': {'altname': ['LATE-MOVERS'], 'catalog': u'J/AJ/153/92'},
         'GLIESE': {'altname': ['GJ'], 'catalog': u'J/PASP/122/885/table1'},
-        'LATEMOVERS': {'altname': ['LATEMOVERS','LATE-MOVERS'], 'catalog': u'J/AJ/153/92'},
+        'DESHPANDE2013': {'altname': ['DESHPANDE-2013','APOGEE_UCD'], 'catalog': u'J/AJ/146/156/table1'},
+        'DITTMAN2014': {'altname': ['DITTMAN-2014','DITTMAN-PARALLAX','DIT16'], 'catalog': u'J/ApJ/784/156/table2'},
+        'NEWTON2016': {'altname': ['NEWTON-2016','NEW16'], 'catalog': u'J/ApJ/821/93/table1'},
+        'KIRKPATRICK2016': {'altname': ['KIRKPATRICK-2016','ALLWISE-MOTION','KIR16'], 'catalog': u'J/ApJS/224/36/motionobj'},
     }
+
+# give a summary of the built-in catalogs
+    if info==True:
+        print('Currently available input catalogs:')
+        for k in list(VIZIER_REF.keys()):
+            line = '\t{}: '.format(k)
+            if len(VIZIER_REF[k]['altname'])>0:
+                line=line+'(or'
+                for a in VIZIER_REF[k]['altname']: line=line+' {}'.format(a)
+                line=line+') '
+            print(line+'Vizier reference: {}'.format(str(VIZIER_REF[k]['catalog'])))
+            catsp = str(VIZIER_REF[k]['catalog']).split('/')
+            ctref = catsp[0] 
+            for ct in catsp[1:-1]: ctref=ctref+'/'+ct
+            print('\tURL = https://cdsarc.unistra.fr/viz-bin/cat/{}\n'.format(ctref))
+        return
+
+    for c in list(VIZIER_REF.keys()): 
+        if kwargs.get(c,False): catalog = c
 
 # is catalog one of pre-defined ones?
     for c in list(VIZIER_REF.keys()): 
@@ -474,9 +495,11 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
     else:
         tv = Table()
 
+    if len(tv)==0: return tv
+
 # sorting
+    tv['sep'] = tv['_r']
     if len(tv) > 1:
-        tv['sep'] = tv['_r']
         sortparam = kwargs.get('sort','sep')
         if sortparam in list(tv.keys()):
             tv.sort(sortparam)
@@ -485,12 +508,12 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
                 print('\nCannot find sorting keyword {}; try using {}\n'.format(sort,list(tv.keys())))
 
 # return only nearest
-    print(kwargs.get('nearest',False))
-    if kwargs.get('nearest',False) == True:
+#    print(kwargs.get('nearest',False))
+    if nearest == True:
 #        tv = tv[0]
-#        while len(tv) > 1:
-#            tv.remove_row(1)
-        print(tv)
+        while len(tv) > 1:
+            tv.remove_row(1)
+#        print(tv)
 
 # reformat to convert binary ascii data to text
     for s in list(tv.keys()):
@@ -511,18 +534,14 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
 
 
 
-def querySimbad(variable,radius=30.*u.arcsec,sort='sep',reject_type=None,nearest=False,iscoordinate=False,isname=False,clean=True,return_pandas=True,verbose=False,**kwargs):
+def querySimbad(variable,radius=30.*u.arcsec,sort='sep',reject_type='',nearest=False,iscoordinate=False,isname=False,clean=False,return_pandas=True,verbose=False,**kwargs):
     '''
     Purpose
         Queries SIMBAD using astroquery for a single source
         If you are getting data on multiple sources, it is preferable to use `splat.database.queryXMatch()`_
 
-    .. _`splat.database.queryXMatch()` : api.html#splat.database.queryXMatch
-
     Required Inputs:
         :param: variable: Either an astropy SkyCoord object containing position of a source, a variable that can be converted into a SkyCoord using `spl.properCoordinates()`_, or a string name for a source.
-
-    .. _`spl.properCoordinates()` : api.html#spl.properCoordinates
         
     Optional Inputs:
         :param: radius: Search radius, nominally in arcseconds although can be set by assigning and astropy.unit value (default = 30 arcseconds)
@@ -555,6 +574,9 @@ def querySimbad(variable,radius=30.*u.arcsec,sort='sep',reject_type=None,nearest
     2MASS J05362590-0643020     brownD* 13.4818185612 ...  12.772     0.026
     2MASS J05362577-0642541        Star  13.983717577 ...                  
 
+
+    .. _`splat.database.queryXMatch()` : api.html#splat.database.queryXMatch
+    .. _`spl.properCoordinates()` : api.html#spl.properCoordinates
     '''
 
 # check that online
@@ -615,30 +637,28 @@ def querySimbad(variable,radius=30.*u.arcsec,sort='sep',reject_type=None,nearest
         raise ValueError('problem!')
 
 # sort results by separation by default
-    if kwargs.get('sort','sep') in list(t_sim.keys()):
-        t_sim.sort(kwargs.get('sort','sep'))
+    if sort in list(t_sim.keys()):
+        t_sim.sort(sort)
     else:
         if verbose:
-            print('\nCannot sort by {}; try keywords {}\n'.format(kwargs.get('sort','sep'),list(t_sim.keys())))
+            print('\nCannot sort by {}; try keywords {}\n'.format(sort,list(t_sim.keys())))
 
 
 # reject object types not wanted
-    if kwargs.get('reject_type',False) != False:
-        rej = kwargs['reject_type']
-        if not isinstance(rej,list):
-            rej = [rej]
+    if reject_type != '':
+        rej = reject_type.split(',')
         for r in rej:
             w = numpy.array([str(r) not in str(o) for o in t_sim['OTYPE']])
             if len(w) > 0:
                 t_sim = t_sim[w]
 
 # trim to single source if nearest flag is set
-    if iscoordinate and kwargs.get('nearest',False):
+    if iscoordinate and nearest==True:
         while len(t_sim)>1:
             t_sim.remove_row(1) 
 
 # clean up the columns    
-    if kwargs.get('clean',True) == True and len(t_sim) > 0:
+    if clean == True and len(t_sim) > 0:
         t_src = Table()
 
 # reformat to convert binary ascii data to text
@@ -884,7 +904,7 @@ def queryNist(element,wave_range,clean=['Observed'],noclean=False,verbose=True,w
 
 
 
-def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNATION',raCol='RA',decCol='DEC',verbose=False,clean=True,drop_repeats=True,use_select_columns=True,select_columns=[],prefix=None,*args):
+def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNATION',raCol='RA',decCol='DEC',verbose=False,clean=True,drop_repeats=True,use_select_columns=False,select_columns=[],prefix=None,info=False,*args):
     '''
     Purpose
         Queries databases in the XXX XMatch service (REF), including SIMBAD
@@ -943,53 +963,18 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
     '''
     callloop = 5
 
-# check db has DESIGNATION and fill in columns
-#    print(db.columns,raCol in list(db.columns),decCol in list(db.columns))
-    if desigCol not in list(db.columns) or raCol not in list(db.columns) or decCol not in list(db.columns):
-        db = prepDB(db,raCol=raCol,decCol=decCol,desigCol=desigCol)
-    if desigCol not in list(db.columns):
-        raise ValueError('\nInput database must have at least the designation column {}; this one has {}'.format(desigCol,db.columns))
-
-# add RA and DEC if needed
-    # if raCol not in list(db.columns) or decCol not in list(db.columns):
-    #     db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
-    #     db[raCol] = [c.ra.degree for c in db['COORDINATES']]
-    #     db[decCol] = [c.dec.degree for c in db['COORDINATES']]
-    basecols = [desigCol,raCol,decCol]
-    if not isUnit(radius): radius = radius*u.arcsec
-        
-# assign entries to save
-    # VIZIER_REF = {
-    #     'SDSS': {'altname': ['SDSS'], catalog=u'V/147'},
-    #     '2MASS': {'altname': ['2MASS'], catalog=u'II/246'},
-    #     'USNO': {'altname': ['USNO','USNOB','USNO-B','USNOB1.0','USNO-B1.0'], catalog=u'I/284'},
-    #     'LSPM': {'altname': ['LSPM','LSPM-N','LSPM-NORTH'], catalog=u'I/298'},
-    #     'WISE': {'altname': ['WISE'], catalog=u'II/311'},
-    #     'CFHT': {'altname': ['CFHT','CFHTLAS'], catalog=u'II/317'},
-    #     'UKIDSS': {'altname': ['UKIDSS','UKIDSS-DR9'], catalog=u'II/319'},
-    #     'UCAC': {'altname': ['UCAC'], catalog=u'I/322A'},
-    #     'ALLWISE': {'altname': ['ALLWISE'], catalog=u'II/328'},
-    #     'VISTA': {'altname': ['VISTA'], catalog=u'II/329'},
-    #     'GAIA-DR1': {'altname': ['GAIA1','GAIA-DR1','GAIADR1'], catalog=u'II/337'},
-    #     'GAIA': {'altname': ['GAIA','GAIA-DR2','GAIADR2','GAIA2'], catalog=u'I/345/gaia2'},
-    #     'DENIS': {'altname': ['DENIS'], catalog=u'B/denis'},
-    #     'LEHPM': {'altname': ['LEHPM'], catalog=u'J/A+A/421/763'},
-    #     'SIPS': {'altname': ['SIPS'], catalog=u'J/A+A/435/363'},
-    #     'MOVERS': {'altname': ['MOVERS'], catalog=u'J/AJ/151/41'},
-    #     'LATEMOVERS': {'altname': ['LATEMOVERS','LATE-MOVERS'], catalog=u'J/AJ/153/92'},
-    # }
-
+# pre-defined catalogs
     XMATCH_CATALOGS = {
-        'SIMBAD': {'altname': ['SIMBAD'],'vref': u'simbad', 'select_columns': ['main_id','ra','dec','main_type','sp_type','plx','pmra','pmdec','radvel','B', 'V', 'R', 'J', 'H', 'K', 'u', 'g', 'r', 'i', 'z']},\
-        '2MASS': {'altname': ['2MASS'],'vref': u'vizier:II/246/out', 'select_columns': ['2MASS','RAJ2000','DEJ2000','Jmag','e_Jmag','Hmag','e_Hmag','Kmag','e_Kmag','MeasureJD']},\
-        'DENIS': {'altname': ['DENIS'],'vref': u'vizier:B/denis/denis', 'select_columns': ['DENIS','RAJ2000','DEJ2000','Imag','e_Imag','Jmag','e_Jmag','Kmag','e_Kmag','Obs.JD']},\
-        'SDSS': {'altname': ['SDSS','SDSS12'],'vref': u'vizier:V/147/sdss12', 'select_columns': ['SDSS12','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
-        'SDSS9': {'altname': ['SDSS9'],'vref': u'vizier:V/139/sdss9', 'select_columns': ['SDSS9','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
-        'ALLWISE': {'altname': ['ALLWISE'],'vref': u'vizier:II/328/allwise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+        'SIMBAD': {'altname': [],'vref': u'simbad', 'select_columns': ['main_id','ra','dec','main_type','sp_type','plx','pmra','pmdec','radvel','B', 'V', 'R', 'J', 'H', 'K', 'u', 'g', 'r', 'i', 'z']},\
+        '2MASS': {'altname': [],'vref': u'vizier:II/246/out', 'select_columns': ['2MASS','RAJ2000','DEJ2000','Jmag','e_Jmag','Hmag','e_Hmag','Kmag','e_Kmag','MeasureJD']},\
+        'DENIS': {'altname': [],'vref': u'vizier:B/denis/denis', 'select_columns': ['DENIS','RAJ2000','DEJ2000','Imag','e_Imag','Jmag','e_Jmag','Kmag','e_Kmag','Obs.JD']},\
+        'SDSS': {'altname': ['SDSS12'],'vref': u'vizier:V/147/sdss12', 'select_columns': ['SDSS12','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
+        'SDSS9': {'altname': [],'vref': u'vizier:V/139/sdss9', 'select_columns': ['SDSS9','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
+        'ALLWISE': {'altname': [],'vref': u'vizier:II/328/allwise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
         'GAIA-DR1': {'altname': ['GAIADR1','GAIA1'],'vref': u'vizier:I/337/gaia', 'select_columns': ['source_id','ra','dec','ref_epoch','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
         'GAIA-DR2': {'altname': ['GAIADR2','GAIA2'],'vref': u'vizier:I/345/gaia2', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
         'GAIA-EDR3': {'altname': ['GAIA-DR3','GAIAEDR3','GAIA3','GAIA'],'vref': u'vizier:I/350/gaiaedr3', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
-        'PANSTARRS': {'altname': ['PAN-STARRS','PANSTARRS','PS1'], 'vref': u'vizier:II/349/ps1', 'select_columns': ['objID','RAJ2000','DEJ2000','Epoch','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','ymag','e_ymag']},
+        'PANSTARRS': {'altname': ['PAN-STARRS','PS1'], 'vref': u'vizier:II/349/ps1', 'select_columns': ['objID','RAJ2000','DEJ2000','Epoch','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','ymag','e_ymag']},
 # not yet integrated
 #        'WISE': {'altname': ['WISE'],'vref': u'vizier:II/311/wise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
 #        'UKIDSS': {'altname': ['UKIDSS'],'vref': u'vizier:II/319/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
@@ -1006,6 +991,42 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
 #        'USNO': {'vref': u'I/284', 'select_columns': 
 #        'LSPM': {'vref': u'I/298', 'select_columns': 
         }
+
+# give a summary of the built-in catalogs
+    if info==True:
+        print('Currently available input catalogs:')
+        for k in list(XMATCH_CATALOGS.keys()):
+            line = '\t{}: '.format(k)
+            if len(XMATCH_CATALOGS[k]['altname'])>0:
+                line=line+'(or'
+                for a in XMATCH_CATALOGS[k]['altname']: line=line+' {}'.format(a)
+                line=line+') '
+            print(line+'Vizier reference: {}'.format(str(XMATCH_CATALOGS[k]['vref'])))
+            if 'vizier:' in str(XMATCH_CATALOGS[k]['vref']):
+                catsp = str(XMATCH_CATALOGS[k]['vref']).split('/')
+                ctref = catsp[0].replace('vizier:','') 
+                for ct in catsp[1:-1]: ctref=ctref+'/'+ct
+                print('\tVizier URL = https://cdsarc.unistra.fr/viz-bin/cat/{}\n'.format(ctref))
+            else: print()
+
+        return
+
+# check db has DESIGNATION and fill in columns
+#    print(db.columns,raCol in list(db.columns),decCol in list(db.columns))
+    if desigCol not in list(db.columns) or raCol not in list(db.columns) or decCol not in list(db.columns):
+        db = prepDB(db,raCol=raCol,decCol=decCol,desigCol=desigCol)
+    if desigCol not in list(db.columns):
+        raise ValueError('\nInput database must have at least the designation column {}; this one has {}'.format(desigCol,db.columns))
+
+# add RA and DEC if needed
+    # if raCol not in list(db.columns) or decCol not in list(db.columns):
+    #     db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
+    #     db[raCol] = [c.ra.degree for c in db['COORDINATES']]
+    #     db[decCol] = [c.dec.degree for c in db['COORDINATES']]
+    basecols = [desigCol,raCol,decCol]
+    if not isUnit(radius): radius = radius*u.arcsec
+        
+# define catalog
     if len(args) > 0: catalog = args[0]
     cat = checkDict(catalog,XMATCH_CATALOGS)
     if cat == False: 
@@ -1018,22 +1039,17 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
 #        vref = XMATCH_CATALOGS[cat]['vref']
         if use_select_columns == True and len(XMATCH_CATALOGS[cat]['select_columns']) > 0: 
             select_columns = XMATCH_CATALOGS[cat]['select_columns']
-        else: select_columns = False
+#        else: select_columns = []
+
+# check that catalog is there
     if XMatch.is_table_available(vref) == False:
         print('\n{} is not one of the catalogs in astroquery.xmatch; try using queryVizer()'.format(catalog))
         return db
     if prefix == None: prefix = cat
 
-#    if use_select_columns == False: select_columns = []
-
 # use XMatch
     t = Table()
     t = t.from_pandas(db[basecols])
-
-# special case for GAIA
-#    if cat == 'GAIA-DR2':
-        
-# use XMatch
     t_match = XMatch.query(t,vref,radius,colRA1=raCol,colDec1=decCol)
     db_match = t_match.to_pandas()
 
@@ -1043,14 +1059,20 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
         db_match.reset_index(drop=True,inplace=True)
             
 # constrain columns and rename
-    if use_select_columns == True:
+    if len(select_columns)>0:
         if len(select_columns) == 0: 
             newcols = list(db_match.columns)
         else:
             newcols = copy.deepcopy(basecols)
             newcols.append('angDist')
             newcols.extend(select_columns)
-        db_match = db_match[newcols]
+# check that all columns are present
+        ncdup = copy.deepcopy(newcols)
+        for s in ncdup:
+            if s not in list(db_match.columns): 
+                print('Warning: could not find column named {}'.format(s))
+                newcols.remove(s)
+        if len(newcols) > 0: db_match = db_match[newcols]
 
 # rename columns
     if prefix != None:
