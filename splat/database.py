@@ -349,7 +349,7 @@ def queryVizier(coordinate,**kwargs):
 
 # NOTE: THIS IS NOT PROPERLY PASSING ON THE KEYWORDS
 
-def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arcsec,sort='sep',info=False,nearest=False,verbose=False,**kwargs):
+def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arcsec,sort='sep',limit=-1,info=False,nearest=False,verbose=False,**kwargs):
     '''
     Purpose
         Downloads photometry for a single source coordinate using astroquery.
@@ -417,7 +417,7 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
         return Table()
 
     VIZIER_REF = {
-        'SDSS': {'altname': [], 'catalog': u'V/147/out'},
+        'SDSS': {'altname': [], 'catalog': u'V/147/sdss12'},
         '2MASS': {'altname': [], 'catalog': u'II/246/out'},
         'USNO': {'altname': ['USNOB','USNO-B','USNOB1.0','USNO-B1.0'], 'catalog': u'I/284/out'},
         'LSPM': {'altname': ['LSPM-N','LSPM-NORTH'], 'catalog': u'I/298/lspm_n'},
@@ -487,6 +487,8 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
 
 # search Vizier, sort by separation        
     v = Vizier(columns=["**", "+_r"], catalog=cat)
+    if limit<0: v.ROW_LIMIT = -1
+    else: v.ROW_LIMIT = int(limit)
     t_vizier = v.query_region(c,radius=radius)
     tv = Table()
     if len(t_vizier) > 0:
@@ -975,16 +977,15 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
         'GAIA-DR2': {'altname': ['GAIADR2','GAIA2'],'vref': u'vizier:I/345/gaia2', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
         'GAIA-EDR3': {'altname': ['GAIA-DR3','GAIAEDR3','GAIA3','GAIA'],'vref': u'vizier:I/350/gaiaedr3', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
         'PANSTARRS': {'altname': ['PAN-STARRS','PS1'], 'vref': u'vizier:II/349/ps1', 'select_columns': ['objID','RAJ2000','DEJ2000','Epoch','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','ymag','e_ymag']},
+        'UKIDSS': {'altname': ['UKIDSS-LAS','UKIDSS-LAS9','UKIDSS-DR9','UKIDSS-LAS-DR9'], 'vref': u'vizier:II/319/las9', 'select_columns': ['JName','RAJ2000','DEJ2000','Epoch','yAperMag3','yAperMag3Err','j_1AperMag3','j_1AperMag3Err','hAperMag3','hAperMag3Err','kAperMag3','kAperMag3Err','mergedClass']},
 # not yet integrated
 #        'WISE': {'altname': ['WISE'],'vref': u'vizier:II/311/wise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-#        'UKIDSS': {'altname': ['UKIDSS'],'vref': u'vizier:II/319/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
 #        'UCAC': {'altname': ['UCAC'],'vref': u'vizier:II/322A/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
 #        'MOVERS': {'altname': ['MOVERS'],'vref': u'vizier:J/AJ/151/41/movers', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
 #        'LATEMOVERS': {'altname': ['LATEMOVERS','LATE-MOVERS'],'vref': u'vizier:J/AJ/153/92/lmovers', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
 #        'WISE': {'vref': u'II/311', 'select_columns': 
 #        'VISTA': {'vref': u'II/329', 'select_columns': 
 #        'CFHT': {'vref': u'II/317', 'select_columns': 
-#        'UKIDSS': {'vref': u'II/314', 'select_columns': 
 #        'LEHPM': {'vref': u'J/A+A/421/763', 'select_columns': 
 #        'SIPS': {'vref': u'J/A+A/435/363', 'select_columns': 
 #        'UCAC': {'vref': u'I/340/ucac5', 'select_columns': 
@@ -1050,7 +1051,7 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
 # use XMatch
     t = Table()
     t = t.from_pandas(db[basecols])
-    t_match = XMatch.query(t,vref,radius,colRA1=raCol,colDec1=decCol)
+    t_match = XMatch.query(t,vref,radius,colRA1=raCol,colDec1=decCol,columns=["**", "+_r"])
     db_match = t_match.to_pandas()
 
 # reject repeats if desired
