@@ -5868,7 +5868,7 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
         fit_ranges = [fit_ranges]
 
 
-    if verbose==True: print(fit_ranges)
+#    if verbose==True: print(fit_ranges)
 
 # compute fitting statistics
     stat = []
