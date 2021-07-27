@@ -196,113 +196,151 @@ def plotMap(*args,**kwargs):
 
 def plotSpectrum(*args, **kwargs):
     '''
-    :Purpose: ``Primary plotting program for Spectrum objects.``
+    Purpose
+    -------
+        Primary plotting program for splat Spectrum objects.
 
-    :Input
-    Spectrum objects, either sequentially, in list, or in list of lists
-            - Spec1, Spec2, ...: plot multiple spectra together, or separately if multiplot = True
-            - [Spec1, Spec2, ...]: plot multiple spectra together, or separately if multiplot = True
-            - [[Spec1, Spec2], [Spec3, Spec4], ..]: plot multiple sets of spectra (multiplot forced to be True)
-
-    :Parameters:
-    title = ''
-        string giving plot title  - NOTE: THIS IS NOT WORKING
-    xrange = [0.85,2.42]:
+    Parameters
+    ----------
+    input(s) : Spectrum objects, either sequentially, in a list, or in list of lists
+        These are the spectra to be plotted; the input is flexible:
+            * `Spec1, Spec2, ...`: plot multiple spectra together, or separately if multiplot = True
+            * `[Spec1, Spec2, ...]`: plot multiple spectra together, or separately if multiplot = True
+            * `[[Spec1, Spec2], [Spec3, Spec4], ..]`: plot multiple sets of spectra (multiplot forced to be True)
+    
+    xrange = [0.85,2.42]: list of 2 floats or unitted astropy quantities (optional)
         plot range for wavelength axis
-    yrange = [-0.02,1.2]*fluxMax:
-        plot range for wavelength axis
-    xlabel:
+    
+    yrange = [-0.02,1.2]*fluxMax: : list of 2 floats or unitted astropy quantities (optional)
+        plot range for flux axis
+    
+    xlabel = wave.unit: string (optional)
         wavelength axis label; by default set by wlabel keywords and wave.unit in first spectrum object
-    ylabel:
+    
+    ylabel = flux.unit: string (optional)
         flux axis label; by default set by fscale, flabel and flux.unit in first spectrum object
-    xlog = False:
-        set the x (wavelength) axis to plot as a log scale
-    ylog = False:
-        set the y (flux) axis to plot as a log scale
-
-    features:
+    
+    xlog, ylog = False : boolean (optional)
+        set the x (wavelength) or y (flux) axis to plot as a log scale
+    
+    features = [] : list of strings (optional)
         a list of strings indicating chemical features to label on the spectra
         options include H2O, CH4, CO, TiO, VO, FeH, H2, HI, KI, NaI, SB (for spectral binary)
-    mdwarf, ldwarf, tdwarf, young, binary = False:
-        add in features characteristic of these classes
-    telluric = False:
-        mark telluric absorption features
-    band(s) = []
+    
+    mdwarf, ldwarf, tdwarf, young, binary = False : boolean (optional)
+        add in pre-defined features characteristic of these classes
+
+    telluric = False : boolean (optional)
+        indicate telluric absorption features
+
+    band(s) = [] : list of 2-element float arrays
         a single or array of 2-element arrays that indicate bands that you want to specifically shade in
-    bandcolor(s) = []
+    
+    bandcolor(s) = 'k' : single or array of strings
         a single or array of colors to shade the bands (default = 'k')
-    bandalpha(s) = []
+    
+    bandalpha(s) = 0.2 : single or array of floats
         a single or array of alphas to shade the bands (default = 0.2)
-    bandlabel(s) = []
+    
+    bandlabel(s) = '' : single or array of strings
         a single or array of labels to annotate the bands (default = '')
-    bandlabelposition(s) = []
-        a single or array of strings indicating the position of the labels; can be 'bottom', 'middle', or 'top' (default = 'bottom')
-    legend(s) or label(s):
+    
+    bandlabelposition(s) = 'bottom' : single or array of strings
+        a single or array of strings indicating the position of the labels; 
+        can be 'bottom', 'middle', or 'top' (default = 'bottom')
+    
+    legend = [] : array of strings
         list of strings providing legend-style labels for each spectrum plotted
-    legendLocation or labelLocation = 'upper right':
-        place of legend; options are 'upper left', 'center middle', 'lower right' (variations thereof) and 'outside'
-    legendfontscale = 1:
+        Alternate notation: legends, label, labels
+    
+    legendLocation = 'upper right' : string
+        place of legend; options are 'upper left', 'center middle', 'lower right' (variations thereof) 
+        and 'outside'
+        Alternate notation: labelLocation 
+    
+    legendfontscale = 1 : float
         sets the scale factor for the legend fontsize (defaults to fontscale)
-    grid = False:
-        add a grid
+    
+    grid = False : boolean
+        set to True to add a grid
 
     stack = 0:
         set to a numerical offset to stack spectra on top of each other
+    
     zeropoint = [0,...]:
         list of offsets for each spectrum, giving finer control than stack
+    
     showZero = True:
         plot the zeropoint(s) of the spectra
 
     comparison:
         a comparison Spectrum to compare in each plot, useful for common reference standard
+    
     noise, showNoise or uncertainty = False:
         plot the uncertainty for each spectrum
+    
     residual = False:
         plots the residual between two spectra
+    
     colorComparison:
         color of comparison source plot lines; by default all grey
 
     color or colors:
         color of plot lines; by default all black
+    
     colorUnc or colorsUnc:
         color of uncertainty lines; by default same as line color but reduced opacity
+    
     colorScheme or colorMap:
         color map to apply based on matplotlib colormaps; 
         see http://matplotlib.org/api/pyplot_summary.html?highlight=colormaps#matplotlib.pyplot.colormaps
+    
     linestyle or linestyles:
         line style of plot lines; by default all solid
+    
     fontscale = 1:
         sets a scale factor for the fontsize
 
     inset = False:
         place an inset panel showing a close up region of the spectral data
+    
     inset_xrange = False:
         wavelength range for inset panel
+    
     inset_yrange = False:
         flux range for inset panel (otherwise set by flux)
+    
     inset_position = [0.65,0.60,0.20,0.20]
         position of inset planet in normalized units, in order left, bottom, width, height
+    
     inset_features = False
         list of features to label in inset plot
 
     file or filename or output:
         filename or filename base for output
+    
     filetype = 'pdf':
         output filetype, generally determined from filename
+    
     multiplot = False: 
         creates multiple plots, depending on format of input (optional)
+    
     multipage = False: 
         spreads plots across multiple pages; output file format must be PDF
         if not set and plots span multiple pages, these pages are output sequentially as separate files
+    
     layout or multilayout = [1,1]:
         defines how multiple plots are laid out on a page
+    
     figsize:
         set the figure size; set to default size if not indicated
+    
     interactive = False:
         if plotting to window, set this to make window interactive
+    
     tight = True:
         makes a ``tight'' box plot to elimate extra whitespace
-        
+
         
     :Example 1: A simple view of a random spectrum
        >>> import splat
@@ -531,7 +569,7 @@ def plotSpectrum(*args, **kwargs):
 # set specific plot parameters
         if not isinstance(sp[0],splat.Spectrum):
             raise ValueError('\nInput to plotSpectrum has wrong format:\n\n{}\n\n'.format(sp[0]))
-        zeropoint = kwargs.get('zeropoint',[0. for x in numpy.arange(len(sp))])
+        zeropoint = kwargs.get('zeropoint',numpy.zeros(len(sp)))
 
 # settings that work if the spectrum was read in as legitmate Spectrum object
         try:
@@ -544,7 +582,8 @@ def plotSpectrum(*args, **kwargs):
         if isUnit(xrng[0]): xrng = [x.value for x in xrng]
         bound = []
         bound.extend(xrng)
-        ymax = [s.fluxMax().value for s in sp]
+#        ymax = [s.fluxMax().value for s in sp]
+        ymax = [numpy.nanquantile(s.flux.value,0.98) for s in sp]
         yrng = kwargs.get('yrange',numpy.array([-0.02,1.2])*numpy.nanmax(ymax)+numpy.nanmax(zeropoint))
         if isUnit(yrng[0]): yrng = [x.value for x in yrng]
         bound.extend(yrng)
@@ -907,58 +946,97 @@ def plotSpectrum(*args, **kwargs):
     return fig
 
 
-def plotBatch(*args, **kwargs):
+def plotBatch(inp,output='spectra_plot.pdf',comparisons=None,classify=False,normalize=False,basecolors=['k','r'],legend=[],fontscale=0.7,layout=[2,2],normrange=[0.9,1.4],classify_kwargs={},plot_kwargs={},**kwargs):
     '''
-    :Purpose: Plots a batch of spectra into a 2x2 set of PDF files, with options of overplotting comparison spectra, including best-match spectral standards. 
+    Purpose 
+    -------
+        Plots a batch of spectra into a 2x2 set of PDF files, with options of overplotting 
+        comparison spectra, including best-match spectral standards. 
 
-    :param input: A single or list of Spectrum objects or filenames, or the glob search string for a set of files (e.g., '/Data/myspectra/*.fits'). 
-    :type input: required
+    Parameters 
+    ----------
+    input : Spectrum, string, or array array of these
+        A single or list of Spectrum objects or filenames, or the glob search string 
+        for a set of files (e.g., '/Data/myspectra/*.fits'). 
 
-    :param output: Filename for PDF file output; full path should be include if not saving to current directory
-    :type output: optional, default = 'spectra_plot.pdf'
-    :param comparisons: list of Spectrum objects or filenames for comparison spectra. If comparisons list is shorter than source list, then last comparison source will be repeated. If the comparisons list is longer, the list will be truncated. 
-    :type comparisons: optional, default = None
-    :param classify: Set to True to classify sources based on comparison to MLT spectral standards following the method of `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_. This option normalizes the spectra by default
-    :type classify: optional, default = False
-    :param normalize: Set to True to normalize source and (if passed) comparison spectra.
-    :type normalize: optional, default = False
-    :param legend: Set to list of legends for plots. The number of legends should equal the number of sources and comparisons (if passed) in an alternating sequence. T
-    :type legend: optional, default = displays file name for source and object name for comparison (if passed)
+    output = 'spectra_plot.pdf' : string (optional), default = 'spectra_plot.pdf'
+        Filename for PDF file output; full path should be included if not saving to local directory
 
-    Relevant parameters for plotSpectrum may also be passed
+    comparisons = None : Spectrum, string, or array array of these (optional) 
+        list of Spectrum objects or filenames for comparison spectra. If comparisons list is shorter 
+        than source list, then the last comparison source will be repeated. If the comparisons list is 
+        longer, the list will be truncated. 
+    
+    classify = False : boolean (optional)
+        Set to True to classify sources based on comparison to MLT spectral standards 
+        following the method of `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_. 
+        This option normalizes the spectra by default
 
-    :Example:
+    normalize = False : boolean (optional)
+        Set to True to normalize source and (if passed) comparison spectra.
+
+    normrange = [0.9,1.4] : list (optional)
+        Range in micron to compute the normalization
+
+    layout = [2,2] : list (optional)
+        Layout of plots on page (# per row x # per column)
+
+    fontscale = 0.7 : float (optional)
+        Set to list of legends for plots. The number of legends should equal the number of 
+
+    legend = [] : list (optional)
+        Set to list of legends for plots. The number of legends should equal the number of 
+        sources and comparisons (if passed) in an alternating sequence. The default is to display
+        the file name for each source and object name for comparison (if passed)
+
+    classify_kwargs = {'method':'kirkpatrick'} : dictionary (optional)
+        Dictionary of keywords for `splat.classifyByStandard()`_ , currently set to just use method='kirkpatrick'
+
+    plot_kwargs = {} : dictionary (optional)
+        Dictionary of additional keywords for `splat.plot.plotSpectrum()`_ 
+
+    Outputs 
+    -------
+    matplotlib figure object showing individual panels of each source with optional comparison star
+
+    Example
+    -------
        >>> import glob, splat
        >>> import splat.plot as splot
        >>> files = glob.glob('/home/mydata/*.fits')
        >>> sp = splot.plotBatch(files,classify=True,output='comparison.pdf')
        >>> sp = splot.plotBatch('/home/mydata/*.fits',classify=True,output='comparison.pdf')
        >>> sp = splot.plotBatch([splat.Spectrum(file=f) for f in files],classify=True,output='comparison.pdf')
+       
        All three of these commands produce the same result
+
+    Dependencies
+    ------------
+    copy
+    glob
+    numpy
+    os
+    `splat.classifyByStandard()`_
+    `splat.Spectrum()`_
+    `splat.plot.plotSpectrum()`_ 
+
+    .. _`splat.plot.plotSpectrum()` : api.html#splat.plot.plotSpectrum
+    .. _`splat.classifyByStandard()` : api.html#splat.classifyByStandard
+    .. _`splat.Spectrum()` : api.html#splat.Spectrum
+
     '''
 
-# keyword check
-    parameters = ['output','comparisons','classify','normalize','normrange','legend']
-    checkKeys(kwargs,parameters,forcekey=False)
-    kwargs['layout']=kwargs.get('layout',[2,2])
-    kwargs['fontscale']=kwargs.get('fontscale',0.7)
-    kwargs['normrange']=kwargs.get('normrange',[0.9,1.4])
+# alt keyword check
+    for k in ['file','filename']: 
+        if kwargs.get(k,'') != '': output = kwargs[k]
+    for k in ['legends','labels']: 
+        if kwargs.get(k,'') != '': legend = kwargs[k]
 
-# input check
-    if len(args) == 0:
-        print('\nNeed to provide a list of spectra or filenames, or a file search string, to use plotBatch')
-        return
-    kwargs['output'] = kwargs.get('output','spectra_plot.pdf')
-    kwargs['output'] = kwargs.get('file',kwargs['output'])
-    kwargs['output'] = kwargs.get('filename',kwargs['output'])
-#    from .splat import Spectrum
-# break out a list
-    if isinstance(args[0],list):
-        inputlist = args[0]
-    else:
-        inputlist = args
+# force input into a list
+    if isinstance(inp,list): inputlist = copy.deepcopy(inp)
+    else: inputlist = [inp]
 
-# if filenames, read in each file to a spectrum object
+# if input is a string of filenames, read in each file to a spectrum object
     if isinstance(inputlist[0],str):
 # try a glob search string  
         files = glob.glob(os.path.normpath(inputlist[0]))
@@ -968,102 +1046,106 @@ def plotBatch(*args, **kwargs):
         try:
             splist = [splat.Spectrum(file = f) for f in inputlist]
         except:
-            raise ValueError('\nCould not read in list of files - make sure the full path is specified and the files are correctly formatted')
+            raise ValueError('\nCould not read in list of files {} - make sure the full path is specified and the files are correctly formatted'.format(inputlist))
 
 # if filenames, read in each file to a spectrum object
     elif isinstance(inputlist[0],splat.Spectrum):
         splist = copy.deepcopy(inputlist)
     else:
-        print('\nInput should be list of Spectra objects or filenames')
-        return
+        raise ValueError('\nInput should be list of splat.Spectrum objects or filenames')
+
+# normalize if desired
+    if normalize==True:
+        tmp = [sp.normalize(normrange) for sp in splist]
 
 # comparison files are present
-    compflag = False
     complist = []
-    if kwargs.get('comparisons',False) != False:
-        comp = kwargs.get('comparisons')
-        if not isinstance(comp,list):
-            comp = [comp]
-        if len(comp) < len(splist):
-            while len(comp) < len(splist):
-                comp.append(comp[-1])
+    if comparisons != None:
+        comp = copy.deepcopy(comparisons)
+        if not isinstance(comp,list): comp = [comp]
         if isinstance(comp[0],str):
             try:
                 complist = [splat.Spectrum(file = f) for f in comp]
-                compflag = True
             except:
                 print('\nCould not read in comparison files: ignoring comparisons')
         if isinstance(comp[0],splat.Spectrum):
             complist = comp
-            compflag = True
+        if len(complist) < len(splist):
+            while len(complist) < len(splist):
+                complist.append(complist[-1])
+# normalize
+        if normalize==True:
+            tmp = [sp.normalize(normrange) for sp in complist]
 
 # set comparison files to be standards for spectral classification
-    if kwargs.get('classify',False):
+# overrules input comparison sample
+    if classify == True:
         complist = []
+        base_kwargs={
+        'return_standard': True,
+        'method': 'kirkpatrick',
+        }
+        base_kwargs.update(classify_kwargs)
         for sp in splist:
-#            from .splat import classifyByStandard
-            spt = splat.classifyByStandard(sp,method='kirkpatrick')
-            complist.append(splat.STDS_DWARF_SPEX[spt[0]])
-        compflag = True
-        kwargs['normalize'] = kwargs.get('normalize',True)
-
-# normalize if desired
-    if kwargs.get('normalize',False):
-        tmp = [sp.normalize(kwargs['normrange']) for sp in splist]
-        if compflag == True:
-            tmp = [sp.normalize(kwargs['normrange']) for sp in complist]
+            complist.append(splat.classifyByStandard(sp,**base_kwargs))
 
 # prep for plotting
     plotlist = []
     clist = []
     for i,sp in enumerate(splist):
-        if compflag == True:
+        if len(complist) == len(splist):
             plotlist.append([sp,complist[i]])
-            clist.extend(['k','r'])
+            clist.extend(basecolors)
         else:
             plotlist.append([sp])
-            clist.extend(['k'])
+            clist.extend(basecolors[0])
 
 # manage legends
-    if kwargs.get('legend',False) != False:
-        legends = kwargs.get('legend')
-        if not isinstance(legends,list):
-            legends = [legends]
-        if len(legends) < (len(splist)+len(complist)):
+    if len(legend) != 0:
+        if not isinstance(legend,list): legend = [legend]
+        if len(legend) < (len(splist)+len(complist)):
 # guess: just left out the comparison legends            
-            if len(complist) > 0 and len(legends) == len(splist):
+            if len(complist) > 0 and len(legend) == len(splist):
                 legtmp = []
-                for i,l in enumerate(legends):
+                for i,l in enumerate(legend):
                     legtmp.extend([l,'{}'.format(complist[i].name)])
-                legends = legtmp
+                legend = legtmp
             else:
 # otherwise: pad the remaining legends with the last legend (pairs)           
-                while len(legends) < (len(splist)+len(complist)):
-                    if compflag:
-                        legends.extend([legends[-2],legends[-1]])
+                while len(legend) < (len(splist)+len(complist)):
+                    if len(complist)>0:
+                        legend.extend([legend[-2],legend[-1]])
                     else:
-                        legends.extend([legends[-1]])
-        if len(legends) > (len(splist)+len(complist)):
-            legends = legends[0:(len(splist)+len(complist))]
+                        legend.extend([legend[-1]])
+        if len(legend) > (len(splist)+len(complist)):
+            legend = legend[0:(len(splist)+len(complist))]
     else:
-        legends = []
+        legend = []
         for i,sp in enumerate(splist):
             l = []
-            if 'name' in list(sp.__dict__.keys()):
-                l.append(sp.name)
-            else:
-                l.append(os.path.basename(sp.filename))
-            if compflag == True:
-                if 'name' in list(complist[i].__dict__.keys()):
-                    l.append(complist[i].name)
-                else:
-                    l.append(os.path.basename(complist[i].filename))
-            legends.extend(l)
+            if 'name' in list(sp.__dict__.keys()): l.append(sp.name)
+            else: l.append(os.path.basename(sp.filename))
+            if len(complist)>0:
+                if 'name' in list(complist[i].__dict__.keys()): l.append(complist[i].name)
+                else: l.append(os.path.basename(complist[i].filename))
+            legend.extend(l)
 
 # generate plot
-    fig = plotSpectrum(plotlist,multiplot=True,multipage=True,legends=legends,colors=clist,**kwargs)
+    base_kwargs={
+    'multiplot': True,
+    'multipage': True,
+    'legends': legend,
+    'colors': clist,
+    'layout': layout,
+    'fontscale': fontscale,
+    'output': output,
+    }
+    base_kwargs.update(plot_kwargs)
+    fig = plotSpectrum(plotlist,**base_kwargs)
 
     return fig
+
+
 
 
 def visualizeIndices(sp,indices,**kwargs):

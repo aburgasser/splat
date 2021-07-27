@@ -326,6 +326,7 @@ class Spectrum(object):
                 mkwargs['silent']=True
                 sdb = searchLibrary(**mkwargs)
 
+
 # return prior spectrum - THIS IS NOT WORKING SO COMMENTED OUT
 #            if self.filename in list(SPECTRA_READIN.keys()) and self.runfast == True:
 #                self = SPECTRA_READIN[self.filename]
@@ -4981,6 +4982,7 @@ def readSpectrum(*args,**kwargs):
     kwargs['filename'] = file
     kwargs['model'] = False
 
+
 # a filename must be passed
     if file == '':
         raise NameError('\nNo filename passed to readSpectrum')
@@ -5132,13 +5134,15 @@ def readSpectrum(*args,**kwargs):
 
 
 # fix to catch badly formatted files where noise column is S/N
+# THIS IS TEMPORARILY REMOVED AS IT IS CAUSING PROBLEMS WITH SOME OF THE FITTING STATISTICS
+# WILL NEED TO GO IN AND FIX THE DATA THEMSELVES
 #    print(flux, numpy.median(flux))
-    if catchSN == True:
-          w = numpy.where(output['flux'] > numpy.nanmedian(output['flux']))
-          if (numpy.nanmedian(output['flux'][w]/output['noise'][w]) < 1.):
-              output['noise'] = output['flux']/output['noise']
-              w = numpy.where(numpy.isnan(output['noise']))
-              output['noise'][w] = numpy.nanmedian(output['noise'])
+    # if catchSN == True:
+    #       w = numpy.where(output['flux'] > numpy.nanmedian(output['flux']))
+    #       if (numpy.nanmedian(output['flux'][w]/output['noise'][w]) < 1.):
+    #           output['noise'] = output['flux']/output['noise']
+    #           w = numpy.where(numpy.isnan(output['noise']))
+    #           output['noise'][w] = numpy.nanmedian(output['noise'])
 
 # add in instrument specific information
     if inst != False:
@@ -5864,6 +5868,8 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
         fit_ranges = [fit_ranges]
 
 
+    if verbose==True: print(fit_ranges)
+
 # compute fitting statistics
     stat = []
     sspt = []
@@ -5915,7 +5921,7 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
     if (kwargs.get('plot',False) != False):
 #        spstd = Spectrum(file=sorted_stdfiles[0])
 #        print(typeToNum(sorted_stdsptnum[0],subclass=subclass))
-        spstd = stds[sorted_stdsptnum[0]]
+        spstd = copy.deepcopy(stds[sorted_stdsptnum[0]])
 #        getStandard(typeToNum(sorted_stdsptnum[0],subclass=subclass))
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
         spstd.scale(scale)
@@ -5930,8 +5936,10 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
         else:
             pl = plotSpectrum(sp,spstd,**kwargs)
 
+    if verbose==True: print(fit_ranges)
+
     if kwargs.get('return_standard',False) == True: 
-        spstd = stds[sorted_stdsptnum]
+        spstd = copy.deepcopy(stds[sorted_stdsptnum[0]])
         chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
         spstd.scale(scale)
         return spstd
@@ -6458,12 +6466,10 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
     if sp1.wave.unit != sp2.wave.unit: sp2.toWaveUnit(sp1.wave.unit)
     if sp1.flux.unit != sp2.flux.unit: sp2.toFluxUnit(sp1.flux.unit)
 
-    fit_ranges = kwargs.get('fit_ranges',[[numpy.nanmin(sp1.wave),numpy.nanmax(sp1.wave)]])
-    fit_ranges = kwargs.get('fit_range',fit_ranges)
-    fit_ranges = kwargs.get('fitrange',fit_ranges)
-    fit_ranges = kwargs.get('fitrng',fit_ranges)
-    fit_ranges = kwargs.get('comprange',fit_ranges)
-    fit_ranges = kwargs.get('comprng',fit_ranges)
+    fit_ranges = [[numpy.nanmin(sp1.wave),numpy.nanmax(sp1.wave)]]
+    for k in ['fit_ranges','fit_range','fitrange','fitrng','comprange','comprng']:
+        if k in list(kwargs.keys()): fit_ranges = kwargs[k]
+
 #    mask_ranges = kwargs.get('mask_ranges',[])
 #    mask_standard = kwargs.get('mask_standard',False)
 #    mask_telluric = kwargs.get('mask_telluric',mask_standard)
@@ -6518,6 +6524,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
         if scale == True:
             scale_factor = numpy.nansum(weights*sp1.flux.value*f(sp1.wave.value)/vtot)/ \
                 numpy.nansum(weights*f(sp1.wave.value)*f(sp1.wave.value)/vtot)
+
 # correct variance
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
         stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2/vtot)
