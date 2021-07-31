@@ -71,7 +71,7 @@ def isNumber(s):
     try:
         s1 = float(s1)
         return (True and not numpy.isnan(s1))
-    except ValueError:
+    except:
         return False
 
 def isUnit(s):

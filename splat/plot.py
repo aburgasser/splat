@@ -215,10 +215,10 @@ def plotSpectrum(*args, **kwargs):
         plot range for flux axis
     
     xlabel = wave.unit: string (optional)
-        wavelength axis label; by default set by wlabel keywords and wave.unit in first spectrum object
+        wavelength axis label; by default set by wave_label keywords and wave.unit in first spectrum object
     
     ylabel = flux.unit: string (optional)
-        flux axis label; by default set by fscale, flabel and flux.unit in first spectrum object
+        flux axis label; by default set by flux_label and flux.unit in first spectrum object
     
     xlog, ylog = False : boolean (optional)
         set the x (wavelength) or y (flux) axis to plot as a log scale
@@ -573,8 +573,8 @@ def plotSpectrum(*args, **kwargs):
 
 # settings that work if the spectrum was read in as legitmate Spectrum object
         try:
-            xlabel = kwargs.get('xlabel','{} ({})'.format(sp[0].wlabel,sp[0].wave.unit))
-            ylabel = kwargs.get('ylabel','{} {} ({})'.format(sp[0].fscale,sp[0].flabel,sp[0].flux.unit))
+            xlabel = kwargs.get('xlabel','{} ({})'.format(sp[0].wave_label,sp[0].wave.unit))
+            ylabel = kwargs.get('ylabel','{} ({})'.format(sp[0].flux_label,sp[0].flux.unit))
         except:
             xlabel = kwargs.get('xlabel','Wavelength')
             ylabel = kwargs.get('ylabel','Flux')

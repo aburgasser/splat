@@ -202,13 +202,12 @@ class Spectrum(object):
     Optional Inputs:
 
     :param ismodel: Set to True to specify spectrum as a model (default = False)
-    :param wlabel: label of wavelength (default = 'Wavelength')
-    :param wunit: unit in which wavelength is measured (default = u.micron)
-    :param wunit_label: label of the unit of wavelength (default = 'micron')
-    :param flabel: label of flux density (default = 'F\_lambda')
-    :param fscale: string describing how flux density is scaled (default = '')
-    :param funit: unit in which flux density is measured (default = u.erg/(u.cm**2 * u.s * u.micron)
-    :param funit_label: label of the unit of flux density (default = 'erg cm\^-2 s\^-1 micron\^-1')
+    :param wave_label: label of wavelength (default = 'Wavelength')
+    :param wave_unit: unit in which wavelength is measured (default = u.micron)
+    :param wave_unit_label: label of the unit of wavelength (default = 'micron')
+    :param flux_label: label of flux density (default = 'F\_lambda')
+    :param flux_unit: unit in which flux density is measured (default = u.erg/(u.cm**2 * u.s * u.micron)
+    :param flux_unit_label: label of the unit of flux density (default = 'erg cm\^-2 s\^-1 micron\^-1')
     :param resolution: Resolution of spectrum (default = median lam/lam step/2.)
     :param slitpixelwidth: Width of the slit measured in subpixel values (default = 3.33)
     :param slitwidth: Actual width of the slit, measured in arcseconds. Default value is the ``slitpixelwidth`` multiplied an assumed (for SpeX) spectrograph pixel scale of 0.15 arcseconds 
@@ -230,16 +229,17 @@ class Spectrum(object):
         sdb = False
         self.ismodel = kwargs.get('ismodel',False)
         self.istransmission = kwargs.get('istransmission',False)
-        self.wlabel = kwargs.get('wlabel',r'Wavelength')
-        self.wunit = kwargs.get('wunit',DEFAULT_WAVE_UNIT)
-        self.wunit_label = kwargs.get('wunit_label',self.wunit)
-        self.flabel = kwargs.get('flabel',r'F$_{\lambda}$')
-        self.fscale = kwargs.get('fscale','Arbitrary')
-        if kwargs.get('surface',False) == True: self.fscale = 'Surface'
-        if kwargs.get('apparent',False) == True: self.fscale = 'Apparent'
-        if kwargs.get('absolute',False) == True: self.fscale = 'Absolute'
-        self.funit = kwargs.get('funit',DEFAULT_FLUX_UNIT)
-        self.funit_label = kwargs.get('funit_label',self.funit)
+        self.wave_label = kwargs.get('wave_label',r'Wavelength')
+        self.wave_unit = kwargs.get('wave_unit',DEFAULT_WAVE_UNIT)
+        self.wave_unit_label = kwargs.get('wave_unit_label',self.wave_unit)
+        self.flux_label = kwargs.get('flux_label',r'F$_{\lambda}$')
+        if kwargs.get('surface',False) == True: self.flux_label = 'Surface {}'.format(self.flux_label)
+        if kwargs.get('apparent',False) == True: self.flux_label = 'Apparent {}'.format(self.flux_label)
+        if kwargs.get('absolute',False) == True: self.flux_label = 'Absolute {}'.format(self.flux_label)
+        if kwargs.get('normalized',False) == True: self.flux_label = 'Normalized {}'.format(self.flux_label)
+        self.flux_unit = kwargs.get('flux_unit',DEFAULT_FLUX_UNIT)
+        if kwargs.get('dimensionless')==True: self.flux_unit = u.dimensionless_unscaled
+        self.flux_unit_label = kwargs.get('flux_unit_label',self.flux_unit)
 #        self.header = kwargs.get('header',fits.PrimaryHDU())
         self.header = kwargs.get('header',{})
         self.filename = kwargs.get('file','')
@@ -268,7 +268,8 @@ class Spectrum(object):
                 self.filename = args[0]
 
 # option 2: a spectrum ID is given
-            elif isinstance(args[0],int) or isinstance(args[0],float) or isinstance(args[0],numpy.int64) or isinstance(args[0],numpy.float64):
+#            elif isinstance(args[0],int) or isinstance(args[0],float) or isinstance(args[0],numpy.int64) or isinstance(args[0],numpy.float64):
+            elif isNumber(args[0])==True:
                 self.idkey = int(args[0])
                 try:
                     sdb = keySpectrum(self.idkey)
@@ -277,7 +278,19 @@ class Spectrum(object):
                 except:
                     print('Warning: problem reading in spectral database')
 
-# option 3: arrays are given - interpret as wave, flux, and optionally noise
+# option 3: a dictionary is given - check for the appropriate keys
+            elif isinstance(args[0],dict)==True:
+                if 'wave' in list(args[0].keys()) and 'flux' in list(args[0].keys()):
+                    for k in list(args[0].keys()): setattr(self,k,args[0][k])
+
+
+# option 4: a pandas array is given - check for the appropriate columns
+            elif isinstance(args[0],pandas.core.frame.DataFrame)==True:
+                if 'wave' in list(args[0].columns) and 'flux' in list(args[0].columns):
+                    for k in list(args[0].columns): setattr(self,k,args[0][k])
+
+# option 5: arrays are given - interpret as wave, flux, and optionally noise
+# puts these into keyword arguments
         if len(args) > 1:
             if (isinstance(args[0],list) or isinstance(args[0],numpy.ndarray)) and (isinstance(args[1],list) or isinstance(args[1],numpy.ndarray)):
                 kwargs['wave'] = kwargs.get('wave',args[0])
@@ -286,6 +299,7 @@ class Spectrum(object):
             if isinstance(args[2],list) or isinstance(args[2],numpy.ndarray):
                 kwargs['noise'] = kwargs.get('noise',args[2])
 
+# option 6: wave, flux and optionally noise included in keyword arguments
         if len(kwargs.get('wave','')) > 0 and len(kwargs.get('flux','')) > 0:
             self.wave = kwargs['wave']
             self.flux = kwargs['flux']
@@ -299,33 +313,30 @@ class Spectrum(object):
                 if len(kwargs.get(o,'')) > 0:
                     setattr(self,o,kwargs[o])
 
-# read in file (NOTE: this overrules passing wave, flux, noise arrays)
-        elif self.filename != '':
+# read in file if there isn't anything in our wave or flux arrays
+        if (len(self.wave)==0 or len(self.flux)==0) and self.filename != '':
+
+            self.simplefilename = os.path.basename(self.filename)
+            self.name = kwargs.get('name',self.simplefilename)
 
 # set up parameters
             mkwargs = {}
-            mkwargs['instrument']=self.instrument
-            mkwargs['instrument_mode']=self.instrument_mode
-            mkwargs['file_type']=kwargs.get('file_type','')
             mkwargs['filename']=self.filename
-            mkwargs['comment']=kwargs.get('comment','#')
-            self.simplefilename = os.path.basename(self.filename)
-#            self.file = self.filename
-            self.name = kwargs.get('name',self.simplefilename)
-
-# folder is by default the current directory
+            mkwargs['instrument']=self.instrument
             mkwargs['folder'] = kwargs.get('folder','./')
-            mkwargs['wunit'] = self.wunit
-            mkwargs['funit'] = self.funit
+            mkwargs['wave_unit'] = self.wave_unit
+            mkwargs['flux_unit'] = self.flux_unit
+            mkwargs['delimiter']=kwargs.get('delimiter',',')
+            mkwargs['comment']=kwargs.get('comment','#')
+            mkwargs['file_type']=kwargs.get('file_type','')
+            mkwargs['verbose']=kwargs.get('verbose',False)
+#            self.file = self.filename
 
 # is this in the SPLAT database? if so use the default folder
 # NOTE: NEED TO MAKE THIS INSTRUMENT FLEXIBLE
             if self.filename in list(DB_SPECTRA['DATA_FILE']): 
                 mkwargs['folder'] = SPLAT_PATH+DATA_FOLDER                
-#                mkwargs['data_key'] = int(DB_SPECTRA['DATA_KEY'][DB_SPECTRA['DATA_FILE']==self.filename])                
-                mkwargs['silent']=True
                 sdb = searchLibrary(**mkwargs)
-
 
 # return prior spectrum - THIS IS NOT WORKING SO COMMENTED OUT
 #            if self.filename in list(SPECTRA_READIN.keys()) and self.runfast == True:
@@ -335,89 +346,72 @@ class Spectrum(object):
 #            try:
 
         # breakouts for specific instruments
-            if (kwargs.get('APOGEE') == True or kwargs.get('apogee') == True or kwargs.get('instrument','SPEX-PRISM').upper() == 'APOGEE') and self.filename != '':
-                rs = _readAPOGEE(self.filename,**kwargs)
-                self.instrument = 'APOGEE'
-#                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
-                self.history.append('Spectrum successfully loaded')
-        # create a copy to store as the original
-                self.original = copy.deepcopy(self)
+#             if (kwargs.get('APOGEE') == True or kwargs.get('apogee') == True or kwargs.get('instrument','SPEX-PRISM').upper() == 'APOGEE') and self.filename != '':
+#                 rs = _readAPOGEE(self.filename,**kwargs)
+#                 self.instrument = 'APOGEE'
+# #                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
+#                 self.history.append('Spectrum successfully loaded')
+#         # create a copy to store as the original
+#                 self.original = copy.deepcopy(self)
 
-            elif (kwargs.get('BOSS',False) == True or kwargs.get('boss',False) == True or kwargs.get('eboss',False) == True or kwargs.get('EBOSS',False) == True or kwargs.get('instrument','SPEX-PRISM').upper() == 'BOSS' or kwargs.get('instrument','SPEX-PRISM').upper() == 'EBOSS') and self.filename != '':
-                rs = _readBOSS(self.filename)
-#                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
-                self.wunit = kwargs.get('wunit',u.Angstrom)
-                self.funit = kwargs.get('funit',u.erg/(u.cm**2 * u.s * u.Angstrom))
-                self.history.append('Spectrum successfully loaded')
-        # create a copy to store as the original
-                self.original = copy.deepcopy(self)
+#             elif (kwargs.get('BOSS',False) == True or kwargs.get('boss',False) == True or kwargs.get('eboss',False) == True or kwargs.get('EBOSS',False) == True or kwargs.get('instrument','SPEX-PRISM').upper() == 'BOSS' or kwargs.get('instrument','SPEX-PRISM').upper() == 'EBOSS') and self.filename != '':
+#                 rs = _readBOSS(self.filename)
+# #                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
+#                 self.wave_unit = kwargs.get('wave_unit',u.Angstrom)
+#                 self.flux_unit = kwargs.get('flux_unit',u.erg/(u.cm**2 * u.s * u.Angstrom))
+#                 self.history.append('Spectrum successfully loaded')
+#         # create a copy to store as the original
+#                 self.original = copy.deepcopy(self)
+#            else:
 
-
-            else:
-                rs = readSpectrum(self.filename,**mkwargs)
+# read in spectrum, being careful not to overwrite specifically assigned quantities
+            rs = readSpectrum(self.filename,**mkwargs)
             for k in list(rs.keys()): 
-#                print(k,rs[k])
                 if k not in list(kwargs.keys()): setattr(self,k.lower(),rs[k])
-#            print(self.wunit)
 
-
-# None of this worked; create an empty Spectrum object (used for copying)
-        else:
-#            print('Warning: Creating an empty Spectrum object')
+# None of this worked; create an empty Spectrum object (can be used for copying)
+        if len(self.wave)==0 or len(self.flux)==0:
+            print('Warning: Creating an empty Spectrum object')
             return
 
 # process spectral data
-        if len(self.wave) > 0:
 # convert to numpy arrays
-            self.wave = numpy.array(self.wave)
-            self.flux = numpy.array(self.flux)
-            self.noise = numpy.array(self.noise)
-            self.noise = numpy.absolute(self.noise)
-# enforce positivity and non-nan
-# THESE HAVE BEEN REMOVED
-#            if (numpy.nanmin(self.flux) < 0):
-#                self.flux[numpy.where(self.flux < 0)] = 0.
-#            self.flux[numpy.isnan(self.flux)] = 0.
-# check on noise being too low - a problem with old SpeX files
-# THIS HAS BEEN REMOVED
-#            if (numpy.nanmax(self.flux/self.noise) > max_snr):
-#                self.noise[numpy.where(self.flux/self.noise > max_snr)]=numpy.median(self.noise)
-# convert to astropy quantities with units
-            if not isUnit(self.wave):
-                self.wave = numpy.array(self.wave)*self.wunit
-#                print(self.wave.unit)
-            if not isUnit(self.flux):
-                self.flux = numpy.array(self.flux)*self.funit
-            if not isUnit(self.noise):
-                self.noise = numpy.array(self.noise)*self.funit
-#            print(self.wave.unit)
+        if not isinstance(self.wave,numpy.ndarray): self.wave = numpy.array(self.wave)
+        if not isinstance(self.flux,numpy.ndarray): self.flux = numpy.array(self.flux)
+        if not isinstance(self.noise,numpy.ndarray): self.noise = numpy.array(self.noise)
+# enforce positivity of noise array
+        self.noise = numpy.absolute(self.noise)
+
+# assure wave, flux, noise have units
+        if not isUnit(self.wave): self.wave = numpy.array(self.wave)*self.wave_unit
+        if not isUnit(self.flux): self.flux = numpy.array(self.flux)*self.flux_unit
+        if not isUnit(self.noise): self.noise = numpy.array(self.noise)*self.flux_unit
 
 # some conversions
-            self.flam = self.flux
-            try:
-                self.nu = self.wave.to('Hz',equivalencies=u.spectral())
-            except:
-                pass
-            try:
-                self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
-                self.fnu_unit = u.Jansky
-            except:
-                pass
-            try:
-                self.noisenu = self.noise.to('Jy',equivalencies=u.spectral_density(self.wave))
-            except:
-                pass
-            self.temperature = numpy.zeros(len(self.flux))
+        self.flam = self.flux
+        try: self.nu = self.wave.to(u.Hz,equivalencies=u.spectral())
+        except: pass
+        try:
+            self.fnu = self.flux.to(u.Jansky,equivalencies=u.spectral_density(self.wave))
+            self.fnu_unit = u.Jansky
+        except: pass
+        try: self.noisenu = self.noise.to(u.Jansky,equivalencies=u.spectral_density(self.wave))
+        except: pass
+        self.temperature = numpy.zeros(len(self.flux))
 # calculate variance & S/N
-            self.variance = numpy.array([n**2 for n in self.noise.value])*self.noise.unit*self.noise.unit
-            self.snr = self.computeSN()
+#            self.variance = numpy.array([n**2 for n in self.noise.value])*self.noise.unit*self.noise.unit
+        self.variance = self.noise**2
+#            self.snr = self.computeSN()
+        self.snr = numpy.nanmedian(self.flux/self.noise)
 
 # estimate resolution - be default central lam/lam spacing/3
-            i = int(0.5*len(self.wave))
-            self.resolution = kwargs.get('resolution',self.wave.value[i]/numpy.absolute(self.wave.value[i+1]-self.wave.value[i])/2.)
+        i = int(0.5*len(self.wave))
+        self.resolution = kwargs.get('resolution',self.wave.value[i]/numpy.absolute(self.wave.value[i+1]-self.wave.value[i])/2.)
 
 # populate information on source and spectrum from database
+# COULD POSSIBLY MOVE THIS TO A SEPARATE FUNCTION
 #        print(sdb)
+#        sdb = searchLibrary(**mkwargs)
         if isinstance(sdb,bool) == False :
             if isinstance(sdb,pandas.core.frame.DataFrame) and len(sdb) != 0:
                 for k in list(sdb.columns):
@@ -431,135 +425,135 @@ class Spectrum(object):
                         setattr(self,k.lower(),str(sdb[k][0]))
                 except:
                     pass
-        try:
-            self.shortname = designationToShortName(self.designation)
-        except:
-            pass
-        try:
-            self.date = str(self.observation_date)
-        except:
-            pass
+ # set shortname if possible
+ # REMOVED
+        # try: self.shortname = designationToShortName(self.designation)
+        # except: pass
+# set observation date if possible
+# REMOVED
+        # try:
+        #     self.date = str(self.observation_date)
+        # except:
+        #     pass
 # convert some data into numbers
         kconv = ['ra','dec','julian_date','median_snr','resolution','airmass',\
         'jmag','jmag_error','hmag','hmag_error','kmag','kmag_error','source_key']
         for k in kconv:
-            try:
-                setattr(self,k,float(getattr(self,k)))
-            except:
-                pass
+            try: setattr(self,k,float(getattr(self,k)))
+            except: pass
 # this is to make sure the database resolution is the default value
+# IS THIS NECESSARY?
         try:
-            if kwargs.get('resolution',False) == False:
+            if kwargs.get('resolution',False) == False or kwargs.get('instrument',False) == False: 
                 kwargs['resolution'] = self.resolution
-            if kwargs.get('instrument',False) == False:
-                kwargs['resolution'] = self.resolution
-        except:
-            pass
+        except: pass
 
 # instrument specific information
-        hkys = list(self.header.keys())
+# THIS HAS BEEN REMOVED
+#         hkys = list(self.header.keys())
 
-# automated stuff for spex data
-        if 'INSTRUME' in hkys:
-            if 'spex' in self.header['INSTRUME'].lower() and 'GRAT' in hkys:
-                if 'lowres15' in self.header['GRAT'].lower() or 'prism' in self.header['GRAT'].lower(): self.instrument = 'SPEX-PRISM'
-                if 'shortxd' in self.header['GRAT'].lower() or 'sxd' in self.header['GRAT'].lower(): self.instrument = 'SPEX-SXD'
-        if 'INSTR' in hkys:
-            if 'spex' in self.header['INSTR'].lower() and 'GRAT' in hkys:
-                if 'lowres15' in self.header['GRAT'].lower() or 'prism' in self.header['GRAT'].lower(): self.instrument = 'SPEX-PRISM'
-                if 'shortxd' in self.header['GRAT'].lower() or 'sxd' in self.header['GRAT'].lower(): self.instrument = 'SPEX-SXD'
-        if 'spex' in self.instrument.lower():
-            if 'observation_date' in list(self.__dict__.keys()): dt = self.observation_date
-            elif 'OBS-DATE' in hkys: dt = self.header['OBS-DATE'].replace('-','')
-            elif 'OBS_DATE' in hkys: dt = self.header['OBS_DATE'].replace('-','')
-            elif 'DATE_OBS' in hkys: dt = self.header['DATE_OBS'].replace('-','')
-            elif 'DATE-OBS' in hkys: dt = self.header['DATE-OBS'].replace('-','')
-            else: dt = '20000101'
-#            if int(dt) > 20140800:
-#                self.instrument = self.instrument.replace('SPEX','USPEX')
+# # automated stuff for spex data
+#         if 'INSTRUME' in hkys:
+#             if 'spex' in self.header['INSTRUME'].lower() and 'GRAT' in hkys:
+#                 if 'lowres15' in self.header['GRAT'].lower() or 'prism' in self.header['GRAT'].lower(): self.instrument = 'SPEX-PRISM'
+#                 if 'shortxd' in self.header['GRAT'].lower() or 'sxd' in self.header['GRAT'].lower(): self.instrument = 'SPEX-SXD'
+#         if 'INSTR' in hkys:
+#             if 'spex' in self.header['INSTR'].lower() and 'GRAT' in hkys:
+#                 if 'lowres15' in self.header['GRAT'].lower() or 'prism' in self.header['GRAT'].lower(): self.instrument = 'SPEX-PRISM'
+#                 if 'shortxd' in self.header['GRAT'].lower() or 'sxd' in self.header['GRAT'].lower(): self.instrument = 'SPEX-SXD'
+#         if 'spex' in self.instrument.lower():
+#             if 'observation_date' in list(self.__dict__.keys()): dt = self.observation_date
+#             elif 'OBS-DATE' in hkys: dt = self.header['OBS-DATE'].replace('-','')
+#             elif 'OBS_DATE' in hkys: dt = self.header['OBS_DATE'].replace('-','')
+#             elif 'DATE_OBS' in hkys: dt = self.header['DATE_OBS'].replace('-','')
+#             elif 'DATE-OBS' in hkys: dt = self.header['DATE-OBS'].replace('-','')
+#             else: dt = '20000101'
+# #            if int(dt) > 20140800:
+# #                self.instrument = self.instrument.replace('SPEX','USPEX')
 
-# populate defaults
-        inst = checkInstrument(self.instrument)
-        if inst == False: 
-#            print(self.instrument)
-            inst = 'UNKNOWN'
-        self.instrument = inst
-        for k in list(INSTRUMENTS[self.instrument].keys()): setattr(self,k,INSTRUMENTS[self.instrument][k])
-        self.slitpixelwidth = (self.slitwidth/self.pixelscale).value
-        if kwargs.get('resolution',False) != False:
-            if kwargs['resolution'] > 0.:
-                self.slitwidth = self.slitwidth*self.resolution/kwargs['resolution']
-                self.slitpixelwidth = self.slitpixelwidth*self.resolution/kwargs['resolution']
-                self.resolution = kwargs['resolution']
-        if kwargs.get('slitwidth',False) != False:
-            sl = kwargs['slitwidth']
-            if isUnit(sl): sl = sl.value
-            if s1 > 0.:
-                self.resolution = self.resolution*(self.slitwidth.value)/sl
-                self.slitpixelwidth = self.slitpixelwidth*s1/(self.slitwidth.value)
-                self.slitwidth = kwargs['slitwidth']
-                if not isUnit(self.slitwidth):
-                    self.slitwidth = self.slitwidth*u.arcsec
-        if kwargs.get('slitpixelwidth',False) != False:
-            if kwargs['slitpixelwidth'] > 0.:
-                self.resolution = self.resolution*self.slitpixelwidth/kwargs['slitpixelwidth']
-                self.slitwidth = self.slitwidth*kwargs['slitpixelwidth']/self.slitpixelwidth
-                self.slitpixelwidth = kwargs['slitpixelwidth']
-#        else:
-#            kys = list(splat.INSTRUMENTS.keys())
-#            for k in list(INSTRUMENTS[kys[0]].keys()): setattr(self,k,'UNKNOWN')
-#            self.instrument_name = self.instrument
-#            self.slitpixelwidth = 3.
-#            self.resolution = (self.wave[int(0.5*len(self.wave))]/(self.wave[int(0.5*len(self.wave))+2]-self.wave[int(0.5*len(self.wave))-1])).value
-#            self.slitwidth = 1.0*u.arcsec # not sure I should set this
-#            print('Warning: {} is not one of the instruments defined for SPLAT'.format(self.instrument))
-#            print('Setting slit width to {}, slit pixel width to {} and resolution to {}'.format(self.slitwidth,self.slitpixelwidth,self.resolution))
+# # populate defaults
+#         inst = checkInstrument(self.instrument)
+#         if inst == False: 
+# #            print(self.instrument)
+#             inst = 'UNKNOWN'
+#         self.instrument = inst
+#         for k in list(INSTRUMENTS[self.instrument].keys()): setattr(self,k,INSTRUMENTS[self.instrument][k])
+#         self.slitpixelwidth = (self.slitwidth/self.pixelscale).value
+#         if kwargs.get('resolution',False) != False:
+#             if kwargs['resolution'] > 0.:
+#                 self.slitwidth = self.slitwidth*self.resolution/kwargs['resolution']
+#                 self.slitpixelwidth = self.slitpixelwidth*self.resolution/kwargs['resolution']
+#                 self.resolution = kwargs['resolution']
+#         if kwargs.get('slitwidth',False) != False:
+#             sl = kwargs['slitwidth']
+#             if isUnit(sl): sl = sl.value
+#             if s1 > 0.:
+#                 self.resolution = self.resolution*(self.slitwidth.value)/sl
+#                 self.slitpixelwidth = self.slitpixelwidth*s1/(self.slitwidth.value)
+#                 self.slitwidth = kwargs['slitwidth']
+#                 if not isUnit(self.slitwidth):
+#                     self.slitwidth = self.slitwidth*u.arcsec
+#         if kwargs.get('slitpixelwidth',False) != False:
+#             if kwargs['slitpixelwidth'] > 0.:
+#                 self.resolution = self.resolution*self.slitpixelwidth/kwargs['slitpixelwidth']
+#                 self.slitwidth = self.slitwidth*kwargs['slitpixelwidth']/self.slitpixelwidth
+#                 self.slitpixelwidth = kwargs['slitpixelwidth']
+# #        else:
+# #            kys = list(splat.INSTRUMENTS.keys())
+# #            for k in list(INSTRUMENTS[kys[0]].keys()): setattr(self,k,'UNKNOWN')
+# #            self.instrument_name = self.instrument
+# #            self.slitpixelwidth = 3.
+# #            self.resolution = (self.wave[int(0.5*len(self.wave))]/(self.wave[int(0.5*len(self.wave))+2]-self.wave[int(0.5*len(self.wave))-1])).value
+# #            self.slitwidth = 1.0*u.arcsec # not sure I should set this
+# #            print('Warning: {} is not one of the instruments defined for SPLAT'.format(self.instrument))
+# #            print('Setting slit width to {}, slit pixel width to {} and resolution to {}'.format(self.slitwidth,self.slitpixelwidth,self.resolution))
 
-        self.dof = numpy.round(len(self.wave)/self.slitpixelwidth)
+#         self.dof = numpy.round(len(self.wave)/self.slitpixelwidth)
 
 
 # information on model
-        if self.ismodel == True:
-            self.teff = kwargs.get('teff',numpy.nan)
-            self.logg = kwargs.get('logg',numpy.nan)
-            self.z = kwargs.get('z',numpy.nan)
-            self.fsed = kwargs.get('fsed',numpy.nan)
-            self.cld = kwargs.get('cld',numpy.nan)
-            self.kzz = kwargs.get('kzz',numpy.nan)
-            self.slit = kwargs.get('slit',numpy.nan)
-            self.model = kwargs.get('model','')
-            mset = checkSpectralModelName(self.model)
-#            print(self.model,mset)
-            if mset != False:
-                self.model = mset
-                self.modelset = mset
-                for k in list(SPECTRAL_MODELS[mset].keys()):
-#                    print(k,SPECTRAL_MODELS[mset][k])
-                    setattr(self,k.lower(),SPECTRAL_MODELS[mset][k])
-#            self.name = self.model+' model'
-#            self.shortname = self.name
-            self.fscale = 'Surface'
-            self.published = 'Y'
-#            print(self.name)
+# MOVE THIS TO READ MODEL FUNCTION
+#         if self.ismodel == True:
+#             self.teff = kwargs.get('teff',numpy.nan)
+#             self.logg = kwargs.get('logg',numpy.nan)
+#             self.z = kwargs.get('z',numpy.nan)
+#             self.fsed = kwargs.get('fsed',numpy.nan)
+#             self.cld = kwargs.get('cld',numpy.nan)
+#             self.kzz = kwargs.get('kzz',numpy.nan)
+#             self.slit = kwargs.get('slit',numpy.nan)
+#             self.model = kwargs.get('model','')
+#             mset = checkSpectralModelName(self.model)
+# #            print(self.model,mset)
+#             if mset != False:
+#                 self.model = mset
+#                 self.modelset = mset
+#                 for k in list(SPECTRAL_MODELS[mset].keys()):
+# #                    print(k,SPECTRAL_MODELS[mset][k])
+#                     setattr(self,k.lower(),SPECTRAL_MODELS[mset][k])
+# #            self.name = self.model+' model'
+# #            self.shortname = self.name
+#             self.published = 'Y'
+# #            print(self.name)
 
 # information on transmission/filter spectrum
-        elif self.istransmission == True:
-            self.shortname = self.name
-            self.fscale = 'Normalized'
-            self.published = 'Y'
-# populate header            
-        else:
-            kconv = {'designation': 'DESIG','name': 'NAME','shortname': 'SNAME','ra': 'RA_DEC','dec': 'DEC_DEC','slitwidth': 'SLTW_ARC','source_key': 'SRC_KEY','data_key': 'DATA_KEY','observer': 'OBSERVER', 'bibcode': 'BIB_DATA','program_pi': 'PI','program_number': 'PROGRAM','airmass': 'AIRMASS','reduction_spextool_version': 'VERSION','reduction_person': 'RED_PERS','reduction_date': 'RED_DATE','observation_date': 'OBSDATE','julian_date': 'JDATE','median_snr': 'SNR','resolution': 'RES', 'instrument': 'INSTRUME','wunit': 'XUNITS','funit': 'YUNITS', 'wlabel': 'XTITLE', 'flabel': 'YTITLE', 'opt_type': 'SPT_OPT', 'lit_type': 'SPT_LIT', 'nir_type': 'SPT_NIR', 'spex_type': 'SPT_SPEX', 'gravity_class_nir': 'GRAV_NIR', 'gravity_class_opt': 'GRAV_OPT', 'metallicity_class': 'ZCLASS', 'luminosity_class': 'LUMCLASS', 'color_extremity': 'COLOREX','mu': 'MU','mu_e': 'E_MU', 'mu_ra': 'MU_RA', 'mu_dec': 'MU_DEC', 'parallax': 'PARALLAX', 'parallax_e': 'E_PARALL', 'vtan': 'VTAN','vtan_e': 'E_VTAN','rv': 'RV','rv_e': 'E_RV', 'vsini': 'VSINI', 'vsini_e': 'E_VSINI','distance': 'DISTANCE', 'distance_e': 'E_DISTAN','j_2mass': 'J_2MASS', 'h_2mass': 'H_2MASS', 'ks_2mass': 'K_2MASS', 'j_2mass_e': 'E_J_2MAS', 'h_2mass_e': 'E_H_2MAS', 'ks_2mass_e': 'E_K_2MAS', 'object_type': 'OBJ_TYPE', 'binary': 'BINARY','sbinary': 'SPBINARY', 'companion_name': 'COMPNAME', 'cluster': 'CLUSTER' }
-            for k in list(kconv.keys()):
-                if kconv[k].upper() not in list(self.header.keys()):
-                    try:
-                        self.header[kconv[k]] = getattr(self,k)
-                    except:
-                        self.header[kconv[k]] = ''
-            if 'DATE_OBS' not in list(self.header.keys()) and 'observation_date' in list(self.__dict__.keys()):
-                self.header['DATE_OBS'] = '{}-{}-{}'.format(self.observation_date[:4],self.observation_date[4:6],self.observation_date[6:])
-            if 'TIME_OBS' not in list(self.header.keys()) and 'observation_time' in list(self.__dict__.keys()):
-                self.header['TIME_OBS'] = self.observation_time.replace(' ',':')
+# MOVE THIS TO READ TRANSMISSION FUNCTION
+        # elif self.istransmission == True:
+        #     self.shortname = self.name
+        #     self.published = 'Y'
+# populate header
+# THIS HAS BEEN REMOVED            
+        # else:
+        #     kconv = {'designation': 'DESIG','name': 'NAME','shortname': 'SNAME','ra': 'RA_DEC','dec': 'DEC_DEC','slitwidth': 'SLTW_ARC','source_key': 'SRC_KEY','data_key': 'DATA_KEY','observer': 'OBSERVER', 'bibcode': 'BIB_DATA','program_pi': 'PI','program_number': 'PROGRAM','airmass': 'AIRMASS','reduction_spextool_version': 'VERSION','reduction_person': 'RED_PERS','reduction_date': 'RED_DATE','observation_date': 'OBSDATE','julian_date': 'JDATE','median_snr': 'SNR','resolution': 'RES', 'instrument': 'INSTRUME','wave_unit': 'XUNITS','flux_unit': 'YUNITS', 'wave_label': 'XTITLE', 'flux_label': 'YTITLE', 'opt_type': 'SPT_OPT', 'lit_type': 'SPT_LIT', 'nir_type': 'SPT_NIR', 'spex_type': 'SPT_SPEX', 'gravity_class_nir': 'GRAV_NIR', 'gravity_class_opt': 'GRAV_OPT', 'metallicity_class': 'ZCLASS', 'luminosity_class': 'LUMCLASS', 'color_extremity': 'COLOREX','mu': 'MU','mu_e': 'E_MU', 'mu_ra': 'MU_RA', 'mu_dec': 'MU_DEC', 'parallax': 'PARALLAX', 'parallax_e': 'E_PARALL', 'vtan': 'VTAN','vtan_e': 'E_VTAN','rv': 'RV','rv_e': 'E_RV', 'vsini': 'VSINI', 'vsini_e': 'E_VSINI','distance': 'DISTANCE', 'distance_e': 'E_DISTAN','j_2mass': 'J_2MASS', 'h_2mass': 'H_2MASS', 'ks_2mass': 'K_2MASS', 'j_2mass_e': 'E_J_2MAS', 'h_2mass_e': 'E_H_2MAS', 'ks_2mass_e': 'E_K_2MAS', 'object_type': 'OBJ_TYPE', 'binary': 'BINARY','sbinary': 'SPBINARY', 'companion_name': 'COMPNAME', 'cluster': 'CLUSTER' }
+        #     for k in list(kconv.keys()):
+        #         if kconv[k].upper() not in list(self.header.keys()):
+        #             try:
+        #                 self.header[kconv[k]] = getattr(self,k)
+        #             except:
+        #                 self.header[kconv[k]] = ''
+        #     if 'DATE_OBS' not in list(self.header.keys()) and 'observation_date' in list(self.__dict__.keys()):
+        #         self.header['DATE_OBS'] = '{}-{}-{}'.format(self.observation_date[:4],self.observation_date[4:6],self.observation_date[6:])
+        #     if 'TIME_OBS' not in list(self.header.keys()) and 'observation_time' in list(self.__dict__.keys()):
+        #         self.header['TIME_OBS'] = self.observation_time.replace(' ',':')
 
 
         self.history.append('{} spectrum successfully loaded'.format(self.instrument))
@@ -580,15 +574,15 @@ class Spectrum(object):
 
         '''
         self.toWaveUnit(other.wave.unit)
-        funit = self.flux.unit
+        flux_unit = self.flux.unit
         trng = [numpy.nanmin(other.wave.value),numpy.nanmax(other.wave.value)]
         dt = numpy.abs(trng[1]-trng[0])
         trng = [trng[0]-overhang*dt,trng[1]+overhang*dt]*other.wave.unit
         self.trim(trng)
-        self.flux = reMap(self.wave.value,self.flux.value,other.wave.value)*funit
-        self.noise = reMap(self.wave.value,self.noise.value,other.wave.value)*funit
+        self.flux = reMap(self.wave.value,self.flux.value,other.wave.value)*flux_unit
+        self.noise = reMap(self.wave.value,self.noise.value,other.wave.value)*flux_unit
         self.wave = other.wave
-        self.variance = [x**2 for x in self.noise.value]*funit**2
+        self.variance = [x**2 for x in self.noise.value]*flux_unit**2
         self.history.append('Mapped onto wavelength grid of {}'.format(other))
         return
 
@@ -631,13 +625,13 @@ class Spectrum(object):
             Spectrum of 2MASS J17373467+5953434 + WISE J174928.57-380401.6
         '''
 # convert wavelength and flux units
-        other.toWaveUnit(self.wunit)
-        other.toFluxUnit(self.funit)
+        other.toWaveUnit(self.wave_unit)
+        other.toFluxUnit(self.flux_unit)
 
 # make a copy and fill in wavelength to be overlapping
         sp = copy.deepcopy(self)
         sp.wave = self.wave.value[numpy.where(numpy.logical_and(self.wave.value < numpy.nanmax(other.wave.value),self.wave.value > numpy.nanmin(other.wave.value)))]
-        sp.wave=sp.wave*self.wunit
+        sp.wave=sp.wave*self.wave_unit
 
 # generate interpolated axes
         f1 = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
@@ -646,10 +640,10 @@ class Spectrum(object):
         n2 = interp1d(other.wave.value,other.variance.value,bounds_error=False,fill_value=0.)
 
 # add
-        sp.flux = (f1(sp.wave.value)+f2(sp.wave.value))*self.funit
+        sp.flux = (f1(sp.wave.value)+f2(sp.wave.value))*self.flux_unit
 
 # uncertainty
-        sp.variance = (n1(sp.wave.value)+n2(sp.wave.value))*(self.funit**2)
+        sp.variance = (n1(sp.wave.value)+n2(sp.wave.value))*(self.flux_unit**2)
         sp.noise = sp.variance**0.5
         sp.snr = sp.computeSN()
 
@@ -766,8 +760,8 @@ class Spectrum(object):
 
 # update information
         sp.name = self.name+' x '+other.name
-        sp.funit = self.flux.unit*other.flux.unit
-        sp.funit_label = str(self.flux.unit*other.flux.unit)
+        sp.flux_unit = self.flux.unit*other.flux.unit
+        sp.flux_unit_label = str(self.flux.unit*other.flux.unit)
         ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
@@ -819,13 +813,13 @@ class Spectrum(object):
         sp.snr = sp.computeSN()
 
 # clean up infinities
-        sp.flux = (numpy.where(numpy.absolute(sp.flux.value) == numpy.inf, numpy.nan, sp.flux.value))*self.funit/other.flux.unit
+        sp.flux = (numpy.where(numpy.absolute(sp.flux.value) == numpy.inf, numpy.nan, sp.flux.value))*self.flux_unit/other.flux.unit
         sp.cleanNoise()
 
 # update information
         sp.name = self.name+' / '+other.name
-        sp.funit = self.flux.unit/other.flux.unit
-        sp.funit_label = str(self.flux.unit/other.flux.unit)
+        sp.flux_unit = self.flux.unit/other.flux.unit
+        sp.fflux_unit_label = str(self.flux.unit/other.flux.unit)
         ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
@@ -881,8 +875,8 @@ class Spectrum(object):
 
 # update information
         sp.name = self.name+' / '+other.name
-        sp.funit = self.flux.unit/other.flux.unit
-        sp.funit_label = str(self.flux.unit/other.flux.unit)
+        sp.flux_unit = self.flux.unit/other.flux.unit
+        sp.flux_unit_label = str(self.flux.unit/other.flux.unit)
         ref = ['date','observer','airmass','designation']
         for r in ref:
             if r in self.__dict__.keys() and r in other.__dict__.keys():
@@ -994,7 +988,7 @@ class Spectrum(object):
             f+='\nbibcode = {}\n'.format(self.bibcode)
         else:
             f = '\n'
-            if hasattr(self,'instrument_name'): f+='{} '.format(self.instrument_name)
+            if hasattr(self,'instrument'): f+='{} '.format(self.instrument)
             if hasattr(self,'name'): f+='spectrum of {}'.format(self.name)
             if hasattr(self,'observer') and hasattr(self,'date'): 
                 if isinstance(self.observer,list):
@@ -1002,9 +996,9 @@ class Spectrum(object):
                         f+='\nObserved by {} on {}'.format(self.observer[i],properDate(self.date[i],output='YYYY MMM DD'))
                 else:
                     f+='\nObserved by {} on {}'.format(self.observer,properDate(self.date,output='YYYY MMM DD'))
-            if hasattr(self,'airmass'): f+='\nAirmass = {}'.format(self.airmass)
+            if hasattr(self,'airmass'): f+='\nAirmass = {:.2f}'.format(float(self.airmass))
             if hasattr(self,'designation'): f+='\nSource designation = {}'.format(self.designation)
-            if hasattr(self,'median_snr'): f+='\nMedian S/N = {}'.format(self.median_snr)
+            if hasattr(self,'median_snr'): f+='\nMedian S/N = {:.0f}'.format(float(self.median_snr))
             if hasattr(self,'spex_type'): f+='\nSpeX Classification = {}'.format(self.spex_type)
 # these lines are currently broken
             # if hasattr(self,'lit_type'): 
@@ -1183,14 +1177,14 @@ class Spectrum(object):
            >>> sp.flux.unit
             Unit("Jy")
         '''
-        if self.fscale == 'Temperature' or self.flabel == r'${\lambda}F_{\lambda}$':
+        if self.flux_label == 'Temperature' or self.flux_label == r'${\lambda}F_{\lambda}$':
             self.reset()
-        self.funit = u.Jy
-        self.flabel = r'$F_{\nu}$'
-        self.flux = self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
-        self.noise = self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
+        self.flux_unit = u.Jy
+        self.flux_label = r'$F_{\nu}$'
+        self.flux = self.flux.to(self.flux_unit,equivalencies=u.spectral_density(self.wave))
+        self.noise = self.noise.to(self.flux_unit,equivalencies=u.spectral_density(self.wave))
         self.snr = self.computeSN()
-        self.history.append('Converted to Fnu units of {}'.format(self.funit))
+        self.history.append('Converted to Fnu units of {}'.format(self.flux_unit))
         return
 
     def fnuToFlam(self):
@@ -1221,15 +1215,15 @@ class Spectrum(object):
            >>> sp.flux.unit
             Unit("erg / (cm2 micron s)")
         '''
-        if self.fscale == 'Temperature' or self.flabel == r'${\lambda}F_{\lambda}$':
+        if self.flux_label == 'Temperature' or self.flux_label == r'${\lambda}F_{\lambda}$':
             self.reset()
-        self.funit = DEFAULT_FLUX_UNIT
-        self.flabel = r'$F_{\lambda}$'
-        self.flux = self.flux.to(self.funit,equivalencies=u.spectral_density(self.wave))
-        self.noise = self.noise.to(self.funit,equivalencies=u.spectral_density(self.wave))
+        self.flux_unit = DEFAULT_FLUX_UNIT
+        self.flux_label = r'$F_{\lambda}$'
+        self.flux = self.flux.to(self.flux_unit,equivalencies=u.spectral_density(self.wave))
+        self.noise = self.noise.to(self.flux_unit,equivalencies=u.spectral_density(self.wave))
         self.variance = self.noise**2
         self.snr = self.computeSN()
-        self.history.append('Converted to Flam units of {}'.format(self.funit))
+        self.history.append('Converted to Flam units of {}'.format(self.flux_unit))
         return
 
     def toSED(self):
@@ -1253,7 +1247,7 @@ class Spectrum(object):
            >>> sp.flux.unit
             Unit("erg / (cm2 s)")
         '''
-        if self.flabel == 'SED':
+        if self.flux_label == 'SED':
             return
 # first convert to F_lambda
         self.toFlam()
@@ -1263,9 +1257,9 @@ class Spectrum(object):
         self.noise = (self.wave*self.noise).to(DEFAULT_SED_UNIT)
         self.variance = self.noise**2
         self.snr = self.computeSN()
-        self.funit = DEFAULT_SED_UNIT
-        self.flabel = r'${\lambda}F_{\lambda}$'
-        self.history.append('Converted to SED units of {}'.format(self.funit))
+        self.flux_unit = DEFAULT_SED_UNIT
+        self.flux_label = r'${\lambda}F_{\lambda}$'
+        self.history.append('Converted to SED units of {}'.format(self.flux_unit))
         return
 
     def toAngstrom(self):
@@ -1292,9 +1286,9 @@ class Spectrum(object):
            >>> sp.wave.unit
             Unit("Angstrom")
         '''
-        self.wunit = u.Angstrom
-        self.wave = self.wave.to(self.wunit)
-        self.history.append('Converted wavelength to units of {}'.format(self.wunit))
+        self.wave_unit = u.Angstrom
+        self.wave = self.wave.to(self.wave_unit)
+        self.history.append('Converted wavelength to units of {}'.format(self.wave_unit))
         return
 
     def toMicron(self):
@@ -1314,19 +1308,19 @@ class Spectrum(object):
         :Example:
            >>> import splat
            >>> import astropy.units as u
-           >>> sp = splat.Spectrum(file='somespectrum',wunit=u.Angstrom)
+           >>> sp = splat.Spectrum(file='somespectrum',wave_unit=u.Angstrom)
            >>> sp.wave.unit
             Unit("Angstrom")
            >>> sp.toMicron()
            >>> sp.wave.unit
             Unit("micron")
         '''
-        self.wunit = u.micron
-        self.wave = self.wave.to(self.wunit)
-        self.history.append('Converted wavelength to units of {}'.format(self.wunit))
+        self.wave_unit = u.micron
+        self.wave = self.wave.to(self.wave_unit)
+        self.history.append('Converted wavelength to units of {}'.format(self.wave_unit))
         return
 
-    def toWaveUnit(self,wunit):
+    def toWaveUnit(self,wave_unit):
         '''
         :Purpose: 
             Converts wavelength to specified units. 
@@ -1343,7 +1337,7 @@ class Spectrum(object):
         :Example:
            >>> import splat
            >>> import astropy.units as u
-           >>> sp = splat.Spectrum(file='somespectrum',wunit=u.Angstrom)
+           >>> sp = splat.Spectrum(file='somespectrum',wave_unit=u.Angstrom)
            >>> print(sp.wave.unit)
              Angstrom
            >>> sp.toWaveUnit(u.micron)
@@ -1353,15 +1347,15 @@ class Spectrum(object):
              Warning! failed to convert wavelength unit from micron to s; no change made
         '''
         try:
-            self.wave = self.wave.to(wunit)
-            self.wunit = wunit
-            self.history.append('Converted wavelength to units of {}'.format(self.wunit))
+            self.wave = self.wave.to(wave_unit)
+            self.wave_unit = wave_unit
+            self.history.append('Converted wavelength to units of {}'.format(self.wave_unit))
         except:
-            print('\nWarning! failed to convert wavelength unit from {} to {}; no change made'.format(self.wave.unit,wunit))            
+            print('\nWarning! failed to convert wavelength unit from {} to {}; no change made'.format(self.wave.unit,wave_unit))            
         return
 
 
-    def toFluxUnit(self,funit):
+    def toFluxUnit(self,flux_unit):
         '''
         :Purpose: 
             Converts flux and noise arrays to given flux units.
@@ -1378,7 +1372,7 @@ class Spectrum(object):
         :Example:
            >>> import splat
            >>> import astropy.units as u
-           >>> sp = splat.Spectrum(file='somespectrum',wunit=u.Angstrom)
+           >>> sp = splat.Spectrum(file='somespectrum',wave_unit=u.Angstrom)
            >>> sp.flux.unit
             erg / (cm2 micron s)
            >>> sp.toFluxUnit(u.Watt/u.m/u.m)
@@ -1389,14 +1383,14 @@ class Spectrum(object):
             Warning! failed to convert flux unit from W / m2 to erg / s; no change made
         '''
         try:
-            self.flux = self.flux.to(funit,equivalencies=u.spectral_density(self.wave))
-            self.noise = self.noise.to(funit,equivalencies=u.spectral_density(self.wave))
+            self.flux = self.flux.to(flux_unit,equivalencies=u.spectral_density(self.wave))
+            self.noise = self.noise.to(flux_unit,equivalencies=u.spectral_density(self.wave))
             self.variance = self.noise**2
-            self.history.append('Converted to flux units of {}'.format(self.funit))
+            self.history.append('Converted to flux units of {}'.format(self.flux_unit))
             self.snr = self.computeSN()
-            self.funit = funit
+            self.flux_unit = flux_unit
         except:
-            print('Warning! failed to convert flux unit from {} to {}; no change made'.format(self.flux.unit,funit))
+            print('Warning! failed to convert flux unit from {} to {}; no change made'.format(self.flux.unit,flux_unit))
         return
 
 
@@ -1438,15 +1432,15 @@ class Spectrum(object):
             self.trim([numpy.nanmin(wave)-0.05*(numpy.nanmax(wave)-numpy.nanmin(wave)),numpy.nanmax(wave)+0.05*(numpy.nanmax(wave)-numpy.nanmin(wave))])
 
 # map onto wavelength grid; if spectrum has lower resolution, interpolate; otherwise integrate & resample
-            funit = self.flux.unit
+            flux_unit = self.flux.unit
             if len(self.wave) <= len(wave):
                 f = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
                 n = interp1d(self.wave.value,self.noise.value,bounds_error=False,fill_value=0.)
-                self.flux = f(wave.value)*funit
-                self.noise = n(wave.value)*funit
+                self.flux = f(wave.value)*flux_unit
+                self.noise = n(wave.value)*flux_unit
             else:
-                self.flux = integralResample(self.wave.value,self.flux.value,wave.value)*funit
-                self.noise = integralResample(self.wave.value,self.noise.value,wave.value)*funit
+                self.flux = integralResample(self.wave.value,self.flux.value,wave.value)*flux_unit
+                self.noise = integralResample(self.wave.value,self.noise.value,wave.value)*flux_unit
             self.wave = wave
             self.variance = self.noise**2
             self.history.append('Resampled to new wavelength grid')
@@ -1478,8 +1472,8 @@ class Spectrum(object):
         method = kwargs.get('method','hamming')
         oversample = kwargs.get('oversample',5)
         overscan = kwargs.get('overscan',0.05)
-        wunit = self.wave.unit
-        funit = self.flux.unit
+        wave_unit = self.wave.unit
+        flux_unit = self.flux.unit
 
 # set up trim and smoothing parameters
         instr = checkInstrument(instrument)
@@ -1499,7 +1493,7 @@ class Spectrum(object):
             resolution = INSTRUMENTS[instr]['resolution']
             for k in list(INSTRUMENTS[instr].keys()): setattr(self,k,INSTRUMENTS[instr][k])
         if not isUnit(wave_range):
-            wave_range = wave_range*wunit
+            wave_range = wave_range*wave_unit
         wave_range.to(self.wave.unit)
         wave_range = wave_range.value
 # limit to range of data
@@ -1540,10 +1534,10 @@ class Spectrum(object):
                 var_oversample = integralResample(self.wave.value,self.variance.value,wave_oversample)
             else:
                 var_oversample = [numpy.nan for f in flux_oversample]
-        self.wave = wave_oversample*wunit
-        self.flux = flux_oversample*funit
-        self.variance = var_oversample*(funit**2)
-        self.noise = numpy.array([x**0.5 for x in self.variance.value])*funit
+        self.wave = wave_oversample*wave_unit
+        self.flux = flux_oversample*flux_unit
+        self.variance = var_oversample*(flux_unit**2)
+        self.noise = numpy.array([x**0.5 for x in self.variance.value])*flux_unit
 
 # smooth this in pixel space including oversample       
         self._smoothToSlitPixelWidth(pixel_resolution*oversample,method=method)
@@ -1554,10 +1548,10 @@ class Spectrum(object):
             var_smooth = integralResample(self.wave.value,self.variance.value,wave_out)
         else:
             var_smooth = [numpy.nan for f in flux_smooth]
-        self.wave = wave_out*wunit
-        self.flux = flux_smooth*funit
-        self.variance = var_smooth*(funit**2)
-        self.noise = numpy.array([x**0.5 for x in self.variance.value])*funit
+        self.wave = wave_out*wave_unit
+        self.flux = flux_smooth*flux_unit
+        self.variance = var_smooth*(flux_unit**2)
+        self.noise = numpy.array([x**0.5 for x in self.variance.value])*flux_unit
 
 # do final trim
         self.trim(wave_range)
@@ -1667,12 +1661,12 @@ class Spectrum(object):
 # normalize kernel
         kern = kern/numpy.nansum(kern)
 
-        funit = self.flux.unit
+        flux_unit = self.flux.unit
         a = (numpy.nanmax(self.wave.value)/numpy.nanmin(self.wave.value))**(1./len(self.wave))
         nwave = numpy.nanmin(self.wave.value)*(a**numpy.arange(len(self.wave)))
         nflux = self.flux.value*nwave
         ncflux = numpy.convolve(nflux, kern, 'same')
-        self.flux = ncflux/nwave*funit
+        self.flux = ncflux/nwave*flux_unit
         self.history.append(report)
 
         return
@@ -1721,8 +1715,8 @@ class Spectrum(object):
 
         Optional Inputs:
 
-        :param absolute: set to True to specify that the given magnitude is an absolute magnitude, which sets the ``fscale`` keyword in the Spectrum object to 'Absolute' (default = False)
-        :param apparent: set to True to specify that the given magnitude is an apparent magnitude, which sets the ``fscale`` flag in the Spectrum object to 'Apparent' (default = False)
+        :param absolute: set to True to specify that the given magnitude is an absolute magnitude, which sets the ``flux_label`` keyword in the Spectrum object to 'Absolute Flux' (default = False)
+        :param apparent: set to True to specify that the given magnitude is an apparent magnitude, which sets the ``flux_label`` flag in the Spectrum object to 'Apparent Flux' (default = False)
 
         Outputs:
 
@@ -1744,9 +1738,9 @@ class Spectrum(object):
         if not isNumber(mag) or not isinstance(filt,str):
             raise ValueError('\nSyntax for function is Spectrum.filterMag(filter,magnitude)')
 
-        if self.fscale == 'Temperature' or self.fscale == 'SED':
+        if self.flux_label == 'Temperature' or self.flux_label == 'SED':
             self.reset()
-        if self.funit != DEFAULT_FLUX_UNIT:
+        if self.flux_unit != DEFAULT_FLUX_UNIT:
             self.toFlam()
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',not absolute)
@@ -1754,11 +1748,11 @@ class Spectrum(object):
 # NOTE: NEED TO INCORPORATE UNCERTAINTY INTO SPECTRAL UNCERTAINTY
         if (~numpy.isnan(apmag)):
             self.scale(10.**(0.4*(apmag-mag)))
-            if (absolute):
-                self.fscale = 'Absolute'
+            if absolute == True:
+                self.flux_label = 'Absolute {}'.format(self.flux_label.split(' ')[-1])
                 self.history.append('Flux calibrated with {} filter to an absolute magnitude of {}'.format(filt,mag))
-            if (apparent):
-                self.fscale = 'Apparent'
+            if apparent == True:
+                self.flux_label = 'Apparent {}'.format(self.flux_label.split(' ')[-1])
                 self.history.append('Flux calibrated with {} filter to an apparent magnitude of {}'.format(filt,mag))
         self.snr = self.computeSN()
 
@@ -1833,7 +1827,7 @@ class Spectrum(object):
                     numpy.logical_and(wv > 1.35,wv < 1.42),
                     numpy.logical_and(wv > 1.8,wv < 1.95)))] = 1
                 fl = fl[msk == 0]
-                if len(fl) > 0: return numpy.nanmax(fl)*self.funit
+                if len(fl) > 0: return numpy.nanmax(fl)*self.flux_unit
 #                if isUnit(fl[0]): fl = [f.value for f in fl]
             except:
                 pass
@@ -1897,7 +1891,7 @@ class Spectrum(object):
         elif numpy.isnan(scalefactor) == True: print('\nWarning: normalize is attempting to divide by nan; ignoring')
         else: 
             self.scale(1./scalefactor)
-            self.fscale = 'Normalized'
+            self.flux_label = 'Normalized {}'.format(self.flux_label.split(' ')[-1])
             self.history.append('Spectrum normalized')
             self.snr = self.computeSN()
         return
@@ -2347,7 +2341,7 @@ class Spectrum(object):
         '''
         if noiseonly == False: 
             self.flux = self.flux*factor
-            self.fscale = 'Scaled'
+            self.flux_label = 'Scaled {}'.format(self.flux_label.split(' ')[-1])
         self.noise = self.noise*factor
         self.variance = self.noise**2
         if noiseonly == True: self.history.append('Spectrum noise scaled by a factor of {}'.format(factor))
@@ -2616,8 +2610,8 @@ class Spectrum(object):
 
 #            f = interp1d(wave_sample,flx_smooth,bounds_error=False,fill_value=0.)
 #            v = interp1d(wave_sample,var_smooth,bounds_error=False,fill_value=0.)
-#            self.flux = f(self.wave.value)*self.funit
-#            self.variance = v(self.wave.value)*self.funit**2
+#            self.flux = f(self.wave.value)*self.flux_unit
+#            self.variance = v(self.wave.value)*self.flux_unit**2
             self.wave = wave_final*self.wave.unit
             self.flux = flx_final*self.flux.unit
             self.variance = var_final*(self.flux.unit**2)
@@ -2675,9 +2669,9 @@ class Spectrum(object):
 # convolve a function to smooth spectrum
             window = signal.get_window(method,int(numpy.round(width)))
             neff = numpy.sum(window)/numpy.nanmax(window)        # effective number of pixels
-            self.flux = signal.convolve(self.flux.value, window/numpy.sum(window), mode='same')*self.funit
-            self.variance = signal.convolve(self.variance.value, window/numpy.sum(window), mode='same')/neff*(self.funit**2)
-            self.noise = [n**0.5 for n in self.variance.value]*self.funit
+            self.flux = signal.convolve(self.flux.value, window/numpy.sum(window), mode='same')*self.flux_unit
+            self.variance = signal.convolve(self.variance.value, window/numpy.sum(window), mode='same')/neff*(self.flux_unit**2)
+            self.noise = [n**0.5 for n in self.variance.value]*self.flux_unit
             self.snr = self.computeSN()
             self.resolution = self.resolution*self.slitpixelwidth/width
             self.slitwidth = self.slitwidth*width/self.slitpixelwidth
@@ -2737,16 +2731,15 @@ class Spectrum(object):
         :Purpose: Convert to surface fluxes given a radius, assuming at absolute fluxes
         .. note:: UNTESTED, NEED TO ADD IN UNCERTAINTIES
         '''
-        if self.fscale == 'Surface':
-            return
-        if self.fscale != 'Absolute':
+        if 'Surface' in self.flux_label: return
+        if 'Absolute' not in self.flux_label: 
             print('To convert to surface fluxes you must first scale spectrum to absolute (10 pc) flux units')
             return
         r = copy.deepcopy(radius)
         if not isUnit(r): r=r*const.R_sun
         self.scale((((10.*u.pc/r).to(u.m/u.m)).value)**2)
         self.history.append('Converted to surface fluxes assuming a radius of {} solar radii'.format((r/const.R_sun).to(u.m/u.m)))
-        self.fscale = 'Surface'
+        self.flux_label = 'Surface {}'.format(self.flux_label.split(' ')[-1])
         return
 
 
@@ -2755,12 +2748,11 @@ class Spectrum(object):
         :Purpose: Convert to surface fluxes given a radius, assuming at absolute fluxes
         .. note: UNTESTED
         '''
-        if self.fscale == 'Temperature':
-            return
-        if self.fscale != 'Surface':
+        if 'Temperature' in self.flux_label: return
+        if 'Surface' not in self.flux_label: 
             print('To convert to brightness temperature you must first scale spectrum to surface flux units')
             return
-        if self.funit != DEFAULT_FLUX_UNIT: self.toFlam()
+        if self.flux_unit != DEFAULT_FLUX_UNIT: self.toFlam()
         fs = copy.deepcopy(self.flux).to(u.erg/u.s/u.cm**3)
         fse = copy.deepcopy(self.noise).to(u.erg/u.s/u.cm**3)
         w = copy.deepcopy(self.wave).to(u.cm)
@@ -2772,9 +2764,8 @@ class Spectrum(object):
         self.variance = self.noise**2
         self.snr = self.computeSN()
         self.history.append('Converted to brightness temperature')
-        self.flabel = 'Temperature'
-        self.fscale = ''
-        self.funit = u.K
+        self.flux_label = 'Temperature'
+        self.flux_unit = u.K
         return
 
     def toTemperature(self):
@@ -3363,31 +3354,31 @@ class NewSpectrum(object):
         self.history.append('Smoothed by a scale of {} pixels'.format(scale))
     
 
-    def convertWave(self,wunit):
+    def convertWave(self,wave_unit):
         '''
         Convert the wavelength to a new unit
         '''
-        if not isUnit(wunit): raise ValueError('{} is not a unit'.format(wunit))
+        if not isUnit(wave_unit): raise ValueError('{} is not a unit'.format(wave_unit))
         try:
-            self.wave = self.wave.to(wunit)
-            self.history.append('Spectrum wavelength converted to units of {}'.format(wunit))
+            self.wave = self.wave.to(wave_unit)
+            self.history.append('Spectrum wavelength converted to units of {}'.format(wave_unit))
         except:
-            print('Cannot convert spectrum with wave units {} to {}'.format(self.wave.unit,wunit))
+            print('Cannot convert spectrum with wave units {} to {}'.format(self.wave.unit,wave_unit))
         return
 
-    def convertFlux(self,funit):
+    def convertFlux(self,flux_unit):
         '''
         Convert the flux to a new unit
         '''
-        if not isUnit(funit): raise ValueError('{} is not a unit'.format(funit))
+        if not isUnit(flux_unit): raise ValueError('{} is not a unit'.format(flux_unit))
         for k in ['flux','noise']:
             if k in list(self.__dict__.keys()):
                 try:
-                    setattr(self,k,(getattr(self,k).to(funit)))
+                    setattr(self,k,(getattr(self,k).to(flux_unit)))
                 except:
-                    print('Cannot convert spectrum element {} into flux units {}'.format(k,funit))
+                    print('Cannot convert spectrum element {} into flux units {}'.format(k,flux_unit))
         self.variance = self.noise**2
-        self.history.append('Spectrum flux converted to units of {}'.format(funit))
+        self.history.append('Spectrum flux converted to units of {}'.format(flux_unit))
         return
 
     def clean(self,positive=True):
@@ -3717,7 +3708,7 @@ class NewSpectrum(object):
         for k in ['ra','dec']:
             if not isinstance(search_parameters[k]['value'],float) and not isinstance(search_parameters[k]['value'],numpy.float64): search_parameters[k]['value'] = None
         if not isinstance(search_parameters['coordinate']['value'],SkyCoord): 
-            try: search_parameters['coordinate']['value'] = splat.properCoordinates(search_parameters['coordinate']['value'])
+            try: search_parameters['coordinate']['value'] = properCoordinates(search_parameters['coordinate']['value'])
             except: pass
         if not isinstance(search_parameters['coordinate']['value'],SkyCoord): search_parameters['coordinate']['value'] = None
 
@@ -3864,16 +3855,16 @@ class NewSpectrum(object):
 
         '''
         if not isUnit(newwave): newwave = newwave*self.wave.unit
-        wunit = self.wave.unit
+        wave_unit = self.wave.unit
         try: self.convertWave(newwave.unit)
         except: raise ValueError('Attempted to map spectrum with wavelength unit {} to wave grid with unit {}'.format(self.wave.unit,newwave.unit))
         if numpy.nanmin(newwave.value) > numpy.nanmax(self.wave.value) or numpy.nanmax(newwave.value) < numpy.nanmin(self.wave.value):
-            self.convertWave(wunit)
+            self.convertWave(wave_unit)
             raise ValueError('New wave range {} to {}{} is outside range of spectrum {} to {}{}'.format(numpy.nanmin(newwave.value),numpy.nanmax(newwave.value),newwave.unit,numpy.nanmin(self.wave.value),numpy.nanmax(self.wave.value),self.wave.unit))
 
-        funit = self.flux.unit
-        self.flux = reMap(self.wave.value,self.flux.value,newwave.value)*funit
-        self.noise = reMap(self.wave.value,self.noise.value,newwave.value)*funit
+        flux_unit = self.flux.unit
+        self.flux = reMap(self.wave.value,self.flux.value,newwave.value)*flux_unit
+        self.noise = reMap(self.wave.value,self.noise.value,newwave.value)*flux_unit
         self.wave = newwave
         self.variance = self.noise**2
         self.history.append('Mapped onto wavelength grid of {}'.format(other))
@@ -3897,8 +3888,8 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
 
         :param rng: range over which spectra are relatively scaled and combined (if desired); if neither spectrum cover this range, then no relative scaling is done and spectra are combined whereever they overlap (default: [])
         :param scale: set to True to relatively scale spectra over rng; if rng is not provided, or spectra to not overlap, this is automatially False (default: True)
-        :param wunit: wavelength unit of final spectrum (default: wavelength unit of s1)
-        :param funit: flux unit of final spectrum (default: flux unit of s1)
+        :param wave_unit: wavelength unit of final spectrum (default: wavelength unit of s1)
+        :param flux_unit: flux unit of final spectrum (default: flux unit of s1)
         :param verbose: set to True to provide feedback (default: False)
 
     :Output: 
@@ -3921,12 +3912,12 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
     sp2 = copy.deepcopy(s2)
     
 # assert common units
-    wunit = kwargs.get('wunit',sp1.wave.unit)
-    sp1.toWaveUnit(wunit)
-    sp2.toWaveUnit(wunit)
-    funit = kwargs.get('funit',sp1.flux.unit)
-    sp1.toFluxUnit(funit)
-    sp2.toFluxUnit(funit)
+    wave_unit = kwargs.get('wave_unit',sp1.wave.unit)
+    sp1.toWaveUnit(wave_unit)
+    sp2.toWaveUnit(wave_unit)
+    flux_unit = kwargs.get('flux_unit',sp1.flux.unit)
+    sp1.toFluxUnit(flux_unit)
+    sp2.toFluxUnit(flux_unit)
 
 # reorder to shortest wavelength spectrum first?
 
@@ -3934,10 +3925,10 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
     rngflag = True
     if len(rng) == 0:
         rng = [numpy.nanmax([numpy.nanmin(sp1.wave.value),numpy.nanmin(sp2.wave.value)]),\
-            numpy.nanmin([numpy.nanmax(sp1.wave.value),numpy.nanmax(sp2.wave.value)])]*wunit
+            numpy.nanmin([numpy.nanmax(sp1.wave.value),numpy.nanmax(sp2.wave.value)])]*wave_unit
     if not isUnit(rng):
-        rng=rng*wunit
-    rng = (rng.to(wunit)).value
+        rng=rng*wave_unit
+    rng = (rng.to(wave_unit)).value
     if rng[0] < numpy.nanmin(sp1.wave.value[1:]): rng[0] = numpy.nanmin(sp1.wave.value[1:])
     if rng[0] < numpy.nanmin(sp2.wave.value[1:]): rng[0] = numpy.nanmin(sp2.wave.value[1:])
     if rng[1] > numpy.nanmax(sp1.wave.value[:-1]): rng[1] = numpy.nanmax(sp1.wave.value[:-1])
@@ -3961,8 +3952,8 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
         wv12 = numpy.array(sp1.wave.value)[w12]
         flx12 = numpy.array(sp1.flux.value)[w12]
         var12 = numpy.array(sp1.variance.value)[w12]
-        sp1mid = Spectrum(wave=wv12*wunit,flux=flx12*funit,noise=(var12**0.5)*funit)
-        sp2mid = Spectrum(wave=wv12*wunit,flux=f2r(sp1mid.wave.value)*funit,noise=(v2r(sp1mid.wave.value)**0.5)*funit)
+        sp1mid = Spectrum(wave=wv12*wave_unit,flux=flx12*flux_unit,noise=(var12**0.5)*flux_unit)
+        sp2mid = Spectrum(wave=wv12*wave_unit,flux=f2r(sp1mid.wave.value)*flux_unit,noise=(v2r(sp1mid.wave.value)**0.5)*flux_unit)
 
         if scaleflag == True:
             chi,scl = compareSpectra(sp1mid,sp2mid)
@@ -4021,12 +4012,12 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
         variance = numpy.append(variance,numpy.array(sp1.variance.value)[w2])
 
 # put back units
-    wave = wave*wunit
-    flux = flux*funit
-    variance = variance*(funit**2)
+    wave = wave*wave_unit
+    flux = flux*flux_unit
+    variance = variance*(flux_unit**2)
 
 # create new spectrum object containing combined spectrum
-    sp = splat.Spectrum(wave=wave,flux=flux,noise=variance**0.5)
+    sp = Spectrum(wave=wave,flux=flux,noise=variance**0.5)
 #    sp.wave = wave
 #    sp.flux = flux
 #    sp.variance = variance
@@ -4427,7 +4418,7 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', source_database=DB_SOURCE
 # prep object classes
     object_classes = numpy.array([])
     if 'OBJECT_TYPE' in list(source_db.keys()):
-        object_classes = numpy.unique(numpy.sort(numpy.array([str(x) for x in splat.DB_SOURCES['OBJECT_TYPE']])))
+        object_classes = numpy.unique(numpy.sort(numpy.array([str(x) for x in DB_SOURCES['OBJECT_TYPE']])))
     object_classes = object_classes[numpy.where(object_classes != '0')]  # eliminate masked element
     object_classes = object_classes[numpy.where(object_classes != 'nan')]  # eliminate masked element
 
@@ -4955,172 +4946,353 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', source_database=DB_SOURCE
 
 
 
-def readSpectrum(*args,**kwargs):
+def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_WAVE_UNIT,flux_unit=DEFAULT_FLUX_UNIT,dimensionless=False,comment='#',delimiter=',',file_type='',crval1='CRVAL1',cdelt1='CDELT1',catchSN=True,noZeroNoise=True,verbose=False,**kwargs):
     '''
-    .. DOCS: will come back to this one
+    Purpose
+    -------
+
+    Reads in spectral data from a variety of formats
+
+    Parameters
+    ----------
+
+    file : string
+        filename of data to be read in; if full path not provided, routine will search in local directory
+        or in folder indicated by folder keyword
+
+    folder = '' : string [optional]
+        full path to folder containing file
+
+    file_type = '' : string [optional]
+        a string indicating some flags that specify what kind of file this is; some examples include:
+            * csv = comma separated file (sets delimiter = ',')
+            * tab or tsv = tab delimited file (sets delimiter = '\t')
+            * pipe = pipe delimited file (sets delimiter = '|')
+            * latex = latex-style table data (sets delimiter = ' & ')
+            * waveheader = wavelength solution is contained within the fits header
+            * wavelog = wavelength solution is logarithmic (common for echelle data)
+            * sdss = sets both waveheader and wavelog
+
+    instrument = DEFAULT_INSTRUMENT : string [optional]
+        instrument by which data was acquired, by default the DEFAULT-INSTRUMENT global parameter
+        checked against INSTRUMENTS dictionary
+
+    wave_unit = DEFAULT_WAVE_UNIT : astropy.unit [optional]
+        units of wavelength axis, by default specified by the DEFAULT_WAVE_UNIT global parameter
+
+    flux_unit = DEFAULT_FLUX_UNIT : astropy.unit [optional]
+        units of flux and uncertainty axes, by default specified by the DEFAULT_FLUX_UNIT global parameter
+        note that you can specify a unitless number 
+
+    dimensionless = False : boolean [optional]
+        set to True to set the flux units to a dimensionless quantity (e.g. transmission, reflectance)
+
+    comment = '#' : string [optional]
+        for ascii files, character that indicates the file line is a comment (to be ignored)
+
+    delimiter = ',' : string [optional]
+        for ascii files, character that separates columns of values
+
+    crval1,cdelt1 = 'CRVAL1','CDELT1' : string [optional]
+        for fits files for which the wavelength solution is embedded in header, 
+        these are the keywords containing the zeroth wavelength and linear change coefficient
+
+    catchSN = True : boolean [optional]
+        set to True to check if uncertainty axis is actually signal-to-noise, by checking if median(flux/uncertainty) < 1
+
+    noZeroNoise = True : boolean [optional]
+        set to True to set all elements of noise array that are zero to numpy.nan;
+        this helps in later computations of S/N or fit statistics
+
+    verbose = False : boolean [optional]
+        set to True to have program return verbose output
+
+    Outputs
+    -------
+
+    output : dictionary
+        dictionary containing the following elements:
+            * wave : numpy.array = array of wavelength values (not unitted)
+            * flux : numpy.array = array of flux values (not unitted)
+            * noise : numpy.array = array of uncertainty values (not unitted)
+            * wave_unit : astropy.unit = units of wavelength axis
+            * flux_unit : astropy.unit = units of flux and uncertainty axes
+            * header : dictionary = header of file (if fits)
+
+    Example
+    -------
+       Case 1: An ascii file named 'spectrum.csv' with three comma-delimited columns of wavelength in Angstroms 
+       and flux and uncertainty in erg/s/cm2/Angstrom
+
+           >>> import splat
+           >>> import astropy.units as u
+           >>> splat.readSpectrum('spectrum.csv',wave_unit=u.Angstrom,flux_unit=u.erg/u.s/u.cm/u.cm/u.Angstrom)
+
+            {'wave': <Quantity [0.45, 0.5 , 0.55, 0.6 , 0.65, 0.7 , 0.75, 0.8 , 0.85, 0.9 ,
+                        0.95, 1.  , 1.05, 1.1 , 1.15, 1.2 , 1.25, 1.3 , 1.35, 1.4 ,
+                        1.45, 1.5 , 1.55, 1.6 , 1.65, 1.7 , 1.75, 1.8 , 1.85, 1.9 ,
+                        1.95, 2.  , 2.05, 2.1 , 2.15, 2.2 , 2.25, 2.3 , 2.35, 2.4 ,
+                        2.45] Angstrom>,
+             'flux': <Quantity [0.965, 0.985, 1.   , 1.007, 1.012, 1.014, 1.014, 1.012, 1.009,
+                        1.005, 1.003, 1.004, 1.004, 1.005, 1.008, 1.012, 1.015, 1.019,
+                        1.026, 1.034, 1.043, 1.052, 1.062, 1.071, 1.081, 1.09 , 1.101,
+                        1.109, 1.12 , 1.13 , 1.139, 1.148, 1.158, 1.17 , 1.18 , 1.188,
+                        1.196, 1.202, 1.208, 1.214, 1.22 ] erg / (Angstrom cm2 s)>,
+             'noise': <Quantity [0.022, 0.01 ,   nan, 0.01 , 0.015, 0.018, 0.019, 0.02 , 0.024,
+                        0.025, 0.028, 0.032, 0.036, 0.04 , 0.044, 0.048, 0.05 , 0.053,
+                        0.055, 0.057, 0.061, 0.064, 0.068, 0.07 , 0.074, 0.077, 0.081,
+                        0.083, 0.086, 0.09 , 0.092, 0.095, 0.099, 0.102, 0.107, 0.109,
+                        0.112, 0.115, 0.116, 0.118, 0.12 ] erg / (Angstrom cm2 s)>,
+             'header': ,
+             'wave_unit': Unit("Angstrom"),
+             'flux_unit': Unit("erg / (Angstrom cm2 s)")}
+
+       Case 2: A fits file named 'spectrum.fits' that is a asteroid spectrum, wavelength in micron 
+       and flux and uncertainty in dimensionless reflectance
+
+           >>> import splat
+           >>> import astropy.units as u
+           >>> splat.readSpectrum('asteroid.fits',wave_unit=u.micron,dimensionless=True)
+
+        {'wave': <Quantity [0.65777063, 0.65988046, 0.66198677, 0.66409034, 0.6661918 ,
+                    0.6682921 , 0.67039174, 0.6724916 , 0.6745923 , 0.6766945 ,
+                    0.6787989 , 0.6809061 , 0.68301684, 0.6851316 , 0.68725103,
+                    0.68937576, 0.69150627, 0.6936432 , 0.6957871 , 0.6979384 ,
+                    0.7000977 , 0.70226544, 0.70444214, 0.7066283 , 0.7088244 ,
+                    ...
+                    2.5862362 , 2.5901842 , 2.594177  ] micron>,
+         'flux': <Quantity [0.2733175 , 0.35201955, 0.35244268, 0.23883328, 0.30472383,
+                    0.3025949 , 0.21126787, 0.22968623, 0.3400901 , 0.18981682,
+                    0.36001053, 0.23199332, 0.32443064, 0.24086563, 0.18240955,
+                    0.25307003, 0.20817572, 0.20775121, 0.06874909, 0.9939198 ,
+                    0.23347081, 0.22479972, 0.2291573 , 0.2468396 , 0.22524261,
+                    ...
+                    0.28856662, 0.2951897 , 0.29580346]>,
+         'noise': <Quantity [1.94668144e-01, 3.19979459e-01, 2.37098530e-01, 1.75096914e-01,
+                    2.45749980e-01, 2.58316606e-01, 1.30246907e-01, 2.03696743e-01,
+                    1.72521144e-01, 8.74038711e-02, 1.51685730e-01, 1.09243065e-01,
+                    8.36683586e-02, 7.38894045e-02, 4.08149362e-02, 4.65220883e-02,
+                    3.61229926e-02, 4.17911708e-02, 7.78270513e-02, 1.64021879e-01,
+                    ...
+                    6.11881772e-03, 6.60514692e-03, 8.59303772e-03]>,
+         'header': SIMPLE  =                    T / Written by IDL:  Tue Jun 29 15:51:22 2021      
+         BITPIX  =                  -32 / IEEE single precision floating point           
+         NAXIS   =                    2 /                                                
+         NAXIS1  =                  564 /                                                
+         NAXIS2  =                    4 /                                                
+         ...                                                                                
+         HISTORY com_spec_2122-2129.fits. Therefore the spectrum is unitless.            ,
+         'wave_unit': Unit("micron"),
+         'flux_unit': Unit(dimensionless)}
+
+    Note that `readSpectrum()` is called by the Spectrum class; you can also create a Spectrum object directly
+    from the output of `readSpectrum()`:
+
+        >>> d = splat.readSpectrum('asteroid.fits',wave_unit=u.micron,dimensionless=True)
+        >>> sp = splat.Spectrum(d,name='Asteroid',instrument='SPEX-PRISM',flux_label='Reflectance')
+        >>> sp.info()
+
+        IRTF SpeX prism spectrum of Asteroid
+
+        UNPUBLISHED DATA
+
+        History:
+            SPEX-PRISM spectrum successfully loaded
+
+    Dependencies
+    ------------
+        `checkAccess()`_
+        `checkInstrument()`_
+        `checkOnline()`_
+        `isUnit()`_
+        `_readAPOGEE()`_
+        `_readBOSS()`_
+        `_readIRAF()`_
+        `_readFIRE()`_
+        `_readMAGE()`_
+        `_readWFC3()`_
+        `_readKAST()`_
+        astropy.io.fits
+        gzip
+        os
+        shutil
+
+    .. _`checkInstrument()` : api.html#splat.utilities.checkInstrument
+    .. _`checkAccess()` : api.html#splat.utilities.checkAccess
+    .. _`checkOnline()` : api.html#splat.utilities.checkOnline
+    .. _`isUnit()` : api.html#splat.utilities.isUnit
+    .. _`_readAPOGEE()` : api.html#splat.core._readAPOGEE
+    .. _`_readBOSS()` : api.html#splat.core._readBOSS
+    .. _`_readIRAF()` : api.html#splat.core._readIRAF
+    .. _`_readFIRE()` : api.html#splat.core._readFIRE
+    .. _`_readMAGE()` : api.html#splat.core._readMAGE
+    .. _`_readWFC3()` : api.html#splat.core._readWFC3
+    .. _`_readKAST()` : api.html#splat.core._readKAST
+
     '''
-# keyword parameters
-    verbose = kwargs.get('verbose',False)
-    folder = kwargs.get('folder','')
-    catchSN = kwargs.get('catchSN',True)
-    kwargs['model'] = False
-    instrument = kwargs.get('instrument','')
-    file_type = kwargs.get('file_type','')
-    inst = checkInstrument(instrument)
-    if inst != False: instrument = inst
-#    local = kwargs.get('local',True)
+# check inputs and keyword parameters
+    for k in ['file','filename','data_file','datafile']:
+        if k in list(kwargs.keys()): file = kwargs[k]
+    if file == '':
+        raise NameError('\nNo filename passed to readSpectrum')
+    if not(isUnit(wave_unit)):
+        if verbose==True: print('Warning: wave_unit {} is not an astropy unit; using default {}'.format(wave_unit,DEFAULT_WAVE_UNIT))
+        wave_unit = DEFAULT_WAVE_UNIT
+    if not(isUnit(flux_unit)):
+        if verbose==True: print('Warning: flux_unit {} is not an astropy unit; using default {}'.format(flux_unit,DEFAULT_FLUX_UNIT))
+        flux_unit = DEFAULT_FLUX_UNIT
+    if dimensionless==True: flux_unit = u.dimensionless_unscaled
+
+# program parameters
     online = False
     dnldflag = False
-#    local = not online
+    readin = False
+    zipflag = ''
+
+# leaving this as a kwargs
+# NEED TO GET RID OF ONLINE ASPECTS HERE
     url = kwargs.get('url',SPLAT_URL+DATA_FOLDER)
 
 # filename
-    file = kwargs.get('file','')
-    file = kwargs.get('filename',file)
-    if (len(args) > 0):
-        file = args[0]
-    kwargs['filename'] = file
-    kwargs['model'] = False
+#    kwargs['filename'] = file
+#    kwargs['model'] = False
 
-
-# a filename must be passed
-    if file == '':
-        raise NameError('\nNo filename passed to readSpectrum')
 
 # first pass: check if file is local
-#    if online == False:
-    if not os.path.exists(os.path.normpath(file)):
-        nfile = folder+os.path.basename(kwargs['filename'])
-        if not os.path.exists(os.path.normpath(nfile)):
-            if verbose==True: print('Cannot find '+kwargs['filename']+' locally, trying online\n\n')
-            online = checkAccess()
-            if online == False:
-                raise ValueError('\nCannot find files {} or {} locally, and you do not have remote access'.format(file,nfile))
-        else:
-            file=nfile
-            kwargs['filename'] = file
+# NEED TO GET RID OF ONLINE ASPECTS HERE
+    ofile = copy.deepcopy(file)
+    if os.path.exists(os.path.normpath(file)) == False: file = folder+os.path.basename(file)
+    if os.path.exists(os.path.normpath(file)) == False:
+        if verbose==True: print('Cannot find {} locally or in folder {}, trying online\n\n'.format(ofile,folder))
+        online=True
+        file = copy.deepcopy(ofile)
+#            kwargs['filename'] = file
 
 # second pass: download file if necessary
+# NEED TO GET RID OF ONLINE ASPECTS HERE
 #    online = not local
+    if online == True and checkAccess() == False:
+            raise ValueError('\nCannot find file locally, and you do not have remote access'.format(file))
     if online == True:
+        ofile = copy.deepcopy(file)
+        if checkOnline(url+file) == '': file = folder+os.path.basename(file)
         if checkOnline(url+file) == '':
-            file = folder+os.path.basename(file)
-            if checkOnline(url+file) == '':
-                raise ValueError('\nCannot find file '+kwargs['filename']+' on SPLAT website\n\n')
+            raise ValueError('\nCannot find file {} or {} on SPLAT website {}\n\n'.format(ofile,file,url))
 # read in online file
 #           file = kwargs['filename']
+
+# this section downloads file to local machine and then reads it in
+# this has caused some problems when the file is not properly downloaded
         try:
-            if os.path.exists(os.path.normpath(os.path.basename(kwargs['filename']))):
-                os.remove(os.path.normpath(os.path.basename(kwargs['filename'])))
-            open(os.path.normpath(os.path.basename(kwargs['filename'])), 'wb').write(requests.get(url+file).content)
+            if os.path.exists(os.path.normpath(os.path.basename(file))):
+                os.remove(os.path.normpath(os.path.basename(file)))
+            open(os.path.normpath(os.path.basename(file)), 'wb').write(requests.get(url+file).content)
             dnldflag = True
         except:
-            raise NameError('\nProblem reading in {} from SPLAT website'.format(kwargs['filename']))
+            raise NameError('\nProblem reading in {} from SPLAT website {}'.format(file,url))
 
-# instrument specific reads
-    if instrument.upper()=='APOGEE': output = _readAPOGEE(file,**kwargs)
-    elif instrument.upper()=='BOSS': output = _readBOSS(file,**kwargs)
-    elif instrument.upper()=='LDSS3': output = _readIRAF(file,**kwargs)
-    elif instrument.upper()=='FIRE': output = _readFIRE(file,**kwargs)
-    elif instrument.upper()=='MAGE': output = _readMAGE(file,**kwargs)
-    elif instrument.upper()=='WFC3': output = _readWFC3(file,**kwargs)
-    elif instrument.upper()=='KAST-RED' or instrument.upper()=='KAST-BLUE': output = _readKAST(file,**kwargs)
-    else:
+# instrument specific read shortcut
+    inst = checkInstrument(instrument)
+    if inst != False: 
+        instrument = inst
+        if INSTRUMENTS[instrument]['reader'] != '': 
+            output = locals()[INSTRUMENTS[instrument]['reader']](file,verbose=verbose,**kwargs)
+            readin = True
+
+    # if instrument.upper()=='APOGEE': output = _readAPOGEE(file,**kwargs)
+    # elif instrument.upper()=='BOSS': output = _readBOSS(file,**kwargs)
+    # elif instrument.upper()=='LDSS3': output = _readIRAF(file,**kwargs)
+    # elif instrument.upper()=='FIRE': output = _readFIRE(file,**kwargs)
+    # elif instrument.upper()=='MAGE': output = _readMAGE(file,**kwargs)
+    # elif instrument.upper()=='WFC3': output = _readWFC3(file,**kwargs)
+    # elif instrument.upper()=='KAST-RED' or instrument.upper()=='KAST-BLUE': output = _readKAST(file,**kwargs)
+
+# other reads
+    if readin==False:
 
 # determine which type of file
-        if file_type == '': file_type = file.split('.')[-1]
-        zipflag = ''
+        file_type = '{} {}'.format(file.split('.')[-1],file_type)
 
-# gzip compressed file - unzip and then rezip later
+# gzip compressed file - unzip and remove later
         if 'gz' in file_type:
             zipflag = 'gz'
             file = file.replace('.gz','')
+            file_type = '{} {}'.format(file.split('.')[-1],file_type)
             with open(os.path.normpath(file), 'wb') as f_out, gzip.open(os.path.normpath(file+'.gz'), 'rb') as f_in:
                 shutil.copyfileobj(f_in, f_out)
 
-# bz2 compressed file - unzip and then rezip later
+# bz2 compressed file - unzip and remove later
         if 'bz2' in file_type:
             zipflag = 'bz2'
             file = file.replace('.bz2','')
+            file_type = '{} {}'.format(file.split('.')[-1],file_type)
             with open(os.path.normpath(file), 'wb') as f_out, bz2.open(os.path.normpath(file+'.bz2'), 'rb') as f_in:
                 shutil.copyfileobj(f_in, f_out)
 
 # fits file
         if 'fit' in file_type:
-#        df = fits.open(file)
-#        with fits.open(file, ignore_missing_end=True) as data:
-            with fits.open(os.path.normpath(file),ignore_missing_end=True) as data:
-                data.verify('silentfix+ignore')
-                if 'NAXIS3' in list(data[0].header.keys()):
-                    d = numpy.copy(data[0].data[0,:,:])
-                else:
-                    d =  numpy.copy(data[0].data)
-                header = data[0].header
+            with fits.open(os.path.normpath(file),ignore_missing_end=True) as hdu:
+                hdu.verify('silentfix+ignore')
+                if 'NAXIS3' in list(hdu[0].header.keys()): d = numpy.copy(hdu[0].data[0,:,:])
+                else: d =  numpy.copy(hdu[0].data)
+                header = hdu[0].header
 
 # ascii file
         else:
+            if 'csv' in file_type: delimiter = ','
+            if 'tsv' in file_type or 'tab' in file_type: delimiter = '\t'
+            if 'pipe' in file_type: delimiter = '|'
+            if 'latex' in file_type: delimiter = '&'
+
             try:
-                d = numpy.genfromtxt(os.path.normpath(file), comments=kwargs.get('comment','#'), unpack=False, \
+                d = numpy.genfromtxt(os.path.normpath(file), comments=comment, delimiter=delimiter, unpack=False, \
                     missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
-            except: raise ValueError('\nCould not read data from file {}'.format(file))
+            except: 
+                raise ValueError('\nCould not read ascii data from file {}'.format(file))
 #                d = numpy.genfromtxt(os.path.normpath(file), comments=';', unpack=False, \
 #                     missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
             header = fits.Header()      # blank header
 
-# delete file if this was an online read
-#        if online and not local and os.path.exists(os.path.basename(file)):
-#            os.remove(os.path.normpath(os.path.basename(file)))
 
-# remove file if this was a zipped file
-        if zipflag != '':
-            os.remove(os.path.normpath(file))
-
-# assign arrays to wave, flux, noise
+# check alignment of data array
         if len(d[:,0]) > len(d[0,:]): d = d.transpose()  # array is oriented wrong
 
 # SDSS format for wavelength scale - in header and log format
-        if kwargs.get('sdss',False) == True or 'wavelog' in file_type:
+# DOES THIS NEED TO BE MOVED INTO A SPECIFIC READER?
+        if 'sdss' in file_type: file_type='waveheader wavelog {}'.format(file_type)
+        if 'waveheader' in file_type or len(d[:,0])<2:
             flux = d[0,:]
-            if 'CRVAL1' in list(data[0].header.keys()) and 'CDELT1' in list(data[0].header.keys()):
-                wave = 10.**(numpy.linspace(float(data[0].header['CRVAL1']),float(data[0].header['CRVAL1'])+len(flux)*float(data[0].header['CDELT1']),num=len(flux)))
-            else: raise ValueError('\nCannot find CRVAL1 and CDELT1 keywords in header of fits file {}'.format(file))
-            if len(d[:,0]) > 1:
-                noise = d[1,:]
+            if crval1 in list(header.keys()) and cdelt1 in list(header.keys()):
+#                wave = numpy.linspace(float(header[crval1]),float(header[crval1])+len(flux)*float(header[cdelt1]),num=len(flux))
+                wave = numpy.polyval([float(header[cdelt1]),float(header[crval1])],numpy.arange(len(flux)))
+            else: 
+                raise ValueError('\nCannot find {} and {} keywords in header of fits file {}'.format(crval1,cdelt1,file))
+            if len(d[:,0]) > 1: noise = d[1,:]
             else:
-                noise = numpy.zeros(len(flux))
-                noise[:] = numpy.nan
-#  wavelength scale in header and linear format
-        elif 'wavelinear' in file_type:
-            flux = d[0,:]
-            if 'CRVAL1' in list(data[0].header.keys()) and 'CDELT1' in list(data[0].header.keys()):
-                wave = numpy.linspace(float(data[0].header['CRVAL1']),float(data[0].header['CRVAL1'])+len(flux)*float(data[0].header['CDELT1']),num=len(flux))
-            else: raise ValueError('\nCannot find CRVAL1 and CDELT1 keywords in header of fits file {}'.format(file))
-            if len(d[:,0]) > 1:
-                noise = d[1,:]
-            else:
-                noise = numpy.zeros(len(flux))
+                noise = numpy.zeros(len(wave))
                 noise[:] = numpy.nan
 # wavelength is explicitly in data array 
         else:
             wave = d[0,:]
             flux = d[1,:]
-            if len(d[:,0]) > 2:
-                noise = d[2,:]
+            if len(d[:,0]) > 2: noise = d[2,:]
             else:
-                noise = numpy.zeros(len(flux))
+                noise = numpy.zeros(len(wave))
                 noise[:] = numpy.nan
+#  wavelength scale is logarithmic
+        if 'wavelog' in file_type: wave = 10.**wave
 
-        output = {'wave': wave, 'flux': flux, 'noise': noise, 'header': header}
-
+        output = {'wave': wave, 'flux': flux, 'noise': noise, 'header': header, 'wave_unit': wave_unit, 'flux_unit': flux_unit}
 
 # make sure arrays are numpy arrays
     output['wave'] = numpy.array(output['wave'])
     output['flux'] = numpy.array(output['flux'])
     output['noise'] = numpy.array(output['noise'])
 
-# fix places where noise is claimed to be 0
-    w = numpy.where(output['noise'] == 0.)
-    output['noise'][w] = numpy.nan
+# make sure arrays have units
+    if not isUnit(output['wave']): output['wave'] = output['wave']*wave_unit
+    if not isUnit(output['flux']): output['flux'] = output['flux']*flux_unit
+    if not isUnit(output['noise']): output['noise'] = output['noise']*flux_unit
 
 # fix nans in flux
 #    w = numpy.where(numpy.isnan(flux) == True)
@@ -5132,27 +5304,21 @@ def readSpectrum(*args,**kwargs):
     output['flux'] = output['flux'][w]
     output['noise'] = output['noise'][w]
 
+# force places where noise is zero to be NaNs
+    if noZeroNoise==True:
+        output['noise'][numpy.where(output['noise'] == 0.)] = numpy.nan
 
-# fix to catch badly formatted files where noise column is S/N
-# THIS IS TEMPORARILY REMOVED AS IT IS CAUSING PROBLEMS WITH SOME OF THE FITTING STATISTICS
-# WILL NEED TO GO IN AND FIX THE DATA THEMSELVES
-#    print(flux, numpy.median(flux))
-    # if catchSN == True:
-    #       w = numpy.where(output['flux'] > numpy.nanmedian(output['flux']))
-    #       if (numpy.nanmedian(output['flux'][w]/output['noise'][w]) < 1.):
-    #           output['noise'] = output['flux']/output['noise']
-    #           w = numpy.where(numpy.isnan(output['noise']))
-    #           output['noise'][w] = numpy.nanmedian(output['noise'])
 
 # add in instrument specific information
-    if inst != False:
-        for k in list(INSTRUMENTS[inst].keys()): output[k] = INSTRUMENTS[inst][k]  
+# this includes default wavelength and flux units
+# LEAVING THIS OUT FOR THE MOMENT
+#    if inst != False:
+#        for k in list(INSTRUMENTS[inst].keys()): output[k] = INSTRUMENTS[inst][k]  
 
-# clean up
-    if online==True and dnldflag == True:
-        os.remove(os.path.normpath(os.path.basename(kwargs['filename'])))
-    if 'wunit' not in list(output.keys()): output['wunit'] = kwargs.get('wunit',DEFAULT_WAVE_UNIT)
-    if 'funit' not in list(output.keys()): output['funit'] = kwargs.get('funit',DEFAULT_FLUX_UNIT)
+# file clean up
+    if zipflag != '': os.remove(os.path.normpath(file))
+    if online==True and dnldflag == True: os.remove(os.path.normpath(os.path.basename(file)))
+
     return output
 
 
@@ -5176,7 +5342,7 @@ def _readAPOGEE(file,**kwargs):
 
     hdulist = fits.open(file)
     header = hdulist[0].header
-    output = {'wunit': u.Angstrom,'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom,'header': header}
+    output = {'wave_unit': u.Angstrom,'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom,'header': header}
 # apstar data - combined fluxes and individual visits
 # https://data.sdss.org/datamodel/files/APOGEE_REDUX/APRED_VERS/APSTAR_VERS/TELESCOPE/LOCATION_ID/apStar.html
     if model=='apstar':
@@ -5269,8 +5435,8 @@ def _readBOSS(file,**kwargs):
           'header': header,
           'sky': sky,
           'model': model,
-          'wunit': u.Angstrom,
-          'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
+          'wave_unit': u.Angstrom,
+          'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
 
 def _readKAST(file,**kwargs):
     '''
@@ -5294,8 +5460,8 @@ def _readKAST(file,**kwargs):
           'flux': flux,
           'noise': noise,
           'header': header,
-          'wunit': u.Angstrom,
-          'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
+          'wave_unit': u.Angstrom,
+          'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
         
 
 def _readIRAF(file, **kwargs):
@@ -5321,8 +5487,8 @@ def _readIRAF(file, **kwargs):
             'flux': flux,
             'noise': noise ,
             'header': header,
-            'wunit': u.Angstrom, 
-            'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
+            'wave_unit': u.Angstrom, 
+            'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
 
 
 def _readMAGE(file, **kwargs):
@@ -5334,19 +5500,19 @@ def _readMAGE(file, **kwargs):
 
     if not os.path.exists(file):
         raise NameError('\nCould not find MagE file {}'.format(file))
-    wunit = u.Angstrom
-    funit = u.erg/u.s/u.cm/u.cm/u.Angstrom
+    wave_unit = u.Angstrom
+    flux_unit = u.erg/u.s/u.cm/u.cm/u.Angstrom
 
     hdulist = fits.open(file)
     header = hdulist[0].header
     if len(hdulist[0].data) == 2:
-        wave = (10.**(numpy.linspace(hdulist[0].header['CRVAL1'],hdulist[0].header['CRVAL1']+hdulist[0].header['NAXIS1']*hdulist[0].header['CDELT1'],num=hdulist[0].header['NAXIS1'],endpoint=False)))*wunit
-        flux = hdulist[0].data[0]*funit
-        noise = hdulist[0].data[1]*funit
+        wave = (10.**(numpy.linspace(hdulist[0].header['CRVAL1'],hdulist[0].header['CRVAL1']+hdulist[0].header['NAXIS1']*hdulist[0].header['CDELT1'],num=hdulist[0].header['NAXIS1'],endpoint=False)))*wave_unit
+        flux = hdulist[0].data[0]*flux_unit
+        noise = hdulist[0].data[1]*flux_unit
     elif len(hdulist[0].data) == 3:
-        wave = hdulist[0].data[0]*wunit
-        flux = hdulist[0].data[1]*funit
-        noise = hdulist[0].data[2]*funit
+        wave = hdulist[0].data[0]*wave_unit
+        flux = hdulist[0].data[1]*flux_unit
+        noise = hdulist[0].data[2]*flux_unit
     else:
         raise ValueError('\nWas expecting 2 or 3 data axes; instead found {}'.format(len(hdulist[0].data)))
 
@@ -5354,8 +5520,8 @@ def _readMAGE(file, **kwargs):
             'flux': flux, 
             'noise': noise, 
             'header': header, 
-            'wunit': wunit,
-            'funit': funit}
+            'wave_unit': wave_unit,
+            'flux_unit': flux_unit}
 
 
 def _readFIRE(file,**kwargs):
@@ -5365,27 +5531,27 @@ def _readFIRE(file,**kwargs):
     '''
     if not os.path.exists(file):
         raise NameError('\nCould not find FIRE file {}'.format(file))
-    wunit = u.micron
-    funit = u.erg/u.s/u.cm/u.cm/u.micron
+    wave_unit = u.micron
+    flux_unit = u.erg/u.s/u.cm/u.cm/u.micron
 
     hdulist = fits.open(file)
     if len(hdulist[0].data) != 3:
         raise ValueError('\n_readFIRE can only read data reduced via FIREHOSE, with wave, flux, noise in fits data channel')
     header = hdulist[0].header
-    wave = hdulist[0].data[0]*wunit
-    flux = hdulist[0].data[1]*funit
-    noise = hdulist[0].data[2]*funit
+    wave = hdulist[0].data[0]*wave_unit
+    flux = hdulist[0].data[1]*flux_unit
+    noise = hdulist[0].data[2]*flux_unit
     if kwargs.get('gagne',False) == True or numpy.median(wave.value) > 3.:
-        wave = (hdulist[0].data[0]*u.Angstrom).to(wunit)
-        flux = (hdulist[0].data[1]*u.erg/u.s/u.cm/u.cm/u.Angstrom).to(funit)
-        noise = (hdulist[0].data[2]*u.erg/u.s/u.cm/u.cm/u.Angstrom).to(funit)
+        wave = (hdulist[0].data[0]*u.Angstrom).to(wave_unit)
+        flux = (hdulist[0].data[1]*u.erg/u.s/u.cm/u.cm/u.Angstrom).to(flux_unit)
+        noise = (hdulist[0].data[2]*u.erg/u.s/u.cm/u.cm/u.Angstrom).to(flux_unit)
     
     return {'wave': wave, 
             'flux': flux, 
             'noise': noise, 
             'header': header, 
-            'wunit': wunit,
-            'funit': funit} 
+            'wave_unit': wave_unit,
+            'flux_unit': flux_unit} 
 
 
 def _readWFC3(file,**kwargs):
@@ -5405,12 +5571,12 @@ def _readWFC3(file,**kwargs):
             flux=data['col2']
             noise=data['col3']
             contam=data['col4']
-            output={'wave':wave,'flux':flux,'noise':noise,'contamination': contam,'wunit': u.Angstrom,'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
+            output={'wave':wave,'flux':flux,'noise':noise,'contamination': contam,'wave_unit': u.Angstrom,'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
         except KeyError:
             try:
-                output=splat.readSpectrum(file)
-                output['wunit']=u.Angstrom
-                output['funit']=u.erg/u.s/u.cm/u.cm/u.Angstrom
+                output=readSpectrum(file)
+                output['wave_unit']=u.Angstrom
+                output['flux_unit']=u.erg/u.s/u.cm/u.cm/u.Angstrom
             except:
                 raise ValueError('\nCould not read in WFC3 spectrum {}'.format(file))
     #for fits files
@@ -5428,8 +5594,8 @@ def _readWFC3(file,**kwargs):
                 'contamination': contam,
                 'header': header,
                 'sensitivity': sens,
-                'wunit': u.Angstrom,
-                'funit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
+                'wave_unit': u.Angstrom,
+                'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
    
     return output
 
@@ -6528,7 +6694,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
 # correct variance
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
         stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2/vtot)
-        unit = sp1.funit/sp1.funit
+        unit = sp1.flux_unit/sp1.flux_unit
 
 # normalized standard deviation
     elif (statistic == 'stddev_norm' or statistic == 'stdev_norm'):
@@ -6540,7 +6706,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
         stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2)/ \
             numpy.median(sp1.flux.value)**2
-        unit = sp1.funit/sp1.funit
+        unit = sp1.flux_unit/sp1.flux_unit
 
 # standard deviation
     elif (statistic == 'stddev' or statistic == 'stdev'):
@@ -6551,7 +6717,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
 # correct variance
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
         stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2)
-        unit = sp1.funit**2
+        unit = sp1.flux_unit**2
 
 # absolute deviation
     elif (statistic == 'absdev'):
@@ -6562,7 +6728,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
 # correct variance
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
         stat = numpy.nansum(weights*abs(sp1.flux.value-f(sp1.wave.value)*scale_factor))
-        unit = sp1.funit
+        unit = sp1.flux_unit
 
 # error
     else:
@@ -6593,7 +6759,7 @@ def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_stan
 
 # parameter check
     wave = copy.deepcopy(wv)
-    if isinstance(wv,splat.Spectrum): wave = wv.wave
+    if isinstance(wv,Spectrum): wave = wv.wave
     if not isUnit(wv): wave = wave*DEFAULT_WAVE_UNIT
     if not isinstance(wave.value,list) and not isinstance(wave.value,numpy.ndarray):
         raise ValueError('\nInput parameter should be an array of wavelengths; you passed {}'.format(wv))
