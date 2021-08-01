@@ -950,11 +950,13 @@ def plotBatch(inp,output='spectra_plot.pdf',comparisons=None,classify=False,norm
     '''
     Purpose 
     -------
-        Plots a batch of spectra into a 2x2 set of PDF files, with options of overplotting 
-        comparison spectra, including best-match spectral standards. 
+    
+    Plots a batch of spectra into a 2x2 set of PDF files, with options of overplotting 
+    comparison spectra, including best-match spectral standards. 
 
     Parameters 
     ----------
+   
     input : Spectrum, string, or array array of these
         A single or list of Spectrum objects or filenames, or the glob search string 
         for a set of files (e.g., '/Data/myspectra/*.fits'). 
@@ -997,18 +999,33 @@ def plotBatch(inp,output='spectra_plot.pdf',comparisons=None,classify=False,norm
 
     Outputs 
     -------
+    
     matplotlib figure object showing individual panels of each source with optional comparison star
 
-    Example
-    -------
-       >>> import glob, splat
-       >>> import splat.plot as splot
-       >>> files = glob.glob('/home/mydata/*.fits')
-       >>> sp = splot.plotBatch(files,classify=True,output='comparison.pdf')
-       >>> sp = splot.plotBatch('/home/mydata/*.fits',classify=True,output='comparison.pdf')
-       >>> sp = splot.plotBatch([splat.Spectrum(file=f) for f in files],classify=True,output='comparison.pdf')
+    Examples
+    --------
+    
+    **Case 1:** These commands will grab a set of high S/N, optically-classified L5 dwarfs, and
+    plot them into a single multiple-page PDF document in a 2x2 grid with the best fit 
+    classification standard overplotted:
+
+        >>> import glob, splat
+        >>> import splat.plot as splot
+        >>> splist = splat.getSpectrum(opt_spt='L5',snr=100)
+        >>> splot.plotBatch(splist,classify=True,normalize=True,yrange=[0,1.2],output='comparison.pdf')
+              
+    **Case 2:** These commands will grab a list of spectral files, plot them into a single multiple-page PDF
+    document in a 2x2 grid, with the best fit classification standard overplotted. The three 
+    calls of `plotBatch()` produce the same outcome.
+
+        >>> import glob, splat
+        >>> import splat.plot as splot
+        >>> files = glob.glob('/home/mydata/*.fits')
+        >>> sp = splot.plotBatch(files,classify=True,output='comparison.pdf')
+        >>> sp = splot.plotBatch('/home/mydata/*.fits',classify=True,output='comparison.pdf')
+        >>> sp = splot.plotBatch([splat.Spectrum(file=f) for f in files],classify=True,output='comparison.pdf')
        
-       All three of these commands produce the same result
+       
 
     Dependencies
     ------------

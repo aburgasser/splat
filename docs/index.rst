@@ -213,3 +213,18 @@ This project has been supported by the National Aeronautics and Space Administra
    :maxdepth: 3
 
  
+   installation
+   quickstart
+   splat
+   splat_empirical
+   splat_plot
+   splat_model
+   splat_evolve
+   splat_simulate
+   api
+   
+*Search*
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
