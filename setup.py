@@ -28,6 +28,7 @@ setup(
     'astroquery',
     'bokeh',
     'corner',
+    'emcee',
     'flask',
     'matplotlib',
     'numpy',
@@ -37,7 +38,7 @@ setup(
   ],
 
   package_dir = {'splat': 'splat'},    
-  package_data = {'splat': ['db/*']},
+  package_data = {'splat': ['db/*','docs/*','resources/*','tutorials/*']},
 #      'reference/Filters': [
 #        'reference/Filters/*.txt',
 #      ],
@@ -75,6 +76,7 @@ setup(
       'Programming Language :: Python :: 3.3',
       'Programming Language :: Python :: 3.4',
       'Programming Language :: Python :: 3.5',
+      'Programming Language :: Python :: 3.6',
       'Topic :: Scientific/Engineering :: Astronomy',
       'Topic :: Scientific/Engineering :: Physics'
   ],

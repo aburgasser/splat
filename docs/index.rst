@@ -12,30 +12,31 @@ SPLAT: The SpeX Prism Library Analysis Toolkit
 
 SPLAT is a python-based spectral access and analysis package designed to interface  
 with the `SpeX Prism Library`_ (`SPL`_), an online repository of over
-2000 low-resolution, near-infrared spectra of low-temperature stars and brown dwarfs.
+3000 low-resolution, near-infrared spectra of low-temperature stars and brown dwarfs.
 It is built on common python packages such as `astropy <http://www.astropy.org/>`_, `emcee <http://dan.iel.fm/emcee/current/>`_, `matplotlib <http://matplotlib.org/>`_, `numpy <http://www.numpy.org/>`_, `pandas <http://pandas.pydata.org/>`_, `scipy <https://www.scipy.org/>`_, and others.  
 
 
 SPLAT tools allow you to:
     * search the SPL for spectral data and source information;
-    * access the publically-available (published) spectra contained in it;
+    * access the publically-available spectra contained in it;
     * compare your own near-infrared spectrum to these data;
     * make use of published empirical trends in absolute magnitudes, luminosity, effective temperatures, and others;
     * perform basic spectral analyses such as spectral classification, gravity classification, index measurement, spectrophotometry, reddening, blended light analysis, and basic math operations;
     * access atmosphere models and perform fits to spectral data;
-    * transform observable to physical parameters using evolutionary models; 
+    * transform observables to physical parameters using evolutionary models; 
     * simulate very low mass star and brown dwarf populations; and
     * plot, tabulate and publish your results.  
 
-**Note that many of these features are currently under development.**
+**Note that many of these features continue to be in development.**
 
 Installation and Dependencies
 -----------------------------
 
-SPLAT is best forked from the github site `https://github.com/aburgasser/splat <https://github.com/aburgasser/splat>`_.
-which is updated on a regular basis. You may also try to install splat using `pip`_, but this is not yet fully supported.
+SPLAT should be cloned from the github site `https://github.com/aburgasser/splat <https://github.com/aburgasser/splat>`_.
+which is updated on a regular basis. 
+**Warning** at this time please do not try to install splat using `pip`_, as this is an outdated version that is no longer supported.
 
-Once you've downloaded the code and data, you will need to copy the file ``.splat_access`` into your home directory (this is your access key) and add the SPLAT top-level directory to the environment variables ``SPLAT_PATH``, ``PYTHONPATH`` or your system ``PATH``.  More detailed instructions are on the `installation <installation.html>`_ page. 
+Once you've downloaded the code and data, you will need to add the SPLAT top-level directory to the environment variables ``SPLAT_PATH`` and ``PYTHONPATH`` (and optionally to your system ``PATH``).  More detailed instructions are on the `installation <installation.html>`_ page. 
 
 SPLAT has core dependencies on the following packages:
     * `astropy <http://www.astropy.org/>`_
@@ -49,7 +50,6 @@ SPLAT has core dependencies on the following packages:
     * `pandas <http://pandas.pydata.org/>`_
     * `requests <http://docs.python-requests.org/en/master/>`_
     * `scipy <https://www.scipy.org/>`_
-    * `triangle <https://pypi.python.org/pypi/triangle_plot>`_
 
 SPLAT has not yet reached v1.0, so bugs are common. Please help us squish them by 
 sending bug reports to aburgasser@ucsd.edu or start an issue on the github site.
@@ -109,7 +109,7 @@ You can also read in your own spectrum by passing a filename
 >>> sp = splat.Spectrum(filename='PATH_TO/myspectrum.fits')
 
 Both fits and ascii (tab or csv) data formats are supported, but files 
-must conform to the data format standard: 
+should conform to the following data format standard: 
     * column 1: wavelength, assumed in microns
     * column 2: flux in f_lambda units
     * column 3: (optional) flux uncertainty in f_lambda units.
@@ -136,7 +136,7 @@ You can also compare multiple spectra:
 
 >>> sp1 = splat.getSpectrum(shortname='0415-0935')[0]
 >>> sp2 = splat.getSpectrum(shortname='1217-0311')[0]
->>> splot.plotSpectrum(sp1,sp2,colors=['black','red'])
+>>> splot.plotSpectrum(sp1,sp2,colors=['k','r'])
 
 `plotSpectrum()`_ and related routines have many extras to label features, plot uncertainties, 
 indicate telluric absorption regions, make multi-panel and multi-page plots
@@ -169,7 +169,7 @@ of the index:
 >>> spt,unc = splat.classifyByStandard(sp,spt=['T5','T9'])
 >>> result = splat.classifyByTemplate(sp,spt=['T6','T9'],nbest=5)
 
-The last line returns a dictionary containing the best 5 template matches to the Spectrum ``sp``.
+The last line returns a dictionary containing the best 5 template matches.
 
 * To compare a spectrum to another spectrum or a model, use `compareSpectra()`_ :
 
@@ -178,14 +178,14 @@ The last line returns a dictionary containing the best 5 template matches to the
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> chi,scale = splat.compareSpectra(sp,mdl)
 >>> mdl.scale(scale)
->>> splat.plotSpectrum(sp,mdl,colors=['black','red'],legend=[sp.name,mdl.name])
+>>> splat.plotSpectrum(sp,mdl,colors=['k','r'],legend=[sp.name,mdl.name])
 
 You can shortcut the last three lines using the ``plot`` keyword:
 
 >>> chi,scale = splat.compareSpectra(sp,mdl,plot=True)
 
 
-# There are also codes **still in development** to fit models directly to spectra: `modelFitGrid()`_, `modelFitMCMC()`_, and `modelFitEMCEE()`_:
+* There are also codes **still in development** to fit models directly to spectra: `modelFitGrid()`_, `modelFitMCMC()`_, and `modelFitEMCEE()`_:
 
 >>> import splat.model as spmod
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
@@ -203,28 +203,13 @@ you need, please suggest them to aburgasser@ucsd.edu, or note it in the "Issues"
 Acknowledgements
 ----------------
 
-SPLAT is an experimental, collaborative project of research students in the `UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at teaching students how to do research by building their own analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Joshua Hazlett, Carolina Herrara Hernandez, Elizabeth Moreno Hilario, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Dorsa Majidi, Diego Octavio Talavera Maya, Alex Mendez, Gretel Mercado, Niana Mohammed, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen, and Russell van Linge.
+SPLAT is an collaborative project of research students in the `UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at developing research through the building of spectral analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Joshua Hazlett, Carolina Herrara Hernandez, Elizabeth Moreno Hilario, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Dorsa Majidi, Diego Octavio Talavera Maya, Alex Mendez, Gretel Mercado, Niana Mohammed, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen, and Russell van Linge.
 
-This project is supported by the National Aeronautics and Space Administration under Grant No. NNX15AI75G.
+This project has been supported by the National Aeronautics and Space Administration under Grant No. NNX15AI75G.
 
 *Contents*
 
 .. toctree::
    :maxdepth: 3
 
-   installation
-   quickstart
-   splat
-   splat_empirical
-   splat_plot
-   splat_model
-   splat_evolve
-   splat_simulate
-   api
-   
-*Search*
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+ 
