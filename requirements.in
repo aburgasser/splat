@@ -1,0 +1,9 @@
+astropy
+bokeh
+emcee
+flask
+matplotlib==3.*
+numpy
+pandas
+requests
+scipt
