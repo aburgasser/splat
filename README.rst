@@ -234,10 +234,26 @@ The outputs of all of these fitting functions is a dictionary or list of diction
 All of these routines have many options worth exploring, and which are (increasingly) documented at `https://splat.physics.ucsd.edu/splat <https://splat.physics.ucsd.edu/splat>`_. If there are capabilities
 you need, please suggest them to aburgasser@ucsd.edu, or note it in the "Issues" link on our `github site <https://github.com/aburgasser/splat>`_.
 
+Citing SPLAT and its data
+-------------------------
+
+If you use SPLAT tools for your research, please cite Burgasser et al. (2017, ASInC 14, 7) [`NASA ADS <https://ui.adsabs.harvard.edu/abs/2017ASInC..14....7B/abstract>`_]. 
+
+In addition, if you use data contained in SPLAT or the SpeX Prism Library, please be sure to cite the original spectral data source, which can be accessed from the Spectrum object:
+
+>>> sp = splat.getSpectrum(lucky=True)
+>>> sp.citation().data_reference
+'2016ApJ...817..112S'
+
+>>> import splat.citations as spcite
+>>> spcite.shortRef(sp.data_reference)
+'Schneider, A. C. et al. (2016, Astrophysical Journal, 817, 112)'
+
 Acknowledgements
 ----------------
 
 SPLAT is an collaborative project of research students in the `UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at developing research through the building of spectral analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Joshua Hazlett, Carolina Herrara Hernandez, Elizabeth Moreno Hilario, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Dorsa Majidi, Diego Octavio Talavera Maya, Alex Mendez, Gretel Mercado, Niana Mohammed, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen, and Russell van Linge.
 
 This project has been supported by the National Aeronautics and Space Administration under Grant No. NNX15AI75G.
+
 
