@@ -32,7 +32,7 @@ import splat.core as splat
 
 
 def plotMap(*args,**kwargs):
-    '''
+    """
     :Purpose: Plot coordinates onto an equatorial map grid
 
     :Input
@@ -80,7 +80,7 @@ def plotMap(*args,**kwargs):
        >>> s = splat.searchLibrary(young=True)
        >>> c = [splat.properCoordinates(x) for x in s['DESIGNATION']]
        >>> splot.plotMap(c)
-    '''
+    """
     
     projection = kwargs.get('projection','mollweide')
     figsize = kwargs.get('figsize',(8,6))
@@ -194,104 +194,114 @@ def plotMap(*args,**kwargs):
 
 
 
-def plotSpectrum(*args, **kwargs):
-    '''
+def plotSpectrum(inp,xrng=[],yrng=[],xlabel='',ylabel='',xlog=False,ylog=False,grid=False,
+    legend=[],legend_location='upper right',fontscale=1,legend_fontscale=1,title='',
+    color='k',colormap=None,linestyle='-',linewidth=1.5,alpha=1.,
+    show_noise=True,color_noise='k',linestyle_noise='-',linewidth_noise=1.5,alpha_noise=0.5,
+    comparison=None,color_comparison='grey',linestyle_comparison='-',linewidth_comparison=1.5,alpha_comparison=1,
+    residual=False,color_residual='m',linestyle_residual='-',linewidth_residual=1.5,alpha_residual=0.5,
+    telluric=False,color_telluric='grey',linestyle_telluric='-',linewidth_telluric=1.5,alpha_telluric=0.2,
+    features=[],mdwarf=False,ldwarf=False,tdwarf=False,young=False,binary=False,nsamples=100,
+    band=[],band_color='k',band_alpha=0.2,band_label='',band_label_position='bottom',band_width=0.1,
+    show_zero=True,stack=0.,zeropoint=0.,color_zero='k',linestyle_zero=':',linewidth_zero=1.5,alpha_zero=0.3,
+    inset=False,inset_xrange=[],inset_yrange=[],inset_position=[0.65,0.60,0.20,0.20],inset_features=False,
+    output='',multiplot=False,multipage=False,layout=[1,1],figsize=[],tight=True,
+    interactive=False,**kwargs):
+    """
     Purpose
     -------
         Primary plotting program for splat Spectrum objects.
 
     Parameters
     ----------
-    input(s) : Spectrum objects, either sequentially, in a list, or in list of lists
+    inp : Spectrum objects or array of Spectrum objects or nested array of Spectrum objects
         These are the spectra to be plotted; the input is flexible:
-            * `Spec1, Spec2, ...`: plot multiple spectra together, or separately if multiplot = True
+            * `Spec`: plot the spectrum Spec
             * `[Spec1, Spec2, ...]`: plot multiple spectra together, or separately if multiplot = True
             * `[[Spec1, Spec2], [Spec3, Spec4], ..]`: plot multiple sets of spectra (multiplot forced to be True)
     
-    xrange = [0.85,2.42]: list of 2 floats or unitted astropy quantities (optional)
+    xrange: array of two floats or two unitted astropy quantities, default = [0.85,2.42]
         plot range for wavelength axis
     
-    yrange = [-0.02,1.2]*fluxMax: : list of 2 floats or unitted astropy quantities (optional)
+    yrange : array of two floats or two unitted astropy quantities, default = [-0.02,1.2] times `fluxMax()`_
         plot range for flux axis
     
-    xlabel = wave.unit: string (optional)
-        wavelength axis label; by default set by wave_label keywords and wave.unit in first spectrum object
+    xlabel : string, default = wave.unit
+        wavelength axis label; by default set by wave.unit in first Spectrum object
     
-    ylabel = flux.unit: string (optional)
-        flux axis label; by default set by flux_label and flux.unit in first spectrum object
+    ylabel : string, default = flux.unit
+        flux axis label; by default set by flux.unit in first Spectrum object
     
-    xlog, ylog = False : boolean (optional)
+    xlog, ylog : bool, default = False
         set the x (wavelength) or y (flux) axis to plot as a log scale
     
-    features = [] : list of strings (optional)
-        a list of strings indicating chemical features to label on the spectra
-        options include H2O, CH4, CO, TiO, VO, FeH, H2, HI, KI, NaI, SB (for spectral binary)
-    
-    mdwarf, ldwarf, tdwarf, young, binary = False : boolean (optional)
-        add in pre-defined features characteristic of these classes
+    grid : bool, default = False
+        set to True to add a grid
 
-    telluric = False : boolean (optional)
+    telluric : bool, default = False
         indicate telluric absorption features
 
-    band(s) = [] : list of 2-element float arrays
+    features : array of strings, default = []
+        A list of strings indicating chemical features to label on the spectra
+        options include H2O, CH4, CO, TiO, VO, FeH, H2, HI, KI, NaI, SB (for spectral binary)
+    
+    mdwarf, ldwarf, tdwarf, young, binary : boolean, default = False
+        Set to True to add pre-defined features characteristic of these classes
+
+    legend : array of strings, default = [] 
+        list of strings providing legend-style labels for each spectrum plotted
+    
+    legend_location : string, default = 'upper right'
+        place of legend; options are 'upper left', 'center middle', 'lower right' (variations thereof) 
+        and 'outside'
+    
+    legend_fontscale: float, default = 1 
+        sets the scale factor for the legend fontsize (defaults to fontscale)
+    
+    band : array of two floats or array of arrays of two floatS, default = []
         a single or array of 2-element arrays that indicate bands that you want to specifically shade in
     
-    bandcolor(s) = 'k' : single or array of strings
-        a single or array of colors to shade the bands (default = 'k')
+    band_color : string or array of strings, default = 'k'
+        a single or array of colors to shade the bands
     
-    bandalpha(s) = 0.2 : single or array of floats
+    band_alpha : float or array of floats, default = 0.2 
         a single or array of alphas to shade the bands (default = 0.2)
     
-    bandlabel(s) = '' : single or array of strings
+    band_label : string or array of strings, default = ''
         a single or array of labels to annotate the bands (default = '')
     
-    bandlabelposition(s) = 'bottom' : single or array of strings
+    band_label_position : string or array of strings, default = 'bottom'
         a single or array of strings indicating the position of the labels; 
         can be 'bottom', 'middle', or 'top' (default = 'bottom')
     
-    legend = [] : array of strings
-        list of strings providing legend-style labels for each spectrum plotted
-        Alternate notation: legends, label, labels
+    stack : float, default = 0.
+        numerical offset to stack spectra on top of each other
     
-    legendLocation = 'upper right' : string
-        place of legend; options are 'upper left', 'center middle', 'lower right' (variations thereof) 
-        and 'outside'
-        Alternate notation: labelLocation 
-    
-    legendfontscale = 1 : float
-        sets the scale factor for the legend fontsize (defaults to fontscale)
-    
-    grid = False : boolean
-        set to True to add a grid
-
-    stack = 0:
-        set to a numerical offset to stack spectra on top of each other
-    
-    zeropoint = [0,...]:
+    zeropoint : float or array of floats, default = 0.
         list of offsets for each spectrum, giving finer control than stack
     
-    showZero = True:
+    show_zero : book, default = True
         plot the zeropoint(s) of the spectra
 
     comparison:
         a comparison Spectrum to compare in each plot, useful for common reference standard
     
-    noise, showNoise or uncertainty = False:
-        plot the uncertainty for each spectrum
+    show_noise : boolean, default = False
+        set to True to plot the uncertainty for each spectrum
     
     residual = False:
         plots the residual between two spectra
     
-    colorComparison:
+    color_comparison:
         color of comparison source plot lines; by default all grey
 
-    color or colors:
+    color:
         color of plot lines; by default all black
     
-    colorUnc or colorsUnc:
+    color_noise:
         color of uncertainty lines; by default same as line color but reduced opacity
     
-    colorScheme or colorMap:
+    colormap:
         color map to apply based on matplotlib colormaps; 
         see http://matplotlib.org/api/pyplot_summary.html?highlight=colormaps#matplotlib.pyplot.colormaps
     
@@ -316,12 +326,9 @@ def plotSpectrum(*args, **kwargs):
     inset_features = False
         list of features to label in inset plot
 
-    file or filename or output:
+    output:
         filename or filename base for output
-    
-    filetype = 'pdf':
-        output filetype, generally determined from filename
-    
+        
     multiplot = False: 
         creates multiple plots, depending on format of input (optional)
     
@@ -329,7 +336,7 @@ def plotSpectrum(*args, **kwargs):
         spreads plots across multiple pages; output file format must be PDF
         if not set and plots span multiple pages, these pages are output sequentially as separate files
     
-    layout or multilayout = [1,1]:
+    layout = [1,1]:
         defines how multiple plots are laid out on a page
     
     figsize:
@@ -341,180 +348,146 @@ def plotSpectrum(*args, **kwargs):
     tight = True:
         makes a ``tight'' box plot to elimate extra whitespace
 
-        
-    :Example 1: A simple view of a random spectrum
+    Returns
+    -------
+    array of matplotlib figure objects
+        Each array element is one of the plots
+
+    Example
+    -------
+    Case 1: A simple view of a random spectrum
        >>> import splat
        >>> import splat.plot as splot
        >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0]
        >>> spc.plot()                       # this automatically generates a "quicklook" plot
        >>> splot.plotSpectrum(spc)          # does the same thing
-       >>> splot.plotSpectrum(spc,uncertainty=True,tdwarf=True)     # show the spectrum uncertainty and T dwarf absorption features
+       >>> splot.plotSpectrum(spc,show_noise=True,tdwarf=True)     # show the spectrum uncertainty and T dwarf absorption features
 
-    :Example 2: Viewing a set of spectra for a given object
+    Case 2: Viewing a set of spectra for a given object
         In this case we'll look at all of the spectra of TWA 30B in the library, sorted by year and compared to the first epoch data
         This is an example of using multiplot and multipage
 
        >>> import splat
        >>> import splat.plot as splot
        >>> splist = splat.getSpectrum(name = 'TWA 30B')         # get all spectra of TWA 30B
-       >>> junk = [sp.normalize() for sp in splist]             # normalize the spectra
-       >>> dates = [sp.date for sp in splist]                   # observation dates
-       >>> spsort = [s for (s,d) in sorted(zip(dates,splis))]   # sort spectra by dates
+       >>> junk = [sp.normalize([0.9,1.2]) for sp in splist]             # normalize the spectra
+       >>> dates = [sp.observation_date for sp in splist]       # observation dates
+       >>> spsort = [s for (d,s) in sorted(zip(dates,splist))]  # sort spectra by dates
        >>> dates.sort()                                         # don't forget to sort dates!
-       >>> splot.plotSpectrum(spsort,multiplot=True,layout=[2,2],multipage=True,\   # here's our plot statement
-           comparison=spsort[0],uncertainty=True,mdwarf=True,telluric=True,legends=dates,\
-           legendLocation='lower left',output='TWA30B.pdf')
+       >>> splot.plotSpectrum(spsort,multiplot=True,layout=[2,2],multipage=True,\
+           comparison=spsort[0],show_noise=True,mdwarf=True,telluric=True,legend=dates,\
+           yrange=[0,1.2],legend_location='lower left',color_comparison='m',alpha_comparison=0.5,\
+           output='TWA30B.pdf')
+
        
-    :Example 3: Display the spectra sequence of L dwarfs
+    Case 3: Display the spectra sequence of L dwarfs
         This example uses the list of standard files contained in SPLAT, and illustrates the stack feature
 
        >>> import splat
        >>> import splat.plot as splot
        >>> spt = [splat.typeToNum(i+20) for i in range(10)] # generate list of L spectral types
        >>> splat.initiateStandards()                        # initiate standards
-       >>> splist = [splat.SPEX_STDS[s] for s in spt]       # extact just L dwarfs
-       >>> junk = [sp.normalize() for sp in splist]         # normalize the spectra
-       >>> labels = [sp.shortname for sp in splist]         # set labels to be names
-       >>> splot.plotSpectrum(splist,figsize=[10,20],labels=labels,stack=0.5,\  # here's our plot statement
-           colorScheme='copper',legendLocation='outside',telluric=True,output='lstandards.pdf')
+       >>> splist = [splat.STDS_DWARF_SPEX[s] for s in spt]       # extact just L dwarfs
+       >>> junk = [sp.normalize([0.9,1.3]) for sp in splist]         # normalize the spectra
+       >>> legend = [sp.name for sp in splist]         # set labels to be names
+       >>> splot.plotSpectrum(splist,figsize=[10,20],legend=legend,stack=0.5,\  # here's our plot statement
+           colormap='copper',legend_location='outside',telluric=True,xrange=[0.8,2.45],output='lstandards.pdf')
        
-    '''
+    """
 
-# keyword parameters
-#    from .splat import Spectrum
-    nsamples = kwargs.get('nsamples',1000)
-    multiplot = kwargs.get('multiplot',False)           # create multiple plots
-    multipage = kwargs.get('multipage',False)           # create a multiple page sequence of plots
-    multilayout = kwargs.get('multilayout',[1,1])       # layout of multiple plots, [# horizontal, # vertical]
-    multilayout = kwargs.get('layout',multilayout)      
-    stack = kwargs.get('stack',0)                   # stack spectra on top of each other
-    grid = kwargs.get('grid',False)                 # plot internal grid lines
-    filename = kwargs.get('filename','')            # output filename
-    filename = kwargs.get('file',filename)
-    filename = kwargs.get('output',filename)
-    if filename == False:
-        filename = ''
-    title = kwargs.get('title','')
-    fontscale = kwargs.get('fontscale',1)
-    legendfontscale = kwargs.get('legendfontscale',0.8*fontscale)
-    fb = filename.split('.')[:-1]               # filebase for multiple files
-    if filename != '' and len(fb) > 1:
-        filebase = fb[0]
-        for x in fb[1:]:
-            filebase+='.'+x
-    elif filename != '' and len(fb) == 1:
-        filebase = fb[0]
-    else:
-        filebase = filename
-    filetype = kwargs.get('format',filename.split('.')[-1])
-    filetype.lower()
-    if filetype == '':
-        filetype = 'pdf'
-    comparison = kwargs.get('comparison',False)
-    if not isinstance(comparison,splat.Spectrum):
-        comparison = False
-    residual = kwargs.get('residual',False)
-    inset = kwargs.get('inset',False)
-    inset_xrange = kwargs.get('inset_xrange',[])
-    inset_yrange = kwargs.get('inset_yrange',[])
-    inset_position = kwargs.get('inset_position',[.65, .6, .2, .2])
-#    inset_color = kwargs.get('inset_color','k')
-    inset_features = kwargs.get('inset_features',False)
-    
+# keyword parameters (for backward compatability)
+    for k in ['showZero','showzero']: show_zero=kwargs.get(k,show_zero)
+    for k in ['showNoise','noise','uncertainty','shownoise','showuncertainty','show_uncertainty']: show_noise=kwargs.get(k,show_noise)
 
-#    mask = kwargs.get('mask',False)                # not yet implemented
+    for k in ['line_style','lineStyle','ls','linestyles','line_styles']: linestyle=kwargs.get(k,linestyle)
+    for k in ['line_width','lineWidth','width','lw','linewidths','line_widths']: linewidth=kwargs.get(k,linewidth)
+    for k in ['colors','colour','colours']: color=kwargs.get(k,color)
+    for k in ['colorScheme','color_scheme','colorscheme','colorMap','color_map']: colormap=kwargs.get(k,colormap)
 
-# features to label on spectra
-    feature_labels = { \
-        'h2o': {'label': r'H$_2$O', 'type': 'band', 'wavelengths': [[0.925,0.95],[1.08,1.20],[1.325,1.550],[1.72,2.14]]}, \
-        'ch4': {'label': r'CH$_4$', 'type': 'band', 'wavelengths': [[1.1,1.24],[1.28,1.44],[1.6,1.76],[2.2,2.35]]}, \
-        'co': {'label': r'CO', 'type': 'band', 'wavelengths': [[2.29,2.39]]}, \
-        'tio': {'label': r'TiO', 'type': 'band', 'wavelengths': [[0.6569,0.6852],[0.705,0.727],[0.76,0.80],[0.825,0.831],[0.845,0.86]]}, \
-#        'tio': {'label': r'TiO', 'type': 'band', 'wavelengths': [[0.76,0.80],[0.825,0.831]]}, \
-        'vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.04,1.08]]}, \
-        'vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.04,1.08]]}, \
-        'young vo': {'label': r'VO', 'type': 'band', 'wavelengths': [[1.17,1.20]]}, \
-#        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.86,0.90],[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
-        'cah': {'label': r'CaH', 'type': 'band', 'wavelengths': [[0.6346,0.639],[0.675,0.705]]}, \
-        'crh': {'label': r'CrH', 'type': 'band', 'wavelengths': [[0.8611,0.8681]]}, \
-        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.8692,0.875],[0.98,1.03],[1.19,1.25],[1.57,1.64]]}, \
-        'h2': {'label': r'H$_2$', 'type': 'band', 'wavelengths': [[1.5,2.4]]}, \
-        'sb': {'label': r'*', 'type': 'band', 'wavelengths': [[1.6,1.64]]}, \
-        'h': {'label': r'H I', 'type': 'line', 'wavelengths': [[1.004,1.005],[1.093,1.094],[1.281,1.282],[1.944,1.945],[2.166,2.166]]},\
-        'hi': {'label': r'H I', 'type': 'line', 'wavelengths': [[1.004,1.005],[1.093,1.094],[1.281,1.282],[1.944,1.945],[2.166,2.166]]},\
-        'h1': {'label': r'H I', 'type': 'line', 'wavelengths': [[1.004,1.005],[1.093,1.094],[1.281,1.282],[1.944,1.945],[2.166,2.166]]},\
-        'na': {'label': r'Na I', 'type': 'line', 'wavelengths': [[0.8186,0.8195],[1.136,1.137],[2.206,2.209]]}, \
-        'nai': {'label': r'Na I', 'type': 'line', 'wavelengths': [[0.8186,0.8195],[1.136,1.137],[2.206,2.209]]}, \
-        'na1': {'label': r'Na I', 'type': 'line', 'wavelengths': [[0.8186,0.8195],[1.136,1.137],[2.206,2.209]]}, \
-        'cs': {'label': r'Cs I', 'type': 'line', 'wavelengths': [[0.8521,0.8521],[0.8943,0.8943]]}, \
-        'csi': {'label': r'Cs I', 'type': 'line', 'wavelengths': [[0.8521,0.8521],[0.8943,0.8943]]}, \
-        'cs1': {'label': r'Cs I', 'type': 'line', 'wavelengths': [[0.8521,0.8521],[0.8943,0.8943]]}, \
-        'rb': {'label': r'Rb I', 'type': 'line', 'wavelengths': [[0.78,0.78],[0.7948,0.7948]]}, \
-        'rbi': {'label': r'Rb I', 'type': 'line', 'wavelengths': [[0.78,0.78],[0.7948,0.7948]]}, \
-        'rb1': {'label': r'Rb I', 'type': 'line', 'wavelengths': [[0.78,0.78],[0.7948,0.7948]]}, \
-        'mg': {'label': r'Mg I', 'type': 'line', 'wavelengths': [[1.7113336,1.7113336],[1.5745017,1.5770150],[1.4881595,1.4881847,1.5029098,1.5044356],[1.1831422,1.2086969],]}, \
-        'mgi': {'label': r'Mg I', 'type': 'line', 'wavelengths': [[1.7113336,1.7113336],[1.5745017,1.5770150],[1.4881595,1.4881847,1.5029098,1.5044356],[1.1831422,1.2086969],]}, \
-        'mg1': {'label': r'Mg I', 'type': 'line', 'wavelengths': [[1.7113336,1.7113336],[1.5745017,1.5770150],[1.4881595,1.4881847,1.5029098,1.5044356],[1.1831422,1.2086969],]}, \
-        'ca': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[0.6573,0.6573],[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
-        'cai': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[0.6573,0.6573],[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
-        'ca1': {'label': r'Ca I', 'type': 'line', 'wavelengths': [[0.6573,0.6573],[2.263110,2.265741],[1.978219,1.985852,1.986764],[1.931447,1.945830,1.951105]]}, \
-        'caii': {'label': r'Ca II', 'type': 'line', 'wavelengths': [[1.184224,1.195301],[0.985746,0.993409]]}, \
-        'ca2': {'label': r'Ca II', 'type': 'line', 'wavelengths': [[1.184224,1.195301],[0.985746,0.993409]]}, \
-        'al': {'label': r'Al I', 'type': 'line', 'wavelengths': [[1.672351,1.675511],[1.3127006,1.3154345]]}, \
-        'ali': {'label': r'Al I', 'type': 'line', 'wavelengths': [[1.672351,1.675511],[1.3127006,1.3154345]]}, \
-        'al1': {'label': r'Al I', 'type': 'line', 'wavelengths': [[1.672351,1.675511],[1.3127006,1.3154345]]}, \
-        'fe': {'label': r'Fe I', 'type': 'line', 'wavelengths': [[1.5081407,1.5494570],[1.25604314,1.28832892],[1.14254467,1.15967616,1.16107501,1.16414462,1.16931726,1.18860965,1.18873357,1.19763233]]}, \
-        'fei': {'label': r'Fe I', 'type': 'line', 'wavelengths': [[1.5081407,1.5494570],[1.25604314,1.28832892],[1.14254467,1.15967616,1.16107501,1.16414462,1.16931726,1.18860965,1.18873357,1.19763233]]}, \
-        'fe1': {'label': r'Fe I', 'type': 'line', 'wavelengths': [[1.5081407,1.5494570],[1.25604314,1.28832892],[1.14254467,1.15967616,1.16107501,1.16414462,1.16931726,1.18860965,1.18873357,1.19763233]]}, \
-        'k': {'label': r'K I', 'type': 'line', 'wavelengths': [[0.7699,0.7665],[1.169,1.177],[1.244,1.252]]}, \
-        'ki': {'label': r'K I', 'type': 'line', 'wavelengths': [[0.7699,0.7665],[1.169,1.177],[1.244,1.252]]}, \
-        'k1': {'label': r'K I', 'type': 'line', 'wavelengths': [[0.7699,0.7665],[1.169,1.177],[1.244,1.252]]}}
+    for k in ['colornoise','colorNoise','colorUnc','coloruncertainty','color_uncertainty','colorUncertainty']: color_noise=kwargs.get(k,color_noise)
+    for k in ['linestylenoise','line_style_noise','linestyleNoise']: linestyle_noise=kwargs.get(k,linestyle_noise)
+    for k in ['linewidthnoise','linewidthNoise','line_width_noise']: linewidth_noise=kwargs.get(k,linewidth_noise)
+    for k in ['alphanoise','alphaNoise']: alpha_noise=kwargs.get(k,alpha_noise)
 
-    features = kwargs.get('features',[])
-    if not isinstance(features,list):
-        features = [features]
-    if (kwargs.get('ldwarf',False) or kwargs.get('mdwarf',False)):
-        features.extend(['k','na','feh','tio','co','h2o','h2'])
-    if (kwargs.get('tdwarf',False)):
-        features.extend(['k','ch4','h2o','h2'])
-    if (kwargs.get('young',False)):
-        features.extend(['vo'])
-    if (kwargs.get('binary',False)):
-        features.extend(['sb'])
-# clean repeats while maintaining order - set does not do this
-    fea = []
-    for i in features:
-        if i not in fea:
-            fea.append(i)
-    features = fea
+    for k in ['colorzero','colorZero']: color_zero=kwargs.get(k,color_zero)
+    for k in ['linestylezero','line_style_zero','linestyleZero']: linestyle_zero=kwargs.get(k,linestyle_zero)
+    for k in ['linewidthzero','linewidthZero','line_width_zero']: linewidth_zero=kwargs.get(k,linewidth_zero)
+    for k in ['alphazero','alphaZero']: alpha_zero=kwargs.get(k,alpha_zero)
 
-# error check - make sure you're plotting something
-    if (len(args) < 1):
-        print('plotSpectrum needs at least one Spectrum object to plot')
-        return
+    for k in ['colorcomparison','colorComparison']: color_comparison=kwargs.get(k,color_comparison)
+    for k in ['linestyleComparison','line_style_comparison','linestylecomparison']: linestyle_comparison=kwargs.get(k,linestyle_comparison)
+    for k in ['linewidthcomparison','linewidthComparison','line_width_comparison']: linewidth_comparison=kwargs.get(k,linewidth_comparison)
+    for k in ['alphacomparison','alphaComparison']: alpha_comparison=kwargs.get(k,alpha_comparison)
+
+    for k in ['colorresidual','colorResidual']: color_residual=kwargs.get(k,color_residual)
+    for k in ['linestyleresidual','line_style_residual','linestyleResidual']: linestyle_residual=kwargs.get(k,linestyle_residual)
+    for k in ['linewidthresidual','linewidthResidual','line_width_residual']: linewidth_residual=kwargs.get(k,linewidth_residual)
+    for k in ['alpharesidual','alphaResidual']: alpha_residual=kwargs.get(k,alpha_residual)
+
+    for k in ['bands']: band=kwargs.get(k,band)
+    if len(band) == 2 and isinstance(band[0],list) == False: band = [band]
+    for k in ['bandcolors','bandcolor','band_colors']: band_color=kwargs.get(k,band_color)
+    for k in ['bandalphas','band_alphas','bandalpha']: band_alpha=kwargs.get(k,band_alpha)
+    for k in ['band_labels','bandlabel','bandlabels']: band_label=kwargs.get(k,band_label)
+    for k in ['band_label_positions','bandlabelposition','bandlabelpositions']: band_label_position=kwargs.get(k,band_label_position)
+    for k in ['bandwidth','bandwidths','band_widths']: band_width=kwargs.get(k,band_width)
+    for par in [band_color,band_alpha,band_label,band_label_position,band_width]:
+        if not isinstance(par,list): par = [par]*len(band)
+        if len(par) < len(band): par.extend([par[-1] for x in range(len(band)-len(par))])
+
+    for k in ['legends','label','labels']: legend=kwargs.get(k,legend)
+    if not isinstance(legend,list): legend = [legend]
+    for k in ['legendfontscale','legendFontscale']: legend_fontscale=kwargs.get(k,legend_fontscale)
+    legend_fontscale=legend_fontscale*fontscale
+    for k in ['legendLocation','legendlocation','labelLocation','labellocation','label_location']: legend_location=kwargs.get(k,legend_location)
+
+    for k in ['xrange','x_range','wave_range','wrange','wrng']: xrng=kwargs.get(k,xrng)
+    if not isinstance(xrng,list): xrng = [xrng]
+    for k in ['yrange','y_range','flux_range','frange','frng']: yrng=kwargs.get(k,yrng)
+    if not isinstance(yrng,list): yrng = [yrng]
+
+    for k in ['multilayout','multiLayout','multi_layout']: layout=kwargs.get(k,layout)
+    for k in ['file','filename']: output=kwargs.get(k,output)
+    if not isinstance(output,str): output=''
+    filetype = ''
+    if output!='': filetype=output.split('.')[-1]
+
+    if comparison != None and isinstance(comparison,splat.Spectrum) == False and isinstance(comparison,list) == False: 
+        print('plotSpectrum() Warning: comparison spectrum should be a splat Spectrum object, you passed {}'.format(comparison))
+        comparison = None
+
+# some plotting constants
+    xlabel_default = 'Wavelength'
+    ylabel_deafult = 'Flux'
+
+# telluric bands in micron
+    telluric_bands = [[1.1,1.2]*u.micron,[1.3,1.5]*u.micron,[1.75,2.0]*u.micron]
+
+# assign features by group
+    if not isinstance(features,list): features = [features]
+    if ldwarf==True or mdwarf==True: features.extend(['k','na','feh','tio','co','h2o','h2'])
+    if tdwarf==True: features.extend(['k','ch4','h2o','h2'])
+    if young==True: features.extend(['vo'])
+    if binary==True: features.extend(['sb'])
+
+# clean repeats in features while maintaining order - set does not do this
+    if len(features)>0:
+        fea = []
+        for i in features:
+            if i not in fea: fea.append(i)
+        features = fea
+
 
 # if a list is passed, use this list
-    elif (len(args) == 1 and isinstance(args[0],list)):
-        splist = args[0]
+    splist = copy.deepcopy(inp)
+    if isinstance(splist,list) == False: splist = [splist]
     
-# if a set of objects is passed, turn into a list
-    else:
-        splist = []
-        for a in args:
-            if isinstance(a,splat.Spectrum):      # a spectrum object
-                splist.append(a)
-            elif isinstance(a,list):
-                splist.append(a)
-            else:
-                print('\nplotSpectrum: Ignoring input object {} as it is neither a Spectrum object nor a list\n\n'.format(a))
-
 # set up for multiplot
-    if (len(splist) == 1):
-        multiplot = False
+    if len(splist) == 1: multiplot = False
     
 # array of lists => force multiplot
-    elif (len(splist) > 1 and isinstance(splist[0],list)):
-        multiplot = True
+    elif len(splist) > 1 and isinstance(splist[0],list) == True: multiplot = True
+    else: pass
 
 # reformat array of spectra of multiplot is used (i.e., user forgot to set)
     if multiplot == True and isinstance(splist[0],splat.Spectrum):
@@ -526,20 +499,14 @@ def plotSpectrum(*args, **kwargs):
 # flatten array if multiplot is not set
     elif multiplot == False and isinstance(splist[0],list) and len(splist) > 1:
         splist = [[item for sublist in splist for item in sublist]]       # flatten
+    else: pass
 
-    tot_sp = len([item for sublist in splist for item in sublist])    # Total number of spectra
+# total number of spectra - use to assign default legends
+    allsps = [item for sublist in splist for item in sublist]   # Total number of spectra
+    if len(legend) == 0: legend=[sp.name for sp in allsps]
+    if len(legend) < len(allsps):
+        legend.extend([allsps[i].name for i in range(len(legend),len(allsps)-len(legend))])
     
-# prep legend
-    legend = kwargs.get('legend',[str() for x in numpy.arange(tot_sp)])
-    legend = kwargs.get('legends',legend)
-    legend = kwargs.get('label',legend)
-    legend = kwargs.get('labels',legend)
-    if not isinstance(legend,list):
-        legend = [legend]
-    if(len(legend) < tot_sp):
-        legend.extend([str() for x in numpy.arange(tot_sp-len(legend))])
-    legendLocation = kwargs.get('legendLocation','upper right')       # sets legend location
-    legendLocation = kwargs.get('labelLocation',legendLocation)       # sets legend location
 
 # now run a loop through the input subarrays
     plt.close('all')
@@ -547,149 +514,109 @@ def plotSpectrum(*args, **kwargs):
 # set up here for multiple file output
     nplot = 1
     if multipage == True or multiplot == True:
-        nplot = multilayout[0]*multilayout[1]
+        nplot = layout[0]*layout[1]
         numpages = int(len(splist) / nplot) + 1
         if (len(splist) % nplot == 0):
                numpages -= 1
         fig = []
         
-    if multipage == True and filetype == 'pdf':
-        pdf_pages = PdfPages(filename)
+    if multipage == True and filetype.lower() == 'pdf':
+        pdf_pages = PdfPages(output)
         
     if multipage == False:
         if len(splist) > 1:
+            filebase = output.replace('.{}'.format(filetype),'')
             files = [filebase+'{}.'.format(i+1)+filetype for i in numpy.arange(len(splist))]
         else:
-            files = [filebase+'.'+filetype]
+            files = [output]
 
     pg_n = 0        # page counter
     plt_n = 0       # plot per page counter
     lg_n = 0        # legend per plot counter
+
     for plts,sp in enumerate(splist):
 # set specific plot parameters
         if not isinstance(sp[0],splat.Spectrum):
             raise ValueError('\nInput to plotSpectrum has wrong format:\n\n{}\n\n'.format(sp[0]))
-        zeropoint = kwargs.get('zeropoint',numpy.zeros(len(sp)))
+
+# set up plotting defaults for the list of spectra - REPLACE THIS
+        if not isinstance(zeropoint,list): zeropoint = [zeropoint]*len(sp)
+        if len(zeropoint) < len(sp): zeropoint.extend([zeropoint[-1] for x in range(len(sp)-len(zeropoint))])
+        if not isinstance(color,list): color = [color]*len(sp)
+        if len(color) < len(sp): color.extend([color[-1] for x in range(len(sp)-len(color))])
+        if not isinstance(linestyle,list): linestyle = [linestyle]*len(sp)
+        if len(linestyle) < len(sp): linestyle.extend([linestyle[-1] for x in range(len(sp)-len(linestyle))])
+        if not isinstance(linewidth,list): linewidth = [linewidth]*len(sp)
+        if len(linewidth) < len(sp): linewidth.extend([linewidth[-1] for x in range(len(sp)-len(linewidth))])
+        if not isinstance(alpha,list): alpha = [alpha]*len(sp)
+        if len(alpha) < len(sp): alpha.extend([alpha[-1] for x in range(len(sp)-len(alpha))])
+        if not isinstance(color_noise,list): color_noise = [color_noise]*len(sp)
+        if len(color_noise) < len(sp): color_noise.extend([color_noise[-1] for x in range(len(sp)-len(color_noise))])
+        if not isinstance(linestyle_noise,list): linestyle_noise = [linestyle_noise]*len(sp)
+        if len(linestyle_noise) < len(sp): linestyle_noise.extend([linestyle_noise[-1] for x in range(len(sp)-len(linestyle_noise))])
+        if not isinstance(linewidth_noise,list): linewidth_noise = [linewidth_noise]*len(sp)
+        if len(linewidth_noise) < len(sp): linewidth_noise.extend([linewidth_noise[-1] for x in range(len(sp)-len(linewidth_noise))])
+        if not isinstance(alpha_noise,list): alpha_noise = [alpha_noise]*len(sp)
+        if len(alpha_noise) < len(sp): alpha_noise.extend([alpha_noise[-1] for x in range(len(sp)-len(color_noise))])
+        if not isinstance(color_comparison,list): color_comparison = [color_comparison]*len(sp)
+        if len(color_comparison) < len(sp): color_comparison.extend([color_comparison[-1] for x in range(len(sp)-len(color_comparison))])
+        if not isinstance(linestyle_comparison,list): linestyle_comparison = [linestyle_comparison]*len(sp)
+        if len(linestyle_comparison) < len(sp): linestyle_comparison.extend([linestyle_comparison[-1] for x in range(len(sp)-len(linestyle_comparison))])
+        if not isinstance(linewidth_comparison,list): linewidth_comparison = [linewidth_comparison]*len(sp)
+        if len(linewidth_comparison) < len(sp): linewidth_comparison.extend([linewidth_comparison[-1] for x in range(len(sp)-len(linewidth_comparison))])
+        if not isinstance(alpha_comparison,list): alpha_comparison = [alpha_comparison]*len(sp)
+        if len(alpha_comparison) < len(sp): alpha_comparison.extend([alpha_comparison[-1] for x in range(len(sp)-len(alpha_comparison))])
 
 # settings that work if the spectrum was read in as legitmate Spectrum object
         try:
             xlabel = kwargs.get('xlabel','{} ({})'.format(sp[0].wave_label,sp[0].wave.unit))
             ylabel = kwargs.get('ylabel','{} ({})'.format(sp[0].flux_label,sp[0].flux.unit))
         except:
-            xlabel = kwargs.get('xlabel','Wavelength')
-            ylabel = kwargs.get('ylabel','Flux')
-        xrng = kwargs.get('xrange',[numpy.nanmin(sp[0].wave.value),numpy.nanmax(sp[0].wave.value)])
-        if isUnit(xrng[0]): xrng = [x.value for x in xrng]
-        bound = []
-        bound.extend(xrng)
-#        ymax = [s.fluxMax().value for s in sp]
+            xlabel = kwargs.get('xlabel',xlabel_default)
+            ylabel = kwargs.get('ylabel',ylabel_default)
+# initial plot range
+        bound = [numpy.nanmin(sp[0].wave.value),numpy.nanmax(sp[0].wave.value)]
         ymax = [numpy.nanquantile(s.flux.value,0.98) for s in sp]
-        yrng = kwargs.get('yrange',numpy.array([-0.02,1.2])*numpy.nanmax(ymax)+numpy.nanmax(zeropoint))
-        if isUnit(yrng[0]): yrng = [x.value for x in yrng]
-        bound.extend(yrng)
-        linestyle = kwargs.get('linestyle',['-' for x in numpy.arange(len(sp))])
-        linestyle = kwargs.get('linestyles',linestyle)
-        if (len(linestyle) < len(sp)):
-            linestyle.extend(['-' for x in numpy.arange(len(sp)-len(linestyle))])
+        bound.extend(numpy.array([-0.02,1.3])*numpy.nanmax(ymax)+\
+            numpy.array([numpy.nanmin(zeropoint),numpy.nanmax(zeropoint)+stack*(len(sp)-1)]))
 
-# colors
-# by default all black lines
-        colors = kwargs.get('colors',['k' for x in numpy.arange(len(sp))])
-        colors = kwargs.get('color',colors)
-        if not isinstance(colors,list):
-            colors = [colors]
-        if (len(colors) < len(sp)):
-            while len(colors) < len(sp):
-                colors.append(colors[-1])
-        colorScheme = kwargs.get('colorScheme',None)
-        colorScheme = kwargs.get('colorMap',colorScheme)
-        if (colorScheme != None):
+# set colormap if provided
+        if colormap != None:
             values = numpy.arange(len(sp))
-            color_map = plt.get_cmap(colorScheme)
+            color_map = plt.get_cmap(colormap)
             norm  = colmap.Normalize(vmin=0, vmax=1.0*values[-1])
             scalarMap = cm.ScalarMappable(norm=norm, cmap=color_map)
-            for i in numpy.arange(len(sp)):
-                colors[i] = scalarMap.to_rgba(values[i])
-        colorsUnc = kwargs.get('colorsUnc',colors)
-        colorsUnc = kwargs.get('colorUnc',colorsUnc)
-        if (len(colorsUnc) < len(sp)):
-            while len(colorsUnc) < len(sp):
-                colorsUnc.append(colors[-1])
-        linewidths = kwargs.get('linewidths',1.5)
-        linewidths = kwargs.get('linewidth',linewidths)
-        linewidths = kwargs.get('lw',linewidths)
-        if not isinstance(linewidths,list):
-            linewidths = [linewidths]
-        if (len(linewidths) < len(sp)):
-            while len(linewidths) < len(sp):
-                linewidths.append(linewidths[-1])
-
-
-# show uncertainties
-        showNoise = kwargs.get('showNoise',[False for x in numpy.arange(len(sp))])
-        showNoise = kwargs.get('noise',showNoise)
-        showNoise = kwargs.get('uncertainty',showNoise)
-        if not isinstance(showNoise, list):
-            showNoise = [showNoise]
-        if (len(showNoise) < len(sp)):
-            showNoise.extend([True for x in numpy.arange(len(sp)-len(showNoise))])
-
-# zero points - by default true
-        showZero = kwargs.get('showZero',[True for x in numpy.arange(len(sp))])
-        if not isinstance(showZero, list):
-            showZero = [showZero]
-        if (len(showZero) < len(sp)):
-            while len(showZero) < len(sp):
-                showZero.extend(showZero[-1])
+            for i in range(len(sp)): color[i] = scalarMap.to_rgba(values[i])
 
 # GENERATE PLOTS
-        if (multiplot == True or multipage == True):
+        if multiplot == True or multipage == True:
             plt_n = plts % nplot
-            if (plt_n == 0):# and plts != len(splist)):
-#                ax = range(nplot)
-#                t = tuple([tuple([i+b*multilayout[1] for i in range(multilayout[1])]) for b in range(multilayout[0])])
-#                fig[pg_n], ax = plt.subplots(multilayout[0], multilayout[1], sharex = True, sharey = True)
-#
-# NOTE THE FOLLOWING LINE IS HAVING PROBLEMS IN PYTHON3
-#
-#
+            if (plt_n == 0):
                 fig.append(plt.figure())
                 pg_n += 1
-            ax = fig[pg_n-1].add_subplot(multilayout[0], multilayout[1], plt_n+1)
+            ax = fig[pg_n-1].add_subplot(layout[0], layout[1], plt_n+1)
             
 # plotting a single plot with all spectra
         else:
             plt.close('all')
-#            ax = range(1)
             plt_n = 0
             fig = []
-            if (kwargs.get('figsize') != None):
-                fig.append(plt.figure(figsize = kwargs.get('figsize')))
-            else:
-                fig.append(plt.figure())
+            if len(figsize)>0: fig.append(plt.figure(figsize=figsize))
+            else: fig.append(plt.figure())
             ax = fig[0].add_subplot(111)
         
         for ii, a in enumerate(sp):
+# zeropoint and stack
             flx = [i+zeropoint[ii] for i in a.flux.value]
-#stack
-            if stack > 0:
-                flx = [f + (len(sp)-ii-1)*stack for f in flx]
-#                if kwargs.get('yrange') == None:
-#                    bound[3] = bound[3] + stack
-
-            ax.plot(a.wave.value,flx,color=colors[ii],linestyle=linestyle[ii], lw=linewidths[ii], zorder = 10, label = legend[lg_n])  
+            if stack > 0: flx = [f + (len(sp)-ii-1)*stack for f in flx]
+            ax.plot(a.wave.value,flx,color=color[ii],linestyle=linestyle[ii], lw=linewidth[ii], alpha=alpha[ii], zorder = 10, label = legend[lg_n])  
 
 # add comparison
-            if comparison != False:
-                colorComparison = kwargs.get('colorComparison',colors[0])
-                linestyleComparison = kwargs.get('linestyleComparison',linestyle[0])
-                linewidthComparison = kwargs.get('linewidthComparison',linewidths[0])
+            if comparison != None:
+# zeropoint and stack
                 cflx = [i+zeropoint[ii] for i in comparison.flux.value]
-
-                if stack > 0:
-                    cflx = [f + (len(sp)-ii-1)*stack for f in cflx]
-
-                ax.plot(comparison.wave.value,cflx,color=colorComparison,linestyle=linestyleComparison, lw=linewidthComparison, alpha=0.5, zorder = 10)
+                if stack > 0: cflx = [f + (len(sp)-ii-1)*stack for f in cflx]
+                ax.plot(comparison.wave.value,cflx,color=color_comparison[ii],linestyle=linestyle_comparison[ii], lw=linewidth_comparison[ii], alpha=alpha_comparison[ii], zorder = 10)
     
 # add residual
             if residual == True and len(sp) == 2:
@@ -700,164 +627,124 @@ def plotSpectrum(*args, **kwargs):
                 # Subtract fluxes and plot
                 elif ii == 1:
                     res = [flx0[f_n] - f for f_n, f in enumerate(flx)]
-                    ax.plot(a.wave.value, res, alpha = 0.3, color = 'g')
+                    ax.plot(a.wave.value, res, alpha = alpha_residual[ii], color = color_residual[ii], linsetyle=linestyle_residual[ii], lw=linewidth_residual[ii])
                     
-                    # Fix bound[2] if res goes below 0
-                    if min(res) < 0:
-                        b0 = numpy.argmax(a.wave.value > bound[0])
-                        b1 = numpy.argmin(a.wave.value < bound[1])
-                        bound[2] = bound[2] + min(res[b0:b1])
+                    # Fix bound[2] if residual goes below 0
+                    if numpy.nanmin(res) < bound[2]:
+                        b0 = numpy.argmin(a.wave.value[a.wave.value > bound[0]])
+                        b1 = numpy.argmax(a.wave.value[a.wave.value < bound[1]])
+                        bound[2] = numpy.nanmin(res[b0:b1])
 
 # noise
-            if (showNoise[ii]):
+            if show_noise == True:
                 ns = [i+zeropoint[ii] for i in a.noise.value]
-                ax.plot(a.wave.value,ns,color=colorsUnc[ii],linestyle=linestyle[ii],alpha=0.3, zorder = 10)
-
+                ax.plot(a.wave.value,ns,color=color_noise[ii],linestyle=linestyle_noise[ii],alpha=alpha_noise[ii], lw=linewidth_noise[ii], zorder = 10)
 
 # zeropoint
-            if (showZero[ii]):
+            if show_zero == True:
                 ze = numpy.ones(len(a.flux))*zeropoint[ii]
-                ax.plot(a.wave.value,ze,color=colors[ii],linestyle=':',alpha=0.3, zorder = 10)
+                ax.plot(a.wave.value,ze,color=color[ii],linestyle=linestyle_zero,alpha=alpha_zero,lw=linewidth_zero, zorder = 10)
 
-# determine maximum flux for all spectra
-            f = interp1d(a.wave,flx,bounds_error=False,fill_value=0.)
-            if (ii == 0):
-                wvmax = numpy.arange(bound[0],bound[1],0.001)
-                flxmax = f(wvmax)
-            else:
-                flxmax = numpy.maximum(flxmax,f(wvmax))
+# save maximum flux among all spectra for plotting
+# THIS IS VERY SLOW AND IT WOULD BE BETTER TO FIND AN ALTERNATE APPROACH
+            if len(features)>0:
+                f = interp1d(a.wave,flx,bounds_error=False,fill_value=0.)
+                if ii == 0: 
+                    wvmax = numpy.linspace(bound[0],bound[1],nsamples)
+                    flxmax = numpy.array(f(wvmax))
+                else: flxmax = numpy.maximum(flxmax,numpy.array(f(wvmax)))
 
 # legend counter
-            lg_n = lg_n + 1 # Increment lg_n
+            lg_n = lg_n + 1 # Increment legend
 
 
 # label features
 # THIS NEEDS TO BE FIXED WITH GRETEL'S STUFF
-        yoff = 0.02*(bound[3]-bound[2])
-        dbx = 0.01*(bound[1]-bound[0])
-        fontsize = 10-numpy.min([(multilayout[0]*multilayout[1]-1),6])
-        for ftr in features:
-            ftr = ftr.lower()
-            if ftr in feature_labels:
-                for ii,waveRng in enumerate(feature_labels[ftr]['wavelengths']):
-                    wRng = ((waveRng*u.micron).to(sp[0].wave.unit)).value
-                    if (numpy.min(wRng) > bound[0] and numpy.max(wRng) < bound[1]):
-                        dwrng = numpy.nanmax(wRng)-numpy.nanmin(wRng)
-#                        if dwrng == 0.: wRng = [wRng[0]-0.01*(bound[1]-bound[0]),wRng[0]+0.01*(bound[1]-bound[0])]
-                        if dwrng < dbx: dwrng = dbx
-                        x = (numpy.arange(0,nsamples+1.0)/nsamples)*dwrng*1.1+numpy.nanmin(wRng)-dwrng*0.05
-#                        print(ftr,wRng,numpy.nanmin(x),numpy.nanmax(x))
-                        wfeature = numpy.where(numpy.logical_and(wvmax >= x[0],wvmax <= x[-1]))
-                        f = interp1d(numpy.array(wvmax)[wfeature],numpy.array(flxmax)[wfeature],bounds_error=False,fill_value=0.)
-                        y = numpy.nanmax(f(x))+1.*yoff
+        if len(features) > 0:
+            yoff = 0.02*(bound[3]-bound[2]) # label offset
+            fontsize = int((10-numpy.nanmin([(layout[0]*layout[1]-1),6]))*fontscale)
+            for ftr in features:
+                ftr = ftr.lower()
+                if ftr in FEATURE_LABELS:
+                    ftrc = checkDict(ftr,FEATURE_LABELS)
+                    if ftrc != False:
+                        for ii,waveRng in enumerate(FEATURE_LABELS[ftrc]['wavelengths']):
+                            wRng = waveRng.to(sp[0].wave.unit).value
+# features must be contained in plot range (may change this)
+                            if numpy.nanmin(wRng) > bound[0] and numpy.nanmax(wRng) < bound[1]:
+                                wfeature = numpy.where(numpy.logical_and(wvmax >= numpy.nanmin(wRng),wvmax <= numpy.nanmax(wRng)))
+                                if len(wvmax[wfeature]) == 0: wfeature = numpy.argmax(numpy.absolute(wvmax-numpy.nanmedian(wRng)))
+                                y = numpy.nanmax(flxmax[wfeature])+yoff
+                                flxmax[wfeature] = flxmax[wfeature]+3.*yoff
 
-                        if feature_labels[ftr]['type'] == 'band':
-                            ax.plot(wRng,[y+yoff]*2,color='k',linestyle='-')
-                            ax.plot([wRng[0]]*2,[y,y+yoff],color='k',linestyle='-')
-                            ax.text(numpy.mean(wRng),y+1.5*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=fontsize)
-                        else:
-                            for w in wRng: ax.plot([w]*2,[y,y+yoff],color='k',linestyle='-')
-                            ax.text(numpy.mean(wRng),y+1.5*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=fontsize)
-#                            wRng = [wRng[0]-0.02,wRng[1]+0.02]   # for overlap
-#                        print(ftr,y,y+yoff,len(wfeature))
+                                if FEATURE_LABELS[ftrc]['type'] == 'band':
+                                    ax.plot(wRng,[y+yoff]*2,color='k',linestyle='-')
+                                    ax.plot([wRng[0]]*2,[y,y+yoff],color='k',linestyle='-')
+                                    ax.text(numpy.mean(wRng),y+1.5*yoff,FEATURE_LABELS[ftrc]['label'],horizontalalignment='center',fontsize=fontsize)
+                                else:
+                                    for w in wRng: ax.plot([w]*2,[y,y+yoff],color='k',linestyle='-')
+                                    ax.text(numpy.mean(wRng),y+1.5*yoff,FEATURE_LABELS[ftrc]['label'],horizontalalignment='center',fontsize=fontsize)
+            bound[3] = numpy.nanmax([numpy.nanmax(flxmax)+2.*yoff,bound[3]])
 
-                        foff = numpy.zeros(len(flxmax))
-                        foff[wfeature] = 3.*yoff
-                        flxmax = list(numpy.array(flxmax)+foff)
-        bound[3] = numpy.nanmax([numpy.nanmax(flxmax)+2.*yoff,bound[3]])
-
-
-# grid
-        if (grid):
-            ax.grid()            
+# add grid
+        if grid == True: ax.grid()            
 
 # axis labels 
-        fontsize = (numpy.round(numpy.max([13./((multilayout[0]*multilayout[1])**0.33),5]))) * fontscale        # Added in fontscale
-#        print(fontsize)
-        legendfontsize = (13-numpy.min([(multilayout[0]*multilayout[1]-1),8])) * legendfontscale        # Added in fontscale
+        fontsize = (numpy.round(numpy.max([13./((layout[0]*layout[1])**0.33),5]))) * fontscale
+        legend_fontsize = (13-numpy.min([(layout[0]*layout[1]-1),8])) * legend_fontscale
         ax.set_xlabel(xlabel, fontsize = fontsize)
         ax.set_ylabel(ylabel, fontsize = fontsize)
         ax.tick_params(axis='x', labelsize=fontsize)
         ax.tick_params(axis='y', labelsize=fontsize)
 
 # log scale?
-        if kwargs.get('xlog',False):
-            ax.set_xscale('log',nonposx='clip')
-        if kwargs.get('ylog',False):
-            ax.set_yscale('log',nonposy='clip')
+        if kwargs.get('xlog',False): ax.set_xscale('log',nonposx='clip')
+        if kwargs.get('ylog',False): ax.set_yscale('log',nonposy='clip')
 
 # place legend
         if len(legend) > 0:
-            if legendLocation == 'outside':
+            if legend_location == 'outside':
                 box = ax.get_position()
                 ax.set_position([box.x0, box.y0 + box.height * 0.15, box.width * 0.7, box.height * 0.7])
-                ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size':legendfontsize})
+                ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size':legend_fontsize})
             else:
-                ax.legend(loc=legendLocation, prop={'size':legendfontsize})
+                ax.legend(loc=legend_location, prop={'size':legend_fontsize})
                 bound[3] = bound[3]+0.1*(bound[3]-bound[2])     # extend axis for in-plot legends
 
 # overplot telluric absorption
-        if (kwargs.get('telluric',False) == True):
-            twv = [[1.1,1.2],[1.3,1.5],[1.75,2.0]]
-            for waveRng in twv:
-                wR = ((waveRng*u.micron).to(sp[0].wave.unit)).value
-                rect = patches.Rectangle((wR[0],bound[2]),wR[1]-wR[0],bound[3]-bound[2],facecolor='0.95',alpha=0.2,color='0.95')
+        if telluric == True:
+            yoff = 0.02*(bound[3]-bound[2]) # label offset
+            for waveRng in telluric_bands:
+                wR = waveRng.to(sp[0].wave.unit).value
+                rect = patches.Rectangle((wR[0],bound[2]),wR[1]-wR[0],bound[3]-bound[2],facecolor=color_telluric,alpha=alpha_telluric,color=color_telluric)
                 ax.add_patch(rect)
                 ax.text(numpy.mean(wR),bound[2]+3*yoff,r'$\oplus$',horizontalalignment='center',fontsize=fontsize)
 
 # overplot color swaths for pre-specified bands
-        bands = kwargs.get('bands',[])
-        bands = kwargs.get('band',bands)
-        if len(bands) > 0:
-            if len(bands) == 2 and isinstance(bands[0],list) == False: bands = [bands]
-            bandcolors = kwargs.get('bandcolors',[])
-            bandcolor = kwargs.get('bandcolor',bandcolors)
-            if not isinstance(bandcolors,list): bandcolors = [bandcolors]*len(bands)
-            if len(bandcolors) < len(bands): 
-                for i in range(len(bands)-len(bandcolors)): bandcolors.append('k')
-            bandalphas = kwargs.get('bandalphas',[])
-            bandalpha = kwargs.get('bandalpha',bandalphas)
-            if not isinstance(bandalphas,list): bandalphas = [bandalphas]*len(bands)
-            if len(bandalphas) < len(bands): 
-                for i in range(len(bands)-len(bandalphas)): bandalphas.append(0.2)
-            bandlabels = kwargs.get('bandlabels',[])
-            bandlabel = kwargs.get('bandlabel',bandlabels)
-            if not isinstance(bandlabels,list): bandlabels = [bandlabels]*len(bands)
-            if len(bandlabels) < len(bands): 
-                for i in range(len(bands)-len(bandlabels)): bandlabels.append('')
-            bandlabelpositions = kwargs.get('bandlabelpositions',[])
-            bandlabelposition = kwargs.get('bandlabelposition',bandlabelpositions)
-            if not isinstance(bandlabelpositions,list): bandlabelpositions = [bandlabelpositions]*len(bands)
-            if len(bandlabelpositions) < len(bands): 
-                for i in range(len(bands)-len(bandlabelpositions)): bandlabelpositions.append('bottom')
-            bandwidth = kwargs.get('bandwidth',0.1)
-            for i,b in enumerate(bands):
+        if len(band) > 0:
+            for i,b in enumerate(band):
                 if not isinstance(b,list): 
-                    try:
-                        b = [float(b)-0.5*bandwidth,float(b)+0.5*bandwidth]
+                    try: b = [float(b)-0.5*band_width,float(b)+0.5*band_width]
                     except:
-                        print('\nWarning: plotSpectrum bands variables should be array of 2-element arrays; you passed {}'.format(bands))
+                        print('\nWarning: plotSpectrum bands variables should be array of 2-element arrays; you passed {}'.format(band))
                         b = [0.,0.]
-                rect = patches.Rectangle((b[0],bound[2]),b[1]-b[0],bound[3]-bound[2],facecolor=bandcolors[i],color=bandcolors[i],alpha=bandalphas[i])
+                rect = patches.Rectangle((b[0],bound[2]),b[1]-b[0],bound[3]-bound[2],facecolor=band_color[i],color=band_color[i],alpha=band_alpha[i])
                 ax.add_patch(rect)
-                if bandlabelpositions[i].lower() == 'top':
-                    ax.text(numpy.mean(b),bound[3]-3*yoff,bandlabels[i],horizontalalignment='center',fontsize=fontsize)
-                elif bandlabelpositions[i].lower() == 'middle':
-                    ax.text(numpy.mean(b),0.5*(bound[2]+bound[3]),bandlabels[i],horizontalalignment='center',fontsize=fontsize)
+                if band_label_position[i].lower() == 'top':
+                    ax.text(numpy.mean(b),bound[3]-3*yoff,band_label[i],horizontalalignment='center',fontsize=fontsize)
+                elif band_label_position[i].lower() == 'middle':
+                    ax.text(numpy.mean(b),0.5*(bound[2]+bound[3]),band_label[i],horizontalalignment='center',fontsize=fontsize)
                 else:
-                    ax.text(numpy.mean(b),bound[2]+3*yoff,bandlabels[i],horizontalalignment='center',fontsize=fontsize)
+                    ax.text(numpy.mean(b),bound[2]+3*yoff,band_label[i],horizontalalignment='center',fontsize=fontsize)
 
 # place inset - RIGHT NOW ONLY SETTING LIMITS WITH FIRST SPECTRUM IN LIST
-        if not isinstance(inset,bool):
-            inset_xrange = kwargs.get('inset_xrange',inset)
-            inset = True
         if inset == True and len(inset_xrange) == 2:
             ax_inset = fig[pg_n-1].add_axes(inset_position) #, axisbg='white')
             bound2 = inset_xrange
             if len(inset_yrange) == 0:
                 b0 = numpy.argmax(sp[0].wave.value > bound2[0])
                 b1 = numpy.argmin(sp[0].wave.value < bound2[1])
-                inset_yrange = [min(sp[0].flux.value[b0:b1]),max(sp[0].flux.value[b0:b1])]
+                inset_yrange = [numpy.nanmin(sp[0].flux.value[b0:b1]),numpy.nanmax(sp[0].flux.value[b0:b1])]
             bound2.extend(inset_yrange)
             db = (bound2[3]-bound2[2])
             bound2[2] = bound2[2]-0.05*db
@@ -867,7 +754,7 @@ def plotSpectrum(*args, **kwargs):
 
             for ii,a in enumerate(sp):
                 flx = [i+zeropoint[ii] for i in a.flux.value]
-                ax_inset.plot(a.wave.value,flx,color=colors[ii],linestyle=linestyle[ii])            
+                ax_inset.plot(a.wave.value,flx,color=colors[ii],linestyle=linestyle[ii],linewidth=linewidth[ii],alpha=alpha[ii])            
                 ax_inset.set_xlabel('')
                 ax_inset.set_ylabel('')
                 ax_inset.tick_params(axis='x', labelsize=inset_fontsize)
@@ -875,136 +762,126 @@ def plotSpectrum(*args, **kwargs):
 #                ax_inset.legend()
 
 # inset feature labels
-            if inset_features != False:
-                f = interp1d(sp[0].wave,flx,bounds_error=False,fill_value=0.)
-                wvmax = numpy.arange(bound2[0],bound2[1],0.001)
-                flxmax = f(wvmax)
+            if len(inset_features) > 0:
                 yoff = 0.05*(bound2[3]-bound2[2])
                 for ftr in inset_features:
-                    ftr = ftr.lower()
-                    if ftr in feature_labels:
-                        for ii,waveRng in enumerate(feature_labels[ftr]['wavelengths']):
-                            wR = ((waveRng*u.micron).to(sp[0].wave.unit)).value
-                            if (numpy.min(wR) > bound2[0] and numpy.max(wR) < bound2[1]):
-                                x = (numpy.arange(0,nsamples+1.0)/nsamples)* \
-                                    (numpy.nanmax(wR)-numpy.nanmin(wR)+0.04)+numpy.nanmin(wR)-0.02
-                                f = interp1d(wvmax,flxmax,bounds_error=False,fill_value=0.)
-                                y = numpy.nanmax(f(x))+0.5*yoff
+                    ftrc = checkDict(ftr,FEATURE_LABELS)
+                    if ftrc != False:
+                        for ii,waveRng in enumerate(FEATURE_LABELS[ftrc]['wavelengths']):
+                            wRng = waveRng.to(sp[0].wave.unit).value
+                            if (numpy.min(wRng) > bound2[0] and numpy.max(wRng) < bound2[1]):
+                                wfeature = numpy.where(numpy.logical_and(wvmax >= numpy.nanmin(wRng),wvmax <= numpy.nanmax(wRng)))
+                                if len(wvmax[wfeature]) == 0: wfeature = numpy.argmax(numpy.absolute(wvmax-numpy.nanmedian(wRng)))
+                                y = numpy.nanmax(flxmax[wfeature])+yoff
+                                flxmax[wfeature] = flxmax[wfeature]+3.*yoff
         
-                                if feature_labels[ftr]['type'] == 'band':
+                                if FEATURE_LABELS[ftrc]['type'] == 'band':
                                     ax_inset.plot(wR,[y+yoff]*2,color='k',linestyle='-')
                                     ax_inset.plot([wR[0]]*2,[y,y+yoff],color='k',linestyle='-')
-                                    ax_inset.text(numpy.mean(wR),y+2*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=inset_fontsize)
+                                    ax_inset.text(numpy.mean(wR),y+2*yoff,FEATURE_LABELS[ftrc]['label'],horizontalalignment='center',fontsize=inset_fontsize)
                                 else:
                                     for w in waveRng:
                                         ax_inset.plot([w]*2,[y,y+yoff],color='k',linestyle='-')
-                                    ax_inset.text(numpy.mean(wR),y+2*yoff,feature_labels[ftr]['label'],horizontalalignment='center',fontsize=inset_fontsize)
+                                    ax_inset.text(numpy.mean(wR),y+2*yoff,FEATURE_LABELS[ftrc]['label'],horizontalalignment='center',fontsize=inset_fontsize)
                                     waveRng = [wR[0]-0.02,wR[1]+0.02]   # for overlap
         
 # update offset
-                                foff = [y+3*yoff if (w >= wR[0] and w <= wR[1]) else 0 for w in wvmax]
-                                flxmax = [numpy.max([xx,yy]) for xx, yy in zip(flxmax, foff)]
-                bound2[3] = numpy.max([bound2[3],numpy.max(flxmax)+5.*yoff])
+                if len(inset_features) > 0: bound2[3] = numpy.nanmax([bound2[3],numpy.nanmax(flxmax)+5.*yoff])
                 ax_inset.axis(bound2)
 
 # finalize bounding
-#        if kwargs.get('xrange',None) != None:
-        bound[0:2] = xrng
-#        if kwargs.get('yrange',None) != None:
-        bound[2:4] = yrng
-        for i,b in enumerate(bound):
-            if isUnit(b): bound[i]=b.value
+        if len(xrng) > 0: bound[0:2] = xrng
+        if len(yrng) > 0: bound[2:4] = yrng
+        if isUnit(bound[0]): bound = [x.value for x in bound]
         ax.axis(bound)
-
     
 # save to file or display
         if multipage == False:
-            if filebase != '' and (plts % nplot == 3 or plts == len(splist)-1):
+            if files[plts] != '' and (plts % nplot == 3 or plts == len(splist)-1):
                 if kwargs.get('tight',True) == True: 
                     plt.savefig(files[plts], format=filetype, bbox_inches='tight')
                 else:
                     plt.savefig(files[plts], format=filetype)
-    if filename == '' and not kwargs.get('web',False):
+    if output == '' and not kwargs.get('web',False):
         plt.show()
-        if (kwargs.get('interactive',False) != False):
-            plt.ion()        # make window interactive 
-        else:
-            plt.ioff()
+        if (kwargs.get('interactive',False) != False): plt.ion()
+        else: plt.ioff()
 
 
 # save figures in multipage format and write off pdf file
-    if (multipage == True):    
+    if multipage == True:    
         for pg_n in numpy.arange(numpages):
 #            fig[pg_n].text(0.5, 0.04, xlabel, ha = 'center', va = 'center')
 #            fig[pg_n].text(0.06, 0.5, ylabel, ha = 'center', va = 'center', rotation = 'vertical')
             fig[pg_n].tight_layout
-            fig[pg_n].suptitle(title, fontsize = 14, fontweight = 'bold')
+            fig[pg_n].suptitle(title, fontsize = int(14*fontsize), fontweight = 'bold')
             pdf_pages.savefig(fig[pg_n])
-        if filetype == 'pdf':
+        if filetype.lower() == 'pdf':
             pdf_pages.close()
 
     return fig
 
 
-def plotBatch(inp,output='spectra_plot.pdf',comparisons=None,classify=False,normalize=False,basecolors=['k','r'],legend=[],fontscale=0.7,layout=[2,2],normrange=[0.9,1.4],classify_kwargs={},plot_kwargs={},**kwargs):
-    '''
-    Purpose 
-    -------
-    
+def plotBatch(inp,output='spectra_plot.pdf',comparisons=None,classify=False,normalize=False,normrange=[0.9,1.4],layout=[2,2],basecolors=['k','m'],legend=[],fontscale=0.7,classify_kwargs={},plot_kwargs={},**kwargs):
+    """
     Plots a batch of spectra into a 2x2 set of PDF files, with options of overplotting 
-    comparison spectra, including best-match spectral standards. 
+    comparison spectra, including best-match spectral standards inferred from `splat.classifyByStandard()`_.
+    This routine is essentially a wrapper for a specific use case of `splat.plot.plotSpectrum()`_.
 
     Parameters 
     ----------
-   
-    input : Spectrum, string, or array array of these
+    inp : Spectrum or string or array of these
         A single or list of Spectrum objects or filenames, or the glob search string 
         for a set of files (e.g., '/Data/myspectra/*.fits'). 
 
-    output = 'spectra_plot.pdf' : string (optional), default = 'spectra_plot.pdf'
+    output : string, default = 'spectra_plot.pdf'
         Filename for PDF file output; full path should be included if not saving to local directory
 
-    comparisons = None : Spectrum, string, or array array of these (optional) 
+    comparisons : Spectrum or string or array of these, default = None
         list of Spectrum objects or filenames for comparison spectra. If comparisons list is shorter 
         than source list, then the last comparison source will be repeated. If the comparisons list is 
         longer, the list will be truncated. 
     
-    classify = False : boolean (optional)
-        Set to True to classify sources based on comparison to MLT spectral standards 
-        following the method of `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_. 
-        This option normalizes the spectra by default
+    classify : boolean, default = False
+        Set to True to classify sources based on comparison to spectral standards using `splat.classifyByStandard()`_.
+        Specific parameters for classification can be specifed with the `classify_kwargs` keyword
 
-    normalize = False : boolean (optional)
+    normalize : boolean, default = False
         Set to True to normalize source and (if passed) comparison spectra.
 
-    normrange = [0.9,1.4] : list (optional)
+    normrange : list, default = [0.9,1.4]
         Range in micron to compute the normalization
 
-    layout = [2,2] : list (optional)
+    layout : list, default = [2,2]
         Layout of plots on page (# per row x # per column)
 
-    fontscale = 0.7 : float (optional)
-        Set to list of legends for plots. The number of legends should equal the number of 
+    basecolors : list, default = ['k','m']
+        Baseline color pair for plotted spectrum and its (optional) comparison template
 
-    legend = [] : list (optional)
+    legend : list, default = []
         Set to list of legends for plots. The number of legends should equal the number of 
         sources and comparisons (if passed) in an alternating sequence. The default is to display
         the file name for each source and object name for comparison (if passed)
 
-    classify_kwargs = {'method':'kirkpatrick'} : dictionary (optional)
-        Dictionary of keywords for `splat.classifyByStandard()`_ , currently set to just use method='kirkpatrick'
+    fontscale : float, default = 0.7
+        Scale factor to change font size; default value is optimal for 2x2 layout 
 
-    plot_kwargs = {} : dictionary (optional)
+    classify_kwargs : dict, default = {}
+        Dictionary of keywords for `splat.classifyByStandard()`_ 
+
+    plot_kwargs : dict, default = {}
         Dictionary of additional keywords for `splat.plot.plotSpectrum()`_ 
 
-    Outputs 
+    **kwargs : dict, optional
+        Additional keyword parameters
+
+    Returns 
     -------
-    
-    matplotlib figure object showing individual panels of each source with optional comparison star
+    matplotlib figure object
+        Figure object containing all of the generated plots
 
     Examples
     --------
-    
     **Case 1:** These commands will grab a set of high S/N, optically-classified L5 dwarfs, and
     plot them into a single multiple-page PDF document in a 2x2 grid with the best fit 
     classification standard overplotted:
@@ -1024,24 +901,18 @@ def plotBatch(inp,output='spectra_plot.pdf',comparisons=None,classify=False,norm
         >>> sp = splot.plotBatch(files,classify=True,output='comparison.pdf')
         >>> sp = splot.plotBatch('/home/mydata/*.fits',classify=True,output='comparison.pdf')
         >>> sp = splot.plotBatch([splat.Spectrum(file=f) for f in files],classify=True,output='comparison.pdf')
-       
-       
-
-    Dependencies
-    ------------
-    copy
-    glob
-    numpy
-    os
-    `splat.classifyByStandard()`_
-    `splat.Spectrum()`_
-    `splat.plot.plotSpectrum()`_ 
 
     .. _`splat.plot.plotSpectrum()` : api.html#splat.plot.plotSpectrum
     .. _`splat.classifyByStandard()` : api.html#splat.classifyByStandard
     .. _`splat.Spectrum()` : api.html#splat.Spectrum
 
-    '''
+
+
+    See Also
+    --------
+    plotSpectrum : primary Spectrum plotting routine
+
+    """
 
 # alt keyword check
     for k in ['file','filename']: 
@@ -1166,12 +1037,12 @@ def plotBatch(inp,output='spectra_plot.pdf',comparisons=None,classify=False,norm
 
 
 def visualizeIndices(sp,indices,**kwargs):
-    '''
+    """
     :Purpose: ``Plot index-index plots.``
 
     indices should be a dictionary of {'index_name': {'ranges': [[],[]], 'value': #, 'unc': #}, ...}
     Not currently implemented
-    '''
+    """
 
 # check inputs
     if not isinstance(sp,splat.Spectrum): raise ValueError('\nFirst argument in visualizeIndices must be a Spectrum object')
@@ -1224,18 +1095,18 @@ def visualizeIndices(sp,indices,**kwargs):
     
 
 def plotSED(*args, **kwargs):
-    '''
+    """
     :Purpose: ``Plot SED photometry with SpeX spectrum.``
 
     Not currently implemented
-    '''
+    """
     pass
     return
 
 
 
 def plotSequence(spec,type_range=2, std_class='dwarf', spt='', output='', verbose=False, **kwargs):
-    '''
+    """
     :Purpose: 
 
         Visualze compares a spectrum to a sequence of standards laid out vertically. The standards are chosen to be some number of
@@ -1269,7 +1140,7 @@ def plotSequence(spec,type_range=2, std_class='dwarf', spt='', output='', verbos
 .. _`plotSpectrum()` : api.html#splat.plot.plotSpectrum
 .. _`classifyByStandard()` : api.html#splat.classifyByStandard
 
-    '''
+    """
 
 # check inputs
 

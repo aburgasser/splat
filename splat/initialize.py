@@ -14,7 +14,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2021.07.30'
+VERSION = '2021.08.02'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -664,6 +664,33 @@ EVOLUTIONARY_MODELS = {\
     'chabrier1997': {'file': 'chabrier1997.csv','citation': 'Chabrier & Baraffe (1997)', 'bibcode': '1997A&A...328...83C', 'altname': ['chabrier','cha97','chabrier97'], 'default': {'metallicity': 0., 'y': 0.275}},\
     'saumon2008': {'file': 'saumon2008.csv','citation': 'Saumon et al. (2008)', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','sau08','saumon08'], 'default': {'metallicity': 0., 'cloud': 'hybrid'}},\
     'marley2019': {'file': 'marley2019.csv','citation': 'Marley et al. (2019)', 'bibcode': 'marley2019', 'url': 'https://zenodo.org/record/1405206#.W4bNhmQzrq0', 'altname': ['marley','sonora','marley19','bobcat'], 'default': {}},\
+}
+
+# labels for plotting features
+FEATURE_LABELS = { \
+    'h2o': {'altname': [], 'label': r'H$_2$O', 'type': 'band', 'wavelengths': [[0.925,0.95]*u.micron,[1.08,1.20]*u.micron,[1.325,1.550]*u.micron,[1.72,2.14]*u.micron]}, \
+    'ch4': {'altname': [], 'label': r'CH$_4$', 'type': 'band', 'wavelengths': [[1.1,1.24]*u.micron,[1.28,1.44]*u.micron,[1.6,1.76]*u.micron,[2.2,2.35]*u.micron]}, \
+    'co': {'altname': [], 'label': r'CO', 'type': 'band', 'wavelengths': [[2.29,2.39]*u.micron]}, \
+    'tio': {'altname': [], 'label': r'TiO', 'type': 'band', 'wavelengths': [[0.6569,0.6852]*u.micron,[0.705,0.727]*u.micron,[0.76,0.80]*u.micron,[0.825,0.831]*u.micron,[0.845,0.86]*u.micron]}, \
+#        'tio': {'label': r'TiO', 'type': 'band', 'wavelengths': [[0.76,0.80]*u.micron,[0.825,0.831]*u.micron]}, \
+    'vo': {'altname': [], 'label': r'VO', 'type': 'band', 'wavelengths': [[1.04,1.08]*u.micron]}, \
+    'young vo': {'altname': [], 'label': r'VO', 'type': 'band', 'wavelengths': [[1.17,1.20]*u.micron]}, \
+#        'feh': {'label': r'FeH', 'type': 'band', 'wavelengths': [[0.86,0.90]*u.micron,[0.98,1.03],*u.micron[1.19,1.25]*u.micron,[1.57,1.64]*u.micron]}, \
+    'cah': {'altname': [], 'label': r'CaH', 'type': 'band', 'wavelengths': [[0.6346,0.639]*u.micron,[0.675,0.705]*u.micron]}, \
+    'crh': {'altname': [], 'label': r'CrH', 'type': 'band', 'wavelengths': [[0.8611,0.8681]*u.micron]}, \
+    'feh': {'altname': [], 'label': r'FeH', 'type': 'band', 'wavelengths': [[0.8692,0.875]*u.micron,[0.98,1.03]*u.micron,[1.19,1.25]*u.micron,[1.57,1.64]*u.micron]}, \
+    'h2': {'altname': ['cia h2'], 'label': r'H$_2$', 'type': 'band', 'wavelengths': [[1.5,2.4]*u.micron]}, \
+    'sb': {'altname': ['binary','lt binary','spectral binary'], 'label': r'*', 'type': 'band', 'wavelengths': [[1.6,1.64]*u.micron]}, \
+    'h': {'altname': ['hi','h1'], 'label': r'H I', 'type': 'line', 'wavelengths': [[1.004,1.005]*u.micron,[1.093,1.094]*u.micron,[1.281,1.282]*u.micron,[1.944,1.945]*u.micron,[2.166,2.166]*u.micron]},\
+    'na': {'altname': ['nai','na1'], 'label': r'Na I', 'type': 'line', 'wavelengths': [[0.8186,0.8195]*u.micron,[1.136,1.137]*u.micron,[2.206,2.209]*u.micron]}, \
+    'cs': {'altname': ['csi','cs1'], 'label': r'Cs I', 'type': 'line', 'wavelengths': [[0.8521,0.8521]*u.micron,[0.8943,0.8943]*u.micron]}, \
+    'rb': {'altname': ['rbi','rb1'], 'label': r'Rb I', 'type': 'line', 'wavelengths': [[0.78,0.78]*u.micron,[0.7948,0.7948]*u.micron]}, \
+    'mg': {'altname': ['mgi','mg1'], 'label': r'Mg I', 'type': 'line', 'wavelengths': [[1.7113336,1.7113336]*u.micron,[1.5745017,1.5770150]*u.micron,[1.4881595,1.4881847,1.5029098,1.5044356]*u.micron,[1.1831422,1.2086969]*u.micron]}, \
+    'ca': {'altname': ['cai','ca1'], 'label': r'Ca I', 'type': 'line', 'wavelengths': [[0.6573,0.6573]*u.micron,[2.263110,2.265741]*u.micron,[1.978219,1.985852,1.986764]*u.micron,[1.931447,1.945830,1.951105]*u.micron]}, \
+    'caii': {'altname': ['ca2'], 'label': r'Ca II', 'type': 'line', 'wavelengths': [[1.184224,1.195301]*u.micron,[0.985746,0.993409]*u.micron]}, \
+    'al': {'altname': ['ali','al1'], 'label': r'Al I', 'type': 'line', 'wavelengths': [[1.672351,1.675511]*u.micron,[1.3127006,1.3154345]*u.micron]}, \
+    'fe': {'altname': ['fei','fe1'], 'label': r'Fe I', 'type': 'line', 'wavelengths': [[1.5081407,1.5494570]*u.micron,[1.25604314,1.28832892]*u.micron,[1.14254467,1.15967616,1.16107501,1.16414462,1.16931726,1.18860965,1.18873357,1.19763233]*u.micron]}, \
+    'k': {'altname': ['ki','k1'], 'label': r'K I', 'type': 'line', 'wavelengths': [[0.7699,0.7665]*u.micron,[1.169,1.177]*u.micron,[1.244,1.252]*u.micron]}, \
 }
 
 EW_SETS = {

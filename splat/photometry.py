@@ -205,7 +205,7 @@ def filterMag(sp,filt,*args,**kwargs):
             missing_values = ('NaN','nan'), filling_values = (numpy.nan))
         vwave = vwave[~numpy.isnan(vflux)]*u.micron
         vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))
-        vflux.to(sp.funit,equivalencies=u.spectral_density(vwave))
+        vflux.to(sp.flux_unit,equivalencies=u.spectral_density(vwave))
 # interpolate Vega onto filter wavelength function
         v = interp1d(vwave.value,vflux.value,bounds_error=False,fill_value=0.)
         if rsr:
@@ -213,7 +213,7 @@ def filterMag(sp,filt,*args,**kwargs):
         else:
             val = -2.5*numpy.log10(trapz(ftrans*d(fwave.value),fwave.value)/trapz(ftrans*v(fwave.value),fwave.value))
         for i in numpy.arange(nsamples):
-#            result.append(-2.5*numpy.log10(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.funit,fwave)/trapz(ftrans*v(fwave)*sp.funit,fwave)))
+#            result.append(-2.5*numpy.log10(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.flux_unit,fwave)/trapz(ftrans*v(fwave)*sp.flux_unit,fwave)))
             if rsr:
                 result.append(-2.5*numpy.log10(trapz(ftrans*fwave.value*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)/trapz(ftrans*fwave.value*v(fwave.value),fwave.value)))
             else:
@@ -576,7 +576,7 @@ def visualizeFilter(filters,verbose=True,xra=[],yra=[0,1.2],**kwargs):
 
     '''
     filt = copy.deepcopy(filters)
-    wunit = kwargs.get('wunit',DEFAULT_WAVE_UNIT)
+    wave_unit = kwargs.get('wave_unit',DEFAULT_WAVE_UNIT)
 
 # single filter name  
     if isinstance(filt,str):
@@ -598,16 +598,16 @@ def visualizeFilter(filters,verbose=True,xra=[],yra=[0,1.2],**kwargs):
 
 # prep parameters
             fwave,ftrans = filterProfile(f,**kwargs)
-            if isUnit(fwave): wunit = kwargs.get('wunit',fwave.unit)
+            if isUnit(fwave): wave_unit = kwargs.get('wave_unit',fwave.unit)
 
-            xl = kwargs.get('xlabel','Wavelength ({})'.format(wunit))
+            xl = kwargs.get('xlabel','Wavelength ({})'.format(wave_unit))
             yl = kwargs.get('ylabel','Transmission Curve')
             legend = []
             fig = plt.figure(figsize=kwargs.get('figsize',[5,4]))
             for i,f in enumerate(filt):
                 fwave,ftrans = filterProfile(f,**kwargs)
-                if isUnit(fwave): fwave.to(wunit)
-                else: fwave = fwave*wunit
+                if isUnit(fwave): fwave.to(wave_unit)
+                else: fwave = fwave*wave_unit
                 if kwargs.get('normalize',False): ftrans = ftrans/numpy.nanmax(ftrans)
                 plt.plot(fwave,ftrans)
                 if len(xra) == 0: xra = [numpy.nanmin(fwave.value),numpy.nanmax(fwave.value)]
@@ -622,12 +622,12 @@ def visualizeFilter(filters,verbose=True,xra=[],yra=[0,1.2],**kwargs):
 
 # list of notch ranges
         if isinstance(filt[0],list):
-            xl = kwargs.get('xlabel','Wavelength ({})'.format(wunit))
+            xl = kwargs.get('xlabel','Wavelength ({})'.format(wave_unit))
             yl = kwargs.get('ylabel','Transmission Curve')
             legend = []
             fig = plt.figure(figsize=kwargs.get('figsize',[5,4]))
             for i,f in enumerate(filt):
-                fwave,ftrans = numpy.linspace(f[0],f[1],1000)*wunit,numpy.ones(1000)
+                fwave,ftrans = numpy.linspace(f[0],f[1],1000)*wave_unit,numpy.ones(1000)
                 plt.plot(fwave,ftrans)
                 if len(xra) == 0: xra = [numpy.nanmin(fwave.value),numpy.nanmax(fwave.value)]
                 xra = [numpy.nanmin([xra[0],numpy.nanmin(fwave.value)]),numpy.nanmax([xra[1],numpy.nanmax(fwave.value)])]
