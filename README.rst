@@ -9,7 +9,7 @@
 SPLAT: The SpeX Prism Library Analysis Toolkit
 ===============================================
 
-Access SPLAT's full documentation at `docs`_.
+Access SPLAT's full documentation at `https://splat.physics.ucsd.edu/splat <https://splat.physics.ucsd.edu/splat>`_.
 
 Preamble
 --------
@@ -33,7 +33,7 @@ SPLAT tools allow you to:
     * simulate very low mass star and brown dwarf populations by combining spatial, evolutionary, and observational properties; and
     * plot, tabulate, and publish your results.  
 
-.. note::
+Note:
     Many features in SPLAT continue to be in development.
     Help us improve the code by reporting bugs (and solutions!) to our github site,
     `https://github.com/aburgasser/splat <https://github.com/aburgasser/splat>`_.
@@ -43,10 +43,10 @@ Installation and Dependencies
 
 SPLAT should be cloned from the github site `https://github.com/aburgasser/splat <https://github.com/aburgasser/splat>`_. which is updated on a regular basis. 
 
-.. warning::
+Warning:
     At this time please do not install splat using `pip`_, as this is an outdated version of SPLAT that is no longer supported.
 
-Once you've downloaded the code and data, you will need to add the SPLAT top-level directory to the environment variables ``SPLAT_PATH`` and ``PYTHONPATH`` (and optionally to your system ``PATH``).  More detailed instructions are on the installation page at `docs`_. 
+Once you've downloaded the code and data, you will need to add the SPLAT top-level directory to the environment variables ``SPLAT_PATH`` and ``PYTHONPATH`` (and optionally to your system ``PATH``).  More detailed instructions are on the installation page at `https://splat.physics.ucsd.edu/splat <https://splat.physics.ucsd.edu/splat>`_. 
 
 SPLAT has core dependencies on the following packages:
     * `astropy <http://www.astropy.org/>`_
@@ -95,8 +95,8 @@ SPLAT has been tested on both Python 2.7 and 3.0-3.7, and is best used in
 All of the necessary data is
 included in the github package, so you don't need to be online to run most programs.
 
-Some Examples
-~~~~~~~~~~~~~
+Reading in Spectra
+~~~~~~~~~~~~~~~~~~
 
 The best way to read in a spectrum is to use `getSpectrum()`_, which takes a number of search keywords and returns a list of `Spectrum`_ objects:
 
@@ -125,11 +125,9 @@ Source designation = J00361617+1821104
 Median S/N = 274
 SpeX Classification = L2.0
 Spectrum key = 10249, Source key = 10068
-
 If you use these data, please cite:
     Burgasser, A. J. et al. (2008, Astrophysical Journal, 681, 579-593)
     bibcode: 2008ApJ...681..579B
-
 History:
     SPEX-PRISM spectrum successfully loaded
 
@@ -149,6 +147,9 @@ To flux calibrate a spectrum, use the `Spectrum`_ object's built in `fluxCalibra
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> sp.fluxCalibrate('2MASS J',14.0)
+
+Visualizing Spectra
+~~~~~~~~~~~~~~~~~~~
 
 To display the spectrum, use the Spectrum object's `plot()`_ function 
 
@@ -174,10 +175,12 @@ indicate telluric absorption regions, make multi-panel and multi-page plots
 of lists of spectra, plot batches of spectra, etc. Be sure to look through the `splat.plot`_ 
 subpackage for more details.
 
+Analysis functions
+~~~~~~~~~~~~~~~~~~
 
 SPLAT's primary purpose is to allow the analysis of ultracool dwarf spectra.
 
-* To measure spectral indices, use `measureIndex()`_ or `measureIndexSet()`_:
+To measure spectral indices, use `measureIndex()`_ or `measureIndexSet()`_:
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> value, error = splat.measureIndex(sp,[1.14,1.165],[1.21,1.235],method='integrate')
@@ -188,12 +191,12 @@ of the index:
 
 >>> print(indices['sH2O-J'])		# returns value, error
 
-* You can also determine the gravity classification of a source following `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ using `classifyGravity()`_:
+You can also determine the gravity classification of a source following `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ using `classifyGravity()`_:
 
 >>> sp = splat.getSpectrum(young=True, lucky=True)[0]
 >>> print(splat.classifyGravity(sp))   # returned 'VL-G'
 
-* To classify a spectrum, use the various `classifyByXXX`_ methods:
+To classify a spectrum, use the various `classifyByXXX`_ methods:
 
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
 >>> spt,unc = splat.classifyByIndex(sp,set='burgasser')
@@ -202,7 +205,7 @@ of the index:
 
 The last line returns a dictionary containing the best 5 template matches.
 
-* To compare a spectrum to another spectrum or a model, use `compareSpectra()`_ :
+To compare a spectrum to another spectrum or a model, use `compareSpectra()`_ :
 
 >>> import splat.model as spmod
 >>> mdl = spmod.loadModel(teff=720,logg=4.8,set='btsettl')      # loads a BTSettl08 model 
@@ -216,7 +219,7 @@ You can shortcut the last three lines using the ``plot`` keyword:
 >>> chi,scale = splat.compareSpectra(sp,mdl,plot=True)
 
 
-* There are also codes **still in development** to fit models directly to spectra: `modelFitGrid()`_, `modelFitMCMC()`_, and `modelFitEMCEE()`_:
+There are also codes **still in development** to fit models directly to spectra: `modelFitGrid()`_, `modelFitMCMC()`_, and `modelFitEMCEE()`_:
 
 >>> import splat.model as spmod
 >>> sp = splat.getSpectrum(shortname='0415-0935')[0]
@@ -228,7 +231,7 @@ You can shortcut the last three lines using the ``plot`` keyword:
 
 The outputs of all of these fitting functions is a dictionary or list of dictionaries containing the parameters of the best-fitting models; there are also several diagnostic plots produced depending on the routine. View the model fitting page for more details.
 
-All of these routines have many options worth exploring, and which are (increasingly) documented at `docs`_. If there are capabilities
+All of these routines have many options worth exploring, and which are (increasingly) documented at `https://splat.physics.ucsd.edu/splat <https://splat.physics.ucsd.edu/splat>`_. If there are capabilities
 you need, please suggest them to aburgasser@ucsd.edu, or note it in the "Issues" link on our `github site <https://github.com/aburgasser/splat>`_.
 
 Acknowledgements
