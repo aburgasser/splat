@@ -208,9 +208,7 @@ def plotSpectrum(inp,xrng=[],yrng=[],xlabel='',ylabel='',xlog=False,ylog=False,g
     output='',multiplot=False,multipage=False,layout=[1,1],figsize=[],tight=True,
     interactive=False,**kwargs):
     """
-    Purpose
-    -------
-        Primary plotting program for splat Spectrum objects.
+    Primary plotting program for splat Spectrum objects.
 
     Parameters
     ----------
@@ -353,46 +351,55 @@ def plotSpectrum(inp,xrng=[],yrng=[],xlabel='',ylabel='',xlog=False,ylog=False,g
     array of matplotlib figure objects
         Each array element is one of the plots
 
-    Example
-    -------
-    Case 1: A simple view of a random spectrum
+    Examples
+    --------
+    Case 1: A simple view of a random spectrum.
+
        >>> import splat
        >>> import splat.plot as splot
-       >>> spc = splat.getSpectrum(spt = 'T5', lucky=True)[0]
-       >>> spc.plot()                       # this automatically generates a "quicklook" plot
-       >>> splot.plotSpectrum(spc)          # does the same thing
-       >>> splot.plotSpectrum(spc,show_noise=True,tdwarf=True)     # show the spectrum uncertainty and T dwarf absorption features
+       >>> spc = splat.getSpectrum(spt='T5',lucky=True)[0]  # grab one T5 spectrum
+       >>> spc.plot()                                       # this automatically generates a "quicklook" plot
+       >>> splot.plotSpectrum(spc)                          # does the same thing
+       >>> splot.plotSpectrum(spc,show_noise=True,tdwarf=True)  # shows the spectrum uncertainty and T dwarf absorption features
 
     Case 2: Viewing a set of spectra for a given object
-        In this case we'll look at all of the spectra of TWA 30B in the library, sorted by year and compared to the first epoch data
-        This is an example of using multiplot and multipage
+        In this case we'll look at all of the spectra of TWA 30B in the library, 
+        sorted by year and compared to the first epoch data
+        This is an example of using multiplot and multipage.
 
        >>> import splat
        >>> import splat.plot as splot
        >>> splist = splat.getSpectrum(name = 'TWA 30B')         # get all spectra of TWA 30B
-       >>> junk = [sp.normalize([0.9,1.2]) for sp in splist]             # normalize the spectra
+       >>> junk = [sp.normalize([0.9,1.2]) for sp in splist]    # normalize the spectra
        >>> dates = [sp.observation_date for sp in splist]       # observation dates
        >>> spsort = [s for (d,s) in sorted(zip(dates,splist))]  # sort spectra by dates
        >>> dates.sort()                                         # don't forget to sort dates!
-       >>> splot.plotSpectrum(spsort,multiplot=True,layout=[2,2],multipage=True,\
-           comparison=spsort[0],show_noise=True,mdwarf=True,telluric=True,legend=dates,\
-           yrange=[0,1.2],legend_location='lower left',color_comparison='m',alpha_comparison=0.5,\
-           output='TWA30B.pdf')
+       >>> splot.plotSpectrum(spsort,multiplot=True,layout=[2,2],multipage=True,
+       ... comparison=spsort[0],show_noise=True,mdwarf=True,telluric=True,legend=dates,
+       ... yrange=[0,1.2],legend_location='lower left',color_comparison='m',alpha_comparison=0.5,
+       ... output='TWA30B.pdf')
 
        
-    Case 3: Display the spectra sequence of L dwarfs
-        This example uses the list of standard files contained in SPLAT, and illustrates the stack feature
+    Case 3: Display a spectra sequence of L dwarfs
+        This example uses the list of standard L dwarf spectra contained in SPLAT, 
+        and illustrates the stack feature.
 
        >>> import splat
        >>> import splat.plot as splot
-       >>> spt = [splat.typeToNum(i+20) for i in range(10)] # generate list of L spectral types
-       >>> splat.initiateStandards()                        # initiate standards
-       >>> splist = [splat.STDS_DWARF_SPEX[s] for s in spt]       # extact just L dwarfs
-       >>> junk = [sp.normalize([0.9,1.3]) for sp in splist]         # normalize the spectra
-       >>> legend = [sp.name for sp in splist]         # set labels to be names
-       >>> splot.plotSpectrum(splist,figsize=[10,20],legend=legend,stack=0.5,\  # here's our plot statement
-           colormap='copper',legend_location='outside',telluric=True,xrange=[0.8,2.45],output='lstandards.pdf')
-       
+       >>> spt = [splat.typeToNum(i+20) for i in range(10)]     # generate list of L spectral types
+       >>> splat.initiateStandards()                            # initiate standards
+       >>> splist = [splat.STDS_DWARF_SPEX[s] for s in spt]     # extact just L dwarfs
+       >>> junk = [sp.normalize([0.9,1.3]) for sp in splist]    # normalize the spectra
+       >>> legend = [sp.name for sp in splist]                  # set labels to be names
+       >>> splot.plotSpectrum(splist,figsize=[10,20],legend=legend,stack=0.5,  # here's our plot statement
+       ... colormap='copper',legend_location='outside',telluric=True,
+       ... xrange=[0.8,2.45],output='lstandards.pdf')
+    
+    See Also
+    --------
+    plotBatch : plots an array of spectra into a grid
+    plotSequence : plots a sequence of spectra vertically
+
     """
 
 # keyword parameters (for backward compatability)

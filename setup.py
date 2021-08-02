@@ -38,7 +38,7 @@ setup(
   ],
 
   package_dir = {'splat': 'splat'},    
-  package_data = {'splat': ['db/*','docs/*','resources/*','tutorials/*']},
+  package_data = {'splat': ['db/*','docs/*','resources/*','tutorials/*','build/*']},
 #      'reference/Filters': [
 #        'reference/Filters/*.txt',
 #      ],
