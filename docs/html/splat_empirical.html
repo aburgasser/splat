@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Empirical Relations &mdash; SPLAT 2021.08.02 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/logo.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SPLAT Plotting Routines" href="splat_plot.html" />
+    <link rel="prev" title="Main SPLAT module" href="splat.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> SPLAT
+          
+
+          
+            
+            <img src="_static/logo.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2021.08.02
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Empirical Relations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#useful-program-constants">Useful Program Constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_simulate.html">Population Simulation Routines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SPLAT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Empirical Relations</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/splat_empirical.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="empirical-relations">
+<h1>Empirical Relations<a class="headerlink" href="#empirical-relations" title="Permalink to this headline">¶</a></h1>
+<p>There are a number of empirical relations contained in the SPLAT code to help convert between common parameters.
+These are all contained in the <a class="reference external" href="splat_empirical.html">splat.empirical</a> module, which should be imported separately:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.empirical</span> <span class="k">as</span> <span class="nn">spemp</span>
+</pre></div>
+</div>
+<p>Examples include:</p>
+<ul>
+<li><dl>
+<dt><a class="reference external" href="api.html#splat.empirical.typeToColor">typeToColor()</a></dt><dd><blockquote>
+<div><p>Takes a spectral type and optionally a <code class="docutils literal notranslate"><span class="pre">color</span></code> (string) and returns the typical color of the source, currently using only the <a class="reference external" href="http://adsabs.harvard.edu/abs/2015A%26A...574A..78S">Skryzpek et al. (2015)</a> : relations.</p>
+</div></blockquote>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToColor</span><span class="p">(</span><span class="s1">&#39;L3&#39;</span><span class="p">,</span> <span class="s1">&#39;J-K&#39;</span><span class="p">)</span>
+<span class="go">    (1.46, nan)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M5&#39;</span><span class="p">,</span> <span class="s1">&#39;i-z&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">,</span> <span class="n">unc</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">    (0.91, 0.57797809947624645)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">,</span> <span class="s1">&#39;i-z&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;skrzypek&#39;</span><span class="p">)</span>
+<span class="go">    Spectral type M0.0 is outside the range for reference set Skrzypek et al. (2015)</span>
+<span class="go">    (nan, nan)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference external" href="api.html#splat.empirical.typeToMag">typeToMag()</a></dt><dd><blockquote>
+<div><p>Takes a spectral type and a filter, and returns absolute magnitude, using one of several empirical relationships; you can see a list by typing <code class="docutils literal notranslate"><span class="pre">print(splat.SPT_ABSMAG_SETS.keys())</span></code>.</p>
+</div></blockquote>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;L3&#39;</span><span class="p">,</span> <span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
+<span class="go">    (12.730064813273996, 0.4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="mi">21</span><span class="p">,</span> <span class="s1">&#39;MKO K&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;burgasser&#39;</span><span class="p">)</span>
+<span class="go">    (10.705292820099999, 0.26)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;faherty&#39;</span><span class="p">)</span>
+<span class="go">    Invalid filter given for Abs Mag/SpT relation from Faherty et al. (2012)</span>
+<span class="go">    (nan, nan)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToMag</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">,</span> <span class="s1">&#39;2MASS H&#39;</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;dupuy&#39;</span><span class="p">)</span>
+<span class="go">    Spectral Type is out of range for Abs Mag/SpT relation from Dupuy &amp; Liu (2012) Abs Mag/SpT relation</span>
+<span class="go">    (nan, nan)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference external" href="api.html#splat.empirical.typeToTeff">typeToTeff()</a></dt><dd><blockquote>
+<div><p>Returns an effective temperature (Teff) and its uncertainty for a given spectral type, using one of the following empirical relationships (set by <code class="docutils literal notranslate"><span class="pre">ref</span></code> keyword):</p>
+<ul class="simple">
+<li><p><a class="reference external" href="http://adsabs.harvard.edu/abs/2004AJ....127.3516G">Golimowski et al. (2004)</a> : Allowed spectral type range is M6 to T8  (<code class="docutils literal notranslate"><span class="pre">ref</span></code> = ‘golimowski’)</p></li>
+<li><p><a class="reference external" href="http://adsabs.harvard.edu/abs/2008ApJ...685.1183L">Looper et al. (2008)</a> : Allowed spectral type range is L0 to T8  (<code class="docutils literal notranslate"><span class="pre">ref</span></code> = ‘looper’)</p></li>
+<li><p><a class="reference external" href="http://adsabs.harvard.edu/abs/2009ApJ...702..154S">Stephens et al. (2009)</a> : Allowed spectral type range is M6 to T8 and uses alternate coefficients for L3 to T8.  (<code class="docutils literal notranslate"><span class="pre">ref</span></code> = ‘stephens’)</p></li>
+<li><p><a class="reference external" href="http://adsabs.harvard.edu/abs/2013AJ....146..161M">Marocco et al. (2013)</a> : Allowed spectral type range is M7 to T8  (<code class="docutils literal notranslate"><span class="pre">ref</span></code> = ‘marocco’)</p></li>
+<li><p><a class="reference external" href="http://adsabs.harvard.edu/abs/2015ApJ...810..158F">Filippazzo et al. (2015).</a> : Allowed spectral type range is M6 to T9 (<code class="docutils literal notranslate"><span class="pre">ref</span></code> = ‘filippazzo’)</p></li>
+</ul>
+</div></blockquote>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="go">    (2233.4796740905499, 100.00007874571999)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">splat</span><span class="o">.</span><span class="n">typeToTeff</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">unc</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="s1">&#39;golimowski&#39;</span><span class="p">)</span>
+<span class="go">    (2305.7500497902788, 127.62548366132124)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference external" href="api.html#splat.estimateDistance">estimateDistance()</a></dt><dd><blockquote>
+<div><p>Takes the apparent magnitude in a given <code class="docutils literal notranslate"><span class="pre">filter</span></code> and either takes or determines the absolute magnitude from empirical relations, then uses the absolute magnitude/distance relation to estimate the distance to the object in parsecs. Returns estimated distance and uncertainty in parsecs. If given only a spectrum object, this routine will measure the apparent magnitude, classify the spectrum, estimate the absolute magnitude, and estimate the distance; any additional inputs such as <code class="docutils literal notranslate"><span class="pre">mag</span></code> (for apparent magnitude), <code class="docutils literal notranslate"><span class="pre">spt</span></code> (for spectral type), <code class="docutils literal notranslate"><span class="pre">absmag</span></code> (for absolute magnitude) and their uncertainties will reduce dependence on the Spectrum object. With all three parameters, this routine operates without a Spectrum object.</p>
+</div></blockquote>
+<p>Example:
+&gt;&gt;&gt; import splat
+&gt;&gt;&gt; sp = splat.getSpectrum(shortname=’1555+0954’)[0]
+Retrieving 2 files
+&gt;&gt;&gt; splat.estimateDistance(sp)</p>
+<blockquote>
+<div><p>Please specify the filter used to determine the apparent magnitude
+(nan, nan)</p>
+</div></blockquote>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
+<span class="go">    (212.20546914411625, 50.593458481040173)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">12.83</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
+<span class="go">    (6.8967647325911665, 1.7439740983732679)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">mag</span><span class="o">=</span><span class="mf">12.83</span><span class="p">)</span>
+<span class="go">    (6.4528658994336521, 1.6853855848066823)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">mag</span><span class="o">=</span><span class="mf">12.83</span><span class="p">,</span> <span class="n">mag_e</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
+<span class="go">    (6.1292809243737336, 1.4986946706101478)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">mag</span><span class="o">=</span><span class="mf">12.83</span><span class="p">,</span> <span class="n">mag_e</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">spt</span><span class="o">=</span><span class="s1">&#39;L5&#39;</span><span class="p">)</span>
+<span class="go">    (6.9954039276140554, 1.1679437846129084)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">estimateDistance</span><span class="p">(</span><span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span> <span class="n">mag</span><span class="o">=</span><span class="mf">12.83</span><span class="p">,</span> <span class="n">mag_e</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">spt</span><span class="o">=</span><span class="s1">&#39;L5&#39;</span><span class="p">,</span> <span class="n">absmag</span><span class="o">=</span><span class="mf">13.56</span><span class="p">,</span> <span class="n">absmag_e</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">)</span>
+<span class="go">    (7.1788501442275461, 0.74878521889450711)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="section" id="useful-program-constants">
+<h2>Useful Program Constants<a class="headerlink" href="#useful-program-constants" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">splat.SPT_BC_SETS</span></code>, <code class="docutils literal notranslate"><span class="pre">splat.SPT_LBOL_SETS</span></code>, <code class="docutils literal notranslate"><span class="pre">splat.SPT_ABSMAG_SETS</span></code></dt><dd><p>Dictionaries containing information on the empirical relations contained in the SPLAT code</p>
+</dd>
+</dl>
+<p><em>Search</em></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="splat_plot.html" class="btn btn-neutral float-right" title="SPLAT Plotting Routines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="splat.html" class="btn btn-neutral float-left" title="Main SPLAT module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2016-2021, Adam Burgasser.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
