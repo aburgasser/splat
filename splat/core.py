@@ -6065,7 +6065,7 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
         if numpy.isnan(numpy.median(sp.noise)):
             mean,var = weightedMeanVar(ssptn,st)
         else:
-            mean,var = weightedMeanVar(ssptn,st,method='ftest',dof=sp.dof)
+            mean,var = weightedMeanVar(ssptn,st,method='ftest')
         if (var**0.5 < 1.):
             sptn = numpy.round(mean*2)*0.5
         else:
@@ -6386,7 +6386,7 @@ def classifyByTemplate(sp, *args, **kwargs):
         sptn = sorted_spt[0]
         sptn_e = unc_sys
     else:
-        mean,var = weightedMeanVar(sspt,stat,method='ftest',dof=sp.dof)
+        mean,var = weightedMeanVar(sspt,stat,method='ftest')
 # allow 1/2 subtypes if uncertainty is less than 1.0
         if (var**0.5 < 1.):
             sptn = numpy.round(mean*2.)*0.5
