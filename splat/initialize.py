@@ -14,7 +14,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2021.08.02'
+VERSION = '2021.11.23'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
