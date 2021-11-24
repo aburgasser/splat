@@ -40,7 +40,8 @@ setup(
     'numpy',
     'pandas',
     'requests',
-    'scipy'
+    'scipy',
+    'shapely'
   ],
 
   package_dir = {'splat': 'splat'},    

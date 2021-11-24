@@ -64,7 +64,7 @@ def prepDB(db_init,raCol='RA',decCol='DEC',desigCol='DESIGNATION',force=False):
     '''
     db = copy.deepcopy(db_init)
     if raCol not in list(db.columns) or decCol not in list(db.columns): 
-        if 'DESIGNATION' not in list(db.columns):
+        if desigCol not in list(db.columns):
             raise ValueError('Database must have columns {} and {}, or {}'.format(raCol,decCol,desigCol))
         else:
             db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]

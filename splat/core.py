@@ -63,6 +63,20 @@ warnings.simplefilter('ignore')
 # temporary constants - will be removed
 max_snr = 1.e6                # maximum S/N ratio permitted
 
+
+#######################################################
+#######################################################
+###############   DISPLAY ON LOAD IN  #################
+#######################################################
+#######################################################
+
+print('\n\nWelcome to the Spex Prism Library Analysis Toolkit (SPLAT)!')
+print('If you make use of any features of this toolkit for your research, please remember to cite the SPLAT paper:')
+print('\n{}; Bibcode: {}\n'.format(CITATION,BIBCODE))
+print('If you make use of any spectra or models in this toolkit, please remember to cite the original source.')
+print('Please report any errors are feature requests to our github page, {}\n\n'.format(GITHUB_URL))
+
+
 #######################################################
 #######################################################
 ##################   DATA LOADING  ####################
@@ -75,7 +89,7 @@ max_snr = 1.e6                # maximum S/N ratio permitted
 def _processNewData(verbose=True,**kwargs):
     pass
 
-def _addData(folder,database=pandas.DataFrame(),input_file=DB_SPECTRA_INPUT_FILE,default_parameters=DB_SPECTRA_DEFAULT_PARAMETERS,allowed_file_extensions=SPECTRA_FILES_EXTENSIONS,verbose=True):
+def _addData(folder,database=pandas.DataFrame(),input_file=DB_SPECTRA_INPUT_FILE,default_parameters=DB_SPECTRA_DEFAULT_PARAMETERS,allowed_file_extensions=SPECTRA_FILES_EXTENSIONS,verbose=False):
     '''
     '''
     sfile = '{}/{}'.format(folder,input_file)
@@ -120,7 +134,7 @@ def _addData(folder,database=pandas.DataFrame(),input_file=DB_SPECTRA_INPUT_FILE
     return database
 
 
-def _initializeAllData(database=pandas.DataFrame(),override=False,verbose=True,**kwargs):
+def _initializeAllData(database=pandas.DataFrame(),override=False,verbose=False,**kwargs):
     '''
     :Purpose:
 
@@ -4214,6 +4228,7 @@ def initiateStandards(*args,**kwargs):
         del swargs['all']
         initiateStandards()
         initiateStandards(sd=True)
+        initiateStandards(dsd=True)
         initiateStandards(esd=True)
         initiateStandards(intg=True)
         initiateStandards(vlg=True)
@@ -5191,12 +5206,14 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
         except:
             raise NameError('\nProblem reading in {} from SPLAT website {}'.format(file,url))
 
-# instrument specific read shortcut
+# instrument specific read shortcut - not working?
     inst = checkInstrument(instrument)
     if inst != False: 
         instrument = inst
         if INSTRUMENTS[instrument]['reader'] != '': 
-            output = locals()[INSTRUMENTS[instrument]['reader']](file,verbose=verbose,**kwargs)
+#            output = locals()[INSTRUMENTS[instrument]['reader']](file,verbose=verbose,**kwargs)
+            print(INSTRUMENTS[instrument]['reader'],type(INSTRUMENTS[instrument]['reader']))
+            output = INSTRUMENTS[instrument]['reader'](file,verbose=verbose,**kwargs)
             readin = True
 
     # if instrument.upper()=='APOGEE': output = _readAPOGEE(file,**kwargs)
@@ -5240,7 +5257,7 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
 # ascii file
         else:
             if 'csv' in file_type: delimiter = ','
-            if 'tsv' in file_type or 'tab' in file_type: delimiter = '\t'
+            if 'tsv' in file_type or 'tab' in file_type or 'txt' in file_type: delimiter = '\t'
             if 'pipe' in file_type: delimiter = '|'
             if 'latex' in file_type: delimiter = '&'
 
@@ -5255,6 +5272,7 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
 
 
 # check alignment of data array
+#        print(file,file_type,numpy.shape(d),header)
         if len(d[:,0]) > len(d[0,:]): d = d.transpose()  # array is oriented wrong
 
 # SDSS format for wavelength scale - in header and log format
@@ -5440,29 +5458,46 @@ def _readBOSS(file,**kwargs):
 
 def _readKAST(file,**kwargs):
     '''
-    Reads Carl Melis's KAST fits files
+    Reads kastredux KAST fits files
     '''
+    wave_unit = INSTRUMENTS['KAST-RED']['wave_unit']
+    flux_unit = INSTRUMENTS['KAST-RED']['flux_unit']
+
     if not os.path.exists(file):
         raise NameError('\nCould not find KAST file {}'.format(file))
 
-    hdulist=fits.open(file)
-    header = hdulist[0].header
-    flux = numpy.array(hdulist[0].data[0,:][0])
-    noise = numpy.array(hdulist[0].data[3,:][0])
-    if 'CRVAL1' in list(header.keys()) and 'CRDELT1' in list(header.keys()):
-        wave = 10.**(numpy.linspace(header['CRVAL1'],header['CRVAL1']+len(flux)*header['CRDELT1'],len(flux)))
-    elif 'CRVAL1' in list(header.keys()) and 'CD1_1' in list(header.keys()):
-        wave = 10.**(numpy.linspace(header['CRVAL1'],header['CRVAL1']+len(flux)*header['CD1_1'],len(flux)))
+    with fits.open(os.path.normpath(file),ignore_missing_end=True,do_not_scale_image_data=True) as data:
+        data.verify('silentfix+ignore')
+        if 'NAXIS3' in list(data[0].header.keys()):
+            d = numpy.copy(data[0].data[0,:,:])
+        else:
+            d =  numpy.copy(data[0].data)
+        header = data[0].header
+    if header['NAXIS']==1:
+        w0,w1 = None,None
+        for x in ['CRVAL1']:
+            if x in list(header.keys()): w0 = header[x]
+        for x in ['CDELT1','CD1_1']:
+            if x in list(header.keys()): w1 = header[x]
+        if w0==None or w1==None: raise ValueError('Could not find the necessary keywords in fits header to generate wavelength scale')
+        if 'linear' in header['CTYPE1'].lower(): wave = numpy.arange(len(d))*w1+w0
+        else: raise ValueError('Cannot handle wavelength scale type {}'.format(header['CTYPE1']))
+        wave=wave*wave_unit
+        flux = d*flux_unit
     else:
-        raise ValueError('\nCould not find appropriate header keywords to make wavelength axis')
+        wave=d[0,:]*wave_unit
+        flux=d[1,:]*flux_unit
+        if len(d[:,0])>2: noise=d[2,:]*flux_unit
     
     return {'wave': wave,
           'flux': flux,
           'noise': noise,
           'header': header,
-          'wave_unit': u.Angstrom,
-          'flux_unit': u.erg/u.s/u.cm/u.cm/u.Angstrom}
-        
+          'wave_unit': wave_unit,
+          'flux_unit': flux_unit}
+INSTRUMENTS['KAST-RED']['reader'] = _readKAST
+INSTRUMENTS['KAST-BLUE']['reader'] = _readKAST
+
 
 def _readIRAF(file, **kwargs):
     '''
@@ -5606,7 +5641,7 @@ def _readWFC3(file,**kwargs):
 #####################################################
 
 
-def classifyByIndex(sp,ref='burgasser',str_flag=True,rnd_flag=False,rem_flag=True,nsamples=100,nloop=5,verbose=False,indices={},sptoffset=0.,coeffs={},method='polynomial', **kwargs):
+def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasure=True,nsamples=100,nloop=5,verbose=False,indices={},param={}, allmeasures=False,**kwargs):
 
     '''
     :Purpose: 
@@ -5641,147 +5676,186 @@ def classifyByIndex(sp,ref='burgasser',str_flag=True,rnd_flag=False,rem_flag=Tru
 
     '''
 
-    str_flag = kwargs.get('string', str_flag)
-#    verbose = kwargs.get('verbose', False)
-    rnd_flag = kwargs.get('round', rnd_flag)
-    rem_flag = kwargs.get('remeasure', rem_flag)
-#    nsamples = kwargs.get('nsamples', 100)
-#    nloop = kwargs.get('nloop', 5)
-    ref = kwargs.get('set',ref)
-    kwargs['ref'] = ref
+    for k in ['set','reference','indexset']: ref = kwargs.get(k,ref)
+    for k in ['str_flag','string']: string_flag = kwargs.get(k,string_flag)
+    for k in ['round','rnd_flag','roundoff']: round_flag = kwargs.get(k,round_flag)
+    for k in ['rem_flag']: remeasure = kwargs.get(k,remeasure)
+    for k in ['parameters']: param = kwargs.get(k,param)
+#    kwargs['ref'] = ref
 #    if (set.lower() not in allowed_sets):
 #        print('\nWarning: index classification method {} not present; returning nan\n\n'.format(set))
 #        return numpy.nan, numpy.nan
 
-# Reid et al. (2001, AJ, 121, 1710)
-    if (ref.lower() == 'reid'):
-        if (rem_flag or len(args) == 0):
-            indices = measureIndexSet(sp, **kwargs)
-        sptoffset = 20.
-        coeffs = { \
-            'H2O-A': {'fitunc': 1.18, 'range': [18,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [-32.1, 23.4]}, \
-            'H2O-B': {'fitunc': 1.02, 'range': [18,28], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [-24.9, 20.7]}}
-        method='polynomial'
+# # Reid et al. (2001, AJ, 121, 1710)
+#     if (ref.lower() == 'reid'):
+#         if (rem_flag or len(args) == 0):
+#             indices = measureIndexSet(sp, **kwargs)
+#         sptoffset = 20.
+#         coeffs = { \
+#             'H2O-A': {'fitunc': 1.18, 'range': [18,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [-32.1, 23.4]}, \
+#             'H2O-B': {'fitunc': 1.02, 'range': [18,28], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [-24.9, 20.7]}}
+#         method='polynomial'
 
-# Testi et al. (2001, ApJ, 522, L147)
-    elif (ref.lower() == 'testi'):
-        if (rem_flag or len(args) == 0):
-            indices = measureIndexSet(sp, **kwargs)
-        sptoffset = 10.
-        coeffs = { \
-            'sHJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [-1.87, 1.67]}, \
-            'sKJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [-1.20, 2.01]}, \
-            'sH2O_J': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [1.54, 0.98]}, \
-            'sH2O_H1': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [1.27, 0.76]}, \
-            'sH2O_H2': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [2.11, 0.29]}, \
-            'sH2O_K': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [2.36, 0.60]}}
-        method='polynomial'
+# # Testi et al. (2001, ApJ, 522, L147)
+#     elif (ref.lower() == 'testi'):
+#         if (rem_flag or len(args) == 0):
+#             indices = measureIndexSet(sp, **kwargs)
+#         sptoffset = 10.
+#         coeffs = { \
+#             'sHJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [-1.87, 1.67]}, \
+#             'sKJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [-1.20, 2.01]}, \
+#             'sH2O_J': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [1.54, 0.98]}, \
+#             'sH2O_H1': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [1.27, 0.76]}, \
+#             'sH2O_H2': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [2.11, 0.29]}, \
+#             'sH2O_K': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [2.36, 0.60]}}
+#         method='polynomial'
 
-# Burgasser (2007, ApJ, 659, 655) calibration
-    elif (ref.lower() == 'burgasser'):
-        if (rem_flag or len(args) == 0):
-            indices = measureIndexSet(sp, **kwargs)
-        sptoffset = 20.
-        coeffs = { \
-            'H2O-J': {'fitunc': 0.8, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
-            'H2O-H': {'fitunc': 1.0, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-            'coeff': [9.087e-1, -3.221e1, 2.527e1, -1.978e1, 2.098e1]}, \
-            'CH4-J': {'fitunc': 0.7, 'range': [30,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-            'coeff': [1.491e2, -3.381e2, 2.424e2, -8.450e1, 2.708e1]}, \
-            'CH4-H': {'fitunc': 0.3, 'range': [31,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-            'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
-            'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
-            'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
-        method='polynomial'
+# # Burgasser (2007, ApJ, 659, 655) calibration
+#     elif (ref.lower() == 'burgasser'):
+#         if (rem_flag or len(args) == 0):
+#             indices = measureIndexSet(sp, **kwargs)
+#         sptoffset = 20.
+#         coeffs = { \
+#             'H2O-J': {'fitunc': 0.8, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
+#             'H2O-H': {'fitunc': 1.0, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+#             'coeff': [9.087e-1, -3.221e1, 2.527e1, -1.978e1, 2.098e1]}, \
+#             'CH4-J': {'fitunc': 0.7, 'range': [30,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+#             'coeff': [1.491e2, -3.381e2, 2.424e2, -8.450e1, 2.708e1]}, \
+#             'CH4-H': {'fitunc': 0.3, 'range': [31,39], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+#             'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
+#             'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1.,  \
+#             'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
+#         method='polynomial'
 
-# Geballe et al. (2002, ApJ, 564, 466) calibration
-    elif ref.lower() == 'geballe':
-        if (rem_flag or len(args) == 0):
-            i1 = measureIndexSet(sp, ref='geballe')
-            i2 = measureIndexSet(sp, ref='martin')
-            if sys.version_info.major == 2:
-                indices = dict(i1.items() + i2.items())
-            else:
-                indices = dict(i1.items() | i2.items())
-        spttypes = numpy.arange(20.,39.,1.)
-        ranges = { \
-            'PC3': [[2.4,2.6,20.],[2.6,2.86,21.],[2.85,3.25,22.],[3.25,4.25,23.],[4.25,6,24.]],\
-            'Color-d2': [[4.5,5.5,20.],[5.5,6.5,21.],[6.5,7.5,22.],[7.5,10.,23.],[10,17,24.],[17.,23.,25.],[23.,25.,26.]],\
-            'H2O-1.2': [[1.5,1.7,30.],[1.7,1.9,31.],[1.9,2.15,32.],[2.15,2.5,33.],[2.5,3.0,34.],[3.0,4.5,35.],[4.5,6.5,36.],[6.5,10.,37.],[10.,15.,38.]],\
-            'H2O-1.5': [[1.2,1.27,20.],[1.27,1.35,21.],[1.35,1.43,22.],[1.43,1.5,23.],[1.5,1.55,24.],[1.55,1.6,25.],[1.6,1.65,26.],[1.65,1.7,27.],[1.7,1.8,28.],[1.8,1.95,29.],[1.95,2.2,30.],[2.2,2.5,31.],[2.5,3.0,32.],[3.0,3.5,33.],[3.5,4.5,34.],[4.5,5.5,35.],[5.5,7.,36.],[7.,9.,37.],[9.,12.,38.]],\
-            'CH4-1.6': [[1.02,1.07,30.],[1.07,1.15,31.],[1.15,1.3,32.],[1.3,1.5,33.],[1.5,1.8,34.],[1.8,2.5,35.],[2.5,4,36.],[4.,6.,37.],[6.,9.,38.]],\
-            'CH4-2.2': [[0.91,0.94,23.],[0.94,0.98,24.],[0.98,1.025,25.],[1.025,1.075,26.],[1.075,1.125,27.],[1.125,1.175,28.],[1.175,1.25,29.],[1.25,1.4,30.],[1.4,1.6,31.],[1.6,1.95,32.],[1.95,2.75,33.],[2.75,3.8,34.],[3.8,5.5,35.],[5.5,8.5,36.],[8.5,12.,37],[12.,18.,38.]],\
-        }
-        method='ranges'
+# # Geballe et al. (2002, ApJ, 564, 466) calibration
+#     elif ref.lower() == 'geballe':
+#         if (rem_flag or len(args) == 0):
+#             i1 = measureIndexSet(sp, ref='geballe')
+#             i2 = measureIndexSet(sp, ref='martin')
+#             if sys.version_info.major == 2:
+#                 indices = dict(i1.items() + i2.items())
+#             else:
+#                 indices = dict(i1.items() | i2.items())
+#         spttypes = numpy.arange(20.,39.,1.)
+#         ranges = { \
+#             'PC3': [[2.4,2.6,20.],[2.6,2.86,21.],[2.85,3.25,22.],[3.25,4.25,23.],[4.25,6,24.]],\
+#             'Color-d2': [[4.5,5.5,20.],[5.5,6.5,21.],[6.5,7.5,22.],[7.5,10.,23.],[10,17,24.],[17.,23.,25.],[23.,25.,26.]],\
+#             'H2O-1.2': [[1.5,1.7,30.],[1.7,1.9,31.],[1.9,2.15,32.],[2.15,2.5,33.],[2.5,3.0,34.],[3.0,4.5,35.],[4.5,6.5,36.],[6.5,10.,37.],[10.,15.,38.]],\
+#             'H2O-1.5': [[1.2,1.27,20.],[1.27,1.35,21.],[1.35,1.43,22.],[1.43,1.5,23.],[1.5,1.55,24.],[1.55,1.6,25.],[1.6,1.65,26.],[1.65,1.7,27.],[1.7,1.8,28.],[1.8,1.95,29.],[1.95,2.2,30.],[2.2,2.5,31.],[2.5,3.0,32.],[3.0,3.5,33.],[3.5,4.5,34.],[4.5,5.5,35.],[5.5,7.,36.],[7.,9.,37.],[9.,12.,38.]],\
+#             'CH4-1.6': [[1.02,1.07,30.],[1.07,1.15,31.],[1.15,1.3,32.],[1.3,1.5,33.],[1.5,1.8,34.],[1.8,2.5,35.],[2.5,4,36.],[4.,6.,37.],[6.,9.,38.]],\
+#             'CH4-2.2': [[0.91,0.94,23.],[0.94,0.98,24.],[0.98,1.025,25.],[1.025,1.075,26.],[1.075,1.125,27.],[1.125,1.175,28.],[1.175,1.25,29.],[1.25,1.4,30.],[1.4,1.6,31.],[1.6,1.95,32.],[1.95,2.75,33.],[2.75,3.8,34.],[3.8,5.5,35.],[5.5,8.5,36.],[8.5,12.,37],[12.,18.,38.]],\
+#         }
+#         method='ranges'
 
-# Allers et al. (2013, ApJ, 657, 511)
-    elif (ref.lower() == 'allers'):
-        if (rem_flag or len(args) == 0):
-            i1 = measureIndexSet(sp, ref='mclean')
-            i2 = measureIndexSet(sp, ref='slesnick')
-            i3 = measureIndexSet(sp, ref='allers')
-            if sys.version_info.major == 2:
-                indices = dict(i1.items() + i2.items() + i3.items())
-            else:
-                indices = dict(i1.items() | i2.items() | i3.items())
-        sptoffset = 10.
-        coeffs = { \
-            'H2O': {'fitunc': 0.390, 'range': [15,25], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [24.0476, -104.424, 169.388,-83.5437]}, \
-            'H2O-1': {'fitunc': 1.097, 'range': [14,25], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [28.5982, -80.7404, 39.3513, 12.1927]}, \
-            'H2OD': {'fitunc': 0.757, 'range': [20,28], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [-97.230, 229.884, -202.245, 79.4477]}, \
-            'H2O-2': {'fitunc': 0.501, 'range': [14,22], 'spt': 0., 'sptunc': 99., 'mask': 1., \
-            'coeff': [37.5013, -97.8144, 55.4580, 10.8822]}}
-        method='polynomial'
+# # Allers et al. (2013, ApJ, 657, 511)
+#     elif (ref.lower() == 'allers'):
+#         if (rem_flag or len(args) == 0):
+#             i1 = measureIndexSet(sp, ref='mclean')
+#             i2 = measureIndexSet(sp, ref='slesnick')
+#             i3 = measureIndexSet(sp, ref='allers')
+#             if sys.version_info.major == 2:
+#                 indices = dict(i1.items() + i2.items() + i3.items())
+#             else:
+#                 indices = dict(i1.items() | i2.items() | i3.items())
+#         sptoffset = 10.
+#         coeffs = { \
+#             'H2O': {'fitunc': 0.390, 'range': [15,25], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [24.0476, -104.424, 169.388,-83.5437]}, \
+#             'H2O-1': {'fitunc': 1.097, 'range': [14,25], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [28.5982, -80.7404, 39.3513, 12.1927]}, \
+#             'H2OD': {'fitunc': 0.757, 'range': [20,28], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [-97.230, 229.884, -202.245, 79.4477]}, \
+#             'H2O-2': {'fitunc': 0.501, 'range': [14,22], 'spt': 0., 'sptunc': 99., 'mask': 1., \
+#             'coeff': [37.5013, -97.8144, 55.4580, 10.8822]}}
+#         method='polynomial'
 
-    else:
-        if len(indices.keys()) == 0: 
-            print('Error: indices is an empty dictionary')
-            return numpy.nan, numpy.nan
-        if len(coeff.keys()) == 0: 
-            print('Error: coeffs is an empty dictionary')
-            return numpy.nan, numpy.nan
+#     else:
+#         if len(indices.keys()) == 0: 
+#             print('Error: indices is an empty dictionary')
+#             return numpy.nan, numpy.nan
+#         if len(coeff.keys()) == 0: 
+#             print('Error: coeffs is an empty dictionary')
+#             return numpy.nan, numpy.nan
 
-# check coefficient index names
-    for i in list(coeffs.keys()):
+# check if using a pre-defined classification relation
+# use that if classification parameters not provided
+    tmp = checkDict(ref,INDEX_CLASSIFICATION_RELATIONS)
+    if tmp==False and len(param) == 0: 
+        print('Error: input citation {} is not one of the predefined classification sets: {}'.format(ref,list(INDEX_CLASSIFICATION_RELATIONS.keys())))
+        return numpy.nan, numpy.nan
+    elif len(param) == 0: 
+        param = INDEX_CLASSIFICATION_RELATIONS[tmp]
+        if verbose: print('Using {} index classification method'.format(tmp))
+    else: pass
+
+# check parameter dictionary has correct keys
+    for k in ['indices','method','sets']:
+        if k not in list(param.keys()): raise ValueError('Index classification parameter set must include the parameter {}; contains {}'.format(k,list(param.keys())))
+    if 'decimal' not in list(param.keys()): param['decimal'] = False
+    if 'sptoffset' not in list(param.keys()): param['sptoffset'] = 0
+    if 'min_indices' not in list(param.keys()): param['min_indices'] = 1
+
+# check coefficient index names are present in indices input; if not remeasure
+    for i in list(param['indices'].keys()):
         if i not in list(indices.keys()):
-            print('Error: coefficient index {} is not one of the measured indices {}; remeasure indices'.format(i,list(indices.keys())))
-            return numpy.nan, numpy.nan
+            if remeasure==False: print('Error: coefficient index {} is not one of the measured indices provided in input indices; remeasuring'.format(i))
+            remeasure = True
 
-# polynomial method
-    if method=='polynomial':
-        for index in coeffs.keys():
+# remeasure indices            
+    if remeasure==True:
+        indices = {}
+        for s in param['sets']:
+            tmp = checkDict(s,INDEX_SETS)
+            if tmp==False: raise ValueError('Index set {} is not one of predefined sets: {}; correct parameter dictionary'.format(s,list(INDEX_SETS.keys())))
+            ind = measureIndexSet(sp,ref=s,verbose=verbose,**kwargs)
+            if sys.version_info.major == 2: indices = dict(indices.items() + ind.items())
+            else: indices = dict(indices.items() | ind.items())            
+
+# determine classifications from polunomials
+    if param['method']=='polynomial':
+        coeffs = {}
+        for index in list(param['indices'].keys()):
+            coeffs[index] = {}
             coeffs[index]['spt'] = numpy.nan
             coeffs[index]['sptunc'] = numpy.nan
             coeffs[index]['mask'] = 0.
-            if numpy.isfinite(indices[index][0]):
-                coeffs[index]['spt'] = numpy.polyval(coeffs[index]['coeff'],indices[index][0])+sptoffset
-                coeffs[index]['sptunc'] = coeffs[index]['fitunc']
-                if (ref.lower() == 'testi'): coeffs[index]['spt'] = (coeffs[index]['spt']-10.)*10.+10.
+# check dictionary for each index has the right keys; if not, skip it
+            skip = False
+            for k in ['coeff','fitunc','fitunc','range']:
+                if k not in list(param['indices'][index].keys()): 
+                    if verbose==True: print('Parameter dictionary is missing key {}'.format(k))
+                    skip = True
+            if skip == False and numpy.isfinite(indices[index][0]):
+                coeffs[index]['spt'] = numpy.polyval(param['indices'][index]['coeff'],indices[index][0])+param['sptoffset']
+                coeffs[index]['sptunc'] = param['indices'][index]['fitunc']
+                if param['decimal']==True: coeffs[index]['spt'] = (coeffs[index]['spt']-param['sptoffset'])*10.+param['sptoffset']
 # noise sim
                 if numpy.isfinite(indices[index][1]):
-                    vals = numpy.polyval(coeffs[index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))
-                    if (ref.lower() == 'testi'): vals = (vals-10.)*10.+10.
-                    coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+coeffs[index]['fitunc']**2)**0.5
-# unmask good values
-            if coeffs[index]['spt'] >= numpy.nanmin(coeffs[index]['range']) and coeffs[index]['spt'] <= numpy.nanmax(coeffs[index]['range']) and numpy.isfinite(coeffs[index]['spt']): coeffs[index]['mask'] = 1.
+                    vals = numpy.polyval(param['indices'][index]['coeff'],numpy.random.normal(indices[index][0],indices[index][1],nsamples))
+                    if param['decimal']==True: vals = (vals-param['sptoffset'])*10.+param['sptoffset']
+                    coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+param['indices'][index]['fitunc']**2)**0.5
 
-# no good values
-        mask = [coeffs[index]['mask'] for index in list(coeffs.keys())]
-        if numpy.nansum(mask) == 0.:
-            if verbose==True: print('\nNone of the indices in set {} returned viable values\n'.format(set))
-            return numpy.nan, numpy.nan
+#                if verbose==True: print('{}: index = {:.3f}+/-{:.3f}, spt = {:.2f}+/-{:.2f}'.format(index,indices[index][0],indices[index][1],coeffs[index]['spt'],coeffs[index]['sptunc']))
+# unmask good values
+            if coeffs[index]['spt'] >= numpy.nanmin(param['indices'][index]['range']) and \
+                coeffs[index]['spt'] <= numpy.nanmax(param['indices'][index]['range']) and \
+                numpy.isfinite(coeffs[index]['spt']): coeffs[index]['mask'] = 1.
+
+# not enough good values
+#         mask = [coeffs[index]['mask'] for index in list(coeffs.keys())]
+# #        print(numpy.nansum(mask), param['min_indices'])
+#         if numpy.nansum(mask) < param['min_indices']:
+#             if verbose==True: print('\nNot of enough indices in set {} returned viable values\n'.format(ref))
+#             return numpy.nan, numpy.nan
 
 # computed weighted mean with rejection, iterating to deal with indices outside ranges      
         for i in numpy.arange(nloop):
@@ -5789,51 +5863,65 @@ def classifyByIndex(sp,ref='burgasser',str_flag=True,rnd_flag=False,rem_flag=Tru
             vals = numpy.array([coeffs[index]['mask']*coeffs[index]['spt']/coeffs[index]['sptunc']**2 for index in list(coeffs.keys())])
             w = numpy.where(numpy.isfinite(wts+vals))
             if len(w) == 0:
-                if verbose==True: print('\nNone of the indices in set {} returned viable values\n'.format(set))
+                if verbose==True: print('\nNone of the indices in set {} returned viable values\n'.format(ref))
                 return numpy.nan, numpy.nan
             sptn = numpy.nansum(vals[w])/numpy.nansum(wts[w])
             sptn_e = 1./numpy.nansum(wts[w])**0.5
             for index in coeffs.keys():
-                if sptn < numpy.nanmin(coeffs[index]['range']) or sptn > numpy.nanmax(coeffs[index]['range']): coeffs[index]['mask'] = 0.
+                if sptn < numpy.nanmin(param['indices'][index]['range']) or sptn > numpy.nanmax(param['indices'][index]['range']): coeffs[index]['mask'] = 0.
 
 # report individual subtypes
         if verbose == True:
             for i in coeffs.keys():
-                flg = '*'
-                if coeffs[i]['mask'] == 0.: flg = ''
+                flg = ''
+                if coeffs[i]['mask'] == 0.: flg = '*'
                 print('{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{:.1f}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc']))
 
+# not enough good values
+        if verbose == True: print('* = not included in classification')
+        mask = [coeffs[index]['mask'] for index in list(coeffs.keys())]
+        if numpy.nansum(mask) < param['min_indices']:
+            if verbose==True: print('\nNot of enough indices in set {} returned viable values\n'.format(ref))
+            return numpy.nan, numpy.nan
+
 # ranges method - NOT CURRENTLY CONSIDERING UNCERTAINTY
-    if method=='ranges':
+    elif param['method']=='ranges':
         spts = []
         spts_unc = []
-        for index in list(ranges.keys()):
+        for index in list(param['indices'].keys()):
             spts.append(numpy.nan)
             spts_unc.append(numpy.nan)
             if indices[index][1] > 0.:
-                for r in ranges[index]: 
+                for r in param['indices'][index]: 
                     if r[0] < indices[index][0] <= r[1]: spts[-1] = r[-1]
+#
+#
 # PLACEHOLDER FOR UNCERTAINTY INCLUSION
+#
+#
             if verbose == True:
                 flg = ''
                 if numpy.isnan(spts[-1]): flg='*'
                 print('{}{}: {:.3f}+/-{:.3f} => SpT = {}'.format(flg,index,indices[index][0],indices[index][1],typeToNum(spts[-1])))
 
+        if verbose == True: print('* = not included in classification')
         spts = numpy.array(spts)
         sptn = numpy.nanmean(spts)
         sptn_e = numpy.nanstd(spts)
 
+    else: raise ValueError('Do not recognize index classification method {}'.format(param['method']))
+
 # round off to nearest 0.5 subtypes if desired
-    if (rnd_flag): sptn = 0.5*numpy.around(sptn*2.)
+    if round_flag==True: sptn = 0.5*numpy.around(sptn*2.)
 
 # change to string if desired
-    if (str_flag): spt = typeToNum(sptn,uncertainty=sptn_e)
+    if string_flag==True: spt = typeToNum(sptn,uncertainty=sptn_e)
     else: spt = sptn
 
-    if kwargs.get('allmeasures',False) == True and method == 'polynomial':
+    if 'allmeasures' == True and param['method'] == 'polynomial':
         output = {}
         for k in coeffs.keys():
-            output[k] = {'spt': coeffs[k]['spt'], 'spt_e': coeffs[k]['sptunc'], 'index': indices[k][0], 'index_e': indices[k][0]}
+            output[k] = {'spt': coeffs[k]['spt'], 'spt_e': coeffs[k]['sptunc'], 'index': indices[k][0], 'index_e': indices[k][1]}
         output['result'] = (spt,sptn_e)
         return output
     else:
@@ -6098,9 +6186,9 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
         from .plot import plotSpectrum
         if kwargs.get('difference',True):
             kwargs['labels'].append('Difference')
-            pl = plotSpectrum(sp,spstd,sp-spstd,**kwargs)
+            pl = plotSpectrum([sp,spstd,sp-spstd],**kwargs)
         else:
-            pl = plotSpectrum(sp,spstd,**kwargs)
+            pl = plotSpectrum([sp,spstd],**kwargs)
 
     if verbose==True: print(fit_ranges)
 
@@ -6493,7 +6581,7 @@ def classifyGravity(sp, *args, **kwargs):
 # Determine the object's NIR spectral type and its uncertainty
     sptn = kwargs.get('spt',False)
     if sptn == False:
-        sptn, spt_e = classifyByIndex(sp,string=False,set='allers')
+        sptn, spt_e = classifyByIndex(sp,string=False,ref='allers2013')
         if numpy.isnan(sptn):
             print('Spectral type could not be determined from indices')
             return ''
@@ -6568,6 +6656,191 @@ def classifyGravity(sp, *args, **kwargs):
         return gravscore['gravity_class']
     else:
         return gravscore
+
+
+
+def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=None,classify='indices',classify_parameters=None,index_definitions=SPECTRAL_BINARY_INDICES,verbose=False,**kwargs):
+    """
+    Determines whether a spectrum of an ultracool dwarf is that of a spectral binary using the index-based methods
+    of Burgasser et al. (2010; 2010ApJ...710.1142B) and Bardalez Gagliuffi et al. (2014; 2014ApJ...794..143B)
+
+
+    Parameters
+    ----------
+    sp : Spectrum class object
+
+
+    ref : string, default = 'burgasser2010'
+        reference for the index/calibration set to use for determining spectral binary status, one of the following:
+            * 'burgasser2010': indices from Burgasser et al. (2010; 2010ApJ...710.1142B) appropriate for spectral types L7--T5
+            * 'bardalez2004': indices from Bardalez Gagliuffi et al. (2014; 2014ApJ...794..143B) appropriate for spectral types M7-L8
+
+    output : string, default = 'classification'
+        what to return from function call, one of the following
+            * 'classification': returns a string indicating the spectral binary classification, either 'strong','weak', or 'non-binary'
+            * 'criteria': return an dictionary with the index measures as key point to whether the criteria were satisfied, and an overall classification
+            * 'allmeasures': return an dictionary containing index measurements, criteria outcomes, and overall classification
+
+    spt : string, default = ''
+        string or number indicating input spectral type; if not provided, spectrum is classified
+
+    indices : dict, default = {}
+        dictionary containing index measurements, with keys corresponding to index names required for spectral binary classification;
+        if empty or partially complete, indices will be remeasured
+
+    classify : string, default = 'indices'
+        if spectrum is to be reclassified, determines method for classification; options are
+            * 'standard': use classifyByStandard()
+            * 'template': use classifyByTemplate(); classify_parameters should include template array
+            * 'indices': use classifyByIndex(); classify_parameters should include classification reference
+
+    classify_parameters : dict, default = {}
+        if spectrum is to be reclassified, optional parameters to pass onto classification functions
+    
+    index_definitions : dict, default = SPECTRAL_BINARY_INDICES
+        dictionary containing the relevant spectral binary index parameters; this should be kept default to avoid code issues
+    
+    verbose : bool, default = False
+        If True, return verbose output
+
+    Returns
+    -------
+    string or dict
+        Output depends on wht is set by 'output' parameter:
+            * 'classification': returns a string indicating the spectral binary classification, either 'strong','weak', or 'non-binary'
+            * 'criteria': return an dictionary with the index measures as key point to whether the criteria were satisfied, and an overall classification
+            * 'allmeasures': return an dictionary containing index measurements, criteria outcomes, and overall classification
+
+    Examples
+    --------
+    TBD
+
+    See Also
+    --------
+    classifyByIndex : classify using a pre-defined set of indices
+    classifyByStandard : classify using a pre-defined set of spectral standards
+    classifyByTemplate : classify using an input set of spectra
+    classifyGravity : determine the gravity class of a spectrum
+
+    """
+
+# keyword replacement
+    for k in ['set','reference']: ref = kwargs.get(k,ref)
+    for k in ['out','return']: output = kwargs.get(k,output)
+    for k in ['type','spectral_type','spectral type']: spt = kwargs.get(k,spt)
+    for k in ['index','measures']: indices = kwargs.get(k,indices)
+    for k in ['classify_method']: classify = kwargs.get(k,classify)
+
+# input checking
+    if isinstance(sp,Spectrum)==False: 
+        raise ValueError('Input variable should be a single Spectrum object; you passed {}'.format(type(sp)))
+    tmp = checkDict(ref,index_definitions)
+    if tmp==False: raise ValueError('Reference set {} is not one of the options for the spectral binary indices: {}'.format(ref,list(index_definitions,keys())))
+    index_data = copy.deepcopy(index_definitions[tmp])
+    if verbose==True: print('Using the {} spectral binary classification indices'.format(tmp))
+    if indices==None: indices = {}
+    if classify_parameters==None: classify_parameters = {}
+
+# is spectrum classified? if not, conduct classification
+    if isinstance(spt,str)==True and index_data['spt']==True:
+        if spt=='' and 'SPT' not in list(indices.keys()):
+            if classify.lower() in ['template','templates']: 
+                if len(classify_parameters.keys())==0: 
+                    if verbose==True: print('classifyByTemplate requires a template list to be passed in classify_parmaeters dictionary, which is empty; running classifyByStandard instead')
+                    classify = 'standard'
+                else: 
+                    spt,spt_e = classifyByTemplate(sp,**classify_parameters)
+                    if verbose==True: print('Classified spectrum by template: result = {}'.format(spt))
+            if classify.lower() in ['standard','std','standards']: 
+                if len(classify_parameters.keys())==0: 
+                    classify_parameters['method']='kirkpatrick'
+                    classify_parameters['telluric']=True
+                spt,spt_e = classifyByStandard(sp,**classify_parameters)
+                if verbose==True: print('Classified spectrum by standards: result = {}'.format(spt))
+            if classify.lower() in ['index','indices','ind']: 
+                if len(classify_parameters.keys())==0: classify_parameters['ref']='burgasser2007'
+                spt,spt_e = classifyByIndex(sp,**classify_parameters)
+                if verbose==True: print('Classified spectrum by indices: result = {}'.format(spt))
+            if spt=='' : 
+                if verbose==True: print('classify parameter {} is not one of the allowed values; classifying by indices'.format(classify))
+#    if not isNumber(spt): spt = typeToNum(spt)
+
+# check indices - first build up set of required indices
+    remeasure=False
+    if len(list(indices.keys()))==0: remeasure=True
+    else:
+        index_required = []
+        for k in index_data['relations']: index_required.extend(k['indices'])
+        index_required = list(set(index_required))
+        index_required.remove('SPT')
+        for k in index_required:
+            if k not in list(indices.keys()): remeasure=True
+    if remeasure==True:
+        indices_measured = measureIndexSet(sp,ref=index_data['index_set'])
+        for k in list(indices_measured.keys()):
+            if k not in list(indices.keys()): indices[k] = indices_measured[k]
+
+    if index_data['spt']==True:
+        if 'SPT' not in list(indices.keys()): indices['SPT'] = spt
+        if isinstance(indices['SPT'],list): indices['SPT']=indices['SPT'][0]
+        if isinstance(indices['SPT'],str): indices['SPT']=typeToNum(indices['SPT'])
+        indices['SPT']=indices['SPT']+index_data['sptoffset']
+
+    indices_applied = copy.deepcopy(indices)
+    for k in list(indices.keys()):
+        if isinstance(indices_applied[k],list): indices_applied[k] = indices_applied[k][0]
+        if isinstance(indices_applied[k],tuple): indices_applied[k] = indices_applied[k][0]
+
+# now apply index methods
+    criteria=[]
+    class_dict = {}
+
+    for k in index_data['relations']:
+        crit = 1
+# extract specific values of x, y
+        if k['measure']=='ratio1':
+            x = indices_applied[k['indices'][0]]/indices_applied[k['indices'][1]]
+            key = '{}/{} vs {}'.format(k['indices'][0],k['indices'][1],k['indices'][2])
+        else: x = indices_applied[k['indices'][0]]
+        if k['measure']=='ratio2':
+            y = indices_applied[k['indices'][-2]]/indices_applied[k['indices'][-1]]
+            key = '{} vs {}/{}'.format(k['indices'][0],k['indices'][1],k['indices'][2])
+        else: y = indices_applied[k['indices'][-1]]
+        if k['measure']!='ratio1' and k['measure']!='ratio2':
+            key = '{} vs {}'.format(k['indices'][0],k['indices'][1])
+# apply test
+        ycrit = numpy.polyval(k['coeff'],x)
+        if k['direction']=='low' and y>ycrit: crit = 0
+        if k['direction']=='high' and y<ycrit: crit = 0
+# addition xlim, ylim constraints
+        if 'xlim' in list(k.keys()):
+            if x < k['xlim'][0] or x > k['xlim'][1]: crit = 0
+        if 'ylim' in list(k.keys()):
+            if y < k['ylim'][0] or y > k['ylim'][1]: crit = 0
+        criteria.append(crit)
+        class_dict[key] = True if crit == 1 else False
+        if verbose==True: print('\t{} test: {}'.format(key,class_dict[key]))
+
+
+# classify
+    classification = 'fail'
+    if numpy.sum(numpy.array(criteria))>=index_data['weak']: classification = 'weak'
+    if numpy.sum(numpy.array(criteria))>=index_data['strong']: classification = 'strong'
+    if indices['SPT'] < index_data['spt_range'][0] or indices['SPT'] > index_data['spt_range'][1]: 
+        if verbose==True: print('Spectral classification {} is outside range of {} relation: {}'.format(typeToNum(indices['SPT']),ref,[typeToNum(x) for x in index_data['spt_range']]))
+        classification='fail'
+    if verbose==True: print('Spectral binary classification: {}'.format(classification))
+
+# return output
+    if output in ['class','classification']: return classification    
+    if output in ['criteria','cases','sets','individual','detail']: return class_dict
+    else: 
+        outval = {}
+        outval['indices'] = indices
+        outval['criteria'] = class_dict
+        outval['classification'] = classification
+        return outval
+    return
 
 
 
@@ -6739,7 +7012,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
     if plot == True:
         spcomp = sp2.copy()
         spcomp.scale(scale_factor)
-        kwargs['colors'] = kwargs.get('colors',['k','r','b'])
+        kwargs['colors'] = kwargs.get('colors',['k','m','b'])
         kwargs['title'] = kwargs.get('title',sp1.name+' vs '+sp2.name)
         from .plot import plotSpectrum
         plotSpectrum(sp1,spcomp,sp1-spcomp,labels=[sp1.name,sp2.name,'{} = {}'.format(statistic,stat)],**kwargs)

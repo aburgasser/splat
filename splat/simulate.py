@@ -1645,7 +1645,7 @@ def simulateDistances(num,model='uniform',max_distance=[10.*u.pc],min_distance=[
 	return distances*unit
 
 
-def simulateUVW(num,age,model='aumer',verbose=False,unit=u.km/u.s,**kwargs):
+def simulateUVW(num,age,model='aumer2009',param={},verbose=False,unit=u.km/u.s,**kwargs):
 	'''
 	:Purpose: 
 
@@ -1687,35 +1687,33 @@ def simulateUVW(num,age,model='aumer',verbose=False,unit=u.km/u.s,**kwargs):
 	while len(ages) < num: ages.append(ages[-1])
 	ages = numpy.array(ages)
 
-	allowed_models = ['aumer']
 	for f in ['ref','reference','set','method','relation','distribution']:
 		if f in list(kwargs.keys()): model = kwargs.get(f,model)
 
-# aumer model
-	if model.lower() == 'aumer':
+# velocity model parameters
+	VELOCITY_MODELS = {'aumer2009': {'altname': ['aumer','aumer09','aum09'], 'citation': 'Aumer & Binney (2009, MNRAS, 397, 1286)', 'bibcode': '2009MNRAS.397.1286A',
+		'param': {'v10_u': 41.899, 'tau1_u': 0.001, 'beta_u': 0.307, 
+				  'v10_v': 28.823, 'tau1_v': 0.715, 'beta_v': 0.430, 'k_uv': 74.,
+				  'v10_w': 23.381, 'tau1_w': 0.001, 'beta_w': 0.445}},
+	}
+	tmp = checkDict(model,VELOCITY_MODELS)
+	if tmp == False: raise ValueError('\nModel {} unrecognized; try {}'.format(model,list(VELOCITY_MODELS.keys())))
+	if verbose == True: print('Using velocity dispersion model of {}'.format(VELOCITY_MODELS[tmp]['citation']))
 
+# aumer model
+	if tmp=='aumer2009':
 # u velocity
-		v10 = 41.899
-		tau1 = 0.001
-		beta = 0.307
-		sig = v10*((numpy.array(ages)+tau1)/(10.+tau1))**beta
+		if len(param)==0: param = copy.deepcopy(VELOCITY_MODELS[tmp]['param'])
+		sig = param['v10_u']*((numpy.array(ages)+param['tau1_u'])/(10.+param['tau1_u']))**param['beta_u']
 		uvel = numpy.random.normal(numpy.zeros(len(ages)),sig)
 		uvel = (uvel*u.km/u.s).to(unit)
-# v velocity - first offset
-		k = 74.
-		voff = -1.*(sig**2)/k
-# now compute scatter	
-		v10 = 28.823
-		tau1 = 0.715
-		beta = 0.430
-		sig = v10*((numpy.array(ages)+tau1)/(10.+tau1))**beta
+# v velocity - first offset then scatter
+		voff = -1.*(sig**2)/param['k_uv']
+		sig = param['v10_u']*((numpy.array(ages)+param['tau1_u'])/(10.+param['tau1_u']))**param['beta_u']
 		vvel = numpy.random.normal(voff,sig)
 		vvel = (vvel*u.km/u.s).to(unit)
 # w velocity
-		v10 = 23.381
-		tau1 = 0.001
-		beta = 0.445
-		sig = v10*((numpy.array(ages)+tau1)/(10.+tau1))**beta
+		sig = param['v10_u']*((numpy.array(ages)+param['tau1_u'])/(10.+param['tau1_u']))**param['beta_u']
 		wvel = numpy.random.normal(numpy.zeros(len(ages)),sig)
 		wvel = (wvel*u.km/u.s).to(unit)
 	else:

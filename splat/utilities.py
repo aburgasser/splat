@@ -1193,7 +1193,7 @@ def coordinateToDesignation(c,prefix='J',sep='',split='',decimal=False):
     return output
 
 
-def designationToCoordinate(value, **kwargs):
+def designationToCoordinate(value, icrs=True, **kwargs):
     '''
     :Purpose: Convert a designation string into a RA, Dec tuple or ICRS SkyCoord objects (default)
 
@@ -1210,14 +1210,18 @@ def designationToCoordinate(value, **kwargs):
     <SkyCoord (ICRS): (ra, dec) in deg
         (238.8585, 9.90333333)>
     '''
-    icrsflag = kwargs.get('icrs',True)
 
-    a = re.sub('[j.:hms]','',value.lower())
+# remove any unnecessary symbols or trailing letters
+    a = re.sub('[j.:hms]','',str(value).lower())
+    a = re.sub(' ','0',a)
+    while not splat.isNumber(a[-1]): a=a[:-1]
     fact = 1.
     spl = a.split('+')
     if len(spl) == 1:
         spl = a.split('-')
         fact = -1.
+    if len(spl) == 1:
+        raise ValueError('Input quantity {} is not a proper designation (missing +/-)'.format(value))
     ra = 15.*float(spl[0][0:2])
     if (len(spl[0]) > 2):
         ra+=15.*float(spl[0][2:4])/60.
@@ -1233,10 +1237,9 @@ def designationToCoordinate(value, **kwargs):
     if (len(spl[1]) > 6):
         dec+=float(spl[1][6:8])/360000.
     dec*=fact
-    if icrsflag:
-        return SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
-    else:
-        return [ra,dec]
+    if icrs == True: return SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
+    else: return [ra,dec]
+
 
 def designationToCoordinateString(designation,delimiter=' ',radec_delimiter=' '):
     '''
@@ -1451,7 +1454,7 @@ def typeToNum(inp, subclass='dwarf', error='', uncertainty=0., luminosity_class 
         #     for i in numpy.arange(len(var)-len(colorclass)): colorclass.append(colorclass[-1])
 
         spind = int(abs(inp/10.))
-        if spind < 0 or spind > len(spletter): 
+        if spind < 0 or spind >= len(spletter): 
             if verbose: print('Spectral type number must be between 0 ({}0) and {} ({}9)'.format(spletter[0],len(spletter)*10.-1.,spletter[-1]))
             return 'N/A'
         spdec = numpy.around(inp,1)-spind*10.

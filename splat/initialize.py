@@ -20,6 +20,7 @@ SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
 GITHUB_URL = 'https://github.com/aburgasser/splat/'
 BIBCODE = '2017ASInC..14....7B'
+CITATION = 'Burgasser et al. (2017, Astro. Soc. India Conf. Series 14, p. 7)'
 EMAIL = 'aburgasser@gmail.com'
 TMPFILENAME = 'splattmpfile'
 MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -752,7 +753,7 @@ INDEX_SETS = {
         'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H2O-H': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H2O-K': {'ranges': ([1.975,1.995]*u.micron,[2.08,2.10]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
-        'K-J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
+        'K/J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H-dip': {'ranges': ([1.61,1.64]*u.micron,[1.56,1.59]*u.micron,[1.66,1.69]*u.micron), 'method': 'inverse_line', 'sample': 'integrate'},\
     }},
     'bardalez2014': {'altname': ['bardalez','bardalez14','bar14'], 'bibcode': '2014ApJ...794..143B', 'indices': {\
@@ -840,7 +841,7 @@ INDEX_SETS = {
         'sH2O_J': {'ranges': ([1.265,1.305]*u.micron,[1.09,1.13]*u.micron), 'method': 'change', 'sample': 'average'},\
         'sH2O_H1': {'ranges': ([1.60,1.70]*u.micron,[1.45,1.48]*u.micron), 'method': 'change', 'sample': 'average'},\
         'sH2O_H2': {'ranges': ([1.60,1.70]*u.micron,[1.77,1.81]*u.micron), 'method': 'change', 'sample': 'average'},\
-        'sH2O_K2': {'ranges': ([2.12,2.16]*u.micron,[1.96,1.99]*u.micron), 'method': 'change', 'sample': 'average'},\
+        'sH2O_K': {'ranges': ([2.12,2.16]*u.micron,[1.96,1.99]*u.micron), 'method': 'change', 'sample': 'average'},\
     }},
     'tokunaga1999': {'altname': ['tokunaga','tokunaga99','tok99'], 'bibcode': '1999AJ....117.1010T', 'indices': {\
         'K1': {'ranges': ([2.1,2.18]*u.micron,[1.96,2.04]*u.micron), 'method': 'change', 'sample': 'average'},\
@@ -852,11 +853,11 @@ INDEX_SETS = {
 # classification indices
 # need to add allers
 INDEX_CLASSIFICATION_RELATIONS = {
-    'reid2001': {'altname': ['reid','reid01','rei01'], 'bibcode': '2001AJ....121.1710R', 'method': 'polynomial', 'sptoffset': 20., 'sets': ['reid2001'], 'indices': { \
+    'reid2001': {'altname': ['reid','reid01','rei01'], 'bibcode': '2001AJ....121.1710R', 'method': 'polynomial', 'sptoffset': 20., 'decimal': False, 'min_indices': 1, 'sets': ['reid2001'], 'indices': { \
             'H2O-A': {'fitunc': 1.18, 'range': [18,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-32.1, 23.4]}, \
             'H2O-B': {'fitunc': 1.02, 'range': [18,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-24.9, 20.7]}}
     },
-    'testi2001': {'altname': ['testi','testi01','tes01'], 'bibcode': '2001ApJ...552L.147T', 'method': 'polynomial', 'sptoffset': 10., 'sets': ['testi2001'], 'indices': { \
+    'testi2001': {'altname': ['testi','testi01','tes01'], 'bibcode': '2001ApJ...552L.147T', 'method': 'polynomial', 'sptoffset': 10., 'decimal': True, 'min_indices': 2, 'sets': ['testi2001'], 'indices': { \
             'sHJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-1.87, 1.67]}, \
             'sKJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-1.20, 2.01]}, \
             'sH2O_J': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [1.54, 0.98]}, \
@@ -864,14 +865,14 @@ INDEX_CLASSIFICATION_RELATIONS = {
             'sH2O_H2': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [2.11, 0.29]}, \
             'sH2O_K': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1.,  'coeff': [2.36, 0.60]}}
     },
-    'burgasser2006': {'altname': ['burgasser','burgasser06','bur06'], 'bibcode': '2006ApJ...637.1067B', 'method': 'polynomial', 'sptoffset': 20., 'sets': ['burgasser2006'], 'indices': { \
+    'burgasser2007': {'altname': ['burgasser','burgasser07','bur07'], 'bibcode': '2007ApJ...659..655B', 'method': 'polynomial', 'sptoffset': 20., 'decimal': False, 'min_indices': 2, 'sets': ['burgasser2006'], 'indices': { \
             'H2O-J': {'fitunc': 0.8, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
             'H2O-H': {'fitunc': 1.0, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [9.087e-1, -3.221e1, 2.527e1, -1.978e1, 2.098e1]}, \
             'CH4-J': {'fitunc': 0.7, 'range': [30,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [1.491e2, -3.381e2, 2.424e2, -8.450e1, 2.708e1]}, \
             'CH4-H': {'fitunc': 0.3, 'range': [31,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
             'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
     },
-    'geballe2002': {'altname': ['geballe','geballe02','geb02'], 'bibcode': '2002ApJ...564..466G', 'method': 'ranges', 'sptoffset': 20., 'sets': ['geballe2002','martin1999'], 'indices': { \
+    'geballe2002': {'altname': ['geballe','geballe02','geb02'], 'bibcode': '2002ApJ...564..466G', 'method': 'ranges', 'sptoffset': 20., 'decimal': False, 'min_indices': 2, 'sets': ['geballe2002','martin1999'], 'indices': { \
             'PC3': [[2.4,2.6,20.],[2.6,2.86,21.],[2.85,3.25,22.],[3.25,4.25,23.],[4.25,6,24.]],\
             'Color-d2': [[4.5,5.5,20.],[5.5,6.5,21.],[6.5,7.5,22.],[7.5,10.,23.],[10,17,24.],[17.,23.,25.],[23.,25.,26.]],\
             'H2O-1.2': [[1.5,1.7,30.],[1.7,1.9,31.],[1.9,2.15,32.],[2.15,2.5,33.],[2.5,3.0,34.],[3.0,4.5,35.],[4.5,6.5,36.],[6.5,10.,37.],[10.,15.,38.]],\
@@ -879,10 +880,45 @@ INDEX_CLASSIFICATION_RELATIONS = {
             'CH4-1.6': [[1.02,1.07,30.],[1.07,1.15,31.],[1.15,1.3,32.],[1.3,1.5,33.],[1.5,1.8,34.],[1.8,2.5,35.],[2.5,4,36.],[4.,6.,37.],[6.,9.,38.]],\
             'CH4-2.2': [[0.91,0.94,23.],[0.94,0.98,24.],[0.98,1.025,25.],[1.025,1.075,26.],[1.075,1.125,27.],[1.125,1.175,28.],[1.175,1.25,29.],[1.25,1.4,30.],[1.4,1.6,31.],[1.6,1.95,32.],[1.95,2.75,33.],[2.75,3.8,34.],[3.8,5.5,35.],[5.5,8.5,36.],[8.5,12.,37],[12.,18.,38.]]}
     },
+    'allers2013': {'altname': ['allers','allers13','all13'], 'bibcode': '2013ApJ...657..511A', 'method': 'polynomial', 'sptoffset': 10., 'decimal': False, 'min_indices': 2, 'sets': ['allers2013','mclean2003','slesnick2004'], 'indices': { \
+             'H2O': {'fitunc': 0.390, 'range': [15,25], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [24.0476, -104.424, 169.388,-83.5437]}, \
+             'H2O-1': {'fitunc': 1.097, 'range': [14,25], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [28.5982, -80.7404, 39.3513, 12.1927]}, \
+             'H2OD': {'fitunc': 0.757, 'range': [20,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-97.230, 229.884, -202.245, 79.4477]}, \
+             'H2O-2': {'fitunc': 0.501, 'range': [14,22], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [37.5013, -97.8144, 55.4580, 10.8822]}},\
+    },
 }
 
-
-
+# indices for spectral binary identification
+SPECTRAL_BINARY_INDICES = {
+    'burgasser2010': {'altname': ['burgasser','burgasser10','bur10'], 'bibcode': '2010ApJ...710.1142B', 'index_set': 'burgasser2006', 'spt': True, 'sptoffset': 0, 'spt_range':[27,35],'strong':3,'weak':2, 'relations': [ \
+            {'indices': ['H2O-J','H2O-K'], 'coeff': [0.2/0.325,0.3], 'xlim':[0.325,0.65],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['CH4-H','CH4-K'], 'coeff': [0.425/0.4,-0.2875],'xlim':[0.6,1.0], 'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['CH4-H','K/J'], 'coeff': [0.125/0.35,0.01786],'xlim':[0.65,1.0], 'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['H2O-H','H-dip'], 'coeff': [0.49],'xlim':[0.5,0.875],'measure': 'individual', 'direction': 'low'},\
+            {'indices': ['SPT','H2O-J','H2O-H'], 'coeff': [-0.075/2,2.10625],'xlim':[28.5,33.5],'ylim':[0.18,0.925], 'measure': 'ratio2', 'direction': 'low'},\
+            {'indices': ['SPT','H2O-J','CH4-K'], 'coeff': [0.2/6.,-0.325],'xlim':[28.5,34.5], 'measure': 'ratio2', 'direction': 'low'},\
+            # {'indices': ['H2O-J','H2O-K'], 'points': ((0.325,0.5),(0.65,0.7)), 'method': 'individual', 'direction': 'y-high'},\
+            # {'indices': ['CH4-H','CH4-K'], 'points': ((0.6,0.35),(1.0,0.775)), 'method': 'individual', 'direction': 'y-high'},\
+            # {'indices': ['CH4-H','K/J'], 'points': ((0.65,0.25),(1.0,0.375)), 'method': 'individual', 'direction': 'y-high'},\
+            # {'indices': ['H2O-H','H-dip'], 'points': ((0.5,0.49),0.875,0.49), 'method': 'individual', 'direction': 'y-low'},\
+            # {'indices': ['SPT','H2O-J','H2O-H'], 'points': ((28.5,0.925),(31.5,0.925),(33.5,0.85)), 'method': 'ratio2', 'direction': 'y-low'},\
+            # {'indices': ['SPT','H2O-J','CH4-K'], 'points': ((28.5,0.625),(34.5,0.825)), 'method': 'ratio2', 'direction': 'y-low'},\
+    ]},
+    'bardalez2014': {'altname': ['baradlez','baradlez14','bar14'], 'bibcode': '2014ApJ...794..143B', 'index_set': 'bardalez2014', 'spt': True, 'sptoffset': 0, 'spt_range':[17,28], 'strong':8,'weak':4,'relations': [ \
+            {'indices': ['SPT','CH4-H'], 'coeff': [-0.00043,0.0253,0.7178-0.0354], 'xlim': [17,29],'measure': 'individual', 'direction': 'low'},\
+            {'indices': ['H2O-J','CH4-H'], 'coeff': [-0.08,1.09], 'xlim': [0.58,0.9],'measure': 'individual', 'direction': 'low'},\
+            {'indices': ['H2O-J','H-bump'], 'coeff': [0.16,0.806], 'xlim': [0.63,0.9],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['CH4-J','CH4-H'], 'coeff': [-0.56,1.41], 'xlim': [0.59,0.74],'ylim':[0.94,1.04],'measure': 'individual', 'direction': 'low'},\
+            {'indices': ['CH4-J','H-bump'], 'coeff': [1.0,0.24], 'xlim': [0.59,0.74],'ylim':[0.91,1.022],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['CH4-H','J-slope'], 'coeff': [1.250,0.-207], 'xlim': [0.938,1.03],'ylim':[1.03,1.135],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['CH4-H','J-curve'], 'coeff': [1.245,-1.565,2.224+0.088], 'xlim': [0.94,1.03],'ylim':[1.97,2.5],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['CH4-H','H-bump'], 'coeff': [1.36,-4.26,3.89-0.013], 'ylim':[0.92,1.03],'measure': 'individual', 'direction': 'low'},\
+            {'indices': ['J-slope','H-dip'], 'coeff': [0.20,0.27], 'xlim':[1.03,1.13],'measure': 'individual', 'direction': 'low'},\
+            {'indices': ['J-slope','H-bump'], 'coeff': [-2.75,3.84], 'ylim':[0.91,1.022],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['K-slope','H2O-Y'], 'coeff': [12.036,-20,8.973+0.064], 'xlim':[0.93,0.96],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['J-curve','H-bump'], 'coeff': [0.269,-1.326,2.479+0.048], 'xlim':[2.0,2.47],'ylim':[0.92,1.022],'measure': 'individual','direction': 'high'},\
+    ]},
+}
 # Empirical relations - SpT to Teff
 SPT_TEFF_RELATIONS = {
     'dupuy_saumon': {'altname': ['dupuy','dupuy17','dupuy2017','dup17','dupuy17_saumon','dupuy2017_saumon','dup17-saumon'], 'reference': 'Dupuy et al. (2017)','bibcode': '',
@@ -1381,7 +1417,7 @@ SPT_ABSMAG_RELATIONS = {
 
 # Empirical relations - SpT to chi value (Halpha EW to LHa/Lbol)
 SPT_CHI_RELATIONS = {
-    'schmidt2014': {'altname': ['schmidt','schmidt14'], 'reference': 'Schmidt et al. (2014)','bibcode':'2014PASP..126..642S', 'sptoffset': 0, 'method': 'interpolate', 'scale': 1.e-4,
+    'schmidt2014': {'altname': ['schmidt','schmidt14'], 'reference': 'Schmidt et al. (2014)','bibcode':'2014PASP..126..642S', 'sptoffset': 0, 'method': 'interpolate', 'scale': 1.e-6,
         'spt': [17,18,19,20,21,22,23,24,25,26,27], \
         'values': [10.28,4.26,2.52,1.98,2.25,2.11,1.67,1.16,1.46,1.23,0.73],\
         'scatter': [3.13,1.18,0.58,0.27,0.11,0.36,0.22,0.3,0.28,0.3,0.3],\
