@@ -7010,12 +7010,12 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
 
 # plot spectrum compared to best spectrum
     if plot == True:
-        spcomp = sp2.copy()
+        spcomp = copy.deepcopy(sp2)
         spcomp.scale(scale_factor)
         kwargs['colors'] = kwargs.get('colors',['k','m','b'])
         kwargs['title'] = kwargs.get('title',sp1.name+' vs '+sp2.name)
         from .plot import plotSpectrum
-        plotSpectrum(sp1,spcomp,sp1-spcomp,labels=[sp1.name,sp2.name,'{} = {}'.format(statistic,stat)],**kwargs)
+        plotSpectrum([sp1,spcomp,sp1-spcomp],labels=[sp1.name,sp2.name,'{} = {}'.format(statistic,stat)],**kwargs)
 
 
     return numpy.nanmax([stat,minreturn])*unit, scale_factor

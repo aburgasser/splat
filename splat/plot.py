@@ -35,7 +35,7 @@ def plotMap(*args,**kwargs):
     """
     :Purpose: Plot coordinates onto an equatorial map grid
 
-    :Input
+    :Input:
     One or more coordinates, specified as astropy.coordinates.SkyCoord objects, two-element arrays 
     (RA and declination in decimal degrees), or string coordinate designation; the latter two are 
     converted to SkyCoord variables using `splat.properCoordinates()`
@@ -826,6 +826,7 @@ def plotSpectrum(inp,xrng=[],yrng=[],xlabel='',ylabel='',xlog=False,ylog=False,g
         if filetype.lower() == 'pdf':
             pdf_pages.close()
 
+    plt.clf()
     return fig
 
 

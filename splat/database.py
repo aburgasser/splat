@@ -24,7 +24,7 @@ import pandas
 from astropy.io import ascii, fits            # for reading in spreadsheet
 from astropy.table import Column, Table, join, vstack           # for reading in table files
 from astropy.time import Time            # for reading in table files
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import Angle,SkyCoord,Galactic,BarycentricTrueEcliptic,match_coordinates_sky,search_around_sky
 from astropy import units as u            # standard units
 from astroquery.simbad import Simbad
 from astroquery.vizier import Vizier
@@ -52,43 +52,105 @@ Nist.TIMEOUT = 60
 XMatch.TIMEOUT = 180
 
 
-#####################################################
-###########   DATABASE QUERY AND ACCESS   ###########
-#####################################################
+##########################################################
+###########   DATABASE QUERY, ACCESS & TOOLS   ###########
+##########################################################
 
-def prepDB(db_init,raCol='RA',decCol='DEC',desigCol='DESIGNATION',force=False):
+def prepDB(db_init,raCol='RA',decCol='DEC',desigCol='DESIGNATION',shortnameCol='SHORTNAME',coordinateCol='COORDINATES',force=False,verbose=False):
     '''
-    Prep a pandas database for DESIGNATION join
-    Populates RA, DEC, DESIGNATION and SHORTNAME columns if not present
-    Requires RA, DEC or DESIGNATION to be present
+    Purpose
+    -------
+
+    Populates RA, DEC, DESIGNATION, COORDINATE and SHORTNAME columns if not present
+    Requires RA and DEC, or DESIGNATION to be present
     '''
     db = copy.deepcopy(db_init)
     if raCol not in list(db.columns) or decCol not in list(db.columns): 
         if desigCol not in list(db.columns):
             raise ValueError('Database must have columns {} and {}, or {}'.format(raCol,decCol,desigCol))
         else:
-            db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
+            db[coordinateCol] = [splat.designationToCoordinate(d) for d in db[desigCol]]
             if raCol not in list(db.columns) or decCol not in list(db.columns): 
-                db[raCol] = [c.ra.degree for c in db['COORDINATES']]
-                db[decCol] = [c.dec.degree for c in db['COORDINATES']]
+                db[raCol] = [c.ra.degree for c in db[coordinateCol]]
+                db[decCol] = [c.dec.degree for c in db[coordinateCol]]
     if desigCol not in list(db.columns):
         db[desigCol] = [splat.coordinateToDesignation([db[raCol].iloc[i],db[decCol].iloc[i]]) for i in range(len(db))]
-    if 'COORDINATES' not in list(db.columns):
-        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
-#    if 'SHORTNAME' not in list(db.columns):
-#        db['SHORTNAME'] = [splat.designationToShortName(d) for d in db['DESIGNATION']]
-
+    if shortnameCol not in list(db.columns):
+        db[shortnameCol] = [splat.designationToShortName(d) for d in db[desigCol]]
 # force COORDINATES, RA, DEC if desired
     if force == True:
-        db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
-        db[raCol] = [c.ra.degree for c in db['COORDINATES']]
-        db[decCol] = [c.dec.degree for c in db['COORDINATES']]
-#        db['SHORTNAME'] = [splat.designationToShortName(d) for d in db['DESIGNATION']]        
+        db[coordinateCol] = [splat.designationToCoordinate(d) for d in db[desigCol]]
+        db[raCol] = [c.ra.degree for c in db[coordinateCol]]
+        db[decCol] = [c.dec.degree for c in db[coordinateCol]]
+        db[shortnameCol] = [splat.designationToShortName(d) for d in db[desigCol]]
     return db   
+
+def longCoordList(dp,imax=10000):
+    '''
+    Purpose
+    -------
+
+    Creates a SkyCoord array of more than 10,000 coordinates
+    '''
+    for i in range(int(len(dp)/imax)):
+        c0 = SkyCoord(ra=dp['RA'].iloc[(i*imax):((i+1)*imax)]*u.degree,dec=dp['DEC'].iloc[(i*imax):((i+1)*imax)]*u.degree)
+        if i==0: c = c0
+        else: c = c0.insert(0,c)
+    c0 = SkyCoord(ra=dp['RA'].iloc[((i+1)*imax):]*u.degree,dec=dp['DEC'].iloc[((i+1)*imax):]*u.degree)
+    c = c0.insert(0,c)
+    return(c)
+    
+def catXMatch(dp1,dp2,sep=5*u.arcsec,imax = 10000,merge=False):
+    '''
+    Purpose
+    -------
+
+    Cross-matches two catalogs and return only those sources in common within the specified separation 
+    '''
+    sep = sep.to(u.arcsec)
+    dp1p = prepDB(dp1)
+    dp2p = prepDB(dp2)
+    if len(dp1p)>imax: c1 = longCoordList(dp1p)
+    else: c1 = SkyCoord(ra=dp1p['RA']*u.degree,dec=dp1p['DEC']*u.degree)
+    if len(dp2p)>imax: c2 = longCoordList(dp2p)
+    else: c2 = SkyCoord(ra=dp2p['RA']*u.degree,dec=dp2p['DEC']*u.degree)
+    idx, sep2d, sep3d = match_coordinates_sky(c1,c2)
+    dp1p['separation'] = [s.to(u.arcsec).value for s in sep2d]
+    dp1pc = dp1p[dp1p['separation']<sep.value]
+    idx, sep2d, sep3d = match_coordinates_sky(c2,c1)
+    dp2p['separation'] = [s.to(u.arcsec).value for s in sep2d]
+    dp2pc = dp2p[dp2p['separation']<sep.value]
+
+    dp1pc.reset_index(inplace=True,drop=True)
+    dp2pc.reset_index(inplace=True,drop=True)
+    
+    return dp1pc,dp2pc
+
+def sourceXMatch(c,dp2,sep=5*u.arcsec,imax = 10000):
+    '''
+    Purpose
+    -------
+
+    Cross-matches a coordinate with a catalog and returns only those sources within the specified separation 
+    '''
+    sep = sep.to(u.arcsec)
+    if not isinstance(c,SkyCoord): c = splat.properCoordinates(c)
+    dp2p = prepDB(dp2)
+    if len(dp2p)>imax: c2 = longCoordList(dp2p)
+    else: c2 = SkyCoord(ra=dp2p['RA']*u.degree,dec=dp2p['DEC']*u.degree)
+    d2d = c.separation(c2).arcsec
+    dp2p['separation'] = d2d
+    dp2pc = dp2p[dp2p['separation']<sep.value]
+    dp2pc.reset_index(inplace=True,drop=True)
+    
+    return dp2pc
 
 def fetchDatabase(*args, **kwargs):
     '''
-    :Purpose: Get the SpeX Database from either online repository or local drive
+    Purpose
+    -------
+
+    Get the SpeX Database from either online repository or local drive
     '''
     filename = 'db_spexprism.txt'   # temporary original database file for backwards compatability
     if len(args) > 0:
