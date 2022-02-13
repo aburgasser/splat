@@ -2974,7 +2974,7 @@ def _modelFitPlotComparison(spec,model,display=True,**kwargs):
 
 
 
-def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True, statistic='chisqr', verbose=False, output='fit', radius=0.1*u.Rsun, radius_tolerance=0.01*u.Rsun, radius_model='', constrain_radius=False, **kwargs):
+def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True, statistic='chisqr', verbose=False, output='fit', radius=0.1*u.Rsun, radius_tolerance=0.01*u.Rsun, radius_model='', compute_radius=False, constrain_radius=False, **kwargs):
     '''
     :Purpose: 
 
@@ -3104,7 +3104,7 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
     spec = copy.deepcopy(specin)
 
 # plotting and reporting keywords
-    compute_radius = kwargs.get('compute_radius', spec.fscale == 'Absolute')
+#    compute_radius = kwargs.get('compute_radius', spec.fscale == 'Absolute')
     output = kwargs.get('filename',output)
     output = kwargs.get('file',output)
     plot_format = kwargs.get('plot_format','pdf')
@@ -3300,7 +3300,7 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
 
 
 
-def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbose=False, nsamples=1000, burn=0.1, **kwargs):
+def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbose=False, showRadius=False, nsamples=1000, burn=0.1, **kwargs):
     '''
     :Purpose: Uses Metropolis-Hastings Markov Chain Monte Carlo method to compare a spectrum to
                 atmosphere models. Returns the best estimate of whatever parameters are allowed to
@@ -3390,7 +3390,7 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
 
 
 # plotting and reporting keywords
-    showRadius = kwargs.get('showRadius', spec.fscale == 'Absolute')
+#    showRadius = kwargs.get('showRadius', spec.fscale == 'Absolute')
     showRadius = kwargs.get('radius', showRadius)
     try:
         filebase = kwargs.get('filebase', 'fit_'+spec.name+'_'+mset)
@@ -4057,7 +4057,7 @@ def _modelFitMCMC_reportResults(spec,dp,*arg,**kwargs):
 
 
 
-def modelFitEMCEE(specin, mset='BTSettl2008', instrument='SPEX-PRISM', initial={}, nofit = [], nwalkers=10, nsamples=100, threads=1, burn=0.5, propose_scale=1.1, verbose=False, **kwargs):
+def modelFitEMCEE(specin, mset='BTSettl2008', instrument='SPEX-PRISM', initial={}, nofit = [], showRadius=False, nwalkers=10, nsamples=100, threads=1, burn=0.5, propose_scale=1.1, verbose=False, **kwargs):
     '''
     :Purpose: Uses the ``emcee`` package by Dan Foreman-Mackey et al. to perform 
         Goodman & Weare's Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler
@@ -4158,9 +4158,6 @@ def modelFitEMCEE(specin, mset='BTSettl2008', instrument='SPEX-PRISM', initial={
     feedback_width = 50
 
 # plotting and reporting keywords
-    showRadius = False
-    try: showRadius = (spec.fscale == 'Absolute')
-    except: pass
     showRadius = kwargs.get('radius', showRadius)
     filebase = kwargs.get('output', 'fit_')
     filebase = kwargs.get('filename',filebase)
@@ -4655,7 +4652,7 @@ def _modelFitEMCEE_summary(sampler,spec,file,**kwargs):
 
 
 
-def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
+def calcLuminosity(sp, mdl=False, absmags={}, **kwargs):
     '''
     :Purpose: Calculate luminosity from photometry and stitching models.
 
@@ -4693,7 +4690,7 @@ def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
 # steps:
 # scale spectrum to absolute magnitude if necessary and integrate flux, varying noise and including variance in abs mag factor
     spcopy = sp
-    if spcopy.fscale != 'Absolute':
+    if len(list(absmags.keys()))>0:
         scale = []
         scale_unc = []
         for k in absmags.keys():
@@ -4706,7 +4703,7 @@ def calcLuminosity(sp, mdl=False, absmags=False, **kwargs):
             raise ValueError('\nNo absolute magnitudes provided to scale spectrum; you specified:\n{}'.format(absmags.keys()))
         scl,scl_e = weightedMeanVar(scale,scale_unc,uncertainty=True)
         spcopy.scale(numpy.mean(scl))
-        spcopy.fscale = 'Absolute'
+#        spcopy.fscale = 'Absolute'
 
 # integrate data
 # NEED TO INSERT UNCERTAINTY HERE

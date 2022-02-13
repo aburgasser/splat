@@ -5929,7 +5929,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
 
 
 
-def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
+def classifyByStandard(sp, std_class='dwarf',dof=-1, **kwargs):
     '''
     :Purpose: 
         Determine the spectral type and uncertainty for a
@@ -6019,6 +6019,7 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
     if (isinstance(sptrange[0],str) != False):
         sptrange = [typeToNum(sptrange[0]),typeToNum(sptrange[1])]
     unc_sys = 0.5       # assumed systematic uncertainty
+    if dof<0: dof=len(sp.wave)
 
 
 # if you just want to compare to one standard
@@ -6153,7 +6154,7 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
         if numpy.isnan(numpy.median(sp.noise)):
             mean,var = weightedMeanVar(ssptn,st)
         else:
-            mean,var = weightedMeanVar(ssptn,st,method='ftest',dof=sp.dof)
+            mean,var = weightedMeanVar(ssptn,st,method='ftest',dof=dof)
         if (var**0.5 < 1.):
             sptn = numpy.round(mean*2)*0.5
         else:
@@ -6205,7 +6206,7 @@ def classifyByStandard(sp, std_class='dwarf', *args, **kwargs):
 
 
 
-def classifyByTemplate(sp, *args, **kwargs):
+def classifyByTemplate(sp, dof=-1, **kwargs):
     '''
     :Purpose: Determine the spectral type and uncertainty for a
                 spectrum by direct comparison to a large set of spectra in
@@ -6336,6 +6337,7 @@ def classifyByTemplate(sp, *args, **kwargs):
     fit_ranges = kwargs.get('comprng',fit_ranges)
     if not isinstance(fit_ranges[0],list):
         fit_ranges = [fit_ranges]
+    if dof<0: dof = len(sp.wave)
 
 #  canned searches
 #  constrain spectral types
@@ -6474,7 +6476,7 @@ def classifyByTemplate(sp, *args, **kwargs):
         sptn = sorted_spt[0]
         sptn_e = unc_sys
     else:
-        mean,var = weightedMeanVar(sspt,stat,method='ftest',dof=sp.dof)
+        mean,var = weightedMeanVar(sspt,stat,method='ftest',dof=dof)
 # allow 1/2 subtypes if uncertainty is less than 1.0
         if (var**0.5 < 1.):
             sptn = numpy.round(mean*2.)*0.5
