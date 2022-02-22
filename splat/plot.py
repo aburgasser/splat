@@ -157,7 +157,7 @@ def plotMap(*args,**kwargs):
     if kwargs.get('galactic',False) != False:
         lng = Angle(numpy.arange(-180.,180.,1.)*u.degree)
         lat = Angle(numpy.zeros(len(lng))*u.degree)
-        s = SkyCoord(Galactic,l=lng,b=lat)
+        s = SkyCoord(l=lng,b=lat,frame='galactic')
         mra = s.icrs.ra
         mra = [c.wrap_at(180*u.degree) for c in mra]
         mra = [c.radian for c in mra]
@@ -170,7 +170,7 @@ def plotMap(*args,**kwargs):
     if kwargs.get('ecliptic',False) != False:
         lng = Angle(numpy.arange(-180.,180.,1.)*u.degree)
         lat = Angle(numpy.zeros(len(lng))*u.degree)
-        s = SkyCoord(BarycentricTrueEcliptic,lon=lng,lat=lat)
+        s = SkyCoord(lon=lng,lat=lat,frame='barycentrictrueecliptic')
         mra = s.icrs.ra
         mra = [c.wrap_at(180*u.degree) for c in mra]
         mra = [c.radian for c in mra]

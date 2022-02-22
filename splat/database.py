@@ -83,6 +83,9 @@ def prepDB(db_init,raCol='RA',decCol='DEC',desigCol='DESIGNATION',shortnameCol='
         db[raCol] = [c.ra.degree for c in db[coordinateCol]]
         db[decCol] = [c.dec.degree for c in db[coordinateCol]]
         db[shortnameCol] = [splat.designationToShortName(d) for d in db[desigCol]]
+# remove extra space in designation string
+    db[desigCol] = [x.strip() for x in db[desigCol]]
+
     return db   
 
 def longCoordList(dp,imax=10000):
@@ -399,6 +402,37 @@ def addUserSpectra(folder='./',instrument='SPEX-PRISM',mode='update',repeat='ret
 #####################################################
 ###########   ACCESSING ONLINE CATALOGS   ###########
 #####################################################
+
+
+def getVizierName(catalog,output=False):
+    '''
+    Wrapper function for Vizier.find_catalogs to help search for Vizier catalog names
+    '''
+    catalog_list = Vizier.find_catalogs(catalog)
+    output={}
+    for k,v in catalog_list.items(): 
+        print('{}: {}'.format(k,v.description))
+        output[k] = v.description
+    if output==True: return output
+    else: return
+
+def getVizierCatalog(catalog,catnum=0,verbose=True,limit=-1,return_pandas=True):
+    '''
+    Wrapper function for Vizier.get_catalogs which returns a single whole catalog
+    '''
+    if limit<0: Vizier.ROW_LIMIT = -1
+    else: Vizier.ROW_LIMIT = int(limit)
+    catalogs = Vizier.get_catalogs(catalog)
+    Vizier.ROW_LIMIT = 50
+    if len(catalogs)<1: 
+        raise ValueError('Catalog {} is not in Vizier; use getVizierName() to check for catalog ID'.format(catalog))
+    catnum = int(numpy.min([catnum,len(catalogs)]))
+    if verbose==True: 
+        print('{} catalog(s) identified, returning the {}th one: {}'.format(len(catalogs),catnum,list(catalogs.keys())[catnum]))
+    if return_pandas==True:
+        return catalogs[catnum].to_pandas()
+    else:
+        return catalogs[catnum]
 
 
 def queryVizier(coordinate,**kwargs):
@@ -968,7 +1002,7 @@ def queryNist(element,wave_range,clean=['Observed'],noclean=False,verbose=True,w
 
 
 
-def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNATION',raCol='RA',decCol='DEC',verbose=False,clean=True,drop_repeats=True,use_select_columns=False,select_columns=[],prefix=None,info=False,*args):
+def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNATION',raCol='RA',decCol='DEC',verbose=False,clean=True,drop_repeats=True,use_select_columns=False,select_columns=[],prefix=None,info=False,debug=False,*args):
     '''
     Purpose
         Queries databases in the XXX XMatch service (REF), including SIMBAD
@@ -1115,12 +1149,15 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
     t = t.from_pandas(db[basecols])
     t_match = XMatch.query(t,vref,radius,colRA1=raCol,colDec1=decCol,columns=["**", "+_r"])
     db_match = t_match.to_pandas()
+    if debug==True: 
+        print('Found {} matches'.format(len(db_match)))
+        print(db_match.iloc[0])
 
 # reject repeats if desired
     if drop_repeats == True:
         db_match.drop_duplicates(subset=desigCol,keep='first',inplace=True)
         db_match.reset_index(drop=True,inplace=True)
-            
+
 # constrain columns and rename
     if len(select_columns)>0:
         if len(select_columns) == 0: 
@@ -1148,6 +1185,10 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
     db_merge = pandas.merge(db,db_match,how='left',on=desigCol,suffixes=('','_DROP'))
     for c in list(db_merge.columns):
         if '_DROP' in c: del db_merge[c]
+
+    if debug==True: 
+        print(db_merge.iloc[0])
+            
 
 # save out
     if file != '':
