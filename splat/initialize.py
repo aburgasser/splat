@@ -768,7 +768,7 @@ INDEX_SETS = {
         'K-slope': {'ranges': ([2.06,2.10]*u.micron,[2.10,2.14]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'J-slope': {'ranges': ([1.27,1.30]*u.micron,[1.30,1.33]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'J-curve': {'ranges': ([1.04,1.07]*u.micron,[1.26,1.29]*u.micron,[1.14,1.17]*u.micron), 'method': 'line', 'sample': 'integrate'},\
-        'H-bump': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
+        'H-bump': {'ranges': ([1.54,1.57]*u.micron,[1.66,1.69]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H2O-Y': {'ranges': ([1.04,1.07]*u.micron,[1.14,1.17]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
     }},
     'covey2010': {'altname': ['covey','covey10','cov10'], 'bibcode': '2010ApJ...722..971C', 'indices': {\
@@ -906,17 +906,17 @@ SPECTRAL_BINARY_INDICES = {
     ]},
     'bardalez2014': {'altname': ['bardalez','bardalez14','bar14'], 'bibcode': '2014ApJ...794..143B', 'index_set': 'bardalez2014', 'spt': True, 'sptoffset': 0, 'spt_range':[17,28], 'strong':8,'weak':4,'relations': [ \
             {'indices': ['SPT','CH4-H'], 'coeff': [-0.00043,0.0253,0.7178-0.0354], 'xlim': [17,29],'measure': 'individual', 'direction': 'low'},\
-            {'indices': ['H2O-J','CH4-H'], 'coeff': [-0.08,1.09], 'xlim': [0.58,0.9],'measure': 'individual', 'direction': 'low'},\
-            {'indices': ['H2O-J','H-bump'], 'coeff': [0.16,0.806], 'xlim': [0.63,0.9],'measure': 'individual', 'direction': 'high'},\
-            {'indices': ['CH4-J','CH4-H'], 'coeff': [-0.56,1.41], 'xlim': [0.59,0.74],'ylim':[0.94,1.04],'measure': 'individual', 'direction': 'low'},\
-            {'indices': ['CH4-J','H-bump'], 'coeff': [1.0,0.24], 'xlim': [0.59,0.74],'ylim':[0.91,1.022],'measure': 'individual', 'direction': 'high'},\
-            {'indices': ['CH4-H','J-slope'], 'coeff': [1.250,0.-207], 'xlim': [0.938,1.03],'ylim':[1.03,1.135],'measure': 'individual', 'direction': 'high'},\
-            {'indices': ['CH4-H','J-curve'], 'coeff': [1.245,-1.565,2.224+0.088], 'xlim': [0.94,1.03],'ylim':[1.97,2.5],'measure': 'individual', 'direction': 'high'},\
-            {'indices': ['CH4-H','H-bump'], 'coeff': [1.36,-4.26,3.89-0.013], 'ylim':[0.92,1.03],'measure': 'individual', 'direction': 'low'},\
-            {'indices': ['J-slope','H-dip'], 'coeff': [0.20,0.27], 'xlim':[1.03,1.13],'measure': 'individual', 'direction': 'low'},\
-            {'indices': ['J-slope','H-bump'], 'coeff': [-2.75,3.84], 'ylim':[0.91,1.022],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['H2O-J','CH4-H'], 'coeff': [-0.08,1.09], 'xlim': [-10,0.9],'measure': 'individual', 'direction': 'low'},\
+            {'indices': ['H2O-J','H-bump'], 'coeff': [0.16,0.806], 'xlim': [-10,0.9],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['CH4-J','CH4-H'], 'coeff': [-0.56,1.41], 'xlim': [-10,0.74],'ylim':[-10,1.04],'measure': 'individual', 'direction': 'low'},\
+            {'indices': ['CH4-J','H-bump'], 'coeff': [1.0,0.24], 'xlim': [-10,0.74],'ylim':[0.91,10.],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['CH4-H','J-slope'], 'coeff': [1.250,0.-207], 'xlim': [-10,1.03],'ylim':[1.03,10.],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['CH4-H','J-curve'], 'coeff': [1.245,-1.565,2.224+0.088], 'xlim': [-10,1.03],'ylim':[1.97,10.],'measure': 'individual', 'direction': 'high'},\
+            {'indices': ['CH4-H','H-bump'], 'coeff': [1.36,-4.26,3.89-0.013], 'ylim':[-10,1.03],'measure': 'individual', 'direction': 'low'},\
+            {'indices': ['J-slope','H-dip'], 'coeff': [0.20,0.27], 'xlim':[1.03,10.],'measure': 'individual', 'direction': 'low'},\
+            {'indices': ['J-slope','H-bump'], 'coeff': [-2.75,3.84], 'ylim':[0.91,10.],'measure': 'individual', 'direction': 'high'},\
             {'indices': ['K-slope','H2O-Y'], 'coeff': [12.036,-20,8.973+0.064], 'xlim':[0.93,0.96],'measure': 'individual', 'direction': 'high'},\
-            {'indices': ['J-curve','H-bump'], 'coeff': [0.269,-1.326,2.479+0.048], 'xlim':[2.0,2.47],'ylim':[0.92,1.022],'measure': 'individual','direction': 'high'},\
+            {'indices': ['J-curve','H-bump'], 'coeff': [0.269,-1.326,2.479+0.048], 'xlim':[2.0,10.],'ylim':[0.92,10],'measure': 'individual','direction': 'high'},\
     ]},
 }
 # Empirical relations - SpT to Teff

@@ -6678,7 +6678,7 @@ def classifyGravity(sp, *args, **kwargs):
 
 
 
-def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=None,classify='indices',classify_parameters=None,index_definitions=SPECTRAL_BINARY_INDICES,verbose=False,**kwargs):
+def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=None,classify='standard',classify_parameters=None,index_definitions=SPECTRAL_BINARY_INDICES,verbose=False,**kwargs):
     """
     Determines whether a spectrum of an ultracool dwarf is that of a spectral binary using the index-based methods
     of Burgasser et al. (2010; 2010ApJ...710.1142B) and Bardalez Gagliuffi et al. (2014; 2014ApJ...794..143B)
@@ -6756,7 +6756,6 @@ def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=Non
     tmp = checkDict(ref,index_definitions)
     if tmp==False: raise ValueError('Reference set {} is not one of the options for the spectral binary indices: {}'.format(ref,list(index_definitions,keys())))
     index_data = copy.deepcopy(index_definitions[tmp])
-    if verbose==True: print('Using the {} spectral binary classification indices'.format(tmp))
     if indices==None: indices = {}
     if classify_parameters==None: classify_parameters = {}
 
@@ -6769,17 +6768,17 @@ def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=Non
                     classify = 'standard'
                 else: 
                     spt,spt_e = classifyByTemplate(sp,**classify_parameters)
-                    if verbose==True: print('Classified spectrum by template: result = {}'.format(spt))
+                    if verbose==True: print('\nClassified spectrum by template: result = {}'.format(spt))
             if classify.lower() in ['standard','std','standards']: 
                 if len(classify_parameters.keys())==0: 
                     classify_parameters['method']='kirkpatrick'
                     classify_parameters['telluric']=True
                 spt,spt_e = classifyByStandard(sp,**classify_parameters)
-                if verbose==True: print('Classified spectrum by standards: result = {}'.format(spt))
+                if verbose==True: print('\nClassified spectrum by standards: result = {}'.format(spt))
             if classify.lower() in ['index','indices','ind']: 
                 if len(classify_parameters.keys())==0: classify_parameters['ref']='burgasser2007'
                 spt,spt_e = classifyByIndex(sp,**classify_parameters)
-                if verbose==True: print('Classified spectrum by indices: result = {}'.format(spt))
+                if verbose==True: print('\nClassified spectrum by indices: result = {}'.format(spt))
             if spt=='' : 
                 if verbose==True: print('classify parameter {} is not one of the allowed values; classifying by indices'.format(classify))
 #    if not isNumber(spt): spt = typeToNum(spt)
@@ -6795,9 +6794,12 @@ def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=Non
         for k in index_required:
             if k not in list(indices.keys()): remeasure=True
     if remeasure==True:
+        if verbose==True: print('\nMeasuring indices using the {} definitions'.format(index_data['index_set']))
         indices_measured = measureIndexSet(sp,ref=index_data['index_set'])
         for k in list(indices_measured.keys()):
-            if k not in list(indices.keys()): indices[k] = indices_measured[k]
+            if k not in list(indices.keys()): 
+                indices[k] = indices_measured[k]
+                if verbose==True: print('\t{} = {:.2f}+/-{:.2f}'.format(k,indices[k][0],indices[k][1]))
 
     if index_data['spt']==True:
         if 'SPT' not in list(indices.keys()): indices['SPT'] = spt
@@ -6814,6 +6816,7 @@ def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=Non
     criteria=[]
     class_dict = {}
 
+    if verbose==True: print('\nUsing the {} spectral binary classification indices'.format(tmp))
     for k in index_data['relations']:
         crit = 1
 # extract specific values of x, y
@@ -6846,9 +6849,9 @@ def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=Non
     if numpy.sum(numpy.array(criteria))>=index_data['weak']: classification = 'weak'
     if numpy.sum(numpy.array(criteria))>=index_data['strong']: classification = 'strong'
     if indices['SPT'] < index_data['spt_range'][0] or indices['SPT'] > index_data['spt_range'][1]: 
-        if verbose==True: print('Spectral classification {} is outside range of {} relation: {}'.format(typeToNum(indices['SPT']),ref,[typeToNum(x) for x in index_data['spt_range']]))
+        if verbose==True: print('\nSpectral classification {} is outside range of {} relation: {}'.format(typeToNum(indices['SPT']),ref,[typeToNum(x) for x in index_data['spt_range']]))
         classification='fail'
-    if verbose==True: print('Spectral binary classification: {}'.format(classification))
+    if verbose==True: print('\nSpectral binary classification: {}'.format(classification))
 
 # return output
     if output in ['class','classification']: return classification    
