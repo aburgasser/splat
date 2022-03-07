@@ -904,7 +904,7 @@ SPECTRAL_BINARY_INDICES = {
             # {'indices': ['SPT','H2O-J','H2O-H'], 'points': ((28.5,0.925),(31.5,0.925),(33.5,0.85)), 'method': 'ratio2', 'direction': 'y-low'},\
             # {'indices': ['SPT','H2O-J','CH4-K'], 'points': ((28.5,0.625),(34.5,0.825)), 'method': 'ratio2', 'direction': 'y-low'},\
     ]},
-    'bardalez2014': {'altname': ['baradlez','baradlez14','bar14'], 'bibcode': '2014ApJ...794..143B', 'index_set': 'bardalez2014', 'spt': True, 'sptoffset': 0, 'spt_range':[17,28], 'strong':8,'weak':4,'relations': [ \
+    'bardalez2014': {'altname': ['bardalez','bardalez14','bar14'], 'bibcode': '2014ApJ...794..143B', 'index_set': 'bardalez2014', 'spt': True, 'sptoffset': 0, 'spt_range':[17,28], 'strong':8,'weak':4,'relations': [ \
             {'indices': ['SPT','CH4-H'], 'coeff': [-0.00043,0.0253,0.7178-0.0354], 'xlim': [17,29],'measure': 'individual', 'direction': 'low'},\
             {'indices': ['H2O-J','CH4-H'], 'coeff': [-0.08,1.09], 'xlim': [0.58,0.9],'measure': 'individual', 'direction': 'low'},\
             {'indices': ['H2O-J','H-bump'], 'coeff': [0.16,0.806], 'xlim': [0.63,0.9],'measure': 'individual', 'direction': 'high'},\

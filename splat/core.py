@@ -2678,6 +2678,12 @@ class Spectrum(object):
         '''
         method = kwargs.get('method','hanning')
         kwargs['method'] = method
+
+# add in resolution keyword if not present
+        if 'resolution' not in list(self.__dict__.keys()):
+            i = int(0.5*len(self.wave.value))
+            self.resolution = self.wave.value[i]/numpy.abs(self.wave.value[i]-self.wave.value[i+1])
+
 # do nothing if requested resolution is higher than current resolution
         if width > 2.:
 # convolve a function to smooth spectrum
@@ -2687,10 +2693,10 @@ class Spectrum(object):
             self.variance = signal.convolve(self.variance.value, window/numpy.sum(window), mode='same')/neff*(self.flux_unit**2)
             self.noise = [n**0.5 for n in self.variance.value]*self.flux_unit
             self.snr = self.computeSN()
-            self.resolution = self.resolution*self.slitpixelwidth/width
-            self.slitwidth = self.slitwidth*width/self.slitpixelwidth
-            self.slitpixelwidth = width
-            self.history.append('Smoothed to slit pixel width of {}'.format(self.slitpixelwidth))
+            self.resolution = self.resolution/width
+#            self.slitwidth = self.slitwidth*width/self.slitpixelwidth
+#            self.slitpixelwidth = width
+            self.history.append('Smoothed to pixel width of {}'.format(width))
         else:
             print('\nTarget slit width {} is less than 2 pixels; no change made'.format(width))
         return
@@ -2735,6 +2741,17 @@ class Spectrum(object):
         method = kwargs.get('method','hanning')
         kwargs['method'] = method
         if not isUnit(width): width=width*u.arcsec
+
+# add in resolution keyword if not present
+        if 'resolution' not in list(self.__dict__.keys()):
+            i = int(0.5*len(self.wave.value))
+            self.resolution = self.wave.value[i]/numpy.abs(self.wave.value[i]-self.wave.value[i+1])
+# add in resolution keyword if not present
+        if 'slitpixelwidth' not in list(self.__dict__.keys()): self.slitpixelwidth = 1
+
+# if slitwidth not present, do nothing
+        if 'slidwidth' not in list(self.__dict__.keys()): return
+
         pwidth = self.slitpixelwidth*(width/self.slitwidth).value
         self._smoothToSlitPixelWidth(pwidth,**kwargs)
         return
