@@ -7598,7 +7598,7 @@ def measureIndexSet(sp,ref='burgasser',index_info={},info=False,verbose=False,in
                 raise ValueError('Keyword "{}" must be present for each defined index in input index dictionary, but is missing for index {}'.format(k,n))
 
 # measure indices
-    result = {}
+    result = {'reference': ref,'bibcode': INDEX_SETS[ref]['bibcode']}
     for n in names:
         ind,err = measureIndex(sp,index_info[indices_keyword][n][range_keyword],method=index_info[indices_keyword][n][method_keyword],sample=index_info[indices_keyword][n][sample_keyword],verbose=verbose,**kwargs)
         result[n] = (ind,err)
