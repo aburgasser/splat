@@ -14,7 +14,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2022.03.07'
+VERSION = '2022.07.05'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -73,20 +73,21 @@ EXTERNAL_EVOLUTIONARY_MODELS_FILE = '.splat_evolutionary_models'
 ACCESS_FILE = '.splat_access'
 
 #set the SPLAT PATH, either from set environment variable or from sys.path
-SPLAT_PATH = './'
-if os.environ.get('SPLAT_PATH') != None:
-    SPLAT_PATH = os.environ['SPLAT_PATH']
-# get from PYTHONPATH
-if os.environ.get('PYTHONPATH') != None and SPLAT_PATH == './':
-    path = os.environ['PYTHONPATH']
-    for i in path.split(':'):
-        if 'splat' in i:
-            SPLAT_PATH = i
-# get from system path
-if SPLAT_PATH == './':
-    checkpath = ['splat' in r for r in sys.path]
-    if max(checkpath):
-        SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
+SPLAT_PATH = os.path.dirname(os.path.abspath(__file__))+'/../'
+# SPLAT_PATH = './'
+# if os.environ.get('SPLAT_PATH') != None:
+#     SPLAT_PATH = os.environ['SPLAT_PATH']
+# # get from PYTHONPATH
+# if os.environ.get('PYTHONPATH') != None and SPLAT_PATH == './':
+#     path = os.environ['PYTHONPATH']
+#     for i in path.split(':'):
+#         if 'splat' in i:
+#             SPLAT_PATH = i
+# # get from system path
+# if SPLAT_PATH == './':
+#     checkpath = ['splat' in r for r in sys.path]
+#     if max(checkpath):
+#         SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
 
 #set user SPLAT model path from environmental variable
 SPLAT_USER_MODELS = './'

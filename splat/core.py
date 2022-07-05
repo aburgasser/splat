@@ -41,6 +41,7 @@ from splat.photometry import filterMag
 #from splat.database import searchLibrary, keySpectrum
 
 # holding arrays
+ERROR_CHECKING = False
 SPECTRA_READIN = {}
 STDS_DWARF_SPEX = {}
 STDS_SD_SPEX = {}
@@ -75,6 +76,7 @@ print('If you make use of any features of this toolkit for your research, please
 print('\n{}; Bibcode: {}\n'.format(CITATION,BIBCODE))
 print('If you make use of any spectra or models in this toolkit, please remember to cite the original source.')
 print('Please report any errors are feature requests to our github page, {}\n\n'.format(GITHUB_URL))
+if ERROR_CHECKING==True: print('Currently running in error checking mode')
 
 
 #######################################################
@@ -2801,6 +2803,48 @@ class Spectrum(object):
 
     def toTemperature(self):
         self.brightnessTemperature()
+
+
+    def sample(self,rng,method='median',verbose=ERROR_CHECKING):
+        '''
+        :Purpose: 
+            Obtains a sample of spectrum over specified wavelength range
+
+        :Required Inputs: 
+
+            :param range: the range(s) over which the spectrum is sampled
+            a single 2-element array or array of 2-element arrays
+
+        :Optional Inputs: 
+
+            None
+
+        :Example:
+            TBD
+        '''
+
+# single number = turn into small range
+        if isinstance(rng,float):
+            rng = [rng-0.01*(numpy.nanmax(self.wave.value)-numpy.nanmin(self.wave.value)),rng+0.01*(numpy.nanmax(self.wave.value)-numpy.nanmin(self.wave.value))]
+
+        if not isinstance(rng,list): rng = list(rng)
+
+        if isUnit(rng[0]):
+            try: rng = [r.to(self.wave.unit).value for r in rng]
+            except: raise ValueError('Could not convert trim range unit {} to spectrum wavelength unit {}'.format(rng.unit,self.wave.unit))
+
+        w = numpy.where(numpy.logical_and(self.wave.value >= rng[0],self.wave.value <= rng[1]))
+        if len(w[0])>0:
+            if method in ['median','med']: val = numpy.nanmedian(self.flux.value[w])
+            elif method in ['mean','average','ave']: val = numpy.nanmean(self.flux.value[w])
+            elif method in ['max','maximum']: val = numpy.nanmax(self.flux.value[w])
+            elif method in ['min','minimum']: val = numpy.nanmin(self.flux.value[w])
+            elif method in ['std','stddev','stdev','rms']: val = numpy.nanstd(self.flux.value[w])
+            else: raise ValueError('Did not recongize sampling method {}'.format(method))
+            return val
+        else:
+            if verbose==True: print('Sampling range {} outside wavelength range of data'.format(rng))
+            return numpy.nan
 
 
     def trim(self,rng,**kwargs):
@@ -6223,314 +6267,354 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, **kwargs):
 
 
 
-def classifyByTemplate(sp, dof=-1, **kwargs):
+def classifyByTemplate(sp, templates, output='best', nbest=1, maxtemplates=100, plot=False, verbose=ERROR_CHECKING, dof=-1, **kwargs):
     '''
-    :Purpose: Determine the spectral type and uncertainty for a
-                spectrum by direct comparison to a large set of spectra in
-                the library. Returns a dictionary with the best spectral type (F-test weighted mean and
-                uncertainty), and arrays for the N best-matching Spectrum objects, scale factors, spectral types and comparison statistics. 
-                There is an option to follow the procedure of
-                `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_,
-                fitting only in the 0.9-1.4 micron region.
-                It is strongly encouraged that users winnow down the templates used in the comparison
-                by selecting templates using the searchLibrary_ options or optionally the ``set`` parameter. 
+    Purpose
+    -------
 
-    :Output: A dictionary containing the following keys:
+    Compares a Spectrum object to a dictionary of templates, identifiying the best fit template
 
-                    - **result**: a tuple containing the spectral type and its uncertainty based on F-test statistic
-                    - **statistic**: array of N best statistical comparison values
-                    - **scale**: array of N best optimal scale factors
-                    - **spectra**: array of N best Spectrum objects
-                    - **spt**: array of N best spectral types
+    Parameters
+    ----------
 
-    :param sp: Spectrum class object, which should contain wave, flux and
-               noise array elements.
-    :param sp: required
-    :param statistic: string defining which statistic to use in comparison; available options are:
+    sp : Spectrum class
+        spectrum to copmare to templates
 
-            - *'chisqr'*: compare by computing chi squared value (requires spectra with noise values)
-            - *'stddev'*: compare by computing standard deviation
-            - *'stddev_norm'*: compare by computing normalized standard deviation
-            - *'absdev'*: compare by computing absolute deviation
+    templates : dict
+        dictionary of spectrum objects, where each key corresponds to the template identifier (e.g., spectral type)
+        and points to a Spectrum class object of the template
 
-    :type statistic: optional, default = 'chisqr'
-    :param select: string defining which spectral template set you want to compare to; several options which can be combined:
+    output = 'best' : str [optional]
+        signifies what should be returned by call to classifyByTemplate()
 
-            - *m dwarf*: fit to M dwarfs only
-            - *l dwarf*: fit to M dwarfs only
-            - *t dwarf*: fit to M dwarfs only
-            - *vlm*: fit to M7-T9 dwarfs
-            - *optical*: only optical classifications
-            - *high sn*: median S/N greater than 100
-            - *young*: only young/low surface gravity dwarfs
-            - *companion*: only companion dwarfs
-            - *subdwarf*: only subdwarfs
-            - *single*: only dwarfs not indicated a binaries
-            - *spectral binaries*: only dwarfs indicated to be spectral binaries
-            - *standard*: only spectral standards (Note: use classifyByStandard_ instead)
+    nbest = 1 : int [optional]
+        indicate what number of best-fit templates to return, in order of lowest fit statistic 
 
-    :type select: optional, default = ''
-    :param method: set to ``'kirkpatrick'`` to follow the `Kirkpatrick et al. (2010) <http://adsabs.harvard.edu/abs/2010ApJS..190..100K>`_ method, fitting only to the 0.9-1.4 micron band
-    :type method: optional, default = ''
-    :param best: Set to True to return only the best fit template type
-    :type best: optional, default = False
-    :param nbest: Set to the number of best fitting spectra to return
-    :type nbest: optional, default = 1
-    :param maxtemplates: Set to the maximum number of templates that should be fit
-    :type maxtemplates: optional, default = 100
-    :param force: By default, classifyByTemplate won't proceed if you have more than 100 templates; set this parameter to True to ignore that constraint
-    :type force: optional, default = False
-    :param plot: Set to True to generate a plot comparing best fit template to source; can also set keywords associated with plotSpectrum_ routine 
-    :type plot: optional, default = False
-    :param string: return spectral type as a string
-    :type string: optional, default = True
-    :param verbose: give lots of feedback
-    :type verbose: optional, default = False
+    maxtemplates = 100 : int [optional]
+        maximum number of templates to compare to if time is an issue; -1 is unlimited 
 
-    Users can also set keyword parameters defined in plotSpectrum_ and searchLibrary_ routines
+    plot = False : bool [optional]
+        plot comparison between source and best-fit template 
 
-    :Example:
-    >>> import splat
-    >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
-    >>> result = splat.classifyByTemplate(sp,string=True,spt=[24,26],nbest=5)
-        Too many templates (171) for classifyByTemplate; set force=True to override this
-    >>> result = splat.classifyByTemplate(sp,string=True,spt=[24,26],snr=50,nbest=5)
-        Comparing to 98 templates
-        LHS 102B L5.0 10488.1100432 11.0947838116
-        2MASSI J0013578-223520 L4.0 7037.37441677 136.830522173
-        SDSS J001608.44-004302.3 L5.5 15468.6209466 274.797693706
-        2MASSI J0028394+150141 L4.5 63696.1897668 187.266152375
-        ...
-        Best match = DENIS-P J153941.96-052042.4 with spectral type L4:
-        Mean spectral type = L4.5+/-0.718078660103
-    >>> result
-        {'result': ('L4.5', 0.71807866010293797),
-         'scale': [3.0379089778408642e-14,
-          96.534933767992072,
-          3.812718429200959,
-          2.9878801833735986e-14,
-          3.0353579048704484e-14],
-         'spectra': [Spectrum of DENIS-P J153941.96-052042.4,
-          Spectrum of 2MASSI J0443058-320209,
-          Spectrum of SDSSp J053951.99-005902.0,
-          Spectrum of 2MASSI J1104012+195921,
-          Spectrum of 2MASS J17502484-0016151],
-         'spt': [24.0, 25.0, 25.0, 24.0, 25.5],
-         'statistic': [<Quantity 2108.997879536768>,
-          <Quantity 2205.640664932956>,
-          <Quantity 2279.316858783139>,
-          <Quantity 2579.0089210846527>,
-          <Quantity 2684.003187310027>]}
+    verbose = False : bool [optional]
+        return verbose feedback during execution 
 
-    .. _classifyByStandard : api.html#splat.core.classifyByStandard
-    .. _searchLibrary : api.html#splat.core.searchLibrary
-    .. _plotSpectrum : api.html#splat.plot.plotSpectrum
+
+    Outputs
+    -------
+
+    Depends on value of output keyword:
+        * output = 'best' : returns the single or array (nbest > 1) of identifiers of the best-fit template(s)
+        * output = 'template' : returns the single or array (nbest > 1) of Spectrum class objects of the best-fit template(s)
+        * output = 'stats' : returns the single or array (nbest > 1) of tuples containing the identifier, fit statistic, and scaling factor for best-fit template(s)
+        * output = 'all' : returns a dictionary where each key is a template identifier, which point to dictionaries 
+        that contain the template, statistic, and scale factor
+
+
+    Example
+    -------
+        TBD
+
+    Dependencies
+    ------------
+        `splat.compareSpectra()`_
+        copy
 
     '''
 
-#
-    spt_type = kwargs.get('spt_type','literature')
-    spt = kwargs.get('spt',[10.,39.9])
-    spt = kwargs.get('spt_range',spt)
-    nbest = kwargs.get('nbest',1)
-    verbose = kwargs.get('verbose',False)
-    published = kwargs.get('published','')
-    published = kwargs.get('public',published)
-    statistic = kwargs.get('statistic','chisqr')
-    statistic = kwargs.get('stat',statistic)
-    force = kwargs.get('force',False)
-    maxtemplates = kwargs.get('maxtemplates',100)
-    select = kwargs.get('select','')
-    select = kwargs.get('set',select)
-#   placeholder for a systematic uncertainty term
-    unc_sys = 0.
-    if (kwargs.get('method','') == 'kirkpatrick'):
-        fit_ranges = [[0.9,1.4]]         # as prescribed in Kirkpatrick et al. 2010, ApJS,
-    else:
-        fit_ranges = [[0.7,2.45]]       # by default, compare whole spectrum
-    fit_ranges = kwargs.get('fitrange',fit_ranges)
-    fit_ranges = kwargs.get('fitrng',fit_ranges)
-    fit_ranges = kwargs.get('comprange',fit_ranges)
-    fit_ranges = kwargs.get('comprng',fit_ranges)
-    if not isinstance(fit_ranges[0],list):
-        fit_ranges = [fit_ranges]
-    if dof<0: dof = len(sp.wave)
+# check inputs
+    if isinstance(sp,Spectrum)==False: raise ValueError('You must input a Spectrum object for comparison source, you passed {}'.format(type(sp)))
+    if isinstance(templates,dict)==False: raise ValueError('You must pass a dictionary of templates; you passed {}'.format(type(templates)))
+    if isinstance(list(templates.items())[0][1],Spectrum)==False: raise ValueError('Your templates must be Spectrum objects; you passed {}'.format(type(list(templates.items())[0][1])))
+    if maxtemplates>0 and len(list(templates.items()))>maxtemplates and verbose==True:
+        print('Warning: maxtemplates is set to {} and your template dictionary has {} templates; change maxtemplates to fit full list'.format(maxtemplates,len(list(templates.items()))))
+    if nbest<1: nbest==1
+    nbest = int(nbest)
+    if verbose==True: print('Comparing spectrum of {} to {} templates'.format(sp.name,len(list(templates.items()))))
 
-#  canned searches
-#  constrain spectral types
-    if ('lit' in spt_type.lower()):
-        spt_type = 'LIT_TYPE'
-    elif ('opt' in spt_type.lower() or 'optical' in select):
-        spt_type = 'OPT_TYPE'
-    elif ('nir' in spt_type.lower()):
-        spt_type = 'NIR_TYPE'
-    else:
-        spt_type = 'LIT_TYPE'
-
-    if ('m dwarf' in select.lower() or kwargs.get('mdwarf',False)):
-        spt = [numpy.max([10,spt[0]]),numpy.min([19.9,spt[-1]])]
-    if ('l dwarf' in select.lower() or kwargs.get('ldwarf',False)):
-        spt = [numpy.max([20,spt[0]]),numpy.min([29.9,spt[-1]])]
-    if ('t dwarf' in select.lower() or kwargs.get('tdwarf',False)):
-        spt = [numpy.max([30,spt[0]]),numpy.min([39.9,spt[-1]])]
-    if ('vlm' in select.lower() or kwargs.get('vlm',False)):
-        spt = [numpy.max([17,spt_range[0]]),numpy.min([39.9,spt_range[-1]])]
-
-#  constrain S/N
-    snr = 0.
-    if ('high sn' in select.lower()):
-        snr = 100.
-    snr = kwargs.get('snr',snr)
-
-#  don't compare to same spectrum
-    try:
-        excludefile = [sp.filename]
-    except:
-        excludefile = []
-    if kwargs.get('excludefile',False) != False:
-        e = kwargs.get('excludefile')
-        if isinstance(e,list):
-            excludefile.extend(e)
-        else:
-            excludefile.append(e)
-    try:
-        excludekey = [sp.data_key]
-    except:
-        excludekey = []
-    if kwargs.get('excludekey',False) != False:
-        e = kwargs.get('excludekey')
-        if isinstance(e,list):
-            excludekey.extend(e)
-        else:
-            excludekey.append(e)
-    try:
-        excludeshortname = [sp.shortname]
-    except:
-        excludeshortname = []
-    if kwargs.get('excludeshortname',False) != False:
-        e = kwargs.get('excludeshortname')
-        if isinstance(e,list):
-            excludeshortname.extend(e)
-        else:
-            excludeshortname.append(e)
-#    print(excludefile, excludekey, excludeshortname)
-
-# other classes
-    giant = ''
-    if 'giant' in select.lower() or kwargs.get('giant',False):
-        giant = True
-    if 'not giant' in select.lower():
-        giant = False
-    companion = ''
-    if 'companion' in select.lower() or kwargs.get('companion',False):
-        companion = True
-    if 'not companion' in select.lower():
-        companion = False
-    young = ''
-    if 'young' in select.lower() or kwargs.get('young',False):
-        young = True
-    if 'not young' in select.lower():
-        young = False
-    binary = ''
-    if 'binary' in select.lower() or kwargs.get('binary',False):
-        binary = True
-    if 'not binary' in select.lower():
-        binary = False
-    spbinary = ''
-    if 'spectral binary' in select.lower() or kwargs.get('sbinary',False):
-        spbinary = True
-    if 'not spectral binary' in select.lower():
-        spbinary = False
-
-# REARRANGE THIS - SEND IN KWARGS WITH OUTPUT, LOGIC SET, AND THE REST ARE UP TO USER?
-
-    lib = searchLibrary(excludefile=excludefile,excludekey=excludekey,excludeshortname=excludeshortname, \
-        snr=snr,spt_type=spt_type,spt=spt,published=published, \
-        giant=giant,companion=companion,young=young,binary=binary,spbinary=spbinary,output='all',logic='and')
-
-# first search for the spectra desired - parameters are set by user
-    if len(lib) == 0:
-        print('\nNo templates available for comparison\n\n')
-        return numpy.nan, numpy.nan
-
-    if len(lib) > maxtemplates and force == False:
-        print('\nToo many templates ({}) for classifyByTemplate; set force=True to override this\n\n'.format(len(lib)))
-        return numpy.nan, numpy.nan
-
-    files = lib['DATA_FILE']
-    dkey = lib['DATA_KEY']
-    sspt = [typeToNum(s) for s in lib[spt_type]]
-
-    if verbose == True:
-        print('\nComparing to {} templates\n'.format(len(files)))
-        if len(files) > 100:
-            print('This may take some time!\n\n'.format(len(files)))
-
-# do comparison
-    stat = []
-    scl = []
-    for i,d in enumerate(dkey):
-
-# INSERT TRY STATEMNT HERE?
-
-        s = Spectrum(d)
+# compare spectra
+    stats,scales,ids = [],[],[]
+    for k in list(templates.keys()):
 
         mkwargs = copy.deepcopy(kwargs)
-        if 'plot' in (mkwargs.keys()): mkwargs['plot'] = False
+        mkwargs['plot'] = False
 
-        stt,scale = compareSpectra(sp,s,fit_ranges=fit_ranges,statistic=statistic,novar2=True,**mkwargs)
-        stat.append(stt)
-        scl.append(scale)
-        if verbose == True: print(s)
+        st,scl = compareSpectra(sp,templates[k],**mkwargs)
+        stats.append(st)
+        scales.append(scl)
+        ids.append(k)
+        if verbose == True: print('\tcomparison to {}: stat = {}, scale = {}'.format(k,st,scl))
 
-# list of sorted standard files and spectral types
-    sorted_dkey = [x for (y,x) in sorted(zip(stat,dkey))]
-    sorted_spt = [x for (y,x) in sorted(zip(stat,sspt))]
-    sorted_scale = [x for (y,x) in sorted(zip(stat,scl))]
+# sort by fit statistic (assumes smallest values is best)
+    sorted_ids = [x for (y,x) in sorted(zip(stats,ids))]
+    sorted_scales = [x for (y,x) in sorted(zip(stats,scales))]
+    stats.sort()
 
-# select either best match or an ftest-weighted average
-    if (kwargs.get('best',False) or len(stat) == 1):
-        sptn = sorted_spt[0]
-        sptn_e = unc_sys
+# plot spectrum compared to best-fit spectrum
+    if plot==True:
+        mkwargs = copy.deepcopy(kwargs)
+        mkwargs['plot'] = True
+
+        st,scl = compareSpectra(sp,templates[sorted_ids[0]],**mkwargs)
+
+# return based on output
+    if output=='best':
+        if nbest==1: return sorted_ids[0]
+        else: return sorted_ids[:nbest]
+    elif output=='template':
+        if nbest==1: 
+            tmp = copy.deepcopy(templates[sorted_ids[0]])
+            tmp.scale(sorted_scales[0])
+            return tmp
+        else: 
+            out = []
+            for i in range(nbest):
+                tmp = copy.deepcopy(templates[sorted_ids[i]])
+                tmp.scale(sorted_scales[i])
+            return out
+    elif output=='stats':
+        if nbest==1: return (sorted_ids[0],stats[0],sorted_scales[0])
+        else: 
+            out = []
+            for i in range(nbest): out.append((sorted_ids[i],stats[i],sorted_scales[i]))
+            return out
+    elif output=='all':
+        out = {}
+        for i,k in enumerate(sorted_ids):
+            tmp = copy.deepcopy(templates[k])
+            tmp.scale(sorted_scales[i])
+            out[k] = {'spectrum': tmp, 'statistic': stats[i], 'scale': sorted_scales[i]}
+        return out
     else:
-        mean,var = weightedMeanVar(sspt,stat,method='ftest',dof=dof)
-# allow 1/2 subtypes if uncertainty is less than 1.0
-        if (var**0.5 < 1.):
-            sptn = numpy.round(mean*2.)*0.5
-        else:
-            sptn = numpy.round(mean)
-        sptn_e = (unc_sys**2+var)**0.5
-
-# plot spectrum compared to best spectrum
-    if (kwargs.get('plot',False) != False):
-        s = Spectrum(sorted_dkey[0])
-#        chisq,scale = compareSpectra(s,sp,fit_ranges=[comprng],stat='chisqr',novar2=True)
-        s.scale(sorted_scale[0])
-        kwargs['legend'] = [sp.name,s.name]
-        kwargs['colors'] = ['k','r','b']
-        from .plot import plotSpectrum
-        plotSpectrum(sp,s,sp-s,**kwargs)
-
-# string or not?
-    if (kwargs.get('string', True) == True):
-        output_spt = typeToNum(sptn,uncertainty=sptn_e)
-    else:
-        output_spt = sptn
-
-    if verbose == True:
-        s = Spectrum(sorted_dkey[0])
-        print('\nBest match = {} with spectral type {}'.format(s,typeToNum(sorted_spt[0])))
-        print('Mean spectral type = {}+/-{}'.format(output_spt,sptn_e))
-
-# return dictionary of results
-    return {'result': (output_spt,sptn_e), \
-        'statistic': sorted(stat)[0:nbest], 'spt': sorted_spt[0:nbest], \
-        'scale': sorted_scale[0:nbest], \
-        'spectra': [Spectrum(d) for d in sorted_dkey[0:nbest]]}
+        raise ValueError('Do not recognize output format {}'.format(output))
 
 
 
-def classifyGravity(sp, *args, **kwargs):
+
+# # select either best match or an ftest-weighted average
+#     if (best_flag or len(stat) == 1):
+#         spt = sorted_stdsptnum[0]
+#         sptn = typeToNum(spt)
+#         sptn_e = unc_sys
+#     else:
+#         ssptn = [typeToNum(s) for s in sspt]
+#         try:
+#             st = stat.value
+#         except:
+#             st = stat
+#         if numpy.isnan(numpy.median(sp.noise)):
+#             mean,var = weightedMeanVar(ssptn,st)
+#         else:
+#             mean,var = weightedMeanVar(ssptn,st,method='ftest',dof=dof)
+#         if (var**0.5 < 1.):
+#             sptn = numpy.round(mean*2)*0.5
+#         else:
+#             sptn = numpy.round(mean)
+#         sptn_e = (unc_sys**2+var**2)**0.5
+#         spt = typeToNum(sptn,uncertainty=sptn_e,subclass=subclass)
+
+#     spt_type = kwargs.get('spt_type','literature')
+#     spt = kwargs.get('spt',[10.,39.9])
+#     spt = kwargs.get('spt_range',spt)
+#     nbest = kwargs.get('nbest',1)
+#     verbose = kwargs.get('verbose',False)
+#     published = kwargs.get('published','')
+#     published = kwargs.get('public',published)
+#     statistic = kwargs.get('statistic','chisqr')
+#     statistic = kwargs.get('stat',statistic)
+#     force = kwargs.get('force',False)
+#     maxtemplates = kwargs.get('maxtemplates',100)
+#     select = kwargs.get('select','')
+#     select = kwargs.get('set',select)
+# #   placeholder for a systematic uncertainty term
+#     unc_sys = 0.
+#     if (kwargs.get('method','') == 'kirkpatrick'):
+#         fit_ranges = [[0.9,1.4]]         # as prescribed in Kirkpatrick et al. 2010, ApJS,
+#     else:
+#         fit_ranges = [[0.7,2.45]]       # by default, compare whole spectrum
+#     fit_ranges = kwargs.get('fitrange',fit_ranges)
+#     fit_ranges = kwargs.get('fitrng',fit_ranges)
+#     fit_ranges = kwargs.get('comprange',fit_ranges)
+#     fit_ranges = kwargs.get('comprng',fit_ranges)
+#     if not isinstance(fit_ranges[0],list):
+#         fit_ranges = [fit_ranges]
+#     if dof<0: dof = len(sp.wave)
+
+# #  canned searches
+# #  constrain spectral types
+#     if ('lit' in spt_type.lower()):
+#         spt_type = 'LIT_TYPE'
+#     elif ('opt' in spt_type.lower() or 'optical' in select):
+#         spt_type = 'OPT_TYPE'
+#     elif ('nir' in spt_type.lower()):
+#         spt_type = 'NIR_TYPE'
+#     else:
+#         spt_type = 'LIT_TYPE'
+
+#     if ('m dwarf' in select.lower() or kwargs.get('mdwarf',False)):
+#         spt = [numpy.max([10,spt[0]]),numpy.min([19.9,spt[-1]])]
+#     if ('l dwarf' in select.lower() or kwargs.get('ldwarf',False)):
+#         spt = [numpy.max([20,spt[0]]),numpy.min([29.9,spt[-1]])]
+#     if ('t dwarf' in select.lower() or kwargs.get('tdwarf',False)):
+#         spt = [numpy.max([30,spt[0]]),numpy.min([39.9,spt[-1]])]
+#     if ('vlm' in select.lower() or kwargs.get('vlm',False)):
+#         spt = [numpy.max([17,spt_range[0]]),numpy.min([39.9,spt_range[-1]])]
+
+# #  constrain S/N
+#     snr = 0.
+#     if ('high sn' in select.lower()):
+#         snr = 100.
+#     snr = kwargs.get('snr',snr)
+
+# #  don't compare to same spectrum
+#     try:
+#         excludefile = [sp.filename]
+#     except:
+#         excludefile = []
+#     if kwargs.get('excludefile',False) != False:
+#         e = kwargs.get('excludefile')
+#         if isinstance(e,list):
+#             excludefile.extend(e)
+#         else:
+#             excludefile.append(e)
+#     try:
+#         excludekey = [sp.data_key]
+#     except:
+#         excludekey = []
+#     if kwargs.get('excludekey',False) != False:
+#         e = kwargs.get('excludekey')
+#         if isinstance(e,list):
+#             excludekey.extend(e)
+#         else:
+#             excludekey.append(e)
+#     try:
+#         excludeshortname = [sp.shortname]
+#     except:
+#         excludeshortname = []
+#     if kwargs.get('excludeshortname',False) != False:
+#         e = kwargs.get('excludeshortname')
+#         if isinstance(e,list):
+#             excludeshortname.extend(e)
+#         else:
+#             excludeshortname.append(e)
+# #    print(excludefile, excludekey, excludeshortname)
+
+# # other classes
+#     giant = ''
+#     if 'giant' in select.lower() or kwargs.get('giant',False):
+#         giant = True
+#     if 'not giant' in select.lower():
+#         giant = False
+#     companion = ''
+#     if 'companion' in select.lower() or kwargs.get('companion',False):
+#         companion = True
+#     if 'not companion' in select.lower():
+#         companion = False
+#     young = ''
+#     if 'young' in select.lower() or kwargs.get('young',False):
+#         young = True
+#     if 'not young' in select.lower():
+#         young = False
+#     binary = ''
+#     if 'binary' in select.lower() or kwargs.get('binary',False):
+#         binary = True
+#     if 'not binary' in select.lower():
+#         binary = False
+#     spbinary = ''
+#     if 'spectral binary' in select.lower() or kwargs.get('sbinary',False):
+#         spbinary = True
+#     if 'not spectral binary' in select.lower():
+#         spbinary = False
+
+# # REARRANGE THIS - SEND IN KWARGS WITH OUTPUT, LOGIC SET, AND THE REST ARE UP TO USER?
+
+#     lib = searchLibrary(excludefile=excludefile,excludekey=excludekey,excludeshortname=excludeshortname, \
+#         snr=snr,spt_type=spt_type,spt=spt,published=published, \
+#         giant=giant,companion=companion,young=young,binary=binary,spbinary=spbinary,output='all',logic='and')
+
+# # first search for the spectra desired - parameters are set by user
+#     if len(lib) == 0:
+#         print('\nNo templates available for comparison\n\n')
+#         return numpy.nan, numpy.nan
+
+#     if len(lib) > maxtemplates and force == False:
+#         print('\nToo many templates ({}) for classifyByTemplate; set force=True to override this\n\n'.format(len(lib)))
+#         return numpy.nan, numpy.nan
+
+#     files = lib['DATA_FILE']
+#     dkey = lib['DATA_KEY']
+#     sspt = [typeToNum(s) for s in lib[spt_type]]
+
+#     if verbose == True:
+#         print('\nComparing to {} templates\n'.format(len(files)))
+#         if len(files) > 100:
+#             print('This may take some time!\n\n'.format(len(files)))
+
+# # do comparison
+#     stat = []
+#     scl = []
+#     for i,d in enumerate(dkey):
+
+# # INSERT TRY STATEMNT HERE?
+
+#         s = Spectrum(d)
+
+#         mkwargs = copy.deepcopy(kwargs)
+#         if 'plot' in (mkwargs.keys()): mkwargs['plot'] = False
+
+#         stt,scale = compareSpectra(sp,s,fit_ranges=fit_ranges,statistic=statistic,novar2=True,**mkwargs)
+#         stat.append(stt)
+#         scl.append(scale)
+#         if verbose == True: print(s)
+
+# # list of sorted standard files and spectral types
+#     sorted_dkey = [x for (y,x) in sorted(zip(stat,dkey))]
+#     sorted_spt = [x for (y,x) in sorted(zip(stat,sspt))]
+#     sorted_scale = [x for (y,x) in sorted(zip(stat,scl))]
+
+# # select either best match or an ftest-weighted average
+#     if (kwargs.get('best',False) or len(stat) == 1):
+#         sptn = sorted_spt[0]
+#         sptn_e = unc_sys
+#     else:
+#         mean,var = weightedMeanVar(sspt,stat,method='ftest',dof=dof)
+# # allow 1/2 subtypes if uncertainty is less than 1.0
+#         if (var**0.5 < 1.):
+#             sptn = numpy.round(mean*2.)*0.5
+#         else:
+#             sptn = numpy.round(mean)
+#         sptn_e = (unc_sys**2+var)**0.5
+
+# # plot spectrum compared to best spectrum
+#     if (kwargs.get('plot',False) != False):
+#         s = Spectrum(sorted_dkey[0])
+# #        chisq,scale = compareSpectra(s,sp,fit_ranges=[comprng],stat='chisqr',novar2=True)
+#         s.scale(sorted_scale[0])
+#         kwargs['legend'] = [sp.name,s.name]
+#         kwargs['colors'] = ['k','r','b']
+#         from .plot import plotSpectrum
+#         plotSpectrum(sp,s,sp-s,**kwargs)
+
+# # string or not?
+#     if (kwargs.get('string', True) == True):
+#         output_spt = typeToNum(sptn,uncertainty=sptn_e)
+#     else:
+#         output_spt = sptn
+
+#     if verbose == True:
+#         s = Spectrum(sorted_dkey[0])
+#         print('\nBest match = {} with spectral type {}'.format(s,typeToNum(sorted_spt[0])))
+#         print('Mean spectral type = {}+/-{}'.format(output_spt,sptn_e))
+
+# # return dictionary of results
+#     return {'result': (output_spt,sptn_e), \
+#         'statistic': sorted(stat)[0:nbest], 'spt': sorted_spt[0:nbest], \
+#         'scale': sorted_scale[0:nbest], \
+#         'spectra': [Spectrum(d) for d in sorted_dkey[0:nbest]]}
+
+
+
+def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs):
     '''
     :Purpose: Determine the gravity classification of a brown dwarf using the method of `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_. 
 
@@ -6573,8 +6657,6 @@ def classifyGravity(sp, *args, **kwargs):
          'spt': 'L4.0'}
     '''
 
-    verbose = kwargs.get('verbose',False)
-
 # Chart for determining gravity scores based on gravity sensitive
 # indices as described in the Allers and Liu paper.
 # The key to the overall indices dictionary is each index name.
@@ -6591,34 +6673,37 @@ def classifyGravity(sp, *args, **kwargs):
         'VO-z': {'M5.0':[numpy.nan,numpy.nan],'M6.0':[numpy.nan,numpy.nan],'M7.0': [numpy.nan,numpy.nan],'M8.0': [numpy.nan,numpy.nan],'M9.0': [numpy.nan,numpy.nan],'L0.0': [1.122,1.256],'L1.0': [1.112,1.251],'L2.0': [1.110,1.232],'L3.0': [1.097,1.187],'L4.0': [1.073,1.118],'L5.0': [numpy.nan,numpy.nan],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
         'KI-J': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [1.042,1.028], 'M7.0': [1.059,1.036],'M8.0': [1.077,1.046],'M9.0': [1.085,1.053],'L0.0': [1.098,1.061],'L1.0': [1.114,1.067],'L2.0': [1.133,1.073],'L3.0': [1.135,1.075],'L4.0': [1.126,1.072],'L5.0': [1.094,1.061],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
         'H-cont': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [.988,.994], 'M7.0': [.981,.990],'M8.0': [.963,.984],'M9.0': [.949,.979],'L0.0': [.935,.972],'L1.0': [.914,.968],'L2.0': [.906,.964],'L3.0': [.898,.960],'L4.0': [.885,.954],'L5.0': [.869,.949],'L6.0': [.874,.950],'L7.0': [0.888,0.952]}}
+    if verbose==True: print('\nGravity Classification')
+    gravscore = {}
+    gravscore['gravity_class'] = 'UNKNOWN'
 
 # Calculate Allers indices and their uncertainties
     ind = kwargs.get('indices',False)
     if ind == False:
         ind = measureIndexSet(sp,set='allers')
+    gravscore['indices'] = ind
 
 # Determine the object's NIR spectral type and its uncertainty
     sptn = kwargs.get('spt',False)
     if sptn == False:
         sptn, spt_e = classifyByIndex(sp,string=False,ref='allers2013')
         if numpy.isnan(sptn):
-            print('Spectral type could not be determined from indices')
-            return ''
-    if isinstance(sptn,str):
-        sptn = typeToNum(sptn)
+            if verbose==True: print('Spectral type could not be determined from indices; try entering with spt keyword')
+            if output=='allmeasures': return gravscore
+            else: return gravscore['gravity_class']
+
+    if isinstance(sptn,str): sptn = typeToNum(sptn)
     Spt = typeToNum(numpy.round(sptn))
+    gravscore['spt'] = Spt
+    if verbose==True: print('\tSpT = {}'.format(Spt))
 
 #Check whether the NIR SpT is within gravity sensitive range values
     if ((sptn < 16.0) or (sptn > 27.0)):
-        print('Spectral type '+typeToNum(sptn)+' outside range for gravity classification')
-        return ''
-
-# print spt if verbose
-    if verbose:
-        print('\nGravity Classification:\n\tSpT = {}'.format(Spt))
+        if verbose==True: print('Spectral type '+typeToNum(sptn)+' outside range for gravity classification')
+        if output=='allmeasures': return gravscore
+        else: return gravscore['gravity_class']
 
 #Creates an empty array with dimensions 4x1 to fill in later with 5 gravscore values
-    gravscore = {'spt': Spt}
     medgrav = []
 
 # Use the spt to pick the column that contains the
@@ -6632,8 +6717,7 @@ def classifyGravity(sp, *args, **kwargs):
                 val = 1.0
             if ind[k][0] >= grav[k][Spt][1]:
                 val = 2.0
-            if verbose:
-                print('\t{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
+            if verbose==True: print('\t{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
         if k == 'FeH-z' or k=='KI-J':
             if numpy.isnan(grav[k][Spt][0]):
                 val = numpy.nan
@@ -6641,8 +6725,7 @@ def classifyGravity(sp, *args, **kwargs):
                 val = 1.0
             if ind[k][0] <= grav[k][Spt][1]:
                 val = 2.0
-            if verbose:
-                print('\t{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
+            if verbose==True: print('\t{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
         gravscore[k] = val
         medgrav.append(val)
 
@@ -6662,8 +6745,7 @@ def classifyGravity(sp, *args, **kwargs):
        gravscore['gravity_class'] = 'UNKNOWN'
 
 # print spt if verbose
-    if verbose:
-        print('\tGravity Class = {}\n'.format(gravscore['gravity_class']))
+    if verbose==True: print('\tGravity Class = {}\n'.format(gravscore['gravity_class']))
 
 
 # plot spectrum against standard
@@ -6671,10 +6753,8 @@ def classifyGravity(sp, *args, **kwargs):
         spt,unc = classifyByStandard(sp,compareto=Spt,method='kirkpatrick',**kwargs)
 
 # return gravity class or entire dictionary
-    if (kwargs.get('allscores',False) == False):
-        return gravscore['gravity_class']
-    else:
-        return gravscore
+    if output=='allmeasures': return gravscore
+    else: return gravscore['gravity_class']
 
 
 
@@ -7692,6 +7772,104 @@ def addUserData(folders=[],default_info={},verbose=True):
                 SPECTRAL_MODELS[minfo['name']] = copy.deepcopy(minfo)
                 del minfo
     return
+
+
+def theWorks(sp,measure_classification=True,classification_classes=[],classification_plot='',\
+    measure_index_set=True,index_sets=list(INDEX_SETS.keys()),\
+    measure_index_classification=True,index_class_sets=list(INDEX_CLASSIFICATION_RELATIONS.keys()),class_string=True,\
+    measure_gravity=True,\
+    measure_spectral_binary=True,spectral_binary_sets=list(SPECTRAL_BINARY_INDICES.keys()),\
+    measure_spectrophotometry=True,spectrophotometry_bands=list(FILTERS.keys()),\
+    nsamples=100,verbose=ERROR_CHECKING):
+    """
+    Conducts a full analysis of a spectrum
+
+    Parameters
+    ----------
+
+    TBD
+
+    Returns
+    -------
+
+    TBD
+
+    Examples
+    --------
+
+    TBD
+
+    See Also
+    --------
+
+    TBD
+
+    """     
+
+    output = {}
+
+# classification by template 
+    if measure_classification==True:
+        cout = {}
+        if verbose==True: print('\nClassification by standards:')
+        if len(classification_classes) == 0: classification_classes = ['all','d','sd','esd','usd','intg','vlg']
+        initializeStandards(all=True)
+        for cl in classification_classes:
+            if len(classification_plot.split('.'))>1:
+                suffix = classification_plot.split('.')[-1]
+                cfile = classification_plot.replace('.'+suffix,'')+'_'+cl+'.'+suffix
+                cout[cl] = classifyByStandard(sp,std_class=cl,telluric=True,method='kirkpatrick',plot=True,output=cfile,colors=['k','m','b'],string=class_string)
+            else:
+                cout[cl] = classifyByStandard(sp,std_class=cl,telluric=True,method='kirkpatrick',plot=False,colors=['k','m','b'],string=class_string)
+            if verbose==True: print('\t{}: {}+/-{:.1f}'.format(cl,cout[cl][0],cout[cl][1]))
+        output['spt-template'] = cout
+
+# indices 
+    if measure_index_set==True:
+        cout = {}
+        if verbose==True: print('\nIndices:')
+        for iset in index_sets:
+            cout[iset] = measureIndexSet(sp,iset)
+            if verbose==True: 
+                print('\t{}'.format(iset))
+                for k in list(cout[iset].keys()): print('\t\t{}: {:.3f}+/-{:.3f}'.format(k,cout[iset][k][0],cout[iset][k][1]))
+        output['indices'] = cout
+
+# index-based classifications
+    if measure_index_classification==True:
+        cout = {}
+        if verbose==True: print('\nIndex based classifications:')
+        for iset in index_class_sets:
+            cout[iset] = classifyByIndex(sp,iset)
+            if verbose==True: print('\t{}: {}+/-{:.1f}'.format(iset,cout[iset][0],cout[iset][1]))
+        output['spt-indices'] = cout
+
+# gravity
+    if measure_gravity==True:
+        output['gravity'] = classifyGravity(sp,output='allmeasures',verbose=verbose)
+
+# spectral binary
+    if measure_spectral_binary==True:
+        cout = {}
+        if verbose==True: print('\nSpectral binary:')
+        for iset in spectral_binary_sets:
+            cout[iset] = classifySB(sp,ref=iset,output='allmeasures',verbose=verbose)
+        output['spectral_binary'] = cout
+        
+# spectrophotometry
+    if measure_spectrophotometry==True:
+        cout = {}
+        if verbose==True: print('\nSpectrophotometry:')
+        for band in spectrophotometry_bands:
+            cout[band] = sp.filterMag(band)
+            if verbose==True: print('\t{}: {:.2f}+/-{:.2f}'.format(band,cout[band][0],cout[band][1]))
+        output['spectrophotometry'] = cout
+        
+    return output
+
+
+
+
 
 
 

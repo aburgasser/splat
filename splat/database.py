@@ -593,7 +593,9 @@ def getPhotometry(coordinate,return_pandas=True,catalog='2MASS',radius=30.*u.arc
     else:
         tv = Table()
 
-    if len(tv)==0: return tv
+    if len(tv)==0: 
+        if return_pandas==True: return pandas.DataFrame()
+        else: return tv
 
 # sorting
     tv['sep'] = tv['_r']
