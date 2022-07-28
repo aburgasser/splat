@@ -745,7 +745,7 @@ def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=T
     return
 
 
-def processModelsToInstrument(instrument_parameters={},instrument='SPEX-PRISM',wunit=DEFAULT_WAVE_UNIT,funit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,*args,**kwargs):
+def processModelsToInstrument(instrument_parameters={},instrument='SPEX-PRISM',wave_unit=DEFAULT_WAVE_UNIT,flux_unit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,*args,**kwargs):
     '''
     :Purpose:
 
@@ -763,8 +763,8 @@ def processModelsToInstrument(instrument_parameters={},instrument='SPEX-PRISM',w
 
         * `wave`: an array containing the wavelengths to sample to; resolution is assumed 2 pixels per resolution element
         * `wave_range` and `resolution`: the first is a two-element array (assumed in microns if not specified), the second the effective resolution, assuming 2 pixels per resolution element
-        * `wunit`: the unit for the wavelength axis
-        * `funit`: the unit for the flux density axis
+        * `wave_unit`: the unit for the wavelength axis
+        * `flux_unit`: the unit for the flux density axis
         * `template`: a template spectrum object, from which the `wave` array is selected
 
         * `pixel_resolution` = 4: the number of pixels per resolution element
@@ -2297,7 +2297,7 @@ def _checkModelParametersInRange(mparam):
     return flag
 
 
-def _loadInterpolatedModel(fast=True,**kwargs):
+def _loadInterpolatedModel(wave_unit=splat.DEFAULT_WAVE_UNIT,flux_unit=splat.DEFAULT_FLUX_UNIT,fast=True,**kwargs):
     '''
     Purpose: 
         Generates as spectral model with is interpolated between model parameter grid points. This routine is called by `loadModel()`_, or it can be called on its own.
@@ -2435,7 +2435,7 @@ def _loadInterpolatedModel(fast=True,**kwargs):
             if mstr not in list(bmodels.keys()):
                 m = loadModel(**mparam)
                 if i==0: mwave = m.wave
-                else: m.toWavelengths(mwave)
+#                else: m.toWavelengths(mwave) # assumed that all models have the same wavelength grid
                 bmodels[mstr] = m
             models.append(bmodels[mstr])
             mparams.append(mparam)
@@ -2568,7 +2568,7 @@ def _loadInterpolatedModel(fast=True,**kwargs):
             mflx.append(10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),\
                 val,(numpy.log10(float(mkwargs['teff'])),float(mkwargs['logg']),float(mkwargs['z'])),'linear')))
 
-    return Spectrum(wave=mwave,flux=mflx*models[0].funit,**mkwargs)
+    return Spectrum(wave=mwave,flux=mflx*models[0].flux.unit,**mkwargs)
 
 
 
@@ -2826,13 +2826,13 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
         'flux': trans_sampled,
         'noise': [numpy.nan for t in trans_sampled],
         'name': 'Telluric transmission',
-        'funit': u.m/u.m,
-        'wunit': DEFAULT_WAVE_UNIT,
+        'flux_unit': u.m/u.m,
+        'wave_unit': DEFAULT_WAVE_UNIT,
         'istransmission': True
         }
         if bibcode != '': mkwargs['bibcode'] = bibcode
         atm = Spectrum(**mkwargs)
-        atm.funit = u.m/u.m
+#        atm.funit = u.m/u.m
         return atm
     else: 
         return numpy.array(trans_sampled)

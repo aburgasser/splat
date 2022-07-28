@@ -1593,6 +1593,22 @@ class Spectrum(object):
 
         return
 
+    def redshift(self,z):
+        '''
+        :Purpose: Shifts the wavelength scale by a given (positive) redshift. A negative redshift is interpreted as shifting back to the restframe.
+        
+        :Example:
+           >>> import splat
+           >>> sp.redshift(0.56)
+        '''
+        shift = 1.+z
+        if z<0: shift = 1./(1.-z)
+        self.wave = self.wave*shift
+        if z<0: self.history.append('Shifted spectrum by redshift {}'.format(z))
+        else: self.history.append('Shifted spectrum back to restframe with redshift {}'.format(z))
+
+        return
+        
     def broaden(self,vbroad,kern=None,epsilon=0.6,method='rotation',verbose=False):
         '''
         :Purpose: 
@@ -6349,6 +6365,7 @@ def classifyByTemplate(sp, templates, output='best', nbest=1, maxtemplates=100, 
     sorted_ids = [x for (y,x) in sorted(zip(stats,ids))]
     sorted_scales = [x for (y,x) in sorted(zip(stats,scales))]
     stats.sort()
+    if verbose==True: print('Best fit template = {}, statistic = {}, scale = {}'.format(sorted_ids[0],stats[0],sorted_scales[0]))
 
 # plot spectrum compared to best-fit spectrum
     if plot==True:
