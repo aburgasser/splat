@@ -1257,7 +1257,7 @@ def simulateMasses(num,mass_range=[0.01,0.1],minmass=0.01,maxmass=0.1,distributi
 		xf = numpy.linspace(mass_range[0],mass_range[1],num=int(nsamp))
 		f = interp1d(xfull,yfull)
 		yf = f(xf)
-		yf = yf-numpy.min(yf)
+#		yf = yf-numpy.min(yf) # this is wrong!
 		yc = numpy.cumsum(yf)
 		yc = yc-numpy.min(yc)
 		yc = yc/numpy.max(yc)
@@ -1320,7 +1320,7 @@ def simulateMasses(num,mass_range=[0.01,0.1],minmass=0.01,maxmass=0.1,distributi
 		f = interp1d(xfull,yfull)
 		xf = numpy.linspace(mass_range[0],mass_range[1],num=int(nsamp))
 		yf = f(xf)
-		yf = yf-numpy.min(yf)
+#		yf = yf-numpy.min(yf)
 		yc = numpy.cumsum(yf)
 		yc = yc-numpy.min(yc)
 		yc = yc/numpy.max(yc)

@@ -2197,30 +2197,92 @@ class Spectrum(object):
         else: print('\nWarning: ambiguous action {} for clean; no action taken'.format(action))
         return
 
-    def mask(self,mask,replace_noise=True,others=[]):
-        self.maskFlux(mask,replace_noise=replace_noise,others=others)
+    def maskWave(self,rng,apply=True,**kwargs):
+        '''
+        Purpose
+        -------
+
+        Generate a mask array based on min/max range of wavelengths
+
+        Parameters
+        ----------
+
+        rng : list of numpy.ndarray
+            2-element array that specifies the minimum and maximum wavelength range to mask
+            elements can be unitted values or pure numbers (interpretted to be same units as spectrum)
+
+        apply = True : bool [optional]
+            If True, apply the mask using maskFlux()
+
+
+        Outputs
+        -------
+
+        None: changes the Spectrum object by:
+            * creates and/or sets the mask keyword within the Spectrum object to an array of booleans
+            * if apply==True, masks the relevant range of data
+
+        Example
+        -------
+        
+        TBD
+
+        Dependencies
+        ------------
+            `maskFlux()`_
+            `isUnit()`_
+            numpy
+
+        .. _`isUnit()` : api.html#splat.utilities.isUnit
+        .. _`maskFlux()` : api.html#splat.core.maskFlux
+
+        '''
+        if 'mask' not in list(self.__dict__.keys()): self.mask = numpy.array([False]*len(self.wave))
+        if isinstance(rng,list) == False and isinstance(rng,numpy.ndarray) == False: 
+            raise ValueError('Trim range should be 2-element list; you passed {}'.format(rng))
+        if isUnit(rng[0]): rng = [r.to(self.wave.unit).value for r in rng]
+        w = numpy.where(numpy.logical_and(self.wave.value>=numpy.nanmin(rng),self.wave.value<=numpy.nanmax(rng)))
+        if len(w[0])>0: self.mask[w] = True 
+        self.history.append('Masked {} pixels in wavelength range {} to {}'.format(len(numpy.where(self.mask==True)),numpy.nanmin(rng),numpy.nanmax(rng)))
+        if apply==True: self.maskFlux(**kwargs)
         return
 
 
-    def maskFlux(self,mask,replace_noise=True,others=[]):
+
+    def maskFlux(self,mask=[],replace_noise=True,replace_value=numpy.nan,others=[]):
         '''
-        :Purpose: 
+        Purpose
+        -------
 
-            Masks elements of flux (set to NaN) as specified by the True/False array
+        Applies a mask array to the elements of a Spectrum object
 
-        :Required Inputs:
+        Parameters
+        ----------
 
-            :param **mask**: An array of booleans, ints or floats, where True or 1 means remove the element 
+        mask = [] : list or numpy.ndarray [optional]
+            array with same length as Spectrum object wavelength array that specifies pixels to be masked
+            array values can be floating point, int, or bool, with 1 = True (mask) and 0 = False (don't mask)
+
+        replace_noise = True : bool [optional]
+            If True, apply the mask to the uncertainty array
+
+        replace_value = numpy.nan : float [optional]
+            Value with which to replace masked elements of flux
+
+        others = []] : list [optional]
+            Other elements of the Spectrum object to apply mask (e.g., wave, flags, mask, etc.)
+            These elements should be present and must be the same length as mask
+
+        Outputs
+        -------
+
+        None: changes the Spectrum object by:
+            * masking the flux array with numpy.nan (or whatever is replace_value)
+            * optionally masks other arrays (noise, etc.)
+
+        Example
+        -------
         
-        :Optional Inputs:
-
-            :param **others**: list of other attributes that mask should be applied (e.g., 'pixel') (default = [])
-
-        :Output:
-
-            Spectrum object has the flagged pixels set to nan in flux arrays
-
-        :Example:
            >>> import splat,numpy
            >>> sp = splat.getSpectrum(lucky=True)[0]
            >>> num = splat.numberList('1-10,18,30-50')
@@ -2229,32 +2291,49 @@ class Spectrum(object):
            >>> sp.showHistory()
                 SPEX_PRISM spectrum successfully loaded
                 Mask applied to remove 32 pixels
+
+
+        Dependencies
+        ------------
+            copy
+            numpy
+
         '''
+
         msk = copy.deepcopy(mask)
+        if len(msk) == 0:
+            if 'mask' in list(self.__dict__.keys()): 
+                msk = copy.deepcopy(self.mask)
+            else: 
+                print('Empty mask provided and no mask in Spectrum object; not removing any pixels')
+                return
 
 # wavelength range given
-        if len(msk) == 2:
-            if not isUnit(msk): msk = msk*self.wave.unit
-            msk.to(self.wave.unit)
-            msk = generateMask(self.wave,mask_range=msk)
+        # if len(msk) == 2:
+        #     if not isUnit(msk): msk = msk*self.wave.unit
+        #     msk.to(self.wave.unit)
+        #     msk = generateMask(self.wave,mask_range=msk)
 
         if len(msk) != len(self.flux):
             print('\nWarning: mask must be same length ({}) as flux arrays ({}); not removing any pixels'.format(len(msk),len(self.flux)))
             return
         if isinstance(msk[0],float): msk = [int(x) for x in msk]
         if isinstance(msk[0],int): msk = [True if x==1 else False for x in msk]
-        if not isinstance(msk[0],bool): print('\nWarning: cannot interpret mask {}; not removing any pixels'.format(mask))
+        if not isinstance(msk[0],bool) and not isinstance(msk[0],numpy.bool_): 
+            print('\nWarning: cannot interpret mask {}; not removing any pixels'.format(msk))
+            return
+#            print(type(msk[0]),isinstance(msk[0],bool))
 
 # mask pixels
-        self.flux[msk] = numpy.nan
-        if replace_noise == True: self.noise[msk] = numpy.nan
+        self.flux[msk] = replace_value
+        if replace_noise == True: self.noise[msk] = replace_value
 
         if len(others) > 0:
             for k in others:
-                if k in self.original.__dict__.keys():
+                if k in list(self.original.__dict__.keys()):
                     try:
                         x = getattr(self,k)
-                        x[msk] = numpy.nan
+                        x[msk] = replace_value
                         setattr(self,k,x)
                     except:
                         pass
@@ -2475,7 +2554,7 @@ class Spectrum(object):
 
         :Optional Inputs:
 
-            :param method: the type of smoothing window to use; see http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html for more details (default = 'hanning')
+            :param method: the type of smoothing window to use; see http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.get_window.html for more details (default = 'hamming')
             :param resolution: Constant resolution to smooth to; see `_smoothToResolution()`_ (default = None)
             :param slitPixelWidth: Number of pixels to smooth in pixel space; see `_smoothToSlitPixelWidth()`_ (default = None)
             :param slitWidth: Number of pixels to smooth in angular space; see `_smoothToPixelWidth()`_ (default = None)
@@ -2494,7 +2573,7 @@ class Spectrum(object):
            >>> sp = splat.getSpectrum(lucky=True)[0]
            >>> sp.smooth(resolution=30)
         '''
-        method = kwargs.get('method','hanning')
+        method = kwargs.get('method','hamming')
         kwargs['method'] = method
         swargs = copy.deepcopy(kwargs)
 
@@ -2694,7 +2773,7 @@ class Spectrum(object):
            >>> sp.computeSN()
            235.77536310249229
         '''
-        method = kwargs.get('method','hanning')
+        method = kwargs.get('method','hamming')
         kwargs['method'] = method
 
 # add in resolution keyword if not present
@@ -2756,7 +2835,7 @@ class Spectrum(object):
            >>> sp.computeSN()
            258.87135134070593
         '''
-        method = kwargs.get('method','hanning')
+        method = kwargs.get('method','hamming')
         kwargs['method'] = method
         if not isUnit(width): width=width*u.arcsec
 
