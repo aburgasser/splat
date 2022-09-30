@@ -2286,13 +2286,13 @@ def _checkModelParametersInRange(mparam):
         if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
 #            ms=='teff' or ms=='logg' or ms=='z':
             if ms in mp:
-                if (float(mparam[ms]) < numpy.min(parameters[ms]) or float(mparam[ms]) > numpy.max(parameters[ms])):
-                    print('\n\nInput value for {} = {} out of range for model set {}\n'.format(ms,mparam[ms],mparam['model']))
+                if (float(mparam[ms]) < numpy.nanmin(parameters['parameter_values'][ms]) or float(mparam[ms]) > numpy.nanmax(parameters['parameter_values'][ms])):
+                    print('\n\nContinuous input value for {} = {} out of range for model set {} (range {} to {})\n'.format(ms,mparam[ms],mparam['model'],numpy.nanmin(parameters['parameter_values'][ms]),numpy.nanmax(parameters['parameter_values'][ms])))
                     flag = False
         else:
             if ms in mp:
-                if (mparam[ms] not in parameters[ms]):
-                    print('\n\nInput value for {} = {} not one of the options for model set {}\n'.format(ms,mparam[ms],mparam['model']))
+                if (mparam[ms] not in parameters['parameter_values'][ms]):
+                    print('\n\nDiscrete input value for {} = {} not one of the options for model set {} which are {}\n'.format(ms,mparam[ms],mparam['model'],parameters['parameter_values'][ms]))
                     flag = False
     return flag
 
@@ -2625,9 +2625,9 @@ def _loadModelParameters(*args,**kwargs):
 #        if not os.access(mfolder, os.R_OK):
         raise OSError('\nCould not find model folder {}\n'.format(mfolder))
 
-    parameters = {'model': mset, 'instrument': instrument, 'parameter_sets': []}
+    parameters = {'model': mset, 'instrument': instrument, 'parameter_sets': [], 'parameter_values': {}}
     for ms in list(SPECTRAL_MODELS[mset]['default'].keys()):
-        parameters[ms] = []
+        parameters['parameter_values'][ms] = []
 #    print('_loadModelParameters called with model {} and instrument {}'.format(mset,instrument))
 #    print(SPECTRAL_MODELS[mset]['default'].keys())
 #    print(parameters.keys())
@@ -2647,12 +2647,12 @@ def _loadModelParameters(*args,**kwargs):
             sp.remove('')
             sp = numpy.array(sp)
         for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-            if ms in list(parameters.keys()):
+            if ms in list(parameters['parameter_values'].keys()):
                 w = numpy.array([SPECTRAL_MODEL_PARAMETERS[ms]['prefix'] in l for l in sp])
                 val = sp[w][0][len(SPECTRAL_MODEL_PARAMETERS[ms]['prefix']):]
 #                print(val)
                 if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous': val = float(val)
-                parameters[ms].append(val)
+                parameters['parameter_values'][ms].append(val)
                 p[ms] = val
         parameters['parameter_sets'].append(p)
 
@@ -2666,10 +2666,10 @@ def _loadModelParameters(*args,**kwargs):
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
 #        if ms=='teff' or ms =='logg' or ms=='z':
 #            parameters[ms] = [float(x) for x in parameters[ms]]
-        if ms in list(parameters.keys()):
-            p = list(set(parameters[ms]))
+        if ms in list(parameters['parameter_values'].keys()):
+            p = list(set(parameters['parameter_values'][ms]))
             p.sort()
-            parameters[ms] = numpy.array(p)
+            parameters['parameter_values'][ms] = numpy.array(p)
 
 #    print(parameters.keys(),parameters)
 
@@ -3361,9 +3361,8 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
     if burn > 1.: burn = burn/nsamples
 
 # check model name
-    modelset = kwargs.get('model', modelset)
-    modelset = kwargs.get('set', modelset)
-    modelset = kwargs.get('model_set', modelset)
+    for m in ['model','set','model_set','mset']:
+        modelset = kwargs.get(m, modelset)
     mset = checkSpectralModelName(modelset)
     if mset == False:
         raise ValueError('\n{} is not in the SPLAT model suite; try {}'.format(modelset,' '.join(list(SPECTRAL_MODELS.keys()))))
@@ -3372,49 +3371,44 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
         kwargs['summary'] = True
 
 # instrument parameters - identify from data or input
-    instrument = kwargs.get('instr',instrument)
+    for m in ['instr']:
+        instrument = kwargs.get(m,instrument)
     try:
         if instrument == '': instrument = specin.instrument
     except:
         pass
     instr = checkInstrument(instrument)
-    if instr == False: instr=instrument
+    if instr == False: instr=instrument # catch error below
     if verbose == True: print('modelFitMCMC is using {} instrument'.format(instr))
 
 # make sure instrument computed for model set
     if instr not in list(SPECTRAL_MODELS[mset]['instruments']):
         raise ValueError('{} models for instrument {} have not been computed; run processModelsToInstrument()'.format(mset,instr))
 
-# copy of spectrum
+# copy spectrum
     spec = copy.deepcopy(specin)
 
-
-# plotting and reporting keywords
+# other parameters
 #    showRadius = kwargs.get('showRadius', spec.fscale == 'Absolute')
-    showRadius = kwargs.get('radius', showRadius)
     try:
-        filebase = kwargs.get('filebase', 'fit_'+spec.name+'_'+mset)
+        srcname = kwargs.get('name',spec.name)
     except:
-        filebase = kwargs.get('filebase', 'fit_'+mset)
-    filebase = kwargs.get('filename', 'fit_'+mset)
+        srcname = kwargs.get('name','')
+    filebase = kwargs.get('filebase', 'fit_'+srcname+'_'+mset)
+#    filebase = kwargs.get('filename', 'fit_'+mset)
     filebase = kwargs.get('folder', '')+filebase
-#    kwargs['filebase'] = filebase
+    savestep = kwargs.get('savestep', nsamples/10)    
+    showRadius = kwargs.get('radius', showRadius)
+# evolutionary models    
+    for m in ['evolutionary_model','evolution','emodel']:
+        emodel = kwargs.get(m, 'baraffe03')
+# output parameters
     output_parameters = kwargs.get('output_parameters',filebase+'modelfitmcmc_parameters.csv')
     output_chain = kwargs.get('output_chain',filebase+'modelfitmcmc_chain.pdf')
     output_corner = kwargs.get('output_corner',filebase+'modelfitmcmc_corner.pdf')
     output_comparison = kwargs.get('output_comparison',filebase+'modelfitmcmc_bestfit.pdf')
     output_summary = kwargs.get('output_summary',filebase+'modelfitmcmc_summary.txt')
-    try:
-        srcname = kwargs.get('name',spec.name)
-    except:
-        srcname = kwargs.get('name','Source')
-    savestep = kwargs.get('savestep', nsample/10)    
 #    dataformat = kwargs.get('dataformat','ascii.csv')
-# evolutionary models    
-    emodel = kwargs.get('evolutionary_model', 'baraffe03')
-    emodel = kwargs.get('evolution', emodel)
-    emodel = kwargs.get('emodel', emodel)
-
 # set mask   
     mask_ranges = kwargs.get('mask_ranges',None)
     mask = kwargs.get('mask',generateMask(spec.wave,**kwargs))
@@ -3426,63 +3420,61 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
         slitwidth = 3.
     eff_dof = numpy.round((numpy.nansum(1.-numpy.array(mask)) / slitwidth) - 1.)
 
-# set ranges for models - input or set by model itself
-    param_range = {}
+# load model parameters
     modelgrid = _loadModelParameters(mset,instrument) # Range parameters can fall in
-    for ms in list(SPECTRAL_MODELS[mset]['default'].keys()): 
-        if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
-            param_range[ms] = [numpy.min(modelgrid[ms]),numpy.max(modelgrid[ms])]
-        else:
-            param_range[ms] = modelgrid[ms]
-    param_range['teff'] = kwargs.get('teff_range',param_range['teff'])
-    param_range['teff'] = kwargs.get('temperature_range',param_range['teff'])
-    param_range['logg'] = kwargs.get('logg_range',param_range['logg'])
-    param_range['logg'] = kwargs.get('gravity_range',param_range['logg'])
-    param_range['z'] = kwargs.get('z_range',param_range['z'])
-    param_range['z'] = kwargs.get('metallicity_range',param_range['z'])
 
 # set initial parameters
-    param0 = {}
-    for ms in list(param_range.keys()): param0[ms] = SPECTRAL_MODELS[mset]['default'][ms]
-    p = kwargs.get('initial_guess',[param0['teff'],param0['logg'],param0['z']])
-    if len(p) < 3: p.append(0.)
-    param0['teff'] = kwargs.get('initial_temperature',p[0])
-    param0['teff'] = kwargs.get('initial_teff',param0['teff'])
-    param0['logg'] = kwargs.get('initial_gravity',p[1])
-    param0['logg'] = kwargs.get('initial_logg',param0['logg'])
-    param0['z'] = kwargs.get('initial_metallicity',p[2])
-    param0['z'] = kwargs.get('initial_z',param0['z'])
-#    kwargs.get('initial_guess',[\
-#        numpy.random.uniform(teff_range[0],teff_range[1]),\
-#        numpy.random.uniform(logg_range[0],logg_range[1]),\
-#        numpy.random.uniform(z_range[0],z_range[1])])
-#        numpy.random.uniform(0.,0.)])
-#    if len(param0_init) < 3:
-#        param0_init.append(0.0)
-        
-# set parameter steps for continuous variables
-    param_step = {}
-    for ms in list(param0.keys()): param_step[ms] = 0.
-    p = kwargs.get('step_sizes',[50,0.1,0.1])
-    param_step['teff'] = kwargs.get('teff_step',p[0])
-    param_step['teff'] = kwargs.get('temperature_step',param_step['teff'])
-    param_step['logg'] = kwargs.get('logg_step',p[1])
-    param_step['logg'] = kwargs.get('gravity_step',param_step['logg'])
-    param_step['z'] = kwargs.get('z_step',p[2])
-    param_step['z'] = kwargs.get('metallicity_step',param_step['z'])
-    if kwargs.get('nometallicity',False) == False or kwargs.get('vary_metallicity',True) == True:
-        param_range['z'] = [0.,0.]
-        param_step['z'] = 0.
-        param0['z'] = 0.0
-    if kwargs.get('vary_fsed',False) == True: param_step['fsed'] = 1.
-    if kwargs.get('vary_cloud',False) == True: param_step['cld'] = 1.
-    if kwargs.get('vary_kzz',False) == True: param_step['kzz'] = 1.
-
-# choose what parameters to plot
+    param0,param_range,param_step = {},{},{}
     param_plot = []
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: 
-        if param_step[ms] != 0.: param_plot.append(ms)
+    for ms in list(modelgrid['parameter_values'].keys()): 
+        imid = int(len(modelgrid['parameter_values'][ms])/2)
+        param0[ms] = kwargs.get('initial_{}'.format(ms),SPECTRAL_MODELS[mset]['default'][ms])
+        if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
+#            print(modelgrid['parameter_values'][ms])
+            param_range[ms] = [numpy.nanmin(modelgrid['parameter_values'][ms]),numpy.nanmax(modelgrid['parameter_values'][ms])]
+            param_step[ms] = kwargs.get('{}_step'.format(ms),0.5*numpy.abs(modelgrid['parameter_values'][ms][imid]-modelgrid['parameter_values'][ms][imid+1]))
+        else: # discrete
+            param_range[ms] = modelgrid['parameter_values'][ms]
+            param_step[ms] = -1
+        param_range[ms] = kwargs.get('range_{}'.format(ms),param_range[ms])
+        if kwargs.get('vary_{}'.format(ms),True)==False: 
+            param_range[ms] = [param0[ms],param0[ms]]
+            param_step[ms] = 0.
+        if param_step[ms] > 0.: param_plot.append(ms)
+        if verbose==True:
+            print('Varying parameter {} between range {} and {} with step {} with initial value {}'.format(ms,param_range[ms][0],param_range[ms][1],param_step[ms],param0[ms]))
     if showRadius == True: param_plot.append('radius')
+
+#     for ms in list(param_range.keys()): param0[ms] = SPECTRAL_MODELS[mset]['default'][ms]
+# #    p = kwargs.get('initial_guess',[param0['teff'],param0['logg'],param0['z']])
+#     if len(p) < 3: p.append(0.)
+#     param0['teff'] = kwargs.get('initial_temperature',p[0])
+#     param0['teff'] = kwargs.get('initial_teff',param0['teff'])
+#     param0['logg'] = kwargs.get('initial_gravity',p[1])
+#     param0['logg'] = kwargs.get('initial_logg',param0['logg'])
+#     param0['z'] = kwargs.get('initial_metallicity',p[2])
+#     param0['z'] = kwargs.get('initial_z',param0['z'])
+
+
+        
+# # set parameter steps for continuous variables
+#     param_step = {}
+#     for ms in list(param0.keys()): param_step[ms] = 0.
+#     p = kwargs.get('step_sizes',[50,0.1,0.1])
+#     param_step['teff'] = kwargs.get('temperature_step',p[0])
+#     param_step['teff'] = kwargs.get('teff_step',param_step['teff'])
+#     param_step['logg'] = kwargs.get('logg_step',p[1])
+#     param_step['logg'] = kwargs.get('gravity_step',param_step['logg'])
+#     param_step['z'] = kwargs.get('z_step',p[2])
+#     param_step['z'] = kwargs.get('metallicity_step',param_step['z'])
+#     if kwargs.get('nometallicity',False) == False or kwargs.get('vary_metallicity',True) == True:
+#         param_range['z'] = [0.,0.]
+#         param_step['z'] = 0.
+#         param0['z'] = 0.0
+#     if kwargs.get('vary_fsed',False) == True: param_step['fsed'] = 1.
+#     if kwargs.get('vary_cloud',False) == True: param_step['cld'] = 1.
+#     if kwargs.get('vary_kzz',False) == True: param_step['kzz'] = 1.
+
 
 # read in prior calculation and start from there
     if kwargs.get('addon',False) != False:
@@ -3491,8 +3483,8 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
         if isinstance(kwargs.get('addon'),Table):
             t = kwargs.get('addon')
             addflg = True
-# a dictionary is passed
-        elif isinstance(kwargs.get('addon'),dict):
+# a dictionary or pandas is passed
+        elif isinstance(kwargs.get('addon'),dict) or isinstance(kwargs.get('addon'),pandas.DataFrame):
             t = Table(kwargs.get('addon'))
             addflg = True
 # a filename is passed
@@ -3507,7 +3499,7 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
         model = loadModel(set=mset, instrument=instrument, **param0)
     except:
         line=''
-        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: line+='{}:{} '.format(ms,param0[ms])
+        for ms in list(modelgrid['parameter_values'].keys()): line+='{}:{} '.format(ms,param0[ms])
         raise ValueError('\nInitial parameter set {} outside of parameter range for {} models'.format(line,mset))
 #    if not (numpy.min(param_range['teff']) <= param0['teff'] <= numpy.max(param_range['teff']) and \
 #        numpy.min(param_range['teff']) <= param0['teff'] <= numpy.max(param_range['teff']) and \
@@ -3524,16 +3516,16 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
     chisqrs = [chisqr0]    
     params = [param0]
     radii = [(10.*u.pc*numpy.sqrt(alpha0)).to(u.Rsun)]
-    for i in numpy.arange(nsample):
-        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+    for i in numpy.arange(nsamples):
+        for ms in list(modelgrid['parameter_values'].keys()):
             param1 = copy.deepcopy(param0)
-            if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous' and param_step[ms] != 0.:
+            if param_step[ms] > 0.: # continuous
                 param1[ms] = numpy.random.normal(param1[ms],param_step[ms])
                 vflag = True
-            elif SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'discrete' and param_step[ms] != 0.:
-                param1[ms] = numpy.random.choice(modelgrid[ms])
+            elif param_step[ms] < 0.: # discrete
+                param1[ms] = numpy.random.choice(modelgrid['parameter_values'][ms])
                 vflag = True
-                param_range[ms] = modelgrid[ms]
+#                param_range[ms] = modelgrid[ms]
             else:
                 vflag = False
 #            print(ms, param_step[ms], param0[ms], param1[ms],vflag)
@@ -3545,7 +3537,7 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
                     chisqr1,alpha1 = compareSpectra(spec, model ,**mkwargs)  
 
 # Probability that it will jump to this new point; determines if step will be taken
-                    if kwargs.get('stat','ftest').lower() == 'ftest' or kwargs.get('stat','f-test').lower() == 'f-test':
+                    if kwargs.get('stat','ftest').lower() in ['ftest','f-test']:
                         h = 1. - stats.f.cdf(chisqr1/chisqr0, eff_dof, eff_dof)
                     elif kwargs.get('stat','ftest').lower() == 'exponential':
                         h = 1. - numpy.exp(0.5*(chisqr1-chisqr0)/eff_dof)
@@ -3563,13 +3555,13 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
                 except:
                     if verbose:
                         line=''
-                        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: line+='{}:{} '.format(ms,param1[ms])
+                        for ms in list(modelgrid['parameter_values'].keys()): line+='{}:{} '.format(ms,param1[ms])
                         print('Trouble with model {} with parameters {}'.format(mset,line))
                     continue
 
         if verbose:
             line=''
-            for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: line+='{}:{} '.format(ms,param0[ms])
+            for ms in list(modelgrid['parameter_values'].keys()): line+='{}:{} '.format(ms,param0[ms])
             print('At cycle {}: chi2 = {:.1f} parameters {}'.format(i,chisqr0,line))
 
 
@@ -3583,11 +3575,11 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
             _modelFitMCMC_plotChains(dp,columns=param_plot,burn=burn,output=output_chain,stat='weights')
             _modelFitMCMC_plotCorner(dp[int(burn*len(dp)):],columns=param_plot,output=output_corner)
             param_best = {}
-            for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: param_best[ms] = dp[ms].iloc[numpy.argmin(dp['chisqr'])]
-            model = loadModel(set = mset, instrument=instrument,**param_best)
             line=''
-            for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: 
+            for ms in list(modelgrid['parameter_values'].keys()): 
+                param_best[ms] = dp[ms].iloc[numpy.argmin(dp['chisqr'])]
                 if param_step[ms] != 0.: line+='{}={:.2f} '.format(ms,param_best[ms])
+            model = loadModel(set = mset, instrument=instrument,**param_best)
             c,a = compareSpectra(spec, model, output=output_comparison,legend=[srcname,'{}\n{}'.format(SPECTRAL_MODELS[mset]['name'],line),'Difference'],**kwargs)
 #            _modelFitMCMC_reportResults(spec,dp,iterative=True,model_set=mset,**kwargs)
 
@@ -3600,11 +3592,11 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
     fig_chains = _modelFitMCMC_plotChains(dp,columns=param_plot,burn=burn,output=output_chain,stat='weights')
     fig_corner = _modelFitMCMC_plotCorner(dp[int(burn*len(dp)):],columns=param_plot,output=output_corner)
     param_best = {}
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: param_best[ms] = dp[ms].iloc[numpy.argmin(dp['chisqr'])]
-    model = loadModel(set = mset, instrument=instrument,**param_best)
     line=''
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER: 
+    for ms in list(modelgrid['parameter_values'].keys()): 
+        param_best[ms] = dp[ms].iloc[numpy.argmin(dp['chisqr'])]
         if param_step[ms] != 0.: line+='{}={:.2f} '.format(ms,param_best[ms])
+    model = loadModel(set = mset, instrument=instrument,**param_best)
     c,a = compareSpectra(spec, model, output=output_comparison,legend=[srcname,'{}\n{}'.format(SPECTRAL_MODELS[mset]['name'],line),'Difference'], **kwargs)
 
 # save data    
