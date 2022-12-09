@@ -72,6 +72,7 @@ max_snr = 1.e6                # maximum S/N ratio permitted
 #######################################################
 
 print('\n\nWelcome to the Spex Prism Library Analysis Toolkit (SPLAT)!')
+print('You are currently using version {}\n'.format(VERSION))
 print('If you make use of any features of this toolkit for your research, please remember to cite the SPLAT paper:')
 print('\n{}; Bibcode: {}\n'.format(CITATION,BIBCODE))
 print('If you make use of any spectra or models in this toolkit, please remember to cite the original source.')
@@ -5368,7 +5369,7 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
         instrument = inst
         if INSTRUMENTS[instrument]['reader'] != '': 
 #            output = locals()[INSTRUMENTS[instrument]['reader']](file,verbose=verbose,**kwargs)
-            print(INSTRUMENTS[instrument]['reader'],type(INSTRUMENTS[instrument]['reader']))
+#            print(INSTRUMENTS[instrument]['reader'],type(INSTRUMENTS[instrument]['reader']))
             output = INSTRUMENTS[instrument]['reader'](file,verbose=verbose,**kwargs)
             readin = True
 
@@ -5404,7 +5405,7 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
 
 # fits file
         if 'fit' in file_type:
-            with fits.open(os.path.normpath(file),ignore_missing_end=True) as hdu:
+            with fits.open(os.path.normpath(file),ignore_missing_end=True,ignore_missing_simple=True,do_not_scale_image_data=True) as hdu:
                 hdu.verify('silentfix+ignore')
                 if 'NAXIS3' in list(hdu[0].header.keys()): d = numpy.copy(hdu[0].data[0,:,:])
                 else: d =  numpy.copy(hdu[0].data)
@@ -5622,7 +5623,7 @@ def _readKAST(file,**kwargs):
     if not os.path.exists(file):
         raise NameError('\nCould not find KAST file {}'.format(file))
 
-    with fits.open(os.path.normpath(file),ignore_missing_end=True,do_not_scale_image_data=True) as data:
+    with fits.open(os.path.normpath(file),ignore_missing_end=True,ignore_missing_simple=True,do_not_scale_image_data=True) as data:
         data.verify('silentfix+ignore')
         if 'NAXIS3' in list(data[0].header.keys()):
             d = numpy.copy(data[0].data[0,:,:])
