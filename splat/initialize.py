@@ -728,6 +728,18 @@ EW_SETS = {
         'nai': {'linecenter': 2.2079*u.micron,'width': 0.0034*u.micron,'continuum': [2.194,2.1985,2.213,2.219]*u.micron, 'recenter': False},\
         'cai': {'linecenter': 2.264*u.micron,'width': 0.0030*u.micron,'continuum': [2.245,2.252,2.2717,2.2781]*u.micron, 'recenter': False},\
     }},
+    'newton2015': {'altname': ['newton15','new15'], 'reference': 'Newton et al. (2015)','bibcode': '2015ApJ...800...85N', 'continuum_fit_order': 1, 'features': {\
+        'mg1': {'linecenter': 1.4882*u.micron,'width': 0.002/2*u.micron,'continuum': [1.4790,1.4850,1.4900,1.4950]*u.micron, 'recenter': False},\
+        'mg2': {'linecenter': 1.5040*u.micron,'width': 0.004/2*u.micron,'continuum': [1.4965,1.5000,1.5070,1.5120]*u.micron, 'recenter': False},\
+        'k'  : {'linecenter': 1.5170*u.micron,'width': 0.002/2*u.micron,'continuum': [1.5105,1.5135,1.5185,1.5215]*u.micron, 'recenter': False},\
+        'mg3': {'linecenter': 1.5760*u.micron,'width': 0.004/2*u.micron,'continuum': [1.5640,1.5680,1.5785,1.5815]*u.micron, 'recenter': False},\
+        'si' : {'linecenter': 1.59025*u.micron,'width': 0.0045/2*u.micron,'continuum': [1.5845,1.5875,1.5925,1.5955]*u.micron, 'recenter': False},\
+        'co1' : {'linecenter': 1.6205*u.micron,'width': 0.003/2*u.micron,'continuum': [1.6120,1.6150,1.6265,1.6295]*u.micron, 'recenter': False},\
+        'co2' : {'linecenter': 1.6255*u.micron,'width': 0.002/2*u.micron,'continuum': [1.6120,1.6150,1.6265,1.6295]*u.micron, 'recenter': False},\
+        'al-a' : {'linecenter': 1.6725*u.micron,'width': 0.002/2*u.micron,'continuum': [1.6550,1.6650,1.6780,1.6820]*u.micron, 'recenter': False},\
+        'al-b' : {'linecenter': 1.676*u.micron,'width': 0.003/2*u.micron,'continuum': [1.6550,1.6650,1.6780,1.6820]*u.micron, 'recenter': False},\
+        'mg' : {'linecenter': 1.71125*u.micron,'width': 0.0025/2*u.micron,'continuum': [1.7025,1.7055,1.7130,1.7160]*u.micron, 'recenter': False},\
+    }},
 }
 
 # all Mann continuua:
