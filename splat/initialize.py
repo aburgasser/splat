@@ -773,6 +773,9 @@ INDEX_SETS = {
         'H-bump': {'ranges': ([1.54,1.57]*u.micron,[1.66,1.69]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H2O-Y': {'ranges': ([1.04,1.07]*u.micron,[1.14,1.17]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
     }},
+    'canty2013': {'altname': ['canty','canty13','can13'], 'bibcode': '2010ApJ...722..971C', 'indices': {\
+        'H2(K)': {'ranges': ([2.16,2.18]*u.micron,[2.23,2.25]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+    }},
     'covey2010': {'altname': ['covey','covey10','cov10'], 'bibcode': '2010ApJ...722..971C', 'indices': {\
         'H2O-H': {'ranges': ([1.595,1.615]*u.micron,[1.68,1.70]*u.micron,[1.76,1.78]*u.micron), 'method': 'doubleratio', 'sample': 'average'},\
         'H2O-K': {'ranges': ([2.18,2.2]*u.micron,[2.27,2.29]*u.micron,[2.36,2.38]*u.micron), 'method': 'doubleratio', 'sample': 'average'},\
