@@ -125,16 +125,16 @@ A summary of the `Spectrum` object can be accessed using `sp.info()`.
     sp.info()
 
 > SPEX-PRISM spectrum of 2MASSW J0036159+182110
-Airmass = nan
-Source designation = J00361617+1821104
-Median S/N = 274
-SpeX Classification = L2.0
-Spectrum key = 10249, Source key = 10068
-If you use these data, please cite:
-    Burgasser, A. J. et al. (2008, Astrophysical Journal, 681, 579-593)
-    bibcode: 2008ApJ...681..579B
-History:
-    SPEX-PRISM spectrum successfully loaded
+>Airmass = nan
+>Source designation = J00361617+1821104
+>Median S/N = 274
+>SpeX Classification = L2.0
+>Spectrum key = 10249, Source key = 10068
+>If you use these data, please cite:
+>    Burgasser, A. J. et al. (2008, Astrophysical Journal, 681, 579-593)
+>    bibcode: 2008ApJ...681..579B
+>History:
+>    SPEX-PRISM spectrum successfully loaded
 
 You can also read in your own spectrum by passing a filename
 
@@ -161,108 +161,108 @@ To flux calibrate a spectrum, use the `Spectrum` object's built in `fluxCalibrat
 
 ### Visualizing Spectra
 
-To display the spectrum, use the Spectrum object's `plot()`_ function 
+To display the spectrum, use the Spectrum object's `plot()` function 
 
->>> sp.plot()
+    sp.plot()
 
-or the splat.plot routine `plotSpectrum()`_ :
+or the splat.plot routine `plotSpectrum()` :
 
->>> import splat.plot as splot
->>> splot.plotSpectrum(sp)
+    import splat.plot as splot
+    splot.plotSpectrum(sp)
 
 You can save your spectrum by adding a filename:
 
->>> splot.plotSpectrum(sp,file='spectrum.pdf')
+    splot.plotSpectrum(sp,file='spectrum.pdf')
 
 You can also compare multiple spectra:
 
->>> sp1 = splat.getSpectrum(shortname='0415-0935')[0]
->>> sp2 = splat.getSpectrum(shortname='1217-0311')[0]
->>> splot.plotSpectrum(sp1,sp2,colors=['k','r'])
+    sp1 = splat.getSpectrum(shortname='0415-0935')[0]
+    sp2 = splat.getSpectrum(shortname='1217-0311')[0]
+    splot.plotSpectrum(sp1,sp2,colors=['k','r'])
 
-`plotSpectrum()`_ and related routines have many extras to label features, plot uncertainties, 
+`plotSpectrum()` and related routines have many extras to label features, plot uncertainties, 
 indicate telluric absorption regions, make multi-panel and multi-page plots
 of lists of spectra, plot batches of spectra, etc. Be sure to look through the `splat.plot`_ 
 subpackage for more details.
 
-Analysis functions
-~~~~~~~~~~~~~~~~~~
+### Analysis functions
+
 
 SPLAT's primary purpose is to allow the analysis of ultracool dwarf spectra.
 
-To measure spectral indices, use `measureIndex()`_ or `measureIndexSet()`_:
+To measure spectral indices, use `measureIndex()` or `measureIndexSet()`:
 
->>> sp = splat.getSpectrum(shortname='0415-0935')[0]
->>> value, error = splat.measureIndex(sp,[1.14,1.165],[1.21,1.235],method='integrate')
->>> indices = splat.measureIndexSet(sp,set='testi')
+    sp = splat.getSpectrum(shortname='0415-0935')[0]
+    value, error = splat.measureIndex(sp,[1.14,1.165],[1.21,1.235],method='integrate')
+    indices = splat.measureIndexSet(sp,set='testi')
 
 The last line returns a dictionary, whose value,error pair can be accessed by the name 
 of the index:
 
->>> print(indices['sH2O-J'])		# returns value, error
+    print(indices['sH2O-J'])		# returns value, error
 
-You can also determine the gravity classification of a source following `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ using `classifyGravity()`_:
+You can also determine the gravity classification of a source following [Allers & Liu (2013)] (http://adsabs.harvard.edu/abs/2013ApJ...772...79A) using `classifyGravity()`:
 
->>> sp = splat.getSpectrum(young=True, lucky=True)[0]
->>> print(splat.classifyGravity(sp))   # returned 'VL-G'
+    sp = splat.getSpectrum(young=True, lucky=True)[0]
+    print(splat.classifyGravity(sp))   # returned 'VL-G'
 
-To classify a spectrum, use the various `classifyByXXX`_ methods:
+To classify a spectrum, use the various `classifyByXXX` methods:
 
->>> sp = splat.getSpectrum(shortname='0415-0935')[0]
->>> spt,unc = splat.classifyByIndex(sp,set='burgasser')
->>> spt,unc = splat.classifyByStandard(sp,spt=['T5','T9'])
->>> result = splat.classifyByTemplate(sp,spt=['T6','T9'],nbest=5)
+    sp = splat.getSpectrum(shortname='0415-0935')[0]
+    spt,unc = splat.classifyByIndex(sp,set='burgasser')
+    spt,unc = splat.classifyByStandard(sp,spt=['T5','T9'])
+    result = splat.classifyByTemplate(sp,spt=['T6','T9'],nbest=5)
 
 The last line returns a dictionary containing the best 5 template matches.
 
-To compare a spectrum to another spectrum or a model, use `compareSpectra()`_ :
+To compare a spectrum to another spectrum or a model, use `compareSpectra()`:
 
->>> import splat.model as spmod
->>> mdl = spmod.loadModel(teff=720,logg=4.8,set='btsettl')      # loads a BTSettl08 model 
->>> sp = splat.getSpectrum(shortname='0415-0935')[0]
->>> chi,scale = splat.compareSpectra(sp,mdl)
->>> mdl.scale(scale)
->>> splat.plotSpectrum(sp,mdl,colors=['k','r'],legend=[sp.name,mdl.name])
+    import splat.model as spmod
+    mdl = spmod.loadModel(teff=720,logg=4.8,set='btsettl')      # loads a BTSettl08 model 
+    sp = splat.getSpectrum(shortname='0415-0935')[0]
+    chi,scale = splat.compareSpectra(sp,mdl)
+    mdl.scale(scale)
+    splat.plotSpectrum(sp,mdl,colors=['k','r'],legend=[sp.name,mdl.name])
 
-You can shortcut the last three lines using the ``plot`` keyword:
+You can shortcut the last three lines using the `plot` keyword:
 
->>> chi,scale = splat.compareSpectra(sp,mdl,plot=True)
+    chi,scale = splat.compareSpectra(sp,mdl,plot=True)
 
 
-There are also codes **still in development** to fit models directly to spectra: `modelFitGrid()`_, `modelFitMCMC()`_, and `modelFitEMCEE()`_:
+There are also codes *still in development* to fit models directly to spectra: `modelFitGrid()`, `modelFitMCMC()`, and `modelFitEMCEE()`:
 
->>> import splat.model as spmod
->>> sp = splat.getSpectrum(shortname='0415-0935')[0]
->>> sp.fluxCalibrate('2MASS J',14.49,absolute=True)
->>> nbest = 5
->>> result1 = splat.modelFitGrid(sp,set='btsettl')
->>> result2 = splat.modelFitMCMC(sp,set='btsettl',initial_guess=[800,5.0,0.],nsamples=300,step_sizes=[50.,0.5,0.])
->>> result3 = splat.modelFitEMCEE(sp,set='btsettl',initial_guess=[800,5.0,0.],nwalkers=12,nsamples=500)
+    import splat.model as spmod
+    sp = splat.getSpectrum(shortname='0415-0935')[0]
+    sp.fluxCalibrate('2MASS J',14.49,absolute=True)
+    nbest = 5
+    result1 = splat.modelFitGrid(sp,set='btsettl')
+    result2 = splat.modelFitMCMC(sp,set='btsettl',initial_guess=[800,5.0,0.],nsamples=300,step_sizes=[50.,0.5,0.])
+    result3 = splat.modelFitEMCEE(sp,set='btsettl',initial_guess=[800,5.0,0.],nwalkers=12,nsamples=500)
 
 The outputs of all of these fitting functions is a dictionary or list of dictionaries containing the parameters of the best-fitting models; there are also several diagnostic plots produced depending on the routine. View the model fitting page for more details.
 
-All of these routines have many options worth exploring, and which are (increasingly) documented at `https://splat.physics.ucsd.edu/splat <https://splat.physics.ucsd.edu/splat>`_. If there are capabilities
-you need, please suggest them to aburgasser@ucsd.edu, or note it in the "Issues" link on our `github site <https://github.com/aburgasser/splat>`_.
+All of these routines have many options worth exploring, and which are (increasingly) documented at https://splat.physics.ucsd.edu/splat. If there are capabilities
+you need, please suggest them to aburgasser@ucsd.edu, or note it in the "Issues" link on our `github site https://github.com/aburgasser/splat.
 
-Citing SPLAT and its data
--------------------------
+## Citing SPLAT and its data
 
-If you use SPLAT tools for your research, please cite Burgasser et al. (2017, ASInC 14, 7) [`NASA ADS <https://ui.adsabs.harvard.edu/abs/2017ASInC..14....7B/abstract>`_]. 
+
+If you use SPLAT tools for your research, please cite Burgasser et al. (2017, ASInC 14, 7), bibcode 2017ASInC..14....7B [NASA ADS] (https://ui.adsabs.harvard.edu/abs/2017ASInC..14....7B/abstract). 
 
 In addition, if you use data contained in SPLAT or the SpeX Prism Library, please be sure to cite the original spectral data source, which can be accessed from the Spectrum object:
 
->>> sp = splat.getSpectrum(lucky=True)
->>> sp.citation().data_reference
-'2016ApJ...817..112S'
+    sp = splat.getSpectrum(lucky=True)
+    sp.citation().data_reference
+> '2016ApJ...817..112S'
 
->>> import splat.citations as spcite
->>> spcite.shortRef(sp.data_reference)
-'Schneider, A. C. et al. (2016, Astrophysical Journal, 817, 112)'
+    import splat.citations as spcite
+    spcite.shortRef(sp.data_reference)
+> Schneider, A. C. et al. (2016, Astrophysical Journal, 817, 112)
 
-Acknowledgements
-----------------
+## Acknowledgements
 
-SPLAT is an collaborative project of research students in the `UCSD Cool Star Lab <http://www.coolstarlab.org>`_, aimed at developing research through the building of spectral analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Joshua Hazlett, Carolina Herrara Hernandez, Elizabeth Moreno Hilario, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Dorsa Majidi, Diego Octavio Talavera Maya, Alex Mendez, Gretel Mercado, Niana Mohammed, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen, and Russell van Linge.
+
+SPLAT is an collaborative project of research students in the [UCSD Cool Star Lab] (http://www.coolstarlab.org), aimed at developing research through the building of spectral analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Joshua Hazlett, Carolina Herrara Hernandez, Elizabeth Moreno Hilario, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Dorsa Majidi, Diego Octavio Talavera Maya, Alex Mendez, Gretel Mercado, Niana Mohammed, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen, and Russell van Linge.
 
 This project has been supported by the National Aeronautics and Space Administration under Grant No. NNX15AI75G.
 
