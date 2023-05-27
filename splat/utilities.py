@@ -10,6 +10,7 @@ from __future__ import print_function
 import base64
 import copy
 import os
+import pandas
 import re
 import requests
 import string
@@ -2261,6 +2262,67 @@ def checkDBCoordinates(db,designation_keyword='DESIGNATION',ra_keyword='RA',dec_
         if shortname_keyword not in list(db.keys()):
             db[shortname_keyword] = [designationToShortName(d) for d in db[designation_keyword]]
     return db
+
+
+def keySearch(keys, key_name='KEY', db=pandas.DataFrame(), verbose=True):
+    '''
+    Purpose
+    -------
+
+    General purpose function that searches a pandas database for values of keys that match in 
+    key_name column. Use by `keySource()`_ and `keySpectrum()`_.
+
+    Parameters
+    ----------
+
+    keys : int or list
+        integer or list of integers corresponding to keys
+
+    key_name = 'KEY' : string [optional]
+        name of column to search 
+
+    db = blank pandas DataFrame : pandas DataFrame [optional]
+        pandas data Frame to search; code checks that it contains key_name column
+
+    verbose = True : boolean [optional]
+        set to True to have program return verbose output
+
+    Outputs
+    -------
+
+    pandas DataFrame containing the rows that match input keys, or empty pandas DataFrame
+
+    Example
+    -------
+
+        TBD
+
+    Dependencies
+    ------------
+        None
+
+    '''
+# check db is a pandas DataFrame, or try to convert
+    if isinstance(db,pandas.DataFrame) == False:
+        try: dbconv = pandas.DataFrame(db)
+        except: pass
+    else: dbconv = copy.deepcopy(db)
+    if isinstance(dbconv,pandas.DataFrame) == False:
+        if verbose==True: print('Passed database is not a pandas dataframe')
+        return pandas.DataFrame()
+
+# check key is in data frame
+    if key_name not in list(dbconv.columns):
+        raise ValueError('Cannot find key column {} in dataframe'.format(key_name))
+
+# vectorize and make integer
+    if isinstance(keys,list) == False: keys = [keys]
+    keys = [int(k) for k in keys]
+
+# search dataframe
+    sdb = dbconv[[x in keys for x in dbconv[key_name]]]
+    if len(sdb) == 0 and verbose==True: print('No sources found with key(s) = {}'.format(*keys))
+    return sdb
     
 
 #####################################################

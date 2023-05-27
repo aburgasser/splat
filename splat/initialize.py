@@ -14,7 +14,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2022.12.09'
+VERSION = '2023.05.27'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -636,7 +636,9 @@ SPECTRAL_MODELS = {\
     'morley14': {'instruments': {}, 'name': 'Morley et al. (2014)', 'citation': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altname': ['morley2014'], 'default': {'teff': 300., 'logg': 5.0, 'z': 0., 'fsed': 'f5', 'cld': 'h50'}}, \
 #    'nextgen99': {'instruments': {}, 'name': 'Phoenix NextGen', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altname': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
     'saumon08': {'instruments': {}, 'name': 'Saumon & Marley 2008', 'citation': 'Saumon & Marley 2008', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','saumon2008'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
-    'sonora18': {'instruments': {}, 'name': 'Sonora 2018', 'citation': 'Marley et al. (2018)', 'bibcode': 'marley_mark_2018_1309035', 'altname': ['marley','marley18','marley2018','sonora','sonora2018'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
+    'sonora18': {'instruments': {}, 'name': 'Sonora 2018', 'citation': 'Marley et al. (2018)', 'bibcode': 'marley_mark_2018_1309035', 'altname': ['marley','marley18','marley2018','sonora2018'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
+    'sonora21': {'instruments': {}, 'name': 'Sonora-bobcat', 'citation': 'Marley et al. (2021)', 'bibcode': '2021ApJ...920...85M', 'altname': ['marley2021','sonora','sonora2021','bobcat','sonora-bobcat'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'co': 1}}, \
+    'karalidi21': {'instruments': {}, 'name': 'Sonora-cholla', 'citation': 'Karalidi et al. (2021)', 'bibcode': '2021ApJ...923..269K', 'altname': ['karalidi2021','karalidi','sonora-cholla','cholla'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': 4}}, \
     'gerasimov': {'instruments': {}, 'name': 'Gerasimov 2020', 'citation': 'Gerasimov et al. (2020)', 'bibcode': '2020RNAAS...4..214G', 'altname': ['phxlowz'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
     'lowz': {'instruments': {}, 'name': 'LowZ models', 'citation': 'Meisner et al. (2021)', 'bibcode': '2021ApJ...915..120M', 'altname': ['meisner2021','mei21'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': '2.0', 'co': 0.85}}, \
 #    'btcond': {'instruments': {}, 'name': 'BT Cond', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['dusty-cond','bt-cond'], 'rawfolder': '/Volumes/splat/models/btcond/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0, 'enrich': 0.0}}, \
@@ -770,6 +772,18 @@ INDEX_SETS = {
         'K/J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'H-dip': {'ranges': ([1.61,1.64]*u.micron,[1.56,1.59]*u.micron,[1.66,1.69]*u.micron), 'method': 'inverse_line', 'sample': 'integrate'},\
     }},
+    'burgasser2023': {'altname': ['burgasser23','bur23'], 'bibcode': '', 'indices': {\
+        'CH4-J': {'ranges': ([1.315,1.335]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'CH4-H': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'CH4-K': {'ranges': ([2.215,2.255]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'H2O-H': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'H2O-K': {'ranges': ([1.975,1.995]*u.micron,[2.08,2.10]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'Y/J': {'ranges': ([1.005,1.045]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'K/J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'K/H': {'ranges': ([2.06,2.10]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'H-dip': {'ranges': ([1.61,1.64]*u.micron,[1.56,1.59]*u.micron,[1.66,1.69]*u.micron), 'method': 'inverse_line', 'sample': 'median'},\
+    }},
     'bardalez2014': {'altname': ['bardalez','bardalez14','bar14'], 'bibcode': '2014ApJ...794..143B', 'indices': {\
         'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'CH4-J': {'ranges': ([1.315,1.335]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
@@ -868,41 +882,45 @@ INDEX_SETS = {
 
 
 # classification indices
-# need to add allers
 INDEX_CLASSIFICATION_RELATIONS = {
     'reid2001': {'altname': ['reid','reid01','rei01'], 'bibcode': '2001AJ....121.1710R', 'method': 'polynomial', 'sptoffset': 20., 'decimal': False, 'min_indices': 1, 'sets': ['reid2001'], 'indices': { \
             'H2O-A': {'fitunc': 1.18, 'range': [18,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-32.1, 23.4]}, \
-            'H2O-B': {'fitunc': 1.02, 'range': [18,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-24.9, 20.7]}}
-    },
+            'H2O-B': {'fitunc': 1.02, 'range': [18,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-24.9, 20.7]},
+    }},
     'testi2001': {'altname': ['testi','testi01','tes01'], 'bibcode': '2001ApJ...552L.147T', 'method': 'polynomial', 'sptoffset': 10., 'decimal': True, 'min_indices': 2, 'sets': ['testi2001'], 'indices': { \
             'sHJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-1.87, 1.67]}, \
             'sKJ': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-1.20, 2.01]}, \
             'sH2O_J': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [1.54, 0.98]}, \
             'sH2O_H1': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [1.27, 0.76]}, \
             'sH2O_H2': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [2.11, 0.29]}, \
-            'sH2O_K': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1.,  'coeff': [2.36, 0.60]}}
-    },
+            'sH2O_K': {'fitunc': 0.5, 'range': [20,26], 'spt': 0., 'sptunc': 99., 'mask': 1.,  'coeff': [2.36, 0.60]},
+    }},
+    'slesnick2004': {'altname': ['slesnick','slesnick04','sle04'], 'bibcode': '2004ApJ...610.1045S', 'method': 'polynomial', 'sptoffset': 10., 'decimal': False, 'min_indices': 1, 'sets': ['slesnick2004'], 'indices': { \
+            'H2O-1': {'fitunc': 1.2, 'range': [10,30], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-35.35,33.71]}, \
+            'H2O-2': {'fitunc': 0.53, 'range': [12,23], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-27.10,34.13]}, \
+            'FeH': {'fitunc': 0.66, 'range': [13,23], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-31.59,36.31]}, \
+    }},
     'burgasser2007': {'altname': ['burgasser','burgasser07','bur07'], 'bibcode': '2007ApJ...659..655B', 'method': 'polynomial', 'sptoffset': 20., 'decimal': False, 'min_indices': 2, 'sets': ['burgasser2006'], 'indices': { \
             'H2O-J': {'fitunc': 0.8, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [1.038e2, -2.156e2,  1.312e2, -3.919e1, 1.949e1]}, \
             'H2O-H': {'fitunc': 1.0, 'range': [20,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [9.087e-1, -3.221e1, 2.527e1, -1.978e1, 2.098e1]}, \
             'CH4-J': {'fitunc': 0.7, 'range': [30,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [1.491e2, -3.381e2, 2.424e2, -8.450e1, 2.708e1]}, \
             'CH4-H': {'fitunc': 0.3, 'range': [31,39], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [2.084e1, -5.068e1, 4.361e1, -2.291e1, 2.013e1]}, \
-            'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}}
-    },
+            'CH4-K': {'fitunc': 1.1, 'range': [20,37], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-1.259e1, -4.734e0, 2.534e1, -2.246e1, 1.885e1]}, \
+    }},
     'geballe2002': {'altname': ['geballe','geballe02','geb02'], 'bibcode': '2002ApJ...564..466G', 'method': 'ranges', 'sptoffset': 20., 'decimal': False, 'min_indices': 2, 'sets': ['geballe2002','martin1999'], 'indices': { \
             'PC3': [[2.4,2.6,20.],[2.6,2.86,21.],[2.85,3.25,22.],[3.25,4.25,23.],[4.25,6,24.]],\
             'Color-d2': [[4.5,5.5,20.],[5.5,6.5,21.],[6.5,7.5,22.],[7.5,10.,23.],[10,17,24.],[17.,23.,25.],[23.,25.,26.]],\
             'H2O-1.2': [[1.5,1.7,30.],[1.7,1.9,31.],[1.9,2.15,32.],[2.15,2.5,33.],[2.5,3.0,34.],[3.0,4.5,35.],[4.5,6.5,36.],[6.5,10.,37.],[10.,15.,38.]],\
             'H2O-1.5': [[1.2,1.27,20.],[1.27,1.35,21.],[1.35,1.43,22.],[1.43,1.5,23.],[1.5,1.55,24.],[1.55,1.6,25.],[1.6,1.65,26.],[1.65,1.7,27.],[1.7,1.8,28.],[1.8,1.95,29.],[1.95,2.2,30.],[2.2,2.5,31.],[2.5,3.0,32.],[3.0,3.5,33.],[3.5,4.5,34.],[4.5,5.5,35.],[5.5,7.,36.],[7.,9.,37.],[9.,12.,38.]],\
             'CH4-1.6': [[1.02,1.07,30.],[1.07,1.15,31.],[1.15,1.3,32.],[1.3,1.5,33.],[1.5,1.8,34.],[1.8,2.5,35.],[2.5,4,36.],[4.,6.,37.],[6.,9.,38.]],\
-            'CH4-2.2': [[0.91,0.94,23.],[0.94,0.98,24.],[0.98,1.025,25.],[1.025,1.075,26.],[1.075,1.125,27.],[1.125,1.175,28.],[1.175,1.25,29.],[1.25,1.4,30.],[1.4,1.6,31.],[1.6,1.95,32.],[1.95,2.75,33.],[2.75,3.8,34.],[3.8,5.5,35.],[5.5,8.5,36.],[8.5,12.,37],[12.,18.,38.]]}
-    },
+            'CH4-2.2': [[0.91,0.94,23.],[0.94,0.98,24.],[0.98,1.025,25.],[1.025,1.075,26.],[1.075,1.125,27.],[1.125,1.175,28.],[1.175,1.25,29.],[1.25,1.4,30.],[1.4,1.6,31.],[1.6,1.95,32.],[1.95,2.75,33.],[2.75,3.8,34.],[3.8,5.5,35.],[5.5,8.5,36.],[8.5,12.,37],[12.,18.,38.]]
+    }},
     'allers2013': {'altname': ['allers','allers13','all13'], 'bibcode': '2013ApJ...657..511A', 'method': 'polynomial', 'sptoffset': 10., 'decimal': False, 'min_indices': 2, 'sets': ['allers2013','mclean2003','slesnick2004'], 'indices': { \
              'H2O': {'fitunc': 0.390, 'range': [15,25], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [24.0476, -104.424, 169.388,-83.5437]}, \
              'H2O-1': {'fitunc': 1.097, 'range': [14,25], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [28.5982, -80.7404, 39.3513, 12.1927]}, \
              'H2OD': {'fitunc': 0.757, 'range': [20,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-97.230, 229.884, -202.245, 79.4477]}, \
-             'H2O-2': {'fitunc': 0.501, 'range': [14,22], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [37.5013, -97.8144, 55.4580, 10.8822]}},\
-    },
+             'H2O-2': {'fitunc': 0.501, 'range': [14,22], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [37.5013, -97.8144, 55.4580, 10.8822]},\
+    }},
 }
 
 # indices for spectral binary identification
@@ -1237,19 +1255,19 @@ SPT_ABSMAG_RELATIONS = {
         'WISE_W3': {\
             'spt': [16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,34,35,36,37,38,39], \
             'values': [8.72,8.96,9.18,9.24,9.35,9.66,9.62,9.91,10.05,10.13,10.53,10.87,10.66,10.48,11.02,11.26,10.61,10.70,11.37,11.61,12.26,12.27,11.97],\
-            'rms': [0.34,0.33,0.47,0.42,0.32,0.31,0.37,0.37,0.44,0.51,0.87,1.08,0.36,0.75,0.5,0.76,0.40,0.5,0.5,0.37,0.76,0.64,0.5]}},
-    },
+            'rms': [0.34,0.33,0.47,0.42,0.32,0.31,0.37,0.37,0.44,0.51,0.87,1.08,0.36,0.75,0.5,0.76,0.40,0.5,0.5,0.37,0.76,0.64,0.5]},
+    }},
     'burgasser2007': {'altname': ['burgasser','burgasser07','bur07'], 'bibcode': '2007ApJ...659..655B', 'sptoffset': 20, 'method': 'polynomial', 'filters': {
         'MKO_J': {'fitunc' : 0.30, 'range' : [20., 38.], 'coeff': [.000203252, -.0129143, .275734, -1.99967, 14.8948]}, 
         'MKO_H': {'fitunc' : 0.27, 'range' : [20., 38.], 'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, 
-        'MKO_K': {'fitunc' : 0.26, 'range' : [20., 38.], 'coeff': [.0000001051, -.000006985, .0001807, -.002271, .01414, -.04024, .05129, .2322, 10.45]}},
-    },
+        'MKO_K': {'fitunc' : 0.26, 'range' : [20., 38.], 'coeff': [.0000001051, -.000006985, .0001807, -.002271, .01414, -.04024, .05129, .2322, 10.45]},
+    }},
     'cruz2003': {'altname': ['cruz','cruz03','cru03'], 'bibcode': '2003AJ....126.2421C', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
-        '2MASS_J': {'fitunc' : 0.30, 'range' : [16.,28.], 'coeff': [-6.892e-4,3.453e-2,-6.193e-1,5.043,-4.410]}},
-    },
+        '2MASS_J': {'fitunc' : 0.30, 'range' : [16.,28.], 'coeff': [-6.892e-4,3.453e-2,-6.193e-1,5.043,-4.410]},
+    }},
     'dahn2002': {'altname': ['dahn','dahn02','dah02'], 'bibcode': '2002AJ....124.1170D', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
-        '2MASS_J': {'fitunc' : 0.25, 'range' : [17.,28.], 'coeff': [0.341,8.38]}},
-    },
+        '2MASS_J': {'fitunc' : 0.25, 'range' : [17.,28.], 'coeff': [0.341,8.38]},
+    }},
     'dupuy2012': {'altname': ['dupuy','dupuy12','dup12'], 'bibcode': '2012ApJS..201...19D', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         'MKO_Y': {'fitunc': 0.40, 'range' : [16., 39.], 'coeff': [-.00000252638, .000285027, -.0126151, .279438, -3.26895, 19.5444, -35.1560]}, 
         'MKO_J': {'fitunc' : 0.39, 'range' : [16., 39.], 'coeff' : [-.00000194920, .000227641, -.0103332, .232771, -2.74405, 16.3986, -28.3129]}, 
@@ -1266,63 +1284,63 @@ SPT_ABSMAG_RELATIONS = {
         'WISE_W1': {'fitunc': 0.39, 'range':[16., 39.], 'coeff': [1.58040e-5, -3.33944e-4, -4.38105e-3, 3.55395e-1, 7.14765]}, 
         'WISE_W2': {'fitunc': 0.35, 'range':[16., 39.], 'coeff': [1.78555e-5, -8.81973e-4, 1.14325e-2, 1.92354e-1, 7.46564]},
         'WISE_W3': {'fitunc': 0.43, 'range':[16., 39.], 'coeff': [2.37656e-5,-1.28563e-3,2.01740e-2,6.64242e-2,7.81181e0]},
-        'WISE_W4': {'fitunc': 0.76, 'range':[16., 39.], 'coeff': [-2.16042e-3,1.14630e-1,7.78974e0]}},
-    },
+        'WISE_W4': {'fitunc': 0.76, 'range':[16., 39.], 'coeff': [-2.16042e-3,1.14630e-1,7.78974e0]},
+    }},
     'dupuy2013': {'altname': ['dupuy13','dup13'], 'bibcode': '2013Sci...341.1492D', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
         'MKO_Y': {'spt': [38,38.5,39,40.], 'values': [17.4,18.81,19.26,20.24], 'rms': [0.25,0.51,0.88,0.17]}, 
         'MKO_J': {'spt': [38,38.5,39,39.5,40.], 'values': [16.43,17.87,18.39,17.68,20.09], 'rms': [0.46,0.44,0.95,0.37,0.25]}, 
         'MKO_H': {'spt': [38,38.5,39,39.5,40.], 'values': [16.82,18.2,18.77,18.08,20.6], 'rms': [0.43,0.45,1.08,0.39,0.25]}, 
         'MKO_K': {'spt': [38,38.5,39,40.], 'values': [16.93,18.27,18.89,20.7], 'rms': [0.8,0.4,0.57,0.18]}, 
         'IRAC_CH1': {'spt': [38,38.5,39,39.5,40.], 'values': [15.11,15.83,16.17,15.58,16.99], 'rms': [0.15,0.22,0.23,0.41,0.21]}, 
-        'IRAC_CH2': {'spt': [38,38.5,39,39.5,40.], 'values': [13.4,13.79,14.09,13.51,14.66], 'rms': [0.21,0.12,0.2,0.43,0.28]}},
-    }, 
+        'IRAC_CH2': {'spt': [38,38.5,39,39.5,40.], 'values': [13.4,13.79,14.09,13.51,14.66], 'rms': [0.21,0.12,0.2,0.43,0.28]},
+    }}, 
     'faherty2012': {'altname': ['faherty12','fah12'],'bibcode': '2012ApJ...752...56F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         'MKO_J': {'fitunc' : 0.30, 'range' : [20., 38.], 'coeff': [.000203252, -.0129143, .275734, -1.99967, 14.8948]}, 
         'MKO_H': {'fitunc' : 0.27, 'range' : [20., 38.], 'coeff' : [.000175368, -.0108205, .227363, -1.60036, 13.2372]}, 
-        'MKO_K': {'fitunc' : 0.28, 'range' : [20., 38.], 'coeff' : [.0000816516, -.00469032, .0940816, -.485519, 9.76100]}},
-    },
+        'MKO_K': {'fitunc' : 0.28, 'range' : [20., 38.], 'coeff' : [.0000816516, -.00469032, .0940816, -.485519, 9.76100]},
+    }},
     'faherty2016': {'altname': ['faherty','faherty2016','faherty-field','fah16'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.402, 'range' : [16., 39.], 'coeff': [3.478e-5,-2.684e-3,7.771e-2,-1.058,7.157,-8.350]},
         '2MASS_H': {'fitunc' : 0.389, 'range' : [16., 39.], 'coeff' : [2.841e-5,-2.217e-3,6.551e-2,-9.174e-1,6.406,-7.496]},
         '2MASS_KS': {'fitunc' : 0.537, 'range' : [16., 39.], 'coeff' : [2.540e-5,-1.997e-3,5.978e-2,-8.481e-1,5.970,-6.704]},
         'WISE_W1': {'fitunc' : 0.365, 'range' : [16., 39.], 'coeff' : [8.337e-6,-6.897e-4,2.258e-2,-3.603e-1,2.991,-1.664e-1]},
         'WISE_W2': {'fitunc' : 0.398, 'range' : [16., 39.], 'coeff' : [8.190e-6,-6.938e-4,2.283e-2,-3.655e-1,3.032,-5.043e-1]},
-        'WISE_W3': {'fitunc' : 0.446, 'range' : [16., 39.], 'coeff' : [-1.024e-6,9.477e-5,-2.573e-3,1.520e-2,3.365e-1,6.462]}},
-    },
+        'WISE_W3': {'fitunc' : 0.446, 'range' : [16., 39.], 'coeff' : [-1.024e-6,9.477e-5,-2.573e-3,1.520e-2,3.365e-1,6.462]},
+    }},
     'faherty2016-young': {'altname': ['faherty-young','fah16y'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.647, 'range' : [17., 27.], 'coeff': [4.032e-3,-1.416e-1,2.097,8.478e-1]},
         '2MASS_H': {'fitunc' : 0.634, 'range' : [17., 27.], 'coeff' : [2.642e-3,-1.049e-1,1.753,1.207]},
         '2MASS_KS': {'fitunc' : 0.640, 'range' : [17., 27.], 'coeff' : [-1.585e-2,7.338e-1,4.537]},
         'WISE_W1': {'fitunc' : 0.648, 'range' : [17., 27.], 'coeff' : [-1.397e-2,5.955e-1,5.247]},
         'WISE_W2': {'fitunc' : 0.694, 'range' : [17., 27.], 'coeff' : [-1.507e-2,5.944e-1,5.061]},
-        'WISE_W3': {'fitunc' : 0.717, 'range' : [17., 27.], 'coeff' : [-1.003e-4,-1.670e-3,2.023e-1,7.529]}},
-    },
+        'WISE_W3': {'fitunc' : 0.717, 'range' : [17., 27.], 'coeff' : [-1.003e-4,-1.670e-3,2.023e-1,7.529]},
+    }},
     'faherty2016-group': {'altname': ['faherty-group','fah16g'],'bibcode': '2016ApJS..225...10F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.660, 'range' : [17., 27.], 'coeff': [-3.825e-3,1.370e-1,-9.279e-1,10.141]},
         '2MASS_H': {'fitunc' : 0.603, 'range' : [17., 27.], 'coeff' : [-3.909e-3,1.346e-1,-9.347e-1,9.728]},
         '2MASS_KS': {'fitunc' : 0.556, 'range' : [17., 27.], 'coeff' : [-4.006e-3,1.378e-1,-1.031,9.916]},
         'WISE_W1': {'fitunc' : 0.551, 'range' : [17., 27.], 'coeff' : [-4.483e-3,1.505e-1,-1.208,10.403]},
         'WISE_W2': {'fitunc' : 0.616, 'range' : [17., 27.], 'coeff' : [-6.821e-3,2.322e-1,-2.133,13.322]},
-        'WISE_W3': {'fitunc' : 0.427, 'range' : [17., 27.], 'coeff' : [-5.684e-3,1.993e-1,-1.987,13.972]}},
-    },
+        'WISE_W3': {'fitunc' : 0.427, 'range' : [17., 27.], 'coeff' : [-5.684e-3,1.993e-1,-1.987,13.972]},
+    }},
     'filippazzo2015': {'altname': ['filippazzo','filippazzo15','fillippazzo','filipazo','filippazo','fil15'],'bibcode': '2015ApJ...810..158F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [3.478e-5, -2.684e-3, 7.771e-2, -1.058, 7.157, -8.350]}, 
-        'WISE_W2': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [8.190e-6, -6.938e-4, 2.283e-2, -3.655e-1, 3.032, -5.043e-1]}},
-    },
+        'WISE_W2': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [8.190e-6, -6.938e-4, 2.283e-2, -3.655e-1, 3.032, -5.043e-1]},
+    }},
     'hawley2002': {'altname': ['hawley02','hawley','haw02'], 'bibcode': '2002AJ....123.3409H', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
-        '2MASS_J': {'spt': numpy.arange(10.,36.1,1.), 'values': [6.45,6.72,6.98,7.24,8.34,9.44,10.18,10.92,11.14,11.43,11.72,12.,12.29,12.58,12.87,13.16,14.31,14.45,14.58,14.72,14.86,14.99,15.13,15.27,15.4,15.54,15.68], 'rms': numpy.zeros(27)+0.4}},
-    }, 
+        '2MASS_J': {'spt': numpy.arange(10.,36.1,1.), 'values': [6.45,6.72,6.98,7.24,8.34,9.44,10.18,10.92,11.14,11.43,11.72,12.,12.29,12.58,12.87,13.16,14.31,14.45,14.58,14.72,14.86,14.99,15.13,15.27,15.4,15.54,15.68], 'rms': numpy.zeros(27)+0.4},
+    }}, 
     'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'bibcode': 'TBD', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.26, 'range' : [17., 27.], 'coeff': [0.263,8.49]},
         '2MASS_H': {'fitunc' : 0.24, 'range' : [17., 27.], 'coeff': [0.304,7.77]},
         '2MASS_KS': {'fitunc' : 0.21, 'range' : [17., 27.], 'coeff': [0.344,7.29]},
         'WISE_W1': {'fitunc' : 0.27, 'range' : [17., 27.], 'coeff': [0.241,7.72]},
-        'WISE_W2': {'fitunc' : 0.24, 'range' : [17., 27.], 'coeff': [0.228,7.62]}},
-    },
+        'WISE_W2': {'fitunc' : 0.24, 'range' : [17., 27.], 'coeff': [0.228,7.62]},
+    }},
     'knapp2004': {'altname': ['knapp','knapp04','kna04'], 'bibcode': '2004AJ....127.3553K', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         'MKO_J': {'fitunc' : 0.40, 'range' : [21., 39.], 'coeff' : [-7.923e-5,3.986e-3,-6.848e-2,4.500e-1,-6.278e-1,12.03]}, 
-        'MKO_K': {'fitunc': 0.30, 'range' : [21., 39.], 'coeff': [-7.351e-5,3.524e-3,-5.819e-2,3.876e-1,-6.485e-1,10.93]}}, 
-    },
+        'MKO_K': {'fitunc': 0.30, 'range' : [21., 39.], 'coeff': [-7.351e-5,3.524e-3,-5.819e-2,3.876e-1,-6.485e-1,10.93]}, 
+    }},
     'kiman2019': {'altname': ['kiman','kiman19','kim19'], 'bibcode': '2019AJ....157..231K', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
         'GAIA_G': {'spt': [10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,26], 'values': [8.13,8.78,9.35,9.97,10.77,11.86,12.92,13.54,14.60,15.26,16.11,16.82,17.11,17.89,18.51,18.92], 'rms': [0.76,0.83,0.69,0.74,0.77,0.85,0.53,0.56,0.55,0.53,0.44,0.31,0.40,0.59,0.27,0.17]}, 
         'GAIA_Rp': {'spt': [10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,26], 'values': [7.20,7.76,8.26,8.81,9.55,10.54,11.50,12.07,13.02,13.62,14.45,15.14,15.42,16.21,16.80,16.98], 'rms': [0.74,0.82,0.67,0.72,0.75,0.81,0.50,0.52,0.51,0.50,0.42,0.31,0.39,0.58,0.25,0.20]}, 
@@ -1351,8 +1369,8 @@ SPT_ABSMAG_RELATIONS = {
         '2MASS_H': {'fitunc' : 0.36, 'range' : [16., 28.], 'coeff': [0.340,7.555]},
         '2MASS_KS': {'fitunc' : 0.33, 'range' : [16., 28.], 'coeff': [0.317,7.292]},
         'WISE_W1': {'fitunc' : 0.26, 'range' : [16., 28.], 'coeff': [0.243,7.698]},
-        'WISE_W2': {'fitunc' : 0.24, 'range' : [16., 28.], 'coeff': [0.236,7.466]}},
-    },
+        'WISE_W2': {'fitunc' : 0.24, 'range' : [16., 28.], 'coeff': [0.236,7.466]},
+    }},
     'liu2016-optical': {'altname': ['liu-optical','liu16-optical','liu16-field-optical','liu-field-optical'],'bibcode': '2016ApJ...833...96L', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
         'MKO_Y': {'fitunc' : 0.29, 'range' : [16., 28.], 'coeff': [0.404,8.677]},
         'MKO_J': {'fitunc' : 0.26, 'range' : [16., 28.], 'coeff': [0.364,8.131]},
@@ -1362,8 +1380,8 @@ SPT_ABSMAG_RELATIONS = {
         '2MASS_H': {'fitunc' : 0.30, 'range' : [16., 28.], 'coeff': [0.332,7.723]},
         '2MASS_KS': {'fitunc' : 0.29, 'range' : [16., 28.], 'coeff': [0.308,7.491]},
         'WISE_W1': {'fitunc' : 0.29, 'range' : [16., 28.], 'coeff': [0.255,7.610]},
-        'WISE_W2': {'fitunc' : 0.29, 'range' : [16., 28.], 'coeff': [0.231,7.559]}},
-    },
+        'WISE_W2': {'fitunc' : 0.29, 'range' : [16., 28.], 'coeff': [0.231,7.559]},
+    }},
     'liu2016-vlg': {'altname': ['liu-vlg','liu16-vlg'],'bibcode': '2016ApJ...833...96L', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
         'MKO_Y': {'fitunc' : 0.77, 'range' : [16., 27.], 'coeff': [0.799,3.689]},
         'MKO_J': {'fitunc' : 0.72, 'range' : [16., 27.], 'coeff': [0.731,3.475]},
@@ -1373,8 +1391,8 @@ SPT_ABSMAG_RELATIONS = {
         '2MASS_H': {'fitunc' : 0.64, 'range' : [16., 27.], 'coeff': [0.632,3.734]},
         '2MASS_KS': {'fitunc' : 0.55, 'range' : [16., 27.], 'coeff': [0.573,3.699]},
         'WISE_W1': {'fitunc' : 0.46, 'range' : [16., 27.], 'coeff': [0.457,4.392]},
-        'WISE_W2': {'fitunc' : 0.48, 'range' : [16., 27.], 'coeff': [0.451,4.039]}},
-    },
+        'WISE_W2': {'fitunc' : 0.48, 'range' : [16., 27.], 'coeff': [0.451,4.039]},
+    }},
     'liu2016-intg': {'altname': ['liu-intg','liu16-intg'],'bibcode': '2016ApJ...833...96L', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
         'MKO_Y': {'fitunc' : 0.36, 'range' : [20., 27.], 'coeff': [0.562,6.778]},
         'MKO_J': {'fitunc' : 0.50, 'range' : [20., 27.], 'coeff': [0.537,5.941]},
@@ -1384,13 +1402,13 @@ SPT_ABSMAG_RELATIONS = {
         '2MASS_H': {'fitunc' : 0.47, 'range' : [20., 27.], 'coeff': [0.411,6.552]},
         '2MASS_KS': {'fitunc' : 0.36, 'range' : [20., 27.], 'coeff': [0.356,6.573]},
         'WISE_W1': {'fitunc' : 0.13, 'range' : [20., 27.], 'coeff': [0.237,7.436]},
-        'WISE_W2': {'fitunc' : 0.18, 'range' : [20., 27.], 'coeff': [0.193,7.561]}},
-    },
+        'WISE_W2': {'fitunc' : 0.18, 'range' : [20., 27.], 'coeff': [0.193,7.561]},
+    }},
     'looper2008': {'altname': ['looper','looper08'],'bibcode': '2008ApJ...685.1183L', 'sptoffset': 20, 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.29, 'range' : [20., 38.], 'coeff': [-5.462e-6,2.595e-4,-3.915e-3,1.663e-2,3.690e-2,1.255e-1,11.817]},
         '2MASS_H': {'fitunc' : 0.29, 'range' : [20., 38.], 'coeff' : [-4.218e-6,1.987e-4,-2.970e-3,1.261e-2,3.032e-2,1.125e-1,11.010]},
-        '2MASS_KS': {'fitunc' : 0.33, 'range' : [20., 38.], 'coeff' : [-4.104e-6,1.911e-4,-2.864e-3,1.299e-2,2.565e-2,7.369e-2,10.521]}},
-    },
+        '2MASS_KS': {'fitunc' : 0.33, 'range' : [20., 38.], 'coeff' : [-4.104e-6,1.911e-4,-2.864e-3,1.299e-2,2.565e-2,7.369e-2,10.521]},
+    }},
     'pecaut2013': {'altname': ['mamajek','pecaut','pecaut13'], 'reference': 'Pecaut & Mamajek (2013)','bibcode':'2013ApJS..208....9P', 'url': 'http://www.pas.rochester.edu/~emamajek/EEM_dwarf_UBVIJHK_colors_Teff.txt','sptoffset': 0, 'method': 'interpolate', 'filters': {
         'BESSEL_V': {\
             'spt': [0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,6.5,7.,8.,9.,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20.,21.,22.,23.,24.,25.], \
@@ -1407,34 +1425,53 @@ SPT_ABSMAG_RELATIONS = {
         '2MASS_KS': {\
             'spt': [0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,6.5,7.,8.,9.,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20.,21.,22.,23.,24.,25.,26.,27.,28.,29.,30.,31.,32.,33.,34.,34.5,35.,35.5,36.,37.,37.5,38.,39.,39.5,40.5,41.,41.5,42.],\
             'values': [3.81, 3.82, 3.87, 3.9, 4.04, 4.07, 4.16, 4.21, 4.25, 4.26, 4.48, 4.57, 4.66, 4.78, 4.82, 4.98, 5.11, 5.22, 5.36, 5.67, 5.85, 6.06, 6.27, 6.54, 7.19, 7.55, 7.93, 8.36, 9.01, 9.32, 9.47, 9.76, 9.97, 10.11, 10.22, 10.3, 10.45, 10.55, 10.8, 10.9, 11.3, 11.4, 11.82, 12.27, 12.62, 12.7, 12.74, 12.9, 12.87, 13.19, 13.69, 14.51, 14.66, 14.9, 15.18, 15.54, 16.36, 16.85, 17.43, 18.48, 19.32, 21.5, 23, 23.5, 24],\
-            'rms': numpy.zeros(65)+0.05}},
-    },
+            'rms': numpy.zeros(65)+0.05},
+    }},
     'tinney2003': {'altname': ['tinney','tinney03'],'bibcode': '2003AJ....126..975T', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
         'COUSINS_I': {'fitunc' : 0.37, 'range' : [20., 37.5], 'coeff': [-2.49821e-6,1.04398e-3,-6.49719e-2,1.56038,-1.58296e1,7.22089e1]},
         'UKIDSS_Z': {'fitunc' : 0.29, 'range' : [20., 37.5], 'coeff': [-9.97226e-7,1.05950e-4,-4.57019e-3,1.02898e-1,-1.29357e0,8.96822e0,-3.08010e1,4.99447e1]},
         'UKIDSS_K': {'fitunc' : 0.40, 'range' : [20., 37.5], 'coeff': [1.14139e-5,-8.86885e-4,2.68071e-2,-3.89554e-1,2.95440e0,8.14626e-1]},
         '2MASS_KS': {'fitunc' : 0.38, 'range' : [20., 37.5], 'coeff': [-1.25074e-5,1.63124e-3,-7.42418e-2,1.54509,-1.47407e1,6.27861e1]},
         'UKIRT_J': {'fitunc' : 0.30, 'range' : [20., 37.5], 'coeff': [-9.91110e-7,1.05811e-4,-4.58399e-3,1.03572e-1,-1.30526e0,9.06701e0,-3.13411e1,5.04642e1]},
-        '2MASS_J': {'fitunc' : 0.36, 'range' : [20., 37.5], 'coeff': [-2.80824e-6,3.41146e-4,-1.73848e-2,4.82120e-1,-7.86911,7.57222e1,-3.98105e2,8.94012e2]}},
-    },
+        '2MASS_J': {'fitunc' : 0.36, 'range' : [20., 37.5], 'coeff': [-2.80824e-6,3.41146e-4,-1.73848e-2,4.82120e-1,-7.86911,7.57222e1,-3.98105e2,8.94012e2]},
+    }},
     'tinney2014': {'altname': ['tinney14'],'bibcode': '2014ApJ...796...39T', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
         'MKO_J': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'values': [15.22,15.49,16.39,16.66,17.9,18.35,19.08,20.32,22.39,22.18,25.76], 'rms': [0.31,0.37,0.72,0.36,0.46,0.9,0.97,1.25,1.,0.76,3.52]}, 
-        'WISE_W2': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'values': [12.86,13.28,13.39,13.44,13.75,13.92,14.28,14.65,15.2,14.78,15.76], 'rms': [0.17,0.48,0.27,0.23,0.22,0.24,0.46,0.35,1.,0.77,2.15]}},
-    },
+        'WISE_W2': {'spt': [36.5,37,37.5,38,38.5,39,39.5,40,40.5,41,42], 'values': [12.86,13.28,13.39,13.44,13.75,13.92,14.28,14.65,15.2,14.78,15.76], 'rms': [0.17,0.48,0.27,0.23,0.22,0.24,0.46,0.35,1.,0.77,2.15]},
+    }},
     'zhang2013': {'altname': ['zhang','zhang13','zha13','zhang_dwarf'],'bibcode': '2013MNRAS.434.2664Z', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
         'SDSS_R': {'fitunc' : 0.71, 'range' : [11., 28.], 'coeff': [-1.6751e-4,8.4503e-3,-1.5169e-1,1.1111,-1.8452,9.8326]},
         'SDSS_I': {'fitunc' : 0.70, 'range' : [11., 28.], 'coeff': [-1.0634e-4,5.3482e-3,-9.6139e-2,7.1114e-1,-1.0400,8.6772]},
         'SDSS_Z': {'fitunc' : 0.60, 'range' : [11., 28.], 'coeff': [-6.2600e-5,2.9652e-3,-4.9888e-2,3.3379e-1,-4.7257e-2,7.8303]},
         '2MASS_J': {'fitunc' : 0.52, 'range' : [11., 29.], 'coeff': [-5.3057e-5,2.7283e-3,-4.9840e-2,3.6508e-1,-2.9785e-1,6.2826]},
         '2MASS_H': {'fitunc' : 0.54, 'range' : [11., 29.], 'coeff': [-5.8608e-5,3.0343e-3,-5.5512e-2,4.0397e-1,-3.9566e-1,5.7798]},
-        '2MASS_KS': {'fitunc' : 0.53, 'range' : [11., 29.], 'coeff': [-5.5258e-5,2.8626e-3,-5.2136e-2,3.7299e-1,-3.0303e-1,5.4490]}},
-    },
-    'zhang2017': {'altname': ['zhang17','zha17','zhang_subdwarf'],'bibcode': '2017MNRAS.464.3040Z', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
+        '2MASS_KS': {'fitunc' : 0.53, 'range' : [11., 29.], 'coeff': [-5.5258e-5,2.8626e-3,-5.2136e-2,3.7299e-1,-3.0303e-1,5.4490]},
+    }},
+    'zhang2017': {'altname': ['zhang17','zha17'],'bibcode': '2017MNRAS.464.3040Z', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
         'MKO_J': {'fitunc' : 0.40, 'range' : [10., 27.], 'coeff': [8.53625e-4,-1.76459e-2,3.17384e-1,8.64788]},
         'MKO_H': {'fitunc' : 0.40, 'range' : [10., 27.], 'coeff': [2.90020e-4,-4.54248e-3,2.71013e-1,8.19731]},
         '2MASS_J': {'fitunc' : 0.40, 'range' : [10., 27.], 'coeff': [8.48172e-4,-1.75984e-2,3.16187e-1,8.68342]},
-        '2MASS_H': {'fitunc' : 0.41, 'range' : [10., 27.], 'coeff': [4.32261e-4,-7.53663e-3,2.81607e-1,8.18494]}},
-    },
+        '2MASS_H': {'fitunc' : 0.41, 'range' : [10., 27.], 'coeff': [4.32261e-4,-7.53663e-3,2.81607e-1,8.18494]},
+    }},
+    'zhang2019lsd': {'altname': ['zhang19lsd','zha19lsd','zhang_lsubdwarf','zhang_lsd'],'bibcode': '2019MNRAS.486.1260Z', 'sptoffset': 20., 'method': 'polynomial', 'filters': {
+        'MKO_Y': {'fitunc' : 0.1063, 'range' : [20., 27.], 'coeff': [0.23129,12.1660]},
+        'WISE_W1': {'fitunc' : 0.1735, 'range' : [20., 27.], 'coeff': [0.1787,10.3005]},
+        'WISE_W2': {'fitunc' : 0.1647, 'range' : [20., 27.], 'coeff': [0.1830,9.9392]},
+    }},
+    'zhang2019tsd': {'altname': ['zhang19tsd','zha19tsd','zhang_tsubdwarf','zhang_tsd'],'bibcode': '2019MNRAS.486.1260Z', 'sptoffset': 30., 'method': 'polynomial', 'filters': {
+        'MKO_Y': {'fitunc' : 0.6426, 'range' : [35.5, 38.], 'coeff': [0.8742,11.2935]},
+        'MKO_J': {'fitunc' : 0.8135, 'range' : [35.5, 39.], 'coeff': [1.2294,7.9159]},
+        'MKO_H': {'fitunc' : 0.7675, 'range' : [35.5, 39.], 'coeff': [1.0964,9.2711]},
+        'MKO_K': {'fitunc' : 0.7876, 'range' : [35.5, 38.], 'coeff': [1.2030,9.1042]},
+        'MKO_KS': {'fitunc' : 0.7865, 'range' : [35.5, 38.], 'coeff': [1.1996,8.9844]},
+        'WISE_W1': {'fitunc' : 0.4584, 'range' : [35.5, 39.], 'coeff': [0.7678,10.5810]},
+        'WISE_W2': {'fitunc' : 0.2887, 'range' : [35.5, 39.], 'coeff': [0.4232,10.2525]},
+    }},
+    'zhang2019esd': {'altname': ['zhang19esd','zha19esd','zhang_esubdwarf','zhang_esd','zhang_usd'],'bibcode': '2019MNRAS.486.1260Z', 'sptoffset': 20., 'method': 'polynomial', 'filters': {
+        'MKO_Y': {'fitunc' : 0.122, 'range' : [20., 23.], 'coeff': [0.2443,11.5748]},
+        'WISE_W1': {'fitunc' : 0.1084, 'range' : [20., 27.], 'coeff': [0.2610,10.0081]},
+        'WISE_W2': {'fitunc' : 0.1213, 'range' : [20., 27.], 'coeff': [0.2250,9.7670]},
+    }},
 }
 
 # Empirical relations - SpT to chi value (Halpha EW to LHa/Lbol)

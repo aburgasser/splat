@@ -242,33 +242,33 @@ class Spectrum(object):
     '''
 
     def __init__(self, *args, **kwargs):
-# some presets
-        sdb = False
-        self.ismodel = kwargs.get('ismodel',False)
-        self.istransmission = kwargs.get('istransmission',False)
-        self.wave_label = kwargs.get('wave_label',r'Wavelength')
+# some presets - DO WE NEED ALL OF THESE?
+        sdb = pandas.DataFrame()
+#        self.ismodel = kwargs.get('ismodel',False)
+#        self.istransmission = kwargs.get('istransmission',False)
         self.wave_unit = kwargs.get('wave_unit',DEFAULT_WAVE_UNIT)
-        self.wave_unit_label = kwargs.get('wave_unit_label',self.wave_unit)
+        self.wave_label = kwargs.get('wave_label',r'Wavelength')
+#        self.wave_unit_label = kwargs.get('wave_unit_label',self.wave_unit)
+        self.flux_unit = kwargs.get('flux_unit',DEFAULT_FLUX_UNIT)
         self.flux_label = kwargs.get('flux_label',r'F$_{\lambda}$')
         if kwargs.get('surface',False) == True: self.flux_label = 'Surface {}'.format(self.flux_label)
         if kwargs.get('apparent',False) == True: self.flux_label = 'Apparent {}'.format(self.flux_label)
         if kwargs.get('absolute',False) == True: self.flux_label = 'Absolute {}'.format(self.flux_label)
         if kwargs.get('normalized',False) == True: self.flux_label = 'Normalized {}'.format(self.flux_label)
-        self.flux_unit = kwargs.get('flux_unit',DEFAULT_FLUX_UNIT)
-        if kwargs.get('dimensionless')==True: self.flux_unit = u.dimensionless_unscaled
-        self.flux_unit_label = kwargs.get('flux_unit_label',self.flux_unit)
+        if kwargs.get('dimensionless',False)==True: self.flux_unit = u.dimensionless_unscaled
+#        self.flux_unit_label = kwargs.get('flux_unit_label',self.flux_unit)
 #        self.header = kwargs.get('header',fits.PrimaryHDU())
         self.header = kwargs.get('header',{})
         self.filename = kwargs.get('file','')
         self.filename = kwargs.get('filename',self.filename)
         self.name = kwargs.get('name','')
-        self.idkey = kwargs.get('idkey',False)
-# instrument
+        self.data_key = kwargs.get('idkey',False)
+        self.data_key = kwargs.get('data_key',self.data_key)
         self.instrument = kwargs.get('instrument','')
         inst = checkInstrument(self.instrument) 
         if inst != False: 
             for k in list(INSTRUMENTS[inst].keys()): setattr(self,k,kwargs.get(k,INSTRUMENTS[inst][k]))
-        self.instrument_mode = kwargs.get('instrument_mode','')
+#        self.instrument_mode = kwargs.get('instrument_mode','')
 #        self.runfast = kwargs.get('runfast',True)
         self.published = kwargs.get('published','N')
         self.bibcode = kwargs.get('bibcode','')
@@ -277,117 +277,137 @@ class Spectrum(object):
         self.flux = []
         self.noise = []
         self.variance = []
+        verbose = kwargs.get('verbose',True)
+
+# return empty Spectrum object if something goes wrong
+        empty = kwargs.get('empty',False)
+        if empty==True: return(self)
 
 # process arguments
 # option 1: a filename is given
-        if len(args) > 0:
-            if isinstance(args[0],str):
+        if len(args) == 1:
+            if isinstance(args[0],str): 
                 self.filename = args[0]
+                empty=True
 
-# option 2: a spectrum ID is given
-#            elif isinstance(args[0],int) or isinstance(args[0],float) or isinstance(args[0],numpy.int64) or isinstance(args[0],numpy.float64):
+# option 2: a spectrum data key is given
             elif isNumber(args[0])==True:
-                self.idkey = int(args[0])
-                try:
-                    sdb = keySpectrum(self.idkey)
-                    if isinstance(sdb,bool) == False:
-                        self.filename = sdb['DATA_FILE'].iloc[0]
-                except:
-                    print('Warning: problem reading in spectral database')
+                self.data_key = int(args[0])
+#                try:
+                sdb = keySpectrum(self.data_key)
+                if len(sdb) > 0: self.filename = sdb['DATA_FILE'].iloc[0]
+                else: 
+                    if verbose==True: print('Could not find data key {} in SPLAT database'.format(args[0]))
+                empty=True
+#                except:
+#                    print('Warning: problem reading in spectral database')
 
 # option 3: a dictionary is given - check for the appropriate keys
             elif isinstance(args[0],dict)==True:
                 if 'wave' in list(args[0].keys()) and 'flux' in list(args[0].keys()):
                     for k in list(args[0].keys()): setattr(self,k,args[0][k])
+                else: 
+                    if verbose==True: print('Passed a dictionary that is missing wave and/or flux keys')
+                    empty=True
 
 
-# option 4: a pandas array is given - check for the appropriate columns
+# option 4: a pandas dataframe is given  
             elif isinstance(args[0],pandas.core.frame.DataFrame)==True:
                 if 'wave' in list(args[0].columns) and 'flux' in list(args[0].columns):
                     for k in list(args[0].columns): setattr(self,k,args[0][k])
+                else: 
+                    if verbose==True: print('Passed a pandas array that is missing wave and/or flux columns')
+                    empty=True
 
-# option 5: arrays are given - interpret as wave, flux, and optionally noise
-# puts these into keyword arguments
-        if len(args) > 1:
-            if (isinstance(args[0],list) or isinstance(args[0],numpy.ndarray)) and (isinstance(args[1],list) or isinstance(args[1],numpy.ndarray)):
-                kwargs['wave'] = kwargs.get('wave',args[0])
-                kwargs['flux'] = kwargs.get('flux',args[1])
-        if len(args) > 2:
-            if isinstance(args[2],list) or isinstance(args[2],numpy.ndarray):
-                kwargs['noise'] = kwargs.get('noise',args[2])
-
-# option 6: wave, flux and optionally noise included in keyword arguments
-        if len(kwargs.get('wave','')) > 0 and len(kwargs.get('flux','')) > 0:
-            self.wave = kwargs['wave']
-            self.flux = kwargs['flux']
-            if len(kwargs.get('noise','')) > 0:
-                self.noise = kwargs['noise']
+# option 5: a list or numpy array or arrays is given:  
+# interpret as wave, flux, and optionally noise
+            elif isinstance(args[0],list)==True or isinstance(args[0],numpy.ndarray)==True:
+                if len(args[0]) >=2 and (isinstance(args[0][0],list)==True or isinstance(args[0][0],numpy.ndarray)==True):
+                    self.wave = args[0][0]
+                    self.flux = args[0][1]
+                    if len(args[0]) >=3: self.noise = args[0][2]
+                else: 
+                    if verbose==True: print('Input array needs at least two arrays for wave and flux, but only contains {}'.format(len(args[0])))
+                    empty=True
             else:
-                self.noise = numpy.zeros(len(self.wave))
-# some extras
-            others = ['pixel','mask','flag','flags','model','background']
-            for o in others:
-                if len(kwargs.get(o,'')) > 0:
-                    setattr(self,o,kwargs[o])
+                if verbose==True: print('Do not recognize input as filename, database key, list, dict, numpy array, or pandas table')
+                empty=True
 
-# read in file if there isn't anything in our wave or flux arrays
-        if (len(self.wave)==0 or len(self.flux)==0) and self.filename != '':
+# option 6: multiple lists or numpy arrays are given
+# interpret as wave, flux, and optionally noise
+        elif len(args) > 1:
+            if (isinstance(args[0],list) or isinstance(args[0],numpy.ndarray)) and \
+                (isinstance(args[1],list) or isinstance(args[1],numpy.ndarray)):
+                self.wave = args[0]
+                self.flux = args[1]
+            else:
+                if verbose==True: print('Multiple inputs need to be lists or numpy arrays')
+                empty=True
 
+            if len(args) > 2:
+                if isinstance(args[2],list) or isinstance(args[2],numpy.ndarray):
+                    kwargs['noise'] = kwargs.get('noise',args[2])
+
+# option 7: wave, flux and optionally noise included in keyword arguments
+# allow for this not being an option
+        else: 
+            for k in ['wave','flux','noise']:
+                if len(kwargs.get(k,[])) > 0:
+                    if isinstance(kwargs[k],list) or isinstance(kwargs[k],numpy.ndarray): 
+                        setattr(self,k,kwargs[k])
+                    else: 
+                        if verbose==True: print('{} keyword must be a list or numpy array; you passed {}'.format(k,type(kwargs[k])))
+                        empty=True
+                else:
+                    if k in 'wave flux':
+#                        if verbose==True: print('{} keyword not included or passed empty list'.format(k))
+                        empty=True
+
+
+# read in file if container is currently empty but there is a filename
+        if empty==True and self.filename != '':
             self.simplefilename = os.path.basename(self.filename)
-            self.name = kwargs.get('name',self.simplefilename)
+            if self.name=='': self.name=self.simplefilename
 
 # set up parameters
             mkwargs = {}
-            mkwargs['filename']=self.filename
+#            mkwargs['filename']=self.filename
             mkwargs['instrument']=self.instrument
             mkwargs['folder'] = kwargs.get('folder','./')
             mkwargs['wave_unit'] = self.wave_unit
             mkwargs['flux_unit'] = self.flux_unit
-            mkwargs['delimiter']=kwargs.get('delimiter',',')
+            mkwargs['delimiter']=kwargs.get('delimiter','')
             mkwargs['comment']=kwargs.get('comment','#')
             mkwargs['file_type']=kwargs.get('file_type','')
             mkwargs['verbose']=kwargs.get('verbose',False)
 #            self.file = self.filename
 
 # is this in the SPLAT database? if so use the default folder
-# NOTE: NEED TO MAKE THIS INSTRUMENT FLEXIBLE
             if self.filename in list(DB_SPECTRA['DATA_FILE']): 
                 mkwargs['folder'] = SPLAT_PATH+DATA_FOLDER                
-                sdb = searchLibrary(**mkwargs)
+                sdb = searchLibrary(file=self.filename)
 
 # return prior spectrum - THIS IS NOT WORKING SO COMMENTED OUT
 #            if self.filename in list(SPECTRA_READIN.keys()) and self.runfast == True:
 #                self = SPECTRA_READIN[self.filename]
 #                return
 
-#            try:
-
-        # breakouts for specific instruments
-#             if (kwargs.get('APOGEE') == True or kwargs.get('apogee') == True or kwargs.get('instrument','SPEX-PRISM').upper() == 'APOGEE') and self.filename != '':
-#                 rs = _readAPOGEE(self.filename,**kwargs)
-#                 self.instrument = 'APOGEE'
-# #                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
-#                 self.history.append('Spectrum successfully loaded')
-#         # create a copy to store as the original
-#                 self.original = copy.deepcopy(self)
-
-#             elif (kwargs.get('BOSS',False) == True or kwargs.get('boss',False) == True or kwargs.get('eboss',False) == True or kwargs.get('EBOSS',False) == True or kwargs.get('instrument','SPEX-PRISM').upper() == 'BOSS' or kwargs.get('instrument','SPEX-PRISM').upper() == 'EBOSS') and self.filename != '':
-#                 rs = _readBOSS(self.filename)
-# #                for k in list(rs.keys()): setattr(self,k.lower(),rs[k])
-#                 self.wave_unit = kwargs.get('wave_unit',u.Angstrom)
-#                 self.flux_unit = kwargs.get('flux_unit',u.erg/(u.cm**2 * u.s * u.Angstrom))
-#                 self.history.append('Spectrum successfully loaded')
-#         # create a copy to store as the original
-#                 self.original = copy.deepcopy(self)
-#            else:
-
 # read in spectrum, being careful not to overwrite specifically assigned quantities
             rs = readSpectrum(self.filename,**mkwargs)
-            for k in list(rs.keys()): 
-                if k not in list(kwargs.keys()): setattr(self,k.lower(),rs[k])
+            if 'wave' in rs.keys():
+                for k in list(rs.keys()): 
+                    if k not in list(kwargs.keys()): setattr(self,k.lower(),rs[k])
+                empty=False
+
+# some extras
+            others = ['pixel','mask','flag','flags','model','background']
+            for o in others:
+                if len(kwargs.get(o,'')) > 0:
+                    setattr(self,o,kwargs[o])
+
 
 # None of this worked; create an empty Spectrum object (can be used for copying)
-        if len(self.wave)==0 or len(self.flux)==0:
+        if empty==True:
             print('Warning: Creating an empty Spectrum object')
             return
 
@@ -395,75 +415,56 @@ class Spectrum(object):
 # convert to numpy arrays
         if not isinstance(self.wave,numpy.ndarray): self.wave = numpy.array(self.wave)
         if not isinstance(self.flux,numpy.ndarray): self.flux = numpy.array(self.flux)
+        if len(self.noise)==0: self.noise = [numpy.nan]*len(self.wave)
         if not isinstance(self.noise,numpy.ndarray): self.noise = numpy.array(self.noise)
 # enforce positivity of noise array
-        self.noise = numpy.absolute(self.noise)
+        if kwargs.get('no_negative_noise',True)==True: self.noise = numpy.absolute(self.noise)
 
 # assure wave, flux, noise have units
         if not isUnit(self.wave): self.wave = numpy.array(self.wave)*self.wave_unit
         if not isUnit(self.flux): self.flux = numpy.array(self.flux)*self.flux_unit
         if not isUnit(self.noise): self.noise = numpy.array(self.noise)*self.flux_unit
 
-# some conversions
-        self.flam = self.flux
-        try: self.nu = self.wave.to(u.Hz,equivalencies=u.spectral())
-        except: pass
-        try:
-            self.fnu = self.flux.to(u.Jansky,equivalencies=u.spectral_density(self.wave))
-            self.fnu_unit = u.Jansky
-        except: pass
-        try: self.noisenu = self.noise.to(u.Jansky,equivalencies=u.spectral_density(self.wave))
-        except: pass
-        self.temperature = numpy.zeros(len(self.flux))
+# some conversions - move off to Spectrum methods
+        # self.flam = self.flux
+        # try: self.nu = self.wave.to(u.Hz,equivalencies=u.spectral())
+        # except: pass
+        # try:
+        #     self.fnu = self.flux.to(u.Jansky,equivalencies=u.spectral_density(self.wave))
+        #     self.fnu_unit = u.Jansky
+        # except: pass
+        # try: self.noisenu = self.noise.to(u.Jansky,equivalencies=u.spectral_density(self.wave))
+        # except: pass
+        # self.temperature = numpy.zeros(len(self.flux))
 # calculate variance & S/N
 #            self.variance = numpy.array([n**2 for n in self.noise.value])*self.noise.unit*self.noise.unit
         self.variance = self.noise**2
 #            self.snr = self.computeSN()
         self.snr = numpy.nanmedian(self.flux/self.noise)
 
-# estimate resolution - be default central lam/lam spacing/3
-        i = int(0.5*len(self.wave))
-        self.resolution = kwargs.get('resolution',self.wave.value[i]/numpy.absolute(self.wave.value[i+1]-self.wave.value[i])/2.)
+# estimate resolution - by default central lam/lam spacing/3
+        self.resolution = kwargs.get('resolution',
+            numpy.nanmedian(self.wave.value)/numpy.absolute(numpy.nanmedian(self.wave.value-numpy.roll(self.wave.value,3))))
 
 # populate information on source and spectrum from database
 # COULD POSSIBLY MOVE THIS TO A SEPARATE FUNCTION
 #        print(sdb)
 #        sdb = searchLibrary(**mkwargs)
-        if isinstance(sdb,bool) == False :
-            if isinstance(sdb,pandas.core.frame.DataFrame) and len(sdb) != 0:
-                for k in list(sdb.columns):
-                    setattr(self,k.lower(),str(sdb[k].iloc[0]))
-#            elif isinstance(sdb,dict) == True: 
-#                for k in list(sdb.keys()):
-#                    setattr(self,k.lower(),str(sdb[k][0]))
-            else:
-                try:
-                    for k in list(sdb.keys()):
-                        setattr(self,k.lower(),str(sdb[k][0]))
-                except:
-                    pass
- # set shortname if possible
- # REMOVED
-        # try: self.shortname = designationToShortName(self.designation)
-        # except: pass
-# set observation date if possible
-# REMOVED
-        # try:
-        #     self.date = str(self.observation_date)
-        # except:
-        #     pass
+        if len(sdb) > 0:
+            for k in list(sdb.columns): setattr(self,k.lower(),str(sdb[k].iloc[0]))
+
 # convert some data into numbers
-        kconv = ['ra','dec','julian_date','median_snr','resolution','airmass',\
-        'jmag','jmag_error','hmag','hmag_error','kmag','kmag_error','source_key']
-        for k in kconv:
-            try: setattr(self,k,float(getattr(self,k)))
-            except: pass
+        # kconv = ['ra','dec','julian_date','median_snr','resolution','airmass',\
+        # 'jmag','jmag_error','hmag','hmag_error','kmag','kmag_error','source_key']
+        # for k in kconv:
+        #     try: setattr(self,k,float(getattr(self,k)))
+        #     except: pass
 # this is to make sure the database resolution is the default value
 # IS THIS NECESSARY?
-        try:
-            if kwargs.get('resolution',False) == False or kwargs.get('instrument',False) == False: 
-                kwargs['resolution'] = self.resolution
-        except: pass
+        # try:
+        #     if kwargs.get('resolution',False) == False or kwargs.get('instrument',False) == False: 
+        #         kwargs['resolution'] = self.resolution
+        # except: pass
 
 # instrument specific information
 # THIS HAS BEEN REMOVED
@@ -579,8 +580,7 @@ class Spectrum(object):
         self.original = copy.deepcopy(self)
 
 # add to previous read spectra
-        if self.filename != '' and self.ismodel == False:
-            SPECTRA_READIN[self.filename] = self
+        if self.filename != '': SPECTRA_READIN[self.filename] = self
 
         return
 
@@ -961,19 +961,24 @@ class Spectrum(object):
 
     def info(self):
         '''
-        :Purpose: 
-            Returns a summary of properties for the Spectrum object
+        Purpose
+        -------
 
-        :Required Inputs: 
-            None
+        Returns a summary of properties for the Spectrum object
 
-        :Optional Inputs: 
-            None
+        Parameters
+        ----------
 
-        :Output: 
-            Text summary describing the Spectrum object
+        None
 
-        :Example:
+        Outputs
+        -------
+
+        Text summary describing the Spectrum object
+
+        Example
+        -------
+
            >>> import splat
            >>> sp = splat.getSpectrum(lucky=True)[0]
            >>> sp.info()
@@ -990,61 +995,63 @@ class Spectrum(object):
                     bibcode: 2010ApJ...710.1142B
                 History:
                     SPEX_PRISM spectrum successfully loaded
+
+        Dependencies
+        ------------
+        None
         '''
-        if self.ismodel == True:
-            f = '\n{} for instrument {} with the following parmeters:'.format(self.modelset,self.instrument)
-            for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-                if hasattr(self,ms): f+='\n\t{} = {} {}'.format(ms,getattr(self,ms),SPECTRAL_MODEL_PARAMETERS[ms]['unit'])
-#            f+='\nSmoothed to slit width {} {}'.format(self.slit,SPECTRAL_MODEL_PARAMETERS['slit']['unit'])
-            f+='\n\nIf you use this model, please cite {}'.format(spbib.shortRef(SPECTRAL_MODELS[self.modelset]['bibcode']))
-            f+='\nbibcode = {}\n'.format(SPECTRAL_MODELS[self.modelset]['bibcode'])
-        elif self.istransmission == True:
-            f = '\n{} spectrum'.format(self.name)
-#            f+='\nSmoothed to slit width {} {}'.format(self.slit,SPECTRAL_MODEL_PARAMETERS['slit']['unit'])
-            f+='\n\nIf you use these data, please cite {}'.format(spbib.shortRef(self.bibcode))
-            f+='\nbibcode = {}\n'.format(self.bibcode)
-        else:
-            f = '\n'
-            if hasattr(self,'instrument'): f+='{} '.format(self.instrument)
-            if hasattr(self,'name'): f+='spectrum of {}'.format(self.name)
-            if hasattr(self,'observer') and hasattr(self,'date'): 
-                if isinstance(self.observer,list):
-                    for i in range(len(self.observer)):
-                        f+='\nObserved by {} on {}'.format(self.observer[i],properDate(self.date[i],output='YYYY MMM DD'))
-                else:
-                    f+='\nObserved by {} on {}'.format(self.observer,properDate(self.date,output='YYYY MMM DD'))
-            if hasattr(self,'airmass'): f+='\nAirmass = {:.2f}'.format(float(self.airmass))
-            if hasattr(self,'designation'): f+='\nSource designation = {}'.format(self.designation)
-            if hasattr(self,'median_snr'): f+='\nMedian S/N = {:.0f}'.format(float(self.median_snr))
-            if hasattr(self,'spex_type'): f+='\nSpeX Classification = {}'.format(self.spex_type)
-# these lines are currently broken
-            # if hasattr(self,'lit_type'): 
-            #     if isinstance(self.lit_type,list):
-            #         for i in range(len(self.lit_type)):
-            #             f+='\nLiterature Classification = {} from {}'.format(self.lit_type[i],spbib.shortRef(self.lit_type_ref[i]))
-            #     else:
-            #         f+='\nLiterature Classification = {} from {}'.format(self.lit_type,spbib.shortRef(self.lit_type_ref))
-            if hasattr(self,'source_key') and hasattr(self,'data_key'): 
-                if isinstance(self.source_key,list):
-                    for i in range(len(self.source_key)):
-                        f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key[i]),int(self.source_key[i]))
-                else:
-                    f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key),int(self.source_key))
-            if self.published == 'Y':
-                f+='\n\nIf you use these data, please cite:'
-                if isinstance(self.data_reference,list):
-                    for i in range(len(self.data_reference)):
-                        f+='\n\t{}'.format(spbib.shortRef(self.data_reference[i]))
-                        f+='\n\tbibcode: {}'.format(self.data_reference[i])
-                else:
-                    f+='\n\t{}'.format(spbib.shortRef(self.data_reference))
-                    f+='\n\tbibcode: {}'.format(self.data_reference)
+#         if self.ismodel == True:
+#             f = '\n{} for instrument {} with the following parmeters:'.format(self.modelset,self.instrument)
+#             for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+#                 if hasattr(self,ms): f+='\n\t{} = {} {}'.format(ms,getattr(self,ms),SPECTRAL_MODEL_PARAMETERS[ms]['unit'])
+# #            f+='\nSmoothed to slit width {} {}'.format(self.slit,SPECTRAL_MODEL_PARAMETERS['slit']['unit'])
+#             f+='\n\nIf you use this model, please cite {}'.format(spbib.shortRef(SPECTRAL_MODELS[self.modelset]['bibcode']))
+#             f+='\nbibcode = {}\n'.format(SPECTRAL_MODELS[self.modelset]['bibcode'])
+#         elif self.istransmission == True:
+#             f = '\n{} spectrum'.format(self.name)
+# #            f+='\nSmoothed to slit width {} {}'.format(self.slit,SPECTRAL_MODEL_PARAMETERS['slit']['unit'])
+#             f+='\n\nIf you use these data, please cite {}'.format(spbib.shortRef(self.bibcode))
+#             f+='\nbibcode = {}\n'.format(self.bibcode)
+#         else:
+        f = '\n'
+        if hasattr(self,'instrument'): f+='{} '.format(self.instrument)
+        if hasattr(self,'name'): f+='spectrum of {}'.format(self.name)
+        if hasattr(self,'observer') and hasattr(self,'date'): 
+            if isinstance(self.observer,list):
+                for i in range(len(self.observer)):
+                    f+='\nObserved by {} on {}'.format(self.observer[i],properDate(self.date[i],output='YYYY MMM DD'))
             else:
-                f+='\n\nUNPUBLISHED DATA'
+                f+='\nObserved by {} on {}'.format(self.observer,properDate(self.date,output='YYYY MMM DD'))
+        if hasattr(self,'airmass'): f+='\nAirmass = {:.2f}'.format(float(self.airmass))
+        if hasattr(self,'designation'): f+='\nSource designation = {}'.format(self.designation)
+        if hasattr(self,'median_snr'): f+='\nMedian S/N = {:.0f}'.format(float(self.median_snr))
+        if hasattr(self,'spex_type'): f+='\nSpeX Classification = {}'.format(self.spex_type)
+# these lines are currently broken
+        # if hasattr(self,'lit_type'): 
+        #     if isinstance(self.lit_type,list):
+        #         for i in range(len(self.lit_type)):
+        #             f+='\nLiterature Classification = {} from {}'.format(self.lit_type[i],spbib.shortRef(self.lit_type_ref[i]))
+        #     else:
+        #         f+='\nLiterature Classification = {} from {}'.format(self.lit_type,spbib.shortRef(self.lit_type_ref))
+        if hasattr(self,'source_key') and hasattr(self,'data_key'): 
+            # if isinstance(self.source_key,list):
+            #     for i in range(len(self.source_key)):
+            #         f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key[i]),int(self.source_key[i]))
+            # else:
+            f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key),int(self.source_key))
+        if self.published == 'Y':
+            f+='\n\nIf you use these data, please cite:'
+            # if isinstance(self.data_reference,list):
+            #     for i in range(len(self.data_reference)):
+            #         f+='\n\t{}'.format(spbib.shortRef(self.data_reference[i]))
+            #         f+='\n\tbibcode: {}'.format(self.data_reference[i])
+            # else:
+            f+='\n\t{}'.format(spbib.shortRef(self.data_reference))
+            f+='\n\tbibcode: {}'.format(self.data_reference)
+        else: f+='\n\nUNPUBLISHED DATA'
 
         f+='\n\nHistory:'
-        for h in self.history:
-            f+='\n\t{}'.format(h)
+        for h in self.history: f+='\n\t{}'.format(h)
         print(f)
         return
 
@@ -1132,7 +1139,7 @@ class Spectrum(object):
                 if isinstance(self.__getattribute__(k),str) == True or (isinstance(self.__getattribute__(k),float) == True and numpy.isnan(self.__getattribute__(k)) == False) or isinstance(self.__getattribute__(k),int) == True or isinstance(self.__getattribute__(k),bool) == True:
                     hdu.header[k.upper()] = str(self.__getattribute__(k))
 #            print(hdu.header)
-            hdu.writeto(filename,clobber=clobber)
+            hdu.writeto(filename,overwrite=clobber)
 #            except:
 #                raise NameError('Problem saving spectrum object to file {}'.format(filename))
 
@@ -1452,12 +1459,16 @@ class Spectrum(object):
             flux_unit = self.flux.unit
             if len(self.wave) <= len(wave):
                 f = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
-                n = interp1d(self.wave.value,self.noise.value,bounds_error=False,fill_value=0.)
                 self.flux = f(wave.value)*flux_unit
-                self.noise = n(wave.value)*flux_unit
+                if numpy.isfinite(numpy.nanmin(self.noise))==True:
+                    n = interp1d(self.wave.value,self.noise.value,bounds_error=False,fill_value=0.)
+                    self.noise = n(wave.value)*flux_unit
+                else: self.noise = self.flux*numpy.nan
             else:
                 self.flux = integralResample(self.wave.value,self.flux.value,wave.value)*flux_unit
-                self.noise = integralResample(self.wave.value,self.noise.value,wave.value)*flux_unit
+                if numpy.isfinite(numpy.nanmin(self.noise))==True:
+                    self.noise = integralResample(self.wave.value,self.noise.value,wave.value)*flux_unit
+                else: self.noise = self.flux*numpy.nan
             self.wave = wave
             self.variance = self.noise**2
             self.history.append('Resampled to new wavelength grid')
@@ -1674,6 +1685,7 @@ class Spectrum(object):
                 kern = lsfRotation(vbroad.value,vsamp.value,epsilon=epsilon)
                 report = 'Rotationally broadened spectrum by {}'.format(vbroad)
 
+# NOTE: THIS IS CURRENTLY NOT FUNCTIONAL
 # gaussian ±10 sigma
             elif 'gauss' in method.lower():
                 n = numpy.ceil(20.*vbroad.value/vsamp.value)
@@ -1699,8 +1711,9 @@ class Spectrum(object):
         nwave = numpy.nanmin(self.wave.value)*(a**numpy.arange(len(self.wave)))
         nflux = self.flux.value*nwave
         ncflux = numpy.convolve(nflux, kern, 'same')
-        self.flux = ncflux/nwave*flux_unit
+        self.flux = (ncflux/nwave)*flux_unit
         self.history.append(report)
+        if verbose==True: print(report)
 
         return
 
@@ -2931,11 +2944,13 @@ class Spectrum(object):
 
         w = numpy.where(numpy.logical_and(self.wave.value >= rng[0],self.wave.value <= rng[1]))
         if len(w[0])>0:
-            if method in ['median','med']: val = numpy.nanmedian(self.flux.value[w])
-            elif method in ['mean','average','ave']: val = numpy.nanmean(self.flux.value[w])
-            elif method in ['max','maximum']: val = numpy.nanmax(self.flux.value[w])
-            elif method in ['min','minimum']: val = numpy.nanmin(self.flux.value[w])
-            elif method in ['std','stddev','stdev','rms']: val = numpy.nanstd(self.flux.value[w])
+            if method.lower() in ['median','med']: val = numpy.nanmedian(self.flux.value[w])
+            elif method.lower() in ['mean','average','ave']: val = numpy.nanmean(self.flux.value[w])
+            elif method.lower() in ['max','maximum']: val = numpy.nanmax(self.flux.value[w])
+            elif method.lower() in ['min','minimum']: val = numpy.nanmin(self.flux.value[w])
+            elif method.lower() in ['std','stddev','stdev','rms']: val = numpy.nanstd(self.flux.value[w])
+            elif method.lower() in ['unc','uncertainty','noise','error']: val = numpy.nanmedian(self.noise.value[w])
+            elif method.lower() in ['sn','snr','signal-to-noise','s/n']: val = numpy.nanmedian(self.flux.value[w]/self.noise.value[w])
             else: raise ValueError('Did not recongize sampling method {}'.format(method))
             return val
         else:
@@ -4211,19 +4226,47 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
 #####################################################
 
 
-def getSpectrum(getList=False, limit=0, *args, **kwargs):
+def getSpectrum(output='spectra', limit=20, verbose=True, key_name='DATA_KEY',*args, **kwargs):
     '''
-    :Purpose: 
+    Purpose
+    -------
 
-        Gets a spectrum from the SPLAT library using various selection criteria. Calls searchLibrary_ to select spectra; if any found it routines an array of Spectrum objects, otherwise an empty array. 
+        Gets a spectrum from the SPLAT library using various selection criteria. 
+        Calls searchLibrary_ to select spectra; if any found it routines an array of 
+        Spectrum objects; otherwise, it returns an empty array. 
 
-    .. _searchLibrary : api.html#splat.core.searchLibrary
+    Parameters
+    ----------
 
-    :Output: 
+    output = 'spectra' : str [optional]
+        Determines what is returned to user; options are:
+            * 'spectra': return array of Spectrum objects [default]
+            * 'files': return a list of filenames
+            * 'table': return pandas table of spectral information (output of `searchLibrary()`_)
 
-        An array of Spectrum objects that satisfy the search criteria
+    limit = 0 : int [optional]
+        Sets limit for the number of returns. Set to < 0 to return unlimited number
 
-    :Example:
+    key = 'DATA_KEY' : str [optional]
+        Keyword for the data key in the database file
+
+    verbose = True : bool [optional]
+        Set to True to provide feedback
+
+    **kwargs : additional keywords
+        Include additional keywords for `searchLibrary()`_
+
+
+    Outputs
+    -------
+
+    result : array or pandas Dataframe
+        An array of Spectrum objects or filenames or pandas Dataframe for sources
+        that satisfy the search criteria
+
+
+    Example
+    -------
     >>> import splat
     >>> sp = splat.getSpectrum(shortname='1507-1627')[0]
         Retrieving 1 file
@@ -4231,53 +4274,78 @@ def getSpectrum(getList=False, limit=0, *args, **kwargs):
         Retrieving 120 files
     >>> sparr = splat.getSpectrum(spt='T5',young=True)
         No files match search criteria
-    '''
 
-    if kwargs.get('lucky',False) == True: kwargs['published'] = True
-    result = []
-    kwargs['output'] = 'all'
+
+    Dependencies
+    ------------
+        `searchLibrary()`_
+
+    .. _searchLibrary : api.html#splat.core.searchLibrary
+
+    '''
+# set default search parameters - NOT NECESSARY
+    # if kwargs.get('lucky',False) == True: kwargs['published'] = True
+    # if kwargs.get('output','')=='': kwargs['output'] = 'all'
+
+# search library
     search = searchLibrary(*args, **kwargs)
 
-    if len(search) > 0:
-        files = []
-        if len(search) == 1:
-            files.append(search['DATA_FILE'].iloc[0])
-        else:
-            for i,x in enumerate(search['DATA_FILE']):
-                files.append(search['DATA_FILE'].iloc[i])
+    if len(search) == 0: 
+        if verbose==True: print('\nNo files match search criteria\n\n')
+        return []
+    # else:
+    #     files = list(search['DATA_FILE'])
+        # if len(search) == 1: files.append(search['DATA_FILE'].iloc[0])
+        # else:
+        #     for i,x in enumerate(search['DATA_FILE']):
+        #         files.append(search['DATA_FILE'].iloc[i])
 
+# return search table
+    if 'table' in output: return search 
 
 # return just the filenames
-        if getList == True:
-            return files
+    if 'file' in output: return list(search['DATA_FILE']) 
 
-        if len(files) == 1:
-            if kwargs.get('lucky',False) == True:
-                print('\nRetrieving 1 lucky file\n')
-            else:
-                print('\nRetrieving 1 file\n')
-            skwargs = search.iloc[0].to_dict()
-            result.append(Spectrum(files[0],**skwargs))
-        else:
-#            if (kwargs.get('lucky',False) == True):
+# return Spectrum objects
+# limit number
+    if limit > 0 and limit < len(search): search = search.iloc[:limit]
+    result=[]
+# string on feedback
+    if verbose==True:
+        txt = ' file'
+        if kwargs.get('lucky',False) == True: txt=' lucky'+txt
+        if len(search)>1: txt = txt+'s'
+        print('\nreturning {:.0f}{}\n'.format(len(search),txt))
+    for i,k in enumerate(search[key_name]):
+        skwargs = search.iloc[i].to_dict()
+        result.append(Spectrum(k))
+#         if len(files) == 1:
+#             if kwargs.get('lucky',False) == True:
+#                 print('\nRetrieving 1 lucky file\n')
+#             else:
+#                 print('\nRetrieving 1 file\n')
+#             skwargs = search.iloc[0].to_dict()
+#             result.append(Spectrum(files[0],**skwargs))
+#         else:
+# #            if (kwargs.get('lucky',False) == True):
 #                print('\nRetrieving 1 lucky file\n')
 #                ind = numpy.random.choice(numpy.arange(len(files)))
 #                print(x)
 #                result.append(Spectrum(files[ind],header=search[ind]))
 #            else:
-            if limit != 0 and limit < len(files):
-                files = files[:limit]
-                search = search.iloc[:limit]
-            print('\nRetrieving {} files\n'.format(len(files)))
-            for i,x in enumerate(files):
-                skwargs = search.iloc[i].to_dict()
-                result.append(Spectrum(x,header=dict(search.iloc[i]),**skwargs))
+            # if limit != 0 and limit < len(files):
+            #     files = files[:limit]
+            #     search = search.iloc[:limit]
+            # print('\nRetrieving {} files\n'.format(len(files)))
+            # for i,x in enumerate(files):
+            #     skwargs = search.iloc[i].to_dict()
+            #     result.append(Spectrum(x,header=dict(search.iloc[i]),**skwargs))
 
-    else:
-        if checkAccess() == False:
-            sys.stderr.write('\nNo published files match search criteria\n\n')
-        else:
-            sys.stderr.write('\nNo files match search criteria\n\n')
+    # else:
+    #     if checkAccess() == False:
+    #         sys.stderr.write('\nNo published files match search criteria\n\n')
+    #     else:
+    #         sys.stderr.write('\nNo files match search criteria\n\n')
 
     return result
 
@@ -4319,6 +4387,11 @@ def getStandard(spt, **kwargs):
         kys = STDS_ESD_SPEX_KEYS
         subclass = 'esd'
         stdtype = 'extreme subdwarf'
+    elif kwargs.get('dsd',False) or 'd/sd' in sptstr:
+        stds = STDS_DSD_SPEX
+        kys = STDS_DSD_SPEX_KEYS
+        subclass = 'd/sd'
+        stdtype = 'mild subdwarf'
     elif kwargs.get('sd',False) or 'sd' in sptstr:
         stds = STDS_SD_SPEX
         kys = STDS_SD_SPEX_KEYS
@@ -4390,8 +4463,21 @@ def initiateStandards(*args,**kwargs):
         initiateStandards(intg=True)
         initiateStandards(vlg=True)
         return
+    if kwargs.get('subdwarf',False):
+        swargs = copy.deepcopy(kwargs)
+        del swargs['subdwarf']
+        initiateStandards(sd=True)
+        initiateStandards(dsd=True)
+        initiateStandards(esd=True)
+        return
+    if kwargs.get('young',False):
+        swargs = copy.deepcopy(kwargs)
+        del swargs['young']
+        initiateStandards(intg=True)
+        initiateStandards(vlg=True)
+        return
 
-    elif kwargs.get('sd',False):
+    if kwargs.get('sd',False):
         stds = STDS_SD_SPEX
         kys = copy.deepcopy(STDS_SD_SPEX_KEYS)
     elif kwargs.get('dsd',False):
@@ -4426,87 +4512,159 @@ def initiateStandards(*args,**kwargs):
     return
 
 
-
-def keySource(keys, **kwargs):
+def keySource(keys,verbose=True):
     '''
-    :Purpose: Takes a source key and returns a table with the source information
-    :param keys: source key or a list of source keys
-    :Example:
-    >>> import splat
-    >>> print spl.keySource(10001)
-        SOURCE_KEY           NAME              DESIGNATION    ... NOTE SELECT
-        ---------- ------------------------ ----------------- ... ---- ------
-             10001 SDSS J000013.54+255418.6 J00001354+2554180 ...        True
-    >>> print spl.keySource([10105, 10623])
-        SOURCE_KEY          NAME             DESIGNATION    ... NOTE SELECT
-        ---------- ---------------------- ----------------- ... ---- ------
-             10105 2MASSI J0103320+193536 J01033203+1935361 ...        True
-             10623 SDSS J09002368+2539343 J09002368+2539343 ...        True
-    >>> print spl.keySource(1000001)
-        No sources found with source key 1000001
-        False
+    Purpose
+    -------
+
+    Searches DB_SOURCE for source matching input source key(s) in column 'SOURCE_KEY'
+
+    Parameters
+    ----------
+
+    keys : int or list
+        integer or list of integers corresponding to source keys
+
+    verbose = True : boolean [optional]
+        set to True to have program return verbose output
+
+    Outputs
+    -------
+
+    pandas DataFrame containing the rows in DB_SOURCE that match input keys, 
+    or empty pandas DataFrame
+
+    Example
+    -------
+
+        TBD
+
+    Dependencies
+    ------------
+        
+        `keySearch()`_
+
+    .. _`keySearch()` : api.html#splat.utilities.keySearch
+
     '''
-
-# vectorize
-    if isinstance(keys,list) == False:
-        keys = [keys]
-
-#    sdb = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
-#    sdb = fetchDatabase(SPLAT_PATH+DB_FOLDER+SOURCES_DB)
-#    sdb = copy.deepcopy(DB_SOURCES)
-#    sdb['SELECT'] = [x in keys for x in sdb['SOURCE_KEY']]
-
-    sdb = DB_SOURCES[[x in keys for x in DB_SOURCES['SOURCE_KEY']]]
-#    if sum(sdb['SELECT']) == 0.:
-    if len(sdb) == 0.:
-        if kwargs.get('verbose',True) == True: print('No sources found with source key(s) = {}'.format(*keys))
-        return False
-    else:
-#        db = sdb[:][numpy.where(sdb['SELECT']==1)]
-        return sdb
+    return keySearch(keys,key_name='SOURCE_KEY',db=DB_SOURCE,verbose=verbose)
 
 
-def keySpectrum(keys, **kwargs):
+def keySpectrum(keys,verbose=True):
     '''
-    :Purpose: Takes a spectrum key and returns a table with the spectrum and source information
-    :param keys: spectrum key or a list of source keys
-    :Example:
-    >>> import splat
-    >>> print spl.keySpectrum(10001)
-        DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2
-        -------- ---------- ---------------- ... --------- -------------- ------
-           10001      10443 10001_10443.fits ...
-    >>> print spl.keySpectrum([10123, 11298])
-        DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2
-        -------- ---------- ---------------- ... --------- -------------- ------
-           11298      10118 11298_10118.fits ...
-           10123      10145 10123_10145.fits ...
-    >>> print spl.keySpectrum(1000001)
-        No spectra found with spectrum key 1000001
-        False
+    Purpose
+    -------
+
+    Searches DB_SPECTRA for source matching input source key(s) in column 'DATA_KEY'
+
+    Parameters
+    ----------
+
+    keys : int or list
+        integer or list of integers corresponding to source keys
+
+    verbose = True : boolean [optional]
+        set to True to have program return verbose output
+
+    Outputs
+    -------
+
+    pandas DataFrame containing the rows in DB_SPECTRA that match input keys, 
+    or empty pandas DataFrame
+
+    Example
+    -------
+
+        TBD
+
+    Dependencies
+    ------------
+        
+        `keySearch()`_
+
+    .. _`keySearch()` : api.html#splat.utilities.keySearch
+
     '''
+    return keySearch(keys,key_name='DATA_KEY',db=DB_SPECTRA,verbose=verbose)
 
-# vectorize
-    if isinstance(keys,list) == False:
-        keys = [keys]
+# def keySource(keys, verbose=True db=DB_SOURCES, **kwargs):
+#     '''
+#     :Purpose: Takes a source key and returns a table with the source information
+#     :param keys: source key or a list of source keys
+#     :Example:
+#     >>> import splat
+#     >>> print spl.keySource(10001)
+#         SOURCE_KEY           NAME              DESIGNATION    ... NOTE SELECT
+#         ---------- ------------------------ ----------------- ... ---- ------
+#              10001 SDSS J000013.54+255418.6 J00001354+2554180 ...        True
+#     >>> print spl.keySource([10105, 10623])
+#         SOURCE_KEY          NAME             DESIGNATION    ... NOTE SELECT
+#         ---------- ---------------------- ----------------- ... ---- ------
+#              10105 2MASSI J0103320+193536 J01033203+1935361 ...        True
+#              10623 SDSS J09002368+2539343 J09002368+2539343 ...        True
+#     >>> print spl.keySource(1000001)
+#         No sources found with source key 1000001
+#         False
+#     '''
 
-#    sdb = copy.deepcopy(DB_SPECTRA)
-#    sdb['SELECT'] = [x in keys for x in sdb['DATA_KEY']]
+# # vectorize
+#     if isinstance(keys,list) == False: keys = [keys]
 
-#    if sum(sdb['SELECT']) == 0.:
-#        if verbose: print('No spectra found with spectrum key {}'.format(keys[0]))
-#        return False
-#    else:
-#        s2db = copy.deepcopy(DB_SOURCES)
-#        db = join(sdb[:][numpy.where(sdb['SELECT']==1)],s2db,keys='SOURCE_KEY')
-#        return db
+# #    sdb = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+# #    sdb = fetchDatabase(SPLAT_PATH+DB_FOLDER+SOURCES_DB)
+# #    sdb = copy.deepcopy(DB_SOURCES)
+# #    sdb['SELECT'] = [x in keys for x in sdb['SOURCE_KEY']]
 
-    sdb = DB_SPECTRA[[x in keys for x in DB_SPECTRA['DATA_KEY']]]
-    if len(sdb) == 0.:
-        if kwargs.get('verbose',True) == True: print('No sources found with spectrum key(s) = {}'.format(*keys))
-        return False
-    else:
-        return sdb
+#     sdb = db[[x in keys for x in db[key_name]]]
+#     if len(sdb) == 0.:
+#         if kwargs.get('verbose',True) == True: print('No sources found with source key(s) = {}'.format(*keys))
+#         return False
+#     else:
+# #        db = sdb[:][numpy.where(sdb['SELECT']==1)]
+#         return sdb
+
+
+# def keySpectrum(keys, **kwargs):
+#     '''
+#     :Purpose: Takes a spectrum key and returns a table with the spectrum and source information
+#     :param keys: spectrum key or a list of source keys
+#     :Example:
+#     >>> import splat
+#     >>> print spl.keySpectrum(10001)
+#         DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2
+#         -------- ---------- ---------------- ... --------- -------------- ------
+#            10001      10443 10001_10443.fits ...
+#     >>> print spl.keySpectrum([10123, 11298])
+#         DATA_KEY SOURCE_KEY    DATA_FILE     ... COMPANION COMPANION_NAME NOTE_2
+#         -------- ---------- ---------------- ... --------- -------------- ------
+#            11298      10118 11298_10118.fits ...
+#            10123      10145 10123_10145.fits ...
+#     >>> print spl.keySpectrum(1000001)
+#         No spectra found with spectrum key 1000001
+#         False
+#     '''
+
+# # vectorize
+#     if isinstance(keys,list) == False:
+#         keys = [keys]
+
+# #    sdb = copy.deepcopy(DB_SPECTRA)
+# #    sdb['SELECT'] = [x in keys for x in sdb['DATA_KEY']]
+
+# #    if sum(sdb['SELECT']) == 0.:
+# #        if verbose: print('No spectra found with spectrum key {}'.format(keys[0]))
+# #        return False
+# #    else:
+# #        s2db = copy.deepcopy(DB_SOURCES)
+# #        db = join(sdb[:][numpy.where(sdb['SELECT']==1)],s2db,keys='SOURCE_KEY')
+# #        return db
+
+#     sdb = DB_SPECTRA[[x in keys for x in DB_SPECTRA['DATA_KEY']]]
+#     if len(sdb) == 0.:
+#         if kwargs.get('verbose',True) == True: print('No sources found with spectrum key(s) = {}'.format(*keys))
+#         return False
+#     else:
+#         return sdb
 
 
 def searchLibrary(radius=10., instrument='SPEX-PRISM', source_database=DB_SOURCES, spectra_database=DB_SPECTRA, *args, **kwargs):
@@ -5118,7 +5276,10 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', source_database=DB_SOURCE
 
 
 
-def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_WAVE_UNIT,flux_unit=DEFAULT_FLUX_UNIT,dimensionless=False,comment='#',delimiter=',',file_type='',crval1='CRVAL1',cdelt1='CDELT1',catchSN=True,noZeroNoise=True,verbose=False,**kwargs):
+def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
+    flux_unit=DEFAULT_FLUX_UNIT,dimensionless=False,comment='#',delimiter='',
+    crval1='CRVAL1',cdelt1='CDELT1',catch_sn=True,remove_nans=True,no_zero_noise=True,
+    use_instrument_reader=True,instrument=DEFAULT_INSTRUMENT,instrument_param={},verbose=False):
     '''
     Purpose
     -------
@@ -5130,7 +5291,7 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
 
     file : string
         filename of data to be read in; if full path not provided, routine will search in local directory
-        or in folder indicated by folder keyword
+        or in folder indicated by folder keyword; can also pass a URL to a remote file
 
     folder = '' : string [optional]
         full path to folder containing file
@@ -5145,10 +5306,6 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
             * wavelog = wavelength solution is logarithmic (common for echelle data)
             * sdss = sets both waveheader and wavelog
 
-    instrument = DEFAULT_INSTRUMENT : string [optional]
-        instrument by which data was acquired, by default the DEFAULT-INSTRUMENT global parameter
-        checked against INSTRUMENTS dictionary
-
     wave_unit = DEFAULT_WAVE_UNIT : astropy.unit [optional]
         units of wavelength axis, by default specified by the DEFAULT_WAVE_UNIT global parameter
 
@@ -5157,24 +5314,39 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
         note that you can specify a unitless number 
 
     dimensionless = False : boolean [optional]
-        set to True to set the flux units to a dimensionless quantity (e.g. transmission, reflectance)
+        set to True to set the flux units to a dimensionless quantity (for transmission, reflectance)
 
     comment = '#' : string [optional]
         for ascii files, character that indicates the file line is a comment (to be ignored)
 
-    delimiter = ',' : string [optional]
+    delimiter = '' : string [optional]
         for ascii files, character that separates columns of values
 
     crval1,cdelt1 = 'CRVAL1','CDELT1' : string [optional]
         for fits files for which the wavelength solution is embedded in header, 
         these are the keywords containing the zeroth wavelength and linear change coefficient
 
-    catchSN = True : boolean [optional]
-        set to True to check if uncertainty axis is actually signal-to-noise, by checking if median(flux/uncertainty) < 1
+    catch_sn = True : boolean [optional]
+        set to True to check if uncertainty axis is actually signal-to-noise, 
+        by checking if median(flux/uncertainty) < 1 [NOTE: NO LONGER IMPLEMENTED]
 
-    noZeroNoise = True : boolean [optional]
+    remove_nans = True : boolean [optional]
+        set to True to remove all wave/flux/noise values for which wave or flux are nan
+
+    no_zero_noise = True : boolean [optional]
         set to True to set all elements of noise array that are zero to numpy.nan;
         this helps in later computations of S/N or fit statistics
+
+    use_instrument_reader = True : bool [optional]
+        set to True to use the default instrument read in the DEFAULT-INSTRUMENT global parameter
+        checked against INSTRUMENTS dictionary
+
+    instrument = DEFAULT_INSTRUMENT : string [optional]
+        instrument by which data was acquired, by default the DEFAULT-INSTRUMENT global parameter
+        checked against INSTRUMENTS dictionary
+
+    instrument_param = {} : dict [optional]
+        instrument-specific parameters to pass to instrument reader
 
     verbose = False : boolean [optional]
         set to True to have program return verbose output
@@ -5193,6 +5365,7 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
 
     Example
     -------
+
        Case 1: An ascii file named 'spectrum.csv' with three comma-delimited columns of wavelength in Angstroms 
        and flux and uncertainty in erg/s/cm2/Angstrom
 
@@ -5273,6 +5446,7 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
 
     Dependencies
     ------------
+        
         `checkAccess()`_
         `checkInstrument()`_
         `checkOnline()`_
@@ -5303,8 +5477,8 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
 
     '''
 # check inputs and keyword parameters
-    for k in ['file','filename','data_file','datafile']:
-        if k in list(kwargs.keys()): file = kwargs[k]
+    # for k in ['file','filename','data_file','datafile']:
+    #     if k in list(kwargs.keys()): file = kwargs[k]
     if file == '':
         raise NameError('\nNo filename passed to readSpectrum')
     if not(isUnit(wave_unit)):
@@ -5315,71 +5489,26 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
         flux_unit = DEFAULT_FLUX_UNIT
     if dimensionless==True: flux_unit = u.dimensionless_unscaled
 
-# program parameters
-    online = False
-    dnldflag = False
-    readin = False
-    zipflag = ''
 
-# leaving this as a kwargs
-# NEED TO GET RID OF ONLINE ASPECTS HERE
-    url = kwargs.get('url',SPLAT_URL+DATA_FOLDER)
+# if a url, make sure it exists
+    if file[:4]=='http':
+        if requests.get(file).status_code!=requests.codes.ok:
+            raise ValueError('Cannot find remote file {}; check URL or your online status'.format(file))
 
-# filename
-#    kwargs['filename'] = file
-#    kwargs['model'] = False
-
-
-# first pass: check if file is local
-# NEED TO GET RID OF ONLINE ASPECTS HERE
-    ofile = copy.deepcopy(file)
-    if os.path.exists(os.path.normpath(file)) == False: file = folder+os.path.basename(file)
-    if os.path.exists(os.path.normpath(file)) == False:
-        if verbose==True: print('Cannot find {} locally or in folder {}, trying online\n\n'.format(ofile,folder))
-        online=True
-        file = copy.deepcopy(ofile)
-#            kwargs['filename'] = file
-
-# second pass: download file if necessary
-# NEED TO GET RID OF ONLINE ASPECTS HERE
-#    online = not local
-    if online == True and checkAccess() == False:
-            raise ValueError('\nCannot find file locally, and you do not have remote access'.format(file))
-    if online == True:
-        ofile = copy.deepcopy(file)
-        if checkOnline(url+file) == '': file = folder+os.path.basename(file)
-        if checkOnline(url+file) == '':
-            raise ValueError('\nCannot find file {} or {} on SPLAT website {}\n\n'.format(ofile,file,url))
-# read in online file
-#           file = kwargs['filename']
-
-# this section downloads file to local machine and then reads it in
-# this has caused some problems when the file is not properly downloaded
-        try:
-            if os.path.exists(os.path.normpath(os.path.basename(file))):
-                os.remove(os.path.normpath(os.path.basename(file)))
-            open(os.path.normpath(os.path.basename(file)), 'wb').write(requests.get(url+file).content)
-            dnldflag = True
-        except:
-            raise NameError('\nProblem reading in {} from SPLAT website {}'.format(file,url))
+# if a local file, make sure it exists
+    else:
+        if os.path.exists(os.path.normpath(file)) == False: file = folder+os.path.basename(file)
+        if os.path.exists(os.path.normpath(file)) == False:
+            raise ValueError('Cannot find {} locally or in folder {}\n\n'.format(ofile,folder))
 
 # instrument specific read shortcut - not working?
+    readin = False
     inst = checkInstrument(instrument)
-    if inst != False: 
+    if inst != False and use_instrument_reader==True: 
         instrument = inst
         if INSTRUMENTS[instrument]['reader'] != '': 
-#            output = locals()[INSTRUMENTS[instrument]['reader']](file,verbose=verbose,**kwargs)
-#            print(INSTRUMENTS[instrument]['reader'],type(INSTRUMENTS[instrument]['reader']))
             output = INSTRUMENTS[instrument]['reader'](file,verbose=verbose,**kwargs)
             readin = True
-
-    # if instrument.upper()=='APOGEE': output = _readAPOGEE(file,**kwargs)
-    # elif instrument.upper()=='BOSS': output = _readBOSS(file,**kwargs)
-    # elif instrument.upper()=='LDSS3': output = _readIRAF(file,**kwargs)
-    # elif instrument.upper()=='FIRE': output = _readFIRE(file,**kwargs)
-    # elif instrument.upper()=='MAGE': output = _readMAGE(file,**kwargs)
-    # elif instrument.upper()=='WFC3': output = _readWFC3(file,**kwargs)
-    # elif instrument.upper()=='KAST-RED' or instrument.upper()=='KAST-BLUE': output = _readKAST(file,**kwargs)
 
 # other reads
     if readin==False:
@@ -5387,77 +5516,70 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
 # determine which type of file
         file_type = '{} {}'.format(file.split('.')[-1],file_type)
 
-# gzip compressed file - unzip and remove later
-        if 'gz' in file_type:
-            zipflag = 'gz'
-            file = file.replace('.gz','')
-            file_type = '{} {}'.format(file.split('.')[-1],file_type)
-            with open(os.path.normpath(file), 'wb') as f_out, gzip.open(os.path.normpath(file+'.gz'), 'rb') as f_in:
-                shutil.copyfileobj(f_in, f_out)
+# zipped file - extract root
+        for k in ['gz','bz2','zip']:
+            if k in file_type:
+                file_type = '{} {}'.format((file.replace(k,'')).split('.')[-1],file_type)
 
-# bz2 compressed file - unzip and remove later
-        if 'bz2' in file_type:
-            zipflag = 'bz2'
-            file = file.replace('.bz2','')
-            file_type = '{} {}'.format(file.split('.')[-1],file_type)
-            with open(os.path.normpath(file), 'wb') as f_out, bz2.open(os.path.normpath(file+'.bz2'), 'rb') as f_in:
-                shutil.copyfileobj(f_in, f_out)
-
-# fits file
+# fits - can be done with fits.open as local or online and w/ or w/o gzip/bzip2/pkzip
         if 'fit' in file_type:
             with fits.open(os.path.normpath(file),ignore_missing_end=True,ignore_missing_simple=True,do_not_scale_image_data=True) as hdu:
                 hdu.verify('silentfix+ignore')
-                if 'NAXIS3' in list(hdu[0].header.keys()): d = numpy.copy(hdu[0].data[0,:,:])
-                else: d =  numpy.copy(hdu[0].data)
                 header = hdu[0].header
+                if 'NAXIS3' in list(header.keys()): d = numpy.copy(hdu[0].data[0,:,:])
+                else: d =  numpy.copy(hdu[0].data)
 
-# ascii file
+# some specific formatting cases
+            if 'sdss' in file_type and 'fit' in file_type: file_type='waveheader wavelog {}'.format(file_type)
+# wavelength is in header 
+            if 'waveheader' in file_type and 'fit' in file_type and len(d[:,0])<3:
+                flux = d[0,:]
+                if crval1 in list(header.keys()) and cdelt1 in list(header.keys()):
+                    wave = numpy.polyval([float(header[cdelt1]),float(header[crval1])],numpy.arange(len(flux)))
+                else: 
+                    raise ValueError('\nCannot find {} and {} keywords in header of fits file {}'.format(crval1,cdelt1,file))
+# wavelength is explicitly in data array 
+            else:
+                wave = d[0,:]
+                flux = d[1,:]
+            if len(d[:,0]) > 1: noise = d[2,:]
+            else: noise = [numpy.nan]*len(wave)
+
+# ascii - can be done with pandas as local or online and w/ or w/o gzip/bzip2/pkzip
         else:
-            if 'csv' in file_type: delimiter = ','
-            if 'tsv' in file_type or 'tab' in file_type or 'txt' in file_type: delimiter = '\t'
-            if 'pipe' in file_type: delimiter = '|'
-            if 'latex' in file_type: delimiter = '&'
+            if 'csv' in file_type and delimiter=='': delimiter = ','
+            elif ('tsv' in file_type or 'tab' in file_type or 'txt' in file_type) and delimiter=='': delimiter = '\t'
+            elif 'pipe' in file_type and delimiter=='': delimiter = '|'
+            elif 'latex' in file_type and delimiter=='': delimiter = '&'
 
-            try:
-                d = numpy.genfromtxt(os.path.normpath(file), comments=comment, delimiter=delimiter, unpack=False, \
-                    missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
-            except: 
-                raise ValueError('\nCould not read ascii data from file {}'.format(file))
-#                d = numpy.genfromtxt(os.path.normpath(file), comments=';', unpack=False, \
-#                     missing_values = ('NaN','nan'), filling_values = (numpy.nan)).transpose()
+# initial read
+            dp = pandas.read_csv(file,delimiter=delimiter,comment=comment,header=0)
+# if numbers in first row, replace with header
+            if isNumber(dp.columns[0])==True:
+                cnames = ['wave','flux']
+                if len(dp.columns)>2: cnames.append('noise')
+                if len(dp.columns)>3: 
+                    for i in range(len(dp.columns))-3: cnames.append('c{}'.format(i))
+                dp = pandas.read_csv(file,delimiter=delimiter,comment=comment,names=cnames)
+# assume order wave, flux, noise
+# for now ignoring any other columns
+            wave = numpy.array(dp[dp.columns[0]])
+            flux = numpy.array(dp[dp.columns[1]])
+            if len(dp.columns)>2: noise = numpy.array(dp[dp.columns[2]])
+            else: noise = [numpy.nan]*len(dp)
+# placeholder header
             header = fits.Header()      # blank header
 
-
-# check alignment of data array
-#        print(file,file_type,numpy.shape(d),header)
-        if len(d[:,0]) > len(d[0,:]): d = d.transpose()  # array is oriented wrong
-
-# SDSS format for wavelength scale - in header and log format
-# DOES THIS NEED TO BE MOVED INTO A SPECIFIC READER?
-        if 'sdss' in file_type: file_type='waveheader wavelog {}'.format(file_type)
-        if 'waveheader' in file_type or len(d[:,0])<2:
-            flux = d[0,:]
-            if crval1 in list(header.keys()) and cdelt1 in list(header.keys()):
-#                wave = numpy.linspace(float(header[crval1]),float(header[crval1])+len(flux)*float(header[cdelt1]),num=len(flux))
-                wave = numpy.polyval([float(header[cdelt1]),float(header[crval1])],numpy.arange(len(flux)))
-            else: 
-                raise ValueError('\nCannot find {} and {} keywords in header of fits file {}'.format(crval1,cdelt1,file))
-            if len(d[:,0]) > 1: noise = d[1,:]
-            else:
-                noise = numpy.zeros(len(wave))
-                noise[:] = numpy.nan
-# wavelength is explicitly in data array 
-        else:
-            wave = d[0,:]
-            flux = d[1,:]
-            if len(d[:,0]) > 2: noise = d[2,:]
-            else:
-                noise = numpy.zeros(len(wave))
-                noise[:] = numpy.nan
 #  wavelength scale is logarithmic
         if 'wavelog' in file_type: wave = 10.**wave
 
-        output = {'wave': wave, 'flux': flux, 'noise': noise, 'header': header, 'wave_unit': wave_unit, 'flux_unit': flux_unit}
+# final output dictionary
+        output = {'wave': wave, 
+                  'flux': flux, 
+                  'noise': noise, 
+                  'header': header, 
+                  'wave_unit': wave_unit, 
+                  'flux_unit': flux_unit}
 
 # make sure arrays are numpy arrays
     output['wave'] = numpy.array(output['wave'])
@@ -5466,21 +5588,21 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
 
 # make sure arrays have units
     if not isUnit(output['wave']): output['wave'] = output['wave']*wave_unit
+    output['wave'].to(wave_unit)
     if not isUnit(output['flux']): output['flux'] = output['flux']*flux_unit
+    output['flux'].to(flux_unit)
     if not isUnit(output['noise']): output['noise'] = output['noise']*flux_unit
-
-# fix nans in flux
-#    w = numpy.where(numpy.isnan(flux) == True)
-#    flux[w] = 0.
+    output['noise'].to(flux_unit)
 
 # remove all parts of spectrum that are nans
-    w = numpy.where(numpy.logical_and(numpy.isnan(output['wave']) == False,numpy.isnan(output['flux']) == False))
-    output['wave'] = output['wave'][w]
-    output['flux'] = output['flux'][w]
-    output['noise'] = output['noise'][w]
+    if remove_nans==True:
+        w = numpy.where(numpy.logical_and(numpy.isnan(output['wave']) == False,numpy.isnan(output['flux']) == False))
+        output['wave'] = output['wave'][w]
+        output['flux'] = output['flux'][w]
+        output['noise'] = output['noise'][w]
 
 # force places where noise is zero to be NaNs
-    if noZeroNoise==True:
+    if no_zero_noise==True:
         output['noise'][numpy.where(output['noise'] == 0.)] = numpy.nan
 
 
@@ -5489,10 +5611,6 @@ def readSpectrum(file,folder='',instrument=DEFAULT_INSTRUMENT,wave_unit=DEFAULT_
 # LEAVING THIS OUT FOR THE MOMENT
 #    if inst != False:
 #        for k in list(INSTRUMENTS[inst].keys()): output[k] = INSTRUMENTS[inst][k]  
-
-# file clean up
-    if zipflag != '': os.remove(os.path.normpath(file))
-    if online==True and dnldflag == True: os.remove(os.path.normpath(os.path.basename(file)))
 
     return output
 
@@ -6086,7 +6204,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
 
 
 
-def classifyByStandard(sp, std_class='dwarf',dof=-1, **kwargs):
+def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
     '''
     :Purpose: 
         Determine the spectral type and uncertainty for a
@@ -6162,7 +6280,7 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, **kwargs):
         ('sdL0.0:', 1.8630159149200021)
     '''
 
-    verbose = kwargs.get('verbose',False)
+#    verbose = kwargs.get('verbose',False)
     best_flag = kwargs.get('best',True)
     average_flag = kwargs.get('average',not best_flag)
     best_flag = not average_flag
@@ -6192,7 +6310,7 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, **kwargs):
         return classifyByStandard(sp,**mkwargs)
 
 # assign subclasses
-    allowed_classes = ['dwarf','subdwarf','sd','esd','dsd','lowg','vlg','intg','all']
+    allowed_classes = ['dwarf','sd','esd','dsd','vlg','intg','subdwarf','young','all']
     for a in allowed_classes:
         if kwargs.get(a,False) == True: std_class = a
     std_class = std_class.lower()
@@ -6206,25 +6324,25 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, **kwargs):
         subclass = ''
         stdtype = 'Dwarf'
         if verbose==True: print('Using dwarf standards')
-    elif std_class == 'sd' or std_class == 'subdwarf':
+    elif std_class == 'sd':
         initiateStandards(sd=True)
         stds = STDS_SD_SPEX
         subclass = 'sd'
-        stdtype = 'Subdwarf'
+        stdtype = 'subdwarf'
         if verbose==True: print('Using subdwarf standards')
     elif std_class == 'dsd':
         initiateStandards(dsd=True)
         stds = STDS_DSD_SPEX
         subclass = ''
-        stdtype = 'Mild subdwarf'
+        stdtype = 'mild subdwarf'
         if verbose == True: print('Using dwarf standards')
     elif std_class == 'esd':
         initiateStandards(esd=True)
         stds = STDS_ESD_SPEX
         subclass = 'esd'
-        stdtype = 'Extreme Subdwarf'
+        stdtype = 'extreme subdwarf'
         if verbose == True: print('Using extreme subdwarf standards')
-    elif std_class == 'vlg' or std_class == 'lowg':
+    elif std_class == 'vlg':
         initiateStandards(vlg=True)
         stds = STDS_VLG_SPEX
         subclass = ''
@@ -6236,6 +6354,22 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, **kwargs):
         subclass = ''
         stdtype = 'Intermediate Gravity'
         if verbose == True: print('Using intermediate low gravity standards')
+    elif std_class == 'subdwarf':
+        initiateStandards(sd=True)
+        initiateStandards(dsd=True)
+        initiateStandards(esd=True)
+        stds = STDS_SD_SPEX.copy()
+        stds.update(STDS_DSD_SPEX)
+        stds.update(STDS_ESD_SPEX)
+        stdtype = 'subdwarf'
+        if verbose == True: print('Using d/sd, sd, and esd standards')
+    elif std_class == 'young':
+        initiateStandards(vlg=True)
+        initiateStandards(intg=True)
+        stds = STDS_VLG_SPEX.copy()
+        stds.update(STDS_INTG_SPEX)
+        stdtype = 'young'
+        if verbose == True: print('Using INTG and VLG standards')
     elif std_class == 'all':
         initiateStandards()
         initiateStandards(sd=True)
@@ -6272,15 +6406,14 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, **kwargs):
     else:
         print('\nWarning: do not recognize method = {}'.format(kwargs['method']))
         fit_ranges = [[0.7,2.45]]       # by default, compare whole spectrum
+    fit_ranges = kwargs.get('fit_ranges',fit_ranges)
     fit_ranges = kwargs.get('fitrange',fit_ranges)
     fit_ranges = kwargs.get('fitrng',fit_ranges)
     fit_ranges = kwargs.get('comprange',fit_ranges)
     fit_ranges = kwargs.get('comprng',fit_ranges)
     if not isinstance(fit_ranges[0],list):
         fit_ranges = [fit_ranges]
-
-
-#    if verbose==True: print(fit_ranges)
+    if verbose==True: print('Fitting over range {}'.format(fit_ranges))
 
 # compute fitting statistics
     stat = []
@@ -6291,8 +6424,7 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, **kwargs):
         chisq,scale = compareSpectra(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True)
         stat.append(chisq)
         sspt.append(t)
-        if (verbose):
-            print('Type {}: statistic = {}, scale = {}'.format(t, chisq, scale))
+        if verbose==True: print('Type {}: statistic = {}, scale = {}'.format(t, chisq, scale))
 
 # list of sorted standard files and spectral types
     sorted_stdsptnum = [x for (y,x) in sorted(zip(stat,sspt))]
@@ -6976,7 +7108,9 @@ def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=Non
         for k in list(indices_measured.keys()):
             if k not in list(indices.keys()): 
                 indices[k] = indices_measured[k]
-                if verbose==True: print('\t{} = {:.2f}+/-{:.2f}'.format(k,indices[k][0],indices[k][1]))
+                if verbose==True and isinstance(indices[k],tuple)==True: 
+#                    print(k,indices[k])
+                    print('\t{} = {:.2f}+/-{:.2f}'.format(k,indices[k][0],indices[k][1]))
 
     if index_data['spt']==True:
         if 'SPT' not in list(indices.keys()): indices['SPT'] = spt
@@ -7581,7 +7715,7 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
         elif (sample == 'sum'):
             value[i] = numpy.nansum(yNum)
         elif (sample == 'median'):
-            value[i] = numpy.median(yNum)
+            value[i] = numpy.nanmedian(yNum)
         elif (sample == 'maximum'):
             value[i] = numpy.nanmax(yNum)
         elif (sample == 'minimum'):
@@ -7612,7 +7746,7 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
                 elif (sample == 'sum'):
                     value_sim[i,j] = numpy.nansum(yVar)
                 elif (sample == 'median'):
-                    value_sim[i,j] = numpy.median(yVar)
+                    value_sim[i,j] = numpy.nanmedian(yVar)
                 elif (sample == 'maximum'):
                     value_sim[i,j] = numpy.nanmax(yVar)
                 elif (sample == 'minimum'):

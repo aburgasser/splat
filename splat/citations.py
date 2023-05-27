@@ -72,7 +72,7 @@ def bibTexParser(bib_input,**kwargs):
 def veryShortRef(bib_dict,**kwargs):
     '''
     :Purpose:
-        Takes a bibtex dictionary and returns a short (in-line) version of the citation
+        Takes a bibtex entry and returns a short (in-line) version of the citation
 
     :Required parameters:
         :param bib_tex: Dictionary output from bibTexParser, else a bibcode that is fed into bibTexParser
@@ -85,14 +85,11 @@ def veryShortRef(bib_dict,**kwargs):
 
     '''
     if type(bib_dict) is not dict:
-        if type(bib_dict) is numpy.str:
-            bib_dict = str(bib_dict)
-        if type(bib_dict) is str:
-            bib_dict = getBibTeX(bib_dict,**kwargs)
-            if isinstance(bib_dict,dict) == False: return ''
-        else:
-            if kwargs.get('verbose',False): print('Input to shortRef is neither a bibcode nor a bibTex dictionary')
-            return ''
+        if type(bib_dict) is str: bib_dict = getBibTeX(bib_dict,**kwargs)
+        if len(bib_dict) == 0: return ''
+    if type(bib_dict) is not dict:
+        if kwargs.get('verbose',False): print('Input to shortRef is neither a bibcode nor a bibTex dictionary')
+        return ''
 
     authors = bib_dict['author'].split(' and ')
     a = authors[0].replace('~',' ').split(' ')
@@ -124,14 +121,12 @@ def shortRef(bib_dict,**kwargs):
 
     '''
     if type(bib_dict) is not dict:
-        if type(bib_dict) is numpy.str:
-            bib_dict = str(bib_dict)
-        if type(bib_dict) is str:
+        if type(bib_dict) is str: 
             bib_dict = getBibTeX(bib_dict,**kwargs)
-            if isinstance(bib_dict,dict) == False: return ''
-        else:
-            if kwargs.get('verbose',False): print('Input to shortRef is neither a bibcode nor a bibTex dictionary')
-            return ''
+            if len(bib_dict) == 0: return ''
+    if type(bib_dict) is not dict:
+        if kwargs.get('verbose',False): print('Input to shortRef is neither a bibcode nor a bibTex dictionary')
+        return ''
 
     authors = bib_dict['author'].split(' and ')
     if len(authors) == 1:
@@ -175,14 +170,12 @@ def longRef(bib_dict,**kwargs):
 
     '''
     if type(bib_dict) is not dict:
-        if type(bib_dict) is numpy.str:
-            bib_dict = str(bib_dict)
         if type(bib_dict) is str:
             bib_dict = getBibTeX(bib_dict,**kwargs)
-            if isinstance(bib_dict,dict) == False: return ''
-        else:
-            if kwargs.get('verbose',False): print('Input to longRef is neither a bibcode nor a bibTex dictionary')
-            return ''
+            if len(bib_dict) == 0: return ''
+    if type(bib_dict) is not dict:
+        if kwargs.get('verbose',False): print('Input to longRef is neither a bibcode nor a bibTex dictionary')
+        return ''
 
     authors = bib_dict['author'].split(' and ')
     if len(authors) == 1:
@@ -226,14 +219,12 @@ def veryLongRef(bib_dict,**kwargs):
 
     '''
     if type(bib_dict) is not dict:
-        if type(bib_dict) is numpy.str:
-            bib_dict = str(bib_dict)
         if type(bib_dict) is str:
             bib_dict = getBibTeX(bib_dict,**kwargs)
-            if isinstance(bib_dict,dict) == False: return ''
-        else:
-            if kwargs.get('verbose',False): print('Input to verylongRef is neither a bibcode nor a bibTex dictionary')
-            return ''
+            if len(bib_dict) == 0: return ''
+    if type(bib_dict) is not dict:
+        if kwargs.get('verbose',False): print('Input to verylongRef is neither a bibcode nor a bibTex dictionary')
+        return ''
 
     authors = bib_dict['author'].split(' and ')
     if len(authors) == 1:
@@ -278,7 +269,7 @@ def citeURL(bib_dict,**kwargs):
 
     '''
     if type(bib_dict) is not dict:
-        if type(bib_dict) is numpy.str:
+        if type(bib_dict) is str:
             bib_dict = str(bib_dict)
         if type(bib_dict) is str:
 # assume this is a bibcode
@@ -337,63 +328,78 @@ def processBiblibrary(biblibrary,verbose=False):
     return output
 
 
-def getBibTeX(bibcode,**kwargs):
+def getBibTeX(bibcode, biblibrary=SPLAT_PATH+DB_FOLDER+BIBFILE, online=False, verbose=True):
     '''
     Purpose
-        Takes a bibcode and returns a dictionary containing the bibtex information; looks either in internal SPLAT
-            or user-supplied bibfile, or seeks online. If nothing found, gives a soft warning and returns False
+    -------
+    Takes a bibcode and returns a dictionary containing the bibtex information; 
+    looks either in internal SPLAT or user-supplied bibfile, or seeks online. 
+    If nothing found, gives a soft warning and returns False
 
-    :Note:
-        **Currently not functional**
+    Parameters
+    ----------
 
-    :Required parameters:
-        :param bibcode: Bibcode string to look up (e.g., '2014ApJ...787..126L')
+    bibcode : str
+        Bibcode string to look up (e.g., '2014ApJ...787..126L')
 
-    :Optional parameters:
-        :param biblibrary: Filename for biblibrary to use in place of SPLAT internal one
-        :type string: optional, default = ''
-        :param online: If True, go directly online; if False, do not try to go online 
-        :type logical: optional, default = null
+    biblibrary = SPLAT_PATH+DB_FOLDER+BIBFILE: str [optional]
+        File pointing to a bibtex library file; by default points to internal library
 
-    :Output:
-        - A dictionary containing the bibtex fields, or False if not found
+    online = False : bool [optional]
+        If True, go directly online; if False, do not try to go online 
+        NOTE: CURRENLY SET TO NOT ONLINE DUE TO CHANGE IN ADS API
+
+    verbose = True : bool [optional]
+        Set to True to provide feedback
+
+    Outputs
+    -------
+
+    dictionary containing bibtex information, or blank dictionary if nothing found
+
+    Example
+    -------
+    
+    TBD
+
+    Dependencies
+    ------------
+    
+    None
 
     '''
 
 # go online first if directed to do so
-    if kwargs.get('online',False) and checkOnline():
-        bib_tex = getBibTeXOnline(bibcode)
+    # if online==True and checkOnline():
+    #     bib_tex = getBibTeXOnline(bibcode)
 
 # read locally first
-    else:
-        biblibrary = kwargs.get('biblibrary', SPLAT_PATH+DB_FOLDER+BIBFILE)
+#    else:
 # check the file
-        if not os.path.exists(os.path.normpath(biblibrary)):
-            if kwargs.get('verbose',True) == True: print('Could not find bibtex library {}'.format(biblibrary))
-            biblibrary = SPLAT_PATH+DB_FOLDER+BIBFILE
+    if not os.path.exists(os.path.normpath(biblibrary)):
+        if verbose == True: print('Could not find bibtex library {}'.format(biblibrary))
+        biblibrary = SPLAT_PATH+DB_FOLDER+BIBFILE
+    if not os.path.exists(os.path.normpath(biblibrary)):
+        raise NameError('Could not find SPLAT main bibtext library {}; something is wrong'.format(biblibrary))
 
-        if not os.path.exists(os.path.normpath(biblibrary)):
-            raise NameError('Could not find SPLAT main bibtext library {}; something is wrong'.format(biblibrary))
+# open and read
+    bib_tex = {}
+    with open(os.path.normpath(biblibrary), 'r') as bib_file:
+        text = bib_file.read()
+        #print re.search('@[A-Z]+{' + bib_code, bib_file)        
+        in_lib = re.search('@[a-z]+{' + bibcode, text)
+        if in_lib != None:  
+#            if force==True: return bib_tex
+#            if kwargs.get('verbose',False) == True: print('Bibcode {} not in bibtex library {}; checking online'.format(bibcode,biblibrary))
+#            bib_tex = getBibTeXOnline(bibcode)
+#        else:
+            begin = text.find(re.search('@[a-z]+{' + bibcode, text).group(0))
+            text = text[begin:]
+            end = text.find('\n@')
+            bib_tex = text[:end]
 
-
-        with open(os.path.normpath(biblibrary), 'r') as bib_file:
-            text = bib_file.read()
-            #print re.search('@[A-Z]+{' + bib_code, bib_file)        
-            in_lib = re.search('@[a-z]+{' + bibcode, text)
-            if in_lib == None:  
-                if kwargs.get('force',False): return False
-                if kwargs.get('verbose',False) == True: print('Bibcode {} not in bibtex library {}; checking online'.format(bibcode,biblibrary))
-                bib_tex = getBibTeXOnline(bibcode)
-            else:
-                begin = text.find(re.search('@[a-z]+{' + bibcode, text).group(0))
-                text = text[begin:]
-                end = text.find('\n@')
-                bib_tex = text[:end]
-
-    if bib_tex == False:
-        return False
-    else:
-        return bibTexParser(bib_tex)
+    if len(bib_tex) == 0: return bib_tex
+    else: return bibTexParser(bib_tex)
 
 
 def getBibTeXOnline(bibcode,verbose=False):

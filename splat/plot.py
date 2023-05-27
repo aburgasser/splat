@@ -456,7 +456,7 @@ def plotSpectrum(inp,xrng=[],yrng=[],xlabel='',ylabel='',xlog=False,ylog=False,g
     for k in ['multilayout','multiLayout','multi_layout']: layout=kwargs.get(k,layout)
     for k in ['file','filename']: output=kwargs.get(k,output)
     if not isinstance(output,str): output=''
-    filetype = ''
+    filetype = '.pdf'
     if output!='': filetype=output.split('.')[-1]
 
     if comparison != None and isinstance(comparison,splat.Spectrum) == False and isinstance(comparison,list) == False: 
@@ -803,12 +803,13 @@ def plotSpectrum(inp,xrng=[],yrng=[],xlabel='',ylabel='',xlog=False,ylog=False,g
         ax.axis(bound)
     
 # save to file or display
+# ERROR HERE - CHECK WHAT FILES
         if multipage == False:
             if files[plts] != '' and (plts % nplot == 3 or plts == len(splist)-1):
                 if kwargs.get('tight',True) == True: 
-                    plt.savefig(files[plts], format=filetype, bbox_inches='tight')
+                    plt.savefig(files[plts], bbox_inches='tight')
                 else:
-                    plt.savefig(files[plts], format=filetype)
+                    plt.savefig(files[plts])
     if output == '' and not kwargs.get('web',False):
         plt.show()
         if (kwargs.get('interactive',False) != False): plt.ion()
