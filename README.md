@@ -144,7 +144,7 @@ A summary of the `Spectrum` object can be accessed using `sp.info()`.
 >
 > History:
 >
->     SPEX-PRISM spectrum successfully loaded
+>> SPEX-PRISM spectrum successfully loaded
 
 You can also read in your own spectrum by passing a filename
 
