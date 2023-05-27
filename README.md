@@ -40,15 +40,9 @@ SPLAT tools allow you to:
 The optimal installation method for SPLAT is cloning from the github site https://github.com/aburgasser/splat, which is updated on a (semi-)regular basis. 
 
 
-For Users:
-
-    pip install splat@git+https://github.com/aburgasser/splat.git
-
-For Developers:
-
     git clone https://github.com/aburgasser/splat.git
     cd splat
-    pip install -e ./ 
+    python setup.py 
 
 
 > Warning: At this time please do not install splat using `pip`, as this is an outdated version of SPLAT that is no longer supported.

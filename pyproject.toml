@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "splat"
+version = "2023.05.27"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "astropy",
+    "astroquery",
+    "scipy",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "importlib_resources; python_version < '3.7'",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["*.dat","*.fits"] # includes the data files in instrument_data/ and data/

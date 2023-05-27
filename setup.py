@@ -2,15 +2,6 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-#try:
-#  from setuptools import setup, find_packages
-#  setup
-#except ImportError:
-#  from distutils.core import setup
-#  setup
-
-#from distutils.core import setup
-
 from __future__ import unicode_literals
 from setuptools import setup, find_packages
 from splat.initialize import VERSION
@@ -42,32 +33,10 @@ setup(
     'pandas',
     'requests',
     'scipy',
-    'shapely'
   ],
 
   package_dir = {'splat': 'splat'},    
   package_data = {'splat': ['db/*','docs/*','resources/*','tutorials/*','build/*']},
-#      'reference/Filters': [
-#        'reference/Filters/*.txt',
-#      ],
-#      'reference/EvolutionaryModels': [
-#        'reference/EvolutionaryModels/Baraffe/*.txt',
-#        'reference/EvolutionaryModels/Burrows/*.txt',
-#        'reference/EvolutionaryModels/Saumon/*.txt',
-#      ],
-#      'reference/Spectra': [
-#        'reference/Spectra/*.fits',
-#      ],
-#      'reference/SpectralModels': [
-#        'reference/SpectralModels/BTSettl2008/*.txt',
-#        'reference/SpectralModels/BTSettl2015/*.txt',
-#        'reference/SpectralModels/burrows06/*.txt',
-#        'reference/SpectralModels/drift/*.txt',
-#        'reference/SpectralModels/morley12/*.txt',
-#        'reference/SpectralModels/morley14/*.txt',
-#        'reference/SpectralModels/saumon12/*.txt',
-#      ],
-#  },
   include_package_data=True,
 
   zip_safe = True,
@@ -92,13 +61,16 @@ setup(
   # metadata for upload to PyPI
   author = "Adam Burgasser",
   author_email = "aburgasser@ucsd.edu",
-  description = "SpeX Prism Library Analysis Toolkit",
-#  long_description = long_description,
+  description = "SpeX Prism Library Analysis Toolkit (SPLAT)",
+  long_description = "Code base for the SpeX Prism Library Analysis Toolkit (SPLAT), which provides \
+  access to near-infrared spectral data for over 3000 sources obtained with the NASA/SpeX instrument \
+  primarily of low-mass stars and brown dwarfs; relevant atmosphere and evolutionary models; and \
+  analysis functions for spectral measurements and emprical calibrations."
   license = "MIT",
 #    download_url='%s/astropy-%s.tar.gz' % (DOWNLOAD_BASE_URL, VERSION),
   keywords = ['splat','spectroscopy', 'spectral analysis', 'astronomy','astrophysics',\
               'ultracool dwarfs','low mass stars', 'brown dwarfs', 'spex','prism', 'classification'],
-  url = "http://www.browndwarfs.org/splat/",   # project home page, if any
+  url = "http://splat.physics.ucsd.edu/splat/",   # project home page, if any
 
   command_options={
         'build_sphinx': {
