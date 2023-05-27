@@ -138,9 +138,9 @@ A summary of the `Spectrum` object can be accessed using `sp.info()`.
 >
 > If you use these data, please cite:
 >
->     Burgasser, A. J. et al. (2008, Astrophysical Journal, 681, 579-593)
->
->     bibcode: 2008ApJ...681..579B
+>> Burgasser, A. J. et al. (2008, Astrophysical Journal, 681, 579-593)
+>>
+>> bibcode: 2008ApJ...681..579B
 >
 > History:
 >
