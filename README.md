@@ -1,125 +1,130 @@
-.. README for SPLAT homepage.
+# SPLAT: The SpeX Prism Library Analysis Toolkit
 
-.. _`SpeX Prism Library`: http://www.browndwarfs.org/spexprism
-.. _`SPL`: http://www.browndwarfs.org/spexprism
-.. _`pip`: https://pip.pypa.io/en/stable/
-.. _`docs`: https://splat.physics.ucsd.edu/splat/
+Access SPLAT's full documentation at https://splat.physics.ucsd.edu/splat.
 
-
-SPLAT: The SpeX Prism Library Analysis Toolkit
-===============================================
-
-Access SPLAT's full documentation at `https://splat.physics.ucsd.edu/splat <https://splat.physics.ucsd.edu/splat>`_.
-
-Preamble
---------
+## Preamble
 
 SPLAT is a python-based spectral access and analysis package designed to interface  
-with the `SpeX Prism Library`_ (`SPL`_), an online repository of over
+with the **SpeX Prism Library (SPL)**, an online repository of over
 3,000 low-resolution, near-infrared spectra, primarily 
 of low-temperature stars and brown dwarfs.
-It is built on common python packages such as `astropy <http://www.astropy.org/>`_, `astroquery <https://astroquery.readthedocs.io/en/latest/>`_, `emcee <http://dan.iel.fm/emcee/current/>`_, `matplotlib <http://matplotlib.org/>`_, `numpy <http://www.numpy.org/>`_, `pandas <http://pandas.pydata.org/>`_, `scipy <https://www.scipy.org/>`_, and others.  
+It is built on common python packages such as 
+[astropy](http://www.astropy.org), 
+[astroquery](https://astroquery.readthedocs.io/en/latest), 
+[emcee](http://dan.iel.fm/emcee/current), 
+[matplotlib](http://matplotlib.org), 
+[numpy](http://www.numpy.org), 
+[pandas](http://pandas.pydata.org), 
+[scipy](https://www.scipy.org), and others.  
 
 
 SPLAT tools allow you to:
-    * search the SpeX Prism Library for spectral data and source information;
-    * access and analyze publically-available spectra contained in it;
-    * analyze your own spectral data from SpeX and other instruments;
-    * perform basic spectral analyses such as type classification, gravity classification, index measurement, spectrophotometry, reddening, blended light analysis, and basic math operations;
-    * access atmosphere models and perform fits to spectral data;
-    * transform observables to physical parameters using evolutionary models; 
-    * use published empirical trends between spectral type, absolute magnitudes, colors, luminosities, effective temperatures, and others;
-    * access online data repositories through wrappers to `astroquery <https://astroquery.readthedocs.io/en/latest/>`_
-    * simulate very low mass star and brown dwarf populations by combining spatial, evolutionary, and observational properties; and
-    * plot, tabulate, and publish your results.  
+* Search the SpeX Prism Library for spectral data and source information;
+* Access and analyze publically-available spectra contained in it;
+* Analyze your own spectral data from SpeX and other instruments;
+* Perform basic spectral analyses such as type classification, gravity classification, index measurement, spectrophotometry, reddening, blended light analysis, and basic math operations;
+* Access atmosphere models and perform fits to spectral data;
+* Transform observables to physical parameters using evolutionary models; 
+* Use published empirical trends between spectral type, absolute magnitudes, colors, luminosities, effective temperatures, and others;
+* Access online data repositories through wrappers to `astroquery <https://astroquery.readthedocs.io/en/latest/>`_
+* Simulate very low mass star and brown dwarf populations by combining spatial, evolutionary, and observational properties; and
+* Plot, tabulate, and publish your results.  
 
-Note:
-    Many features in SPLAT continue to be in development.
+> Note: Many features in SPLAT continue to be in development.
     Help us improve the code by reporting bugs (and solutions!) to our github site,
-    `https://github.com/aburgasser/splat <https://github.com/aburgasser/splat>`_.
+    https://github.com/aburgasser/splat.
 
-Installation and Dependencies
------------------------------
 
-SPLAT should be cloned from the github site `https://github.com/aburgasser/splat <https://github.com/aburgasser/splat>`_. which is updated on a regular basis. 
+## Installation and Dependencies
 
-Warning:
-    At this time please do not install splat using `pip`_, as this is an outdated version of SPLAT that is no longer supported.
+The optimal installation method for SPLAT is cloning from the github site https://github.com/aburgasser/splat, which is updated on a (semi-)regular basis. 
 
-Once you've downloaded the code and data, you will need to add the SPLAT top-level directory to the environment variables ``SPLAT_PATH`` and ``PYTHONPATH`` (and optionally to your system ``PATH``).  More detailed instructions are on the installation page at `https://splat.physics.ucsd.edu/splat <https://splat.physics.ucsd.edu/splat>`_. 
+
+For Users:
+
+    pip install splat@git+https://github.com/aburgasser/splat.git
+
+For Developers:
+
+    git clone https://github.com/aburgasser/splat.git
+    cd splat
+    pip install -e ./ 
+
+
+> Warning: At this time please do not install splat using `pip`, as this is an outdated version of SPLAT that is no longer supported.
+
+Once you've downloaded the code and data, you will need to add the SPLAT top-level directory to the environment variable `PYTHONPATH`.  See the following links on how to update environment variables:
+
+* bash or zsh (Unix/Mac): https://apple.stackexchange.com/questions/356441/how-to-add-permanent-environment-variable-in-zsh
+* windows: https://www.computerhope.com/issues/ch000549.htm 
+
+
 
 SPLAT has core dependencies on the following packages:
-    * `astropy <http://www.astropy.org/>`_
-    * `astroquery <https://astroquery.readthedocs.io/en/latest/>`_
-    * `bokeh <http://bokeh.pydata.org/en/latest/>`_ (for SPLAT web interface only)
-    * `corner <http://corner.readthedocs.io/en/latest/>`_  (for model fitting only)
-    * `emcee <http://dan.iel.fm/emcee/current/>`_ (for model fitting only)
-    * `flask <http://flask.pocoo.org/>`_ (for SPLAT web interface only)
-    * `matplotlib <http://matplotlib.org/>`_
-    * `numpy <http://www.numpy.org/>`_
-    * `pandas <http://pandas.pydata.org/>`_
-    * `requests <http://docs.python-requests.org/en/master/>`_
-    * `scipy <https://www.scipy.org/>`_
+* [astropy](http://www.astropy.org)
+* [astroquery](https://astroquery.readthedocs.io/en/latest)
+* [matplotlib](http://matplotlib.org)
+* [numpy](http://www.numpy.org)
+* [pandas](http://pandas.pydata.org)
+* [requests](http://docs.python-requests.org/en/master)
+* [scipy](https://www.scipy.org)
+* [corner](http://corner.readthedocs.io/en/latest)  (for model fitting only)
+* [emcee](http://dan.iel.fm/emcee/current) (for model fitting only)
+* [bokeh](http://bokeh.pydata.org/en/latest) (for SPLAT web interface only)
+* [flask](http://flask.pocoo.org) (for SPLAT web interface only)
 
-Using SPLAT
------------
-
-.. _`Spectrum`: https://splat.physics.ucsd.edu/splat/splat.html?highlight=spectrum#the-splat-spectrum-object
-.. _`getSpectrum()`: https://splat.physics.ucsd.edu/splat/api.html#splat.getSpectrum
-.. _`fluxCalibrate()`: https://splat.physics.ucsd.edu/splat/api.html#splat.Spectrum.fluxCalibrate
-.. _`plot()`: https://splat.physics.ucsd.edu/splat/api.html#splat.Spectrum.plot
-.. _`plotSpectrum()`: https://splat.physics.ucsd.edu/splat/api.html#splat.plot.plotSpectrum
-.. _`measureIndex()`: https://splat.physics.ucsd.edu/splat/api.html#splat.measureIndex
-.. _`measureIndexSet()`: https://splat.physics.ucsd.edu/splat/api.html#splat.measureIndexSet
-.. _`classifyGravity()`: https://splat.physics.ucsd.edu/splat/api.html#splat.classifyGravity
-.. _`classifyByXXX`: https://splat.physics.ucsd.edu/splat/api.html#spectral-classification
-.. _`compareSpectra()`: https://splat.physics.ucsd.edu/splat/api.html#splat.compareSpectra
-.. _`modelFitMCMC()`: https://splat.physics.ucsd.edu/splat/api.html#splat.model.modelFitMCMC
+## Using SPLAT
 
 
 SPLAT is organized into a series of modules based on core functionalities:
-  * `splat.core`: core functionalities, including index measurement, database access and classification
-  * `splat.citations`: biblographic/bibtex routines
-  * `splat.database`: access the spectral and source databases, as well as online resources through astroquery
-  * `splat.empirical`: empirical conversion relations
-  * `splat.evolve`: access to evolutionary models
-  * `splat.model`: access to spectral models and model-fitting routines
-  * `splat.photometry`: spectrophotometry routines and filter access
-  * `splat.plot`: plotting and visualization routines
-  * `splat.simulate`: population simulation routines
-  * `splat.utilities`: additional routines for general analysis
-  * `splat.web`: SPLAT's web interface (in development)
+* `splat.core`: core functionalities, including index measurement, database access and classification
+* `splat.citations`: biblographic/bibtex routines
+* `splat.database`: access the spectral and source databases, as well as online resources through astroquery
+* `splat.empirical`: empirical conversion relations
+* `splat.evolve`: access to evolutionary models
+* `splat.model`: access to spectral models and model-fitting routines
+* `splat.photometry`: spectrophotometry routines and filter access
+* `splat.plot`: plotting and visualization routines
+* `splat.simulate`: population simulation routines
+* `splat.utilities`: additional routines for general analysis
+* `splat.web`: SPLAT's web interface (under development)
 
-SPLAT has been tested on both Python 2.7 and 3.0-3.7, and is best used in 
+SPLAT has been tested on both Python 2.7 and 3.0-3.11, and is best used in 
 `ipython` or `jupyter notebook`.
-All of the necessary data is
-included in the github package, so you don't need to be online to run most programs.
+All of the necessary data is included in the github package, so you don't need to be online to run most programs.
 
-Reading in Spectra
-~~~~~~~~~~~~~~~~~~
 
-The best way to read in a spectrum is to use `getSpectrum()`_, which takes a number of search keywords and returns a list of `Spectrum`_ objects:
+### Reading in Spectra
 
->>> import splat
->>> splist = splat.getSpectrum(shortname='0415-0935')  
-Retrieving 1 file
+The best way to read in a spectrum is to use `getSpectrum()`, which takes a number of search keywords and returns a list of `Spectrum` objects:
 
->>> splist = splat.getSpectrum(name='TWA30A')  
-Retrieving 3 files
+    import splat
+    splist = splat.getSpectrum(shortname='0415-0935')  
+> Retrieving 1 file
 
->>> splist = splat.getSpectrum(opt_spt=['L2','L5'],jmag=[12,13])
-Retrieving 5 files
+    splist = splat.getSpectrum(name='TWA30A')  
+> Retrieving 3 files
 
-In each case, splist is a list of `Spectrum`_ objects, each a container of various aspects of each spectrum and its source properties. For example, selecting the first spectrum,
+    splist = splat.getSpectrum(opt_spt=['L2','L5'],jmag=[12,13])
+> Retrieving 5 files
 
->>> splist[0]
-SPEX-PRISM spectrum of 2MASSW J0036159+182110
+In each case, `splist` is a list of `Spectrum` objects, each a container of various aspects of each spectrum and its source properties. For example, selecting the first spectrum,
 
-``sp.wave`` gives the wavelengths of this spectrum, ``sp.flux`` the flux values, and ``sp.noise`` the 
-flux uncertainty. A summary of the `Spectrum`_ object can be accessed using ``sp.info()``.
+    sp = splist[0]
+    sp
 
->>> splist[0].info()
-SPEX-PRISM spectrum of 2MASSW J0036159+182110
+> SPEX-PRISM spectrum of 2MASSW J0036159+182110
+
+The main elements of the `Spectrum` obejct are:
+* `sp.wave`: wavelength array in default units of micron
+* `sp.flux`: flux array in default units of erg/cm^2/s/micron
+* `sp.noise`: flux uncertainty array in default units of erg/cm^2/s/micron
+
+A summary of the `Spectrum` object can be accessed using `sp.info()`.
+
+    sp.info()
+
+> SPEX-PRISM spectrum of 2MASSW J0036159+182110
 Airmass = nan
 Source designation = J00361617+1821104
 Median S/N = 274
@@ -133,23 +138,28 @@ History:
 
 You can also read in your own spectrum by passing a filename
 
->>> sp = splat.Spectrum(filename='PATH_TO/myspectrum.fits')
+    sp = splat.Spectrum(file='PATH_TO/myspectrum.fits')
+
+or a URL
+
+    sp = splat.Spectrum(file='http://splat.physics.ucsd.edu/splat/spexprism/spectra/spex-prism_SO0253+1625_20040908_BUR08B.txt')
+
 
 Both fits and ascii (tab or csv) data formats are supported, but files 
 should ideally conform to the following data format standard: 
-    * column 1: wavelength, assumed in microns
-    * column 2: flux in f_lambda units
-    * column 3: (optional) flux uncertainty in f_lambda units.
+* column 1: wavelength, assumed in microns
+* column 2: flux in f_lambda units
+* column 3: (optional) flux uncertainty in f_lambda units.
 
 There are a few built-in readers for specific data formats.
 
-To flux calibrate a spectrum, use the `Spectrum`_ object's built in `fluxCalibrate()`_ method:
+To flux calibrate a spectrum, use the `Spectrum` object's built in `fluxCalibrate()` method:
 
->>> sp = splat.getSpectrum(shortname='0415-0935')[0]
->>> sp.fluxCalibrate('2MASS J',14.0)
+    sp = splat.getSpectrum(shortname='0415-0935')[0]
+    sp.fluxCalibrate('2MASS J',14.0)
 
-Visualizing Spectra
-~~~~~~~~~~~~~~~~~~~
+
+### Visualizing Spectra
 
 To display the spectrum, use the Spectrum object's `plot()`_ function 
 
