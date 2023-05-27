@@ -124,17 +124,17 @@ A summary of the `Spectrum` object can be accessed using `sp.info()`.
 
     sp.info()
 
-> SPEX-PRISM spectrum of 2MASSW J0036159+182110
->Airmass = nan
->Source designation = J00361617+1821104
->Median S/N = 274
->SpeX Classification = L2.0
->Spectrum key = 10249, Source key = 10068
->If you use these data, please cite:
->    Burgasser, A. J. et al. (2008, Astrophysical Journal, 681, 579-593)
->    bibcode: 2008ApJ...681..579B
->History:
->    SPEX-PRISM spectrum successfully loaded
+> SPEX-PRISM spectrum of 2MASSW J0036159+182110 \\
+ Airmass = nan \\
+ Source designation = J00361617+1821104
+ Median S/N = 274
+ SpeX Classification = L2.0
+ Spectrum key = 10249, Source key = 10068
+ If you use these data, please cite:
+     Burgasser, A. J. et al. (2008, Astrophysical Journal, 681, 579-593)
+     bibcode: 2008ApJ...681..579B
+ History:
+     SPEX-PRISM spectrum successfully loaded
 
 You can also read in your own spectrum by passing a filename
 
