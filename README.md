@@ -26,7 +26,7 @@ SPLAT tools allow you to:
 * Access atmosphere models and perform fits to spectral data;
 * Transform observables to physical parameters using evolutionary models; 
 * Use published empirical trends between spectral type, absolute magnitudes, colors, luminosities, effective temperatures, and others;
-* Access online data repositories through wrappers to `astroquery <https://astroquery.readthedocs.io/en/latest/>`_
+* Access online data repositories through wrappers to [astroquery] (https://astroquery.readthedocs.io/en/latest)
 * Simulate very low mass star and brown dwarf populations by combining spatial, evolutionary, and observational properties; and
 * Plot, tabulate, and publish your results.  
 
@@ -158,8 +158,8 @@ or a URL
 Both fits and ascii (tab or csv) data formats are supported, but files 
 should ideally conform to the following data format standard: 
 * column 1: wavelength, assumed in microns
-* column 2: flux in f_lambda units
-* column 3: (optional) flux uncertainty in f_lambda units.
+* column 2: flux in flambda units
+* column 3: (optional) flux uncertainty in flambda units.
 
 There are a few built-in readers for specific data formats.
 
@@ -192,7 +192,7 @@ You can also compare multiple spectra:
 
 `plotSpectrum()` and related routines have many extras to label features, plot uncertainties, 
 indicate telluric absorption regions, make multi-panel and multi-page plots
-of lists of spectra, plot batches of spectra, etc. Be sure to look through the `splat.plot`_ 
+of lists of spectra, plot batches of spectra, etc. Be sure to look through the `splat.plot`
 subpackage for more details.
 
 ### Analysis functions
