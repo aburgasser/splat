@@ -45,6 +45,7 @@ from .core import Spectrum, classifyByIndex, compareSpectra, generateMask
 
 # structure to store models that have been read in
 MODELS_READIN = {}
+ERROR_CHECKING = False
 
 #######################################################
 #######################################################
@@ -52,39 +53,90 @@ MODELS_READIN = {}
 #######################################################
 #######################################################
 
-def info(model=None):
-    if model == None:
-        model = list(SPECTRAL_MODELS.keys())
-    elif isinstance(model,str):
-        model = [model]
+def info(model=None,verbose=ERROR_CHECKING):
+    '''
+    Purpose
+    -------
+
+    Provides an overview of the spectral models current uploaded into SPLAT
+
+    Parameters
+    ----------
+
+    model = None : string
+        name of the model to summarize; set to None to list all models
+
+    verbose = False : bool [optional]
+        set to True to return verbose output, including listing all models 
+
+
+    Outputs
+    -------
+
+    Prints a summary of the models available and their parameter ranges
+
+    Example
+    -------
+
+    >>> import splat.model as spmod
+    >>> spmod.info('btsettl')
+
+    Model btsettl08:
+        Reference: Allard, F. et al. (2012, Philosophical Transactions of the Royal Society A, 370, 2765-2777)
+        Bibcode: 2012RSPTA.370.2765A
+        Computed for instruments RAW, SED, SPEX-PRISM
+        Parameters:
+            teff: 500.0 K to 3500.0 K
+            logg: 3.0 dex to 5.5 dex
+            z: -2.5 dex to 0.5 dex
+            enrich: 0.0 dex to 0.4 dex
+
+    Dependencies
+    ------------
+        `splat.citations.shortRef()`_
+        `splat.model.loadModelParameters()`_
+        `splat.utilities.checkSpectralModelName()`_
+        copy
+    '''    
+
+    if model == None: model = list(SPECTRAL_MODELS.keys()).sort()
+    elif isinstance(model,str): model = [model]
     for m in model:
         mdl = checkSpectralModelName(m)
-        if mdl == False: print('\nNew model named {} is currently loaded'.format(m))
-        print('\nModel {}:'.format(mdl))
-        if SPECTRAL_MODELS[mdl]['bibcode'] != '':
-            print('\tReference: {}'.format(shortRef(SPECTRAL_MODELS[mdl]['bibcode'])))
-            print('\tBibcode: {}'.format(SPECTRAL_MODELS[mdl]['bibcode']))
-        instr = numpy.array(list(SPECTRAL_MODELS[mdl]['instruments'].keys()))
-        numpy.sort(instr)
-        f = instr[0]
-        for i in instr[1:]: f=f+', {}'.format(i)
-        print('\tComputed for instruments {}'.format(f))
-        print('\tParameters:')
-        p = _loadModelParameters(mdl)
-        for m in SPECTRAL_MODEL_PARAMETERS_INORDER:
-            if m in list(p.keys()):
-                if SPECTRAL_MODEL_PARAMETERS[m]['type'] == 'continuous':
-                    print('\t\t{}: {} {} to {} {}'.format(m,numpy.nanmin(p[m]),SPECTRAL_MODEL_PARAMETERS[m]['unit'],numpy.nanmax(p[m]),SPECTRAL_MODEL_PARAMETERS[m]['unit']))
-                else:
-                    pval = numpy.array(list(set(p[m])))
-                    numpy.sort(pval)
-                    f = pval[0]
-                    for i in pval[1:]: f=f+', {}'.format(i)
-                    print('\t\t{}: {} {}'.format(m,f,SPECTRAL_MODEL_PARAMETERS[m]['unit']))
+        if mdl == False: 
+            if verbose==True or len(model)<2: 
+                print('\nNo model named {} is currently available'.format(m))
+        else:
+            instr = numpy.sort(numpy.array(list(SPECTRAL_MODELS[mdl]['instruments'].keys())))
+            if len(instr)>0:
+                print('\nModel {}:'.format(mdl))
+                if SPECTRAL_MODELS[mdl]['bibcode'] != '':
+                    print('\tReference: {}'.format(shortRef(SPECTRAL_MODELS[mdl]['bibcode'])))
+                    print('\tBibcode: {}'.format(SPECTRAL_MODELS[mdl]['bibcode']))
+                f = instr[0]
+                for i in instr[1:]: f=f+', {}'.format(i)
+                print('\tComputed for instruments {}'.format(f))
+                print('\tParameters:')
+                p = loadModelParameters(mdl)
+                for m in SPECTRAL_MODEL_PARAMETERS_INORDER:
+                    if m in list(p['parameter_values'].keys()):
+                        if SPECTRAL_MODEL_PARAMETERS[m]['type'] == 'continuous':
+                            if numpy.nanmin(p['parameter_values'][m])==numpy.nanmax(p['parameter_values'][m]):
+                                print('\t\t{}: {} {}'.format(m,numpy.nanmin(p['parameter_values'][m]),SPECTRAL_MODEL_PARAMETERS[m]['unit']))
+                            else:
+                                print('\t\t{}: {} {} to {} {}'.format(m,numpy.nanmin(p['parameter_values'][m]),SPECTRAL_MODEL_PARAMETERS[m]['unit'],numpy.nanmax(p['parameter_values'][m]),SPECTRAL_MODEL_PARAMETERS[m]['unit']))
+                        else:
+                            pval = numpy.array(list(set(p['parameter_values'][m])))
+                            pval = numpy.sort(pval)
+                            f = pval[0]
+                            for i in pval[1:]: f=f+', {}'.format(i)
+                            print('\t\t{}: {} {}'.format(m,f,SPECTRAL_MODEL_PARAMETERS[m]['unit']))
+        # else:
+        #     print('\nNot currently available (no stored models)')
     return 
 
 
-def addUserModels(folders=[],default_info={},verbose=True):
+def addUserModels(folders=[],default_info={},verbose=ERROR_CHECKING):
     '''
     :Purpose:
 
@@ -164,7 +216,7 @@ def addUserModels(folders=[],default_info={},verbose=True):
                 del minfo
     return
 
-def _initializeModels(verbose=False):
+def _initializeModels(verbose=ERROR_CHECKING,reset=False):
     '''
     :Purpose:
 
@@ -191,7 +243,7 @@ def _initializeModels(verbose=False):
         'citation': '', 
         'bibcode': '', 
         'altname': [], 
-        'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
+        'default': {}}
 
 # folders from which models are to be found
     mfolders = [SPLAT_PATH+SPECTRAL_MODEL_FOLDER]
@@ -217,9 +269,11 @@ def _initializeModels(verbose=False):
         print('\nNo folders containing spectral models were found to be present')
         return
     mfolders = list(set(mfolders))
+    mfolders.sort()
     if verbose == True:
-        print('Spectral model folders:')
-        for m in mfolders: print('\t{}'.format(m))
+        print('Important spectral models\n\n')
+        print('\tSpectral model folders:')
+        for m in mfolders: print('\t\t{}'.format(m))
 
 # go through each model folder and check model names
     for i,f in enumerate(mfolders):
@@ -238,15 +292,16 @@ def _initializeModels(verbose=False):
 # using info.txt data if available                    
                 if name == False:
                     name = nm
-                    adddict = {'name': name}
-                    definfo = copy.deepcopy(default_info)
+                    adddict = copy.deepcopy(default_info)
+                    adddict['name'] = name
                     if 'info.txt' in instruments:
                         with open(os.path.join(fnm,'info.txt'), 'r') as frd: x = frd.read()
                         lines = x.split('\n')
                         if '' in lines: lines.remove('')
                         lines = [x.split('\t') for x in lines]
-                        adddict = dict(lines)
-                        if 'altnames' in list(adddict.keys()): adddict['altnames'] = adddict['altnames'].split(',')
+                        adddict.update(dict(lines))
+                        if 'altnames' in list(adddict.keys()): 
+                            if isinstance(adddict['altnames'],str)==True: adddict['altnames'] = adddict['altnames'].split(',')
 #                    for k in list(SPECTRAL_MODELS[list(SPECTRAL_MODELS.keys())[0]].keys()):
 #                        if k not in list(adddict.keys()):
 #                            if k in list(default_info.keys()): adddict[k] = definfo[k]
@@ -262,12 +317,9 @@ def _initializeModels(verbose=False):
 #                        if k in list(adddict['default'].keys()): print(k,adddict['default'][k])
 #                    print('\nWarning: did not find info.txt file in {}; using default values for model information'.format(minfo['folder']))
 #                    adddict['name'] = nm
-                    if 'name' not in list(adddict.keys()): adddict['name'] = name
-                    if 'instruments' not in list(adddict.keys()): adddict['instruments'] = {}
-                    if 'bibcode' not in list(adddict.keys()): adddict['bibcode'] = ''
                     SPECTRAL_MODELS[name] = adddict
-                    if verbose==True: print('\nAdded a new model {} with parameters {}'.format(name,adddict))
-                    del adddict, definfo
+                    if verbose==True: print('\n\tAdded a new model set {}'.format(name))
+                    del adddict
 # go through instruments                
                 rm = []
                 for m in instruments:
@@ -284,14 +336,14 @@ def _initializeModels(verbose=False):
 # unknown instrument; just add for now
                             if instrument == False:
                                 instrument = (inst.replace(' ','-').replace('_','-')).upper()
-                            if instrument not in list(SPECTRAL_MODELS[name]['instruments'].keys()):
+                            if instrument not in list(SPECTRAL_MODELS[name]['instruments'].keys()) or reset==True:
                                 SPECTRAL_MODELS[name]['instruments'][instrument] = fnmi
-                                if verbose == True: print('\nAdding model {} and instrument {} from {}'.format(name,instrument,fnmi))
+                                if verbose == True: print('\n\tAdding model {} and instrument {} from {}'.format(name,instrument,fnmi))
                             else:
-                                if verbose == True: print('\nModel {} and instrument {}: ignoring {} as these already exists in {}'.format(name,instrument,fnmi,SPECTRAL_MODELS[name]['instruments'][instrument]))
+                                if verbose == True: print('\n\tREPEAT: Model {} and instrument {}: ignoring {} as these already exist in {}'.format(name,instrument,fnmi,SPECTRAL_MODELS[name]['instruments'][instrument]))
 
     return
-
+# RUN IT!
 _initializeModels()
 
 
@@ -449,7 +501,7 @@ def _modelName(modelset,instrument,param):
     return filename
 
 
-def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=True,skipraw=True,*args,**kwargs):
+def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=ERROR_CHECKING,skipraw=True,*args,**kwargs):
 
     default_info = {
         'instruments': {},
@@ -745,7 +797,7 @@ def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=T
     return
 
 
-def processModelsToInstrument(instrument_parameters={},instrument='SPEX-PRISM',wave_unit=DEFAULT_WAVE_UNIT,flux_unit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=False,overwrite=False,*args,**kwargs):
+def processModelsToInstrument(instrument_parameters={},instrument='SPEX-PRISM',wave_unit=DEFAULT_WAVE_UNIT,flux_unit=DEFAULT_FLUX_UNIT,pixel_resolution=4.,wave=[],wave_range=[],resolution=None,template=None,verbose=ERROR_CHECKING,overwrite=False,*args,**kwargs):
     '''
     :Purpose:
 
@@ -1160,7 +1212,7 @@ def loadOriginalInterpolatedModel(model='btsettl08',teff=2000,logg=5.0,**kwargs)
     return mdl_return
 
 # make model function
-def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model=None,model1=None,model2=None,instkern=None,contfitdeg=5,return_nontelluric=False,checkplots=False,checkprefix='tmp',verbose=True,timecheck=False):
+def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model=None,model1=None,model2=None,instkern=None,contfitdeg=5,return_nontelluric=False,checkplots=False,checkprefix='tmp',verbose=ERROR_CHECKING,timecheck=False):
     '''
     parameters may contain any of the following:
         - **modelparam** or **modelparam1**: dictionary of model parameters for primary if model not provided in model or model1: {modelset,teff,logg,z,fsed,kzz,cld,instrument}
@@ -1491,7 +1543,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
 def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,nsteps=100,
     method='standard',outlier_sigma=0.,return_threshold=0.9,dof=0.,binary=False,duplicate=False,
     secondary_model=None,atm=None,report=True,report_index=10,report_each=False,file='tmp',
-    output='all',verbose=True,**kwargs):
+    output='all',verbose=ERROR_CHECKING,**kwargs):
     '''
     :Purpose:
 
@@ -1734,7 +1786,7 @@ def mcmcForwardModelReport(datain,parameters,chis,burn=0.25,dof=0,plotChains=Tru
     plotMean=True,plotCorner=True,saveParameters=True,plotParameters=None,writeReport=True,vbary=0.,
     file='tmp',atm=None,model=None,model2=None,chiweights=False,binary=False,duplicate=False,
     plotColors=['k','magenta','r','b','grey','grey'],plotLines=['-','-','-','-','--','--'],
-    figsize_compare=[15,5],verbose=True,corner_smooth=1.,**kwargs):
+    figsize_compare=[15,5],verbose=ERROR_CHECKING,corner_smooth=1.,**kwargs):
     '''
     :Purpose:
 
@@ -2000,7 +2052,7 @@ def _smooth2resolution(wave,flux,resolution,**kwargs):
 
 
 
-def loadModel(modelset='btsettl08',instrument='SPEX-PRISM',raw=False,sed=False,*args,**kwargs):
+def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=False,*args,**kwargs):
     '''
     Purpose: 
         Loads up a model spectrum based on a set of input parameters. The models may be any one of the following listed below. For parameters between the model grid points, loadModel calls the function `_loadInterpolatedModel()`_.
@@ -2278,7 +2330,7 @@ def _checkModelParametersInRange(mparam):
         mparam['model'] = 'BTSettl2008'
     if 'instrument' not in mp:
         mparam['instrument'] = 'SPEX-PRISM'
-    parameters = _loadModelParameters(**mparam)
+    parameters = loadModelParameters(**mparam)
     flag = True
 
 # check that given parameters are in model ranges
@@ -2378,7 +2430,7 @@ def _loadInterpolatedModel(wave_unit=splat.DEFAULT_WAVE_UNIT,flux_unit=splat.DEF
 # FAST METHOD - just calculate a simple weight factor that linearly interpolates between grid points (all logarithmic)
 #    print('_loadInterpolatedModel called with mkwargs {}'.format(mkwargs))
     if fast == True:
-        parameters = _loadModelParameters(mkwargs['modelset'],mkwargs['instrument'],pandas=True)
+        parameters = loadModelParameters(mkwargs['modelset'],mkwargs['instrument'],return_pandas=True)
         mparams = {}
         mweights = {}
         mgrid = []
@@ -2453,7 +2505,7 @@ def _loadInterpolatedModel(wave_unit=splat.DEFAULT_WAVE_UNIT,flux_unit=splat.DEF
 
 # identify grid points around input parameters
 # 3x3 grid for teff, logg, z
-        parameters = _loadModelParameters(mkwargs['model'],mkwargs['instrument'])
+        parameters = loadModelParameters(mkwargs['model'],mkwargs['instrument'])
 
         tvals = numpy.array([float(p['teff']) for p in parameters['parameter_sets']])
         gvals = numpy.array([float(p['logg']) for p in parameters['parameter_sets']])
@@ -2573,50 +2625,93 @@ def _loadInterpolatedModel(wave_unit=splat.DEFAULT_WAVE_UNIT,flux_unit=splat.DEF
 
 
 
-def _loadModelParameters(*args,**kwargs):
+def loadModelParameters(modelset,instrument=DEFAULT_INSTRUMENT,instrument_default=DEFAULT_INSTRUMENT,return_pandas='False',verbose=ERROR_CHECKING,**kwargs):
     '''
-    Purpose: 
-        Assistant routine for `loadModel()`_ that loads in the spectral model grid points.
+    Purpose
+    -------
 
-    .. _`loadModel()` : api.html#splat_model.loadModel
+    Assistant routine for `loadModel()`_ that loads in the spectral model grid points
 
-    Required Inputs:
-        :param: model: set of models to use; see options in `loadModel()`_ (default = 'BTSettl2008')
-    
-    Optional Inputs:
-        **instrument = 'RAW'**: search specifically for an instrument-designed model 
-        **pandas = False**: return a pandas Dataframe
+    Parameters
+    ----------
 
+    modelset : string
+        name of the model to load in
 
-    The parameters for `loadModel()`_ can also be used here.
+    instrument = 'RAW' : str [optional]
+        instrument within model set to load in; if not present, will load in either 
+        instrument_default or first instrument available
 
-    Output:
-        A dictionary containing the individual parameter values for the grid points in the given model set (not all of these grid points will be filled); this dictionary includs a list of dictionaries containing the individual parameter sets.
-    '''
+    instrument_default = splat.DEFAULT_INSTRUMENT : str [optional]
+        instrument to load in if original instrument choice is not available
+
+    return_pandas = False : bool [optional]
+        set to True to return a pandas Dataframe of the parameter sets
+
+    verbose = False : bool [optional]
+        set to True to return verbose output, including listing all models 
+
+    Outputs
+    -------
+
+    Either a nested dict of model parameter values, or a pandas dataframe if return_pandas == True
+
+    Example
+    -------
+
+    >>> import splat.model as spmod
+    >>> spmod.loadModelParameters('btsettl',instrument='SPEX-PRISM'))
+
+    {'model': 'btsettl08',
+     'instrument': 'SPEX-PRISM',
+     'parameter_sets': [{'model': 'btsettl08',
+       'instrument': 'SPEX-PRISM',
+       'enrich': 0.0,
+       'logg': 5.0,
+       'teff': 2700.0,
+       'z': 0.5}, 
+    ...
+    'parameter_values': {'enrich': array([0. , 0.2, 0.4]),
+      'logg': array([3. , 3.5, 4. , 4.5, 5. , 5.5]),
+      'teff': array([ 500.,  600.,  700.,  800.,  900., 1000., 1100., 1200., 1300.,
+             1400., 1500., 1600., 1700., 1800., 1900., 2000., 2100., 2200.,
+             2300., 2400., 2500., 2600., 2700., 2800., 2900., 3000., 3100.,
+             3200., 3300., 3400., 3500.]),
+      'z': array([-2.5, -2. , -1.5, -1. , -0.5, -0. ,  0.5])}}
+
+    Dependencies
+    ------------
+        `splat.utilities.checkSpectralModelName()`_
+        `splat.utilities.checkInstrument()`_
+        os
+        pandas
+    '''    
+
+    suffixes = ['txt','gz','zip','fits','fit','csv']
+    pnames = list(SPECTRAL_MODEL_PARAMETERS.keys())
+    pnames.sort()
 
 # model set
-    modelset = False
-    if len(args) > 0: modelset = args[0]
-    modelset = kwargs.get('modelset',modelset)
-    modelset = kwargs.get('model',modelset)
-    modelset = kwargs.get('set',modelset)
+    for k in ['modelset','model','set','ref']: modelset = kwargs.get(k,modelset)
     mset = checkSpectralModelName(modelset)
     if mset == False:
         raise NameError('\nInput model set {} not in defined set of models:\n{}\n'.format(modelset,list(SPECTRAL_MODELS.keys())))
 
 # instrument
-    instrument = ''
-    if len(args) > 1: instrument = args[1]
-    instrument = kwargs.get('instrument',instrument)
-    instrument = kwargs.get('instr',instrument)
+    for k in ['instrument','instr']: instrument = kwargs.get(k,instrument)
     instr = checkInstrument(instrument)
     if instr != False: instrument = instr
+# instrument is not defined for model set - prompt user to create them
     if instrument not in list(SPECTRAL_MODELS[mset]['instruments'].keys()):
         ins = list(SPECTRAL_MODELS[mset]['instruments'].keys())
         if 'ORIGINAL' in ins: ins.remove('ORIGINAL')
-        if len(ins) == 0: raise ValueError('\nNo SPLAT-processed models for {}'.format(mset))
-        instrument = ins[0]
-
+        if len(ins) == 0: raise ValueError('\nNo SPLAT-generated models for {}'.format(mset))
+        else:
+            instr = checkInstrument(instrument_default)
+            if instr not in ins: instr = ins[0]
+            print('Warning: instrument {} not yet generated with SPLAT for model set {}; using {} as default'.format(instrument,modelset,instr))
+            instrument = instr
+        
 # folder for models
     mfolder = os.path.normpath(SPECTRAL_MODELS[mset]['instruments'][instrument])
     if not os.access(mfolder, os.R_OK):
@@ -2626,35 +2721,58 @@ def _loadModelParameters(*args,**kwargs):
         raise OSError('\nCould not find model folder {}\n'.format(mfolder))
 
     parameters = {'model': mset, 'instrument': instrument, 'parameter_sets': [], 'parameter_values': {}}
-    for ms in list(SPECTRAL_MODELS[mset]['default'].keys()):
-        parameters['parameter_values'][ms] = []
-#    print('_loadModelParameters called with model {} and instrument {}'.format(mset,instrument))
+    # for ms in list(SPECTRAL_MODELS[mset]['default'].keys()):
+    #     parameters['parameter_values'][ms] = []
+#    print('loadModelParameters called with model {} and instrument {}'.format(mset,instrument))
 #    print(SPECTRAL_MODELS[mset]['default'].keys())
 #    print(parameters.keys())
 
 # establish parameters from list of filenames
 #    if kwargs.get('old',False) == False:
-    mfiles = glob.glob(mfolder+'/*.txt')
-    mfiles.extend(glob.glob(mfolder+'/*.gz'))
+    mfiles = []
+    for k in suffixes:
+        mfiles.extend(glob.glob(mfolder+'/*.{}'.format(k)))
 #    if instr == 'RAW' or len(mfiles) == 0: mfiles = glob.glob(mfolder+'/*.gz')
     if len(mfiles) == 0:
         raise ValueError('\nCould not find any model files in {}'.format(mfolder))
-    for mf in mfiles:
+
+    for i,mf in enumerate(mfiles):
         p = {'model': mset, 'instrument': instrument}
-        sp = numpy.array(os.path.basename(mf).replace('.txt','').replace('.gz','').replace(mset+'_','').replace('_'+instrument,'').split('_'))
-        if '' in sp: 
-            sp = list(sp)
-            sp.remove('')
-            sp = numpy.array(sp)
-        for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
-            if ms in list(parameters['parameter_values'].keys()):
-                w = numpy.array([SPECTRAL_MODEL_PARAMETERS[ms]['prefix'] in l for l in sp])
-                val = sp[w][0][len(SPECTRAL_MODEL_PARAMETERS[ms]['prefix']):]
+        sp = os.path.basename(mf)
+        for k in suffixes: sp = sp.replace('.{}'.format(k),'')
+        sp = numpy.array(sp.replace(mset+'_','').replace('_'+instrument,'').split('_'))
+        # if '' in sp: 
+        #     sp = list(sp)
+        #     sp.remove('')
+        #     sp = numpy.array(sp)
+
+        for ms in pnames:
+#            if ms in list(parameters['parameter_values'].keys()):
+            pref = SPECTRAL_MODEL_PARAMETERS[ms]['prefix']
+            w = numpy.array([l[:len(pref)]==pref for l in sp])
+#            print(ms,w,True in w)
+            if True in w: 
+                if i==0: parameters['parameter_values'][ms] = []
+                val = sp[w][0][len(pref):]
 #                print(val)
                 if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous': val = float(val)
                 parameters['parameter_values'][ms].append(val)
                 p[ms] = val
         parameters['parameter_sets'].append(p)
+
+# re-sort the parameter values
+    for ms in list(parameters['parameter_values'].keys()):
+        parameters['parameter_values'][ms] = numpy.sort(numpy.array(list(set(parameters['parameter_values'][ms]))))
+
+#         for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
+#             if ms in list(parameters['parameter_values'].keys()):
+#                 w = numpy.array([SPECTRAL_MODEL_PARAMETERS[ms]['prefix'] in l for l in sp])
+#                 val = sp[w][0][len(SPECTRAL_MODEL_PARAMETERS[ms]['prefix']):]
+# #                print(val)
+#                 if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous': val = float(val)
+#                 parameters['parameter_values'][ms].append(val)
+#                 p[ms] = val
+#         parameters['parameter_sets'].append(p)
 
 #        if len(sp) >= len(SPECTRAL_MODEL_PARAMETERS_INORDER):
 #            p = {'model': mset}
@@ -2663,17 +2781,16 @@ def _loadModelParameters(*args,**kwargs):
 #                    parameters[ms].append(sp[i])
 #                p[ms] = sp[i]
 #            parameters['parameter_sets'].append(p)
-    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
 #        if ms=='teff' or ms =='logg' or ms=='z':
 #            parameters[ms] = [float(x) for x in parameters[ms]]
-        if ms in list(parameters['parameter_values'].keys()):
-            p = list(set(parameters['parameter_values'][ms]))
-            p.sort()
-            parameters['parameter_values'][ms] = numpy.array(p)
+        # if ms in list(parameters['parameter_values'].keys()):
+        #     p = list(set(parameters['parameter_values'][ms]))
+        #     p.sort()
+        #     parameters['parameter_values'][ms] = numpy.array(p)
 
 #    print(parameters.keys(),parameters)
 
-    if kwargs.get('pandas',False) == True:
+    if return_pandas == True:
         dp = pandas.DataFrame(parameters['parameter_sets'])
  #       for ms in ['teff','logg','z']: dp[ms] = [float(t) for t in dp[ms]]
         return dp
@@ -2974,7 +3091,7 @@ def _modelFitPlotComparison(spec,model,display=True,**kwargs):
 
 
 
-def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True, statistic='chisqr', verbose=False, output='fit', radius=0.1*u.Rsun, radius_tolerance=0.01*u.Rsun, radius_model='', compute_radius=False, constrain_radius=False, **kwargs):
+def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True, statistic='chisqr', verbose=ERROR_CHECKING, output='fit', radius=0.1*u.Rsun, radius_tolerance=0.01*u.Rsun, radius_model='', compute_radius=False, constrain_radius=False, **kwargs):
     '''
     :Purpose: 
 
@@ -3121,7 +3238,7 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
 #        f.close()
 
 # read in available model grid points
-    gridparam = _loadModelParameters(mset,instr) 
+    gridparam = loadModelParameters(mset,instr) 
 
 # populate ranges
     ranges = {}
@@ -3300,7 +3417,7 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
 
 
 
-def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbose=False, showRadius=False, nsamples=1000, burn=0.1, **kwargs):
+def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbose=ERROR_CHECKING, showRadius=False, nsamples=1000, burn=0.1, **kwargs):
     '''
     :Purpose: Uses Metropolis-Hastings Markov Chain Monte Carlo method to compare a spectrum to
                 atmosphere models. Returns the best estimate of whatever parameters are allowed to
@@ -3421,7 +3538,7 @@ def modelFitMCMC(specin, modelset='BTSettl2008', instrument='SPEX-PRISM', verbos
     eff_dof = numpy.round((numpy.nansum(1.-numpy.array(mask)) / slitwidth) - 1.)
 
 # load model parameters
-    modelgrid = _loadModelParameters(mset,instrument) # Range parameters can fall in
+    modelgrid = loadModelParameters(mset,instrument) # Range parameters can fall in
 
 # set initial parameters
     param0,param_range,param_step = {},{},{}
@@ -4049,7 +4166,7 @@ def _modelFitMCMC_reportResults(spec,dp,*arg,**kwargs):
 
 
 
-def modelFitEMCEE(specin, mset='BTSettl2008', instrument='SPEX-PRISM', initial={}, nofit = [], showRadius=False, nwalkers=10, nsamples=100, threads=1, burn=0.5, propose_scale=1.1, verbose=False, **kwargs):
+def modelFitEMCEE(specin, mset='BTSettl2008', instrument='SPEX-PRISM', initial={}, nofit = [], showRadius=False, nwalkers=10, nsamples=100, threads=1, burn=0.5, propose_scale=1.1, verbose=ERROR_CHECKING, **kwargs):
     '''
     :Purpose: Uses the ``emcee`` package by Dan Foreman-Mackey et al. to perform 
         Goodman & Weare's Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler
@@ -4197,10 +4314,10 @@ def modelFitEMCEE(specin, mset='BTSettl2008', instrument='SPEX-PRISM', initial={
 
 
 # grab model parameters
-    modelgrid = _loadModelParameters(mset,instrument) # Range parameters can fall in
+    modelgrid = loadModelParameters(mset,instrument) # Range parameters can fall in
 
 # read in available model grid points
-    gridparam = _loadModelParameters(mset,instr) 
+    gridparam = loadModelParameters(mset,instr) 
 
 # populate ranges - ONLY CONTINUOUS AND NOT IN "NOFIT"
     ranges = {}

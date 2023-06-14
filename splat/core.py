@@ -1154,10 +1154,11 @@ class Spectrum(object):
                 for k in list(self.__dict__.keys()):
                     if isinstance(self.__getattribute__(k),str) == True or (isinstance(self.__getattribute__(k),float) == True and numpy.isnan(self.__getattribute__(k)) == False) or isinstance(self.__getattribute__(k),int) == True or isinstance(self.__getattribute__(k),bool) == True:
                         f.write('{}{} = {}\n'.format(comment,k.upper(),self.__getattribute__(k)))
-                f.write('{}WAVELENGTH{}FLUX{}UNCERTAINTY\n'.format(comment,delimiter,delimiter))
             if save_noise == True:
+                f.write('{}WAVELENGTH{}FLUX{}UNCERTAINTY\n'.format(comment,delimiter,delimiter))
                 for i in range(len(self.wave.value)): f.write('{}{}{}{}{}\n'.format(self.wave.value[i],delimiter,self.flux.value[i],delimiter,self.noise.value[i]))
             else:
+                f.write('{}WAVELENGTH{}FLUX\n'.format(comment,delimiter))
                 for i in range(len(self.wave.value)): f.write('{}{}{}\n'.format(self.wave.value[i],delimiter,self.flux.value[i]))
             f.close()
 
@@ -5499,7 +5500,7 @@ def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
     else:
         if os.path.exists(os.path.normpath(file)) == False: file = folder+os.path.basename(file)
         if os.path.exists(os.path.normpath(file)) == False:
-            raise ValueError('Cannot find {} locally or in folder {}\n\n'.format(ofile,folder))
+            raise ValueError('Cannot find {} locally or in folder {}\n\n'.format(file,folder))
 
 # instrument specific read shortcut - not working?
     readin = False
@@ -5519,7 +5520,7 @@ def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
 # zipped file - extract root
         for k in ['gz','bz2','zip']:
             if k in file_type:
-                file_type = '{} {}'.format((file.replace(k,'')).split('.')[-1],file_type)
+                file_type = '{} {}'.format((file.replace('.'+k,'')).split('.')[-1],file_type)
 
 # fits - can be done with fits.open as local or online and w/ or w/o gzip/bzip2/pkzip
         if 'fit' in file_type:

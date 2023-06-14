@@ -9,12 +9,11 @@ from __future__ import print_function, division
 import os
 import sys
 import numpy
-import pandas
 from astropy import units as u
 
 
 # program constants
-VERSION = '2023.05.27'
+VERSION = '2023.06.13'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -639,8 +638,9 @@ SPECTRAL_MODELS = {\
     'sonora18': {'instruments': {}, 'name': 'Sonora 2018', 'citation': 'Marley et al. (2018)', 'bibcode': 'marley_mark_2018_1309035', 'altname': ['marley','marley18','marley2018','sonora2018'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
     'sonora21': {'instruments': {}, 'name': 'Sonora-bobcat', 'citation': 'Marley et al. (2021)', 'bibcode': '2021ApJ...920...85M', 'altname': ['marley2021','sonora','sonora2021','bobcat','sonora-bobcat'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'co': 1}}, \
     'karalidi21': {'instruments': {}, 'name': 'Sonora-cholla', 'citation': 'Karalidi et al. (2021)', 'bibcode': '2021ApJ...923..269K', 'altname': ['karalidi2021','karalidi','sonora-cholla','cholla'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': 4}}, \
-    'gerasimov': {'instruments': {}, 'name': 'Gerasimov 2020', 'citation': 'Gerasimov et al. (2020)', 'bibcode': '2020RNAAS...4..214G', 'altname': ['phxlowz'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
-    'lowz': {'instruments': {}, 'name': 'LowZ models', 'citation': 'Meisner et al. (2021)', 'bibcode': '2021ApJ...915..120M', 'altname': ['meisner2021','mei21'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': '2.0', 'co': 0.85}}, \
+    'gerasimov20': {'instruments': {}, 'name': 'Gerasimov 2020', 'citation': 'Gerasimov et al. (2020)', 'bibcode': '2020RNAAS...4..214G', 'altname': ['phxlowz','ger20'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
+    'gerasimov23': {'instruments': {}, 'name': 'Gerasimov 2023', 'citation': 'Gerasimov et al. (2023)', 'bibcode': '', 'altname': ['gerasimov','ger23'], 'default': {'teff': 1500., 'logg': 5.0, 'z': -0.5, 'en': 0.30}}, \
+    'lowz': {'instruments': {}, 'name': 'LowZ models', 'citation': 'Meisner et al. (2021)', 'bibcode': '2021ApJ...915..120M', 'altname': ['meisner2021','mei21','line21','line2021'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': '2.0', 'co': 0.85}}, \
 #    'btcond': {'instruments': {}, 'name': 'BT Cond', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['dusty-cond','bt-cond'], 'rawfolder': '/Volumes/splat/models/btcond/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0, 'enrich': 0.0}}, \
 #    'btdusty': {'instruments': {}, 'name': 'BT Dusty', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['dusty-bt','bt-dusty'], 'rawfolder': '/Volumes/splat/models/btdusty/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0}}, \
 }
