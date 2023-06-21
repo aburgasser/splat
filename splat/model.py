@@ -99,8 +99,10 @@ def info(model=None,verbose=ERROR_CHECKING):
         copy
     '''    
 
-    if model == None: model = list(SPECTRAL_MODELS.keys()).sort()
-    elif isinstance(model,str): model = [model]
+    if model == None: 
+        model = list(SPECTRAL_MODELS.keys())
+        model.sort()
+    if isinstance(model,str): model = [model]
     for m in model:
         mdl = checkSpectralModelName(m)
         if mdl == False: 
