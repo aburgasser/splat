@@ -5529,6 +5529,8 @@ def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
                 header = hdu[0].header
                 if 'NAXIS3' in list(header.keys()): d = numpy.copy(hdu[0].data[0,:,:])
                 else: d =  numpy.copy(hdu[0].data)
+# make sure file is oriented correctly
+            if numpy.shape(d)[0]>numpy.shape(d)[1]: d = numpy.transpose(d)
 
 # some specific formatting cases
             if 'sdss' in file_type and 'fit' in file_type: file_type='waveheader wavelog {}'.format(file_type)
