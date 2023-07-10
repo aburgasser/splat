@@ -327,6 +327,25 @@ FILTERS = { \
     'IRAC_CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0, 'method': 'vega', 'rsr': True, 'altname': ['irac 3','irac 5.8','[5.8]']}, \
     'IRAC_CH4': {'file': 'irac4.txt', 'description': 'IRAC Channel 4 (8.0 micron)', 'zeropoint': 64.13, 'method': 'vega', 'rsr': True, 'altname': ['irac 4','irac 8.0','[8.0]']}, \
     'KEPLER': {'file': 'Kepler.txt', 'description': 'Kepler bandpass', 'zeropoint': 3033.1, 'method': 'vega', 'rsr': False, 'altname': ['kep','kepler k','kp']}, \
+    'LSST_U': {'file': 'LSST_u.txt', 'description': 'LSST u', 'zeropoint': 2038.22, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'LSST_G': {'file': 'LSST_g.txt', 'description': 'LSST g', 'zeropoint': 3990.48, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'LSST_R': {'file': 'LSST_r.txt', 'description': 'LSST r', 'zeropoint': 3163.86, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'LSST_I': {'file': 'LSST_i.txt', 'description': 'LSST i', 'zeropoint': 2576.07, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'LSST_Z': {'file': 'LSST_z.txt', 'description': 'LSST z', 'zeropoint': 2261.40, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'LSST_Y': {'file': 'LSST_y.txt', 'description': 'LSST y', 'zeropoint': 2165.23, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F0560W': {'file': 'JWST-MIRI_F0560W.txt', 'description': 'JWST MIRI F0560W', 'zeropoint': 115.29, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F0770W': {'file': 'JWST-MIRI_F0770W.txt', 'description': 'JWST MIRI F0770W', 'zeropoint': 65.08, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1000W': {'file': 'JWST-MIRI_F1000W.txt', 'description': 'JWST MIRI F1000W', 'zeropoint': 38.51, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1065C': {'file': 'JWST-MIRI_F1065C.txt', 'description': 'JWST MIRI F1065C', 'zeropoint': 33.89, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1130W': {'file': 'JWST-MIRI_F1130W.txt', 'description': 'JWST MIRI F1130W', 'zeropoint': 29.63, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1140C': {'file': 'JWST-MIRI_F1140C.txt', 'description': 'JWST MIRI F1140C', 'zeropoint': 29.66, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1280W': {'file': 'JWST-MIRI_F1280W.txt', 'description': 'JWST MIRI F1280W', 'zeropoint': 23.52, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1500W': {'file': 'JWST-MIRI_F1500W.txt', 'description': 'JWST MIRI F1500W', 'zeropoint': 17.12, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1550C': {'file': 'JWST-MIRI_F1550C.txt', 'description': 'JWST MIRI F1550C', 'zeropoint': 15.93, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1800W': {'file': 'JWST-MIRI_F1800W.txt', 'description': 'JWST MIRI F1800W', 'zeropoint': 11.99, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F2100W': {'file': 'JWST-MIRI_F2100W.txt', 'description': 'JWST MIRI F2100W', 'zeropoint': 9.06, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F2300C': {'file': 'JWST-MIRI_F2300C.txt', 'description': 'JWST MIRI F2300C', 'zeropoint': 7.62, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F2550W': {'file': 'JWST-MIRI_F2550W.txt', 'description': 'JWST MIRI F2550W', 'zeropoint': 6.07, 'method': 'vega', 'rsr': True, 'altname': []}, \
     'MKO_J_ATM': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'MKO_H_ATM': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'MKO_K_ATM': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
@@ -364,41 +383,51 @@ FILTERS = { \
     'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'NIRC2 Fe II', 'zeropoint': 1019.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'NIRC2 LP', 'zeropoint': 248.0, 'method': 'vega', 'rsr': False, 'altname': ['nirc2 l prime','nirc2 l']}, \
     'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'NIRC2 M', 'zeropoint': 165.8, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'NIRCAM_F070W': {'file': 'jwst-nircam-F070W.txt', 'description': 'JWST NIRCAM F070W (wide 0.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F090W': {'file': 'jwst-nircam-F090W.txt', 'description': 'JWST NIRCAM F090W (wide 0.90 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F115W': {'file': 'jwst-nircam-F115W.txt', 'description': 'JWST NIRCAM F115W (wide 1.15 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F140M': {'file': 'jwst-nircam-F140M.txt', 'description': 'JWST NIRCAM F140M (medium 1.40 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F150W': {'file': 'jwst-nircam-F150W.txt', 'description': 'JWST NIRCAM F150W (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F150W2': {'file': 'jwst-nircam-F150W2.txt', 'description': 'JWST NIRCAM F150W2 (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F162M': {'file': 'jwst-nircam-F162M.txt', 'description': 'JWST NIRCAM F162M (medium 1.62 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F164N': {'file': 'jwst-nircam-F164N.txt', 'description': 'JWST NIRCAM F164N (narrow 1.64 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F182M': {'file': 'jwst-nircam-F182M.txt', 'description': 'JWST NIRCAM F182M (medium 1.82 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F187N': {'file': 'jwst-nircam-F187N.txt', 'description': 'JWST NIRCAM F187N (narrow 1.87 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F200W': {'file': 'jwst-nircam-F200W.txt', 'description': 'JWST NIRCAM F200W (wide 2.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F210W': {'file': 'jwst-nircam-F210M.txt', 'description': 'JWST NIRCAM F210M (medium 2.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F212N': {'file': 'jwst-nircam-F212N.txt', 'description': 'JWST NIRCAM F212N (narrow 2.12 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F250M': {'file': 'jwst-nircam-F250M.txt', 'description': 'JWST NIRCAM F250M (medium 2.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F277W': {'file': 'jwst-nircam-F277W.txt', 'description': 'JWST NIRCAM F277W (wide 2.77 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F300M': {'file': 'jwst-nircam-F300M.txt', 'description': 'JWST NIRCAM F300M (medium 3.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F322W2': {'file': 'jwst-nircam-F322W2.txt', 'description': 'JWST NIRCAM F322W2 (wide 3.22 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F323N': {'file': 'jwst-nircam-F323N.txt', 'description': 'JWST NIRCAM F323N (narrow 3.23 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F335M': {'file': 'jwst-nircam-F335M.txt', 'description': 'JWST NIRCAM F335M (medium 3.35 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F356W': {'file': 'jwst-nircam-F356W.txt', 'description': 'JWST NIRCAM F356W (wide 3.56 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F360M': {'file': 'jwst-nircam-F360M.txt', 'description': 'JWST NIRCAM F360M (medium 3.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F405N': {'file': 'jwst-nircam-F405N.txt', 'description': 'JWST NIRCAM F405N (narrow 4.05 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F410M': {'file': 'jwst-nircam-F410M.txt', 'description': 'JWST NIRCAM F410M (medium 4.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F430M': {'file': 'jwst-nircam-F430M.txt', 'description': 'JWST NIRCAM F430M (medium 4.30 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F444W': {'file': 'jwst-nircam-F444W.txt', 'description': 'JWST NIRCAM F444W (wide 4.44 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F460M': {'file': 'jwst-nircam-F460M.txt', 'description': 'JWST NIRCAM F460M (medium 4.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F466N': {'file': 'jwst-nircam-F466N.txt', 'description': 'JWST NIRCAM F466N (narrow 4.66 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F470N': {'file': 'jwst-nircam-F470N.txt', 'description': 'JWST NIRCAM F470N (narrow 4.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F480M': {'file': 'jwst-nircam-F480M.txt', 'description': 'JWST NIRCAM F480M (medium 4.80 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F070W': {'file': 'JWST-NIRCAM_F070W.txt', 'description': 'JWST NIRCAM F070W (wide 0.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F090W': {'file': 'JWST-NIRCAM_F090W.txt', 'description': 'JWST NIRCAM F090W (wide 0.90 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F115W': {'file': 'JWST-NIRCAM_F115W.txt', 'description': 'JWST NIRCAM F115W (wide 1.15 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F140M': {'file': 'JWST-NIRCAM_F140M.txt', 'description': 'JWST NIRCAM F140M (medium 1.40 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F150W': {'file': 'JWST-NIRCAM_F150W.txt', 'description': 'JWST NIRCAM F150W (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F150W2': {'file': 'JWST-NIRCAM_F150W2.txt', 'description': 'JWST NIRCAM F150W2 (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F162M': {'file': 'JWST-NIRCAM_F162M.txt', 'description': 'JWST NIRCAM F162M (medium 1.62 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F164N': {'file': 'JWST-NIRCAM_F164N.txt', 'description': 'JWST NIRCAM F164N (narrow 1.64 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F182M': {'file': 'JWST-NIRCAM_F182M.txt', 'description': 'JWST NIRCAM F182M (medium 1.82 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F187N': {'file': 'JWST-NIRCAM_F187N.txt', 'description': 'JWST NIRCAM F187N (narrow 1.87 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F200W': {'file': 'JWST-NIRCAM_F200W.txt', 'description': 'JWST NIRCAM F200W (wide 2.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F210W': {'file': 'JWST-NIRCAM_F210M.txt', 'description': 'JWST NIRCAM F210M (medium 2.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F212N': {'file': 'JWST-NIRCAM_F212N.txt', 'description': 'JWST NIRCAM F212N (narrow 2.12 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F250M': {'file': 'JWST-NIRCAM_F250M.txt', 'description': 'JWST NIRCAM F250M (medium 2.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F277W': {'file': 'JWST-NIRCAM_F277W.txt', 'description': 'JWST NIRCAM F277W (wide 2.77 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F300M': {'file': 'JWST-NIRCAM_F300M.txt', 'description': 'JWST NIRCAM F300M (medium 3.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F322W2': {'file': 'JWST-NIRCAM_F322W2.txt', 'description': 'JWST NIRCAM F322W2 (wide 3.22 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F323N': {'file': 'JWST-NIRCAM_F323N.txt', 'description': 'JWST NIRCAM F323N (narrow 3.23 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F335M': {'file': 'JWST-NIRCAM_F335M.txt', 'description': 'JWST NIRCAM F335M (medium 3.35 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F356W': {'file': 'JWST-NIRCAM_F356W.txt', 'description': 'JWST NIRCAM F356W (wide 3.56 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F360M': {'file': 'JWST-NIRCAM_F360M.txt', 'description': 'JWST NIRCAM F360M (medium 3.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F405N': {'file': 'JWST-NIRCAM_F405N.txt', 'description': 'JWST NIRCAM F405N (narrow 4.05 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F410M': {'file': 'JWST-NIRCAM_F410M.txt', 'description': 'JWST NIRCAM F410M (medium 4.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F430M': {'file': 'JWST-NIRCAM_F430M.txt', 'description': 'JWST NIRCAM F430M (medium 4.30 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F444W': {'file': 'JWST-NIRCAM_F444W.txt', 'description': 'JWST NIRCAM F444W (wide 4.44 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F460M': {'file': 'JWST-NIRCAM_F460M.txt', 'description': 'JWST NIRCAM F460M (medium 4.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F466N': {'file': 'JWST-NIRCAM_F466N.txt', 'description': 'JWST NIRCAM F466N (narrow 4.66 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F470N': {'file': 'JWST-NIRCAM_F470N.txt', 'description': 'JWST NIRCAM F470N (narrow 4.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F480M': {'file': 'JWST-NIRCAM_F480M.txt', 'description': 'JWST NIRCAM F480M (medium 4.80 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
     'PANSTARRS_G': {'file': 'panstarrs-g.txt', 'description': 'PANSTARRS g-band', 'zeropoint': 3909.11, 'method': 'ab', 'rsr': False, 'altname': []}, \
     'PANSTARRS_R': {'file': 'panstarrs-r.txt', 'description': 'PANSTARRS r-band', 'zeropoint': 3151.44, 'method': 'ab', 'rsr': False, 'altname': []}, \
     'PANSTARRS_W': {'file': 'panstarrs-w.txt', 'description': 'PANSTARRS w-band', 'zeropoint': 3024.76, 'method': 'ab', 'rsr': False, 'altname': []}, \
     'PANSTARRS_I': {'file': 'panstarrs-i.txt', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6, 'method': 'ab', 'rsr': False, 'altname': []}, \
     'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2273.09, 'method': 'ab', 'rsr': False, 'altname': []}, \
     'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2205.95, 'method': 'ab', 'rsr': False, 'altname': []}, \
+    'ROMAN_F062': {'file': 'Roman-WFI_F062.txt', 'description': 'Roman WFI F062', 'zeropoint': 3174.18, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F087': {'file': 'Roman-WFI_F087.txt', 'description': 'Roman WFI F087', 'zeropoint': 2294.04, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F106': {'file': 'Roman-WFI_F106.txt', 'description': 'Roman WFI F106', 'zeropoint': 1967.08, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F129': {'file': 'Roman-WFI_F129.txt', 'description': 'Roman WFI F129', 'zeropoint': 1483.60, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F146': {'file': 'Roman-WFI_F146.txt', 'description': 'Roman WFI F146', 'zeropoint': 1683.10, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F158': {'file': 'Roman-WFI_F158.txt', 'description': 'Roman WFI F158', 'zeropoint': 1355.34, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F184': {'file': 'Roman-WFI_F184.txt', 'description': 'Roman WFI F184', 'zeropoint': 1396.74, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F213': {'file': 'Roman-WFI_F213.txt', 'description': 'Roman WFI F213', 'zeropoint': 1091.96, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_GRISM': {'file': 'Roman-WFI_Grism.txt', 'description': 'Roman WFI Grism passband', 'zeropoint': 854.12, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_PRISM': {'file': 'Roman-WFI_Prism.txt', 'description': 'Roman WFI Prism passband', 'zeropoint': 675.72, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
     'SDSS_U': {'file': 'sdss-u.txt', 'description': 'SDSS u-band', 'zeropoint': 1568.5, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
     'SDSS_G': {'file': 'sdss-g.txt', 'description': 'SDSS g-band', 'zeropoint': 3965.9, 'method': 'ab', 'rsr': False, 'altname': ['g']}, \
     'SDSS_R': {'file': 'sdss-r.txt', 'description': 'SDSS r-band', 'zeropoint': 3162.0, 'method': 'ab', 'rsr': False, 'altname': ['r']}, \
@@ -422,21 +451,23 @@ FILTERS = { \
     'VISTA_J': {'file': 'vista_j.txt', 'description': 'VISTA J-band', 'zeropoint': 1554.03, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'VISTA_H': {'file': 'vista_h.txt', 'description': 'VISTA H-band', 'zeropoint': 1030.40, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'VISTA_KS': {'file': 'vista_ks.txt', 'description': 'VISTA Ks-band', 'zeropoint': 674.83, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFC3_F098M': {'file': 'HST-WFC3_IR_F098M.txt', 'description': 'WFC3 F098M', 'zeropoint': 2154.5, 'method': 'vega', 'rsr': False, 'altname': ['F098M']}, \
-    'WFC3_F105W': {'file': 'HST-WFC3_IR_F105W.txt', 'description': 'WFC3 F105W', 'zeropoint': 1975.2, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 y','F105W']}, \
-    'WFC3_F110W': {'file': 'HST-WFC3_IR_F110W.txt', 'description': 'WFC3 F110W', 'zeropoint': 1738.4, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 yj','F110W']}, \
-    'WFC3_F125W': {'file': 'HST-WFC3_IR_F125W.txt', 'description': 'WFC3 F125W', 'zeropoint': 1564.3, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 j','F125W']}, \
-    'WFC3_F126N': {'file': 'HST-WFC3_IR_F126N.txt', 'description': 'WFC3 F126N', 'zeropoint': 1552.5, 'method': 'vega', 'rsr': False, 'altname': ['F126N']}, \
-    'WFC3_F127M': {'file': 'HST-WFC3_IR_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 1496.5, 'method': 'vega', 'rsr': False, 'altname': ['F127M']}, \
-    'WFC3_F128N': {'file': 'HST-WFC3_IR_F128N.txt', 'description': 'WFC3 F128N', 'zeropoint': 1392.6, 'method': 'vega', 'rsr': False, 'altname': ['F128N']}, \
-    'WFC3_F130N': {'file': 'HST-WFC3_IR_F130N.txt', 'description': 'WFC3 F130N', 'zeropoint': 1475.9, 'method': 'vega', 'rsr': False, 'altname': ['F130N']}, \
-    'WFC3_F132N': {'file': 'HST-WFC3_IR_F132N.txt', 'description': 'WFC3 F132N', 'zeropoint': 1466.6, 'method': 'vega', 'rsr': False, 'altname': ['F132N']}, \
-    'WFC3_F139M': {'file': 'HST-WFC3_IR_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 1342.8, 'method': 'vega', 'rsr': False, 'altname': ['F139M']}, \
-    'WFC3_F140W': {'file': 'HST-WFC3_IR_F140W.txt', 'description': 'WFC3 F140W', 'zeropoint': 1324.8, 'method': 'vega', 'rsr': False, 'altname': ['F140W']}, \
-    'WFC3_F153M': {'file': 'HST-WFC3_IR_F153M.txt', 'description': 'WFC3 F153M', 'zeropoint': 1142.0, 'method': 'vega', 'rsr': False, 'altname': ['F153M']}, \
-    'WFC3_F160W': {'file': 'HST-WFC3_IR_F160W.txt', 'description': 'WFC3 F160W', 'zeropoint': 1138.1, 'method': 'vega', 'rsr': False, 'altname': ['wfc3 h','F160W']}, \
-    'WFC3_F164N': {'file': 'HST-WFC3_IR_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 1005.5, 'method': 'vega', 'rsr': False, 'altname': ['F164N']}, \
-    'WFC3_F167N': {'file': 'HST-WFC3_IR_F167N.txt', 'description': 'WFC3 F167N', 'zeropoint': 1030.0, 'method': 'vega', 'rsr': False, 'altname': ['F167N']}, \
+    'WFC3_F098M': {'file': 'HST-WFC3_F098M.txt', 'description': 'WFC3 F098M', 'zeropoint': 2154.5, 'method': 'vega', 'rsr': False, 'altname': ['F098M']}, \
+    'WFC3_F105W': {'file': 'HST-WFC3_F105W.txt', 'description': 'WFC3 F105W', 'zeropoint': 1975.2, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-Y','F105W']}, \
+    'WFC3_F110W': {'file': 'HST-WFC3_F110W.txt', 'description': 'WFC3 F110W', 'zeropoint': 1738.4, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-YJ','F110W']}, \
+    'WFC3_F125W': {'file': 'HST-WFC3_F125W.txt', 'description': 'WFC3 F125W', 'zeropoint': 1564.3, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-J','F125W']}, \
+    'WFC3_F126N': {'file': 'HST-WFC3_F126N.txt', 'description': 'WFC3 F126N', 'zeropoint': 1552.5, 'method': 'vega', 'rsr': False, 'altname': ['F126N']}, \
+    'WFC3_F127M': {'file': 'HST-WFC3_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 1496.5, 'method': 'vega', 'rsr': False, 'altname': ['F127M']}, \
+    'WFC3_F128N': {'file': 'HST-WFC3_F128N.txt', 'description': 'WFC3 F128N', 'zeropoint': 1392.6, 'method': 'vega', 'rsr': False, 'altname': ['F128N']}, \
+    'WFC3_F130N': {'file': 'HST-WFC3_F130N.txt', 'description': 'WFC3 F130N', 'zeropoint': 1475.9, 'method': 'vega', 'rsr': False, 'altname': ['F130N']}, \
+    'WFC3_F132N': {'file': 'HST-WFC3_F132N.txt', 'description': 'WFC3 F132N', 'zeropoint': 1466.6, 'method': 'vega', 'rsr': False, 'altname': ['F132N']}, \
+    'WFC3_F139M': {'file': 'HST-WFC3_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 1342.8, 'method': 'vega', 'rsr': False, 'altname': ['F139M']}, \
+    'WFC3_F140W': {'file': 'HST-WFC3_F140W.txt', 'description': 'WFC3 F140W', 'zeropoint': 1324.8, 'method': 'vega', 'rsr': False, 'altname': ['F140W']}, \
+    'WFC3_F153M': {'file': 'HST-WFC3_F153M.txt', 'description': 'WFC3 F153M', 'zeropoint': 1142.0, 'method': 'vega', 'rsr': False, 'altname': ['F153M']}, \
+    'WFC3_F160W': {'file': 'HST-WFC3_F160W.txt', 'description': 'WFC3 F160W', 'zeropoint': 1138.1, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-H','F160W']}, \
+    'WFC3_F164N': {'file': 'HST-WFC3_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 1005.5, 'method': 'vega', 'rsr': False, 'altname': ['F164N']}, \
+    'WFC3_F167N': {'file': 'HST-WFC3_F167N.txt', 'description': 'WFC3 F167N', 'zeropoint': 1030.0, 'method': 'vega', 'rsr': False, 'altname': ['F167N']}, \
+    'WFC3_G102': {'file': 'HST-WFC3_G102.txt', 'description': 'WFC3 G102', 'zeropoint': 2074.54, 'method': 'vega', 'rsr': False, 'altname': ['G102']}, \
+    'WFC3_G141': {'file': 'HST-WFC3_G141.txt', 'description': 'WFC3 G141', 'zeropoint': 1355.32, 'method': 'vega', 'rsr': False, 'altname': ['G141']}, \
 #    'WFC3_F127M': {'file': 'wfc3_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
 #    'WFC3_F139M': {'file': 'wfc3_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
 #    'WFC3_F164N': {'file': 'wfc3_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
