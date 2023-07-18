@@ -62,7 +62,7 @@ setup(
   author = "Adam Burgasser",
   author_email = "aburgasser@ucsd.edu",
   description = "SpeX Prism Library Analysis Toolkit (SPLAT)",
-  long_description = "Code base for the SpeX Prism Library Analysis Toolkit (SPLAT), which provides access to near-infrared spectral data for over 3000 sources obtained with the NASA/SpeX instrument primarily of low-mass stars and brown dwarfs; relevant atmosphere and evolutionary models; and analysis functions for spectral measurements and emprical calibrations."
+  long_description = "Code base for the SpeX Prism Library Analysis Toolkit (SPLAT), which provides access to near-infrared spectral data for over 3000 sources obtained with the NASA/SpeX instrument primarily of low-mass stars and brown dwarfs; relevant atmosphere and evolutionary models; and analysis functions for spectral measurements and emprical calibrations.",
   license = "MIT",
 #    download_url='%s/astropy-%s.tar.gz' % (DOWNLOAD_BASE_URL, VERSION),
   keywords = ['splat','spectroscopy', 'spectral analysis', 'astronomy','astrophysics',\
