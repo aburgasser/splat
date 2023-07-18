@@ -3245,16 +3245,15 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
 # populate ranges
     ranges = {}
     for ms in list(SPECTRAL_MODEL_PARAMETERS.keys()):
-        if ms in list(gridparam.keys()):
+        if ms in list(gridparam['parameter_values'].keys()):
             if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous':
-                rng = kwargs.get('{}_range'.format(ms),[numpy.min(gridparam[ms]),numpy.max(gridparam[ms])])
+                rng = kwargs.get('{}_range'.format(ms),[numpy.min(gridparam['parameter_values'][ms]),numpy.max(gridparam['parameter_values'][ms])])
             else:
-                rng = numpy.unique(gridparam[ms])
+                rng = numpy.unique(gridparam['parameter_values'][ms])
             rng = kwargs.get('{}_range'.format(SPECTRAL_MODEL_PARAMETERS[ms]['name']),rng)
             rng = kwargs.get('{}_range'.format(SPECTRAL_MODEL_PARAMETERS[ms]['prefix']),rng)
             ranges[ms] = rng
             if ms == 'z' and kwargs.get('nometallicity',False) == True: ranges[ms] = [0,0]
-
 
 # select models to fit by checking ranges
     parameters = []
