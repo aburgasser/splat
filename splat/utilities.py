@@ -368,32 +368,32 @@ def checkFile(filename,**kwargs):
 
 
 
-def checkAccess(**kwargs):
-    '''
-    :Purpose: Checks if user has access to unpublished spectra in SPLAT library.
-    :Example:
-       >>> import splat
-       >>> print spl.checkAccess()
-       True
-    :Note: Must have the file .splat_access in your home directory with the correct passcode to use.
-    '''
-    result = False
+# def checkAccess(**kwargs):
+#     '''
+#     :Purpose: Checks if user has access to unpublished spectra in SPLAT library.
+#     :Example:
+#        >>> import splat
+#        >>> print spl.checkAccess()
+#        True
+#     :Note: Must have the file .splat_access in your home directory with the correct passcode to use.
+#     '''
+#     result = False
 
-    try:
-        home = os.path.expanduser("~")
-        if home == None: home = './'
-        bcode = requests.get(SPLAT_URL+ACCESS_FILE).content
-        lcode = base64.b64encode(open(home+'/'+ACCESS_FILE,'r').read().encode())
-        if (bcode[:-3] in lcode): result = True
-    except:
-        result = False
+#     try:
+#         home = os.path.expanduser("~")
+#         if home == None: home = './'
+#         bcode = requests.get(SPLAT_URL+ACCESS_FILE).content
+#         lcode = base64.b64encode(open(home+'/'+ACCESS_FILE,'r').read().encode())
+#         if (bcode[:-3] in lcode): result = True
+#     except:
+#         result = False
 
-    if (kwargs.get('verbose',False) == True):
-        if result == True:
-            print('You have full access to all SPLAT data')
-        else:
-            print('You have access only to published data')
-    return result
+#     if (kwargs.get('verbose',False) == True):
+#         if result == True:
+#             print('You have full access to all SPLAT data')
+#         else:
+#             print('You have access only to published data')
+#     return result
 
 
 def checkLocal(inputfile):
