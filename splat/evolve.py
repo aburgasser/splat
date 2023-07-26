@@ -468,7 +468,7 @@ def _modelParametersSingle(*args, **kwargs):
 
         if input_type != 'two_params': 
             input_type = 'one_param'
-            for k in ['temperature','gravity','radius','luminosity']:
+            for k in ['temperature','gravity','radius','luminosity','Mj','Mh','Mk']:
                 if numpy.isnan(params[k]) == False: P.append([k, params[k]])
             if len(P) == 0 or len(P) > 1:
                 for k in list(params.keys()):
@@ -507,7 +507,7 @@ def _modelParametersSingle(*args, **kwargs):
 
         if input_type != 'two_params' and input_type != 'one_param': 
             input_type = 'one_param'
-            for k in ['temperature','gravity','radius','luminosity']:
+            for k in ['temperature','gravity','radius','luminosity','Mj','Mh','Mk']:
                 if numpy.isnan(params[k]) == False: P.append([k, params[k]])
             if len(P) == 0 or len(P) > 1:
                 for k in list(params.keys()):
