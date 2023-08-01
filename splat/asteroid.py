@@ -375,6 +375,9 @@ def classifyAsteroid(spectrumObject, *args, **kwargs):
     else:
         return verdict
 
+# def _PCA_classifying()
+#     todo: put _PCA into one method, and _template into another. classifyAsteroid calls either one
+#     depending on the "method" kwarg
 
     
 def classifyStep1(pc_scores, slope):
