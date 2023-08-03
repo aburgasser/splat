@@ -5232,8 +5232,8 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', source_database=DB_SOURCE
 #    print(len(spectral_db[:][numpy.where(spectral_db['SELECT']==1)]))
 #    print(len(spectral_db[:][numpy.where(spectral_db['SOURCE_SELECT']==True)]))
 #    print(len(spectral_db[:][numpy.where(numpy.logical_and(spectral_db['SELECT']==1,spectral_db['SOURCE_SELECT']==True))]))
-    if (not checkAccess() or kwargs.get('published',False) or kwargs.get('public',False)):
-        spectral_db['SELECT'][spectral_db['PUBLISHED'] != 'Y'] = 0.
+#    if (not checkAccess() or kwargs.get('published',False) or kwargs.get('public',False)):
+#        spectral_db['SELECT'][spectral_db['PUBLISHED'] != 'Y'] = 0.
 
 #    print(spectral_db['SOURCE_KEY'][numpy.where(spectral_db['SELECT']==1)])
 #    print(spectral_db['SOURCE_KEY'][numpy.where(spectral_db['SOURCE_SELECT']==True)])
