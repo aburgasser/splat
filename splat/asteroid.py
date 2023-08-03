@@ -791,8 +791,9 @@ def MITHNEOS_to_Spectrum(txtPath):
     '''
     
     data = open(txtPath, 'r')
-
-    objName = txtPath.split("/")[len(txtPath.split("/"))-1]
+    
+    abspath = os.path.abspath(txtPath)
+    objName = os.path.split(abspath)[-1]
 
     dataString = data.read()
 
