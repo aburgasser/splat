@@ -11,6 +11,7 @@ from splat.plot import plotSpectrum
 import shutil
 import math
 import re
+import copy
 ######################################
 ############# external ###############
 import numpy as np
@@ -284,7 +285,7 @@ def classifyAsteroid(spectrumObject, *args, **kwargs):
     force_classify = kwargs.get('force_classify', False)
     
     # storing a copy of the input splat.Spectrum Object
-    sp = spectrumObject
+    sp = copy.deepcopy(spectrumObject)
     
     # preparing the object, cubic spline, dividing out the slope
     sp_reduced, slope_value, slope_line = form_data_pairs(sp, waverange, norm)
@@ -812,7 +813,8 @@ def MITHNEOS_to_Spectrum(txtPath):
     for entry in dataList:
         if entry is not '': # ignores empty rows
             removed_spaces = entry.split()
-            if (float(removed_spaces[len(removed_spaces)-1]) != 0): 
+            if (int(removed_spaces[-1]) != 0): 
+                print(removed_spaces)
                 pruned_dataList.append(removed_spaces) # strings, of each value
 
     # pruned_dataList is a list of lists, of which the smaller list are rows of the .txt file
