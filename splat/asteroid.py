@@ -813,7 +813,7 @@ def MITHNEOS_to_Spectrum(txtPath):
     for entry in dataList:
         if entry is not '': # ignores empty rows
             removed_spaces = entry.split()
-            if (int(removed_spaces[-1]) != 0): 
+            if (float(removed_spaces[-1]) != 0): 
                 pruned_dataList.append(removed_spaces) # strings, of each value
 
     # pruned_dataList is a list of lists, of which the smaller list are rows of the .txt file
