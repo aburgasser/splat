@@ -503,6 +503,30 @@ def _modelName(modelset,instrument,param):
     return filename
 
 
+# REPLACEMENT FOR ABOVE
+def generateModelName(par,suffix='txt'):
+    '''
+    Purpose
+    -------
+    Generates a model name given a dictionary of parameters
+
+    DOCSTRING IN PROGRESS
+    '''
+    for x in ['model','instrument']:
+        if x not in list(par.keys()): raise ValueError('parameter dict must include {} keyword'.format(x))
+    file = par['model']
+    for x in splat.SPECTRAL_MODEL_PARAMETERS_INORDER:
+        if x in list(par.keys()): 
+            if splat.SPECTRAL_MODEL_PARAMETERS[x]['type']=='continuous':
+                kstr = '_{}{:.2f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x])-0.0001)
+                if x=='teff': kstr = '_{}{:.0f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x]))
+                if x in ['z','enrich','zc','zo','zn'] and float(par[x])>0: kstr = '_{}+{:.2f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x]))
+            else: kstr = '_{}{}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],str(par[x]))
+            file+=kstr
+    file+='_{}.{}'.format(par['instrument'],suffix)
+    return file
+
+
 def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=ERROR_CHECKING,skipraw=True,*args,**kwargs):
 
     default_info = {
@@ -2186,7 +2210,7 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
             raise ValueError('\nCould not locate folder {} or {} for model {} and instrument {}; make sure models are properly located'.format(finit,kwargs['folder'],kwargs['modelset'],kwargs['instrument']))
 
 # preset defaults
-    mparam = {}
+    mparam = {'model': kwargs['modelset'], 'instrument': kwargs['instrument']}
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
         if ms in list(SPECTRAL_MODELS[kwargs['modelset']]['default'].keys()):
             mparam[ms] = kwargs.get(ms,SPECTRAL_MODELS[kwargs['modelset']]['default'][ms])
@@ -2198,20 +2222,25 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
 
 # generate model filename
     
-    filename = os.path.join(SPECTRAL_MODELS[kwargs['modelset']]['instruments'][kwargs['instrument']],kwargs['modelset'])
+    filename = generateModelName(mparam,suffix='txt')
+    kwargs['filename'] = os.path.join(SPECTRAL_MODELS[kwargs['modelset']]['instruments'][kwargs['instrument']],filename)
 
-    for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
-        if k in list(SPECTRAL_MODELS[kwargs['modelset']]['default'].keys()):
-            if k in list(mparam.keys()): val = mparam[k] 
-            else: val = SPECTRAL_MODELS[mset]['default'][k]
-            if SPECTRAL_MODEL_PARAMETERS[k]['type'] == 'continuous':
-                kstr = '_{}{:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],float(val))
-            else:
-                kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],val)
-            if k == 'teff': kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],int(val))
-            elif k == 'z': kstr = '_{}{:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],float(val)-0.0001)
-            filename=filename+kstr
-    kwargs['filename'] = filename+'_{}.txt'.format(kwargs['instrument'])
+    # filename = os.path.join(SPECTRAL_MODELS[kwargs['modelset']]['instruments'][kwargs['instrument']],kwargs['modelset'])
+
+    # for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
+    #     if k in list(SPECTRAL_MODELS[kwargs['modelset']]['default'].keys()):
+    #         if k in list(mparam.keys()): val = mparam[k] 
+    #         else: val = SPECTRAL_MODELS[mset]['default'][k]
+    #         if SPECTRAL_MODEL_PARAMETERS[k]['type'] == 'continuous':
+    #             kstr = '_{}{:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],float(val))
+    #         else:
+    #             kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],val)
+    #         if k == 'teff': kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],int(val))
+    #         elif k == 'z': 
+    #             if float(val)>0: kstr = '_{}+{:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],float(val))
+    #             else: kstr = '_{}{:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[k]['prefix'],float(val)-0.0001)
+    #         filename=filename+kstr
+    # kwargs['filename'] = filename+'_{}.txt'.format(kwargs['instrument'])
 
 #    kwargs['filename'] = os.path.normpath(kwargs['folder'])+'{}_{:.0f}_{:.1f}_{:.1f}_{}_{}_{}_{}.txt'.\
 #        format(kwargs['model'],float(kwargs['teff']),float(kwargs['logg']),float(kwargs['z'])-0.001,kwargs['fsed'],kwargs['cld'],kwargs['kzz'],kwargs['instrument']))
@@ -2267,7 +2296,7 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
     if file=='':
         file = checkLocal(kwargs['filename']+'.gz')
         if file=='':
-            if kwargs['force']: raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
+            if kwargs['force']: raise NameError('\nCould not find {} or {} locally\n\n'.format(kwargs['filename'],kwargs['filename']+'.gz'))
             else: 
 #                print('calling _loadInterpolatedModel with {}'.format(kwargs))
                 sp = _loadInterpolatedModel(**kwargs)
@@ -3120,22 +3149,22 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
     :param mask: an array of the same length as the spectrum flux array, specifying which data to include in comparison statistic as coded by 0 = good data, 1 = bad (masked). The routine `generateMask()`_ is called to create a mask, so parameters from that routine may be specified (default: no masking)
 
 
-    :param compute\_radius: if set to True, force the computation of the radius based on the model scaling factor. This is automatically set to True if the input spectrum is absolutely flux calibrated (default = False)
+    :param compute_radius: if set to True, force the computation of the radius based on the model scaling factor. This is automatically set to True if the input spectrum is absolutely flux calibrated (default = False)
 
-    :param teff\_range: set to the range of temperatures over which model fitting will be done (``temperature_range`` and ``t_range`` may also be used; default = full range of model temperatures)
-    :param logg\_range: set to the range of surface gravities over which model fitting will be done (``gravity_range`` and ``g_range`` may also be used; default = full range of model temperatures)
-    :param z\_range: set to the range of metallicities over which model fitting will be done (``metallicity_range`` may also be used; default = full range of model temperatures)
+    :param teff_range: set to the range of temperatures over which model fitting will be done (``temperature_range`` and ``t_range`` may also be used; default = full range of model temperatures)
+    :param logg_range: set to the range of surface gravities over which model fitting will be done (``gravity_range`` and ``g_range`` may also be used; default = full range of model temperatures)
+    :param z_range: set to the range of metallicities over which model fitting will be done (``metallicity_range`` may also be used; default = full range of model temperatures)
 
-    :param return\_model: set to True to return a Spectrum class of the best-fit model instead of a dictionary of parameters (default = False)
-    :param return\_mean\_parameters: set to True a dictionary of mean parameters (default = False)
-    :param return\_all\_parameters: set to True to return all of the parameter sets and fitting values (default = False)
+    :param return_model: set to True to return a Spectrum class of the best-fit model instead of a dictionary of parameters (default = False)
+    :param return_mean_parameters: set to True a dictionary of mean parameters (default = False)
+    :param return_all_parameters: set to True to return all of the parameter sets and fitting values (default = False)
 
     :param summary: set to True to report a summary of results (default = True)
     :param output: a string containing the base filename for outputs associated with this fitting routine (``file`` and ``filename`` may also be used; default = 'fit')
     :param plot: set to True to suppress plotting outputs (default = False)
-    :param plot\_format: specifes the file format for output plots (default = `pdf`)
-    :param file\_best\_comparison: filename to use for plotting spectrum vs. best-fit model (default = '``OUTPUT``\_best\_comparison.``PLOT_FORMAT``')
-    :param file\_mean\_comparison: filename to use for plotting spectrum vs. mean parameter model (default = '``OUTPUT``\_mean\_comparison.``PLOT_FORMAT``')
+    :param plot_format: specifes the file format for output plots (default = `pdf`)
+    :param file_best_comparison: filename to use for plotting spectrum vs. best-fit model (default = '``OUTPUT``_best_comparison.``PLOT_FORMAT``')
+    :param file_mean_comparison: filename to use for plotting spectrum vs. mean parameter model (default = '``OUTPUT``_mean_comparison.``PLOT_FORMAT``')
 
     In addition, the parameters for `compareSpectra()`_ , `generateMask()`_ and `plotSpectrum()`_ may be used; see SPLAT API for details.
 
@@ -3156,16 +3185,16 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
     >>> p = spmod.modelFitGrid(sp,teff_range=[1200,2500],model='Saumon',file='fit1507')
         Best Parameters to fit to BT-Settl (2008) models:
             $T_{eff}$=1800.0 K
-            $log\ g$=5.0 dex(cm / s2)
+            $log g$=5.0 dex(cm / s2)
             $[M/H]$=-0.0 dex
             $f_{sed}$=nc 
             $cld$=nc 
-            $log\ \kappa_{zz}$=eq dex(cm2 / s)
+            $log \kappa_{zz}$=eq dex(cm2 / s)
             R=0.143324498969 solRad
             chi=4500.24997585
         Mean Parameters:
             $T_{eff}$: 1800.0+/-0.0 K
-            $log\ g$: 5.0+/-0.0 dex(cm / s2)
+            $log g$: 5.0+/-0.0 dex(cm / s2)
             Radius: 0.143324498969+/-0.0 solRad
             $[M/H]$: 0.0+/-0.0 dex
 

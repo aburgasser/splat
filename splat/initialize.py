@@ -638,14 +638,14 @@ SPECTRAL_MODEL_PARAMETERS = {\
     'logg': {'name': 'gravity', 'prefix': 'g', 'unit': u.dex, 'default': 5.0, 'title': '$\log{g}$ (cgs)', 'type': 'continuous'}, \
     'z': {'name': 'metallicity', 'prefix': 'z', 'unit': u.dex, 'default': 0., 'title': '$Z$', 'type': 'continuous'}, \
     'fsed': {'name': 'rainout', 'prefix': 'f', 'unit': u.m/u.m, 'default': 'nc', 'title': '$f_{sed}$', 'type': 'discrete'}, \
-    'cld': {'name': 'cloud', 'prefix': 'c', 'unit': u.m/u.m, 'default': 'nc', 'title': 'Cloud or Condensation Treatment', 'type': 'discrete'}, \
+    'cld': {'name': 'cloud', 'prefix': 'cld', 'unit': u.m/u.m, 'default': 'nc', 'title': 'Cloud or Condensation Treatment', 'type': 'discrete'}, \
     'kzz': {'name': 'mixing', 'prefix': 'k', 'unit': u.m/u.m, 'default': 'eq', 'title': '$log\ \kappa_{zz}$ (cgs)', 'type': 'discrete'},\
     'ad': {'name': 'adiabat', 'prefix': 'ad', 'unit': u.m/u.m, 'default': 1., 'title': 'Adiabatic Index', 'type': 'continuous'},\
     'y': {'name': 'He abundance', 'prefix': 'y', 'unit': u.dex, 'default': 0.27, 'title': '$Y$', 'type': 'continuous'}, \
     'enrich': {'name': 'alpha enrichment', 'prefix': 'en', 'unit': u.dex, 'default': 0., 'title': 'Alpha Element Enrichment', 'type': 'continuous'},\
-    'zc': {'name': 'C enrichment', 'prefix': 'zc', 'unit': u.dex, 'default': 0., 'title': 'Carbon Enrichment', 'type': 'continuous'},\
-    'zo': {'name': 'O enrichment', 'prefix': 'zo', 'unit': u.dex, 'default': 0., 'title': 'Oxygen Enrichment', 'type': 'continuous'},\
-    'zn': {'name': 'N enrichment', 'prefix': 'zn', 'unit': u.dex, 'default': 0., 'title': 'Nitrogen Enrichment', 'type': 'continuous'},\
+    'zc': {'name': 'C enrichment', 'prefix': 'ec', 'unit': u.dex, 'default': 0., 'title': 'Carbon Enrichment', 'type': 'continuous'},\
+    'zo': {'name': 'O enrichment', 'prefix': 'eo', 'unit': u.dex, 'default': 0., 'title': 'Oxygen Enrichment', 'type': 'continuous'},\
+    'zn': {'name': 'N enrichment', 'prefix': 'en', 'unit': u.dex, 'default': 0., 'title': 'Nitrogen Enrichment', 'type': 'continuous'},\
     'co': {'name': 'C/O ratio', 'prefix': 'co', 'unit': u.dex, 'default': 0.54, 'title': 'C/O ratio', 'type': 'continuous'},\
     'broad': {'name': 'broadening', 'prefix': 'br', 'unit': u.m/u.m, 'default': 'A', 'title': 'Alkali Line Broadening Prescription', 'type': 'discrete'},\
     'logpmin': {'name': 'log pressure top', 'prefix': 'pt', 'unit': u.dex, 'default': -8., 'title': 'log Minimum Pressure (bar)', 'type': 'continuous'},\
