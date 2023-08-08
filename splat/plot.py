@@ -704,6 +704,9 @@ def plotSpectrum(inp,xrng=[],yrng=[],xlabel='',ylabel='',xlog=False,ylog=False,g
         ax.tick_params(axis='x', labelsize=fontsize)
         ax.tick_params(axis='y', labelsize=fontsize)
 
+# add title
+        if title!='': ax.set_title(title)
+
 # log scale?
         if kwargs.get('xlog',False): ax.set_xscale('log',nonposx='clip')
         if kwargs.get('ylog',False): ax.set_yscale('log',nonposy='clip')

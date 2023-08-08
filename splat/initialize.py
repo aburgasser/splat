@@ -13,7 +13,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2023.07.18'
+VERSION = '2023.08.08'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -643,14 +643,14 @@ SPECTRAL_MODEL_PARAMETERS = {\
     'ad': {'name': 'adiabat', 'prefix': 'ad', 'unit': u.m/u.m, 'default': 1., 'title': 'Adiabatic Index', 'type': 'continuous'},\
     'y': {'name': 'He abundance', 'prefix': 'y', 'unit': u.dex, 'default': 0.27, 'title': '$Y$', 'type': 'continuous'}, \
     'enrich': {'name': 'alpha enrichment', 'prefix': 'en', 'unit': u.dex, 'default': 0., 'title': 'Alpha Element Enrichment', 'type': 'continuous'},\
-    'zc': {'name': 'C enrichment', 'prefix': 'ec', 'unit': u.dex, 'default': 0., 'title': 'Carbon Enrichment', 'type': 'continuous'},\
-    'zo': {'name': 'O enrichment', 'prefix': 'eo', 'unit': u.dex, 'default': 0., 'title': 'Oxygen Enrichment', 'type': 'continuous'},\
-    'zn': {'name': 'N enrichment', 'prefix': 'en', 'unit': u.dex, 'default': 0., 'title': 'Nitrogen Enrichment', 'type': 'continuous'},\
+    'zc': {'name': 'C enrichment', 'prefix': 'ca', 'unit': u.dex, 'default': 0., 'title': 'Carbon Enrichment', 'type': 'continuous'},\
+    'zo': {'name': 'O enrichment', 'prefix': 'ox', 'unit': u.dex, 'default': 0., 'title': 'Oxygen Enrichment', 'type': 'continuous'},\
+    'zn': {'name': 'N enrichment', 'prefix': 'ni', 'unit': u.dex, 'default': 0., 'title': 'Nitrogen Enrichment', 'type': 'continuous'},\
     'co': {'name': 'C/O ratio', 'prefix': 'co', 'unit': u.dex, 'default': 0.54, 'title': 'C/O ratio', 'type': 'continuous'},\
     'broad': {'name': 'broadening', 'prefix': 'br', 'unit': u.m/u.m, 'default': 'A', 'title': 'Alkali Line Broadening Prescription', 'type': 'discrete'},\
     'logpmin': {'name': 'log pressure top', 'prefix': 'pt', 'unit': u.dex, 'default': -8., 'title': 'log Minimum Pressure (bar)', 'type': 'continuous'},\
     'logpmax': {'name': 'log pressure bottom', 'prefix': 'pb', 'unit': u.dex, 'default': 4., 'title': 'log Maximum Pressure (bar)', 'type': 'continuous'},\
-    'radius': {'name': 'radius', 'prefix': 'r', 'unit': u.Rsun, 'default': 0., 'title': 'Radius (R$_{\odot}$)', 'type': 'continuous'},\
+    'radius': {'name': 'radius', 'prefix': 'rad', 'unit': u.Rsun, 'default': 0., 'title': 'Radius (R$_{\odot}$)', 'type': 'continuous'},\
 }
 SPECTRAL_MODELS = {\
 #    'gaia': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/gaia/', 'name': 'AMES GAIA', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altname': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'rawfolder': HOME_FOLDER+'/models/phoenix/nextgen/fullres/', 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
