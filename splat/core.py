@@ -4436,80 +4436,187 @@ def initializeStandards(*args,**kwargs):
     return initiateStandards(*args,**kwargs)
 
 
-def initiateStandards(*args,**kwargs):
+def initiateStandards(spt=[],dwarf=True,subdwarf=False,young=False,allstds=False,dsd=False,sd=False,esd=False,intg=False,vlg=False,reset=True,output=False,verbose=False):
     '''
-    :Purpose: Initiates the spectral standards in the SpeX library. By default this loads the dwarfs standards, but you can also specify loading of subdwarf and extreme subdwarf standards as well. Once loaded, these standards remain in memory.
+    Purpose
+    -------
 
-    :param sd: Set equal to True to load subdwarf standards
-    :type sd: optional, default = False
-    :param esd: Set equal to True to load extreme subdwarf standards
-    :type esd: optional, default = False
+    Initiates the spectral standards in the SpeX library. By default this loads the dwarfs standards, 
+    but you can also load in subdwarf and low gravity standards as well. Once loaded, these standards remain in memory.
 
-    :Example:
-    >>> import splat
-    >>> splat.initiateStandards()
-    >>> splat.SPEX_STDS['M5.0']
-    Spectrum of Gl51
+    Parameters
+    ----------
+
+    spt = [] : None, int, float, str, or list [optional]
+        spectral type range to limit standards; if empty list or None, reads in all relevant standards
+
+    dwarf = True : boolean [optional]
+        by default, read in dwarf standards
+
+    subdwarf = False : boolean [optional]
+        read in d/sd, sd and esd standards
+
+    young = False : boolean [optional]
+        read in intg and vlg standards
+
+    allstds = False : boolean [optional]
+        read in dwarf, subdwarf, and young standards
+
+    dsd = False : boolean [optional]
+        read in mild subdwarf standards
+
+    sd = False : boolean [optional]
+        read in subdwarf standards
+
+    esd = False : boolean [optional]
+        read in extreme subdwarf standards
+
+    int = False : boolean [optional]
+        read in intermediate low gravity standards
+
+    vlg = False : boolean [optional]
+        read in very low gravity standards
+
+    reset = False : boolean [optional]
+        set to True to re-read in spectral standards (replaces those in place)
+
+    output = False : boolean [optional]
+        set to True to return the standards dictionary as output
+
+    verbose = False : boolean [optional]
+        set to True to have program return verbose output
+
+    Outputs
+    -------
+
+    By default, code updates the relevant code dictionary variable with key (e.g., STDS_DWARF_SPEX) with value pairs
+    set to spectral type: Spectrum object. If keyword output = True, will also return dictionary as output
+
+    Example
+    -------
+
+        >>> import splat
+        >>> splat.initiateStandards(spt=['L0','L5'])
+        >>> splat.STDS_DWARF_SPEX
+
+        {'L0.0': SPEX-PRISM spectrum of 2MASP J0345432+254023 (L0.0 Std),
+         'L1.0': SPEX-PRISM spectrum of 2MASSW J2130446-084520 (L1.0 Std),
+         'L2.0': SPEX-PRISM spectrum of Kelu-1 (L2.0 Std),
+         'L3.0': SPEX-PRISM spectrum of 2MASSW J1506544+132106 (L3.0 Std),
+         'L4.0': SPEX-PRISM spectrum of 2MASS J21580457-1550098 (L4.0 Std),
+         'L5.0': SPEX-PRISM spectrum of SDSS J083506.16+195304.4 (L5.0 Std)}
+
+        >>> splat.initiateStandards(spt=['L0','L5'],intg=True)
+        >>> splat.STDS_INTG_SPEX
+
+        {'L0.0beta': SPEX-PRISM spectrum of 2MASSW J1552591+294849 (L0.0beta Std),
+         'L1.0beta': SPEX-PRISM spectrum of 2MASS J02271036-1624479 (L1.0beta Std),
+         'L2.0beta': SPEX-PRISM spectrum of LSR 0602+3910 (L2.0beta Std),
+         'L3.0beta': SPEX-PRISM spectrum of 2MASSI J1726000+153819 (L3.0beta Std)}
+
+    Dependencies
+    ------------
+        
+        `typeToNum()`_
+
+    .. _`typeToNum()` : api.html#splat.core.typeToNum
+
     '''
+
 
 # choose what kind of standards desired - d, sd, esd
 # and read in standards into dictionary if they haven't been already
-    if kwargs.get('all',False):
-        swargs = copy.deepcopy(kwargs)
-        del swargs['all']
-        initiateStandards()
-        initiateStandards(sd=True)
-        initiateStandards(dsd=True)
-        initiateStandards(esd=True)
-        initiateStandards(intg=True)
-        initiateStandards(vlg=True)
-        return
-    if kwargs.get('subdwarf',False):
-        swargs = copy.deepcopy(kwargs)
-        del swargs['subdwarf']
-        initiateStandards(sd=True)
-        initiateStandards(dsd=True)
-        initiateStandards(esd=True)
-        return
-    if kwargs.get('young',False):
-        swargs = copy.deepcopy(kwargs)
-        del swargs['young']
-        initiateStandards(intg=True)
-        initiateStandards(vlg=True)
-        return
+    if allstds==True:
+        if verbose==True: print('Reading in all standards')
+        initiateStandards(spt=spt,reset=reset,verbose=verbose,output=False)
+        initiateStandards(spt=spt,subdwarf=True,reset=reset,verbose=verbose,output=False)
+        initiateStandards(spt=spt,young=True,reset=reset,verbose=verbose,output=False)
+        if output==True:
+            stds = copy.deepcopy(STDS_DWARF_SPEX)
+            for x in [STDS_SD_SPEX_KEYS,STDS_DSD_SPEX_KEYS,STDS_ESD_SPEX_KEYS,STDS_VLG_SPEX_KEYS,STDS_INTG_SPEX_KEYS]:
+                stds.update(x)
+            return stds
+        else: return
+    if subdwarf==True:
+        if verbose==True: print('Reading in all metal-poor standards')
+        initiateStandards(spt=spt,sd=True,reset=reset,verbose=verbose,output=False)
+        initiateStandards(spt=spt,dsd=True,reset=reset,verbose=verbose,output=False)
+        initiateStandards(spt=spt,esd=True,reset=reset,verbose=verbose,output=False)
+        if output==True:
+            stds = copy.deepcopy(STDS_SD_SPEX_KEYS)
+            for x in [STDS_DSD_SPEX_KEYS,STDS_ESD_SPEX_KEYS]:
+                stds.update(x)
+            return stds
+        else: return
+    if young==True:
+        if verbose==True: print('Reading in all young standards')
+        initiateStandards(spt=spt,intg=True,reset=reset,verbose=verbose,output=False)
+        initiateStandards(spt=spt,vlg=True,reset=reset,verbose=verbose,output=False)
+        if output==True:
+            stds = copy.deepcopy(STDS_VLG_SPEX_KEYS)
+            stds.update(STDS_INTG_SPEX_KEYS)
+            return stds
+        else: return
 
-    if kwargs.get('sd',False):
+# assign dictionary to fill
+    if sd==True:
+        if verbose==True: print('Reading in subdwarf (sd) standards')
         stds = STDS_SD_SPEX
         kys = copy.deepcopy(STDS_SD_SPEX_KEYS)
-    elif kwargs.get('dsd',False):
+    elif dsd==True:
+        if verbose==True: print('Reading in mild subdwarf (d/sd) standards')
         stds = STDS_DSD_SPEX
         kys = copy.deepcopy(STDS_DSD_SPEX_KEYS)
-    elif kwargs.get('esd',False):
+    elif esd==True:
+        if verbose==True: print('Reading in extreme subdwarf (esd) standards')
         stds = STDS_ESD_SPEX
         kys = copy.deepcopy(STDS_ESD_SPEX_KEYS)
-    elif kwargs.get('vlg',False):
+    elif vlg==True:
+        if verbose==True: print('Reading in very low gravity (vlg) standards')
         stds = STDS_VLG_SPEX
         kys = copy.deepcopy(STDS_VLG_SPEX_KEYS)
-    elif kwargs.get('intg',False):
+    elif intg==True:
+        if verbose==True: print('Reading in intermediate low gravity (intg) standards')
         stds = STDS_INTG_SPEX
         kys = copy.deepcopy(STDS_INTG_SPEX_KEYS)
-    else:
+    elif dwarf==True:
+        if verbose==True: print('Reading in dwarf standards')
         stds = STDS_DWARF_SPEX
         kys = copy.deepcopy(STDS_DWARF_SPEX_KEYS)
-    if len(args)>0:
+    else:
+        print('WARNING: now spectral classes indicated to read in, returning empty dictionary')
+        return
+
+# read in spectral types as desired by comparing numerical 
+    if not isinstance(spt,type(None)) and (isinstance(spt,list) and len(spt)>0):
         newkys = {}
-        spt = copy.deepcopy(args[0])
-        if isinstance(spt,float) == True or isinstance(spt,int) == True: spt = typeToNum(spt)
-        if isinstance(spt,str) == True or isinstance(spt,list) == False: spt = [spt]
-        for t in spt:
-            if t in kys: newkys[t] = kys[t]
+        sptset = copy.deepcopy(spt)
+        if not isinstance(sptset,list): sptset = [sptset]
+        if isinstance(sptset[0],str): sptset = [typeToNum(x) for x in sptset]
+# single type
+        if len(sptset)==1:
+            for k in kys:
+                if typeToNum(k)==sptset[0]: newkys[k] = kys[k]
+# range min to max inclusive
+        elif len(sptset)==2:
+            for k in kys:
+                if sptset[0]<=typeToNum(k)<=sptset[1]: newkys[k] = kys[k]
+# individual types
+        else:
+            for t in sptset:
+                for k in keys:
+                    if typeToNum(k)==t: newkys[k] = kys[k]
         kys = copy.deepcopy(newkys)
+
+# now read in missing keys as needed
     for t in list(kys.keys()):
-        if t not in list(stds.keys()) or kwargs.get('reset',False):
+        if t not in list(stds.keys()) or reset==True:
             stds[t] = Spectrum(kys[t])
             stds[t].normalize()
-            stds[t].name += ' ({})'.format(t)
+            stds[t].name += ' ({} Std)'.format(t)
+            if verbose==True: print('\tReading in {}'.format(stds[t].name))
 
+    if output==True: return stds
     return
 
 
