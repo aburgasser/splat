@@ -4,7 +4,6 @@
 
 #internal imports
 import copy
-import os
 
 # external imports
 import pandas as pd
@@ -16,6 +15,7 @@ from specutils.spectra import Spectrum1D
 from specutils.fitting import fit_generic_continuum
 
 # splat imports
+from splat.initialize import *
 from splat.core import Spectrum, compareSpectra
 from splat.plot import plotSpectrum
 
@@ -88,7 +88,7 @@ def find_best_redshift(targ_sp, z_limits, steps, num_sims, template = 'Glikman_2
 
     #read in the template
     if template == 'Glikman_2006':
-        data_path = os.getcwd() + '/data'
+        data_path = SPLAT_PATH + '/resources/SpectralTemplates/GlikmanQuasars'
         temp_df = pd.read_csv(data_path + '/Glikman_2006.csv', names = ['wave', 'flux', 'noise'])
         temp_sp = Spectrum(wave = list(temp_df['wave']), flux = list(temp_df['flux']), noise = list(temp_df['noise']), name = 'template')
     
@@ -102,7 +102,6 @@ def find_best_redshift(targ_sp, z_limits, steps, num_sims, template = 'Glikman_2
             plot_stats(z_arr, corr_arr, chi_arr)
 
     #calculate the best redshift with error
-    print(z_list)
     z_mean = np.mean(z_list)
     z_std = np.std(z_list)
     print('The best redshift estimate is', z_mean, '+/-', z_std)
