@@ -200,13 +200,13 @@ def galacticDensityJuric(rc,zc,rho0 = 1./(u.pc**3),report='total',center='sun',u
 					 5.15618875e-04])	
 	'''	
 # constants
-	r0 = (8000.*u.pc).to(unit).value # radial offset from galactic center to Sun
-	z0 = (25.*u.pc).to(unit).value  # vertical offset from galactic plane to Sun
-	r1 = (2600.*u.pc).to(unit).value # radial length scale of exponential thin disk 
-	z1 = (300.*u.pc).to(unit).value # vertical length scale of exponential thin disk 
+	r0 = (8000.*u.pc).to(unit) # radial offset from galactic center to Sun
+	z0 = (25.*u.pc).to(unit)  # vertical offset from galactic plane to Sun
+	r1 = (2600.*u.pc).to(unit) # radial length scale of exponential thin disk 
+	z1 = (300.*u.pc).to(unit) # vertical length scale of exponential thin disk 
 	ftd = 0.12 # relative number of thick disk to thin disk star counts
-	r2 = (3600.*u.pc).to(unit).value # radial length scale of exponential thick disk 
-	z2 = (900.*u.pc).to(unit).value # vertical length scale of exponential thick disk 
+	r2 = (3600.*u.pc).to(unit) # radial length scale of exponential thick disk 
+	z2 = (900.*u.pc).to(unit) # vertical length scale of exponential thick disk 
 	fh = 0.0051 # relative number of halo to thin disk star counts
 	qh = 0.64 # halo axial ratio
 	nh = 2.77 # halo power law index

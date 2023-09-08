@@ -49,7 +49,7 @@ def filterProfile(filt,**kwargs):
 
     :param filter: String giving the name of one of the predefined filters listed in splat.FILTERS.keys() (required)
     
-    :param filterFolder: folder containing the filter transmission files (optional, default = splat.FILTER_FOLDER)
+    :param filterfolder: folder containing the filter transmission files (optional, default = splat.FILTER_FOLDER)
 
     :Example:
     >>> import splat
@@ -60,9 +60,9 @@ def filterProfile(filt,**kwargs):
         (14.345894376898123, 0.027596454828421831)
     '''
 # keyword parameters
-    filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
-    if not os.path.exists(filterFolder):
-        filterFolder = SPLAT_URL+FILTER_FOLDER
+    filterfolder = kwargs.get('filterfolder',SPLAT_PATH+FILTER_FOLDER)
+    if not os.path.exists(filterfolder):
+        filterfolder = SPLAT_URL+FILTER_FOLDER
 
 # check that requested filter is in list
     f0 = checkFilterName(filt, verbose=True)
@@ -70,17 +70,17 @@ def filterProfile(filt,**kwargs):
     filt = f0
 
 # read in filter
-    fwave,ftrans = numpy.genfromtxt(os.path.normpath(filterFolder+FILTERS[filt]['file']), comments='#', unpack=True, missing_values = ('NaN','nan'), filling_values = (numpy.nan))
+    fwave,ftrans = numpy.genfromtxt(os.path.normpath(filterfolder+FILTERS[filt]['file']), comments='#', unpack=True, missing_values = ('NaN','nan'), filling_values = (numpy.nan))
 #    print(type(fwave),type(ftrans),isinstance(fwave,numpy.ndarray),isinstance(ftrans,numpy.ndarray),not isinstance(fwave,numpy.ndarray) or not isinstance(ftrans,numpy.ndarray))
     if not isinstance(fwave,numpy.ndarray) or not isinstance(ftrans,numpy.ndarray):
-        raise ValueError('\nProblem reading in {}'.format(filterFolder+FILTERS[filt]['file']))
+        raise ValueError('\nProblem reading in {}'.format(filterfolder+FILTERS[filt]['file']))
     fwave = fwave[~numpy.isnan(ftrans)]*u.micron
     ftrans = ftrans[~numpy.isnan(ftrans)]
     return fwave,ftrans
 
 
 
-def filterMag(sp,filt,*args,**kwargs):
+def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,rsr=False,vegafile=VEGAFILE,filterfolder=SPLAT_PATH+FILTER_FOLDER,info=False,verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -99,12 +99,12 @@ def filterMag(sp,filt,*args,**kwargs):
     
         **custom** = None: A 2 x N vector array specifying the wavelengths and transmissions for a custom filter
         **notch** = None: A 2 element array that specifies the lower and upper wavelengths for a notch filter (100% transmission within, 0% transmission without)
-        **vega** = True: compute Vega magnitudes (may be set by filter)
-        **ab** = False: compute AB magnitudes (may be set by filter)
+        **vega** = False: compute Vega magnitudes
+        **ab** = False: compute AB magnitudes
         **energy** = False: compute energy flux
         **photon** = False: compute photon flux
-        **filterFolder** = splat.FILTER_FOLDER: folder containing the filter transmission files
-        **vegaFile** = 'vega_kurucz.txt': name of file containing Vega flux file, must be within ``filterFolder``
+        **filterfolder** = splat.FILTER_FOLDER: folder containing the filter transmission files
+        **vegafile** = 'vega_kurucz.txt': name of file containing Vega flux file, must be within ``filterfolder``
         **nsamples** = 100: number of samples to use in Monte Carlo error estimation
         **info** = False: List the predefined filter names available
         **verbose** = True: List the predefined filter names available
@@ -118,66 +118,41 @@ def filterMag(sp,filt,*args,**kwargs):
         (14.345894376898123, 0.027596454828421831)
     '''
 # keyword parameters
-    filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
-    if not os.path.exists(filterFolder):
-        filterFolder = SPLAT_URL+FILTER_FOLDER
-    vegaFile = kwargs.get('vegaFile',VEGAFILE)
-    info = kwargs.get('info',False)
-    custom = kwargs.get('custom',False)
-    notch = kwargs.get('notch',False)
-    vega = kwargs.get('vega',True)
-    ab = kwargs.get('ab',not vega)
-    rsr = kwargs.get('rsr',False)
-    nsamples = kwargs.get('nsamples',100)
-    verbose = kwargs.get('verbose',False)
-
+    # filterfolder = kwargs.get('filterfolder',SPLAT_PATH+FILTER_FOLDER)
+    # if not os.path.exists(filterfolder):
+    #     filterfolder = SPLAT_URL+FILTER_FOLDER
+    # vegafile = kwargs.get('vegafile',VEGAFILE)
+    # info = kwargs.get('info',False)
+    # custom = kwargs.get('custom',False)
+    # notch = kwargs.get('notch',False)
+    # rsr = kwargs.get('rsr',False)
+    if kwargs.get('vega',False) == True: computevalue = 'vega'
+    if kwargs.get('ab',False) == True: computevalue = 'ab'
+    if kwargs.get('photon',False) == True: computevalue = 'photons'
+    if kwargs.get('photons',False) == True: computevalue = 'photons'
+    if kwargs.get('energy',False) == True: computevalue = 'energy'
+    if kwargs.get('flux',False) == True: computevalue = 'energy'
 
 # check that requested filter is in list
     if isinstance(custom,bool) and isinstance(notch,bool):
         f0 = checkFilterName(filt,verbose=True)
         if f0 == False: 
+            if verbose==True: print('\nWarning: SPLAT does not have filter {}; print splat.FILTERS.keys() to get list of current filters '.format(filt))
             return numpy.nan, numpy.nan
-        filt = f0
-        
-# reset filter calculation methods based on filter design
-        if 'ab' in FILTERS[filt]['method']: 
-            ab = kwargs.get('ab',True)
-            vega = not ab
-        if 'vega' in FILTERS[filt]['method']: 
-            vega = kwargs.get('vega',True)
-            ab = not vega
-        rsr = FILTERS[filt]['rsr']
-
-# other possibilities
-    photons = kwargs.get('photons',False)
-    photons = kwargs.get('photon',photons)
-    energy = kwargs.get('energy',False)
-    energy = kwargs.get('flux',energy)
-    if (photons or energy):
-        vega = False
-        ab = False
-    if photons: energy = False
-    if energy: photons = False
-
-
-# Read in filter
-    if isinstance(custom,bool) and isinstance(notch,bool):
-        fwave,ftrans = filterProfile(filt,**kwargs)
+        fwave,ftrans = filterProfile(f0,**kwargs)
 # notch filter
     elif isinstance(custom,bool) and isinstance(notch,list):
-        dn = (notch[1]-notch[0])/1000
-        fwave = numpy.arange(notch[0]-5.*dn,notch[1]+5.*dn,dn)
+        dn = (notch[-1]-notch[0])/1000
+        fwave = numpy.arange(notch[0]-5.*dn,notch[-1]+5.*dn,dn)
         ftrans = numpy.zeros(len(fwave))
-        ftrans[numpy.where(numpy.logical_and(fwave >= notch[0],fwave <= notch[1]))] = 1.
+        ftrans[numpy.where(numpy.logical_and(fwave >= notch[0],fwave <= notch[-1]))] = 1.
 # custom filter
     else:
         fwave,ftrans = custom[0],custom[1]
-
 # units
-    if isinstance(fwave,u.quantity.Quantity) == True:
-        fwave = fwave.to(u.micron)
-    else:
-        fwave = fwave*u.micron
+    if isinstance(fwave,u.quantity.Quantity) == True: fwave = fwave.to(u.micron)
+    else: fwave = fwave*u.micron
+
 
 # check that spectrum and filter cover the same wavelength ranges
     if numpy.nanmax(fwave) < numpy.nanmin(sp.wave) or numpy.nanmin(fwave) > numpy.nanmax(sp.wave):
@@ -199,28 +174,29 @@ def filterMag(sp,filt,*args,**kwargs):
         n = interp1d(sp.wave.value,sp.flux.value*1.e-9,bounds_error=False,fill_value=0.)
 
     result = []
-    if (vega):
+    if computevalue== 'vega':
 # Read in Vega spectrum
-        vwave,vflux = numpy.genfromtxt(os.path.normpath(filterFolder+vegaFile), comments='#', unpack=True, \
+        vwave,vflux = numpy.genfromtxt(os.path.normpath(filterfolder+vegafile), comments='#', unpack=True, \
             missing_values = ('NaN','nan'), filling_values = (numpy.nan))
         vwave = vwave[~numpy.isnan(vflux)]*u.micron
+        vwave.to(sp.wave.unit)
         vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))
         vflux.to(sp.flux_unit,equivalencies=u.spectral_density(vwave))
 # interpolate Vega onto filter wavelength function
         v = interp1d(vwave.value,vflux.value,bounds_error=False,fill_value=0.)
-        if rsr:
+        if rsr == True:
             val = -2.5*numpy.log10(trapz(ftrans*fwave.value*d(fwave.value),fwave.value)/trapz(ftrans*fwave.value*v(fwave.value),fwave.value))
         else:
             val = -2.5*numpy.log10(trapz(ftrans*d(fwave.value),fwave.value)/trapz(ftrans*v(fwave.value),fwave.value))
         for i in numpy.arange(nsamples):
 #            result.append(-2.5*numpy.log10(trapz(ftrans*numpy.random.normal(d(fwave),n(fwave))*sp.flux_unit,fwave)/trapz(ftrans*v(fwave)*sp.flux_unit,fwave)))
-            if rsr:
+            if rsr == True:
                 result.append(-2.5*numpy.log10(trapz(ftrans*fwave.value*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)/trapz(ftrans*fwave.value*v(fwave.value),fwave.value)))
             else:
                 result.append(-2.5*numpy.log10(trapz(ftrans*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)/trapz(ftrans*v(fwave.value),fwave.value)))
         outunit = 1.
 
-    elif (ab):
+    elif computevalue== 'ab':
         nu = sp.wave.to('Hz',equivalencies=u.spectral())
         fnu = sp.flux.to('Jy',equivalencies=u.spectral_density(sp.wave))
         noisenu = sp.noise.to('Jy',equivalencies=u.spectral_density(sp.wave))
@@ -235,7 +211,7 @@ def filterMag(sp,filt,*args,**kwargs):
             result.append(-2.5*numpy.log10(a/b))
         outunit = 1.
 
-    elif (energy):
+    elif computevalue== 'energy':
         outunit = u.erg/u.s/u.cm**2
         if rsr:
             a = trapz(ftrans*fwave.value*d(fwave.value),fwave.value)*sp.wave.unit*sp.flux.unit
@@ -253,7 +229,7 @@ def filterMag(sp,filt,*args,**kwargs):
             else:
                 result.append((trapz(ftrans*(d(fwave.value)+numpy.random.normal(0,1.)*n(fwave.value)),fwave.value)*sp.wave.unit*sp.flux.unit).to(outunit).value)
 
-    elif (photons):
+    elif computevalue== 'photons':
         outunit = 1./u.s/u.cm**2
         convert = const.h.to('erg s')*const.c.to('micron/s')
         val = (trapz(ftrans*fwave.value*convert.value*d(fwave.value),fwave.value)*sp.wave.unit*sp.flux.unit*convert.unit).to(outunit).value
@@ -265,8 +241,7 @@ def filterMag(sp,filt,*args,**kwargs):
 
 #    val = numpy.nanmean(result)*outunit
     err = numpy.nanstd(result)
-    if len(sp.wave[wgood]) == 0:
-        err = 0.
+    if len(sp.wave[wgood]) == 0: err = 0.
     return val*outunit,err*outunit
 
 
@@ -397,9 +372,9 @@ def filterProperties(filt,**kwargs):
       FOURSTAR H SHORT: FOURSTAR H short
       ...
     '''
-    filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
-    if not os.path.exists(filterFolder):
-        filterFolder = SPLAT_URL+FILTER_FOLDER
+    filterfolder = kwargs.get('filterfolder',SPLAT_PATH+FILTER_FOLDER)
+    if not os.path.exists(filterfolder):
+        filterfolder = SPLAT_URL+FILTER_FOLDER
 
 # check that requested filter is in list
     filt = checkFilterName(filt)
@@ -456,10 +431,10 @@ def magToFlux(mag,filt,**kwargs):
     '''
 
 # keyword parameters
-    filterFolder = kwargs.get('filterFolder',SPLAT_PATH+FILTER_FOLDER)
-    if not os.path.exists(filterFolder):
-        filterFolder = SPLAT_URL+FILTER_FOLDER
-    vegaFile = kwargs.get('vegaFile','vega_kurucz.txt')
+    filterfolder = kwargs.get('filterfolder',SPLAT_PATH+FILTER_FOLDER)
+    if not os.path.exists(filterfolder):
+        filterfolder = SPLAT_URL+FILTER_FOLDER
+    vegafile = kwargs.get('vegafile','vega_kurucz.txt')
     vega = kwargs.get('vega',True)
     ab = kwargs.get('ab',not vega)
     rsr = kwargs.get('rsr',False)
@@ -513,7 +488,7 @@ def magToFlux(mag,filt,**kwargs):
         
         if vega == True:
     # Read in Vega spectrum
-            vwave,vflux = numpy.genfromtxt(os.path.normpath(filterFolder+vegaFile), comments='#', unpack=True, \
+            vwave,vflux = numpy.genfromtxt(os.path.normpath(filterfolder+vegafile), comments='#', unpack=True, \
                 missing_values = ('NaN','nan'), filling_values = (numpy.nan))
             vwave = vwave[~numpy.isnan(vflux)]*u.micron
             vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))
