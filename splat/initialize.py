@@ -333,8 +333,8 @@ FILTERS = { \
     'LSST_I': {'file': 'LSST_i.txt', 'description': 'LSST i', 'zeropoint': 2576.07, 'method': 'vega', 'rsr': True, 'altname': []}, \
     'LSST_Z': {'file': 'LSST_z.txt', 'description': 'LSST z', 'zeropoint': 2261.40, 'method': 'vega', 'rsr': True, 'altname': []}, \
     'LSST_Y': {'file': 'LSST_y.txt', 'description': 'LSST y', 'zeropoint': 2165.23, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F0560W': {'file': 'JWST-MIRI_F0560W.txt', 'description': 'JWST MIRI F0560W', 'zeropoint': 115.29, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F0770W': {'file': 'JWST-MIRI_F0770W.txt', 'description': 'JWST MIRI F0770W', 'zeropoint': 65.08, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F0560W': {'file': 'JWST-MIRI_F560W.txt', 'description': 'JWST MIRI F0560W', 'zeropoint': 115.29, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F0770W': {'file': 'JWST-MIRI_F770W.txt', 'description': 'JWST MIRI F0770W', 'zeropoint': 65.08, 'method': 'vega', 'rsr': True, 'altname': []}, \
     'MIRI_F1000W': {'file': 'JWST-MIRI_F1000W.txt', 'description': 'JWST MIRI F1000W', 'zeropoint': 38.51, 'method': 'vega', 'rsr': True, 'altname': []}, \
     'MIRI_F1065C': {'file': 'JWST-MIRI_F1065C.txt', 'description': 'JWST MIRI F1065C', 'zeropoint': 33.89, 'method': 'vega', 'rsr': True, 'altname': []}, \
     'MIRI_F1130W': {'file': 'JWST-MIRI_F1130W.txt', 'description': 'JWST MIRI F1130W', 'zeropoint': 29.63, 'method': 'vega', 'rsr': True, 'altname': []}, \
@@ -675,7 +675,7 @@ SPECTRAL_MODELS = {\
     'gerasimov23': {'instruments': {}, 'name': 'Gerasimov 2023', 'citation': 'Gerasimov et al. (2023)', 'bibcode': '', 'altname': ['gerasimov','ger23'], 'default': {'teff': 1500., 'logg': 5.0, 'z': -0.5, 'enrich': 0.30}}, \
     'lowz': {'instruments': {}, 'name': 'LowZ models', 'citation': 'Meisner et al. (2021)', 'bibcode': '2021ApJ...915..120M', 'altname': ['meisner2021','mei21','line21','line2021'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': '2.0', 'co': 0.85}}, \
 #    'btcond': {'instruments': {}, 'name': 'BT Cond', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['dusty-cond','bt-cond'], 'rawfolder': '/Volumes/splat/models/btcond/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0, 'enrich': 0.0}}, \
-#    'btdusty': {'instruments': {}, 'name': 'BT Dusty', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['dusty-bt','bt-dusty'], 'rawfolder': '/Volumes/splat/models/btdusty/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0}}, \
+#    'btdusty16': {'instruments': {}, 'name': 'BT Dusty 2016', 'citation': 'TBD', 'bibcode': '', 'altname': ['dusty-bt','bt-dusty','bt-dusty2016'], 'rawfolder': '/Volumes/splat/models/btdusty/ORIGINAL/', 'default': {'teff': 2000., 'logg': 5.0, 'z': -2.0, 'enrich': 0.6}}, \
 }
 
 
