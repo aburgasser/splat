@@ -918,7 +918,7 @@ class Spectrum(object):
         self.variance = (ns**2)*self.noise.unit*self.noise.unit
         return
 
-    def computeSN(self):
+    def computeSN(self,rng=[],statistic='median',offset=0.1):
         '''
         :Purpose: Compute a representative S/N value as the median value of S/N among the top 50% of flux values
         
@@ -930,8 +930,22 @@ class Spectrum(object):
            >>> sp.computeSN()
            115.96374031163553
         '''
-        w = numpy.where(self.flux.value > numpy.median(self.flux.value))
-        return numpy.nanmedian(self.flux.value[w]/self.noise.value[w])
+        if isinstance(rng,int)==True or isinstance(rng,float)==True: rng = [rng]
+        if len(rng)==0:
+            w = numpy.where(self.flux.value > numpy.median(self.flux.value))
+        if len(rng) == 1:
+            rng = [rng[0]-offset,rng[0]+offset]
+        if len(rng) >= 2:
+            if isUnit(rng[0]): rng = [x.to(u.self.wave.unit).value for x in rng]
+            w = numpy.where(numpy.logical_and(self.wave.value >=numpy.nanmin(rng),self.wave.value <= numpy.nanmax(rng)))
+        if 'mean' in statistic: 
+            return numpy.nanmean(self.flux.value[w]/self.noise.value[w])
+        elif 'max' in statistic: 
+            return numpy.nanmax(self.flux.value[w]/self.noise.value[w])
+        elif 'min' in statistic: 
+            return numpy.nanmin(self.flux.value[w]/self.noise.value[w])
+        else:
+            return numpy.nanmedian(self.flux.value[w]/self.noise.value[w])
 
     def addNoise(self,snr=0.):
         '''

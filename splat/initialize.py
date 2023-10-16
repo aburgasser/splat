@@ -349,8 +349,8 @@ FILTERS = { \
     'MKO_J_ATM': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'MKO_H_ATM': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'MKO_K_ATM': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
-# this needs to be added!
-#    'MKO_Y': {'file': 'mko_j.txt', 'description': 'MKO Y-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': ['Y']}, \
+# using WFCAM Y for MKO Y
+    'MKO_Y': {'file': 'wfcam-y.txt', 'description': 'MKO Y-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': ['Y']}, \
     'MKO_J': {'file': 'mko_j.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'MKO_H': {'file': 'mko_h.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
     'MKO_K': {'file': 'mko_ks.txt', 'description': 'MKO K-band', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
@@ -394,7 +394,7 @@ FILTERS = { \
     'NIRCAM_F182M': {'file': 'JWST-NIRCAM_F182M.txt', 'description': 'JWST NIRCAM F182M (medium 1.82 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
     'NIRCAM_F187N': {'file': 'JWST-NIRCAM_F187N.txt', 'description': 'JWST NIRCAM F187N (narrow 1.87 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
     'NIRCAM_F200W': {'file': 'JWST-NIRCAM_F200W.txt', 'description': 'JWST NIRCAM F200W (wide 2.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F210W': {'file': 'JWST-NIRCAM_F210M.txt', 'description': 'JWST NIRCAM F210M (medium 2.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F210M': {'file': 'JWST-NIRCAM_F210M.txt', 'description': 'JWST NIRCAM F210M (medium 2.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
     'NIRCAM_F212N': {'file': 'JWST-NIRCAM_F212N.txt', 'description': 'JWST NIRCAM F212N (narrow 2.12 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
     'NIRCAM_F250M': {'file': 'JWST-NIRCAM_F250M.txt', 'description': 'JWST NIRCAM F250M (medium 2.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
     'NIRCAM_F277W': {'file': 'JWST-NIRCAM_F277W.txt', 'description': 'JWST NIRCAM F277W (wide 2.77 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \

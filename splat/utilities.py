@@ -1268,7 +1268,7 @@ def designationToCoordinateString(designation,delimiter=' ',radec_delimiter=' ')
     >>> splat.designationToCoordinateString('J155526400+095412000',delimiter=':')
     15 55 26.400 +09 54 12.000
     '''
-    if not isinstance(designation,string): raise ValueError('Input variable must be a string')
+    if not isinstance(designation,str): raise ValueError('Input variable must be a string')
 
     d = designation.replace('J','').replace('j','').replace('.','')
     dsym = '+'
