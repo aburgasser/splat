@@ -1,179 +1,88 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="English" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>SPLAT: The SpeX Prism Library Analysis Toolkit &mdash; SPLAT 2021.08.02 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-
-  
-  
+  <title>SPLAT: The SpeX Prism Library Analysis Toolkit &mdash; SpeX Prism Library Analysis Toolkit 2023.11.25 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/logo.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+        <script src="_static/documentation_options.js?v=6ff9b23f"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation and Dependencies" href="installation.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="#" class="icon icon-home"> SPLAT
           
-
-          
-            
-            <img src="_static/logo.jpg" class="logo" alt="Logo"/>
-          
+          <a href="#" class="icon icon-home">
+            SpeX Prism Library Analysis Toolkit
+              <img src="_static/logo.jpg" class="logo" alt="Logo"/>
           </a>
-
-          
-            
-            
               <div class="version">
-                2021.08.02
+                2023.11.25
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_empirical.html">Empirical Relations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_photometry.html">Photometry package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="splat_simulate.html">Population Simulation Routines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">SPLAT</a>
-        
+          <a href="#">SpeX Prism Library Analysis Toolkit</a>
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>SPLAT: The SpeX Prism Library Analysis Toolkit</li>
-    
-    
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">SPLAT: The SpeX Prism Library Analysis Toolkit</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="splat-the-spex-prism-library-analysis-toolkit">
-<h1>SPLAT: The SpeX Prism Library Analysis Toolkit<a class="headerlink" href="#splat-the-spex-prism-library-analysis-toolkit" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="splat-the-spex-prism-library-analysis-toolkit">
+<h1>SPLAT: The SpeX Prism Library Analysis Toolkit<a class="headerlink" href="#splat-the-spex-prism-library-analysis-toolkit" title="Link to this heading">¶</a></h1>
 <p>SPLAT is a python-based spectral access and analysis package designed to interface
 with the <a class="reference external" href="http://www.browndwarfs.org/spexprism">SpeX Prism Library</a> (<a class="reference external" href="http://www.browndwarfs.org/spexprism">SPL</a>), an online repository of over
 3,000 low-resolution, near-infrared spectra, primarily
@@ -200,14 +109,14 @@ It is built on common python packages such as <a class="reference external" href
 Help us improve the code by reporting bugs (and solutions!) to our github site,
 <a class="reference external" href="https://github.com/aburgasser/splat">https://github.com/aburgasser/splat</a>.</p>
 </div>
-<div class="section" id="installation-and-dependencies">
-<h2>Installation and Dependencies<a class="headerlink" href="#installation-and-dependencies" title="Permalink to this headline">¶</a></h2>
+<section id="installation-and-dependencies">
+<h2>Installation and Dependencies<a class="headerlink" href="#installation-and-dependencies" title="Link to this heading">¶</a></h2>
 <p>SPLAT should be cloned from the github site <a class="reference external" href="https://github.com/aburgasser/splat">https://github.com/aburgasser/splat</a>. which is updated on a regular basis.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>At this time please do not install splat using <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a>, as this is an outdated version of SPLAT that is no longer supported.</p>
 </div>
-<p>Once you’ve downloaded the code and data, you will need to add the SPLAT top-level directory to the environment variables <code class="docutils literal notranslate"><span class="pre">SPLAT_PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> (and optionally to your system <code class="docutils literal notranslate"><span class="pre">PATH</span></code>).  More detailed instructions are on the <a class="reference external" href="installation.html">installation</a> page.</p>
+<p>Once you've downloaded the code and data, you will need to add the SPLAT top-level directory to the environment variables <code class="docutils literal notranslate"><span class="pre">SPLAT_PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> (and optionally to your system <code class="docutils literal notranslate"><span class="pre">PATH</span></code>).  More detailed instructions are on the <a class="reference external" href="installation.html">installation</a> page.</p>
 <dl class="simple">
 <dt>SPLAT has core dependencies on the following packages:</dt><dd><ul class="simple">
 <li><p><a class="reference external" href="http://www.astropy.org/">astropy</a></p></li>
@@ -224,31 +133,31 @@ Help us improve the code by reporting bugs (and solutions!) to our github site,
 </ul>
 </dd>
 </dl>
-</div>
-<div class="section" id="using-splat">
-<h2>Using SPLAT<a class="headerlink" href="#using-splat" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="using-splat">
+<h2>Using SPLAT<a class="headerlink" href="#using-splat" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>SPLAT is organized into a series of modules based on core functionalities:</dt><dd><ul class="simple">
 <li><p><a class="reference external" href="splat.html">splat.core</a>: core functionalities, including index measurement, database access and classification</p></li>
 <li><p><a class="reference external" href="splat_citations.html">splat.citations</a>: biblographic/bibtex routines</p></li>
-<li><p><a class="reference external" href="splat_database.html">splat.database</a>: access the spectral and source databases, as well as online resources through astroquery</p></li>
+<li><p>splat.database: access the spectral and source databases, as well as online resources through astroquery</p></li>
 <li><p><a class="reference external" href="splat_empirical.html">splat.empirical</a>: empirical conversion relations</p></li>
 <li><p><a class="reference external" href="splat_evolve.html">splat.evolve</a>: access to evolutionary models</p></li>
 <li><p><a class="reference external" href="splat_model.html">splat.model</a>: access to spectral models and model-fitting routines</p></li>
 <li><p><a class="reference external" href="splat_photometry.html">splat.photometry</a>: spectrophotometry routines and filter access</p></li>
 <li><p><a class="reference external" href="splat_plot.html">splat.plot</a>: plotting and visualization routines</p></li>
 <li><p><a class="reference external" href="splat_simulate.html">splat.simulate</a>: population simulation routines</p></li>
-<li><p><a class="reference external" href="splat_utilities.html">splat.utilities</a>: additional routines for general analysis</p></li>
-<li><p><a class="reference external" href="splat_web.html">splat.web</a>: SPLAT’s web interface (in development)</p></li>
+<li><p>splat.utilities: additional routines for general analysis</p></li>
+<li><p>splat.web: SPLAT's web interface (in development)</p></li>
 </ul>
 </dd>
 </dl>
-<p>SPLAT has been tested on both Python 2.7 and 3.0-3.7, and is best used in
+<p>SPLAT has been tested on both Python 2.7 and 3.0-3.11, and is best used in
 <cite>ipython</cite> or <cite>jupyter notebook</cite>.
 All of the necessary data is
-included in the github package, so you don’t need to be online to run most programs.</p>
-<div class="section" id="some-examples">
-<h3>Some Examples<a class="headerlink" href="#some-examples" title="Permalink to this headline">¶</a></h3>
+included in the github package, so you don't need to be online to run most programs.</p>
+<section id="some-examples">
+<h3>Some Examples<a class="headerlink" href="#some-examples" title="Link to this heading">¶</a></h3>
 <p>The best way to read in a spectrum is to use <a class="reference external" href="api.html#splat.getSpectrum">getSpectrum()</a>, which takes a number of search keywords and returns a list of <a class="reference external" href="splat.html?highlight=spectrum#the-splat-spectrum-object">Spectrum</a> objects:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">splist</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)</span>
@@ -298,12 +207,12 @@ should ideally conform to the following data format standard:</p>
 </ul>
 </div></blockquote>
 <p>There are a few built-in readers for specific data formats.</p>
-<p>To flux calibrate a spectrum, use the <a class="reference external" href="splat.html?highlight=spectrum#the-splat-spectrum-object">Spectrum</a> object’s built in <a class="reference external" href="api.html#splat.Spectrum.fluxCalibrate">fluxCalibrate()</a> method:</p>
+<p>To flux calibrate a spectrum, use the <a class="reference external" href="splat.html?highlight=spectrum#the-splat-spectrum-object">Spectrum</a> object's built in <a class="reference external" href="api.html#splat.Spectrum.fluxCalibrate">fluxCalibrate()</a> method:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;0415-0935&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="mf">14.0</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>To display the spectrum, use the Spectrum object’s <a class="reference external" href="api.html#splat.Spectrum.plot">plot()</a> function</p>
+<p>To display the spectrum, use the Spectrum object's <a class="reference external" href="api.html#splat.Spectrum.plot">plot()</a> function</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -326,7 +235,7 @@ should ideally conform to the following data format standard:</p>
 indicate telluric absorption regions, make multi-panel and multi-page plots
 of lists of spectra, plot batches of spectra, etc. Be sure to look through the <a class="reference external" href="splat_plot.html">splat.plot</a>
 subpackage for more details.</p>
-<p>SPLAT’s primary purpose is to allow the analysis of ultracool dwarf spectra.</p>
+<p>SPLAT's primary purpose is to allow the analysis of ultracool dwarf spectra.</p>
 <ul class="simple">
 <li><p>To measure spectral indices, use <a class="reference external" href="api.html#splat.measureIndex">measureIndex()</a> or <a class="reference external" href="api.html#splat.measureIndexSet">measureIndexSet()</a>:</p></li>
 </ul>
@@ -386,11 +295,11 @@ of the index:</p>
 </div>
 <p>The outputs of all of these fitting functions is a dictionary or list of dictionaries containing the parameters of the best-fitting models; there are also several diagnostic plots produced depending on the routine. View the model fitting page for more details.</p>
 <p>All of these routines have many options worth exploring, and which are (increasingly) documented on this website. If there are capabilities
-you need, please suggest them to <a class="reference external" href="mailto:aburgasser&#37;&#52;&#48;ucsd&#46;edu">aburgasser<span>&#64;</span>ucsd<span>&#46;</span>edu</a>, or note it in the “Issues” link on our <a class="reference external" href="https://github.com/aburgasser/splat">github site</a>.</p>
-</div>
-</div>
-<div class="section" id="citing-splat-and-its-data">
-<h2>Citing SPLAT and its data<a class="headerlink" href="#citing-splat-and-its-data" title="Permalink to this headline">¶</a></h2>
+you need, please suggest them to <a class="reference external" href="mailto:aburgasser&#37;&#52;&#48;ucsd&#46;edu">aburgasser<span>&#64;</span>ucsd<span>&#46;</span>edu</a>, or note it in the &quot;Issues&quot; link on our <a class="reference external" href="https://github.com/aburgasser/splat">github site</a>.</p>
+</section>
+</section>
+<section id="citing-splat-and-its-data">
+<h2>Citing SPLAT and its data<a class="headerlink" href="#citing-splat-and-its-data" title="Link to this heading">¶</a></h2>
 <p>If you use SPLAT tools for your research, please cite Burgasser et al. (2017, ASInC 14, 7) [<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2017ASInC..14....7B/abstract">NASA ADS</a>].</p>
 <p>In addition, if you use data contained in SPLAT or the SpeX Prism Library, please be sure to cite the original spectral data source, which can be accessed from the Spectrum object:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -403,17 +312,21 @@ you need, please suggest them to <a class="reference external" href="mailto:abur
 <span class="go">&#39;Schneider, A. C. et al. (2016, Astrophysical Journal, 817, 112)&#39;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="acknowledgements">
-<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="acknowledgements">
+<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Link to this heading">¶</a></h2>
 <p>SPLAT is an collaborative project of research students in the <a class="reference external" href="http://www.coolstarlab.org">UCSD Cool Star Lab</a>, aimed at developing research through the building of spectral analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Joshua Hazlett, Carolina Herrara Hernandez, Elizabeth Moreno Hilario, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Dorsa Majidi, Diego Octavio Talavera Maya, Alex Mendez, Gretel Mercado, Niana Mohammed, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen, and Russell van Linge.</p>
 <p>This project has been supported by the National Aeronautics and Space Administration under Grant No. NNX15AI75G.</p>
-</div>
-<div class="section" id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Dependencies</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#for-mac-unix">For MAC/UNIX:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#for-windows">For Windows:</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#accessing-spectra">Accessing Spectra</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#manipulating-spectral-data">Manipulating Spectral Data</a></li>
@@ -458,6 +371,10 @@ you need, please suggest them to <a class="reference external" href="mailto:abur
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="splat_plot.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="splat_photometry.html">Photometry package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="splat_photometry.html#useful-program-constants">Useful Program Constants</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a><ul>
@@ -512,54 +429,37 @@ you need, please suggest them to <a class="reference external" href="mailto:abur
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="installation.html" class="btn btn-neutral float-right" title="Installation and Dependencies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2016-2021, Adam Burgasser.
-
-    </p>
+    <p>&#169; Copyright 2016-2021, Adam Burgasser.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

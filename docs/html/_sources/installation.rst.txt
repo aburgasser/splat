@@ -8,13 +8,24 @@ which is updated on a regular basis. The command is:
 
 Note that ``pip`` installation IS NOT CURRENTLY WORKING, so best to install from github.
 
-There is one additional step to complete to get full functionality: Set up your environment variables to find the SPLAT code; this can be done in three ways (in the order for which the code looks for this directory):
+In addition, you will need to set up your environment variables to find the SPLAT code
 
-	- Best: create an environment variable called SPLAT_PATH and set it to the root directory of the SPLAT code (in bsh environment, add the line ``export SPLAT_PATH=/Users/adam/projects/splat`` to your .bashrc or .bash_profile)
+For MAC/UNIX:
+-------------
+	- Best: create an environment variable called SPLAT_PATH and set it to the root directory of the SPLAT code; in bash environment, add the line ``export SPLAT_PATH=[path to splat]`` to your .bashrc or .bash_profile, where [path to splat] is the full path to your SPLAT python code (e.g., /Users/adam/python_codes/splat/). If you have a newwer Mac OS, which uses the zsh environment, add the same line to your .zshrc or .zsh_profile
 
-	- If you use the PYTHONPATH environment variable, add the root directory of the SPLAT code to it (in bsh environment add the line ``export PYTHONPATH=/Users/adam/projects/splat:${PYTHONPATH}`` to your .bashrc or .bash_profile)
+	- If you use the PYTHONPATH environment variable, add the root directory of the SPLAT code to it by adding the line ``export PYTHONPATH=[path to splat]:${PYTHONPATH}`` to your .bashrc / .bash_profile or .zshrc / .zsh_profile files
 
-	- add the root directory of the SPLAT code to your system PATH variable (in bsh environment add the line ``export PATH=/Users/adam/projects/splat:${PATH}`` to your .bashrc or .bash_profile)
+	- add the root directory of the SPLAT code to your system PATH variable by adding the line ``export PATH=[path to splat]:${PATH}`` to your .bashrc / .bash_profile or .zshrc / .zsh_profile files
+
+For Windows:
+------------
+	- SPLAT has been found to work fine in the Anaconda environment, and you can set environmental variables by entering the following lines on your Anaconda terminal:
+
+		* conda env config vars set SPLAT_PATH=[path to splat]
+		* conda env config vars set PYTHONPATH=[path to splat]
+
+	where again [path to splat] is the full path to your SPLAT python code (e.g., /Users/adam/python_codes/splat/).
 
 
 The SPLAT code uses the following external packages that are contained in the `Ananconda <https://docs.continuum.io/>`_ installation:

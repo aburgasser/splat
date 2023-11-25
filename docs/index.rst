@@ -75,17 +75,17 @@ Using SPLAT
 SPLAT is organized into a series of modules based on core functionalities:
   * `splat.core <splat.html>`_: core functionalities, including index measurement, database access and classification
   * `splat.citations <splat_citations.html>`_: biblographic/bibtex routines
-  * `splat.database <splat_database.html>`_: access the spectral and source databases, as well as online resources through astroquery
+  * splat.database: access the spectral and source databases, as well as online resources through astroquery
   * `splat.empirical <splat_empirical.html>`_: empirical conversion relations
   * `splat.evolve <splat_evolve.html>`_: access to evolutionary models
   * `splat.model <splat_model.html>`_: access to spectral models and model-fitting routines
   * `splat.photometry <splat_photometry.html>`_: spectrophotometry routines and filter access
   * `splat.plot <splat_plot.html>`_: plotting and visualization routines
   * `splat.simulate <splat_simulate.html>`_: population simulation routines
-  * `splat.utilities <splat_utilities.html>`_: additional routines for general analysis
-  * `splat.web <splat_web.html>`_: SPLAT's web interface (in development)
+  * splat.utilities: additional routines for general analysis
+  * splat.web: SPLAT's web interface (in development)
 
-SPLAT has been tested on both Python 2.7 and 3.0-3.7, and is best used in 
+SPLAT has been tested on both Python 2.7 and 3.0-3.11, and is best used in 
 `ipython` or `jupyter notebook`.
 All of the necessary data is
 included in the github package, so you don't need to be online to run most programs.
@@ -258,6 +258,7 @@ Contents
     splat
     splat_empirical
     splat_plot
+    splat_photometry
     splat_model
     splat_evolve
     splat_simulate

@@ -5626,11 +5626,12 @@ def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
 # instrument specific read shortcut - not working?
     readin = False
     inst = checkInstrument(instrument)
-    if inst != False and use_instrument_reader==True: 
-        instrument = inst
-        if INSTRUMENTS[instrument]['reader'] != '': 
-            output = INSTRUMENTS[instrument]['reader'](file,verbose=verbose,**kwargs)
-            readin = True
+#    if inst != False and use_instrument_reader==True: 
+        # this mode is not working
+        # instrument = inst
+        # if INSTRUMENTS[instrument]['reader'] != '': 
+        #     output = INSTRUMENTS[instrument]['reader'](file,verbose=verbose)
+        #     readin = True
 
 # other reads
     if readin==False:
@@ -5666,7 +5667,7 @@ def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
             else:
                 wave = d[0,:]
                 flux = d[1,:]
-            if len(d[:,0]) > 1: noise = d[2,:]
+            if len(d[:,0]) > 2: noise = d[2,:]
             else: noise = [numpy.nan]*len(wave)
 
 # ascii - can be done with pandas as local or online and w/ or w/o gzip/bzip2/pkzip

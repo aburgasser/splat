@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="English" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photometry package &mdash; SpeX Prism Library Analysis Toolkit 2023.11.25 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/logo.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/documentation_options.js?v=6ff9b23f"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SPLAT Spectral Modeling" href="splat_model.html" />
+    <link rel="prev" title="SPLAT Plotting Routines" href="splat_plot.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SpeX Prism Library Analysis Toolkit
+              <img src="_static/logo.jpg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                2023.11.25
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat.html">Main SPLAT module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_empirical.html">Empirical Relations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_plot.html">SPLAT Plotting Routines</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Photometry package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#useful-program-constants">Useful Program Constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="splat_model.html">SPLAT Spectral Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_evolve.html">Brown Dwarf Evolutionary Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splat_simulate.html">Population Simulation Routines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SpeX Prism Library Analysis Toolkit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Photometry package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/splat_photometry.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="photometry-package">
+<h1>Photometry package<a class="headerlink" href="#photometry-package" title="Link to this heading">¶</a></h1>
+<p>This package contains several functions related to spectrophotometry, using either built-in filter profiles curated from the <a class="reference external" href="http://svo2.cab.inta-csic.es/theory/fps/">SVO Filter Profile Service</a> or user-defined. These functions can be called up by importing the splat.photometry package:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.photometry</span> <span class="k">as</span> <span class="nn">spphot</span>
+</pre></div>
+</div>
+<p>Key functions include:</p>
+<ul>
+<li><dl>
+<dt><a class="reference external" href="api.html#splat.photometry.filterMag">filterMag()</a></dt><dd><p>Retrieves the filter profile from the SPLAT filter library, and returns two arrays: the filter wavelength and filter transmission curve.
+This function is also contained within the Spectrum object</p>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.photometry</span> <span class="k">as</span> <span class="nn">spphot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">fluxCalibrate</span><span class="p">(</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="mf">14.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">spphot</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">))</span>
+<span class="go">    (14.499999979756499, 0.0010606102934068472)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">filterMag</span><span class="p">(</span><span class="s1">&#39;MKO J&#39;</span><span class="p">))</span>
+<span class="go">    (14.499999979756499, 0.0011216264136789818)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a href="#id2"><span class="problematic" id="id3">`checkFilter()`_</span></a></dt><dd><p>Checks that a filter is in the SPLAT filter library</p>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.photometry</span> <span class="k">as</span> <span class="nn">spphot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spphot</span><span class="o">.</span><span class="n">checkFilter</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
+<span class="go">2MASS_J</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spphot</span><span class="o">.</span><span class="n">checkFilter</span><span class="p">(</span><span class="s1">&#39;2MASS Y&#39;</span><span class="p">)</span>
+<span class="go">Filter 2MASS Y not currently available for SPLAT</span>
+<span class="go">Try [&#39;2MASS_J&#39;, &#39;2MASS_H&#39;, &#39;2MASS_KS&#39;, &#39;BESSEL_U&#39;, &#39;BESSEL_B&#39;, &#39;BESSEL_V&#39;, ...</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference external" href="api.html#splat.photometry.filterProfile">filterProfile()</a></dt><dd><p>Retrieves the filter profile from the SPLAT filter library, and returns two arrays: the filter wavelength and filter transmission curve.</p>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.photometry</span> <span class="k">as</span> <span class="nn">spphot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lam</span><span class="p">,</span><span class="n">trans</span> <span class="o">=</span> <span class="n">spphot</span><span class="o">.</span><span class="n">filterProfile</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">,</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<a class="reference internal image-reference" href="_images/photometry_filterprofile.png"><img alt="_images/photometry_filterprofile.png" class="align-center" src="_images/photometry_filterprofile.png" style="width: 400px;" /></a>
+</li>
+<li><dl>
+<dt><a class="reference external" href="api.html#splat.photometry.visualizeFilter">visualizeFilter()</a></dt><dd><p>Plots a filter or set of filter transmission curves, and optionally a comparison spectrum.</p>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.photometry</span> <span class="k">as</span> <span class="nn">spphot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">shortname</span><span class="o">=</span><span class="s1">&#39;1507-1627&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spphot</span><span class="o">.</span><span class="n">visualizeFilter</span><span class="p">([</span><span class="s1">&#39;MKO Y&#39;</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="s1">&#39;MKO H&#39;</span><span class="p">,</span><span class="s1">&#39;MKO K&#39;</span><span class="p">],</span><span class="n">comparison</span><span class="o">=</span><span class="n">sp</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;g&#39;</span><span class="p">,</span><span class="s1">&#39;m&#39;</span><span class="p">],</span><span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<a class="reference internal image-reference" href="_images/photometry_visualizefilter.png"><img alt="_images/photometry_visualizefilter.png" class="align-center" src="_images/photometry_visualizefilter.png" style="width: 400px;" /></a>
+</li>
+<li><dl>
+<dt><a href="#id4"><span class="problematic" id="id5">`filterInfo()`_</span></a></dt><dd><p>Prints out information for a filter in the SPLAT filter library.</p>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.photometry</span> <span class="k">as</span> <span class="nn">spphot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spphot</span><span class="o">.</span><span class="n">filterInfo</span><span class="p">(</span><span class="s1">&#39;MKO J&#39;</span><span class="p">)</span>
+<span class="go">MKO J: MKO J-band + atmosphere</span>
+<span class="go">    Wavelength range = 1.148 micron to 1.349 micron</span>
+<span class="go">    Zeropoint = 1562.30 Jy</span>
+<span class="go">    Central wavelength: = 1.249 micron</span>
+<span class="go">    Mean wavelength: = 1.248 micron</span>
+<span class="go">    Pivot point: = 1.247 micron</span>
+<span class="go">    FWHM = 0.162 micron</span>
+<span class="go">    Vega to AB = 0.911</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference external" href="api.html#splat.photometry.vegaToAB">vegaToAB()</a></dt><dd><p>Gives filter offset between Vega and AB magnitudes within a given filter transmission curve</p>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.photometry</span> <span class="k">as</span> <span class="nn">spphot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spphot</span><span class="o">.</span><span class="n">vegaToAB</span><span class="p">(</span><span class="s1">&#39;2MASS J&#39;</span><span class="p">)</span>
+<span class="go">0.8923112818878385</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a href="#id6"><span class="problematic" id="id7">`magToFlux()`_</span></a></dt><dd><p>Converts a magntiude in a given filter to integrated flux units</p>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat.photometry</span> <span class="k">as</span> <span class="nn">spphot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spphot</span><span class="o">.</span><span class="n">magToFlux</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="s1">&#39;MKO J&#39;</span><span class="p">,</span><span class="n">unc</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="go">(&lt;Quantity 1.08182532e-12 erg / (s cm2)&gt;, &lt;Quantity 1.00599678e-13 erg / (s cm2)&gt;)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+</ul>
+<section id="useful-program-constants">
+<h2>Useful Program Constants<a class="headerlink" href="#useful-program-constants" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">splat.FILTERS</span></code></dt><dd><p>Dictionary containing pre-stored filters</p>
+</dd>
+</dl>
+<p><em>Search</em></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="splat_plot.html" class="btn btn-neutral float-left" title="SPLAT Plotting Routines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="splat_model.html" class="btn btn-neutral float-right" title="SPLAT Spectral Modeling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016-2021, Adam Burgasser.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
