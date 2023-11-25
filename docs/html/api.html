@@ -129,6 +129,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#id37"><code class="docutils literal notranslate"><span class="pre">filterMag()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#splat.photometry.filterProfile"><code class="docutils literal notranslate"><span class="pre">filterProfile()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#splat.photometry.magToFlux"><code class="docutils literal notranslate"><span class="pre">magToFlux()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#splat.photometry.vegaToAB"><code class="docutils literal notranslate"><span class="pre">vegaToAB()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#splat.photometry.visualizeFilter"><code class="docutils literal notranslate"><span class="pre">visualizeFilter()</span></code></a></li>
 </ul>
 </li>
@@ -227,7 +228,11 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#specialty-packages">Specialty Packages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#euclid-analysis-routines">EUCLID Analysis Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#euclid-analysis-routines">EUCLID Analysis Routines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#splat.euclid.spexToEuclid"><code class="docutils literal notranslate"><span class="pre">spexToEuclid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#splat.euclid.addEuclidNoise"><code class="docutils literal notranslate"><span class="pre">addEuclidNoise()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#bibtex-routines">BibTeX Routines</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#splat.citations.veryShortRef"><code class="docutils literal notranslate"><span class="pre">veryShortRef()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#splat.citations.shortRef"><code class="docutils literal notranslate"><span class="pre">shortRef()</span></code></a></li>
@@ -4003,6 +4008,11 @@ using Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245)</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="splat.photometry.vegaToAB">
+<span class="sig-prename descclassname"><span class="pre">splat.photometry.</span></span><span class="sig-name descname"><span class="pre">vegaToAB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vegafile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vega_kurucz.txt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filterfolder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/Users/adam/projects/splat/code/splat/splat/..//resources/Filters/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rsr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#splat.photometry.vegaToAB" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="splat.photometry.visualizeFilter">
 <span class="sig-prename descclassname"><span class="pre">splat.photometry.</span></span><span class="sig-name descname"><span class="pre">visualizeFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fprof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spectrum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'k'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linestyle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'-'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#splat.photometry.visualizeFilter" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -7128,6 +7138,70 @@ For example, model='juric' can take population='thin disk','thick disk','halo','
 <h2>Specialty Packages<a class="headerlink" href="#specialty-packages" title="Link to this heading">¶</a></h2>
 <section id="euclid-analysis-routines">
 <h3>EUCLID Analysis Routines<a class="headerlink" href="#euclid-analysis-routines" title="Link to this heading">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="splat.euclid.spexToEuclid">
+<span class="sig-prename descclassname"><span class="pre">splat.euclid.</span></span><span class="sig-name descname"><span class="pre">spexToEuclid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#splat.euclid.spexToEuclid" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Purpose<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Convert a SpeX file into EUCLID form, using the resolution and wavelength coverage
+defined from the Euclid Red Book (<a class="reference external" href="http://sci.esa.int/euclid/48983-euclid-definition-study-report-esa-sre-2011-12/">Laurijs et al. 2011</a>). This function changes the input Spectrum
+objects, which can be restored by the Spectrum.reset() method.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sp</strong> -- Spectrum class object, which should contain wave, flux and noise array elements</p>
+</dd>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>                                <span class="c1"># grab a random file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">spexToEuclid</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">min</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">wave</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">wave</span><span class="p">)</span>
+<span class="go">         (&lt;Quantity 1.25 micron&gt;, &lt;Quantity 1.8493000000000364 micron&gt;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">history</span>
+<span class="go">         [``&#39;Spectrum successfully loaded``&#39;,</span>
+<span class="go">          ``&#39;Converted to EUCLID format``&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">min</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">wave</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">wave</span><span class="p">)</span>
+<span class="go">         (&lt;Quantity 0.6454827785491943 micron&gt;, &lt;Quantity 2.555659770965576 micron&gt;)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="splat.euclid.addEuclidNoise">
+<span class="sig-prename descclassname"><span class="pre">splat.euclid.</span></span><span class="sig-name descname"><span class="pre">addEuclidNoise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#splat.euclid.addEuclidNoise" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Purpose<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Adds Gaussian noise to a EUCLID-formatted spectrum assuming a constant noise
+model of 3e-15 erg/s/cm2/micron (as extrapolated from the Euclid Red Book;
+Laurijs et al. 2011 &lt;<a class="reference external" href="http://sci.esa.int/euclid/48983-euclid-definition-study-report-esa-sre-2011-12/">http://sci.esa.int/euclid/48983-euclid-definition-study-report-esa-sre-2011-12/</a>&gt;`_).
+Note that noise is added to both flux and (in quadrature) variance. This function creates a
+new Spectrum object so as not to corrupt the original data.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sp</strong> -- Spectrum class object, which should contain wave, flux and noise array elements</p>
+</dd>
+<dt class="field-odd">Output<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Spectrum object with Euclid noise added in</p>
+</dd>
+<dt class="field-even">Example<span class="colon">:</span></dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">splat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">getSpectrum</span><span class="p">(</span><span class="n">lucky</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>                                <span class="c1"># grab a random file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">splat</span><span class="o">.</span><span class="n">spexToEuclid</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">1.e-14</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">         115.96374031163553</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp_noisy</span> <span class="o">=</span> <span class="n">splat</span><span class="o">.</span><span class="n">addEculidNoise</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp_noisy</span><span class="o">.</span><span class="n">computeSN</span><span class="p">()</span>
+<span class="go">         3.0847209519763172</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="bibtex-routines">
 <h3>BibTeX Routines<a class="headerlink" href="#bibtex-routines" title="Link to this heading">¶</a></h3>

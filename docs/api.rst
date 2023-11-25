@@ -87,8 +87,8 @@ Spectrophotometry
 .. autofunction:: splat.photometry.filterMag
 .. autofunction:: splat.core.Spectrum.filterMag
 .. autofunction:: splat.photometry.filterProfile
-.. autofunction:: splat.photometry.filterProperties
 .. autofunction:: splat.photometry.magToFlux
+.. autofunction:: splat.photometry.vegaToAB
 .. autofunction:: splat.photometry.visualizeFilter
 
 
@@ -211,8 +211,8 @@ Specialty Packages
 
 EUCLID Analysis Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: splat_euclid.spexToEuclid
-.. autofunction:: splat_euclid.addEuclidNoise
+.. autofunction:: splat.euclid.spexToEuclid
+.. autofunction:: splat.euclid.addEuclidNoise
 
 
 BibTeX Routines
