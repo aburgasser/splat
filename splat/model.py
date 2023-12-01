@@ -520,7 +520,8 @@ def generateModelName(par,suffix='txt'):
             if splat.SPECTRAL_MODEL_PARAMETERS[x]['type']=='continuous':
                 kstr = '_{}{:.2f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x])-0.0001)
                 if x=='teff': kstr = '_{}{:.0f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x]))
-                if x in ['z','enrich','zc','zo','zn'] and float(par[x])>0: kstr = '_{}+{:.2f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x]))
+#                if x in ['z','enrich','zc','zo','zn'] and float(par[x])>0: kstr = '_{}+{:.2f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x]))
+#                else: kstr = '_{}{:.2f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x]))
             else: kstr = '_{}{}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],str(par[x]))
             file+=kstr
     file+='_{}.{}'.format(par['instrument'],suffix)
@@ -2195,7 +2196,11 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
     inst = checkInstrument(instrument)
     if inst != False: instrument = inst
     if instrument not in list(SPECTRAL_MODELS[mset]['instruments'].keys()):
-        raise ValueError('Models for set {} and instrument {} have not yet been computed; run processModelsToInstrument(set={},instrument={})'.format(kwargs['modelset'],instrument,kwargs['modelset'],instrument))
+        if 'RAW' not in list(SPECTRAL_MODELS[mset]['instruments'].keys()):
+            raise ValueError('Models for set {} and instrument {} have not yet been computed; run processModelsToInstrument(set={},instrument={})'.format(kwargs['modelset'],instrument,kwargs['modelset'],instrument))
+        else: 
+            instrument=='RAW'
+            if verbose==True: print('Models for set {} and instrument {} have not yet been computed; using "RAW" model files'.format(kwargs['modelset'],instrument))
     kwargs['instrument'] = instrument
     kwargs['name'] = '{} model'.format(kwargs['modelset'])
 
@@ -3325,37 +3330,44 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
 # test away    
 #    stats = []
     for p in parameters:
-        model = loadModel(force=True,**p)
-        mkwargs = copy.deepcopy(kwargs)
-        mkwargs['plot'] = False
-        chi,scl = compareSpectra(spec, model, stat=statistic, **mkwargs)
-        p['stat'] = chi
-        p['scale'] = scl
-        p['radius'] = ((scl*(10.*u.pc)**2)**0.5).to(u.Rsun)
-#        print(p['radius'],scl)
-
-# use radius as a constraint
-        if constrain_radius == True:
-            if evol_flag == True:
-                epar = spev.modelParameters(temperature=p['teff'],gravity=p['logg'],model=radius_model)
-                if numpy.isnan(epar['radius']): 
-                    chi = chi*10.  # penalty for being outside evolutionary model range
-                else:
-                    radius = epar['radius']
-                    if not isUnit(radius): radius = radius*u.Rsun
-                    radius.to(u.Rsun)
-                    scl = scl*((radius/p['radius']).value)**2
-                    model.scale(scl)
-                    chi,scl = compareSpectra(spec, model, stat=statistic, scale=False, **mkwargs)
-            else: 
-                print(scl,radius,p['radius'])
-                scl = scl*((radius/p['radius']).value)**2
-                print(scl)
-                model.scale(1./scl)
-                chi,scl = compareSpectra(spec, model, stat=statistic, scale=False, **mkwargs)
+        try:
+            model = loadModel(force=True,**p)
+        except:
+            if verbose==True: print('Cannot find model {}; skipping'.format(p))
+            p['stat'] = 1.e30
+            p['scl'] = 0.
+            p['radius'] = 0.*u.Rsun
+        else:
+            mkwargs = copy.deepcopy(kwargs)
+            mkwargs['plot'] = False
+            chi,scl = compareSpectra(spec, model, stat=statistic, **mkwargs)
             p['stat'] = chi
             p['scale'] = scl
             p['radius'] = ((scl*(10.*u.pc)**2)**0.5).to(u.Rsun)
+#        print(p['radius'],scl)
+
+# use radius as a constraint
+            if constrain_radius == True:
+                if evol_flag == True:
+                    epar = spev.modelParameters(temperature=p['teff'],gravity=p['logg'],model=radius_model)
+                    if numpy.isnan(epar['radius']): 
+                        chi = chi*10.  # penalty for being outside evolutionary model range
+                    else:
+                        radius = epar['radius']
+                        if not isUnit(radius): radius = radius*u.Rsun
+                        radius.to(u.Rsun)
+                        scl = scl*((radius/p['radius']).value)**2
+                        model.scale(scl)
+                        chi,scl = compareSpectra(spec, model, stat=statistic, scale=False, **mkwargs)
+                else: 
+                    print(scl,radius,p['radius'])
+                    scl = scl*((radius/p['radius']).value)**2
+                    print(scl)
+                    model.scale(1./scl)
+                    chi,scl = compareSpectra(spec, model, stat=statistic, scale=False, **mkwargs)
+                p['stat'] = chi
+                p['scale'] = scl
+                p['radius'] = ((scl*(10.*u.pc)**2)**0.5).to(u.Rsun)
 
 
 #        if verbose == True: print(p)

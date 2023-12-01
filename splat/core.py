@@ -2356,6 +2356,7 @@ class Spectrum(object):
 # mask pixels
         self.flux[msk] = replace_value
         if replace_noise == True: self.noise[msk] = replace_value
+        self.variance = self.noise**2
 
         if len(others) > 0:
             for k in others:
@@ -2726,9 +2727,9 @@ class Spectrum(object):
 # now convolve a function to smooth resampled spectrum
             window = signal.get_window(method,int(2.*numpy.round(oversample)))
             neff = numpy.sum(window)/numpy.nanmax(window)        # effective number of pixels
-            flx_smooth = signal.convolve(flx_sample, window/numpy.sum(window), mode='same')
+            flx_smooth = signal.convolve(flx_sample, window/numpy.sum(window), mode='same',method='direct')
             if numpy.isfinite(self.variance.value).any() == True:
-                var_smooth = signal.convolve(var_sample, window/numpy.sum(window), mode='same')/neff
+                var_smooth = signal.convolve(var_sample, window/numpy.sum(window), mode='same',method='direct')/neff
 # resample back to original wavelength grid
             wave_final = numpy.array(self.wave.value)
             wave_final = wave_final[wave_final <= numpy.max(wave_sample)]
@@ -2814,9 +2815,9 @@ class Spectrum(object):
         if width > 2.:
 # convolve a function to smooth spectrum
             window = signal.get_window(method,int(numpy.round(width)))
-            neff = numpy.sum(window)/numpy.nanmax(window)        # effective number of pixels
-            self.flux = signal.convolve(self.flux.value, window/numpy.sum(window), mode='same')*self.flux_unit
-            self.variance = signal.convolve(self.variance.value, window/numpy.sum(window), mode='same')/neff*(self.flux_unit**2)
+            neff = numpy.nansum(window)/numpy.nanmax(window)        # effective number of pixels
+            self.flux = signal.convolve(self.flux.value, window/numpy.nansum(window), mode='same',method='direct')*self.flux_unit
+            self.variance = signal.convolve(self.variance.value, window/numpy.nansum(window), mode='same',method='direct')/neff*(self.flux_unit**2)
             self.noise = [n**0.5 for n in self.variance.value]*self.flux_unit
             self.snr = self.computeSN()
             self.resolution = self.resolution/width
@@ -7385,6 +7386,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
         v = interp1d(sp2.wave.value,sp2.variance.value,bounds_error=False,fill_value=numpy.nan)
 # total variance - funny form to cover for nans
     vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)],axis=0)
+    vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
 
 # manage fit ranges and generate fit mask
     if len(fit_ranges) == 0: fit_ranges = [[numpy.nanmin(sp1.wave),numpy.nanmax(sp1.wave)]]
@@ -7424,6 +7426,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
 
 # correct variance
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
+        vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
         stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2/vtot)
         unit = sp1.flux_unit/sp1.flux_unit
 
@@ -7435,8 +7438,9 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
                 numpy.nansum(weights*f(sp1.wave.value))
 # correct variance
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
+        vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
         stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2)/ \
-            numpy.median(sp1.flux.value)**2
+            numpy.nanmedian(sp1.flux.value)**2
         unit = sp1.flux_unit/sp1.flux_unit
 
 # standard deviation
@@ -7447,6 +7451,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
                 numpy.nansum(weights*f(sp1.wave.value)*f(sp1.wave.value))
 # correct variance
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
+        vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
         stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2)
         unit = sp1.flux_unit**2
 
@@ -7458,6 +7463,7 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
                 numpy.nansum(weights*f(sp1.wave.value))
 # correct variance
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
+        vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
         stat = numpy.nansum(weights*abs(sp1.flux.value-f(sp1.wave.value)*scale_factor))
         unit = sp1.flux_unit
 
