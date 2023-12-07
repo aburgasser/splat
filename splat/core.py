@@ -6550,9 +6550,9 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
     for t in spt_sample:
 #        chisq,scale = compareSpectra(sp,stds[typeToNum(t,subclass=subclass)],fit_ranges=fit_ranges,statistic=statistic,novar2=True)
         if (kwargs.get('method','').lower() == 'cruz'):
-            chisq,scale = compareSpectraCruz(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True)
+            chisq,scale = compareSpectraCruz(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True,verbose=verbose)
         else: 
-            chisq,scale = compareSpectra(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True)
+            chisq,scale = compareSpectra(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True,verbose=verbose)
         stat.append(chisq)
         sspt.append(t)
         if verbose==True: print('Type {}: statistic = {}, scale = {}'.format(t, chisq, scale))
@@ -6599,7 +6599,7 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
         spstd = copy.deepcopy(stds[sorted_stdsptnum[0]])
 #        getStandard(typeToNum(sorted_stdsptnum[0],subclass=subclass))
         if (kwargs.get('method','').lower() == 'cruz'):
-            chisq,scale = compareSpectraCruz(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
+            chisq,scale = compareSpectraCruz(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
             spstd.flux[numpy.where( (spstd.wave.value >= numpy.min(fit_ranges[0])) & ((spstd.wave.value <= numpy.max(fit_ranges[0])) ) )] *= scale[0]
             spstd.flux[numpy.where( (spstd.wave.value >= numpy.min(fit_ranges[1])) & ((spstd.wave.value <= numpy.max(fit_ranges[1])) ) )] *= scale[1]
             spstd.flux[numpy.where( (spstd.wave.value >= numpy.min(fit_ranges[2])) & ((spstd.wave.value <= numpy.max(fit_ranges[2])) ) )] *= scale[2]
@@ -6608,7 +6608,7 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
                                     ( (spstd.wave.value < numpy.min(fit_ranges[2])) | (spstd.wave.value > numpy.max(fit_ranges[2])) ) 
                                    )] = numpy.nan
         else:
-            chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
+            chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
             spstd.scale(scale)
         if kwargs.get('colors',False) == False:
             kwargs['colors'] = ['k','r','b']
@@ -6626,9 +6626,9 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
     if kwargs.get('return_standard',False) == True: 
         spstd = copy.deepcopy(stds[sorted_stdsptnum[0]])
         if (kwargs.get('method','').lower() == 'cruz'):
-            chisq,scale = compareSpectraCruz(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
+            chisq,scale = compareSpectraCruz(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
         else:
-            chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
+            chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
         spstd.scale(scale)
         return spstd
     elif kwargs.get('return_statistic',False) == True: 
@@ -7653,52 +7653,78 @@ def compareSpectraCruz(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=
     elif (statistic == 'stddev_norm' or statistic == 'stdev_norm'):
 # compute scale factor
         if scale == True:
-            scale_factor = numpy.nansum(weights*sp1.flux.value)/ \
-                numpy.nansum(weights*f(sp1.wave.value))
+            scale_factor1 = numpy.nansum(weights1*sp1.flux.value)/ \
+                numpy.nansum(weights1*f(sp1.wave.value))
+            scale_factor2 = numpy.nansum(weights2*sp1.flux.value)/ \
+                numpy.nansum(weights2*f(sp1.wave.value))
+            scale_factor3 = numpy.nansum(weights3*sp1.flux.value)/ \
+                numpy.nansum(weights3*f(sp1.wave.value))
 # correct variance
-        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
-        vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
-        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2)/ \
+        vtot1 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor1**2)],axis=0)
+        vtot2 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor2**2)],axis=0)
+        vtot3 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor3**2)],axis=0)
+        vtot1[numpy.isnan(vtot1)==True] = numpy.nanmedian(vtot1)
+        vtot2[numpy.isnan(vtot2)==True] = numpy.nanmedian(vtot2)
+        vtot3[numpy.isnan(vtot3)==True] = numpy.nanmedian(vtot3)
+        stat1 = numpy.nansum(weights1*(sp1.flux.value-f(sp1.wave.value)*scale_factor1)**2)/ \
             numpy.nanmedian(sp1.flux.value)**2
+        stat2 = numpy.nansum(weights2*(sp1.flux.value-f(sp1.wave.value)*scale_factor2)**2)/ \
+            numpy.nanmedian(sp1.flux.value)**2
+        stat3 = numpy.nansum(weights3*(sp1.flux.value-f(sp1.wave.value)*scale_factor3)**2)/ \
+            numpy.nanmedian(sp1.flux.value)**2
+        stat = stat1+stat2+stat3
         unit = sp1.flux_unit/sp1.flux_unit
 
 # standard deviation
     elif (statistic == 'stddev' or statistic == 'stdev'):
 # compute scale factor
         if scale == True:
-            scale_factor = numpy.nansum(weights*sp1.flux.value*f(sp1.wave.value))/ \
-                numpy.nansum(weights*f(sp1.wave.value)*f(sp1.wave.value))
+            scale_factor1 = numpy.nansum(weights1*sp1.flux.value*f(sp1.wave.value))/ \
+                numpy.nansum(weights1*f(sp1.wave.value)*f(sp1.wave.value))
+            scale_factor2 = numpy.nansum(weights2*sp1.flux.value*f(sp1.wave.value))/ \
+                numpy.nansum(weights2*f(sp1.wave.value)*f(sp1.wave.value))
+            scale_factor3 = numpy.nansum(weights3*sp1.flux.value*f(sp1.wave.value))/ \
+                numpy.nansum(weights3*f(sp1.wave.value)*f(sp1.wave.value))
 # correct variance
-        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
-        vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
-        stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2)
+        vtot1 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor1**2)],axis=0)
+        vtot2 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor2**2)],axis=0)
+        vtot3 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor3**2)],axis=0)
+        vtot1[numpy.isnan(vtot1)==True] = numpy.nanmedian(vtot1)
+        vtot2[numpy.isnan(vtot2)==True] = numpy.nanmedian(vtot2)
+        vtot3[numpy.isnan(vtot3)==True] = numpy.nanmedian(vtot3)
+        stat1 = numpy.nansum(weights1*(sp1.flux.value-f(sp1.wave.value)*scale_factor1)**2)
+        stat2 = numpy.nansum(weights2*(sp1.flux.value-f(sp1.wave.value)*scale_factor2)**2)
+        stat3 = numpy.nansum(weights3*(sp1.flux.value-f(sp1.wave.value)*scale_factor3)**2)
+        stat = stat1+stat2+stat3
         unit = sp1.flux_unit**2
 
 # absolute deviation
     elif (statistic == 'absdev'):
 # compute scale factor
         if scale == True:
-            scale_factor = numpy.nansum(weights*sp1.flux.value)/ \
-                numpy.nansum(weights*f(sp1.wave.value))
+            scale_factor1 = numpy.nansum(weights1*sp1.flux.value)/ \
+                numpy.nansum(weights1*f(sp1.wave.value))
+            scale_factor2 = numpy.nansum(weights2*sp1.flux.value)/ \
+                numpy.nansum(weights2*f(sp1.wave.value))
+            scale_factor3 = numpy.nansum(weights3*sp1.flux.value)/ \
+                numpy.nansum(weights3*f(sp1.wave.value))
 # correct variance
-        vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
-        vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
-        stat = numpy.nansum(weights*abs(sp1.flux.value-f(sp1.wave.value)*scale_factor))
+        vtot1 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor1**2)],axis=0)
+        vtot2 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor2**2)],axis=0)
+        vtot3 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor3**2)],axis=0)
+        vtot1[numpy.isnan(vtot1)==True] = numpy.nanmedian(vtot1)
+        vtot2[numpy.isnan(vtot2)==True] = numpy.nanmedian(vtot2)
+        vtot3[numpy.isnan(vtot3)==True] = numpy.nanmedian(vtot3)
+        stat1 = numpy.nansum(weights1*abs(sp1.flux.value-f(sp1.wave.value)*scale_factor1))
+        stat2 = numpy.nansum(weights2*abs(sp1.flux.value-f(sp1.wave.value)*scale_factor2))
+        stat3 = numpy.nansum(weights3*abs(sp1.flux.value-f(sp1.wave.value)*scale_factor3))
+        stat = stat1+stat2+stat3
         unit = sp1.flux_unit
 
 # error
     else:
         print('Error: statistic {} for compareSpectra not available'.format(statistic))
         return numpy.nan, numpy.nan
-
-    #import matplotlib.pyplot as plot
-    #plt.plot(sp1.wave, sp1.flux, label='data')
-    #plt.plot(sp1.wave, weights1*f(sp1.wave.value)*scale_factor1, label='standard')
-    #plt.plot(sp1.wave, weights2*f(sp1.wave.value)*scale_factor2, label='standard')
-    #plt.plot(sp1.wave, weights3*f(sp1.wave.value)*scale_factor3, label='standard')
-    #plt.legend()
-    #plt.show()
-    #sys.exit()
 
 # plot spectrum compared to best spectrum
     if plot == True:
