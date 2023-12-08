@@ -7835,16 +7835,21 @@ def measureEW(sp,lc,width=0.,continuum=[0.,0.],plot=False,file='',continuum_widt
     if numpy.nanmax(cont) < line_center:
         cont = [c+line_center for c in cont]
     if len(cont) < 4:
-        cont = [2*line_center-cont[-1],2*line_center-cont[-2],cont[-1],cont[-2]]
+        if len(cont) == 2:
+            if continuum_width != False:
+                cont = [cont[0]-continuum_width/2, cont[0]+continuum_width/2, cont[1]-continuum_width/2,cont[1]+continuum_width/2]
+        else:
+            cont = [2*line_center-cont[-1],2*line_center-cont[-2],cont[-1],cont[-2]]
+
     if debug==True: print('Line center = {}, Line width = {}, Continuum = {}'.format(line_center,line_width,cont))
 
 # preset fail condition
-    ew = numpy.nan
-    ew_unc = numpy.nan
-    line_center_measure = numpy.nan
+    ew                      = numpy.nan
+    ew_unc                  = numpy.nan
+    line_center_measure     = numpy.nan
     line_center_measure_unc = numpy.nan
-    rv = numpy.nan
-    rv_unc = numpy.nan
+    rv                      = numpy.nan
+    rv_unc                  = numpy.nan
     
 # first compute value
     samplerng = [numpy.nanmin(cont)-0.1*(numpy.nanmax(cont)-numpy.nanmin(cont)),numpy.nanmax(cont)+0.1*(numpy.nanmax(cont)-numpy.nanmin(cont))]
@@ -7861,15 +7866,18 @@ def measureEW(sp,lc,width=0.,continuum=[0.,0.],plot=False,file='',continuum_widt
                 else: line_center_measure = wv[numpy.nanargmax(fl)]
         rv = ((line_center_measure-line_center)/line_center)*const.c.to(u.km/u.s)
 
-        w = numpy.where(numpy.logical_and(sp.wave.value >= samplerng[0],sp.wave.value <= samplerng[1]))
+        w = numpy.where(numpy.logical_and(sp.wave.value >= samplerng[0],sp.wave.value <= samplerng[1]) )
         if len(w[0]) > 0:
-            f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=0.)
+            f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=numpy.nan)
             wline = numpy.linspace(line_center_measure-line_width,line_center_measure+line_width,nsamp)
             wcont = numpy.append(numpy.linspace(cont[0],cont[1],nsamp),numpy.linspace(cont[-2],cont[-1],nsamp))        
             fline = f(wline)
             fcont = f(wcont)
-            pcont = numpy.poly1d(numpy.polyfit(wcont,fcont,continuum_fit_order))
+
+            goodind  = numpy.where(~numpy.isnan(fcont))
+            pcont    = numpy.poly1d(numpy.polyfit(wcont[goodind],fcont[goodind],continuum_fit_order))
             fcontfit = pcont(wline)
+
             # print(wline,fline)
             # print(wcont,fcont)
             ew = (trapz((numpy.ones(len(wline))-(fline/fcontfit)), wline)*sp.wave.unit).to(output_unit)
