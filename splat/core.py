@@ -7852,8 +7852,17 @@ def measureEW(sp,lc,width=0.,continuum=[0.,0.],plot=False,file='',continuum_widt
     rv_unc                  = numpy.nan
     
 # first compute value
+    print(cont)
+    print(numpy.nanmin(cont)-0.1*(numpy.nanmax(cont)-numpy.nanmin(cont)))
+    print(numpy.nanmax(cont)+0.1*(numpy.nanmax(cont)-numpy.nanmin(cont)))
     samplerng = [numpy.nanmin(cont)-0.1*(numpy.nanmax(cont)-numpy.nanmin(cont)),numpy.nanmax(cont)+0.1*(numpy.nanmax(cont)-numpy.nanmin(cont))]
+    print(samplerng)
+    print(numpy.nanmin(sp.wave.value) <= samplerng[0])
+    print(numpy.nanmax(sp.wave.value) >= samplerng[1])
     if numpy.nanmin(sp.wave.value) <= samplerng[0] and numpy.nanmax(sp.wave.value) >= samplerng[1]:
+
+        plt.plot(sp.wave.value,sp.flux.value,'k-')
+        plt.show()
 
 # refine line centering
         line_center_measure = line_center
