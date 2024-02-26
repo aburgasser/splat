@@ -4107,7 +4107,7 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
 
 # parameters
     scaleflag = kwargs.get('scaleflag',scale)
-    vflag = True
+    vflag = kwargs.get('vflag',scale)
 
 # generate copies of spectrum objects
     sp1 = copy.deepcopy(s1)
@@ -4145,8 +4145,9 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
     if rngflag==True:
 
 # interpolation of second spectrum
-        f2r = interp1d(sp2.wave.value,sp2.flux.value)
-        v2r = interp1d(sp2.wave.value,sp2.variance.value)
+        if verbose==True: print('Scaling over the region {} to {}'.format(rng[0],rng[1]))
+        f2r = interp1d(sp2.wave.value,sp2.flux.value,bounds_error=False,fill_value=numpy.nan)
+        v2r = interp1d(sp2.wave.value,sp2.variance.value,bounds_error=False,fill_value=numpy.nan)
 
 # find overlap region, assuming first spectrum sets the flux scale standard
 # assume this minimizes chi^2 residuals
@@ -4165,14 +4166,15 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
             if not numpy.isnan(numpy.nanmedian(v2r(wv12))): vtot=vtot+v2r(wv12)
 
             if numpy.nanmedian(vtot) == 0.: vflag = False
+            if numpy.isnan(numpy.nanmedian(vtot)) == True: vflag = False
             if vflag == True:
                 scl = numpy.nansum(flx12*f2r(wv12)/vtot)/numpy.nansum(f2r(wv12)**2/vtot)
             else:
                 scl = numpy.nansum(flx12*f2r(wv12))/numpy.nansum(f2r(wv12)**2)
             sp2.scale(scl)
 
-        f2r = interp1d(sp2.wave.value,sp2.flux.value)
-        v2r = interp1d(sp2.wave.value,sp2.variance.value)
+        f2r = interp1d(sp2.wave.value,sp2.flux.value,bounds_error=False,fill_value=numpy.nan)
+        v2r = interp1d(sp2.wave.value,sp2.variance.value,bounds_error=False,fill_value=numpy.nan)
 
 # piece back together, starting with segments with minimum wavelength
     if numpy.nanmin(sp1.wave.value) < numpy.nanmin(sp2.wave.value):
@@ -4192,10 +4194,10 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
         v2 = v2r(wv12)
         if numpy.isnan(numpy.nanmedian(v1)): v1 = v2
         if numpy.isnan(numpy.nanmedian(v2)): v2 = v1
-        if vflag == 0:
-            flxmid = (flx12/v1+f2r(wv12)/v2)/(1./v1+1./v2)
-        else:
+        if numpy.isnan(numpy.nanmedian(v1))==True and numpy.isnan(numpy.nanmedian(v2))==True:
             flxmid = 0.5*(flx12+f2r(wv12))
+        else:
+            flxmid = (flx12/v1+f2r(wv12)/v2)/(1./v1+1./v2)
         varmid = 1./(1./v1+1./v2)
         wave = numpy.append(wave,wv12)
         flux = numpy.append(flux,flxmid)

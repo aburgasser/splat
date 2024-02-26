@@ -2190,7 +2190,8 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
     kwargs['model'] = modelset
 
 #    kwargs['instrument'] = kwargs.get('instrument','SPEX-PRISM')
-    instrument = kwargs.get('instr',instrument)
+    for x in ['instr','instrument']:
+        instrument = kwargs.get(x,instrument)
     if raw == True: instrument = 'RAW'
     if sed == True: instrument = 'SED'
     inst = checkInstrument(instrument)
@@ -2199,7 +2200,7 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
         if 'RAW' not in list(SPECTRAL_MODELS[mset]['instruments'].keys()):
             raise ValueError('Models for set {} and instrument {} have not yet been computed; run processModelsToInstrument(set={},instrument={})'.format(kwargs['modelset'],instrument,kwargs['modelset'],instrument))
         else: 
-            instrument=='RAW'
+            instrument='RAW'
             if verbose==True: print('Models for set {} and instrument {} have not yet been computed; using "RAW" model files'.format(kwargs['modelset'],instrument))
     kwargs['instrument'] = instrument
     kwargs['name'] = '{} model'.format(kwargs['modelset'])
@@ -2219,6 +2220,9 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
     for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
         if ms in list(SPECTRAL_MODELS[kwargs['modelset']]['default'].keys()):
             mparam[ms] = kwargs.get(ms,SPECTRAL_MODELS[kwargs['modelset']]['default'][ms])
+#            print(kwargs.get(ms,'FAIL'))
+#            if ms in list(kwargs.keys()): print(ms,mparam[ms],kwargs[ms])
+#            else: print(ms,kwargs)
             if isUnit(mparam[ms]):
                 mparam[ms] = (mparam[ms].to(SPECTRAL_MODEL_PARAMETERS[ms]['unit'])).value
     if len(mparam.keys()) == 0:
@@ -2228,6 +2232,7 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
 # generate model filename
     
     filename = generateModelName(mparam,suffix='txt')
+#    print(mparam,filename)
     kwargs['filename'] = os.path.join(SPECTRAL_MODELS[kwargs['modelset']]['instruments'][kwargs['instrument']],filename)
 
     # filename = os.path.join(SPECTRAL_MODELS[kwargs['modelset']]['instruments'][kwargs['instrument']],kwargs['modelset'])
