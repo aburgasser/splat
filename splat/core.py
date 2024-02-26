@@ -7129,7 +7129,7 @@ def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=Non
     ref : string, default = 'burgasser2010'
         reference for the index/calibration set to use for determining spectral binary status, one of the following:
             * 'burgasser2010': indices from Burgasser et al. (2010; 2010ApJ...710.1142B) appropriate for spectral types L7--T5
-            * 'bardalez2004': indices from Bardalez Gagliuffi et al. (2014; 2014ApJ...794..143B) appropriate for spectral types M7-L8
+            * 'bardalez2014': indices from Bardalez Gagliuffi et al. (2014; 2014ApJ...794..143B) appropriate for spectral types M7-L8
 
     output : string, default = 'classification'
         what to return from function call, one of the following
