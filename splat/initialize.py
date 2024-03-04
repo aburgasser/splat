@@ -323,6 +323,9 @@ FILTERS = { \
     'HAWK_NB1060': {'file': 'hawk-nb1060.txt', 'description': 'HAWK Narrow Band 1060', 'zeropoint': 2003.27, 'method': 'vega', 'rsr': False, 'altname': ['hawk 1060']}, \
     'HAWK_NB1190': {'file': 'hawk-nb1190.txt', 'description': 'HAWK Narrow Band 1190', 'zeropoint': 1697.50, 'method': 'vega', 'rsr': False, 'altname': ['hawk 1190']}, \
     'HAWK_NB2090': {'file': 'hawk-nb2090.txt', 'description': 'HAWK Narrow Band 2090', 'zeropoint': 706.68, 'method': 'vega', 'rsr': False, 'altname': ['hawk 2090']}, \
+    'ACS_F435W': {'file': 'HST-ACS_F435W.txt', 'description': 'HST ACS WFC F435W', 'zeropoint': 4036.38, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'ACS_F606W': {'file': 'HST-ACS_F606W.txt', 'description': 'HST ACS WFC F606W', 'zeropoint': 3351.09, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'ACS_F814W': {'file': 'HST-ACS_F814W.txt', 'description': 'HST ACS WFC F814W', 'zeropoint': 2440.74, 'method': 'vega', 'rsr': True, 'altname': []}, \
     'IRAC_CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9, 'method': 'vega', 'rsr': True, 'altname': ['irac 1','irac 3.6','[3.6]']}, \
     'IRAC_CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7, 'method': 'vega', 'rsr': True, 'altname': ['irac 2','irac 4.5','[4.5]']}, \
     'IRAC_CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0, 'method': 'vega', 'rsr': True, 'altname': ['irac 3','irac 5.8','[5.8]']}, \
