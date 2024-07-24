@@ -42,7 +42,7 @@ The optimal installation method for SPLAT is cloning from the github site https:
 
     git clone https://github.com/aburgasser/splat.git
     cd splat
-    python setup.py -e install
+    python -m setup.py install
 
 
 > Warning: At this time please do not install splat using `pip`, as this is an outdated version of SPLAT that is no longer supported.
