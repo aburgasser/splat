@@ -1,9 +1,58 @@
-from __future__ import print_function, division
+"""
+
+    splat.model
+
+    Package Description
+    -------------------
+
+    The SPLAT model package hosts access to various atmosphere models that can be used to analyze
+    the atmospheric properties of low-temperature stellar and brown dwarf spectra. The SPLAT 
+    package includes a set of models that have been set up to match to SpeX prism data; additional models
+    in other instrumental formats can also be accessed at http://splat.physics.ucsd.edu/models, and these
+    or user models can included in the code by following the instructions given below 
+
+    Pre-set models
+    --------------
+    The SPLAT package comes with the following models pre-loaded in the resources/SpectralModels folder:
+
+    * atmo - ATMO2020 model set from Phillips et al. (2020) bibcode: TBD - SPEX-PRISM, JWST-NIRSPEC-PRISM
+    * btcond - BT-Cond model set from Allard et al. (2012) bibcode: 2012RSPTA.370.2765A - SPEX-PRISM
+    * btdusty2016 - BT-Dusty model set from TBD - SPEX-PRISM
+    * btnextgen - BT-NextGen model set from Allard et al. (2012) bibcode: 2012RSPTA.370.2765A - SPEX-PRISM
+    * btsettl08 - BT-Settled model set from Allard et al. (2012) bibcode: 2012RSPTA.370.2765A - SPEX-PRISM, JWST-NIRSPEC-PRISM
+    * btsettl15 - BT-Settled model set from Allard et al. (2015) bibcode: 2015A&A...577A..42B - SPEX-PRISM
+    * burrows06 - Model set from Burrows et al. (2006) bibcode: 2006ApJ...640.1063B - SPEX-PRISM
+    * cond01 - AMES Cond model set from Allard et al. (2001) bibcode: 2001ApJ...556..357A - SPEX-PRISM
+    * dback24 - Sonora Diamondback model set from Morley et al. (2024) bibcode: 2024arXiv240200758M - SPEX-PRISM, JWST-NIRSPEC-PRISM
+    * drift - Drift model set from Witte et al. (2011) bibcode: 2011A&A...529A..44W - SPEX-PRISM
+    * dusty01 - AMES Dusty model set from Allard et al. (2001) bibcode: 2001ApJ...556..357A - SPEX-PRISM
+    * elfowl24 - Sonora Elfowl model set from Mukherjee et al. (2024) bibcode: 2024arXiv240200756M - SPEX-PRISM
+    * karalidi21 - Sonora Cholla model set from Karalidi et al. (2021) bibcode: 2021ApJ...923..269K - SPEX-PRISM, JWST-NIRSPEC-PRISM
+    * lowz - LOWZ model set from Meisner et al. (2021) bibcode: 2021ApJ...915..120M - SPEX-PRISM, JWST-NIRSPEC-PRISM
+    * madhusudhan11 - Model set from Madhusudhan et al. (2011) bibcode: 2011ApJ...737...34M - SPEX-PRISM
+    * morley12 - Model set from Morley et al. (2012) bibcode: 2012ApJ...756..172M - SPEX-PRISM
+    * morley14 - Model set from Morley et al. (2014) bibcode: 2014ApJ...787...78M - SPEX-PRISM
+    * sand24 - SAND model set from Alvardo et al. (2024) bibcode: TBD - SPEX-PRISM, JWST-NIRSPEC-PRISM
+    * saumon12 - Model set from Saumon et al. (2012) bibcode: 2012ApJ...750...74S - SPEX-PRISM
+    * sonora18 - Sonora Alpha model set from Marley et al. (2018) bibcode: marley_mark_2018_1309035 - SPEX-PRISM
+    * sonora21 - Sonora Bobcat model set from Marley et al. (2021) bibcode: 2021ApJ...920...85M - SPEX-PRISM JWST-NIRSPEC-PRISM
+    * tremblin16 - Model set from Tremblin et al. (2016) bibcode: 2016ApJ...817L..19T - SPEX-PRISM
+    * veyette - Model set from Veyette et al. (2017) bibcode: 2017arXiv171010259V - SPEX-PRISM
+
+    Adding user models
+    ------------------
+    User models can be added to the modeling suite by following these instructions:
+
+    First, create a model directory, and make sure the full path 
+
+    * Create the ascii file `.splat_spectral_models` in your home directory (note the period at the front of the name)
+    * In this file, put the full path 
 
 """
-.. note::
-         These are the spectral modeling functions for SPLAT 
-"""
+
+
+from __future__ import print_function, division
+
 # imports: internal
 import bz2
 import copy
@@ -84,7 +133,7 @@ def info(model=None,verbose=ERROR_CHECKING):
     Model btsettl08:
         Reference: Allard, F. et al. (2012, Philosophical Transactions of the Royal Society A, 370, 2765-2777)
         Bibcode: 2012RSPTA.370.2765A
-        Computed for instruments RAW, SED, SPEX-PRISM
+        Computed for instruments RAW, SPEX-PRISM
         Parameters:
             teff: 500.0 K to 3500.0 K
             logg: 3.0 dex to 5.5 dex
@@ -1087,7 +1136,7 @@ def loadOriginalModel(model='btsettl08',instrument='UNKNOWN',file='',**kwargs):
             - *btsettl08*: (default) model set from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  with effective temperatures of 400 to 2900 K (steps of 100 K); surface gravities of 3.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity of -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.3, and 0.5 for temperatures greater than 2000 K only; cloud opacity is fixed in this model, and equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `btsettled`, `btsettl`, `allard`, `allard12`)
             - *burrows06*: model set from `Burrows et al. (2006) <http://adsabs.harvard.edu/abs/2006ApJ...640.1063B>`_ with effective temperatures of 700 to 2000 K (steps of 50 K); surface gravities of 4.5 to 5.5 in units of cm/s^2 (steps of 0.1 dex); metallicity of -0.5, 0.0 and 0.5; and either no clouds or grain size 100 microns (fsed = 'nc' or 'f100'). equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `burrows`, `burrows2006`)
             - *morley12*: model set from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_ with effective temperatures of 400 to 1300 K (steps of 50 K); surface gravities of 4.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and sedimentation efficiency (fsed) of 2, 3, 4 or 5; metallicity is fixed to solar, equilibrium chemistry is assumed, and there are no clouds associated with this model (alternate designations: `morley2012`)
-            - *morley14*: model set from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, sedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: `morley2014`)
+            - *morley14*: model set from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: `morley2014`)
             - *saumon12*: model set from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_ with effective temperatures of 400 to 1500 K (steps of 50 K); and surface gravities of 3.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, and no clouds are associated with these models (alternate designations: `saumon`, `saumon2012`)
             - *drift*: model set from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_ with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex); cloud opacity is fixed in this model, equilibrium chemistry is assumed (alternate designations: `witte`, `witte2011`, `helling`)
             - *madhusudhan*: model set from `Madhusudhan et al. (2011) <http://adsabs.harvard.edu/abs/2011ApJ...737...34M>`_ with effective temperatures of 600 K to 1700 K (steps of 50-100 K); surface gravities of 3.5 and 5.0 in units of cm/s^2; and metallicities of 0.0 to 1.0 (in steps of 0.5 dex); there are multiple cloud prescriptions for this model, equilibrium chemistry is assumed (alternate designations: `madhusudhan`)
@@ -2096,7 +2145,7 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
             - *btsettl08*: (default) model set from `Allard et al. (2012) <http://adsabs.harvard.edu/abs/2012RSPTA.370.2765A>`_  with effective temperatures of 400 to 2900 K (steps of 100 K); surface gravities of 3.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity of -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.3, and 0.5 for temperatures greater than 2000 K only; cloud opacity is fixed in this model, and equilibrium chemistry is assumed. Note that this grid is not completely filled and some gaps have been interpolated (alternate designations: `btsettled`, `btsettl`, `allard`, `allard12`)
             - *btsettl15*: model set from `Allard et al. (2015) <http://adsabs.harvard.edu/abs/2015A&A...577A..42B>`_  with effective temperatures of 1200 to 6300 K (steps of 100 K); surface gravities of 2.5 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and metallicity fixed to solar (alternate designations: 'allard15','allard2015','btsettl015','btsettl2015','BTSettl2015')
             - *morley12*: model set from `Morley et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...756..172M>`_ with effective temperatures of 400 to 1300 K (steps of 50 K); surface gravities of 4.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); and sedimentation efficiency (fsed) of 2, 3, 4 or 5; metallicity is fixed to solar, equilibrium chemistry is assumed, and there are no clouds associated with this model (alternate designations: `morley2012`)
-            - *morley14*: model set from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, sedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: `morley2014`)
+            - *morley14*: model set from `Morley et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...787...78M>`_ with effective temperatures of 200 to 450 K (steps of 25 K) and surface gravities of 3.0 to 5.0 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumedimentation efficiency is fixed at fsed = 5, and cloud coverage fixed at 50% (alternate designations: `morley2014`)
             - *saumon12*: model set from `Saumon et al. (2012) <http://adsabs.harvard.edu/abs/2012ApJ...750...74S>`_ with effective temperatures of 400 to 1500 K (steps of 50 K); and surface gravities of 3.0 to 5.5 in units of cm/s^2 (steps of 0.5 dex); metallicity is fixed to solar, equilibrium chemistry is assumed, and no clouds are associated with these models (alternate designations: `saumon`, `saumon2012`)
             - *drift*: model set from `Witte et al. (2011) <http://adsabs.harvard.edu/abs/2011A%26A...529A..44W>`_ with effective temperatures of 1700 to 3000 K (steps of 50 K); surface gravities of 5.0 and 5.5 in units of cm/s^2; and metallicities of -3.0 to 0.0 (in steps of 0.5 dex); cloud opacity is fixed in this model, equilibrium chemistry is assumed (alternate designations: `witte`, `witte2011`, `helling`)
             - *madhusudhan11*: model set from `Madhusudhan et al. (2011) <http://adsabs.harvard.edu/abs/2011ApJ...737...34M>`_ with effective temperatures of 600 K to 1700 K (steps of 50-100 K); surface gravities of 3.5 and 5.0 in units of cm/s^2; and metallicities of 0.0 to 1.0 (in steps of 0.5 dex); there are multiple cloud prescriptions for this model, equilibrium chemistry is assumed (alternate designations: `madhusudhan`)
@@ -2232,9 +2281,8 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
 # generate model filename
     
     filename = generateModelName(mparam,suffix='txt')
-#    print(mparam,filename)
     kwargs['filename'] = os.path.join(SPECTRAL_MODELS[kwargs['modelset']]['instruments'][kwargs['instrument']],filename)
-
+#    print(mparam,filename,kwargs['filename'])
     # filename = os.path.join(SPECTRAL_MODELS[kwargs['modelset']]['instruments'][kwargs['instrument']],kwargs['modelset'])
 
     # for k in SPECTRAL_MODEL_PARAMETERS_INORDER:
@@ -2822,7 +2870,7 @@ def loadModelParameters(modelset,instrument=DEFAULT_INSTRUMENT,instrument_defaul
                 if SPECTRAL_MODEL_PARAMETERS[ms]['type'] == 'continuous': val = float(val)
                 parameters['parameter_values'][ms].append(val)
                 p[ms] = val
-        parameters['parameter_sets'].append(p)
+        if len(p) > 2: parameters['parameter_sets'].append(p)
 
 # re-sort the parameter values
     for ms in list(parameters['parameter_values'].keys()):
