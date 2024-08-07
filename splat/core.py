@@ -25,7 +25,7 @@ from astropy.coordinates import SkyCoord      # coordinate conversion
 from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 from scipy import stats, signal
-from scipy.integrate import trapz        # for numerical integration
+from scipy.integrate import trapzezoid as trapz        # for numerical integration
 from scipy.interpolate import interp1d
 
 if sys.version_info.major != 2 and sys.version_info.major != 3:
