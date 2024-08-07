@@ -4,13 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "splat"
-version = "2023.05.27"
+version = "2024.08.07"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
+    "asdf-astropy",
     "astropy",
     "astroquery",
     "scipy",
