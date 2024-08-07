@@ -28,7 +28,7 @@ import matplotlib.patheffects
 import numpy
 from scipy import stats
 from scipy.interpolate import interp1d,InterpolatedUnivariateSpline
-from scipy.integrate import trapzezoid as trapz
+from scipy.integrate import trapezoid as trapz
 
 
 # code constants

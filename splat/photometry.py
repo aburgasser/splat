@@ -16,7 +16,7 @@ from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
-from scipy.integrate import trapzezoid as trapz        # for numerical integration
+from scipy.integrate import trapezoid as trapz        # for numerical integration
 from scipy.interpolate import interp1d
 
 # splat functions and constants

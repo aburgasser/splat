@@ -25,7 +25,7 @@ from astropy.coordinates import SkyCoord      # coordinate conversion
 from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 from scipy import stats, signal
-from scipy.integrate import trapzezoid as trapz        # for numerical integration
+from scipy.integrate import trapezoid as trapz        # for numerical integration
 from scipy.interpolate import interp1d
 
 if sys.version_info.major != 2 and sys.version_info.major != 3:
@@ -222,9 +222,9 @@ class Spectrum(object):
     :param wave_label: label of wavelength (default = 'Wavelength')
     :param wave_unit: unit in which wavelength is measured (default = u.micron)
     :param wave_unit_label: label of the unit of wavelength (default = 'micron')
-    :param flux_label: label of flux density (default = 'F\_lambda')
+    :param flux_label: label of flux density (default = r'F\\_lambda')
     :param flux_unit: unit in which flux density is measured (default = u.erg/(u.cm**2 * u.s * u.micron)
-    :param flux_unit_label: label of the unit of flux density (default = 'erg cm\^-2 s\^-1 micron\^-1')
+    :param flux_unit_label: label of the unit of flux density (default = r'erg cm\\^-2 s\\^-1 micron\\^-1')
     :param resolution: Resolution of spectrum (default = median lam/lam step/2.)
     :param slitpixelwidth: Width of the slit measured in subpixel values (default = 3.33)
     :param slitwidth: Actual width of the slit, measured in arcseconds. Default value is the ``slitpixelwidth`` multiplied an assumed (for SpeX) spectrograph pixel scale of 0.15 arcseconds 
@@ -1197,8 +1197,8 @@ class Spectrum(object):
     def toFnu(self):
         '''
         :Purpose: 
-            Converts flux density F\_nu in units of Jy.  
-            There is no change if the spectrum is already in F\_nu units.
+            Converts flux density r'F\\_nu' in units of Jy.  
+            There is no change if the spectrum is already in r'F\\_nu' units.
 
         :Required Inputs:
             None
@@ -1232,8 +1232,8 @@ class Spectrum(object):
     def toFlam(self):
         '''
         :Purpose: 
-            Converts flux density to F\_lambda in units of erg/s/cm\^2/Hz. 
-            There is no change if the spectrum is already in F\_lambda units.
+            Converts flux density to r'F\\_lambda' in units of r'erg/s/cm\\^2/Hz'. 
+            There is no change if the spectrum is already in r'F\\_lambda' units.
         
         :Required Inputs:
             None
@@ -1268,7 +1268,7 @@ class Spectrum(object):
     def toSED(self):
         '''
         :Purpose: 
-            Converts flux density in F\_lambda to lambda x F\_lambda with units of erg/s/cm\^2. 
+            Converts flux density in r'F\\_lambda' to lambda x r'F\\_lambda' with units of r'erg/s/cm\\^2'. 
 
         :Required Inputs:
             None
