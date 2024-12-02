@@ -564,18 +564,47 @@ def generateModelName(par,suffix='txt'):
     for x in ['model','instrument']:
         if x not in list(par.keys()): raise ValueError('parameter dict must include {} keyword'.format(x))
     file = par['model']
-    for x in splat.SPECTRAL_MODEL_PARAMETERS_INORDER:
+    for x in SPECTRAL_MODEL_PARAMETERS_INORDER:
         if x in list(par.keys()): 
-            if splat.SPECTRAL_MODEL_PARAMETERS[x]['type']=='continuous':
-                kstr = '_{}{:.2f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x])-0.0001)
-                if x=='teff': kstr = '_{}{:.0f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x]))
+            if SPECTRAL_MODEL_PARAMETERS[x]['type']=='continuous':
+                kstr = '_{}{:.2f}'.format(SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x])-0.0001)
+                if x=='teff': kstr = '_{}{:.0f}'.format(SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x]))
 #                if x in ['z','enrich','zc','zo','zn'] and float(par[x])>0: kstr = '_{}+{:.2f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x]))
 #                else: kstr = '_{}{:.2f}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],float(par[x]))
-            else: kstr = '_{}{}'.format(splat.SPECTRAL_MODEL_PARAMETERS[x]['prefix'],str(par[x]))
+            else: kstr = '_{}{}'.format(SPECTRAL_MODEL_PARAMETERS[x]['prefix'],str(par[x]))
             file+=kstr
     file+='_{}.{}'.format(par['instrument'],suffix)
     return file
 
+# reverse function
+def ModelNameToParameters(file,unit=False):
+    '''
+    Purpose
+    -------
+    Extracts dictionary of parameters from a standard SPLAT file name
+
+    DOCSTRING IN PROGRESS
+    '''
+    f = copy.deepcopy(os.path.basename(file))
+# remove suffix
+    suffix = ['.txt','.csv','.fits','.gz','.dat']
+    for x in suffix: f = f.replace(x,'')
+
+# split file
+    mpar = numpy.array(f.split('_'))
+    par = {'model': mpar[0], 'instrument': mpar[-1]}
+
+# search for prefix and add to dict if found
+    for x in SPECTRAL_MODEL_PARAMETERS:
+        pref = SPECTRAL_MODEL_PARAMETERS[x]['prefix']
+        w = numpy.array([l[:len(pref)]==pref for l in mpar])
+        if True in w:
+            val = mpar[w][0][len(pref):]
+            if SPECTRAL_MODEL_PARAMETERS[x]['type'] == 'continuous': 
+                par[x] = float(val)
+                if unit==True: par[x] = float(val)*SPECTRAL_MODEL_PARAMETERS[x]['unit']
+            else: par[x] = val
+    return par
 
 def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=ERROR_CHECKING,skipraw=True,*args,**kwargs):
 

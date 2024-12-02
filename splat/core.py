@@ -1053,7 +1053,7 @@ class Spectrum(object):
             #         f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key[i]),int(self.source_key[i]))
             # else:
             f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key),int(self.source_key))
-        if self.published == 'Y':
+        if self.published == 'Y' or self.data_reference != '':
             f+='\n\nIf you use these data, please cite:'
             # if isinstance(self.data_reference,list):
             #     for i in range(len(self.data_reference)):
@@ -1801,8 +1801,8 @@ class Spectrum(object):
 
         if self.flux_label == 'Temperature' or self.flux_label == 'SED':
             self.reset()
-        if self.flux_unit != DEFAULT_FLUX_UNIT:
-            self.toFlam()
+        # if self.flux_unit != DEFAULT_FLUX_UNIT:
+        #     self.toFlam()
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',not absolute)
         apmag,apmag_e = filterMag(self,filt,**kwargs)
@@ -1848,7 +1848,7 @@ class Spectrum(object):
             (15.002545668628173, 0.017635234089677564)
         '''
 
-        from .photometry import filterMag
+#        from .photometry import filterMag
         return filterMag(self,filt,**kwargs)
 
 
@@ -2276,6 +2276,56 @@ class Spectrum(object):
         if apply==True: self.maskFlux(**kwargs)
         return
 
+
+    def maskSN(self,limit,apply=True,**kwargs):
+        '''
+        Purpose
+        -------
+
+        Apply a mask based on S/N upper limit
+
+        Parameters
+        ----------
+
+        limit : float
+            S/N upper limit; all fluxes with values below this S/N are masked
+
+        apply = True : bool [optional]
+            If True, apply the mask using maskFlux()
+
+        Outputs
+        -------
+
+        None: changes the Spectrum object by:
+            * creates and/or sets the mask keyword within the Spectrum object to an array of booleans
+            * if apply==True, masks the relevant range of data
+
+        Example
+        -------
+        
+        TBD
+
+        Dependencies
+        ------------
+            `maskFlux()`_
+            `isUnit()`_
+            numpy
+
+        .. _`isUnit()` : api.html#splat.utilities.isUnit
+        .. _`maskFlux()` : api.html#splat.core.maskFlux
+
+        '''
+        if 'mask' not in list(self.__dict__.keys()): self.mask = numpy.array([False]*len(self.wave))
+        if isUnit(limit): limit  = limit.value
+        w = numpy.where(numpy.logical_or(self.flux.value/self.noise.value<limit,numpy.isnan(self.flux.value/self.noise.value)==True))
+        if len(w[0])>0: 
+            if len(w[0])==len(self.wave): 
+                if verbose==True: print('Warning: all pixels would be masked with this S/N limit; not applying mask')
+            else: 
+                self.mask[w] = True 
+                if apply==True: self.maskFlux(**kwargs)
+                self.history.append('Masked {} pixels with S/N < {}'.format(len(w[0]),limit))
+        return
 
 
     def maskFlux(self,mask=[],replace_noise=True,replace_value=numpy.nan,others=[]):
@@ -7832,7 +7882,7 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
 
 # compute intepolated flux and noise
 #        print(waveRng,len(w),numpy.min(w),numpy.max(w))
-        w = padWhereArray(w,len(sp.wave))
+        w = padWhereArray(w,len(sp.wave)-1)
 #        print(waveRng,len(w),numpy.min(w),numpy.max(w))
         f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=numpy.nan)
         yNum = f(xNum)
