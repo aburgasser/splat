@@ -1902,22 +1902,14 @@ class Spectrum(object):
     def normalize(self,*args,**kwargs):
         '''
         :Purpose: 
-
             Normalize a spectrum to a maximum value of 1 (in its current units) either at a 
             particular wavelength or over a wavelength range
-
         :Required Inputs: 
-
             None
-
         :Optional Inputs: 
-
             :param wave_range: choose the wavelength range to normalize; can be a list specifying minimum and maximum or a single wavelength (default = None); alternate keywords: `wave_range`, `range`
-
         :Output: 
-
             None; spectrum is normalized
-
         :Example:
            >>> import splat
            >>> sp = splat.getSpectrum(lucky=True)[0]
@@ -1928,6 +1920,7 @@ class Spectrum(object):
            >>> sp.fluxMax()
            <Quantity 1.591310977935791 erg / (cm2 micron s)>
         '''
+        med = kwargs.get('median',False)
         rng = kwargs.get('wave_range',False)
         rng = kwargs.get('waverange',rng)
         rng = kwargs.get('range',rng)
@@ -1944,9 +1937,15 @@ class Spectrum(object):
                 f = interp1d(self.wave.value,self.flux.value)
                 scalefactor = f(rng[0])
             else:
-                scalefactor = numpy.nanmax(self.flux.value[numpy.where(numpy.logical_and(self.wave.value > rng[0],self.wave.value < rng[1]))])
+                if med:                
+                    scalefactor = numpy.nanmedian(self.flux.value[numpy.where(numpy.logical_and(self.wave.value > rng[0],self.wave.value < rng[1]))])
+                else:
+                    scalefactor = numpy.nanmax(self.flux.value[numpy.where(numpy.logical_and(self.wave.value > rng[0],self.wave.value < rng[1]))])
         else:
-            scalefactor = self.fluxMax(**kwargs)
+            if med:
+                scalefactor = numpy.nanmedian(self.flux.value)
+            else:
+                scalefactor = self.fluxMax(**kwargs)
         if isUnit(scalefactor): scalefactor = scalefactor.value
         if scalefactor == 0.: print('\nWarning: normalize is attempting to divide by zero; ignoring')
         elif numpy.isnan(scalefactor) == True: print('\nWarning: normalize is attempting to divide by nan; ignoring')
@@ -1956,6 +1955,7 @@ class Spectrum(object):
             self.history.append('Spectrum normalized')
             self.snr = self.computeSN()
         return
+
 
     def plot(self,**kwargs):
         '''
