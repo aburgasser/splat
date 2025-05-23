@@ -25,7 +25,7 @@ from astropy.coordinates import SkyCoord      # coordinate conversion
 from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 from scipy import stats, signal
-from scipy.integrate import trapz        # for numerical integration
+from scipy.integrate import trapezoid as trapz        # for numerical integration
 from scipy.interpolate import interp1d
 
 if sys.version_info.major != 2 and sys.version_info.major != 3:
@@ -222,9 +222,9 @@ class Spectrum(object):
     :param wave_label: label of wavelength (default = 'Wavelength')
     :param wave_unit: unit in which wavelength is measured (default = u.micron)
     :param wave_unit_label: label of the unit of wavelength (default = 'micron')
-    :param flux_label: label of flux density (default = 'F\_lambda')
+    :param flux_label: label of flux density (default = r'F\\_lambda')
     :param flux_unit: unit in which flux density is measured (default = u.erg/(u.cm**2 * u.s * u.micron)
-    :param flux_unit_label: label of the unit of flux density (default = 'erg cm\^-2 s\^-1 micron\^-1')
+    :param flux_unit_label: label of the unit of flux density (default = r'erg cm\\^-2 s\\^-1 micron\\^-1')
     :param resolution: Resolution of spectrum (default = median lam/lam step/2.)
     :param slitpixelwidth: Width of the slit measured in subpixel values (default = 3.33)
     :param slitwidth: Actual width of the slit, measured in arcseconds. Default value is the ``slitpixelwidth`` multiplied an assumed (for SpeX) spectrograph pixel scale of 0.15 arcseconds 
@@ -1053,7 +1053,7 @@ class Spectrum(object):
             #         f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key[i]),int(self.source_key[i]))
             # else:
             f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key),int(self.source_key))
-        if self.published == 'Y':
+        if self.published == 'Y' or self.data_reference != '':
             f+='\n\nIf you use these data, please cite:'
             # if isinstance(self.data_reference,list):
             #     for i in range(len(self.data_reference)):
@@ -1197,8 +1197,8 @@ class Spectrum(object):
     def toFnu(self):
         '''
         :Purpose: 
-            Converts flux density F\_nu in units of Jy.  
-            There is no change if the spectrum is already in F\_nu units.
+            Converts flux density r'F\\_nu' in units of Jy.  
+            There is no change if the spectrum is already in r'F\\_nu' units.
 
         :Required Inputs:
             None
@@ -1232,8 +1232,8 @@ class Spectrum(object):
     def toFlam(self):
         '''
         :Purpose: 
-            Converts flux density to F\_lambda in units of erg/s/cm\^2/Hz. 
-            There is no change if the spectrum is already in F\_lambda units.
+            Converts flux density to r'F\\_lambda' in units of r'erg/s/cm\\^2/Hz'. 
+            There is no change if the spectrum is already in r'F\\_lambda' units.
         
         :Required Inputs:
             None
@@ -1268,7 +1268,7 @@ class Spectrum(object):
     def toSED(self):
         '''
         :Purpose: 
-            Converts flux density in F\_lambda to lambda x F\_lambda with units of erg/s/cm\^2. 
+            Converts flux density in r'F\\_lambda' to lambda x r'F\\_lambda' with units of r'erg/s/cm\\^2'. 
 
         :Required Inputs:
             None
@@ -1801,8 +1801,8 @@ class Spectrum(object):
 
         if self.flux_label == 'Temperature' or self.flux_label == 'SED':
             self.reset()
-        if self.flux_unit != DEFAULT_FLUX_UNIT:
-            self.toFlam()
+        # if self.flux_unit != DEFAULT_FLUX_UNIT:
+        #     self.toFlam()
         absolute = kwargs.get('absolute',False)
         apparent = kwargs.get('apparent',not absolute)
         apmag,apmag_e = filterMag(self,filt,**kwargs)
@@ -1848,7 +1848,7 @@ class Spectrum(object):
             (15.002545668628173, 0.017635234089677564)
         '''
 
-        from .photometry import filterMag
+#        from .photometry import filterMag
         return filterMag(self,filt,**kwargs)
 
 
@@ -2276,6 +2276,56 @@ class Spectrum(object):
         if apply==True: self.maskFlux(**kwargs)
         return
 
+
+    def maskSN(self,limit,apply=True,**kwargs):
+        '''
+        Purpose
+        -------
+
+        Apply a mask based on S/N upper limit
+
+        Parameters
+        ----------
+
+        limit : float
+            S/N upper limit; all fluxes with values below this S/N are masked
+
+        apply = True : bool [optional]
+            If True, apply the mask using maskFlux()
+
+        Outputs
+        -------
+
+        None: changes the Spectrum object by:
+            * creates and/or sets the mask keyword within the Spectrum object to an array of booleans
+            * if apply==True, masks the relevant range of data
+
+        Example
+        -------
+        
+        TBD
+
+        Dependencies
+        ------------
+            `maskFlux()`_
+            `isUnit()`_
+            numpy
+
+        .. _`isUnit()` : api.html#splat.utilities.isUnit
+        .. _`maskFlux()` : api.html#splat.core.maskFlux
+
+        '''
+        if 'mask' not in list(self.__dict__.keys()): self.mask = numpy.array([False]*len(self.wave))
+        if isUnit(limit): limit  = limit.value
+        w = numpy.where(numpy.logical_or(self.flux.value/self.noise.value<limit,numpy.isnan(self.flux.value/self.noise.value)==True))
+        if len(w[0])>0: 
+            if len(w[0])==len(self.wave): 
+                if verbose==True: print('Warning: all pixels would be masked with this S/N limit; not applying mask')
+            else: 
+                self.mask[w] = True 
+                if apply==True: self.maskFlux(**kwargs)
+                self.history.append('Masked {} pixels with S/N < {}'.format(len(w[0]),limit))
+        return
 
 
     def maskFlux(self,mask=[],replace_noise=True,replace_value=numpy.nan,others=[]):
@@ -4107,7 +4157,7 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
 
 # parameters
     scaleflag = kwargs.get('scaleflag',scale)
-    vflag = True
+    vflag = kwargs.get('vflag',scale)
 
 # generate copies of spectrum objects
     sp1 = copy.deepcopy(s1)
@@ -4145,8 +4195,9 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
     if rngflag==True:
 
 # interpolation of second spectrum
-        f2r = interp1d(sp2.wave.value,sp2.flux.value)
-        v2r = interp1d(sp2.wave.value,sp2.variance.value)
+        if verbose==True: print('Scaling over the region {} to {}'.format(rng[0],rng[1]))
+        f2r = interp1d(sp2.wave.value,sp2.flux.value,bounds_error=False,fill_value=numpy.nan)
+        v2r = interp1d(sp2.wave.value,sp2.variance.value,bounds_error=False,fill_value=numpy.nan)
 
 # find overlap region, assuming first spectrum sets the flux scale standard
 # assume this minimizes chi^2 residuals
@@ -4165,14 +4216,15 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
             if not numpy.isnan(numpy.nanmedian(v2r(wv12))): vtot=vtot+v2r(wv12)
 
             if numpy.nanmedian(vtot) == 0.: vflag = False
+            if numpy.isnan(numpy.nanmedian(vtot)) == True: vflag = False
             if vflag == True:
                 scl = numpy.nansum(flx12*f2r(wv12)/vtot)/numpy.nansum(f2r(wv12)**2/vtot)
             else:
                 scl = numpy.nansum(flx12*f2r(wv12))/numpy.nansum(f2r(wv12)**2)
             sp2.scale(scl)
 
-        f2r = interp1d(sp2.wave.value,sp2.flux.value)
-        v2r = interp1d(sp2.wave.value,sp2.variance.value)
+        f2r = interp1d(sp2.wave.value,sp2.flux.value,bounds_error=False,fill_value=numpy.nan)
+        v2r = interp1d(sp2.wave.value,sp2.variance.value,bounds_error=False,fill_value=numpy.nan)
 
 # piece back together, starting with segments with minimum wavelength
     if numpy.nanmin(sp1.wave.value) < numpy.nanmin(sp2.wave.value):
@@ -4192,10 +4244,10 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
         v2 = v2r(wv12)
         if numpy.isnan(numpy.nanmedian(v1)): v1 = v2
         if numpy.isnan(numpy.nanmedian(v2)): v2 = v1
-        if vflag == 0:
-            flxmid = (flx12/v1+f2r(wv12)/v2)/(1./v1+1./v2)
-        else:
+        if numpy.isnan(numpy.nanmedian(v1))==True and numpy.isnan(numpy.nanmedian(v2))==True:
             flxmid = 0.5*(flx12+f2r(wv12))
+        else:
+            flxmid = (flx12/v1+f2r(wv12)/v2)/(1./v1+1./v2)
         varmid = 1./(1./v1+1./v2)
         wave = numpy.append(wave,wv12)
         flux = numpy.append(flux,flxmid)
@@ -7145,7 +7197,7 @@ def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=Non
     ref : string, default = 'burgasser2010'
         reference for the index/calibration set to use for determining spectral binary status, one of the following:
             * 'burgasser2010': indices from Burgasser et al. (2010; 2010ApJ...710.1142B) appropriate for spectral types L7--T5
-            * 'bardalez2004': indices from Bardalez Gagliuffi et al. (2014; 2014ApJ...794..143B) appropriate for spectral types M7-L8
+            * 'bardalez2014': indices from Bardalez Gagliuffi et al. (2014; 2014ApJ...794..143B) appropriate for spectral types M7-L8
 
     output : string, default = 'classification'
         what to return from function call, one of the following
@@ -8104,7 +8156,7 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
 
 # compute intepolated flux and noise
 #        print(waveRng,len(w),numpy.min(w),numpy.max(w))
-        w = padWhereArray(w,len(sp.wave))
+        w = padWhereArray(w,len(sp.wave)-1)
 #        print(waveRng,len(w),numpy.min(w),numpy.max(w))
         f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=numpy.nan)
         yNum = f(xNum)

@@ -13,7 +13,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2023.11.30'
+VERSION = '2024.08.07'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -52,6 +52,7 @@ AUTHORS = [
     'Tomoki Tamiya',
     'Steven Truong',
     'Russell Van Linge',
+    'Joman Wong',
 ]
 
 # Directory variables
@@ -322,6 +323,9 @@ FILTERS = { \
     'HAWK_NB1060': {'file': 'hawk-nb1060.txt', 'description': 'HAWK Narrow Band 1060', 'zeropoint': 2003.27, 'method': 'vega', 'rsr': False, 'altname': ['hawk 1060']}, \
     'HAWK_NB1190': {'file': 'hawk-nb1190.txt', 'description': 'HAWK Narrow Band 1190', 'zeropoint': 1697.50, 'method': 'vega', 'rsr': False, 'altname': ['hawk 1190']}, \
     'HAWK_NB2090': {'file': 'hawk-nb2090.txt', 'description': 'HAWK Narrow Band 2090', 'zeropoint': 706.68, 'method': 'vega', 'rsr': False, 'altname': ['hawk 2090']}, \
+    'ACS_F435W': {'file': 'HST-ACS_F435W.txt', 'description': 'HST ACS WFC F435W', 'zeropoint': 4036.38, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'ACS_F606W': {'file': 'HST-ACS_F606W.txt', 'description': 'HST ACS WFC F606W', 'zeropoint': 3351.09, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'ACS_F814W': {'file': 'HST-ACS_F814W.txt', 'description': 'HST ACS WFC F814W', 'zeropoint': 2440.74, 'method': 'vega', 'rsr': True, 'altname': []}, \
     'IRAC_CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9, 'method': 'vega', 'rsr': True, 'altname': ['irac 1','irac 3.6','[3.6]']}, \
     'IRAC_CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7, 'method': 'vega', 'rsr': True, 'altname': ['irac 2','irac 4.5','[4.5]']}, \
     'IRAC_CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0, 'method': 'vega', 'rsr': True, 'altname': ['irac 3','irac 5.8','[5.8]']}, \
@@ -407,7 +411,7 @@ FILTERS = { \
     'NIRCAM_F405N': {'file': 'JWST-NIRCAM_F405N.txt', 'description': 'JWST NIRCAM F405N (narrow 4.05 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
     'NIRCAM_F410M': {'file': 'JWST-NIRCAM_F410M.txt', 'description': 'JWST NIRCAM F410M (medium 4.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
     'NIRCAM_F430M': {'file': 'JWST-NIRCAM_F430M.txt', 'description': 'JWST NIRCAM F430M (medium 4.30 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F444W': {'file': 'JWST-NIRCAM_F444W.txt', 'description': 'JWST NIRCAM F444W (wide 4.44 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F444W': {'file': 'JWST-NIRCAM_F444W.txt', 'description': 'JWST NIRCAM F444W (wide 4.44 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': ['F444W']}, \
     'NIRCAM_F460M': {'file': 'JWST-NIRCAM_F460M.txt', 'description': 'JWST NIRCAM F460M (medium 4.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
     'NIRCAM_F466N': {'file': 'JWST-NIRCAM_F466N.txt', 'description': 'JWST NIRCAM F466N (narrow 4.66 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
     'NIRCAM_F470N': {'file': 'JWST-NIRCAM_F470N.txt', 'description': 'JWST NIRCAM F470N (narrow 4.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
@@ -635,14 +639,14 @@ INSTRUMENTS_ALT = {
     }
 
 # Spectral model defaults
-SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','fsed','cld','kzz','ad','y','enrich','zc','zo','zn','co','broad','logpmin','logpmax','radius']
+SPECTRAL_MODEL_PARAMETERS_INORDER = ['teff','logg','z','kzz','fsed','co','cld','y','enrich','zc','zo','zn','broad','logpmin','logpmax','ad','radius']
 SPECTRAL_MODEL_PARAMETERS = {\
-    'teff': {'name': 'temperature', 'prefix': 't', 'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$ (K)', 'type': 'continuous'}, \
-    'logg': {'name': 'gravity', 'prefix': 'g', 'unit': u.dex, 'default': 5.0, 'title': '$\log{g}$ (cgs)', 'type': 'continuous'}, \
+    'teff': {'name': 'temperature', 'prefix': 't', 'unit': u.K, 'default': 1000.0, 'title': r'$T_{eff}$ (K)', 'type': 'continuous'}, \
+    'logg': {'name': 'gravity', 'prefix': 'g', 'unit': u.dex, 'default': 5.0, 'title': r'$\log{g}$ (cgs)', 'type': 'continuous'}, \
     'z': {'name': 'metallicity', 'prefix': 'z', 'unit': u.dex, 'default': 0., 'title': '$Z$', 'type': 'continuous'}, \
-    'fsed': {'name': 'rainout', 'prefix': 'f', 'unit': u.m/u.m, 'default': 'nc', 'title': '$f_{sed}$', 'type': 'discrete'}, \
+    'fsed': {'name': 'rainout', 'prefix': 'f', 'unit': u.m/u.m, 'default': 'nc', 'title': r'$f_{sed}$', 'type': 'discrete'}, \
     'cld': {'name': 'cloud', 'prefix': 'cld', 'unit': u.m/u.m, 'default': 'nc', 'title': 'Cloud or Condensation Treatment', 'type': 'discrete'}, \
-    'kzz': {'name': 'mixing', 'prefix': 'k', 'unit': u.m/u.m, 'default': 'eq', 'title': '$log\ \kappa_{zz}$ (cgs)', 'type': 'discrete'},\
+    'kzz': {'name': 'mixing', 'prefix': 'k', 'unit': u.m/u.m, 'default': 'eq', 'title': r'$log\ \kappa_{zz}$ (cgs)', 'type': 'continuous'},\
     'ad': {'name': 'adiabat', 'prefix': 'ad', 'unit': u.m/u.m, 'default': 1., 'title': 'Adiabatic Index', 'type': 'continuous'},\
     'y': {'name': 'He abundance', 'prefix': 'y', 'unit': u.dex, 'default': 0.27, 'title': '$Y$', 'type': 'continuous'}, \
     'enrich': {'name': 'alpha enrichment', 'prefix': 'en', 'unit': u.dex, 'default': 0., 'title': 'Alpha Element Enrichment', 'type': 'continuous'},\
@@ -653,31 +657,48 @@ SPECTRAL_MODEL_PARAMETERS = {\
     'broad': {'name': 'broadening', 'prefix': 'br', 'unit': u.m/u.m, 'default': 'A', 'title': 'Alkali Line Broadening Prescription', 'type': 'discrete'},\
     'logpmin': {'name': 'log pressure top', 'prefix': 'pt', 'unit': u.dex, 'default': -8., 'title': 'log Minimum Pressure (bar)', 'type': 'continuous'},\
     'logpmax': {'name': 'log pressure bottom', 'prefix': 'pb', 'unit': u.dex, 'default': 4., 'title': 'log Maximum Pressure (bar)', 'type': 'continuous'},\
-    'radius': {'name': 'radius', 'prefix': 'rad', 'unit': u.Rsun, 'default': 0., 'title': 'Radius (R$_{\odot}$)', 'type': 'continuous'},\
+    'radius': {'name': 'radius', 'prefix': 'rad', 'unit': u.Rsun, 'default': 0., 'title': r'Radius (R$_{\odot}$)', 'type': 'continuous'},\
 }
 SPECTRAL_MODELS = {\
 #    'gaia': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/gaia/', 'name': 'AMES GAIA', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altname': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'rawfolder': HOME_FOLDER+'/models/phoenix/nextgen/fullres/', 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
-    'alvarado24': {'instruments': {}, 'name': 'Alvarado 2024', 'citation': 'Alvarado et al. (2024)', 'bibcode': '', 'altname': ['alvarado','alv24',], 'default': {'teff': 1500., 'logg': 6.0, 'z': 0.10, 'enrich': 0.0}}, \
-    'btnextgen': {'instruments': {}, 'name': 'BT NextGen', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['nextgen-bt','btnextgen'], 'default': {'teff': 3000., 'logg': 5.0, 'z': 0.0, 'enrich': 0.}}, \
-    'btsettl08': {'instruments': {}, 'name': 'BT Settl 2008', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['allard','allard12','allard2012','btsettl','btsettled','btsettl08','btsettl2008','BTSettl2008'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'enrich': 0.}}, \
-    'btsettl15': {'instruments': {}, 'name': 'BT Settl 2015', 'citation': 'Allard et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altname': ['allard15','allard2015','btsettl015','btsettl2015','BTSettl2015'],  'default': {'teff': 1500., 'logg': 5.0, 'z': 0.}}, \
+#    'alvarado24': {'instruments': {}, 'name': 'Alvarado 2024', 'citation': 'Alvarado et al. (2024)', 'bibcode': '', 'altname': ['alvarado','alv24','sand','sandy'], 'default': {'teff': 1500., 'logg': 6.0, 'z': 0.10, 'enrich': 0.0}}, \
+    'atmo20': {'instruments': {}, 'name': 'ATMO2020', 'citation': 'Phillips et al. (2020)', 'bibcode': '2020A%26A...637A..38P', 'altname': ['atmo','phillips','phi20','atmos2020','atmos20','atmo2020','atmo20'], 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0,'kzz': 0.0,'cld': 'LC','broad': 'A','ad': 1.0,'logpmin': -8, 'logpmax': 4}}, \
+    'atmo20pp': {'instruments': {}, 'name': 'ATMO2020++', 'citation': 'Meisner et al. (2023)', 'bibcode': '2023AJ....166...57M', 'altname': ['atmo++','meisner23','mei23','atmo2020++','atmo20++','atmos2020++','atmos20++'], 'default': {'teff': 1200., 'logg': 5.0, 'z': 0.0,'kzz': 4.0}}, \
+    'btcond': {'instruments': {}, 'name': 'BT Cond', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['dusty-cond','bt-cond','btc'], 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0, 'enrich': 0.0}}, \
+    'btdusty16': {'instruments': {}, 'name': 'BT Dusty 2016', 'citation': 'TBD', 'bibcode': '', 'altname': ['btdusty2016','dusty16','dusty2016','dusty-bt','bt-dusty','bt-dusty2016','btdusty','bt-dusty16','btd'], 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0, 'enrich': 0.0}}, \
+    'btnextgen': {'instruments': {}, 'name': 'BT NextGen', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['nextgen-bt','btnextgen','btn'], 'default': {'teff': 3000., 'logg': 5.0, 'z': 0.0, 'enrich': 0.}}, \
+    'btsettl08': {'instruments': {}, 'name': 'BT Settl 2008', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['allard','allard12','allard2012','btsettl','btsettled','btsettl08','btsettl2008','BTSettl2008','bts','bts08'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'enrich': 0.}}, \
+    'btsettl15': {'instruments': {}, 'name': 'BT Settl 2015', 'citation': 'Allard et al. (2015)', 'bibcode': '2015A&A...577A..42B', 'altname': ['allard15','allard2015','btsettl015','btsettl2015','BTSettl2015','bts15'],  'default': {'teff': 1500., 'logg': 5.0, 'z': 0.}}, \
     'burrows06': {'instruments': {}, 'name': 'Burrows et al. (2006)', 'citation': 'Burrows et al. (2006)', 'bibcode': '2006ApJ...640.1063B', 'altname': ['burrows','burrows2006'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
     'cond01': {'instruments': {}, 'name': 'AMES Cond', 'citation': 'Allard et al. (2001)', 'bibcode': '2001ApJ...556..357A', 'altname': ['cond','cond-ames','amescond'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
+    'dusty01': {'instruments': {}, 'name': 'AMES Dusty', 'citation': 'Allard et al. (2001)', 'bibcode': '2001ApJ...556..357A', 'altname': ['dusty','dusty-ames','amesdusty'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
+    'dback24': {'instruments': {}, 'name': 'Sonora Diamondback', 'citation': 'Morley et al. (2024)', 'bibcode': '2024arXiv240200758M', 'altname': ['diamondback','sonora-diamondback','sonora-dback','dback24','diamondback24','morley24','mor24'], 'default': {'teff': 1200., 'logg': 5.0, 'z': 0., 'fsed': 'f2'}}, \
     'drift': {'instruments': {}, 'name': 'Drift', 'citation': 'Witte et al. (2011)', 'bibcode': '2011A&A...529A..44W', 'altname': ['witte','witte11','witte2011','helling'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
     'dusty01': {'instruments': {}, 'name': 'AMES Dusty', 'citation': 'Allard et al. (2001)', 'bibcode': '2001ApJ...556..357A', 'altname': ['dusty','dusty-ames','amesdusty'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0}}, \
-    'madhusudhan11': {'instruments': {}, 'name': 'Madhusudhan et al. (2011)', 'citation': 'Madhusudhan et al. (2011)', 'bibcode': '2011ApJ...737...34M', 'altname': ['madhu','madhusudhan','madhu11','madhu2011','madhusudhan2011'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.,'cld': 'ae60', 'kzz': 'eq','fsed': 'eq'}}, \
+    'gerasimov20': {'instruments': {}, 'name': 'Gerasimov et al. 2020', 'citation': 'Gerasimov et al. (2020)', 'bibcode': '2020RNAAS...4..214G', 'altname': ['phxlowz','ger20'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
+    'helios': {'instruments': {}, 'name': 'Helios', 'citation': 'Malik et al. (2017)', 'bibcode': '2017AJ....153...56M', 'altname': ['hel','malik2017','malik17','mal17'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'co': 0.5}}, \
+    'elfowl24': {'instruments': {}, 'name': 'Sonora Elfowl', 'citation': 'Mukherjee et al. (2024)', 'bibcode': '2024ApJ...963...73M', 'altname': ['elfowl','sonora-elfowl','elfowl24','mukherjee','mukherjee24','muk24'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'co': 1, 'kzz': 2.0}}, \
+    'elfowl24-ph3': {'instruments': {}, 'name': 'Modified Sonora Elfowl', 'citation': 'Beiler et al. (2024)', 'bibcode': '2024ApJ...973...60B', 'altname': ['ph3','elfowl24-mod','beiler','beiler24','bei24'], 'default': {'teff': 500., 'logg': 5.0, 'z': 0., 'co': 1, 'kzz': 2.0}}, \
+    'karalidi21': {'instruments': {}, 'name': 'Sonora Cholla', 'citation': 'Karalidi et al. (2021)', 'bibcode': '2021ApJ...923..269K', 'altname': ['karalidi2021','karalidi','sonora-cholla','cholla'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': 4.0}}, \
+    'lacy23': {'instruments': {}, 'name': 'Lacy & Burrows (2023)', 'citation': 'Lacy & Burrows (2023)', 'bibcode': '2023ApJ...950....8L', 'altname': ['lacy2023','lac23','lacy'], 'default': {'teff': 400., 'logg': 4.0, 'z': 0., 'cld': 'nc', 'kzz': 0.}}, \
+    'lowz': {'instruments': {}, 'name': 'LowZ models', 'citation': 'Meisner et al. (2021)', 'bibcode': '2021ApJ...915..120M', 'altname': ['meisner2021','mei21','line21','line2021'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': 2.0, 'co': 0.85}}, \
+    'lowz-cold': {'instruments': {}, 'name': 'LowZ Cold Models', 'citation': 'M. Line (priv. comm.)', 'bibcode': '', 'altname': ['line24','lin24'], 'default': {'teff': 500., 'logg': 4.5, 'z': 0., 'co': 0.91}}, \
+    'madhu11': {'instruments': {}, 'name': 'Madhusudhan et al. (2011)', 'citation': 'Madhusudhan et al. (2011)', 'bibcode': '2011ApJ...737...34M', 'altname': ['madhu','madhusudhan','madhusudhan11','madhu2011','madhusudhan2011'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.,'cld': 'ae60', 'kzz': 0.0,'fsed': -1.0}}, \
+    'meisner23': {'instruments': {}, 'name': 'Meisner et al. (2023)', 'citation': 'Meisner et al. (2023)', 'bibcode': '2023AJ....166...57M', 'altname': ['meisner','mei23'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': 5.0, 'ad': 3.95}}, \
     'morley12': {'instruments': {}, 'name': 'Morley et al. (2012)', 'citation': 'Morley et al. (2012)', 'bibcode': '2012ApJ...756..172M', 'altname': ['morley','morley2012'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'fsed': 'f5'}}, \
     'morley14': {'instruments': {}, 'name': 'Morley et al. (2014)', 'citation': 'Morley et al. (2014)', 'bibcode': '2014ApJ...787...78M', 'altname': ['morley2014'], 'default': {'teff': 300., 'logg': 5.0, 'z': 0., 'fsed': 'f5', 'cld': 'h50'}}, \
 #    'nextgen99': {'instruments': {}, 'name': 'Phoenix NextGen', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altname': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
-    'saumon08': {'instruments': {}, 'name': 'Saumon & Marley 2008', 'citation': 'Saumon & Marley 2008', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','saumon2008'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
-    'sonora18': {'instruments': {}, 'name': 'Sonora 2018', 'citation': 'Marley et al. (2018)', 'bibcode': 'marley_mark_2018_1309035', 'altname': ['marley','marley18','marley2018','sonora2018'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
-    'sonora21': {'instruments': {}, 'name': 'Sonora-bobcat', 'citation': 'Marley et al. (2021)', 'bibcode': '2021ApJ...920...85M', 'altname': ['marley2021','sonora','sonora2021','bobcat','sonora-bobcat'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'co': 1}}, \
-    'karalidi21': {'instruments': {}, 'name': 'Sonora-cholla', 'citation': 'Karalidi et al. (2021)', 'bibcode': '2021ApJ...923..269K', 'altname': ['karalidi2021','karalidi','sonora-cholla','cholla'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': 4}}, \
-    'gerasimov20': {'instruments': {}, 'name': 'Gerasimov 2020', 'citation': 'Gerasimov et al. (2020)', 'bibcode': '2020RNAAS...4..214G', 'altname': ['phxlowz','ger20'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
-    'gerasimov23': {'instruments': {}, 'name': 'Gerasimov 2023', 'citation': 'Gerasimov et al. (2023)', 'bibcode': '', 'altname': ['gerasimov','ger23'], 'default': {'teff': 1500., 'logg': 5.0, 'z': -0.5, 'enrich': 0.30}}, \
-    'lowz': {'instruments': {}, 'name': 'LowZ models', 'citation': 'Meisner et al. (2021)', 'bibcode': '2021ApJ...915..120M', 'altname': ['meisner2021','mei21','line21','line2021'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': '2.0', 'co': 0.85}}, \
-#    'btcond': {'instruments': {}, 'name': 'BT Cond', 'citation': 'Allard et al. (2012)', 'bibcode': '2012RSPTA.370.2765A', 'altname': ['dusty-cond','bt-cond'], 'rawfolder': '/Volumes/splat/models/btcond/ORIGINAL/', 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0, 'enrich': 0.0}}, \
-#    'btdusty16': {'instruments': {}, 'name': 'BT Dusty 2016', 'citation': 'TBD', 'bibcode': '', 'altname': ['dusty-bt','bt-dusty','bt-dusty2016'], 'rawfolder': '/Volumes/splat/models/btdusty/ORIGINAL/', 'default': {'teff': 2000., 'logg': 5.0, 'z': -2.0, 'enrich': 0.6}}, \
+    'phillips24': {'instruments': {}, 'name': 'Phillips et al. (2024)', 'citation': 'Phillips et al. (2024)', 'bibcode': '2024ApJ...961..210P', 'altname': ['phi24'], 'default': {'teff': 800., 'logg': 5.0, 'z': 0., 'kzz': 4.0, 'zo': 0.0}}, \
+    'petrus22': {'instruments': {}, 'name': 'Petrus et al. (2022)', 'citation': 'Petrus et al. (2022)', 'bibcode': '', 'altname': ['pet22','petrus'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': 5.0, 'co': 1.0, 'ad': 1.03}}, \
+    'sand24': {'instruments': {}, 'name': 'Alvarado et al. 2024', 'citation': 'Alvarado et al. 2024', 'bibcode': '2024RNAAS...8..134A', 'altname': ['sand','san24','sand2024'], 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.1, 'enrich': 0.0}}, \
+    'saumon08': {'instruments': {}, 'name': 'Saumon & Marley 2008', 'citation': 'Saumon & Marley 2008', 'bibcode': '2008ApJ...689.1327S', 'altname': ['sau08','saumon2008'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
+    'saumon12': {'instruments': {}, 'name': 'Saumon et al. 2012', 'citation': 'Saumon & Marley 2008', 'bibcode': '2012ApJ...750...74S', 'altname': ['saumon','sau12','saumon2012'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.}}, \
+    'sonora18': {'instruments': {}, 'name': 'Sonora Alpha', 'citation': 'Marley et al. (2018)', 'bibcode': 'marley_mark_2018_1309035', 'altname': ['marley','marley18','marley2018','sonora2018'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'cld': 'nc'}}, \
+    'sonora21': {'instruments': {}, 'name': 'Sonora Bobcat', 'citation': 'Marley et al. (2021)', 'bibcode': '2021ApJ...920...85M', 'altname': ['marley2021','sonora','sonora2021','bobcat','sonora-bobcat'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'co': 1}}, \
+#    'gerasimov23': {'instruments': {}, 'name': 'Gerasimov 2023', 'citation': 'Gerasimov et al. (2023)', 'bibcode': '', 'altname': ['gerasimov','ger23'], 'default': {'teff': 1500., 'logg': 5.0, 'z': -0.5, 'enrich': 0.30}}, \
+    'tremblin15': {'instruments': {}, 'name': 'Tremblin et al. 2015', 'citation': 'Tremblin et al. 2015', 'bibcode': '2015ApJ...804L..17T', 'altname': ['tremblin','tre15','tremblin2015'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0.0, 'kzz': 8.0, 'ad': 1.20}}, \
+#    'tremblin16': {'instruments': {}, 'name': 'Tremblin et al. 2016', 'citation': 'Tremblin et al. 2016', 'bibcode': '2016ApJ...817L..19T', 'altname': ['tremblin','tre16','tremblin2016'], 'default': {'teff': 1300., 'logg': 5.0, 'z': 0.1, 'kzz': 6.0, 'ad': 1.05}}, \
+    'veyette': {'instruments': {}, 'name': 'Veyette et al. 2017', 'citation': 'Veyette et al. 2017', 'bibcode': '2017ApJ...851...26V', 'altname': ['veyette17','veyette2017'], 'default': {'teff': 3000., 'logg': 5.0, 'z': 0.0, 'enrich': 0.0, 'carbon': 0.0, 'oxygen': 0.0}}, \
 }
 
 
@@ -685,10 +706,10 @@ SPECTRAL_MODELS = {\
 EVOLUTIONARY_MODEL_PARAMETERS = {\
     'mass': {'unit': u.solMass, 'default': 0.05, 'title': '$M$', 'altname': ['m','masses']},\
     'age': {'unit': u.Gyr, 'default': 5., 'title': '$\tau$', 'altname': ['a','time','ages']},\
-    'temperature': {'unit': u.K, 'default': 1000.0, 'title': '$T_{eff}$', 'altname': ['t','teff','temp','temperatures']},\
-    'gravity': {'unit': u.dex(u.cm / u.s**2), 'default': 5.0, 'title': '$\log{g}', 'altname': ['g','logg','gravities','grav']},\
-    'luminosity': {'unit': u.dex(u.solLum), 'default': -5., 'title': '$\log{L_{bol}/L_{\odot}}$', 'altname': ['l','lbol','lum','luminosities']},\
-    'radius': {'unit': u.solRad, 'default': 0.1, 'title': '$R_{\odot}$', 'altname': ['r','rad','radii','radiuses']},
+    'temperature': {'unit': u.K, 'default': 1000.0, 'title': r'$T_{eff}$', 'altname': ['t','teff','temp','temperatures']},\
+    'gravity': {'unit': u.dex(u.cm / u.s**2), 'default': 5.0, 'title': r'$\log{g}', 'altname': ['g','logg','gravities','grav']},\
+    'luminosity': {'unit': u.dex(u.solLum), 'default': -5., 'title': r'$\log{L_{bol}/L_{\odot}}$', 'altname': ['l','lbol','lum','luminosities']},\
+    'radius': {'unit': u.solRad, 'default': 0.1, 'title': r'$R_{\odot}$', 'altname': ['r','rad','radii','radiuses']},
     'metallicity': {'unit': u.dex(), 'default': 0., 'title': '[M/H]', 'altname': ['z','metal','abundance']},
     'y': {'unit': u.dex(), 'default': 0., 'title': 'Y', 'altname': ['he']},
     'l_mix': {'unit': u.cm/u.cm, 'default': 1.0, 'title': 'Mixing Length', 'altname': ['alpha']},
@@ -1004,9 +1025,9 @@ SPECTRAL_BINARY_INDICES = {
 }
 # Empirical relations - SpT to Teff
 SPT_TEFF_RELATIONS = {
-    'dupuy_saumon': {'altname': ['dupuy','dupuy17','dupuy2017','dup17','dupuy17_saumon','dupuy2017_saumon','dup17-saumon'], 'reference': 'Dupuy et al. (2017)','bibcode': '',
+    'dupuy_saumon': {'altname': ['dupuy','dupuy17','dupuy2017','dup17','dupuy17_saumon','dupuy2017_saumon','dup17-saumon'], 'reference': 'Dupuy et al. (2017)','bibcode': '2017ApJS..231...15D',
         'method': 'polynomial', 'sptoffset': 10.,'coeff': [6.001,-284.52,4544.3], 'range': [21.5,35.],'fitunc': 80.},
-    'dupuy_lyon': {'altname': ['dupuy17_lyon','dupuy2017_lyon','dup17_lyon'], 'reference': 'Dupuy et al. (2017)','bibcode': '',
+    'dupuy_lyon': {'altname': ['dupuy17_lyon','dupuy2017_lyon','dup17_lyon'], 'reference': 'Dupuy et al. (2017)','bibcode': '2017ApJS..231...15D',
         'method': 'polynomial', 'sptoffset': 10.,'coeff': [4.582,-238.03,4251.0], 'range': [17.,35.],'fitunc': 90.},
     'faherty': {'altname': ['faherty16','faherty2016','fah16'], 'reference': 'Faherty et al. (2016)','bibcode': '2016ApJS..225...10F',
         'method': 'polynomial', 'sptoffset': 10.,'coeff': [1.546e-4,-1.606e-2,6.318e-1,-1.191e1,1.155e2,-7.005e2,4.747e3], 'range': [17.,38.],'fitunc': 113.},
@@ -1020,15 +1041,15 @@ SPT_TEFF_RELATIONS = {
         'method': 'polynomial', 'sptoffset': 10.,'coeff': [1.546e-4, -1.606e-2, 6.318e-1, -1.191e1, 1.155e2, -7.005e2, 4.747e3], 'range': [16.,39.],'fitunc': 113.},
     'golimowski': {'altname': ['golimowski04','golimowski2004','gol04'], 'reference': 'Golimowski et al. (2004)','bibcode': '2004AJ....127.3516G',
         'method': 'polynomial', 'sptoffset': 10.,'coeff': [9.5373e-4,-9.8598e-2,4.0323,-8.3099e1,9.0951e2,-5.1287e3,1.4322e4],'range': [16.,38.],'fitunc': 124.},
-    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'reference': 'Gonzales et al. (2018)','bibcode': 'TBD', 
+    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'reference': 'Gonzales et al. (2018)','bibcode': '2018ApJ...864..100G', 
         'method': 'polynomial', 'sptoffset': 10., 'fitunc': 108, 'range' : [17., 27.], 'coeff': [-117,3721.]},
     'kirkpatrick2019': {'altname': ['kirkpatrick','kirkpatrick19','kirk19','kir19'], 'reference': 'Kirkpartick et al. (2019)','bibcode': '2019ApJS..240...19K',
         'method': 'polynomial', 'sptoffset': 30, 'coeff': [9.89240,-286.401,2335.64],'range': [36.,44.],'fitunc': 68.},
-    'kirkpatrick2021-l': {'altname': ['kirkpatrick-l','kirkpatrick21-l','kirk21-l','kir21-l'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2020arXiv201111616K',
+    'kirkpatrick2021_l': {'altname': ['kirkpatrick_l','kirkpatrick21_l','kirk21_l','kir21_l'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2021ApJS..253....7K',
         'method': 'polynomial', 'sptoffset': 20, 'coeff': [4.0301e0,-1.4496e2,2.2375e3],'range': [20,28.75],'fitunc': 134.},
-    'kirkpatrick2021-lt': {'altname': ['kirkpatrick-lt','kirkpatrick21-lt','kirk21-lt','kir21-lt'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2020arXiv201111616K',
+    'kirkpatrick2021_lt': {'altname': ['kirkpatrick_lt','kirkpatrick21_lt','kirk21_lt','kir21_lt'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2021ApJS..253....7K',
         'method': 'polynomial', 'sptoffset': 20, 'coeff': [-1.8309e1,1.4379e3],'range': [28.75,34.75],'fitunc': 79.},
-    'kirkpatrick2021-ty': {'altname': ['kirkpatrick-ty','kirkpatrick21-ty','kirk21-ty','kir21-ty'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2020arXiv201111616K',
+    'kirkpatrick2021_ty': {'altname': ['kirkpatrick_ty','kirkpatrick21_ty','kirk21_ty','kir21_ty'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2021ApJS..253....7K',
         'method': 'polynomial', 'sptoffset': 20, 'coeff': [6.3701e0,-3.6865e2,5.1413e3],'range': [34.75,42],'fitunc': 79.},
     'looper': {'altname': ['looper08','looper2008','lop08'], 'reference': 'Looper et al. (2008)','bibcode': '2008ApJ...685.1183L',
         'method': 'polynomial', 'sptoffset': 20.,'coeff': [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92],'range': [20.,38.],'fitunc': 87.},
@@ -1039,10 +1060,18 @@ SPT_TEFF_RELATIONS = {
         'rms': numpy.zeros(67)+108.},
     'marocco': {'altname': ['marocco13','marocco2013','mar13'], 'reference': 'Marocco et al. (2013)','bibcode': '2013AJ....146..161M',
         'method': 'polynomial', 'sptoffset': 10.,'coeff': [7.4211e-5,-8.43736e-3,3.90319e-1,-9.46896,129.141,-975.953,3561.47,-1613.82],'range': [17.,38.],'fitunc': 140.},
+    'sanghi2023': {'altname': ['sanghi23','san23','sanghi'], 'reference': 'Sanghi et al. (2023)','bibcode': '2023ApJ...959...63S',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [-5.75357642e-02,3.71753828e+00,-7.99773680e+01,5.52980543e+02,1.58703841e+03],'range': [16.,39.],'fitunc': 175.},
+    'sanghi2023_opt': {'altname': ['sanghi23_opt','san23_opt','sanghi_opt'], 'reference': 'Sanghi et al. (2023)','bibcode': '2023ApJ...959...63S',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [-7.58233882e-02,5.08274865e+00,-1.15315067e+02,9.22014212e+02,2.89211204e+02],'range': [16.,39.],'fitunc': 183.},
+    'sanghi2023_nir': {'altname': ['sanghi23_nir','san23_nir','sanghi_nir'], 'reference': 'Sanghi et al. (2023)','bibcode': '2023ApJ...959...63S',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [-4.05522698e-02,2.54129573e+00,-5.16856405e+01,2.80510088e+02,2.44117451e+03],'range': [16.,39.],'fitunc': 180.},
     'stephens': {'altname': ['stephens09','stephens2009','ste09'], 'reference': 'Stephens et al. (2009)','bibcode': '2009ApJ...702..154S',
         'method': 'polynomial', 'sptoffset': 10.,'coeff': [-0.0025492,0.17667,-4.4727,54.67,-467.26,4400.],'range': [16.,38.],'fitunc': 100.},
     'stephens_alt': {'altname': ['stephens09_alt','stephens2009_alt','ste09alt'], 'reference': 'Stephens et al. (2009)','bibcode': '2009ApJ...702..154S',
         'method': 'polynomial', 'sptoffset': 10.,'coeff': [-0.011997,1.2315,-50.472,1031.9,-10560.,44898.],'range': [23.,38.],'fitunc': 100.},
+    'zhang2017': {'altname': ['zhang','zha17'], 'reference': 'Zhang et al. (2017)','bibcode': '2017MNRAS.464.3040Z',
+        'method': 'polynomial', 'sptoffset': 10.,'coeff': [-0.1606,1.686,-107.8,3706],'range': [15.5,27],'fitunc': 32.5},
 }
 
 
@@ -1235,16 +1264,31 @@ SPT_BC_RELATIONS = {
             'spt': [0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,6.5,7.,8.,9.,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20.,21.,22.,23.,24.,25.], \
             'values': [-0.23, -0.26, -0.27, -0.29, -0.32, -0.41, -0.45, -0.56, -0.6, -0.68, -0.75, -0.81, -0.92, -0.95, -1.03, -1.1, -1.16, -1.38, -1.44, -1.57, -1.65, -1.76, -1.97, -2.27, -2.59, -3.05, -3.28, -3.8, -4.36, -4.6, -5.06, -5.46, -5.7, -5.8, -5.9, -6.13, -6.33, -6.51, -6.56, -6.74, -7.28, -7.76]},
         }},
+    'sanghi2023': {'altname': ['sanghi23','san23','sanghi'], 'bibcode': '2023ApJ...959...63S', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        'SDSS_Z': {'fitunc' : 0.208, 'range' : [16,39], 'coeff': [-3.67327336e-05,2.00785031e-03,-3.01625334e-02,-3.28812471e-02,8.82748312e-01]},
+        '2MASS_J': {'fitunc' : 0.157, 'range' : [16,39], 'coeff': [-4.49787817e-06,2.91250402e-04,-6.23850138e-03,4.91437247e-02,-1.00428244e-01,1.83270671e+00]},
+        'MKO_J': {'fitunc' : 0.141, 'range' : [16,39], 'coeff': [-7.12860976e-06,5.03938151e-04,-1.27017514e-02,1.41154739e-01,-7.05942778e-01,3.34867561e+00]},
+        '2MASS_H': {'fitunc' : 0.114, 'range' : [16,39], 'coeff': [-1.63230829e-05,9.23336345e-04,-1.90813876e-02,1.78079042e-01,2.06836504e+00]},
+        'MKO_H': {'fitunc' : 0.091, 'range' : [16,39], 'coeff': [-2.89674748e-05,1.68671698e-03,-3.51960013e-02,3.16405418e-01,1.60830399e+00]},
+        '2MASS_KS': {'fitunc' : 0.169, 'range' : [16,39], 'coeff': [-3.28963542e-04,9.29897400e-03,-3.73942004e-02,2.96143878e+00]},
+        'MKO_K': {'fitunc' : 0.148, 'range' : [16,39], 'coeff': [3.72518239e-05,-2.73558092e-03,6.31017798e-02,-5.30973644e-01,4.56079546e+00]},
+        'WISE_W1': {'fitunc' : 0.193, 'range' : [16,39], 'coeff': [-2.74443149e-07,3.99592136e-05,-2.05225834e-03,4.92274677e-02,-5.96094136e-01,3.60659733e+00,-5.36228544e+00]},
+        'WISE_W2': {'fitunc' : 0.198, 'range' : [16,39], 'coeff': [-8.53309439e-07,9.68864595e-05,-4.27523017e-03,9.35831952e-02,-1.07147549e+00,6.19843221e+00,-1.07410524e+01]},
+        }},
     }
 
 # Empirical relations - SpT to Lbol
 SPT_LBOL_RELATIONS = {
-    'filippazzo2015': {'altname': ['filippazzo','filippazzo15','fillippazzo','filipazo','filippazo'], 'bibcode': '2015ApJ...810..158F', 'sptoffset': 10., 'method': 'polynomial', 'fitunc' : 0.133, 'range' : [16,39], 'coeff': [2.736e-7,-3.220e-5,1.449e-3,-3.207e-2,3.727e-1,-2.310e0,2.787e0]},
-    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'bibcode': 'TBD', 'sptoffset': 10., 'method': 'polynomial', 'fitunc': 0.144, 'range' : [17., 27.], 'coeff': [-0.125,-2.10]},
+    'filippazzo2015': {'altname': ['filippazzo','filippazzo15','fillippazzo','filipazo','filippazo'], 'bibcode': '2015ApJ...810..158F', 
+        'sptoffset': 10., 'method': 'polynomial', 'fitunc' : 0.133, 'range' : [16,39], 'coeff': [2.736e-7,-3.220e-5,1.449e-3,-3.207e-2,3.727e-1,-2.310e0,2.787e0]},
+    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'bibcode': '2018ApJ...864..100G', 
+        'sptoffset': 10., 'method': 'polynomial', 'fitunc': 0.144, 'range' : [17., 27.], 'coeff': [-0.125,-2.10]},
     'pecaut2013': {'altname': ['mamajek','pecaut','pecaut13'], 'reference': 'Pecaut & Mamajek (2013)','bibcode':'2013ApJS..208....9P', 'url': 'http://www.pas.rochester.edu/~emamajek/EEM_dwarf_UBVIJHK_colors_Teff.txt','sptoffset': 0, 'method': 'interpolate', 'scatter': 0.05,
         'spt': [0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,6.5,7.,8.,9.,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20.,21.,22.,23.,24.,25.,26.,27.,28.,29.,30.,31.,32.,33.,34.,34.5,35.,35.5,36.,37.,37.5,38.,38.5,39.,40.],
         'values': [-0.33, -0.36, -0.39, -0.47, -0.51, -0.58, -0.64, -0.67, -0.68, -0.78, -0.84, -0.9, -0.96, -0.98, -1.1, -1.18, -1.2, -1.27, -1.4, -1.47, -1.57, -1.68, -1.78, -2.07, -2.2, -2.31, -2.52, -2.79, -3.02, -3.09, -3.21, -3.29, -3.36, -3.44, -3.57, -3.55, -3.57, -3.7, -3.84, -3.98, -4.11, -4.24, -4.36, -4.46, -4.55, -4.61, -4.66, -4.69, -4.73, -4.77, -4.84, -4.9, -4.95, -5.04, -5.12, -5.37, -5.54, -5.71, -5.93, -6.15, -6.52]
         },
+    'sanghi2023': {'altname': ['sanghi23','san23','sanghi'],'bibcode': '2023ApJ...959...63S',
+        'sptoffset': 10., 'method': 'polynomial', 'fitunc': 0.157, 'range' : [16., 39.], 'coeff': [3.85072198e-07,-4.22643837e-05,1.79418353e-03,-3.75870300e-02,4.10403429e-01,-2.34765187e+00,2.38575339e+00]},
     }
 
 # Empirical relations - Absolute magnitude to Lbol
@@ -1378,7 +1422,7 @@ SPT_ABSMAG_RELATIONS = {
     'hawley2002': {'altname': ['hawley02','hawley','haw02'], 'bibcode': '2002AJ....123.3409H', 'sptoffset': 0, 'method': 'interpolate', 'filters': {
         '2MASS_J': {'spt': numpy.arange(10.,36.1,1.), 'values': [6.45,6.72,6.98,7.24,8.34,9.44,10.18,10.92,11.14,11.43,11.72,12.,12.29,12.58,12.87,13.16,14.31,14.45,14.58,14.72,14.86,14.99,15.13,15.27,15.4,15.54,15.68], 'rms': numpy.zeros(27)+0.4},
     }}, 
-    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'bibcode': 'TBD', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
+    'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'bibcode': '2018ApJ...864..100G', 'sptoffset': 10., 'method': 'polynomial', 'filters': {
         '2MASS_J': {'fitunc' : 0.26, 'range' : [17., 27.], 'coeff': [0.263,8.49]},
         '2MASS_H': {'fitunc' : 0.24, 'range' : [17., 27.], 'coeff': [0.304,7.77]},
         '2MASS_KS': {'fitunc' : 0.21, 'range' : [17., 27.], 'coeff': [0.344,7.29]},

@@ -16,7 +16,7 @@ from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
-from scipy.integrate import trapz        # for numerical integration
+from scipy.integrate import trapezoid as trapz        # for numerical integration
 from scipy.interpolate import interp1d
 
 # splat functions and constants
@@ -252,20 +252,20 @@ def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,
     else:
         fwave,ftrans = custom[0],custom[1]
 # units
-    if isinstance(fwave,u.quantity.Quantity) == True: fwave = fwave.to(u.micron)
-    else: fwave = fwave*u.micron
+    if isinstance(fwave,u.quantity.Quantity) == True: fwave = fwave.to(sp.wave.unit)
+    else: fwave = (fwave*u.micron).to(sp.wave.unit)
 
 
 # check that spectrum and filter cover the same wavelength ranges
-    if numpy.nanmax(fwave) < numpy.nanmin(sp.wave) or numpy.nanmin(fwave) > numpy.nanmax(sp.wave):
+    if numpy.nanmax(fwave.value) < numpy.nanmin(sp.wave.value) or numpy.nanmin(fwave.value) > numpy.nanmax(sp.wave.value):
         if verbose==True: print('\nWarning: no overlap between spectrum for {} and filter {}'.format(sp.name,filt))
         return numpy.nan, numpy.nan
 
-    if numpy.nanmin(fwave) < numpy.nanmin(sp.wave) or numpy.nanmax(fwave) > numpy.nanmax(sp.wave):
+    if numpy.nanmin(fwave.value) < numpy.nanmin(sp.wave.value) or numpy.nanmax(fwave.value) > numpy.nanmax(sp.wave.value):
         if verbose==True: print('\nWarning: spectrum for {} does not span full filter profile for {}'.format(sp.name,filt))
 
 # interpolate spectrum onto filter wavelength function
-    wgood = numpy.where(~numpy.isnan(sp.noise))
+    wgood = numpy.where(numpy.logical_and(~numpy.isnan(sp.noise.value),~numpy.isnan(sp.flux.value)))
     if len(sp.wave[wgood]) > 0:
         d = interp1d(sp.wave[wgood].value,sp.flux[wgood].value,bounds_error=False,fill_value=0.)
         n = interp1d(sp.wave[wgood].value,sp.noise[wgood].value,bounds_error=False,fill_value=0)

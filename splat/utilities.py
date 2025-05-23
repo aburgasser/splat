@@ -28,7 +28,7 @@ import matplotlib.patheffects
 import numpy
 from scipy import stats
 from scipy.interpolate import interp1d,InterpolatedUnivariateSpline
-from scipy.integrate import trapz
+from scipy.integrate import trapezoid as trapz
 
 
 # code constants
@@ -1578,14 +1578,11 @@ def UVW(coord,distance,mu,rv,e_distance = 0.,e_mu = [0.,0.],e_rv = 0.,nsamp=100,
     if not isinstance(e_mu,list) and not isinstance(e_mu,numpy.ndarray): 
         raise ValueError('\nProper motion uncertainty input {} must be a 2-element list'.format(e_mu))
 
-    if e_distance==0 and e_mu[0]==0 and e_mu[1]==0 and e_rv==0:
-        return uvwcalc(c.ra.degree,c.dec.degree,numpy.distance,mu[0],mu[1],rv),numpy.null
-    else:
-        if full==False:
-            us,vs,ws = uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance,nsamp),numpy.random.normal(mu[0],e_mu[0],nsamp),numpy.random.normal(mu[1],e_mu[1],nsamp),numpy.random.normal(rv,e_rv,nsamp))
-            return [numpy.median(us),numpy.std(us)],[numpy.median(vs),numpy.std(vs)],[numpy.median(ws),numpy.std(ws)]
-        else:
-            return uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance,nsamp),numpy.random.normal(mu[0],e_mu[0],nsamp),numpy.random.normal(mu[1],e_mu[1],nsamp),numpy.random.normal(rv,e_rv,nsamp))
+    u,v,w = uvwcalc(c.ra.degree,c.dec.degree,distance,mu[0],mu[1],rv)
+    if e_distance!=0 or e_mu[0]!=0 or e_mu[1]!=0 or e_rv!=0:
+        us,vs,ws = uvwcalc(c.ra.degree,c.dec.degree,numpy.random.normal(distance,e_distance,nsamp),numpy.random.normal(mu[0],e_mu[0],nsamp),numpy.random.normal(mu[1],e_mu[1],nsamp),numpy.random.normal(rv,e_rv,nsamp))
+        return [u,numpy.std(us)],[v,numpy.std(vs)],[w,numpy.std(ws)]
+    else: return [u,0],[v,0],[w,0]
 
 def lbolToMbol(lbol,err=0.,scale='log',sun_scale=True,reverse=False):
     l0 = 3.0128e28*u.Watt # in watts

@@ -5,8 +5,8 @@
 from __future__ import unicode_literals
 from setuptools import setup, find_packages
 from splat.initialize import VERSION
-from sphinx.setup_command import BuildDoc
-cmdclass = {'build_sphinx': BuildDoc}
+#from sphinx.setup_command import BuildDoc
+#cmdclass = {'build_sphinx': BuildDoc}
 
 
 name = "SPLAT"
@@ -16,12 +16,14 @@ setup(
   name=name,
   version=version,
   packages = find_packages(),
-  cmdclass = cmdclass,
+#  cmdclass = cmdclass,
 #  packages = find_packages(exclude=['docs','tests']),
 
   # Project uses reStructuredText, so ensure that the docutils get
   # installed or upgraded on the target machine
   install_requires = [
+    'asdf-astropy',
+#    'sphinx==6.2.1',    
     'astropy',
     'astroquery',
     'bokeh',
@@ -69,10 +71,10 @@ setup(
               'ultracool dwarfs','low mass stars', 'brown dwarfs', 'spex','prism', 'classification'],
   url = "http://splat.physics.ucsd.edu/splat/",   # project home page, if any
 
-  command_options={
-        'build_sphinx': {
-            'project': ('setup.py', name),
-            'version': ('setup.py', version),
-            'source_dir': ('setup.py', './docs'),
-            'build_dir': ('setup.py', './docs')}},
+  # command_options={
+  #       'build_sphinx': {
+  #           'project': ('setup.py', name),
+  #           'version': ('setup.py', version),
+  #           'source_dir': ('setup.py', './docs'),
+  #           'build_dir': ('setup.py', './docs')}},
 )
