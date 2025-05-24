@@ -6272,11 +6272,12 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
             ind = measureIndexSet(sp,ref=s,verbose=verbose,**kwargs)
             if sys.version_info.major == 2: indices = dict(indices.items() + ind.items())
             else: indices = dict(indices.items() | ind.items())            
-
-# determine classifications from polunomials
+    #print('INDICES', indices)
+# determine classifications from polynomials
     if param['method']=='polynomial':
         coeffs = {}
         for index in list(param['indices'].keys()):
+            if index in ['jtype', 'ktype']: continue
             coeffs[index] = {}
             coeffs[index]['spt'] = numpy.nan
             coeffs[index]['sptunc'] = numpy.nan
@@ -6297,7 +6298,8 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
                     if param['decimal']==True: vals = (vals-param['sptoffset'])*10.+param['sptoffset']
                     coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+param['indices'][index]['fitunc']**2)**0.5
 
-#                if verbose==True: print('{}: index = {:.3f}+/-{:.3f}, spt = {:.2f}+/-{:.2f}'.format(index,indices[index][0],indices[index][1],coeffs[index]['spt'],coeffs[index]['sptunc']))
+#                if verbose==True: print('{}: index = {:.3f}+/-{:.3f}, spt = {:.2f}+/-{:.2f}'.format(index,indices[index][0],indices[index][1],coeffs[index]['spt'],coeffs[index]['sptunc']))            
+
 # unmask good values
             if coeffs[index]['spt'] >= numpy.nanmin(param['indices'][index]['range']) and \
                 coeffs[index]['spt'] <= numpy.nanmax(param['indices'][index]['range']) and \
@@ -6310,7 +6312,28 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
 #             if verbose==True: print('\nNot of enough indices in set {} returned viable values\n'.format(ref))
 #             return numpy.nan, numpy.nan
 
-# computed weighted mean with rejection, iterating to deal with indices outside ranges      
+# if Allers method, need to compute the J and K spectral types
+        #print('METHOD', ref.lower())
+        if ref.lower() in ['allers','all13','allers13','allers2013']:
+            coeffs['jtype'] = {}
+            coeffs['ktype'] = {}
+            # Calculate The J and K spectral types for Allers method
+            jtype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.07,1.40]) 
+            #print('JType', jtype)
+            #print(typeToNum(jtype[0]))
+            coeffs['jtype']['spt']    = typeToNum(jtype[0])
+            coeffs['jtype']['sptunc'] = 1.
+            coeffs['jtype']['mask']   = 1.
+            ktype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.90,2.20]) 
+            #print('KType', ktype)
+            #print(typeToNum(ktype[0]))
+            coeffs['ktype']['spt']    = typeToNum(ktype[0])
+            coeffs['ktype']['sptunc'] = 1.
+            coeffs['ktype']['mask']   = 1.
+
+# computed weighted mean with rejection, iterating to deal with indices outside ranges   
+        #print(coeffs)   
+        #sys.exit()
         for i in numpy.arange(nloop):
             wts = numpy.array([coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in list(coeffs.keys())])
             vals = numpy.array([coeffs[index]['mask']*coeffs[index]['spt']/coeffs[index]['sptunc']**2 for index in list(coeffs.keys())])
@@ -6378,7 +6401,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
         output['result'] = (spt,sptn_e)
         return output
     else:
-        return spt, sptn_e
+        return spt, sptn_e, (jtype, ktype)
 
 
 
@@ -7097,7 +7120,9 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
         'FeH-z':{'M5.0':[numpy.nan,numpy.nan],'M6.0':[1.068,1.039],'M7.0':[1.103,1.056],'M8.0':[1.146,1.074],'M9.0': [1.167,1.086],'L0.0': [1.204,1.106],'L1.0':[1.252,1.121],'L2.0':[1.298,1.142],'L3.0': [1.357,1.163],'L4.0': [1.370,1.164],'L5.0': [1.258,1.138],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
         'VO-z': {'M5.0':[numpy.nan,numpy.nan],'M6.0':[numpy.nan,numpy.nan],'M7.0': [numpy.nan,numpy.nan],'M8.0': [numpy.nan,numpy.nan],'M9.0': [numpy.nan,numpy.nan],'L0.0': [1.122,1.256],'L1.0': [1.112,1.251],'L2.0': [1.110,1.232],'L3.0': [1.097,1.187],'L4.0': [1.073,1.118],'L5.0': [numpy.nan,numpy.nan],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
         'KI-J': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [1.042,1.028], 'M7.0': [1.059,1.036],'M8.0': [1.077,1.046],'M9.0': [1.085,1.053],'L0.0': [1.098,1.061],'L1.0': [1.114,1.067],'L2.0': [1.133,1.073],'L3.0': [1.135,1.075],'L4.0': [1.126,1.072],'L5.0': [1.094,1.061],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
-        'H-cont': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [.988,.994], 'M7.0': [.981,.990],'M8.0': [.963,.984],'M9.0': [.949,.979],'L0.0': [.935,.972],'L1.0': [.914,.968],'L2.0': [.906,.964],'L3.0': [.898,.960],'L4.0': [.885,.954],'L5.0': [.869,.949],'L6.0': [.874,.950],'L7.0': [0.888,0.952]}}
+        'H-cont': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [.988,.994], 'M7.0': [.981,.990],'M8.0': [.963,.984],'M9.0': [.949,.979],'L0.0': [.935,.972],'L1.0': [.914,.968],'L2.0': [.906,.964],'L3.0': [.898,.960],'L4.0': [.885,.954],'L5.0': [.869,.949],'L6.0': [.874,.950],'L7.0': [0.888,0.952]},\
+        }
+
     if verbose==True: print('\nGravity Classification')
     gravscore = {}
     gravscore['gravity_class'] = 'UNKNOWN'
@@ -7111,7 +7136,7 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
 # Determine the object's NIR spectral type and its uncertainty
     sptn = kwargs.get('spt',False)
     if sptn == False:
-        sptn, spt_e = classifyByIndex(sp,string=False,ref='allers2013')
+        sptn, spt_e, spts2 = classifyByIndex(sp,string=False,ref='allers2013')
         if numpy.isnan(sptn):
             if verbose==True: print('Spectral type could not be determined from indices; try entering with spt keyword')
             if output=='allmeasures': return gravscore
@@ -7120,7 +7145,8 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
     if isinstance(sptn,str): sptn = typeToNum(sptn)
     Spt = typeToNum(numpy.round(sptn))
     gravscore['spt'] = Spt
-    if verbose==True: print('\tSpT = {}'.format(Spt))
+    if verbose==True: 
+        print('\tSpT = {} (Jtype = {}; Ktype = {})'.format(Spt, spts2[0][0], spts2[1][0]))
 
 #Check whether the NIR SpT is within gravity sensitive range values
     if ((sptn < 16.0) or (sptn > 27.0)):
