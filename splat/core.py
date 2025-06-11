@@ -6351,6 +6351,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
             for i in coeffs.keys():
                 flg = ''
                 if coeffs[i]['mask'] == 0.: flg = '*'
+                if i in ['jtype', 'ktype']: continue
                 print('{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{:.1f}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc']))
 
 # not enough good values
@@ -7146,7 +7147,7 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
     Spt = typeToNum(numpy.round(sptn))
     gravscore['spt'] = Spt
     if verbose==True: 
-        print('\tSpT = {} (Jtype = {}; Ktype = {})'.format(Spt, spts2[0][0], spts2[1][0]))
+        print('\tSpT = {} (J-type = {}; K-type = {})'.format(Spt, spts2[0][0], spts2[1][0]))
 
 #Check whether the NIR SpT is within gravity sensitive range values
     if ((sptn < 16.0) or (sptn > 27.0)):
