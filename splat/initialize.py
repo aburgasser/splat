@@ -13,7 +13,7 @@ from astropy import units as u
 
 
 # program constants
-VERSION = '2024.08.07'
+VERSION = '2025.07.09'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
 DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
@@ -207,44 +207,53 @@ STDS_DWARF_SPEX_KEYS = { \
     'T6.0': 10200, #'10200_11236.fits',\
     'T7.0': 10159, #'10159_10513.fits',\
     'T8.0': 10126, #'10126_10349.fits',\
-    'T9.0': 11536} #'11536_10509.fits'}
+    'T9.0': 11536, #'11536_10509.fits'}
+    }
 
 # subdwarf spectral standards
 STDS_DSD_SPEX_KEYS = { \
-    'd/sdM4.0': 10523, #'11670_11134.fits',\  10501
-    'd/sdM5.0': 10232, #'10265_10045.fits',\  11498
-    'd/sdM6.0': 10198, #'10265_10045.fits',\  11208
-    'd/sdM7.0': 10863, #'10197_11074.fits',\  11704
-    'd/sdM8.0': 10040, #'10197_11074.fits',\  11190
-    'd/sdM9.0': 10367, #'10197_11074.fits',\  11086
-    'd/sdL0.0': 10146, #'11972_10248.fits',\
-    'd/sdL1.0': 10506, #'11972_10248.fits',\
-    'd/sdL7.0': 10552, #'11972_10248.fits',\
+    'd/sdM4.0': 10523, # LSPM J0713+2151
+    'd/sdM5.0': 10232, # 2MASS J2059203+175223
+    'd/sdM6.0': 10198, # LSR 1610-0040
+    'd/sdM7.0': 10863, # NLTT 57956
+    'd/sdM8.0': 10040, # 2MASS J15561873+1300527
+#    'd/sdM9.0': 10367, # SSSPM 1444-2019
+    'd/sdL0.0': 10146, # 2MASS J00412179+3547133
+    'd/sdL1.0': 10506, # 2MASS J17561080+2815238 Greco+2019 sdL1
+    'd/sdL3.0': 12230, # WISEA J003338.45+282732.4
+    'd/sdL6.0': 11509, # SDSS J133148.92-011651.4 Zhang+2018 peculiar L6
+    'd/sdL7.0': 10552, # 2MASS J11582077+0435014 Burgasser+2025 d/sdL7 Greco+2019 sdL7
+    'd/sdT8.0': 10185, # 2MASS J09393548-2448279 Burgasser+2025 d/sdT8
     }
 
 STDS_SD_SPEX_KEYS = { \
-    'sdM2.0': 10223, #'11670_11134.fits',\
-    'sdM4.0': 10528, #'11670_11134.fits',\
-    'sdM5.0': 10221, #'11670_11134.fits',\
-    'sdM5.5': 11670, #'11670_11134.fits',\
-    'sdM6.0': 10265, #'10265_10045.fits',\
-    'sdM7.0': 10197, #'10197_11074.fits',\
-    'sdM8.0': 10123, #'10123_10145.fits',\
-    'sdM9.5': 10188, #'10188_10700.fits',\
-    'sdL0.0': 11973, #'11972_10248.fits',\
-    'sdL3.5': 10364, #'10364_10946.fits',\
-    'sdL4.0': 10203} #'10203_11241.fits'}
+    'sdM2.0': 10223, # LHS 3181 Greco+2019 sdM2
+    'sdM4.0': 10528, # LSPM J0949+1746
+    'sdM5.0': 10221, # LHS 407 Greco+2019 sdM5
+    'sdM5.5': 11670, # APMPM 1523-0245
+    'sdM6.0': 10265, # LHS 1074 Greco+2019 sdM6
+    'sdM7.0': 10197, # LHS 377 Greco+2019 sdM7
+    'sdM8.5': 10123, # 2MASS J01423153+0523285 Greco+2019 sdM8.5
+#    'sdM9.5': 10188, # SSSPM 1013-1356 
+    'sdL0.0': 11973, # WISE J04592121+1540592
+    'sdL1.0': 10367, # SSSPM 1444-2019 Zhang+2017 esdL1
+    'sdL5.0': 11240, # SDSS J1416+1348A Zhang+2017 sdL7
+    'sdT6.0': 10171, # 2MASS J0937+2931 Burgasser+2025 sdT6
+    'sdT7.0': 11377, # ULAS J1416+1348B Burgasser+2025 sdT7
+    }
 
 # extreme subdwarf spectral standards
 STDS_ESD_SPEX_KEYS = { \
-    'esdM0.0': 10763, #'10229_10163.fits',\
-    'esdM4.0': 10366, #'10229_10163.fits',\
-    'esdM5.0': 10229, #'10229_10163.fits',\
-#    'esdM6.5': '_10579.fits',\
-    'esdM6.5': 10359, #'10521_10458.fits',\
-    'esdM7.5': 10521, #'10521_10458.fits',\
-    'esdM8.5': 10278} #'10278_10400.fits'}
-# EMPTY DICTIONARY
+#    'esdM0.0': 10763, # LHS 217 Greco+2019 esdM0
+    'esdM4.0': 10366, # LHS 375 Greco+2019 esdM4
+    'esdM5.0': 10229, # LP 589-7 Greco+2019 esdM5
+    'esdM6.0': 10359, # LHS 2023 Greco+2019 esdM6
+    'esdM7.0': 10521, # APMPM J0559-2903  Greco+2019 esdM7
+    'esdM8.5': 10278, # LEHPM 2-59  Greco+2019 esdM8
+    'esdL0.0': 10188, # SSSPM J1013-1356 Zhang+2017 usdL0 Greco+2019 sdM9.5
+    'esdL3.0': 10364, # SDSS J125637.16-022452.2 Zhang+2017 usdL3 Greco+2019 sdL3.5
+    'esdL4.0': 10203, # 2MASS J16262034+3925190 Zhang+2017 usdL4 Greco+2019 sdL4
+    }
 
 # young spectral standards from Allers & Liu (2013) and Cruz et al. (2017)
 STDS_VLG_SPEX_KEYS = { \
@@ -258,7 +267,8 @@ STDS_VLG_SPEX_KEYS = { \
     'L2.0gamma': 11696,  # 0536-1920
     'L3.0gamma': 11198,  # 2208+2921
     'L4.0gamma': 11177,  # 0501-0010 - proposed by Cruz et al. 2017
-    'L6.0gamma': 10455}  # 2244+2043
+    'L6.0gamma': 10455,  # 2244+2043
+    }
 
 STDS_INTG_SPEX_KEYS = { \
     'M8.0beta': 12572,  # 0019+4614
@@ -266,7 +276,8 @@ STDS_INTG_SPEX_KEYS = { \
     'L1.0beta': 10845,  # 0227-1624 - proposed by Cruz et al. 2017
     'L2.0beta': 11304,  # 0602+3910
     'L3.0beta': 11070,  # 1726+1538
-    'L6.0beta': 10678}  # 0103+1935
+    'L6.0beta': 10678,  # 0103+1935
+    }
 
 
 # filters
@@ -853,6 +864,31 @@ INDEX_SETS = {
         'K/H': {'ranges': ([2.06,2.10]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median'},\
         'H-dip': {'ranges': ([1.61,1.64]*u.micron,[1.56,1.59]*u.micron,[1.66,1.69]*u.micron), 'method': 'inverse_line', 'sample': 'median'},\
     }},
+    'burgasser2025': {'altname': ['burgasser23','bur23'], 'bibcode': '', 'indices': {\
+        'CH4-1.3': {'ranges': ([1.315,1.335]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'CH4-1.6': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'CH4-3.3': {'ranges': ([3.22,3.42]*u.micron,[3.93,4.13]*u.micron), 'method': 'ratio', 'sample': 'average'},
+        'CO-2.3': {'ranges': ([2.33,2.37]*u.micron,[2.12,2.16]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'CO-4.6': {'ranges': ([4.5,4.6]*u.micron,[4.33,4.43]*u.micron), 'method': 'ratio', 'sample': 'average'},
+        'CO2-4.2': {'ranges': ([4.22,4.32]*u.micron,[4.05,4.15]*u.micron), 'method': 'ratio', 'sample': 'average'},
+        'H2O-1.1': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'H2O-1.5': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'H2O-2.0': {'ranges': ([1.975,1.995]*u.micron,[2.08,2.10]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'H2O-5.8': {'ranges': ([5.65,5.95]*u.micron,[6.6,6.9]*u.micron,[6.1,6.4]*u.micron), 'weights':[1,0.562,0.474],'method': 'sumnum', 'sample': 'average'},\
+        'CH4-7.6': {'ranges': ([7.35,7.95]*u.micron,[9.7,10.3]*u.micron), 'method': 'ratio', 'sample': 'average'},\
+        'NH3-11': {'ranges': ([10.5,11.1]*u.micron,[9.7,10.3]*u.micron), 'method': 'ratio', 'sample': 'average'},\
+        'SIH4-4.6': {'ranges': ([4.55,4.65]*u.micron,[4.36,4.]*u.micron), 'method': 'ratio', 'sample': 'average'},
+        'SO2-4.0': {'ranges': ([3.95,4.05]*u.micron,[3.8,3.9]*u.micron), 'method': 'ratio', 'sample': 'average'},
+        'Silicate': {'ranges': ([8.7,9.3]*u.micron,[7.2,7.8]*u.micron,[11.2,11.8]*u.micron), 'method': 'fitdenom', 'sample': 'average', 'fitorder': 1},\
+        'PH3': {'ranges': ([4.285,4.335]*u.micron,[4.22,4.27]*u.micron,[4.36,4.41]*u.micron), 'method': 'avegdenom', 'sample': 'average'},
+        'Y/J': {'ranges': ([1.005,1.045]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'K/J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'K/H': {'ranges': ([2.06,2.10]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median'},\
+        'M/J': {'ranges': ([4.1,4.15]*u.micron,[1.24,1.29]*u.micron,), 'method': 'ratio', 'sample': 'average'},
+        'M/K': {'ranges': ([4.1,4.15]*u.micron,[2.06,2.11]*u.micron,), 'method': 'ratio', 'sample': 'average'},
+        'M/L': {'ranges': ([4.1,4.15]*u.micron,[3,3.05]*u.micron,), 'method': 'ratio', 'sample': 'average'},
+        'H-dip': {'ranges': ([1.61,1.64]*u.micron,[1.56,1.59]*u.micron,[1.66,1.69]*u.micron), 'method': 'inverse_line', 'sample': 'median'},\
+    }},
     'bardalez2014': {'altname': ['bardalez','bardalez14','bar14'], 'bibcode': '2014ApJ...794..143B', 'indices': {\
         'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
         'CH4-J': {'ranges': ([1.315,1.335]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
@@ -874,6 +910,11 @@ INDEX_SETS = {
     'covey2010': {'altname': ['covey','covey10','cov10'], 'bibcode': '2010ApJ...722..971C', 'indices': {\
         'H2O-H': {'ranges': ([1.595,1.615]*u.micron,[1.68,1.70]*u.micron,[1.76,1.78]*u.micron), 'method': 'doubleratio', 'sample': 'average'},\
         'H2O-K': {'ranges': ([2.18,2.2]*u.micron,[2.27,2.29]*u.micron,[2.36,2.38]*u.micron), 'method': 'doubleratio', 'sample': 'average'},\
+    }},
+    'cushing2006': {'altname': ['cus06','cushing06'], 'bibcode': '2006ApJ...648..614C', 'indices': {\
+        'IRS-H2O': {'ranges': ([6.175,6.325]*u.micron,[5.725,5.875]*u.micron,[6.675,6.825]*u.micron), 'weights':[1,0.562,0.474],'method': 'sumdenom', 'sample': 'average'},\
+        'IRS-CH4': {'ranges': ([9.85,10.15]*u.micron,[8.35,8.65]*u.micron), 'method': 'ratio', 'sample': 'average'},\
+        'IRS-NH3': {'ranges': ([9.85,10.15]*u.micron,[10.65,10.95]*u.micron), 'method': 'ratio', 'sample': 'average'},\
     }},
     'geballe2002': {'altname': ['geballe','geballe02','geb02'], 'bibcode': '2002ApJ...564..466G', 'indices': {\
         'Color-d2': {'ranges': ([0.96,0.98]*u.micron,[0.735,0.755]*u.micron), 'method': 'ratio', 'sample': 'integrate'},\
@@ -934,6 +975,12 @@ INDEX_SETS = {
         'H2O-1': {'ranges': ([1.335,1.345]*u.micron,[1.295,1.305]*u.micron), 'method': 'ratio', 'sample': 'average'},\
         'H2O-2': {'ranges': ([2.035,2.045]*u.micron,[2.145,2.155]*u.micron), 'method': 'ratio', 'sample': 'average'},\
         'FeH': {'ranges': ([1.1935,1.2065]*u.micron,[1.2235,1.2365]*u.micron), 'method': 'ratio', 'sample': 'average'},\
+    }},
+    'suarez2022': {'altname': ['sua22','suarez22'], 'bibcode': '2022MNRAS.513.5701S', 'indices': {\
+        'H2O': {'ranges': ([6.1,6.4]*u.micron,[5.65,5.95]*u.micron,[6.6,6.9]*u.micron), 'weights':[1,0.562,0.474],'method': 'sumdenom', 'sample': 'average'},\
+        'CH4': {'ranges': ([9.7,10.3]*u.micron,[7.35,7.95]*u.micron), 'method': 'ratio', 'sample': 'average'},\
+        'NH3': {'ranges': ([9.7,10.3]*u.micron,[10.5,11.1]*u.micron), 'method': 'ratio', 'sample': 'average'},\
+        'Silicate': {'ranges': ([7.2,7.8]*u.micron,[11.2,11.8]*u.micron,[8.7,9.3]*u.micron), 'method': 'fitnum', 'sample': 'average', 'fitorder': 1},\
     }},
     'testi2001': {'altname': ['testi','testi01','tes01'], 'bibcode': '2001ApJ...552L.147T', 'indices': {\
         'sHJ': {'ranges': ([1.265,1.305]*u.micron,[1.6,1.7]*u.micron), 'method': 'change', 'sample': 'average'},\
@@ -1043,13 +1090,13 @@ SPT_TEFF_RELATIONS = {
         'method': 'polynomial', 'sptoffset': 10.,'coeff': [9.5373e-4,-9.8598e-2,4.0323,-8.3099e1,9.0951e2,-5.1287e3,1.4322e4],'range': [16.,38.],'fitunc': 124.},
     'gonzales2018': {'altname': ['gonzales','gonzales18','gonzalez2018','gonzalez18','gonzalez','gon18','subdwarf'],'reference': 'Gonzales et al. (2018)','bibcode': '2018ApJ...864..100G', 
         'method': 'polynomial', 'sptoffset': 10., 'fitunc': 108, 'range' : [17., 27.], 'coeff': [-117,3721.]},
-    'kirkpatrick2019': {'altname': ['kirkpatrick','kirkpatrick19','kirk19','kir19'], 'reference': 'Kirkpartick et al. (2019)','bibcode': '2019ApJS..240...19K',
+    'kirkpatrick2019': {'altname': ['kirkpatrick','kirkpatrick19','kirk19','kir19'], 'reference': 'Kirkpatrick et al. (2019)','bibcode': '2019ApJS..240...19K',
         'method': 'polynomial', 'sptoffset': 30, 'coeff': [9.89240,-286.401,2335.64],'range': [36.,44.],'fitunc': 68.},
-    'kirkpatrick2021_l': {'altname': ['kirkpatrick_l','kirkpatrick21_l','kirk21_l','kir21_l'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2021ApJS..253....7K',
+    'kirkpatrick2021_l': {'altname': ['kirkpatrick_l','kirkpatrick21_l','kirk21_l','kir21_l'], 'reference': 'Kirkpatrick et al. (2021)','bibcode': '2021ApJS..253....7K',
         'method': 'polynomial', 'sptoffset': 20, 'coeff': [4.0301e0,-1.4496e2,2.2375e3],'range': [20,28.75],'fitunc': 134.},
-    'kirkpatrick2021_lt': {'altname': ['kirkpatrick_lt','kirkpatrick21_lt','kirk21_lt','kir21_lt'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2021ApJS..253....7K',
+    'kirkpatrick2021_lt': {'altname': ['kirkpatrick_lt','kirkpatrick21_lt','kirk21_lt','kir21_lt'], 'reference': 'Kirkpatrick et al. (2021)','bibcode': '2021ApJS..253....7K',
         'method': 'polynomial', 'sptoffset': 20, 'coeff': [-1.8309e1,1.4379e3],'range': [28.75,34.75],'fitunc': 79.},
-    'kirkpatrick2021_ty': {'altname': ['kirkpatrick_ty','kirkpatrick21_ty','kirk21_ty','kir21_ty'], 'reference': 'Kirkpartick et al. (2021)','bibcode': '2021ApJS..253....7K',
+    'kirkpatrick2021_ty': {'altname': ['kirkpatrick_ty','kirkpatrick21_ty','kirk21_ty','kir21_ty'], 'reference': 'Kirkpatrick et al. (2021)','bibcode': '2021ApJS..253....7K',
         'method': 'polynomial', 'sptoffset': 20, 'coeff': [6.3701e0,-3.6865e2,5.1413e3],'range': [34.75,42],'fitunc': 79.},
     'looper': {'altname': ['looper08','looper2008','lop08'], 'reference': 'Looper et al. (2008)','bibcode': '2008ApJ...685.1183L',
         'method': 'polynomial', 'sptoffset': 20.,'coeff': [9.084e-4,-4.255e-2,6.414e-1,-3.101,1.950,-108.094,2319.92],'range': [20.,38.],'fitunc': 87.},

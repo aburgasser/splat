@@ -2058,7 +2058,7 @@ def integralResample(xh, yh, xl, nsamp=100,method='fast'):
         for i in range(len(xl)-1): xs.append(xl[i]+0.5*(xl[i+1]-xl[i]))
         xs.append(numpy.min([xl[-1]+0.5*(xl[-1]-xl[-2]),xh[-1]]))
 
-        f = interp1d(xh,yh)
+        f = interp1d(xh,yh,bounds_error=False,fill_value=0.)
 
 # integral loop
         ys = []
@@ -2068,6 +2068,7 @@ def integralResample(xh, yh, xl, nsamp=100,method='fast'):
 #    plt.plot(xh,yh,color='k')
 #    plt.plot(xl,ys,color='r')
 
+# NOTE: THIS METHOD TENDS TO PRODUCE ALL NAN ARRAYS - NEED TO RETHINK THIS
     elif method == 'fast':
 #        print(xh,yh)
         baseline = numpy.polynomial.Polynomial.fit(xh, yh, 4)

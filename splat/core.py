@@ -1473,16 +1473,16 @@ class Spectrum(object):
 # map onto wavelength grid; if spectrum has lower resolution, interpolate; otherwise integrate & resample
             flux_unit = self.flux.unit
             if len(self.wave) <= len(wave):
-                f = interp1d(self.wave.value,self.flux.value,bounds_error=False,fill_value=0.)
+                f = interp1d(self.wave.value,self.flux.value,kind='slinear',bounds_error=False,fill_value='extrapolate')
                 self.flux = f(wave.value)*flux_unit
                 if numpy.isfinite(numpy.nanmin(self.noise))==True:
-                    n = interp1d(self.wave.value,self.noise.value,bounds_error=False,fill_value=0.)
+                    n = interp1d(self.wave.value,self.noise.value,bounds_error=False,fill_value='extrapolate')
                     self.noise = n(wave.value)*flux_unit
                 else: self.noise = self.flux*numpy.nan
             else:
-                self.flux = integralResample(self.wave.value,self.flux.value,wave.value)*flux_unit
+                self.flux = integralResample(self.wave.value,self.flux.value,wave.value,method='splat')*flux_unit
                 if numpy.isfinite(numpy.nanmin(self.noise))==True:
-                    self.noise = integralResample(self.wave.value,self.noise.value,wave.value)*flux_unit
+                    self.noise = integralResample(self.wave.value,self.noise.value,wave.value,method='splat')*flux_unit
                 else: self.noise = self.flux*numpy.nan
             self.wave = wave
             self.variance = self.noise**2
@@ -7823,7 +7823,7 @@ def measureEWSet(sp,ref='rojas',**kwargs):
     return result
 
 
-def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseFlag=False,plot=False,verbose=False,**pkwargs):
+def measureIndex(sp,ranges,method='ratio',sample='integrate',weights=[],fitorder=1,nsamples=100,noiseFlag=False,plot=False,verbose=False,**pkwargs):
     '''
     :Purpose: Measure an index on a spectrum based on defined methodology
                 measure method can be mean, median, integrate
@@ -7849,10 +7849,13 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
     if (len(ranges) < 3 and (method == 'line' or method == 'allers' or method == 'inverse_line'  or method == 'sumnum' or method == 'sumdenom')):
         raise ValueError('Index method {} needs at least 3 sample regions'.format(method))
 
+# weights
+    while len(weights)<len(ranges): weights.append(1.)
 
 # define the sample vectors
     value = numpy.zeros(len(ranges))
     value_sim = numpy.zeros((len(ranges),nsamples))
+    xNums,yNums,yNums_e = [],[],[]
 
 # loop over all sampling regions
     for i,waveRng in enumerate(ranges):
@@ -7866,6 +7869,7 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
             waveRng = ((waveRng*DEFAULT_WAVE_UNIT).to(sp.wave.unit)).value
         xNum = (numpy.arange(0,nsamples+1.0)/nsamples)* \
             (numpy.nanmax(waveRng)-numpy.nanmin(waveRng))+numpy.nanmin(waveRng)
+        xNums.append(xNum)
 
 # identify measureable regions
         w = numpy.where(numpy.logical_and(\
@@ -7886,9 +7890,11 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
 #        print(waveRng,len(w),numpy.min(w),numpy.max(w))
         f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=numpy.nan)
         yNum = f(xNum)
+        yNums.append(yNum)
         if noiseFlag == False:
             s = interp1d(sp.wave.value[w],sp.noise.value[w],bounds_error=False,fill_value=0.)
             yNum_e = s(xNum)
+            yNums_e.append(yNum_e)
 
 # first compute the actual value
         if (sample == 'integrate'):
@@ -7939,49 +7945,70 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',nsamples=100,noiseF
 
 # compute index based on defined method
 # default is a simple ratio
-        if (method == 'single'):
-            val = value[0]
-            vals = value_sim[0,:]
-        elif (method == 'ratio'):
-            val = value[0]/value[1]
-            vals = value_sim[0,:]/value_sim[1,:]
-        elif (method == 'line'):
-            val = 0.5*(value[0]+value[1])/value[2]
-            vals = 0.5*(value_sim[0,:]+value_sim[1,:])/value_sim[2,:]
-        elif (method == 'inverse_line'):
-            val = 2.*value[0]/(value[1]+value[2])
-            vals = 2.*value_sim[0,:]/(value_sim[1,:]+value_sim[2,:])
-        elif (method == 'change'):
-            val = 2.*(value[0]-value[1])/(value[0]+value[1])
-            vals = 2.*(value_sim[0,:]-value_sim[1,:])/(value_sim[0,:]+value_sim[1,:])
-        elif (method == 'sumnum'):
-            val = (value[0]+value[1])/value[2]
-            vals = (value_sim[0,:]+value_sim[1,:])/value_sim[2,:]
-        elif (method == 'sumdenom'):
-            val = value[0]/(value[1]+value[2])
-            vals = value_sim[0,:]/(value_sim[1,:]+value_sim[2,:])
-        elif (method == 'doubleratio'):
-            val = (value[0]/value[1])/(value[1]/value[2])
-            vals = (value_sim[0,:]/value_sim[1,:])/(value_sim[1,:]/value_sim[2,:])
-        elif (method == 'allers'):
-            val = (((numpy.mean(ranges[0])-numpy.mean(ranges[1]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value[2] \
-                + ((numpy.mean(ranges[2])-numpy.mean(ranges[0]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value[1]) \
-                /value[0]
-            vals = (((numpy.mean(ranges[0])-numpy.mean(ranges[1]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value_sim[2,:] \
-                + ((numpy.mean(ranges[2])-numpy.mean(ranges[0]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value_sim[1,:]) \
-                /value_sim[0,:]
-        else:
-            val = value[0]/value[1]
-            vals = value_sim[0,:]/value_sim[1,:]
+    if (method == 'single'):
+        val = value[0]
+        vals = value_sim[0,:]
+    elif (method == 'ratio'):
+        val = (weights[0]*value[0])/(weights[1]*value[1])
+        vals = (weights[0]*value_sim[0,:])/(weights[1]*value_sim[1,:])
+    elif (method == 'line'):
+        val = 0.5*(weights[0]*value[0]+weights[1]*value[1])/(weights[2]*value[2])
+        vals = 0.5*(weights[0]*value_sim[0,:]+weights[1]*value_sim[1,:])/(weights[2]*value_sim[2,:])
+    elif (method == 'inverse_line'):
+        val = 2.*weights[0]*value[0]/(weights[1]*value[1]+weights[2]*value[2])
+        vals = 2.*weights[0]*value_sim[0,:]/(weights[1]*value_sim[1,:]+weights[2]*value_sim[2,:])
+    elif (method == 'change'):
+        val = 2.*(weights[0]*value[0]-weights[1]*value[1])/(weights[0]*value[0]+weights[1]*value[1])
+        vals = 2.*(weights[0]*value_sim[0,:]-weights[1]*value_sim[1,:])/(weights[0]*value_sim[0,:]+weights[1]*value_sim[1,:])
+    elif (method == 'sumnum'):
+        val = (weights[0]*value[0]+weights[1]*value[1])/(weights[2]*value[2])
+        vals = (weights[0]*value_sim[0,:]+weights[1]*value_sim[1,:])/(weights[2]*value_sim[2,:])
+    elif (method == 'sumdenom'):
+        val = weights[0]*value[0]/(weights[1]*value[1]+weights[2]*value[2])
+        vals = weights[0]*value_sim[0,:]/(weights[1]*value_sim[1,:]+weights[2]*value_sim[2,:])
+# continuum fitting methods
+    elif (method == 'fitnum'):
+        cfit = numpy.polyfit(numpy.array([xNums[0],xNums[1]]).ravel(),numpy.array([yNums[0],yNums[1]]).ravel(),fitorder)
+        val = weights[0]*numpy.polyval(cfit,numpy.nanmean(xNums[-1]))/(weights[-1]*value[-1])
+        if noiseFlag == False: 
+            vals = []
+            for j in numpy.arange(0,nsamples):
+                yVar1 = yNums[0]+numpy.random.normal(0.,3.,size=len(yNums[0]))*yNums_e[0]
+                yVar2 = yNums[1]+numpy.random.normal(0.,3.,size=len(yNums[1]))*yNums_e[1]
+                cfit = numpy.polyfit(numpy.array([xNums[0],xNums[1]]).ravel(),numpy.array([yVar1,yVar2]).ravel(),fitorder)
+                vals.append(weights[0]*numpy.polyval(cfit,numpy.nanmean(xNums[-1]))/(weights[-1]*value_sim[-1,j]))
+    elif (method == 'fitdenom'):
+        cfit = numpy.polyfit(numpy.array([xNums[1],xNums[2]]).ravel(),numpy.array([yNums[1],yNums[2]]).ravel(),fitorder)
+        val = weights[0]*value[0]/(weights[-1]*numpy.polyval(cfit,xNums[-1]))
+        if noiseFlag == False: 
+            vals = []
+            for j in numpy.arange(0,nsamples):
+                yVar1 = yNums[0]+numpy.random.normal(0.,3.,size=len(yNums[0]))*yNums_e[0]
+                yVar2 = yNums[1]+numpy.random.normal(0.,3.,size=len(yNums[1]))*yNums_e[1]
+                cfit = numpy.polyfit(numpy.array([xNums[0],xNums[1]]).ravel(),numpy.array([yVar1,yVar2]).ravel(),fitorder)
+                vals.append(weights[0]*value_sim[0,j]/(weights[-1]*numpy.polyval(cfit,xNums[-1])))
+    elif (method == 'doubleratio'):
+        val = ((weights[0]/weights[1])/(weights[1]/weights[2]))*((value[0]/value[1])/(value[1]/value[2]))
+        vals = ((weights[0]/weights[1])/(weights[1]/weights[2]))*((value_sim[0,:]/value_sim[1,:])/(value_sim[1,:]/value_sim[2,:]))
+    elif (method == 'allers'):
+        val = (((numpy.mean(ranges[0])-numpy.mean(ranges[1]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value[2] \
+            + ((numpy.mean(ranges[2])-numpy.mean(ranges[0]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value[1]) \
+            /value[0]
+        vals = (((numpy.mean(ranges[0])-numpy.mean(ranges[1]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value_sim[2,:] \
+            + ((numpy.mean(ranges[2])-numpy.mean(ranges[0]))/(numpy.mean(ranges[2])-numpy.mean(ranges[1])))*value_sim[1,:]) \
+            /value_sim[0,:]
+    else:
+        val = (weights[0]*value[0])/(weights[1]*value[1])
+        vals = (weights[0]*value_sim[0,:])/(weights[1]*value_sim[1,:])
 
 # PLOTTING/VISUALIZATION?
-        if plot == True:
-            from splat.plot import visualizeIndices, plotSpectrum
-            bands = []
-            for r in ranges: bands.append(r)
-            inddict = {pkwargs.get('name','Index'): {'ranges': bands, 'value': value}}
-    #        visualizeIndices(sp,inddict,**kwargs)        
-            plotSpectrum(sp,bands=bands,bandlabels=[pkwargs.get('name','') for b in bands],**pkwargs)        
+    if plot == True:
+        from splat.plot import visualizeIndices, plotSpectrum
+        bands = []
+        for r in ranges: bands.append(r)
+        inddict = {pkwargs.get('name','Index'): {'ranges': bands, 'value': value}}
+#        visualizeIndices(sp,inddict,**kwargs)        
+        plotSpectrum(sp,bands=bands,bandlabels=[pkwargs.get('name','') for b in bands],**pkwargs)        
 
 # output mean, standard deviation
 
@@ -8091,10 +8118,15 @@ def measureIndexSet(sp,ref='burgasser',index_info={},info=False,verbose=False,in
             if k not in list(index_info[indices_keyword][n].keys()):
                 raise ValueError('Keyword "{}" must be present for each defined index in input index dictionary, but is missing for index {}'.format(k,n))
 
+# check on weights
+
 # measure indices
     result = {'reference': ref,'bibcode': INDEX_SETS[ref]['bibcode']}
     for n in names:
-        ind,err = measureIndex(sp,index_info[indices_keyword][n][range_keyword],method=index_info[indices_keyword][n][method_keyword],sample=index_info[indices_keyword][n][sample_keyword],verbose=verbose,**kwargs)
+        fitorder,weights=1,[]
+        if 'weights' in list(index_info[indices_keyword][n].keys()): weights=index_info[indices_keyword][n]['weights']
+        if 'fitorder' in list(index_info[indices_keyword][n].keys()): fitorder=index_info[indices_keyword][n]['fitorder']
+        ind,err = measureIndex(sp,index_info[indices_keyword][n][range_keyword],method=index_info[indices_keyword][n][method_keyword],sample=index_info[indices_keyword][n][sample_keyword],weights=weights,fitorder=fitorder,verbose=verbose,**kwargs)
         result[n] = (ind,err)
         if verbose == True: print('Index {}: {:.3f}+/-{:.3f}'.format(n,ind,err))
 

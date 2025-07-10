@@ -72,7 +72,8 @@ import matplotlib.pyplot as plt
 import numpy
 import pandas
 from scipy import stats, signal
-from scipy.integrate import trapz        # for numerical integration
+try: from scipy.integrate import trapz 
+except: from scipy.integrate import trapezoid as trapz        # for numerical integration
 from scipy.interpolate import griddata, interp1d
 import scipy.optimize as op
 from astropy.io import ascii,fits            # for reading in spreadsheet
