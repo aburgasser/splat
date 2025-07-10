@@ -1902,22 +1902,14 @@ class Spectrum(object):
     def normalize(self,*args,**kwargs):
         '''
         :Purpose: 
-
             Normalize a spectrum to a maximum value of 1 (in its current units) either at a 
             particular wavelength or over a wavelength range
-
         :Required Inputs: 
-
             None
-
         :Optional Inputs: 
-
             :param wave_range: choose the wavelength range to normalize; can be a list specifying minimum and maximum or a single wavelength (default = None); alternate keywords: `wave_range`, `range`
-
         :Output: 
-
             None; spectrum is normalized
-
         :Example:
            >>> import splat
            >>> sp = splat.getSpectrum(lucky=True)[0]
@@ -1928,6 +1920,7 @@ class Spectrum(object):
            >>> sp.fluxMax()
            <Quantity 1.591310977935791 erg / (cm2 micron s)>
         '''
+        med = kwargs.get('median',False)
         rng = kwargs.get('wave_range',False)
         rng = kwargs.get('waverange',rng)
         rng = kwargs.get('range',rng)
@@ -1944,9 +1937,15 @@ class Spectrum(object):
                 f = interp1d(self.wave.value,self.flux.value)
                 scalefactor = f(rng[0])
             else:
-                scalefactor = numpy.nanmax(self.flux.value[numpy.where(numpy.logical_and(self.wave.value > rng[0],self.wave.value < rng[1]))])
+                if med:                
+                    scalefactor = numpy.nanmedian(self.flux.value[numpy.where(numpy.logical_and(self.wave.value > rng[0],self.wave.value < rng[1]))])
+                else:
+                    scalefactor = numpy.nanmax(self.flux.value[numpy.where(numpy.logical_and(self.wave.value > rng[0],self.wave.value < rng[1]))])
         else:
-            scalefactor = self.fluxMax(**kwargs)
+            if med:
+                scalefactor = numpy.nanmedian(self.flux.value)
+            else:
+                scalefactor = self.fluxMax(**kwargs)
         if isUnit(scalefactor): scalefactor = scalefactor.value
         if scalefactor == 0.: print('\nWarning: normalize is attempting to divide by zero; ignoring')
         elif numpy.isnan(scalefactor) == True: print('\nWarning: normalize is attempting to divide by nan; ignoring')
@@ -1956,6 +1955,7 @@ class Spectrum(object):
             self.history.append('Spectrum normalized')
             self.snr = self.computeSN()
         return
+
 
     def plot(self,**kwargs):
         '''
@@ -6272,11 +6272,12 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
             ind = measureIndexSet(sp,ref=s,verbose=verbose,**kwargs)
             if sys.version_info.major == 2: indices = dict(indices.items() + ind.items())
             else: indices = dict(indices.items() | ind.items())            
-
-# determine classifications from polunomials
+    #print('INDICES', indices)
+# determine classifications from polynomials
     if param['method']=='polynomial':
         coeffs = {}
         for index in list(param['indices'].keys()):
+            if index in ['jtype', 'ktype']: continue
             coeffs[index] = {}
             coeffs[index]['spt'] = numpy.nan
             coeffs[index]['sptunc'] = numpy.nan
@@ -6297,7 +6298,8 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
                     if param['decimal']==True: vals = (vals-param['sptoffset'])*10.+param['sptoffset']
                     coeffs[index]['sptunc'] = (numpy.nanstd(vals)**2+param['indices'][index]['fitunc']**2)**0.5
 
-#                if verbose==True: print('{}: index = {:.3f}+/-{:.3f}, spt = {:.2f}+/-{:.2f}'.format(index,indices[index][0],indices[index][1],coeffs[index]['spt'],coeffs[index]['sptunc']))
+#                if verbose==True: print('{}: index = {:.3f}+/-{:.3f}, spt = {:.2f}+/-{:.2f}'.format(index,indices[index][0],indices[index][1],coeffs[index]['spt'],coeffs[index]['sptunc']))            
+
 # unmask good values
             if coeffs[index]['spt'] >= numpy.nanmin(param['indices'][index]['range']) and \
                 coeffs[index]['spt'] <= numpy.nanmax(param['indices'][index]['range']) and \
@@ -6310,7 +6312,28 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
 #             if verbose==True: print('\nNot of enough indices in set {} returned viable values\n'.format(ref))
 #             return numpy.nan, numpy.nan
 
-# computed weighted mean with rejection, iterating to deal with indices outside ranges      
+# if Allers method, need to compute the J and K spectral types
+        #print('METHOD', ref.lower())
+        if ref.lower() in ['allers','all13','allers13','allers2013']:
+            coeffs['jtype'] = {}
+            coeffs['ktype'] = {}
+            # Calculate The J and K spectral types for Allers method
+            jtype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.07,1.40]) 
+            #print('JType', jtype)
+            #print(typeToNum(jtype[0]))
+            coeffs['jtype']['spt']    = typeToNum(jtype[0])
+            coeffs['jtype']['sptunc'] = 1.
+            coeffs['jtype']['mask']   = 1.
+            ktype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.90,2.20]) 
+            #print('KType', ktype)
+            #print(typeToNum(ktype[0]))
+            coeffs['ktype']['spt']    = typeToNum(ktype[0])
+            coeffs['ktype']['sptunc'] = 1.
+            coeffs['ktype']['mask']   = 1.
+
+# computed weighted mean with rejection, iterating to deal with indices outside ranges   
+        #print(coeffs)   
+        #sys.exit()
         for i in numpy.arange(nloop):
             wts = numpy.array([coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in list(coeffs.keys())])
             vals = numpy.array([coeffs[index]['mask']*coeffs[index]['spt']/coeffs[index]['sptunc']**2 for index in list(coeffs.keys())])
@@ -6328,6 +6351,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
             for i in coeffs.keys():
                 flg = ''
                 if coeffs[i]['mask'] == 0.: flg = '*'
+                if i in ['jtype', 'ktype']: continue
                 print('{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{:.1f}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc']))
 
 # not enough good values
@@ -6378,7 +6402,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
         output['result'] = (spt,sptn_e)
         return output
     else:
-        return spt, sptn_e
+        return spt, sptn_e, (jtype, ktype)
 
 
 
@@ -6579,6 +6603,8 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
 # determine comparison range based on method
     if (kwargs.get('method','').lower() == 'kirkpatrick'):
         fit_ranges = [[0.9,1.4]]         # as prescribed in Kirkpatrick et al. 2010, ApJS,
+    elif (kwargs.get('method','').lower() == 'cruz'):
+        fit_ranges = [[[0.87,1.39]],[[1.41,1.89]],[[1.91,2.39]]]    # as prescribed in Cruz et al. 2018, AJ,
     elif (kwargs.get('method','').lower() == ''):
         fit_ranges = [[0.7,2.45]]       # by default, compare whole spectrum
     else:
@@ -6599,7 +6625,10 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
 
     for t in spt_sample:
 #        chisq,scale = compareSpectra(sp,stds[typeToNum(t,subclass=subclass)],fit_ranges=fit_ranges,statistic=statistic,novar2=True)
-        chisq,scale = compareSpectra(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True)
+        if (kwargs.get('method','').lower() == 'cruz'):
+            chisq,scale = compareSpectraCruz(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True,verbose=verbose)
+        else: 
+            chisq,scale = compareSpectra(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True,verbose=verbose)
         stat.append(chisq)
         sspt.append(t)
         if verbose==True: print('Type {}: statistic = {}, scale = {}'.format(t, chisq, scale))
@@ -6645,8 +6674,18 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
 #        print(typeToNum(sorted_stdsptnum[0],subclass=subclass))
         spstd = copy.deepcopy(stds[sorted_stdsptnum[0]])
 #        getStandard(typeToNum(sorted_stdsptnum[0],subclass=subclass))
-        chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
-        spstd.scale(scale)
+        if (kwargs.get('method','').lower() == 'cruz'):
+            chisq,scale = compareSpectraCruz(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
+            spstd.flux[numpy.where( (spstd.wave.value >= numpy.min(fit_ranges[0])) & ((spstd.wave.value <= numpy.max(fit_ranges[0])) ) )] *= scale[0]
+            spstd.flux[numpy.where( (spstd.wave.value >= numpy.min(fit_ranges[1])) & ((spstd.wave.value <= numpy.max(fit_ranges[1])) ) )] *= scale[1]
+            spstd.flux[numpy.where( (spstd.wave.value >= numpy.min(fit_ranges[2])) & ((spstd.wave.value <= numpy.max(fit_ranges[2])) ) )] *= scale[2]
+            spstd.flux[numpy.where( ( (spstd.wave.value < numpy.min(fit_ranges[0])) | (spstd.wave.value > numpy.max(fit_ranges[0])) ) &
+                                    ( (spstd.wave.value < numpy.min(fit_ranges[1])) | (spstd.wave.value > numpy.max(fit_ranges[1])) ) &
+                                    ( (spstd.wave.value < numpy.min(fit_ranges[2])) | (spstd.wave.value > numpy.max(fit_ranges[2])) ) 
+                                   )] = numpy.nan
+        else:
+            chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
+            spstd.scale(scale)
         if kwargs.get('colors',False) == False:
             kwargs['colors'] = ['k','r','b']
         if kwargs.get('labels',False) == False:
@@ -6658,11 +6697,14 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
         else:
             pl = plotSpectrum([sp,spstd],**kwargs)
 
-    if verbose==True: print(fit_ranges)
+    if verbose==True: print('Fit-ranges:', fit_ranges)
 
     if kwargs.get('return_standard',False) == True: 
         spstd = copy.deepcopy(stds[sorted_stdsptnum[0]])
-        chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic)
+        if (kwargs.get('method','').lower() == 'cruz'):
+            chisq,scale = compareSpectraCruz(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
+        else:
+            chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
         spstd.scale(scale)
         return spstd
     elif kwargs.get('return_statistic',False) == True: 
@@ -7079,7 +7121,9 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
         'FeH-z':{'M5.0':[numpy.nan,numpy.nan],'M6.0':[1.068,1.039],'M7.0':[1.103,1.056],'M8.0':[1.146,1.074],'M9.0': [1.167,1.086],'L0.0': [1.204,1.106],'L1.0':[1.252,1.121],'L2.0':[1.298,1.142],'L3.0': [1.357,1.163],'L4.0': [1.370,1.164],'L5.0': [1.258,1.138],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
         'VO-z': {'M5.0':[numpy.nan,numpy.nan],'M6.0':[numpy.nan,numpy.nan],'M7.0': [numpy.nan,numpy.nan],'M8.0': [numpy.nan,numpy.nan],'M9.0': [numpy.nan,numpy.nan],'L0.0': [1.122,1.256],'L1.0': [1.112,1.251],'L2.0': [1.110,1.232],'L3.0': [1.097,1.187],'L4.0': [1.073,1.118],'L5.0': [numpy.nan,numpy.nan],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
         'KI-J': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [1.042,1.028], 'M7.0': [1.059,1.036],'M8.0': [1.077,1.046],'M9.0': [1.085,1.053],'L0.0': [1.098,1.061],'L1.0': [1.114,1.067],'L2.0': [1.133,1.073],'L3.0': [1.135,1.075],'L4.0': [1.126,1.072],'L5.0': [1.094,1.061],'L6.0': [numpy.nan,numpy.nan],'L7.0': [numpy.nan,numpy.nan]},\
-        'H-cont': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [.988,.994], 'M7.0': [.981,.990],'M8.0': [.963,.984],'M9.0': [.949,.979],'L0.0': [.935,.972],'L1.0': [.914,.968],'L2.0': [.906,.964],'L3.0': [.898,.960],'L4.0': [.885,.954],'L5.0': [.869,.949],'L6.0': [.874,.950],'L7.0': [0.888,0.952]}}
+        'H-cont': {'M5.0': [numpy.nan,numpy.nan], 'M6.0': [.988,.994], 'M7.0': [.981,.990],'M8.0': [.963,.984],'M9.0': [.949,.979],'L0.0': [.935,.972],'L1.0': [.914,.968],'L2.0': [.906,.964],'L3.0': [.898,.960],'L4.0': [.885,.954],'L5.0': [.869,.949],'L6.0': [.874,.950],'L7.0': [0.888,0.952]},\
+        }
+
     if verbose==True: print('\nGravity Classification')
     gravscore = {}
     gravscore['gravity_class'] = 'UNKNOWN'
@@ -7093,7 +7137,7 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
 # Determine the object's NIR spectral type and its uncertainty
     sptn = kwargs.get('spt',False)
     if sptn == False:
-        sptn, spt_e = classifyByIndex(sp,string=False,ref='allers2013')
+        sptn, spt_e, spts2 = classifyByIndex(sp,string=False,ref='allers2013')
         if numpy.isnan(sptn):
             if verbose==True: print('Spectral type could not be determined from indices; try entering with spt keyword')
             if output=='allmeasures': return gravscore
@@ -7102,7 +7146,8 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
     if isinstance(sptn,str): sptn = typeToNum(sptn)
     Spt = typeToNum(numpy.round(sptn))
     gravscore['spt'] = Spt
-    if verbose==True: print('\tSpT = {}'.format(Spt))
+    if verbose==True: 
+        print('\tSpT = {} (J-type = {}; K-type = {})'.format(Spt, spts2[0][0], spts2[1][0]))
 
 #Check whether the NIR SpT is within gravity sensitive range values
     if ((sptn < 16.0) or (sptn > 27.0)):
@@ -7537,6 +7582,251 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
     return numpy.nanmax([stat,minreturn])*unit, scale_factor
 
 
+def compareSpectraCruz(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=False, verbose=False, **kwargs):
+    '''
+    :Purpose: 
+
+        Compare two spectra against each other using a pre-selected statistic. 
+        Returns the value of the desired statistic as well as the optimal scale factor. 
+
+    :Required Parameters: 
+
+        :param sp1: First spectrum class object, which sets the wavelength scale
+        :param sp2: Second spectrum class object, interpolated onto the wavelength scale of sp1
+
+    :Optional Parameters: 
+
+        :param: statistic = 'chisqr': string defining which statistic to use in comparison; available options are (also stat):
+
+            - *'chisqr'* or *'chi'*: compare by computing chi squared value (requires spectra with noise values)
+            - *'stddev'*: compare by computing standard deviation
+            - *'stddev_norm'*: compare by computing normalized standard deviation
+            - *'absdev'*: compare by computing absolute deviation
+
+        :param: scale = True: If True, finds the best scale factor to minimize the statistic
+        :param: fit_ranges = [range of first spectrum]: 2-element array or nested array of 2-element arrays specifying the wavelength ranges to be used for the fit, assumed to be measured in microns; this is effectively the opposite of mask_ranges (also fit_range, fitrange, fitrng, comprange, comprng)
+        :param: mask = numpy.zeros(): Array specifiying which wavelengths to mask; must be an array with length equal to the wavelength scale of ``sp1`` with only 0 (OK) or 1 (mask).
+        :param: mask_ranges = None: Multi-vector array setting wavelength boundaries for masking data, assumed to be in microns
+        :param: mask_telluric = False: Set to True to mask pre-defined telluric absorption regions
+        :param: mask_standard = False: Like ``mask_telluric``, with a slightly tighter cut of 0.80-2.35 micron
+        :param: weights = numpy.ones(): Array specifying the weights for individual wavelengths; must be an array with length equal to the wavelength scale of ``sp1``; need not be normalized
+        :param: novar2 = True: Set to True to compute statistic without considering variance of ``sp2``
+        :param: plot = False: Set to True to plot ``sp1`` with scaled ``sp2`` and difference spectrum overlaid
+        :param: verbose = False: Set to True to report things as you're going along
+
+    :Output: 
+        statistic and optimal scale factor for the comparison
+
+    :Example:
+        >>> import splat
+        >>> import numpy
+        >>> sp1 = splat.getSpectrum(shortname = '2346-3153')[0]
+            Retrieving 1 file
+        >>> sp2 = splat.getSpectrum(shortname = '1421+1827')[0]
+            Retrieving 1 file
+        >>> sp1.normalize()
+        >>> sp2.normalize()    
+        >>> splat.compareSpectra(sp1, sp2, statistic='chisqr')
+            (<Quantity 19927.74527822856>, 0.94360732593223595)
+        >>> splat.compareSpectra(sp1, sp2, statistic='stddev')
+            (<Quantity 3.0237604611215705 erg2 / (cm4 micron2 s2)>, 0.98180983971456637)
+        >>> splat.compareSpectra(sp1, sp2, statistic='absdev')
+            (<Quantity 32.99816249949072 erg / (cm2 micron s)>, 0.98155779612333172)
+        >>> splat.compareSpectra(sp1, sp2, statistic='chisqr', novar2=False)
+            (<Quantity 17071.690727945213>, 0.94029474635786015)
+    '''
+
+    sp1 = copy.deepcopy(s1)
+    sp2 = copy.deepcopy(s2)
+    
+# make sure spectra are on the same wavelength and flux unit scales
+    if sp1.wave.unit != sp2.wave.unit: sp2.toWaveUnit(sp1.wave.unit)
+    if sp1.flux.unit != sp2.flux.unit: sp2.toFluxUnit(sp1.flux.unit)
+
+    fit_ranges = [[[0.87,1.39]],[[1.41,1.89]],[[1.91,2.39]]]    # as prescribed in Cruz et al. 2018, AJ
+
+#    mask_ranges = kwargs.get('mask_ranges',[])
+#    mask_standard = kwargs.get('mask_standard',False)
+#    mask_telluric = kwargs.get('mask_telluric',mask_standard)
+    var_flag = novar2
+    if numpy.isnan(numpy.max(sp2.variance.value)) == True: var_flag = True
+    if numpy.isnan(numpy.max(sp1.variance.value)) == True: var_flag = False
+    statistic = kwargs.get('stat',statistic)
+    minreturn = 1.e-60
+    scale_factor = 1.
+    stats, scale_factors = [], []
+
+# create interpolation function for second spectrum
+    f = interp1d(sp2.wave.value,sp2.flux.value,bounds_error=False,fill_value=0.)
+    if var_flag:
+        v = interp1d(sp2.wave.value,[numpy.nan for s in sp2.wave],bounds_error=False,fill_value=numpy.nan)
+    else:
+        v = interp1d(sp2.wave.value,sp2.variance.value,bounds_error=False,fill_value=numpy.nan)
+# total variance - funny form to cover for nans
+    vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)],axis=0)
+    vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
+
+# manage fit ranges and generate fit mask
+    if not isUnit(fit_ranges[0]):
+        fit_ranges[0] = (fit_ranges[0]*u.micron).to(sp1.wave.unit)
+    if not isUnit(fit_ranges[1]):
+        fit_ranges[1] = (fit_ranges[1]*u.micron).to(sp1.wave.unit)
+    if not isUnit(fit_ranges[2]):
+        fit_ranges[2] = (fit_ranges[2]*u.micron).to(sp1.wave.unit)
+    fit_mask1 = kwargs.get('fit_mask',1.-generateMask(sp1.wave,mask_ranges=fit_ranges[0]))
+    fit_mask2 = kwargs.get('fit_mask',1.-generateMask(sp1.wave,mask_ranges=fit_ranges[1]))
+    fit_mask3 = kwargs.get('fit_mask',1.-generateMask(sp1.wave,mask_ranges=fit_ranges[2]))
+
+# generate masking array and combine with fit mask
+#    reject_mask = numpy.array(kwargs.get('mask',generateMask(sp1.wave,**kwargs)))
+    reject_mask = numpy.array(kwargs.get('mask',numpy.zeros(len(sp1.wave))))
+# mask flux < 0
+    reject_mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
+    mask1 = numpy.clip(fit_mask1+reject_mask,0,1)
+    mask2 = numpy.clip(fit_mask2+reject_mask,0,1)
+    mask3 = numpy.clip(fit_mask3+reject_mask,0,1)
+
+# set the weights
+    weights1 = kwargs.get('weights',numpy.ones(len(sp1.wave)))
+    weights2 = kwargs.get('weights',numpy.ones(len(sp1.wave)))
+    weights3 = kwargs.get('weights',numpy.ones(len(sp1.wave)))
+    weights1 = weights1*(1.-mask1)
+    weights2 = weights2*(1.-mask2)
+    weights3 = weights3*(1.-mask3)
+
+# comparison statistics
+# switch to standard deviation if no uncertainty
+    if numpy.isnan(numpy.nanmax(vtot)):
+        statistic = 'stddev'
+        if verbose==True:
+            print('No uncertainties provided; using the {} statistic by default'.format(statistic))
+    else:
+        if verbose==True:
+            print('Comparing spectra using the {} statistic'.format(statistic))
+
+# chi^2
+    if (statistic == 'chisqr' or statistic == 'chisq' or statistic == 'chi'):
+# compute scale factor
+        if scale == True:
+            scale_factor1 = numpy.nansum(weights1*sp1.flux.value*f(sp1.wave.value)/vtot)/ \
+                numpy.nansum(weights1*f(sp1.wave.value)*f(sp1.wave.value)/vtot)
+            scale_factor2 = numpy.nansum(weights2*sp1.flux.value*f(sp1.wave.value)/vtot)/ \
+                numpy.nansum(weights2*f(sp1.wave.value)*f(sp1.wave.value)/vtot)
+            scale_factor3 = numpy.nansum(weights3*sp1.flux.value*f(sp1.wave.value)/vtot)/ \
+                numpy.nansum(weights3*f(sp1.wave.value)*f(sp1.wave.value)/vtot)
+
+# correct variance
+        vtot1 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor1**2)],axis=0)
+        vtot2 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor2**2)],axis=0)
+        vtot3 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor3**2)],axis=0)
+        vtot1[numpy.isnan(vtot1)==True] = numpy.nanmedian(vtot1)
+        vtot2[numpy.isnan(vtot2)==True] = numpy.nanmedian(vtot2)
+        vtot3[numpy.isnan(vtot3)==True] = numpy.nanmedian(vtot3)
+        stat1 = numpy.nansum(weights1*(sp1.flux.value-f(sp1.wave.value)*scale_factor1)**2/vtot1)
+        stat2 = numpy.nansum(weights2*(sp1.flux.value-f(sp1.wave.value)*scale_factor2)**2/vtot2)
+        stat3 = numpy.nansum(weights3*(sp1.flux.value-f(sp1.wave.value)*scale_factor3)**2/vtot3)
+        stat = stat1+stat2+stat3
+        unit = sp1.flux_unit/sp1.flux_unit
+
+# normalized standard deviation (NEED TO DO ALL OF THESE TOO!)
+    elif (statistic == 'stddev_norm' or statistic == 'stdev_norm'):
+# compute scale factor
+        if scale == True:
+            scale_factor1 = numpy.nansum(weights1*sp1.flux.value)/ \
+                numpy.nansum(weights1*f(sp1.wave.value))
+            scale_factor2 = numpy.nansum(weights2*sp1.flux.value)/ \
+                numpy.nansum(weights2*f(sp1.wave.value))
+            scale_factor3 = numpy.nansum(weights3*sp1.flux.value)/ \
+                numpy.nansum(weights3*f(sp1.wave.value))
+# correct variance
+        vtot1 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor1**2)],axis=0)
+        vtot2 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor2**2)],axis=0)
+        vtot3 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor3**2)],axis=0)
+        vtot1[numpy.isnan(vtot1)==True] = numpy.nanmedian(vtot1)
+        vtot2[numpy.isnan(vtot2)==True] = numpy.nanmedian(vtot2)
+        vtot3[numpy.isnan(vtot3)==True] = numpy.nanmedian(vtot3)
+        stat1 = numpy.nansum(weights1*(sp1.flux.value-f(sp1.wave.value)*scale_factor1)**2)/ \
+            numpy.nanmedian(sp1.flux.value)**2
+        stat2 = numpy.nansum(weights2*(sp1.flux.value-f(sp1.wave.value)*scale_factor2)**2)/ \
+            numpy.nanmedian(sp1.flux.value)**2
+        stat3 = numpy.nansum(weights3*(sp1.flux.value-f(sp1.wave.value)*scale_factor3)**2)/ \
+            numpy.nanmedian(sp1.flux.value)**2
+        stat = stat1+stat2+stat3
+        unit = sp1.flux_unit/sp1.flux_unit
+
+# standard deviation
+    elif (statistic == 'stddev' or statistic == 'stdev'):
+# compute scale factor
+        if scale == True:
+            scale_factor1 = numpy.nansum(weights1*sp1.flux.value*f(sp1.wave.value))/ \
+                numpy.nansum(weights1*f(sp1.wave.value)*f(sp1.wave.value))
+            scale_factor2 = numpy.nansum(weights2*sp1.flux.value*f(sp1.wave.value))/ \
+                numpy.nansum(weights2*f(sp1.wave.value)*f(sp1.wave.value))
+            scale_factor3 = numpy.nansum(weights3*sp1.flux.value*f(sp1.wave.value))/ \
+                numpy.nansum(weights3*f(sp1.wave.value)*f(sp1.wave.value))
+# correct variance
+        vtot1 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor1**2)],axis=0)
+        vtot2 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor2**2)],axis=0)
+        vtot3 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor3**2)],axis=0)
+        vtot1[numpy.isnan(vtot1)==True] = numpy.nanmedian(vtot1)
+        vtot2[numpy.isnan(vtot2)==True] = numpy.nanmedian(vtot2)
+        vtot3[numpy.isnan(vtot3)==True] = numpy.nanmedian(vtot3)
+        stat1 = numpy.nansum(weights1*(sp1.flux.value-f(sp1.wave.value)*scale_factor1)**2)
+        stat2 = numpy.nansum(weights2*(sp1.flux.value-f(sp1.wave.value)*scale_factor2)**2)
+        stat3 = numpy.nansum(weights3*(sp1.flux.value-f(sp1.wave.value)*scale_factor3)**2)
+        stat = stat1+stat2+stat3
+        unit = sp1.flux_unit**2
+
+# absolute deviation
+    elif (statistic == 'absdev'):
+# compute scale factor
+        if scale == True:
+            scale_factor1 = numpy.nansum(weights1*sp1.flux.value)/ \
+                numpy.nansum(weights1*f(sp1.wave.value))
+            scale_factor2 = numpy.nansum(weights2*sp1.flux.value)/ \
+                numpy.nansum(weights2*f(sp1.wave.value))
+            scale_factor3 = numpy.nansum(weights3*sp1.flux.value)/ \
+                numpy.nansum(weights3*f(sp1.wave.value))
+# correct variance
+        vtot1 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor1**2)],axis=0)
+        vtot2 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor2**2)],axis=0)
+        vtot3 = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor3**2)],axis=0)
+        vtot1[numpy.isnan(vtot1)==True] = numpy.nanmedian(vtot1)
+        vtot2[numpy.isnan(vtot2)==True] = numpy.nanmedian(vtot2)
+        vtot3[numpy.isnan(vtot3)==True] = numpy.nanmedian(vtot3)
+        stat1 = numpy.nansum(weights1*abs(sp1.flux.value-f(sp1.wave.value)*scale_factor1))
+        stat2 = numpy.nansum(weights2*abs(sp1.flux.value-f(sp1.wave.value)*scale_factor2))
+        stat3 = numpy.nansum(weights3*abs(sp1.flux.value-f(sp1.wave.value)*scale_factor3))
+        stat = stat1+stat2+stat3
+        unit = sp1.flux_unit
+
+# error
+    else:
+        print('Error: statistic {} for compareSpectra not available'.format(statistic))
+        return numpy.nan, numpy.nan
+
+# plot spectrum compared to best spectrum
+    if plot == True:
+        spcomp = copy.deepcopy(sp2)
+        spcomp.flux[numpy.where( (spcomp.wave >= numpy.min(fit_ranges[0])) & ((spcomp.wave <= numpy.max(fit_ranges[0])) ) )] *= scale_factor1
+        spcomp.flux[numpy.where( (spcomp.wave >= numpy.min(fit_ranges[1])) & ((spcomp.wave <= numpy.max(fit_ranges[1])) ) )] *= scale_factor2
+        spcomp.flux[numpy.where( (spcomp.wave >= numpy.min(fit_ranges[2])) & ((spcomp.wave <= numpy.max(fit_ranges[2])) ) )] *= scale_factor3
+        spcomp.flux[numpy.where( ( (spcomp.wave < numpy.min(fit_ranges[0])) | (spcomp.wave > numpy.max(fit_ranges[0])) ) &
+                                 ( (spcomp.wave < numpy.min(fit_ranges[1])) | (spcomp.wave > numpy.max(fit_ranges[1])) ) &
+                                 ( (spcomp.wave < numpy.min(fit_ranges[2])) | (spcomp.wave > numpy.max(fit_ranges[2])) ) 
+                                )] = numpy.nan
+        kwargs['colors'] = kwargs.get('colors',['k','m','b'])
+        kwargs['title'] = kwargs.get('title',sp1.name+' vs '+sp2.name)
+        from .plot import plotSpectrum
+        plotSpectrum([sp1,spcomp,sp1-spcomp],labels=[sp1.name,sp2.name,'{} = {}'.format(statistic,stat)],**kwargs)
+
+    scale_factors = [scale_factor1, scale_factor2, scale_factor3]
+
+    return numpy.nanmax([stat,minreturn])*unit, scale_factors
+
+
+
+
 def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_standard=False,**kwargs):
     '''
     :Purpose: Generates a mask array based on wavelength vector and optional inputs on what to mask.
@@ -7589,6 +7879,11 @@ def generateMask(wv,mask=[],mask_range=[-99.,-99.],mask_telluric=False,mask_stan
 
 
 
+
+
+
+
+
 def measureEW(sp,lc,width=0.,continuum=[0.,0.],plot=False,file='',continuum_width=False,output_unit=u.Angstrom,nsamp=100,nmc=100,verbose=True,recenter=True,absorption=True,name='',continuum_fit_order=1,debug=False):
 
 # input checks
@@ -7619,16 +7914,21 @@ def measureEW(sp,lc,width=0.,continuum=[0.,0.],plot=False,file='',continuum_widt
     if numpy.nanmax(cont) < line_center:
         cont = [c+line_center for c in cont]
     if len(cont) < 4:
-        cont = [2*line_center-cont[-1],2*line_center-cont[-2],cont[-1],cont[-2]]
+        if len(cont) == 2:
+            if continuum_width != False:
+                cont = [cont[0]-continuum_width/2, cont[0]+continuum_width/2, cont[1]-continuum_width/2,cont[1]+continuum_width/2]
+        else:
+            cont = [2*line_center-cont[-1],2*line_center-cont[-2],cont[-1],cont[-2]]
+
     if debug==True: print('Line center = {}, Line width = {}, Continuum = {}'.format(line_center,line_width,cont))
 
 # preset fail condition
-    ew = numpy.nan
-    ew_unc = numpy.nan
-    line_center_measure = numpy.nan
+    ew                      = numpy.nan
+    ew_unc                  = numpy.nan
+    line_center_measure     = numpy.nan
     line_center_measure_unc = numpy.nan
-    rv = numpy.nan
-    rv_unc = numpy.nan
+    rv                      = numpy.nan
+    rv_unc                  = numpy.nan
     
 # first compute value
     samplerng = [numpy.nanmin(cont)-0.1*(numpy.nanmax(cont)-numpy.nanmin(cont)),numpy.nanmax(cont)+0.1*(numpy.nanmax(cont)-numpy.nanmin(cont))]
@@ -7645,17 +7945,18 @@ def measureEW(sp,lc,width=0.,continuum=[0.,0.],plot=False,file='',continuum_widt
                 else: line_center_measure = wv[numpy.nanargmax(fl)]
         rv = ((line_center_measure-line_center)/line_center)*const.c.to(u.km/u.s)
 
-        w = numpy.where(numpy.logical_and(sp.wave.value >= samplerng[0],sp.wave.value <= samplerng[1]))
+        w = numpy.where(numpy.logical_and(sp.wave.value >= samplerng[0],sp.wave.value <= samplerng[1]) )
         if len(w[0]) > 0:
-            f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=0.)
+            f = interp1d(sp.wave.value[w],sp.flux.value[w],bounds_error=False,fill_value=numpy.nan)
             wline = numpy.linspace(line_center_measure-line_width,line_center_measure+line_width,nsamp)
             wcont = numpy.append(numpy.linspace(cont[0],cont[1],nsamp),numpy.linspace(cont[-2],cont[-1],nsamp))        
             fline = f(wline)
             fcont = f(wcont)
-            pcont = numpy.poly1d(numpy.polyfit(wcont,fcont,continuum_fit_order))
+
+            goodind  = numpy.where(~numpy.isnan(fcont))
+            pcont    = numpy.poly1d(numpy.polyfit(wcont[goodind],fcont[goodind],continuum_fit_order))
             fcontfit = pcont(wline)
-            # print(wline,fline)
-            # print(wcont,fcont)
+
             ew = (trapz((numpy.ones(len(wline))-(fline/fcontfit)), wline)*sp.wave.unit).to(output_unit)
             if plot == True:
                 plt.clf()
