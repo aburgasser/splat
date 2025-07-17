@@ -6359,7 +6359,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
         mask = [coeffs[index]['mask'] for index in list(coeffs.keys())]
         if numpy.nansum(mask) < param['min_indices']:
             if verbose==True: print('\nNot of enough indices in set {} returned viable values\n'.format(ref))
-            return numpy.nan, numpy.nan
+            return numpy.nan, numpy.nan, numpy.nan
 
 # ranges method - NOT CURRENTLY CONSIDERING UNCERTAINTY
     elif param['method']=='ranges':
