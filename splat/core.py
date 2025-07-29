@@ -258,7 +258,7 @@ class Spectrum(object):
         if kwargs.get('dimensionless',False)==True: self.flux_unit = u.dimensionless_unscaled
 #        self.flux_unit_label = kwargs.get('flux_unit_label',self.flux_unit)
 #        self.header = kwargs.get('header',fits.PrimaryHDU())
-        self.header = kwargs.get('header',{})
+        self.header = kwargs.get('header',x)
         self.filename = kwargs.get('file','')
         self.filename = kwargs.get('filename',self.filename)
         self.name = kwargs.get('name','')
@@ -272,7 +272,7 @@ class Spectrum(object):
 #        self.runfast = kwargs.get('runfast',True)
         self.published = kwargs.get('published','N')
         self.bibcode = kwargs.get('bibcode','')
-        self.history = []
+        if 'history' in list(self.__dict__.keys()): self.history = []
         self.wave = []
         self.flux = []
         self.noise = []
@@ -574,7 +574,8 @@ class Spectrum(object):
         #         self.header['TIME_OBS'] = self.observation_time.replace(' ',':')
 
 
-        self.history.append('{} spectrum successfully loaded'.format(self.instrument))
+        if 'history' in list(self.__dict__.keys()):
+            self.history.append('{} spectrum successfully loaded'.format(self.instrument))
 
 # create a copy to store as the original
         self.original = copy.deepcopy(self)
@@ -600,7 +601,8 @@ class Spectrum(object):
         self.noise = reMap(self.wave.value,self.noise.value,other.wave.value)*flux_unit
         self.wave = other.wave
         self.variance = [x**2 for x in self.noise.value]*flux_unit**2
-        self.history.append('Mapped onto wavelength grid of {}'.format(other))
+        if 'history' in list(self.__dict__.keys()):
+            self.history.append('Mapped onto wavelength grid of {}'.format(other))
         return
 
 
@@ -1065,7 +1067,8 @@ class Spectrum(object):
         else: f+='\n\nUNPUBLISHED DATA'
 
         f+='\n\nHistory:'
-        for h in self.history: f+='\n\t{}'.format(h)
+        if 'history' in list(self.__dict__.keys()):
+            for h in self.history: f+='\n\t{}'.format(h)
         print(f)
         return
 
@@ -1176,7 +1179,7 @@ class Spectrum(object):
                 for i in range(len(self.wave.value)): f.write('{}{}{}\n'.format(self.wave.value[i],delimiter,self.flux.value[i]))
             f.close()
 
-        self.history.append('Spectrum saved to {}'.format(filename))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Spectrum saved to {}'.format(filename))
         return
 
 
@@ -1223,7 +1226,7 @@ class Spectrum(object):
         self.flux = self.flux.to(self.flux_unit,equivalencies=u.spectral_density(self.wave))
         self.noise = self.noise.to(self.flux_unit,equivalencies=u.spectral_density(self.wave))
         self.snr = self.computeSN()
-        self.history.append('Converted to Fnu units of {}'.format(self.flux_unit))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Converted to Fnu units of {}'.format(self.flux_unit))
         return
 
     def fnuToFlam(self):
@@ -1262,7 +1265,7 @@ class Spectrum(object):
         self.noise = self.noise.to(self.flux_unit,equivalencies=u.spectral_density(self.wave))
         self.variance = self.noise**2
         self.snr = self.computeSN()
-        self.history.append('Converted to Flam units of {}'.format(self.flux_unit))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Converted to Flam units of {}'.format(self.flux_unit))
         return
 
     def toSED(self):
@@ -1298,7 +1301,7 @@ class Spectrum(object):
         self.snr = self.computeSN()
         self.flux_unit = DEFAULT_SED_UNIT
         self.flux_label = r'${\lambda}F_{\lambda}$'
-        self.history.append('Converted to SED units of {}'.format(self.flux_unit))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Converted to SED units of {}'.format(self.flux_unit))
         return
 
     def toAngstrom(self):
@@ -1327,7 +1330,7 @@ class Spectrum(object):
         '''
         self.wave_unit = u.Angstrom
         self.wave = self.wave.to(self.wave_unit)
-        self.history.append('Converted wavelength to units of {}'.format(self.wave_unit))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Converted wavelength to units of {}'.format(self.wave_unit))
         return
 
     def toMicron(self):
@@ -1356,7 +1359,7 @@ class Spectrum(object):
         '''
         self.wave_unit = u.micron
         self.wave = self.wave.to(self.wave_unit)
-        self.history.append('Converted wavelength to units of {}'.format(self.wave_unit))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Converted wavelength to units of {}'.format(self.wave_unit))
         return
 
     def toWaveUnit(self,wave_unit):
@@ -1388,7 +1391,7 @@ class Spectrum(object):
         try:
             self.wave = self.wave.to(wave_unit)
             self.wave_unit = wave_unit
-            self.history.append('Converted wavelength to units of {}'.format(self.wave_unit))
+            if 'history' in list(self.__dict__.keys()): self.history.append('Converted wavelength to units of {}'.format(self.wave_unit))
         except:
             print('\nWarning! failed to convert wavelength unit from {} to {}; no change made'.format(self.wave.unit,wave_unit))            
         return
@@ -1425,7 +1428,7 @@ class Spectrum(object):
             self.flux = self.flux.to(flux_unit,equivalencies=u.spectral_density(self.wave))
             self.noise = self.noise.to(flux_unit,equivalencies=u.spectral_density(self.wave))
             self.variance = self.noise**2
-            self.history.append('Converted to flux units of {}'.format(self.flux_unit))
+            if 'history' in list(self.__dict__.keys()): self.history.append('Converted to flux units of {}'.format(self.flux_unit))
             self.snr = self.computeSN()
             self.flux_unit = flux_unit
         except:
@@ -1486,7 +1489,7 @@ class Spectrum(object):
                 else: self.noise = self.flux*numpy.nan
             self.wave = wave
             self.variance = self.noise**2
-            self.history.append('Resampled to new wavelength grid')
+            if 'history' in list(self.__dict__.keys()): self.history.append('Resampled to new wavelength grid')
             self.snr = self.computeSN()
             if verbose: print('\nSpectrum resampled onto input wavelength grid')
         else: 
@@ -1599,7 +1602,7 @@ class Spectrum(object):
 # do final trim
         self.trim(wave_range)
 
-        self.history.append('Converted to instrument {}: wave range = {} resolution = {}'.format(instrument,wave_range,resolution))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Converted to instrument {}: wave range = {} resolution = {}'.format(instrument,wave_range,resolution))
         self.snr = self.computeSN()
         return
 
@@ -1616,7 +1619,7 @@ class Spectrum(object):
             rv=rv*(u.km/u.s)
         rv.to(u.km/u.s)
         self.wave = self.wave*(1.+(rv/const.c).to(u.m/u.m))
-        self.history.append('Shifted spectrum by radial velocity {}'.format(rv))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Shifted spectrum by radial velocity {}'.format(rv))
 
         return
 
@@ -1631,8 +1634,9 @@ class Spectrum(object):
         shift = 1.+z
         if z<0: shift = 1./(1.-z)
         self.wave = self.wave*shift
-        if z<0: self.history.append('Shifted spectrum by redshift {}'.format(z))
-        else: self.history.append('Shifted spectrum back to restframe with redshift {}'.format(z))
+        if 'history' in list(self.__dict__.keys()): 
+            if z<0: self.history.append('Shifted spectrum by redshift {}'.format(z))
+            else: self.history.append('Shifted spectrum back to restframe with redshift {}'.format(z))
 
         return
         
@@ -1727,7 +1731,7 @@ class Spectrum(object):
         nflux = self.flux.value*nwave
         ncflux = numpy.convolve(nflux, kern, 'same')
         self.flux = (ncflux/nwave)*flux_unit
-        self.history.append(report)
+        if 'history' in list(self.__dict__.keys()): self.history.append(report)
         if verbose==True: print(report)
 
         return
@@ -1811,10 +1815,10 @@ class Spectrum(object):
             self.scale(10.**(0.4*(apmag-mag)))
             if absolute == True:
                 self.flux_label = 'Absolute {}'.format(self.flux_label.split(' ')[-1])
-                self.history.append('Flux calibrated with {} filter to an absolute magnitude of {}'.format(filt,mag))
+                if 'history' in list(self.__dict__.keys()): self.history.append('Flux calibrated with {} filter to an absolute magnitude of {}'.format(filt,mag))
             if apparent == True:
                 self.flux_label = 'Apparent {}'.format(self.flux_label.split(' ')[-1])
-                self.history.append('Flux calibrated with {} filter to an apparent magnitude of {}'.format(filt,mag))
+                if 'history' in list(self.__dict__.keys()): self.history.append('Flux calibrated with {} filter to an apparent magnitude of {}'.format(filt,mag))
         self.snr = self.computeSN()
 
         return
@@ -1952,7 +1956,7 @@ class Spectrum(object):
         else: 
             self.scale(1./scalefactor)
             self.flux_label = 'Normalized {}'.format(self.flux_label.split(' ')[-1])
-            self.history.append('Spectrum normalized')
+            if 'history' in list(self.__dict__.keys()): self.history.append('Spectrum normalized')
             self.snr = self.computeSN()
         return
 
@@ -2042,7 +2046,7 @@ class Spectrum(object):
         self.flux = numpy.array(self.flux.value)*numpy.array(absfrac)*self.flux.unit
         self.noise = numpy.array(self.noise.value)*numpy.array(absfrac)*self.noise.unit
         self.variance = self.noise**2
-        self.history.append(report)
+        if 'history' in list(self.__dict__.keys()): self.history.append(report)
 
         return
 
@@ -2111,7 +2115,7 @@ class Spectrum(object):
                         pass
 
         cnt = numpy.sum([1 if x == False else 0 for x in msk])
-        self.history.append('Mask applied to remove {} pixels'.format(cnt))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Mask applied to remove {} pixels'.format(cnt))
         return
 
 
@@ -2182,7 +2186,7 @@ class Spectrum(object):
         self.snr = self.computeSN()
 
         cnt = numpy.sum([1 if x == False else 0 for x in msk])
-        self.history.append('Mask applied to replace {} pixels'.format(cnt))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Mask applied to replace {} pixels'.format(cnt))
         return
 
 
@@ -2272,7 +2276,7 @@ class Spectrum(object):
         if isUnit(rng[0]): rng = [r.to(self.wave.unit).value for r in rng]
         w = numpy.where(numpy.logical_and(self.wave.value>=numpy.nanmin(rng),self.wave.value<=numpy.nanmax(rng)))
         if len(w[0])>0: self.mask[w] = True 
-        self.history.append('Masked {} pixels in wavelength range {} to {}'.format(len(numpy.where(self.mask==True)),numpy.nanmin(rng),numpy.nanmax(rng)))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Masked {} pixels in wavelength range {} to {}'.format(len(numpy.where(self.mask==True)),numpy.nanmin(rng),numpy.nanmax(rng)))
         if apply==True: self.maskFlux(**kwargs)
         return
 
@@ -2324,7 +2328,7 @@ class Spectrum(object):
             else: 
                 self.mask[w] = True 
                 if apply==True: self.maskFlux(**kwargs)
-                self.history.append('Masked {} pixels with S/N < {}'.format(len(w[0]),limit))
+                if 'history' in list(self.__dict__.keys()): self.history.append('Masked {} pixels with S/N < {}'.format(len(w[0]),limit))
         return
 
 
@@ -2419,7 +2423,7 @@ class Spectrum(object):
                         pass
 
         cnt = numpy.sum([1 if x == False else 0 for x in msk])
-        self.history.append('Masking applied to {} pixels'.format(cnt))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Masking applied to {} pixels'.format(cnt))
         return
 
     def reset(self):
@@ -2459,7 +2463,7 @@ class Spectrum(object):
                 except:
                     pass
 
-        self.history.append('Returned to original state')
+        if 'history' in list(self.__dict__.keys()): self.history.append('Returned to original state')
         self.original = copy.deepcopy(self)
         return
 
@@ -2535,8 +2539,9 @@ class Spectrum(object):
             self.flux_label = 'Scaled {}'.format(self.flux_label.split(' ')[-1])
         self.noise = self.noise*factor
         self.variance = self.noise**2
-        if noiseonly == True: self.history.append('Spectrum noise scaled by a factor of {}'.format(factor))
-        else: self.history.append('Spectrum scaled by a factor of {}'.format(factor))
+        if 'history' in list(self.__dict__.keys()): 
+            if noiseonly == True: self.history.append('Spectrum noise scaled by a factor of {}'.format(factor))
+            else: self.history.append('Spectrum scaled by a factor of {}'.format(factor))
         return
 
     def setNoise(self,rng=[],floor=0.):
@@ -2615,8 +2620,8 @@ class Spectrum(object):
             Spectrum normalized
             Flux calibrated with 2MASS J filter to an apparent magnitude of 15.0
         '''
-        for h in self.history:
-            print(h)
+        if 'history' in list(self.__dict__.keys()): 
+            for h in self.history: print(h)
         return
 
     def smooth(self,smv,resolution=False,slitwidth=False,**kwargs):
@@ -2811,7 +2816,7 @@ class Spectrum(object):
 #            self.slitpixelwidth = self.slitpixelwidth*self.resolution/res
 #            self.slitwidth = self.slitwidth*self.resolution/res
             self.resolution = res
-            self.history.append('Smoothed to a constant resolution of {}'.format(self.resolution))
+            if 'history' in list(self.__dict__.keys()): self.history.append('Smoothed to a constant resolution of {}'.format(self.resolution))
         else:
             print('\nTarget resolution {} greater than current resolution {}; no change made'.format(res,self.resolution))
         return
@@ -2873,7 +2878,7 @@ class Spectrum(object):
             self.resolution = self.resolution/width
 #            self.slitwidth = self.slitwidth*width/self.slitpixelwidth
 #            self.slitpixelwidth = width
-            self.history.append('Smoothed to pixel width of {}'.format(width))
+            if 'history' in list(self.__dict__.keys()): self.history.append('Smoothed to pixel width of {}'.format(width))
         else:
             print('\nTarget slit width {} is less than 2 pixels; no change made'.format(width))
         return
@@ -2946,7 +2951,7 @@ class Spectrum(object):
         r = copy.deepcopy(radius)
         if not isUnit(r): r=r*const.R_sun
         self.scale((((10.*u.pc/r).to(u.m/u.m)).value)**2)
-        self.history.append('Converted to surface fluxes assuming a radius of {} solar radii'.format((r/const.R_sun).to(u.m/u.m)))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Converted to surface fluxes assuming a radius of {} solar radii'.format((r/const.R_sun).to(u.m/u.m)))
         self.flux_label = 'Surface {}'.format(self.flux_label.split(' ')[-1])
         return
 
@@ -2971,7 +2976,7 @@ class Spectrum(object):
         self.noise = self.flux*x/((1.+x)*numpy.log(1.+x))*((fs/fse).to(u.m/u.m))
         self.variance = self.noise**2
         self.snr = self.computeSN()
-        self.history.append('Converted to brightness temperature')
+        if 'history' in list(self.__dict__.keys()): self.history.append('Converted to brightness temperature')
         self.flux_label = 'Temperature'
         self.flux_unit = u.K
         return
@@ -3097,7 +3102,7 @@ class Spectrum(object):
 #        self.fnu = self.flux.to('Jy',equivalencies=u.spectral_density(self.wave))
 #        self.noisenu = self.noise.to('Jy',equivalencies=u.spectral_density(self.wave))
         self.snr = self.computeSN()
-        self.history.append('Spectrum trimmed to range {}'.format(rng))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Spectrum trimmed to range {}'.format(rng))
         return
 
     def updateSourceInfo(self,verbose=False,radius=10.*u.arcsec,**kwargs):
@@ -3302,7 +3307,7 @@ class NewSpectrum(object):
 # clean up
         self.variance = self.noise**2
         self.original = copy.deepcopy(self)
-        self.history = ['{} spectrum of {} successfully loaded'.format(self.instrument,self.name)]
+        if 'history' in list(self.__dict__.keys()): self.history = ['{} spectrum of {} successfully loaded'.format(self.instrument,self.name)]
         return
 
     def setbase(self):
@@ -3323,7 +3328,7 @@ class NewSpectrum(object):
                 except:
                     pass
 
-        self.history.append('Returned to original state')
+        if 'history' in list(self.__dict__.keys()): self.history.append('Returned to original state')
 #        self.original = copy.deepcopy(self)
         return
 
@@ -3348,7 +3353,7 @@ class NewSpectrum(object):
 # set variance
         self.variance = self.noise**2
 # need to: 
-        self.history.append('Spectrum cleaned')
+        if 'history' in list(self.__dict__.keys()): self.history.append('Spectrum cleaned')
         return
 
     def __copy__(self):
@@ -3566,7 +3571,7 @@ class NewSpectrum(object):
         for k in ['flux','noise']:
             if k in list(self.__dict__.keys()): setattr(self,k,getattr(self,k)*fact)
         self.variance = self.noise**2
-        self.history.append('Spectrum scaled by factor {}'.format(fact))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Spectrum scaled by factor {}'.format(fact))
         return
 
     def normalize(self,rng=[]):
@@ -3591,7 +3596,7 @@ class NewSpectrum(object):
             print('\nWarning: normalize is attempting to divide by nan; ignoring')
         else: 
             self.scale(1./factor)
-            self.history.append('Spectrum normalized')
+            if 'history' in list(self.__dict__.keys()): self.history.append('Spectrum normalized')
         return
 
     def smooth(self,scale,method='median'):
@@ -3603,7 +3608,7 @@ class NewSpectrum(object):
         for k in ['flux','noise']:
             setattr(self,k,numpy.array([numpy.nanmedian(getattr(self,k).value[x:x+scale]) for x in xsamp])*getattr(self,k).unit)
         self.variance = self.noise**2
-        self.history.append('Smoothed by a scale of {} pixels'.format(scale))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Smoothed by a scale of {} pixels'.format(scale))
     
 
     def convertWave(self,wave_unit):
@@ -3613,7 +3618,7 @@ class NewSpectrum(object):
         if not isUnit(wave_unit): raise ValueError('{} is not a unit'.format(wave_unit))
         try:
             self.wave = self.wave.to(wave_unit)
-            self.history.append('Spectrum wavelength converted to units of {}'.format(wave_unit))
+            if 'history' in list(self.__dict__.keys()): self.history.append('Spectrum wavelength converted to units of {}'.format(wave_unit))
         except:
             print('Cannot convert spectrum with wave units {} to {}'.format(self.wave.unit,wave_unit))
         return
@@ -3630,7 +3635,7 @@ class NewSpectrum(object):
                 except:
                     print('Cannot convert spectrum element {} into flux units {}'.format(k,flux_unit))
         self.variance = self.noise**2
-        self.history.append('Spectrum flux converted to units of {}'.format(flux_unit))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Spectrum flux converted to units of {}'.format(flux_unit))
         return
 
     def clean(self,positive=True):
@@ -3646,7 +3651,7 @@ class NewSpectrum(object):
             if k in list(self.__dict__.keys()):
                 setattr(self,k,(getattr(self,k).value[mask==0])*getattr(self,k).unit)
         self.variance = self.noise**2
-        self.history.append('Spectrum cleaned of {:.0f} pixels'.format(numpy.total(mask)))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Spectrum cleaned of {:.0f} pixels'.format(numpy.total(mask)))
         return
 
     def plot(self,**kwargs):
@@ -3708,7 +3713,7 @@ class NewSpectrum(object):
                 f.write('{}\n'.format(ln))
             f.close()
 
-        self.history.append('Spectrum saved to {}'.format(file))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Spectrum saved to {}'.format(file))
         return
 
     def write(self,file,**kwargs): 
@@ -3780,7 +3785,7 @@ class NewSpectrum(object):
                         except: pass
 
         cnt = numpy.sum([1 if x == False else 0 for x in msk])
-        self.history.append('Mask applied to remove {} pixels'.format(cnt))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Mask applied to remove {} pixels'.format(cnt))
         return
 
 
@@ -3856,7 +3861,7 @@ class NewSpectrum(object):
         self.snr = self.computeSN()
 
         cnt = numpy.sum([1 if x == False else 0 for x in msk])
-        self.history.append('Mask applied to replace {} pixels'.format(cnt))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Mask applied to replace {} pixels'.format(cnt))
         return
 
 
@@ -4096,7 +4101,7 @@ class NewSpectrum(object):
         self.flux = numpy.array(self.flux.value)*numpy.array(absfrac)*self.flux.unit
         self.noise = numpy.array(self.noise.value)*numpy.array(absfrac)*self.noise.unit
         self.variance = self.noise**2
-        self.history.append(report)
+        if 'history' in list(self.__dict__.keys()): self.history.append(report)
 
         return
 
@@ -4119,7 +4124,7 @@ class NewSpectrum(object):
         self.noise = reMap(self.wave.value,self.noise.value,newwave.value)*flux_unit
         self.wave = newwave
         self.variance = self.noise**2
-        self.history.append('Mapped onto wavelength grid of {}'.format(other))
+        if 'history' in list(self.__dict__.keys()): self.history.append('Mapped onto wavelength grid of {}'.format(other))
         return
         
 

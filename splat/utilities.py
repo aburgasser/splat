@@ -40,7 +40,7 @@ try: input=raw_input
 except NameError: pass
 
 # change the command prompt
-sys.ps1 = 'splat util> '
+#sys.ps1 = 'splat util> '
 
 
 #####################################################
