@@ -991,7 +991,7 @@ def modelParameters(*model,**kwargs):
 
 
 
-def plotModelParameters(parameters,xparam,yparam,**kwargs):
+def plotModelParameters(parameters,xparam,yparam,verbose=False,**kwargs):
     '''
     :Purpose: 
 
@@ -1034,6 +1034,7 @@ def plotModelParameters(parameters,xparam,yparam,**kwargs):
     [plot of temperature vs age for 50 data points with baraffe models overplotted]    
     '''
 # check inputs
+    noplot=False
     if type(parameters) is not dict:
         if len(parameters) != 2:
             raise ValueError('\nInput parameters should be a dictionary or two-element list\n')
@@ -1074,7 +1075,8 @@ def plotModelParameters(parameters,xparam,yparam,**kwargs):
         xmparam = 'luminosity'
         xlogflag = False
     else:
-        raise ValueError('\nx-axis parameter {} is not one that can be plotted'.format(xparam))
+        noplot = True 
+        if verbose==True: print('\nx-axis parameter {} is not one that can be plotted'.format(xparam))
 
     if yparam=='age' or yparam=='time' or yparam=='a':
         ymparam = 'age'
@@ -1095,7 +1097,13 @@ def plotModelParameters(parameters,xparam,yparam,**kwargs):
         ymparam = 'luminosity'
         ylogflag = False
     else:
-        raise ValueError('\ny-axis parameter {} is not one that can be plotted'.format(yparam))
+        noplot = True 
+        if verbose==True: print('\ny-axis parameter {} is not one that can be plotted'.format(xparam))
+
+# can't plot - just return
+    if noplot==True:
+        if verbose==True: print('\nUnable to plot; returning')
+        return None
 
 # plot parameters
     plt.close('all')

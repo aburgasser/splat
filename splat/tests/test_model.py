@@ -13,11 +13,9 @@ from astropy import units as u            # standard units
 from astropy import constants as const        # physical constants in SI units
 from astropy import coordinates as coord      # coordinate conversion
 from astropy.io import fits
-from numpy.testing.utils import assert_allclose
+from numpy.testing import assert_allclose
 
 # splat functions and constants
-from splat.initialize import *
-from splat.utilities import *
 import splat
 
 

@@ -970,11 +970,11 @@ def properDate(din,**kwargs):
 
     dformat = kwargs.get('format','')
     oformat = kwargs.get('output','YYYY-MM-DD')
-    if len(din)==0:
-        print('\nCould not determine format of input date {}; please provide a format string\n'.format(din))
-        return ''        
     d = copy.deepcopy(din)
     if not isinstance(d,str): d = str(int(d))
+    if len(d)==0:
+        print('\nCould not determine format of input date {}; please provide a format string\n'.format(din))
+        return ''        
 
 # some defaults
     if '/' in d and dformat == '':       # default American style
@@ -1474,7 +1474,7 @@ def typeToNum(inp, subclass='dwarf', error='', uncertainty=0., luminosity_class 
         if uncertainty > 2.: error = '::'
         pstr = ''
         if peculiar == True: pstr = 'p'
-        
+
         return '{}{}{}{:3.1f}{}{}{}{}'.format(color_class,metallicity_class,spletter[spind],spdec,age_class,luminosity_class,pstr,error)
 
 

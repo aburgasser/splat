@@ -256,9 +256,7 @@ class Spectrum(object):
         if kwargs.get('absolute',False) == True: self.flux_label = 'Absolute {}'.format(self.flux_label)
         if kwargs.get('normalized',False) == True: self.flux_label = 'Normalized {}'.format(self.flux_label)
         if kwargs.get('dimensionless',False)==True: self.flux_unit = u.dimensionless_unscaled
-#        self.flux_unit_label = kwargs.get('flux_unit_label',self.flux_unit)
 #        self.header = kwargs.get('header',fits.PrimaryHDU())
-        self.header = kwargs.get('header',x)
         self.filename = kwargs.get('file','')
         self.filename = kwargs.get('filename',self.filename)
         self.name = kwargs.get('name','')
@@ -272,7 +270,7 @@ class Spectrum(object):
 #        self.runfast = kwargs.get('runfast',True)
         self.published = kwargs.get('published','N')
         self.bibcode = kwargs.get('bibcode','')
-        if 'history' in list(self.__dict__.keys()): self.history = []
+        self.history = kwargs.get('history',[])
         self.wave = []
         self.flux = []
         self.noise = []
@@ -975,7 +973,7 @@ class Spectrum(object):
             self.flux = self.flux+(numpy.random.normal(numpy.zeros(len(self.noise)),self.noise.value))*self.noise.unit
         return 
 
-    def info(self):
+    def info(self,printout=True):
         '''
         Purpose
         -------
@@ -1069,8 +1067,10 @@ class Spectrum(object):
         f+='\n\nHistory:'
         if 'history' in list(self.__dict__.keys()):
             for h in self.history: f+='\n\t{}'.format(h)
-        print(f)
-        return
+        if printout==True: 
+            print(f)
+            return
+        return f
 
 
     def export(self,filename='',clobber=True,csv=False,tab=True,delimiter='\t',save_header=True,save_noise=True,comment='#',file_type='',*args,**kwargs):
@@ -4685,7 +4685,7 @@ def initiateStandards(spt=[],dwarf=True,subdwarf=False,young=False,allstds=False
         if t not in list(stds.keys()) or reset==True:
             stds[t] = Spectrum(kys[t])
             stds[t].normalize()
-            stds[t].name += ' ({} Std)'.format(t)
+#            stds[t].name += ' ({} Std)'.format(t)
             if verbose==True: print('\tReading in {}'.format(stds[t].name))
 
     if output==True: return stds
@@ -6269,20 +6269,19 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
             remeasure = True
 
 # remeasure indices            
-    if remeasure==True:
-        indices = {}
+    if remeasure==True or False in [k in indices.keys() for k in list(param['indices'].keys())]:
         for s in param['sets']:
+            ind0 = copy.deepcopy(indices)
             tmp = checkDict(s,INDEX_SETS)
             if tmp==False: raise ValueError('Index set {} is not one of predefined sets: {}; correct parameter dictionary'.format(s,list(INDEX_SETS.keys())))
             ind = measureIndexSet(sp,ref=s,verbose=verbose,**kwargs)
-            if sys.version_info.major == 2: indices = dict(indices.items() + ind.items())
-            else: indices = dict(indices.items() | ind.items())            
-    #print('INDICES', indices)
+            if sys.version_info.major == 2: indices = ind0.update(ind)
+            else: indices = {**ind0,**ind}
 # determine classifications from polynomials
     if param['method']=='polynomial':
         coeffs = {}
         for index in list(param['indices'].keys()):
-            if index in ['jtype', 'ktype']: continue
+#            if index in ['jtype', 'ktype']: continue
             coeffs[index] = {}
             coeffs[index]['spt'] = numpy.nan
             coeffs[index]['sptunc'] = numpy.nan
@@ -6318,23 +6317,24 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
 #             return numpy.nan, numpy.nan
 
 # if Allers method, need to compute the J and K spectral types
+# TEMPORARILY REMOVING THIS AT IT BREAKS THE CODE
         #print('METHOD', ref.lower())
-        if ref.lower() in ['allers','all13','allers13','allers2013']:
-            coeffs['jtype'] = {}
-            coeffs['ktype'] = {}
-            # Calculate The J and K spectral types for Allers method
-            jtype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.07,1.40]) 
-            #print('JType', jtype)
-            #print(typeToNum(jtype[0]))
-            coeffs['jtype']['spt']    = typeToNum(jtype[0])
-            coeffs['jtype']['sptunc'] = 1.
-            coeffs['jtype']['mask']   = 1.
-            ktype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.90,2.20]) 
-            #print('KType', ktype)
-            #print(typeToNum(ktype[0]))
-            coeffs['ktype']['spt']    = typeToNum(ktype[0])
-            coeffs['ktype']['sptunc'] = 1.
-            coeffs['ktype']['mask']   = 1.
+        # if ref.lower() in ['allers','all13','allers13','allers2013']:
+        #     coeffs['jtype'] = {}
+        #     coeffs['ktype'] = {}
+        #     # Calculate The J and K spectral types for Allers method
+        #     jtype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.07,1.40]) 
+        #     #print('JType', jtype)
+        #     #print(typeToNum(jtype[0]))
+        #     coeffs['jtype']['spt']    = typeToNum(jtype[0])
+        #     coeffs['jtype']['sptunc'] = 1.
+        #     coeffs['jtype']['mask']   = 1.
+        #     ktype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.90,2.20]) 
+        #     #print('KType', ktype)
+        #     #print(typeToNum(ktype[0]))
+        #     coeffs['ktype']['spt']    = typeToNum(ktype[0])
+        #     coeffs['ktype']['sptunc'] = 1.
+        #     coeffs['ktype']['mask']   = 1.
 
 # computed weighted mean with rejection, iterating to deal with indices outside ranges   
         #print(coeffs)   
@@ -6356,7 +6356,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
             for i in coeffs.keys():
                 flg = ''
                 if coeffs[i]['mask'] == 0.: flg = '*'
-                if i in ['jtype', 'ktype']: continue
+#                if i in ['jtype', 'ktype']: continue
                 print('{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{:.1f}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc']))
 
 # not enough good values
@@ -6407,7 +6407,8 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
         output['result'] = (spt,sptn_e)
         return output
     else:
-        return spt, sptn_e, (jtype, ktype)
+#        return spt, sptn_e, (jtype, ktype) # NOT SURE WHERE THIS CAME IN?
+        return spt, sptn_e
 
 
 
@@ -7111,6 +7112,7 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
          'spt': 'L4.0'}
     '''
 
+# NB: WHOEVER EDITED THIS BROKE THE ROUTINE - PLEASE TEST BEFORE UPDATING
 # Chart for determining gravity scores based on gravity sensitive
 # indices as described in the Allers and Liu paper.
 # The key to the overall indices dictionary is each index name.
@@ -7142,7 +7144,8 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
 # Determine the object's NIR spectral type and its uncertainty
     sptn = kwargs.get('spt',False)
     if sptn == False:
-        sptn, spt_e, spts2 = classifyByIndex(sp,string=False,ref='allers2013')
+#        sptn, spt_e, spts2 = classifyByIndex(sp,string=False,ref='allers2013')
+        sptn, spt_e = classifyByIndex(sp,string=False,ref='allers2013')
         if numpy.isnan(sptn):
             if verbose==True: print('Spectral type could not be determined from indices; try entering with spt keyword')
             if output=='allmeasures': return gravscore
@@ -7151,8 +7154,8 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
     if isinstance(sptn,str): sptn = typeToNum(sptn)
     Spt = typeToNum(numpy.round(sptn))
     gravscore['spt'] = Spt
-    if verbose==True: 
-        print('\tSpT = {} (J-type = {}; K-type = {})'.format(Spt, spts2[0][0], spts2[1][0]))
+    # if verbose==True: 
+    #     print('\tSpT = {} (J-type = {}; K-type = {})'.format(Spt, spts2[0][0], spts2[1][0]))
 
 #Check whether the NIR SpT is within gravity sensitive range values
     if ((sptn < 16.0) or (sptn > 27.0)):
