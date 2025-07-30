@@ -18,7 +18,7 @@ dependencies = [
     "matplotlib",
     "numpy",
     "pandas",
-    "importlib_resources; python_version < '3.11'",
+    "importlib_resources; python_version < '3.9'",
 ]
 dynamic = ["version"]
 

@@ -1,9 +1,0 @@
-astropy
-astroquery
-bokeh
-flask
-matplotlib
-numpy
-pandas
-requests
-scipy

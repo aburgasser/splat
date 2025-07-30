@@ -25,7 +25,7 @@ install:
     #- pip install copy
     #- pip install re
     #- ./.travis/install.sh
-script: python tests/tests_splat/test_splat.py
+script: python src/tests/tests_splat/test_splat.py
 #before_install:
 #  - sudo apt-get -qq update
 #  - sudo apt-get install -y libxml2-dev

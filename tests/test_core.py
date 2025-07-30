@@ -15,7 +15,8 @@ from astropy.io import fits
 from numpy.testing import assert_allclose
 
 # splat functions and constants
-import splat.core as splat
+import splat
+import splat.model as spmdl
 
 
 #####################
@@ -251,9 +252,8 @@ def test_classify_gravity():
 
 def test_compare():
 # compareSpectra
-    from .. import model as spm
     sp = splat.Spectrum(10001)
-    mdl = spm.getModel(teff=2000,logg=5.0)
+    mdl = spmdl.getModel(teff=2000,logg=5.0)
     chi, scale = splat.compareSpectra(sp,mdl,mask_standard=True,stat='chisqr')
 #    sys.stderr.write('\nScaling model: chi^2 = {}, scale = {}'.format(chi,scale))
 #    sys.stderr.write('\n...compareSpectra successful\n'.format(chi,scale))
