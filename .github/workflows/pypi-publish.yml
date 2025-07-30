@@ -1,0 +1,59 @@
+# Based on 
+# https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflow
+# Only tagged releases will get published to pypi.
+
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v4
+      with:
+        lfs: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+  
+    - name: Install dependencies
+      run: >-
+        python3 -m 
+        pip install 
+        build
+        --user
+    - name: Build a binary wheel
+      run: python3 -m build
+    - name: Store the distribution package
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs:
+    - build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/splat
+    permissions:
+      id-token: write  
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
