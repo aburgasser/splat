@@ -2342,14 +2342,14 @@ def codeStats():
     print('Total number of public spectra = {} of {} sources'.format(len(s),len(numpy.unique(numpy.array(s['SOURCE_KEY'])))))
 
 # data citations 
-    pubs = numpy.unique(numpy.array(sall['DATA_REFERENCE']))
+    pubs = numpy.unique(numpy.array(sall['BIBCODE']))
     print('Total number of citations for all spectra = {}'.format(len(pubs)))
     for p in pubs:
         try:
             x = splat.citations.longRef(str(p))
         except:
             print('\tWarning: no bibtex information for citation {}'.format(p))
-    pubs = numpy.unique(numpy.array(s['DATA_REFERENCE']))
+    pubs = numpy.unique(numpy.array(s['BIBCODE']))
     print('Total number of citations for public spectra = {}'.format(len(pubs)))
     cites = []
     cites_html = []

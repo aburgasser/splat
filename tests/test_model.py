@@ -28,24 +28,27 @@ import splat.empirical as spemp
 
 
 def test_loadmodel():
-    mdl = spmdl.loadModel(model='burrows',teff=1000,logg=5.0)
-    if len(mdl.wave) > 0:
-        mdl.info()
-        mdl.scale(1.e-24)
-    return 
-
-def test_loadinterpolatedmodel:
-    mdl = spmdl.loadInterpolatedModel(model='burrows',teff=1025,logg=4.75)
-    if len(mdl.wave) > 0:
-        mdl.info()
-        mdl.scale(1.e-24)
+# grid model
+    mdl = spmdl.loadModel(modelset='burrows',teff=1000,logg=5.0)
+    mdl.info()
+    mdl.normalize()
+    assert numpy.nanmax(mdl.flux.value)==1.0
+# interpolated model
+    mdl = spmdl.loadModel(modelset='burrows',teff=1025,logg=4.7)
+    mdl.normalize()
+    assert numpy.nanmax(mdl.flux.value)==1.0
     return 
 
 def test_modelfitgrid():
     sp = splat.getSpectrum(shortname='J1507-1627')[0]
     sp.fluxCalibrate('2MASS J',12.32,absolute=True)
-    res = spmdl.modelFitGrid(sp,teff_range=[1000,2200],logg_range=[4.5,5.5],model='BTSettl2008')
+    res = spmdl.modelFitGrid(sp,teff_range=[1000,2200],logg_range=[4.5,5.5],modelset='btsettl',plot=False)
+    assert res['logg']==5.5
+    assert res['teff']==1800
+    assert res['z']==0.0
     return
+
+# THESE TESTS ARE FAILING, NEED TO REBUILD 
 
 # def OLD_test_modelfitEMCEE(folder):
 #     sp = splat.getSpectrum(shortname='1507-1627')[0]

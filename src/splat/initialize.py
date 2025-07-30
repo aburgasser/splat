@@ -114,7 +114,7 @@ DB_SPECTRA_DEFAULT_PARAMETERS = {
 #    'DATA_KEY': {'altname': [], 'type': int, 'required': False},
     'FOLDER': {'altname': ['PATH','FOLD','DIR','DIRECTORY'], 'default': '', 'type': str, 'initialize': 'create'},
     'INSTRUMENT': {'altname': [], 'default': DEFAULT_INSTRUMENT, 'type': str, 'initialize': 'default'},
-    'REFERENCE': {'altname': ['DATA_BIBCODE','REF','BIBCODE','BIB','DATA_REFERENCE','DATA_REF'], 'default': '', 'type': str, 'initialize': 'default'},
+    'BIBCODE': {'altname': ['REFERENCE','DATA_BIBCODE','REF','BIB','DATA_REFERENCE','DATA_REF'], 'default': '', 'type': str, 'initialize': 'default'},
     'OBSERVATION_DATE': {'altname': ['OBSDATE','OBS_DATE','DATE'], 'default': '', 'type': str, 'initialize': 'default'},
     'OBSERVATION_TIME': {'altname': ['OBSTIME','OBS_TIME'], 'default': numpy.nan, 'type': float, 'initialize': 'default'},
     'OBSERVATION_MJD': {'altname': ['MJD','OBS_MJD','JULIAN_DATE'], 'default': numpy.nan, 'type': float, 'initialize': 'default'},

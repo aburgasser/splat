@@ -1235,7 +1235,7 @@ def importSpectra(*args,**kwargs):
             * ``slit``: slit width used (for computing resolution)
             * ``airmass``: airmass of observation
             * ``observer``: last name of primary observer
-            * ``data_reference``: bibcode of data reference
+            * ``bibcode``: bibcode of data reference
 
     :Output:
         - Source DB update file: spreadsheet containing update to source_data.txt, saved in review folder as source_data.txt
@@ -1414,9 +1414,9 @@ def importSpectra(*args,**kwargs):
             t_spec['AIRMASS'] = t_input['AIRMASS']
         if 'OBSERVER' in tkeys:
             t_spec['OBSERVER'] = t_input['OBSERVER']
-        if 'DATA_REFERENCE' in tkeys:
-            t_spec['DATA_REFERENCE'] = t_input['DATA_REFERENCE']
-            for i,ref in enumerate(t_spec['DATA_REFERENCE']):
+        if 'BIBCODE' in tkeys:
+            t_spec['BIBCODE'] = t_input['BIBCODE']
+            for i,ref in enumerate(t_spec['BIBCODE']):
                 if ref != '':
                     t_spec['PUBLISHED'][i] = 'Y'
 

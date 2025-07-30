@@ -268,7 +268,7 @@ class Spectrum(object):
             for k in list(INSTRUMENTS[inst].keys()): setattr(self,k,kwargs.get(k,INSTRUMENTS[inst][k]))
 #        self.instrument_mode = kwargs.get('instrument_mode','')
 #        self.runfast = kwargs.get('runfast',True)
-        self.published = kwargs.get('published','N')
+        self.published = kwargs.get('published',False)
         self.bibcode = kwargs.get('bibcode','')
         self.history = kwargs.get('history',[])
         self.wave = []
@@ -1053,15 +1053,16 @@ class Spectrum(object):
             #         f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key[i]),int(self.source_key[i]))
             # else:
             f+='\nSpectrum key = {}, Source key = {}'.format(int(self.data_key),int(self.source_key))
-        if self.published == 'Y' or self.data_reference != '':
-            f+='\n\nIf you use these data, please cite:'
+        if hasattr(self,'published') and hasattr(self,'bibcode'):
+            if self.published == True or self.bibcode != '':
+                f+='\n\nIf you use these data, please cite:'
             # if isinstance(self.data_reference,list):
             #     for i in range(len(self.data_reference)):
             #         f+='\n\t{}'.format(spbib.shortRef(self.data_reference[i]))
             #         f+='\n\tbibcode: {}'.format(self.data_reference[i])
             # else:
-            f+='\n\t{}'.format(spbib.shortRef(self.data_reference))
-            f+='\n\tbibcode: {}'.format(self.data_reference)
+                f+='\n\t{}'.format(spbib.shortRef(self.bibcode))
+                f+='\n\tbibcode: {}'.format(self.bibcode)
         else: f+='\n\nUNPUBLISHED DATA'
 
         f+='\n\nHistory:'
@@ -5376,7 +5377,7 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', source_database=DB_SOURCE
         if isinstance(drefer,str):
             drefer = [drefer]
         for r in drefer:
-            spectral_db['SELECT'][spectral_db['DATA_REFERENCE'] == r] += 1
+            spectral_db['SELECT'][spectral_db['BIBCODE'] == r] += 1
         count+=1.
 
 # search by spex type

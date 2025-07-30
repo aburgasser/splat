@@ -2401,6 +2401,7 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
     setattr(sp,'modelset',kwargs['modelset'])
     setattr(sp,'model',kwargs['modelset'])
     setattr(sp,'instrument',kwargs['instrument'])
+    setattr(sp,'published',True)
     for k in list(SPECTRAL_MODELS[kwargs['modelset']]['default'].keys()):
         if k in list(mparam.keys()): setattr(sp,k,mparam[k])
         else: setattr(sp,k,SPECTRAL_MODELS[mset]['default'][k])
