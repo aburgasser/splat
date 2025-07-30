@@ -33,7 +33,7 @@ from scipy.integrate import trapz        # for numerical integration
 
 # imports: splat
 from .core import getSpectrum, classifyByIndex
-import splat.empirical as spem
+import splat.empirical as spemp
 import splat.evolve as spev
 import splat.plot as splot
 
