@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools","wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "splat"
-version = "2024.08.07"
+version = "20250729"
 readme = "README.md"
 requires-python = ">=3.7"
 license = {'file' = 'LICENSE'}
@@ -12,14 +12,12 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
-    "asdf-astropy",
     "astropy",
     "astroquery",
     "scipy",
     "matplotlib",
     "numpy",
     "pandas",
-    "importlib_resources; python_version < '3.7'",
 ]
 
 [tool.setuptools]
