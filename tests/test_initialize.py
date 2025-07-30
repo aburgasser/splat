@@ -26,6 +26,8 @@ import splat
 
 def test_folders_files():
     assert os.access(splat.SPLAT_PATH,os.R_OK)
+    print(splat.SPLAT_PATH)
+    print(os.path.join(splat.SPLAT_PATH,splat.DATA_FOLDER))
     assert os.access(os.path.join(splat.SPLAT_PATH,splat.DATA_FOLDER),os.R_OK)
     assert os.access(os.path.join(splat.SPLAT_PATH,splat.FILTER_FOLDER),os.R_OK)
     assert os.access(os.path.join(splat.SPLAT_PATH,splat.SPECTRAL_MODEL_FOLDER),os.R_OK)
@@ -35,26 +37,26 @@ def test_folders_files():
     assert os.access(os.path.join(splat.SPLAT_PATH,splat.DB_FOLDER,splat.DB_SPECTRA_FILE),os.R_OK)
 #    assert os.access(SPLAT_PATH+DB_FOLDER+DB_PHOTOMETRY_FILE,os.R_OK)
     assert os.access(os.path.join(splat.SPLAT_PATH,splat.DB_FOLDER,splat.BIBFILE),os.R_OK)
-    if os.access(os.path.join(splat.SPLAT_PATH,splat.ACCESS_FILE),os.R_OK) != True:
-    	print('Warning: {} is not found'.format(splat.ACCESS_FILE))
+    # if os.access(os.path.join(splat.SPLAT_PATH,splat.ACCESS_FILE),os.R_OK) != True:
+    # 	print('Warning: {} is not found'.format(splat.ACCESS_FILE))
     return
 
 def test_filter_files():
 # getBibTex
 # getBibTexOnline
     for f in list(splat.FILTERS.keys()):
-    	assert os.access(SPLAT_PATH+FILTER_FOLDER+FILTERS[f]['file'],os.R_OK)
+    	assert os.access(os.path.join(splat.SPLAT_PATH,splat.FILTER_FOLDER,splat.FILTERS[f]['file']),os.R_OK)
     return
 
 def test_standards_present():
-    for s in list(STDS_DWARF_SPEX_KEYS.keys()):
-    	sp = splat.Spectrum(STDS_DWARF_SPEX_KEYS[s])
+    for s in list(splat.STDS_DWARF_SPEX_KEYS.keys()):
+    	sp = splat.Spectrum(splat.STDS_DWARF_SPEX_KEYS[s])
     	assert type(sp) == splat.Spectrum
-    for s in list(STDS_SD_SPEX_KEYS.keys()):
-    	sp = splat.Spectrum(STDS_SD_SPEX_KEYS[s])
+    for s in list(splat.STDS_SD_SPEX_KEYS.keys()):
+    	sp = splat.Spectrum(splat.STDS_SD_SPEX_KEYS[s])
     	assert type(sp) == splat.Spectrum
-    for s in list(STDS_ESD_SPEX_KEYS.keys()):
-    	sp = splat.Spectrum(STDS_ESD_SPEX_KEYS[s])
+    for s in list(splat.STDS_ESD_SPEX_KEYS.keys()):
+    	sp = splat.Spectrum(splat.STDS_ESD_SPEX_KEYS[s])
     	assert type(sp) == splat.Spectrum
     return
 

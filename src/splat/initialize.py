@@ -56,17 +56,17 @@ AUTHORS = [
 ]
 
 # Directory variables
-DB_FOLDER = '/db/'
-DOCS_FOLDER = '/docs/'
-TUTORIAL_FOLDER = '/tutorials/'
-DOCS_INDEX_HTML = '/docs/_build/html/index.html'
-WEB_HTML_BASE = '/docs/_templates/'
+DB_FOLDER = 'db/'
+DOCS_FOLDER = 'docs/'
+TUTORIAL_FOLDER = 'tutorials/'
+DOCS_INDEX_HTML = 'docs/_build/html/index.html'
+WEB_HTML_BASE = 'docs/_templates/'
 HOME_FOLDER = os.path.expanduser('~')
-FILTER_FOLDER = '/resources/Filters/'
-SPECTRAL_MODEL_FOLDER = '/resources/SpectralModels/'
-EVOLUTIONARY_MODEL_FOLDER = '/resources/EvolutionaryModels/'
-TELLURIC_MODEL_FOLDER = '/resources/Telluric/'
-CITATION_RESOURCES_FOLDER = '/resources/Citations/'
+FILTER_FOLDER = 'resources/Filters/'
+SPECTRAL_MODEL_FOLDER = 'resources/SpectralModels/'
+EVOLUTIONARY_MODEL_FOLDER = 'resources/EvolutionaryModels/'
+TELLURIC_MODEL_FOLDER = 'resources/Telluric/'
+CITATION_RESOURCES_FOLDER = 'resources/Citations/'
 EXTERNAL_DATA_FILE = '.splat_data'
 EXTERNAL_SPECTRAL_MODELS_FILE = '.splat_spectral_models'
 EXTERNAL_EVOLUTIONARY_MODELS_FILE = '.splat_evolutionary_models'
@@ -103,7 +103,7 @@ DEFAULT_CROSSSECTION_UNIT = u.cm**2
 DEFAULT_INSTRUMENT = 'SPEX-PRISM'
 
 # OLD SPECTRAL LIBRARY PARAMETERS
-DATA_FOLDER = '/resources/Spectra/SPEX-PRISM/'
+DATA_FOLDER = 'resources/Spectra/SPEX-PRISM/'
 DB_SPECTRA_FILE = 'spectral_data.txt'
 DB_SOURCES_FILE = 'source_data.txt'
 
