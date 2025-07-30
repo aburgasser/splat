@@ -288,7 +288,7 @@ FILTERS = { \
     '2MASS_KS': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega', 'rsr': True, 'altname': ['2MASS_K']}, \
 #    '2MASS_K': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
 #    '2MASS_Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
-    'BESSEL_U': {'file': 'BESSEL_U.txt', 'description': 'Bessel U-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['U']}, \
+    'BESSEL_U': {'file': 'Bessel_U.txt', 'description': 'Bessel U-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['U']}, \
     'BESSEL_B': {'file': 'Bessel_B.txt', 'description': 'Bessel B-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['B']}, \
     'BESSEL_V': {'file': 'Bessel_V.txt', 'description': 'Bessel V-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['V']}, \
     'BESSEL_R': {'file': 'Bessel_R.txt', 'description': 'Bessel R-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['R']}, \
