@@ -1,4 +1,6 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from setuptools import setup
-#setup()
+import setuptools
+
+if __name__ == "__main__":
+	setuptools.setup()
