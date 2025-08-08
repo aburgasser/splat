@@ -40,7 +40,7 @@ SPLAT tools allow you to:
 The optimal installation method for SPLAT is cloning from the github site https://github.com/aburgasser/splat, which is updated on a (semi-)regular basis. The installations uses a pyproject.toml to install dependencies, so recommended set up is as follows:
 
 
-    conda create splat
+    conda create -n splat
     conda activate splat
     git clone https://github.com/aburgasser/splat.git
     cd splat
