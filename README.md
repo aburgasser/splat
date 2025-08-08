@@ -37,17 +37,19 @@ SPLAT tools allow you to:
 
 ## Installation and Dependencies
 
-The optimal installation method for SPLAT is cloning from the github site https://github.com/aburgasser/splat, which is updated on a (semi-)regular basis. 
+The optimal installation method for SPLAT is cloning from the github site https://github.com/aburgasser/splat, which is updated on a (semi-)regular basis. The installations uses a pyproject.toml to install dependencies, so recommended set up is as follows:
 
 
+    conda create splat
+    conda activate splat
     git clone https://github.com/aburgasser/splat.git
     cd splat
-    python -m setup.py install
+    python -m pip install .
 
 
 > Warning: At this time please do not install splat using `pip`, as this is an outdated version of SPLAT that is no longer supported.
 
-Once you've downloaded the code and data, you will need to add the SPLAT top-level directory to the environment variable `PYTHONPATH`.  See the following links on how to update environment variables:
+Once you've downloaded the code and data, you should add the SPLAT top-level directory to the environment variable `PYTHONPATH`.  See the following links on how to update environment variables:
 
 * bash or zsh (Unix/Mac): https://apple.stackexchange.com/questions/356441/how-to-add-permanent-environment-variable-in-zsh
 * windows: https://www.computerhope.com/issues/ch000549.htm 
