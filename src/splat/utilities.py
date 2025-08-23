@@ -309,7 +309,7 @@ def writeDictToFile(data,file,delim='\t',verbose=False,**kwargs):
 
     return True
 
-def directoryTree(folder,verbose=True):
+def directoryTree(folder,verbose=ERROR_CHECKING):
     '''
     :Purpose:
 
@@ -340,7 +340,7 @@ def directoryTree(folder,verbose=True):
         if verbose==True: print('Warning: folder {} cannot be found'.format(folder))
     else:
         for p,d,r in os.walk(folder):
-            if not d: paths.append(p+'/')
+            if not d: paths.append(os.path.join(p,''))
     return paths
     
 
@@ -368,34 +368,6 @@ def checkFile(filename,**kwargs):
 
 
 
-# def checkAccess(**kwargs):
-#     '''
-#     :Purpose: Checks if user has access to unpublished spectra in SPLAT library.
-#     :Example:
-#        >>> import splat
-#        >>> print spl.checkAccess()
-#        True
-#     :Note: Must have the file .splat_access in your home directory with the correct passcode to use.
-#     '''
-#     result = False
-
-#     try:
-#         home = os.path.expanduser("~")
-#         if home == None: home = './'
-#         bcode = requests.get(SPLAT_URL+ACCESS_FILE).content
-#         lcode = base64.b64encode(open(home+'/'+ACCESS_FILE,'r').read().encode())
-#         if (bcode[:-3] in lcode): result = True
-#     except:
-#         result = False
-
-#     if (kwargs.get('verbose',False) == True):
-#         if result == True:
-#             print('You have full access to all SPLAT data')
-#         else:
-#             print('You have access only to published data')
-#     return result
-
-
 def checkLocal(inputfile):
     '''
     :Purpose: Checks if a file is present locally or within the SPLAT
@@ -410,10 +382,10 @@ def checkLocal(inputfile):
        True  # found it
     '''
     if not os.path.exists(os.path.normpath(inputfile)):
-        if not os.path.exists(os.path.normpath(SPLAT_PATH+inputfile)):
+        if not os.path.exists(os.path.normpath(inputfile)):
             return ''
         else:
-            return SPLAT_PATH+inputfile
+            return inputfile
     else:
         return inputfile
 
@@ -2360,16 +2332,16 @@ def codeStats():
         except:
             print('\tWarning: no bibtex information for citation {}'.format(p))
     cites.sort()
-    with open(SPLAT_PATH+DOCS_FOLDER+'_static/citation_list.txt', 'w') as f:
-        f.write('Data references in SPLAT:\n')
-        for c in cites:
-            f.write('{}\n'.format(c))
-    cites_html.sort()
-    with open(SPLAT_PATH+DOCS_FOLDER+'_static/citation_list.html', 'w') as f:
-        f.write('<ul>\n')
-        for c in cites_html:
-            f.write('\t{}\n'.format(c))
-        f.write('</ul>\n')
+    # with open(DOCS_FOLDER+'_static/citation_list.txt', 'w') as f:
+    #     f.write('Data references in SPLAT:\n')
+    #     for c in cites:
+    #         f.write('{}\n'.format(c))
+    # cites_html.sort()
+    # with open(DOCS_FOLDER+'_static/citation_list.html', 'w') as f:
+    #     f.write('<ul>\n')
+    #     for c in cites_html:
+    #         f.write('\t{}\n'.format(c))
+    #     f.write('</ul>\n')
 
 # source citations 
     pubs = numpy.unique(numpy.array(sall['DISCOVERY_REFERENCE'].replace(numpy.nan,'')))
@@ -2520,7 +2492,8 @@ def codeStats():
         plt.ylabel('log10 Number')
         plt.xlim([sptrng[0]-0.5,sptrng[1]+0.5])
         plt.legend(['M dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))])),'L dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))])),'T dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))]))])
-        plt.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/spt_spex_distribution_{}.png'.format(fname))
+#        plt.savefig(DOCS_FOLDER+'_images/spt_spex_distribution_{}.png'.format(fname))
+        plt.show()
         plt.clf()
     # Optical type
         sptarr = numpy.array(opt_spts)
@@ -2533,7 +2506,8 @@ def codeStats():
         plt.ylabel('log10 Number')
         plt.xlim([sptrng[0]-0.5,sptrng[1]+0.5])
         plt.legend(['M dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))])),'L dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))])),'T dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))]))])
-        plt.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/spt_optical_distribution_{}.png'.format(fname))
+#        plt.savefig(DOCS_FOLDER+'_images/spt_optical_distribution_{}.png'.format(fname))
+        plt.show()
         plt.clf()
     # NIR type
         sptarr = numpy.array(nir_spts)
@@ -2546,7 +2520,8 @@ def codeStats():
         plt.ylabel('log10 Number')
         plt.xlim([sptrng[0]-0.5,sptrng[1]+0.5])
         plt.legend(['M dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))])),'L dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))])),'T dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))]))])
-        plt.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/spt_nir_distribution_{}.png'.format(fname))
+#        plt.savefig(DOCS_FOLDER+'_images/spt_nir_distribution_{}.png'.format(fname))
+        plt.show()
         plt.clf()
     # Adopted type
         sptarr = numpy.array(spts)
@@ -2559,7 +2534,8 @@ def codeStats():
         plt.ylabel('log10 Number')
         plt.xlim([sptrng[0]-0.5,sptrng[1]+0.5])
         plt.legend(['M dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= sptrng[0],sptarr < 20))])),'L dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 20,sptarr < 30))])),'T dwarfs ({} sources)'.format(len(sptarr[numpy.where(numpy.logical_and(sptarr >= 30,sptarr < sptrng[1]))]))])
-        plt.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/spt_adopted_distribution_{}.png'.format(fname))
+#        plt.savefig(DOCS_FOLDER+'_images/spt_adopted_distribution_{}.png'.format(fname))
+        plt.show()
         plt.clf()
 
 # histogram of S/N
@@ -2586,7 +2562,8 @@ def codeStats():
 #    axis.major_ticklabels.set_path_effects([ef])
  #   axis.label.set_path_effects([ef])
     plt.legend([p1,p2],['All Sources ({})'.format(len(sall)),'Published Sources ({})'.format(len(s))],bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
-    fig.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/map_all.png')
+#    fig.savefig(DOCS_FOLDER+'_images/map_all.png')
+    plt.show()
     fig.clf()
 
 # map sources on based on spectral type
@@ -2613,7 +2590,8 @@ def codeStats():
     plt.legend([p1,p2,p3],['M dwarfs ({})'.format(len(sm)),'L dwarfs ({})'.format(len(sl)),'T dwarfs ({})'.format(len(st))],bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
     ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
     ax.grid(True)
-    fig.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/map_byspt.png')
+#    fig.savefig(DOCS_FOLDER+'_images/map_byspt.png')
+    plt.show()
     fig.clf()
 
 # map sources on based on young or field
@@ -2634,7 +2612,8 @@ def codeStats():
     ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
     ax.grid(True)
     plt.legend([p1],['Young Sources ({})'.format(len(sy))],bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
-    fig.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/map_young.png')
+#    fig.savefig(DOCS_FOLDER+'_images/map_young.png')
+    plt.show()
     fig.clf()
 
 # pie chart of spectrum types
@@ -2647,7 +2626,8 @@ def codeStats():
     ax.pie(sizes, explode=explode, labels=otypes, autopct='%1.1f%%',
         shadow=True, startangle=90, pctdistance = 0.7)
     ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-    fig.savefig(SPLAT_PATH+DOCS_FOLDER+'_images/object_othertypes.png')
+#    fig.savefig(DOCS_FOLDER+'_images/object_othertypes.png')
+    plt.show()
 
 
 def about():

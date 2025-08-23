@@ -1,7 +1,0 @@
-name	AMES Cond
-citation	Allard et al. (2001)
-bibcode	2001ApJ...556..357A
-altname	cond,cond-ames,amescond
-teff	1000
-logg	5.0
-z	0.0

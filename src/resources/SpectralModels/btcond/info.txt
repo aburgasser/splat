@@ -1,8 +1,0 @@
-name	BT Cond
-citation	Allard et al. (2012)
-bibcode	2012RSPTA.370.2765A
-altname	cond-bt,bt-cond
-teff	1000
-logg	5.0
-z	0.0
-enrich	0.0

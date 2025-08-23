@@ -2,7 +2,6 @@ Please be sure to cite the original reference for each spectrum; these can be ac
 
 > Spectrum.info()
 
-
 If you use any of SPLAT's tools, please use the following citation:
 
 Burgasser, AJ, and the SPLAT Development Team. "The SpeX Prism Library Analysis Toolkit (SPLAT): A Data Curation Model" Astronomical Society of India Conference Series 14, pp 7-12 (2017) 
@@ -28,7 +27,6 @@ Burgasser, AJ, and the SPLAT Development Team. "The SpeX Prism Library Analysis 
 If you make use of the SpeX Prism Library (the data), please use the following citation:
 
 Burgasser, AJ. "The SpeX Prism Library: 1000+ low-resolution, near-infrared spectra of ultracool M, L, T and Y dwarfs" Astronomical Society of India Conference Series 11, pp 7-16 (2014) 
-
 
 @inproceedings{2014ASInC..11....7B,
 	Adsnote = {Provided by the SAO/NASA Astrophysics Data System},

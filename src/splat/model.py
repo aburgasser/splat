@@ -91,7 +91,7 @@ import splat.plot as splot
 import splat.photometry as spphot
 import splat.empirical as spemp
 import splat.evolve as spev
-from .core import Spectrum, classifyByIndex, compareSpectra, generateMask
+from .core import classifyByIndex, compareSpectra, generateMask
 
 # structure to store models that have been read in
 MODELS_READIN = {}
@@ -221,8 +221,9 @@ def addUserModels(folders=[],default_info={},verbose=ERROR_CHECKING):
             'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
 
 # read in folders specified in .splat_spectral_models
-    if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
-        with open(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
+    if os.path.exists(EXTERNAL_SPECTRAL_MODELS_FILE):
+        with open(EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: 
+            x = frd.read()
         folders.extend(x.split('\n'))
         if '' in folders: folders.remove('')
 
@@ -272,7 +273,7 @@ def _initializeModels(verbose=ERROR_CHECKING,reset=False):
     '''
     :Purpose:
 
-        Initializes the spectral model set by adding folders to splat.SPECTRAL_MODELS global variable
+        Initializes the spectral model set by adding folders to SPECTRAL_MODELS global variable
 
     :Required Inputs:
 
@@ -298,14 +299,16 @@ def _initializeModels(verbose=ERROR_CHECKING,reset=False):
         'default': {}}
 
 # folders from which models are to be found
-    mfolders = [SPLAT_PATH+SPECTRAL_MODEL_FOLDER]
+    mfolders = [SPECTRAL_MODEL_FOLDER]
 
 # specified in .splat_spectral_models
     if os.path.exists(EXTERNAL_SPECTRAL_MODELS_FILE):
-        with open(EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
+        with open(EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: 
+            x = frd.read()
         mfolders.extend(x.split('\n'))
-    if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
-        with open(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
+    if os.path.exists(EXTERNAL_SPECTRAL_MODELS_FILE):
+        with open(EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: 
+            x = frd.read()
         mfolders.extend(x.split('\n'))
 # specified in environmental variable SPLAT_SPECTRAL_MODELS
     if os.environ.get('SPLAT_SPECTRAL_MODELS') != None:
@@ -511,7 +514,7 @@ def _readTremblin16(file):
     nu = numpy.array(data['col1'])/u.cm
     fnu = numpy.array(data['col2'])*u.erg/(u.s*u.cm)
     wave = (1./nu).to(u.DEFAULT_WAVE_UNIT)
-    flux = (fnu*nu**2).to(splat.DEFAULT_FLUX_UNIT,equivalencies=u.spectral_density(wave))
+    flux = (fnu*nu**2).to(DEFAULT_FLUX_UNIT,equivalencies=u.spectral_density(wave))
     flux = flux*((((10.*u.pc)/(0.1*u.Rsun)).to(u.m/u.m))**2)  # scale to surface flux
     fluxsort = [x for (y,x) in sorted(zip(wave.value,flux.value))]
     wavesort = sorted(wave.value)
@@ -827,7 +830,7 @@ def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=E
         for i,f in enumerate(files):
             try:
                 wv,flx = readfxn(f)
-    #        spmodel = Spectrum(wave=wv,flux=flx)
+    #        spmodel = splat.Spectrum(wave=wv,flux=flx)
 
             except:
                 print('\nError reading in file {}; skipping'.format(f))
@@ -889,7 +892,7 @@ def _processOriginalModels(sedres=100,instruments=['SED','SPEX-PRISM'],verbose=E
             if verbose == True: print('Processing models for instrument {}'.format(inst))
 
             if inst=='SPEX-PRISM':
-                spref = Spectrum(10001)
+                spref = splat.Spectrum(10001)
                 processModelsToInstrument(modelset=modelset,wave=spref.wave,instrument=inst)
             elif inst=='SED':
                 INSTRUMENTS['SED']['wave_range'] = [numpy.nanmin(wv),numpy.nanmax(wv)]
@@ -971,7 +974,7 @@ def processModelsToInstrument(instrument_parameters={},instrument='SPEX-PRISM',w
         return
 
 # use a template
-    if isinstance(template,splat.core.Spectrum):
+    if isinstance(template,splat.Spectrum):
         instrument_parameters['wave'] = template.wave
         instrument_parameters['wunit'] = template.wave.unit
         instrument_parameters['funit'] = template.flux.unit
@@ -1059,11 +1062,11 @@ def processModelsToInstrument(instrument_parameters={},instrument='SPEX-PRISM',w
 
         for i,f in enumerate(files):
             if verbose == True: print('{}: Processing model {}'.format(i,f))
-            noutputfile = outputfolder+'/'+(os.path.basename(f)).replace('RAW',instr).replace('.gz','')
+            noutputfile = os.path.join(outputfolder,(os.path.basename(f)).replace('RAW',instr).replace('.gz',''))
             if not os.path.exists(noutputfile) or (os.path.exists(noutputfile) and overwrite==True):
 
 # read in the model
-                spmodel = Spectrum(f,ismodel=True,instrument='RAW')
+                spmodel = splat.Spectrum(f,ismodel=True,instrument='RAW')
                 spmodel.toInstrument(instr)
 
                 t = Table([spmodel.wave.value,spmodel.flux.value],names=['#wavelength ({})'.format(spmodel.wave.unit),'surface_flux ({})'.format(spmodel.flux.unit)])
@@ -1088,7 +1091,7 @@ def processModelsToInstrument(instrument_parameters={},instrument='SPEX-PRISM',w
 # loop through model files
         for ii,f in enumerate(files):
             if verbose == True: print('{}: Processing model {}'.format(ii,f))
-            spmodel = Spectrum(f,ismodel=True,instrument='RAW')
+            spmodel = splat.Spectrum(f,ismodel=True,instrument='RAW')
 
 # now loop over orders
             for jj,order in enumerate(instrument_parameters['orders']):
@@ -1245,7 +1248,7 @@ def loadOriginalModel(model='btsettl08',instrument='UNKNOWN',file='',**kwargs):
 # convert to instrument - TBD
     mkwargs['instrument'] = instrument
 
-    return Spectrum(**mkwargs)
+    return splat.Spectrum(**mkwargs)
 
 
 def loadOriginalInterpolatedModel(model='btsettl08',teff=2000,logg=5.0,**kwargs):
@@ -1313,7 +1316,7 @@ def loadOriginalInterpolatedModel(model='btsettl08',teff=2000,logg=5.0,**kwargs)
     mdl_return.flux = flx*models[0].flux.unit
     mdl_return.teff = teff
     mdl_return.logg = logg
-    mdl_return.name = '{} Teff={} logg={}'.format(splat.SPECTRAL_MODELS[checkSpectralModelName(model)]['name'],teff,logg)
+    mdl_return.name = '{} Teff={} logg={}'.format(SPECTRAL_MODELS[checkSpectralModelName(model)]['name'],teff,logg)
     
     return mdl_return
 
@@ -1380,7 +1383,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
         else: raise ValueError('Unknown model set {} for primary'.format(parameters['modelset2']))
 
     if 'instrument' not in list(parameters.keys()): parameters['instrument'] = 'RAW'
-    if parameters['instrument'] not in list(splat.SPECTRAL_MODELS[parameters['modelset1']]['instruments'].keys()):
+    if parameters['instrument'] not in list(SPECTRAL_MODELS[parameters['modelset1']]['instruments'].keys()):
         raise ValueError('Instrument {} has not been established for model {}'.format(parameters['instrument'],parameters['modelset1']))
 
 # timing check
@@ -1401,7 +1404,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
     else:
 # read in new model
         mparam = {'modelset': parameters['modelset1'], 'instrument': parameters['instrument']}
-        for m in list(splat.SPECTRAL_MODELS[parameters['modelset1']]['default'].keys()):
+        for m in list(SPECTRAL_MODELS[parameters['modelset1']]['default'].keys()):
             if m in list(parameters.keys()): mparam[m] = parameters[m]
             if '{}1'.format(m) in list(parameters.keys()): mparam[m] = parameters['{}1'.format(m)]
         try:
@@ -1423,7 +1426,7 @@ def makeForwardModel(parameters,data,atm=None,binary=False,duplicate=False,model
             mdl2 = copy.deepcopy(model2)
         else:
             mparam = {'modelset': parameters['modelset2'], 'instrument': parameters['instrument']}
-            for m in list(splat.SPECTRAL_MODELS[parameters['modelset2']]['default'].keys()):
+            for m in list(SPECTRAL_MODELS[parameters['modelset2']]['default'].keys()):
                 if '{}2'.format(m) in list(parameters.keys()): mparam[m] = parameters['{}2'.format(m)]
             if len(list(mparam.keys())) == 2:
                 print('Warning: no parameters provided for secondary; assuming a duplicate model')
@@ -1723,7 +1726,7 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
     if dof == 0.: dof = int(len(data.wave)-len(list(param0.keys())))
     dofc = int(dof-numpy.sum(mask))
     if binary == True and duplicate == True and 'modelset2' in list(param0.keys()):
-        for m in list(splat.SPECTRAL_MODELS[param0['modelset2']]['default'].keys()):
+        for m in list(SPECTRAL_MODELS[param0['modelset2']]['default'].keys()):
             if '{}2'.format(m) in list(param0.keys()): param0['{}2'.format(m)] = param0['{}1'.format(m)]
     mdl = makeForwardModel(param0,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
     chi0,scale = splat.compareSpectra(data,mdl)
@@ -1747,7 +1750,7 @@ def mcmcForwardModelFit(data,param0,param_var,model=None,limits={},nwalkers=1,ns
 #                print(numpy.nanmin(data.wave.value),numpy.nanmax(data.wave.value))    
 #                if atm != None: print(numpy.nanmin(atm.wave.value),numpy.nanmax(atm.wave.value))    
                 if binary == True and duplicate == True and 'modelset2' in list(param.keys()):
-                    for m in list(splat.SPECTRAL_MODELS[param['modelset2']]['default'].keys()):
+                    for m in list(SPECTRAL_MODELS[param['modelset2']]['default'].keys()):
                         if '{}2'.format(m) in list(param.keys()): param['{}2'.format(m)] = param['{}1'.format(m)]
                 mdl = makeForwardModel(param,data,binary=binary,duplicate=duplicate,atm=atm,model=model,model2=secondary_model)
 #                print(numpy.nanmin(mdl.wave.value),numpy.nanmax(mdl.wave.value))    
@@ -2254,7 +2257,7 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
 #            if verbose: print('RUNFAST 1: {}'.format(kwargs['filename']))
                 return MODELS_READIN[kwargs['filename']]
             else:
-                MODELS_READIN[kwargs['filename']] = Spectrum(**kwargs)
+                MODELS_READIN[kwargs['filename']] = splat.Spectrum(**kwargs)
                 return MODELS_READIN[kwargs['filename']]
 
 
@@ -2290,7 +2293,7 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
     kwargs['folder'] = os.path.normpath(SPECTRAL_MODELS[kwargs['modelset']]['instruments'][kwargs['instrument']])
     if not os.path.exists(kwargs['folder']):
         finit = kwargs['folder']
-        kwargs['folder'] = os.path.normpath(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+kwargs['modelset']+'/'+kwargs['instrument']+'/')
+        kwargs['folder'] = os.path.normpath(os.path.join(SPECTRAL_MODEL_FOLDER,kwargs['modelset'],kwargs['instrument'],''))
         if not os.path.exists(kwargs['folder']):
             raise ValueError('\nCould not locate folder {} or {} for model {} and instrument {}; make sure models are properly located'.format(finit,kwargs['folder'],kwargs['modelset'],kwargs['instrument']))
 
@@ -2394,7 +2397,7 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
 #        else:
 #    else:
     if file != '':
-        sp = Spectrum(**kwargs)
+        sp = splat.Spectrum(**kwargs)
         MODELS_READIN[kwargs['filename']] = sp
 
 # populate model parameters
@@ -2423,7 +2426,7 @@ def loadModel(modelset='btsettl08',instrument=DEFAULT_INSTRUMENT,raw=False,sed=F
 #        open(os.path.basename(tmp), 'wb').write(requests.get(url+kwargs['filename']).content) 
 #        mkwargs = copy.deepcopy(kwargs)
 #        mkwargs['filename'] = os.path.basename(tmp)
-#        sp = Spectrum(**mkwargs)
+#        sp = splat.Spectrum(**mkwargs)
 #        os.remove(os.path.basename(tmp))
 
 # add to read in files
@@ -2469,7 +2472,7 @@ def _checkModelParametersInRange(mparam):
     return flag
 
 
-def _loadInterpolatedModel(wave_unit=splat.DEFAULT_WAVE_UNIT,flux_unit=splat.DEFAULT_FLUX_UNIT,fast=True,**kwargs):
+def _loadInterpolatedModel(wave_unit=splat.DEFAULT_WAVE_UNIT,flux_unit=DEFAULT_FLUX_UNIT,fast=True,**kwargs):
     '''
     Purpose: 
         Generates as spectral model with is interpolated between model parameter grid points. This routine is called by `loadModel()`_, or it can be called on its own.
@@ -2516,7 +2519,7 @@ def _loadInterpolatedModel(wave_unit=splat.DEFAULT_WAVE_UNIT,flux_unit=splat.DEF
 #    mkwargs['instrument'] = checkInstrument(mkwargs['instrument'])
 #    mkwargs['name'] = mkwargs['model']
     
-#    mkwargs['folder'] = SPLAT_PATH+SPECTRAL_MODEL_FOLDER+mkwargs['model']+'/'
+#    mkwargs['folder'] = SPECTRAL_MODEL_FOLDER+mkwargs['model']+'/'
 
 
 #    for ms in SPECTRAL_MODEL_PARAMETERS_INORDER:
@@ -2740,7 +2743,7 @@ def _loadInterpolatedModel(wave_unit=splat.DEFAULT_WAVE_UNIT,flux_unit=splat.DEF
             mflx.append(10.**(griddata((mx.flatten(),my.flatten(),mz.flatten()),\
                 val,(numpy.log10(float(mkwargs['teff'])),float(mkwargs['logg']),float(mkwargs['z'])),'linear')))
 
-    return Spectrum(wave=mwave,flux=mflx*models[0].flux.unit,**mkwargs)
+    return splat.Spectrum(wave=mwave,flux=mflx*models[0].flux.unit,**mkwargs)
 
 
 def fastInterpolator():
@@ -2859,7 +2862,7 @@ def loadModelParameters(modelset,instrument=DEFAULT_INSTRUMENT,instrument_defaul
     mfolder = os.path.normpath(SPECTRAL_MODELS[mset]['instruments'][instrument])
     if not os.access(mfolder, os.R_OK):
 #        raise NameError('\nInstrument setting {} is not defined for model set {}\n'.format(instrument,mset))
-#        mfolder = os.path.normpath(SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/'+mset)
+#        mfolder = os.path.normpath(SPECTRAL_MODEL_FOLDER+'/'+mset)
 #        if not os.access(mfolder, os.R_OK):
         raise OSError('\nCould not find model folder {}\n'.format(mfolder))
 
@@ -3023,13 +3026,13 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
 # Livingston & Wallace (1991) spectrum
     if source.lower()=='livingston' or source.lower()=='solar atlas':  
         bibcode = '1991aass.book.....L'
-        folder=splat.SPLAT_PATH+splat.TELLURIC_MODEL_FOLDER+'/SolAtlas/'
+        folder=splat.splat.TELLURIC_MODEL_FOLDER+'/SolAtlas/'
 
 # prep files
-        tfiles = glob.glob(folder+'wn*')
+        tfiles = glob.glob(os.path.join(folder,'wn*'))
         tfiles.reverse()
         tfiles = numpy.array(tfiles)
-        tfwv = numpy.array([1.e4/float(f[len(folder+'wn'):]) for f in tfiles])
+        tfwv = numpy.array([1.e4/float(f.replace(folder,'').replace('wn','').replace('.gz','')) for f in tfiles])
 # select only those files in the range of wavelengths
 #    tfiles = tfiles[
         w = numpy.where(numpy.logical_and(tfwv > numpy.min(wave),tfwv < numpy.max(wave)))
@@ -3053,7 +3056,7 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
 # Moehler et al. (2014) Paranal spectrum R = 60,000
     elif source.lower()=='eso' or source.lower()=='moehler' or source.lower()=='paranal':  
         bibcode = '2014A&A...568A...9M'
-        folder=splat.SPLAT_PATH+splat.TELLURIC_MODEL_FOLDER+'/ESO/'
+        folder=splat.splat.TELLURIC_MODEL_FOLDER+'/ESO/'
         tfiles=glob.glob(folder+'*.fits')
 
 # COULD PUT A CHOICE HERE OF TELLURIC SPECTRA IF WE DOWNLOAD MORE        
@@ -3091,7 +3094,7 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
         'istransmission': True
         }
         if bibcode != '': mkwargs['bibcode'] = bibcode
-        atm = Spectrum(**mkwargs)
+        atm = splat.Spectrum(**mkwargs)
 #        atm.funit = u.m/u.m
         return atm
     else: 
@@ -3313,7 +3316,7 @@ def modelFitGrid(specin, modelset='btsettl08', instrument='', nbest=1, plot=True
             Radius: 0.143324498969+/-0.0 solRad
             $[M/H]$: 0.0+/-0.0 dex
 
-    .. _`fluxcalibrate()` : api.html#splat.Spectrum.fluxCalibrate
+    .. _`fluxcalibrate()` : api.html#Spectrum.fluxCalibrate
     .. _`generateMask()` : api.html#splat.generateMask
     .. _`loadModel()` : api.html#splat_model.loadModel
     .. _`plotSpectrum()`: api.html#splat_plot.plotSpectrum
@@ -4674,7 +4677,7 @@ def _modelFitEMCEE_lnlikelihood(theta,x,y,yerr,model_params):
         print(resp)
         return -1.e30,0.
 #    chi,scl = splat.compareSpectra(sp,mdl,**model_params)
-    chi,scl = compareSpectra(Spectrum(wave=x,flux=y,noise=yerr),mdl,**model_params)
+    chi,scl = compareSpectra(splat.Spectrum(wave=x,flux=y,noise=yerr),mdl,**model_params)
     lnp = -0.5*chi
     if model_params.get('noise_scaling',False):
         f = interp1d(mdl.wave.value,mdl.flux.value*scl,bounds_error=False,fill_value=0.)

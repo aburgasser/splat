@@ -18,6 +18,7 @@ from numpy.testing import assert_allclose
 import splat
 import splat.evolve as spel
 import splat.simulate as spsim
+from splat.initialize import *
 #import splat as splat
 
 # things to test
@@ -34,7 +35,7 @@ def test_loadEvolModel():
 
 # check that models load properly
 	chkpar = ['mass','age','temperature','gravity','luminosity']
-	for e in list(splat.EVOLUTIONARY_MODELS.keys()):
+	for e in list(EVOLUTIONARY_MODELS.keys()):
 		m = spel.loadEvolModel(e)
 		for x in chkpar: assert x in list(m.keys())
 		# for x in ['file','citation','bibcode','altname','default']: 
@@ -69,12 +70,12 @@ def test_modelParameters():
 	masses = numpy.linspace(numpy.min(mdl['mass'][-1]),numpy.max(mdl['mass'][0]),len(mdl['age']))
 	p = spel.modelParameters(mass=masses,age=mdl['age'],**mkwargs)
 	assert isinstance(p,dict)
-	for e in list(splat.EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
+	for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
 		assert isinstance(p[e],u.quantity.Quantity)
 		assert isinstance(p[e].value,numpy.ndarray)
 	p = spel.modelParameters(teff=1220,logg=5.1,**mkwargs)
 	assert isinstance(p,dict)
-	for e in list(splat.EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
+	for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
 		assert isinstance(p[e],u.quantity.Quantity)
 		assert isinstance(p[e].value,float)
 	l = list(p.keys())
@@ -84,7 +85,7 @@ def test_modelParameters():
 		kwargs = {**kwargs, **mkwargs}
 		p2 = spel.modelParameters(**kwargs)
 		assert isinstance(p2,dict)
-		for e in list(splat.EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
+		for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
 			assert isinstance(p2[e],u.quantity.Quantity)
 			assert isinstance(p2[e].value,float)
 #			assert_allclose(p[e].value,p2[e].value,rtol=1.e-1)
@@ -94,12 +95,12 @@ def test_modelParameters():
 	masses = numpy.linspace(numpy.min(mdl['mass'][-1]),numpy.max(mdl['mass'][0]),len(mdl['age']))
 	p = spel.modelParameters(mass=masses,age=mdl['age'],**mkwargs)
 	assert isinstance(p,dict)
-	for e in list(splat.EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
+	for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
 		assert isinstance(p[e],u.quantity.Quantity)
 		assert isinstance(p[e].value,numpy.ndarray)
 	p = spel.modelParameters(teff=1040,logg=5.1,**mkwargs)
 	assert isinstance(p,dict)
-	for e in list(splat.EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
+	for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
 		assert isinstance(p[e],u.quantity.Quantity)
 		assert isinstance(p[e].value,float)
 	l = list(p.keys())
@@ -110,7 +111,7 @@ def test_modelParameters():
 #		for mk in list(mkwargs.keys()): kwargs[mk] = mkwargs[mk]
 		p2 = spel.modelParameters(**kwargs)
 		assert isinstance(p2,dict)
-		for e in list(splat.EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
+		for e in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()): 
 			assert isinstance(p2[e],u.quantity.Quantity)
 			assert isinstance(p2[e].value,float)
 #			assert_allclose(p[e].value,p2[e].value,rtol=1.e-1)

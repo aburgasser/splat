@@ -40,22 +40,13 @@ import splat.citations as spbib
 from splat.photometry import filterMag
 #from splat.database import searchLibrary, keySpectrum
 
-# holding arrays
-ERROR_CHECKING = False
-SPECTRA_READIN = {}
-STDS_DWARF_SPEX = {}
-STDS_SD_SPEX = {}
-STDS_DSD_SPEX = {}
-STDS_ESD_SPEX = {}
-STDS_VLG_SPEX = {}
-STDS_INTG_SPEX = {}
 
 # databases - using the .txt files for now, will need to change to SQL at a future date
 # these are now done using pandas
-#DB_SOURCES = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE)
-#DB_SPECTRA = ascii.read(SPLAT_PATH+DB_FOLDER+DB_SPECTRA_FILE)
-DB_SOURCES = pandas.read_csv(os.path.normpath(SPLAT_PATH+DB_FOLDER+DB_SOURCES_FILE),delimiter='\t')
-DB_SPECTRA = pandas.read_csv(os.path.normpath(SPLAT_PATH+DB_FOLDER+DB_SPECTRA_FILE),delimiter='\t')
+#DB_SOURCES = ascii.read(DB_SOURCES_FILE)
+#DB_SPECTRA = ascii.read(DB_SPECTRA_FILE)
+# DB_SOURCES = pandas.read_csv(os.path.normpath(DB_SOURCES_FILE),delimiter='\t')
+# DB_SPECTRA = pandas.read_csv(os.path.normpath(DB_SPECTRA_FILE),delimiter='\t')
 
 # suppress warnings - probably not an entirely safe approach!
 numpy.seterr(all='ignore')
@@ -64,20 +55,6 @@ warnings.simplefilter('ignore')
 # temporary constants - will be removed
 max_snr = 1.e6                # maximum S/N ratio permitted
 
-
-#######################################################
-#######################################################
-###############   DISPLAY ON LOAD IN  #################
-#######################################################
-#######################################################
-
-print('\n\nWelcome to the Spex Prism Library Analysis Toolkit (SPLAT)!')
-print('You are currently using version {}\n'.format(VERSION))
-print('If you make use of any features of this toolkit for your research, please remember to cite the SPLAT paper:')
-print('\n{}; Bibcode: {}\n'.format(CITATION,BIBCODE))
-print('If you make use of any spectra or models in this toolkit, please remember to cite the original source.')
-print('Please report any errors are feature requests to our github page, {}\n\n'.format(GITHUB_URL))
-if ERROR_CHECKING==True: print('Currently running in error checking mode')
 
 
 #######################################################
@@ -95,7 +72,7 @@ def _processNewData(verbose=True,**kwargs):
 def _addData(folder,database=pandas.DataFrame(),input_file=DB_SPECTRA_INPUT_FILE,default_parameters=DB_SPECTRA_DEFAULT_PARAMETERS,allowed_file_extensions=SPECTRA_FILES_EXTENSIONS,verbose=False):
     '''
     '''
-    sfile = '{}/{}'.format(folder,input_file)
+    sfile = os.path.join(folder,input_file)
     if os.path.exists(sfile) == True:
         try: pd = pandas.read_csv(sfile)
         except: 
@@ -159,39 +136,42 @@ def _initializeAllData(database=pandas.DataFrame(),override=False,verbose=False,
 ##### ISSUES #####
 # need to figure out how to properly read in quantities
 
-# default information for a new data set    
-    DATA_FOLDERS = directoryTree(PUBLIC_DATA_FOLDER)
+# default data provided with package    
+    data_folders = directoryTree(SPECTRAL_DATA_FOLDER)
+#    for d in data_folders: print(d)
+
 # as specified in .splat_spectral_data
     if os.path.exists(EXTERNAL_DATA_FILE):
         with open(EXTERNAL_DATA_FILE, 'r') as frd: x = frd.read()
         mfolders = x.split('\n')
         if len(mfolders) > 0:
-            for m in mfolders: DATA_FOLDERS.extend(directoryTree(m))
-    if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_DATA_FILE):
-        with open(HOME_FOLDER+'/'+EXTERNAL_DATA_FILE, 'r') as frd: x = frd.read()
-        mfolders = x.split('\n')
-        if len(mfolders) > 0:
-            for m in mfolders: DATA_FOLDERS.extend(directoryTree(m))
+            for m in mfolders: data_folders.extend(directoryTree(m))
+#    for d in data_folders: print(d)
+
 # specified in environmental variable SPLAT_DATA as folder1:folder2:...
     if os.environ.get('SPLAT_DATA') != None:
         mfolders = str(os.environ['SPLAT_DATA']).split(':')
         if len(mfolders) > 0:
-            for m in mfolders: DATA_FOLDERS.extend(directoryTree(m))
+            for m in mfolders: data_folders.extend(directoryTree(m))
+#    for d in data_folders: print(d)
 
 # check that the folders exist
-    DATA_FOLDERS = list(set(DATA_FOLDERS))
-    if '' in DATA_FOLDERS: DATA_FOLDERS.remove('')
+    data_folders = list(set(data_folders))
+    for x in ['',' ']:
+        if x in data_folders: data_folders.remove(x)
     rm = []
-    for m in DATA_FOLDERS:
+    for m in data_folders:
         if os.path.exists(m) == False: rm.append(m)
     if len(rm) > 0:
-        for m in rm: DATA_FOLDERS.remove(m)
-    if len(DATA_FOLDERS) == 0:
+        print('could not find {}'.format(rm))
+        for m in rm: data_folders.remove(m)
+    if len(data_folders) == 0:
         if verbose == True: print('\nNo folders containing spectral data were found to be present')
         return
+#    for d in data_folders: print(d)
 
 # go through each folder and load in the relavant spectra.csv files, or create them
-    for d in DATA_FOLDERS: database = _addData(d,database=database,verbose=verbose)
+    for d in data_folders: database = _addData(d,database=database,verbose=verbose)
 
 # drop duplicate file names
     if len(database)>0:
@@ -200,7 +180,7 @@ def _initializeAllData(database=pandas.DataFrame(),override=False,verbose=False,
         if len(database) != ln and verbose==True:
             print('Dropped {} duplicates; {} remaining'.format(ln-len(database),len(database)))
 
-    return DATA_FOLDERS,database
+    return data_folders,database
 
 DATA_FOLDERS,DB_ALL_SPECTRA = _initializeAllData()
 
@@ -235,10 +215,10 @@ class Spectrum(object):
 
     :Example:
        >>> import splat
-       >>> sp = splat.Spectrum(filename='myspectrum.fits')      # read in a file
-       >>> sp = splat.Spectrum('myspectrum.fits')               # same
-       >>> sp = splat.Spectrum(10002)                           # read in spectrum with data_key = 10002
-       >>> sp = splat.Spectrum(wave=wavearray,flux=fluxarray)   # create objects with wavelength & flux arrays
+       >>> sp = Spectrum(filename='myspectrum.fits')      # read in a file
+       >>> sp = Spectrum('myspectrum.fits')               # same
+       >>> sp = Spectrum(10002)                           # read in spectrum with data_key = 10002
+       >>> sp = Spectrum(wave=wavearray,flux=fluxarray)   # create objects with wavelength & flux arrays
     '''
 
     def __init__(self, *args, **kwargs):
@@ -382,7 +362,7 @@ class Spectrum(object):
 
 # is this in the SPLAT database? if so use the default folder
             if self.filename in list(DB_SPECTRA['DATA_FILE']): 
-                mkwargs['folder'] = SPLAT_PATH+DATA_FOLDER                
+                mkwargs['folder'] = SPECTRAL_DATA_FOLDER                
                 sdb = searchLibrary(file=self.filename)
 
 # return prior spectrum - THIS IS NOT WORKING SO COMMENTED OUT
@@ -962,7 +942,7 @@ class Spectrum(object):
             None (spectrum object changed in place)
 
         :Example:
-           >>> sp = splat.Spectrum(10001)
+           >>> sp = Spectrum(10001)
            >>> sp.addNoise(snr=10.)
            >>> sp.computeSN()
                 9.5702358777108234
@@ -1082,7 +1062,7 @@ class Spectrum(object):
             If the filename does not include the full path, the file is saved in the current directory.  
             Spectrum.export and `Spectrum.save()`_ function in the same manner.
 
-        .. _`Spectrum.save()` : api.html#splat.core.Spectrum.save
+        .. _`Spectrum.save()` : api.html#Spectrum.save
 
         :Required Inputs: 
             None
@@ -1190,7 +1170,7 @@ class Spectrum(object):
 
         `Spectrum.export()`_ and `Spectrum.save` function in the same manner.
 
-        .. _`Spectrum.export()` : api.html#splat.core.Spectrum.export
+        .. _`Spectrum.export()` : api.html#Spectrum.export
         '''
         self.export(*args,**kwargs)
 
@@ -1351,7 +1331,7 @@ class Spectrum(object):
         :Example:
            >>> import splat
            >>> import astropy.units as u
-           >>> sp = splat.Spectrum(file='somespectrum',wave_unit=u.Angstrom)
+           >>> sp = Spectrum(file='somespectrum',wave_unit=u.Angstrom)
            >>> sp.wave.unit
             Unit("Angstrom")
            >>> sp.toMicron()
@@ -1380,7 +1360,7 @@ class Spectrum(object):
         :Example:
            >>> import splat
            >>> import astropy.units as u
-           >>> sp = splat.Spectrum(file='somespectrum',wave_unit=u.Angstrom)
+           >>> sp = Spectrum(file='somespectrum',wave_unit=u.Angstrom)
            >>> print(sp.wave.unit)
              Angstrom
            >>> sp.toWaveUnit(u.micron)
@@ -1415,7 +1395,7 @@ class Spectrum(object):
         :Example:
            >>> import splat
            >>> import astropy.units as u
-           >>> sp = splat.Spectrum(file='somespectrum',wave_unit=u.Angstrom)
+           >>> sp = Spectrum(file='somespectrum',wave_unit=u.Angstrom)
            >>> sp.flux.unit
             erg / (cm2 micron s)
            >>> sp.toFluxUnit(u.Watt/u.m/u.m)
@@ -1670,7 +1650,7 @@ class Spectrum(object):
             
         :Example:
            >>> import splat
-           >>> sp = splat.Spectrum(10001)
+           >>> sp = Spectrum(10001)
            >>> sp.broaden(30.,method='rotation')
            >>> sp.info()
             History:
@@ -1744,7 +1724,7 @@ class Spectrum(object):
 
             Rotationally broaden the lines of a spectrum; a shortcut call to `Spectrum.broaden()`_
 
-        .. _`Spectrum.broaden()` : api.html#splat.core.Spectrum.broaden
+        .. _`Spectrum.broaden()` : api.html#Spectrum.broaden
 
         :Required Inputs:
             :param vsini: Rotational velocity in km/s
@@ -1759,7 +1739,7 @@ class Spectrum(object):
             
         :Example:
            >>> import splat
-           >>> sp = splat.Spectrum(10001)
+           >>> sp = Spectrum(10001)
            >>> sp.vsini(30.)
            >>> sp.info()
             History:
@@ -2010,7 +1990,7 @@ class Spectrum(object):
         :Example:
 
            >>> import splat
-           >>> sp = splat.Spectrum(10001)                   # read in a source
+           >>> sp = Spectrum(10001)                   # read in a source
            >>> spr = splat.redden(sp,av=5.,rv=3.2)          # redden to equivalent of AV=5
 
         **Note**
@@ -2645,9 +2625,9 @@ class Spectrum(object):
             :param slitPixelWidth: Number of pixels to smooth in pixel space; see `_smoothToSlitPixelWidth()`_ (default = None)
             :param slitWidth: Number of pixels to smooth in angular space; see `_smoothToPixelWidth()`_ (default = None)
 
-        .. _`_smoothToResolution()` : api.html#splat.core.Spectrum._smoothToResolution
-        .. _`_smoothToPixelWidth()` : api.html#splat.core.Spectrum._smoothToPixelWidth
-        .. _`_smoothToSlitPixelWidth()` : api.html#splat.core.Spectrum._smoothToSlitPixelWidth
+        .. _`_smoothToResolution()` : api.html#Spectrum._smoothToResolution
+        .. _`_smoothToPixelWidth()` : api.html#Spectrum._smoothToPixelWidth
+        .. _`_smoothToSlitPixelWidth()` : api.html#Spectrum._smoothToSlitPixelWidth
 
 
         :Output: 
@@ -2729,7 +2709,7 @@ class Spectrum(object):
 
             see other optional keywords in _`Spectrum.smooth()`
 
-        .. _`Spectrum.smooth()` : api.html#splat.core.Spectrum.smooth
+        .. _`Spectrum.smooth()` : api.html#Spectrum.smooth
 
         :Outputs:
             None; spectrum is smoothed
@@ -2837,7 +2817,7 @@ class Spectrum(object):
 
             see other optional keywords in _`Spectrum.smooth()`
 
-        .. _`Spectrum.smooth()` : api.html#splat.core.Spectrum.smooth
+        .. _`Spectrum.smooth()` : api.html#Spectrum.smooth
 
         :Outputs:
             None; spectrum is smoothed
@@ -2899,7 +2879,7 @@ class Spectrum(object):
 
             see other optional keywords in _`Spectrum.smooth()`
 
-        .. _`Spectrum.smooth()` : api.html#splat.core.Spectrum.smooth
+        .. _`Spectrum.smooth()` : api.html#Spectrum.smooth
 
         :Outputs:
             None; spectrum is smoothed
@@ -3257,10 +3237,10 @@ class NewSpectrum(object):
 # read in file
         if self.filename != '':
             if os.path.exists(self.filename)==False:
-                if os.path.exists(self.folder+self.filename)==False:
-                    raise ValueError('Could not find file {} or {}'.format(self.filename,self.folder+self.filename))
+                if os.path.exists(os.path.join(self.folder,self.filename))==False:
+                    raise ValueError('Could not find file {} or {}'.format(self.filename,os.path.join(self.folder,self.filename)))
                 else:
-                    self.filename = self.folder+self.filename
+                    self.filename = os.path.join(self.folder,self.filename)
 # Have we already read this in? if so, just copy
 # NOTE: THIS IS NOT WORKING SO COMMENTED OUT
 #            if self.filename in list(SPECTRA_READIN.keys()):
@@ -4065,7 +4045,7 @@ class NewSpectrum(object):
         :Example:
 
            >>> import splat
-           >>> sp = splat.Spectrum(10001)                   # read in a source
+           >>> sp = Spectrum(10001)                   # read in a source
            >>> spr = splat.redden(sp,av=5.,rv=3.2)          # redden to equivalent of AV=5
 
         **Note**
@@ -4156,8 +4136,8 @@ def stitch(s1,s2,rng=[],verbose=False,scale=True,**kwargs):
 
     :Example:
        >>> import splat
-       >>> spopt = splat.Spectrum(file='myopticalspectrum.fits')
-       >>> spnir = splat.Spectrum(file='myopticalspectrum.fits')
+       >>> spopt = Spectrum(file='myopticalspectrum.fits')
+       >>> spnir = Spectrum(file='myopticalspectrum.fits')
        >>> sp = splat.stitch(spopt,spnir,rng=[0.8,0.9],trim=[0.35,2.4])
     '''
 
@@ -4791,8 +4771,8 @@ def keySpectrum(keys,verbose=True):
 # # vectorize
 #     if isinstance(keys,list) == False: keys = [keys]
 
-# #    sdb = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
-# #    sdb = fetchDatabase(SPLAT_PATH+DB_FOLDER+SOURCES_DB)
+# #    sdb = ascii.read(DB_FOLDER+SOURCES_DB, delimiter='\t',fill_values='-99.',format='tab')
+# #    sdb = fetchDatabase(DB_FOLDER+SOURCES_DB)
 # #    sdb = copy.deepcopy(DB_SOURCES)
 # #    sdb['SELECT'] = [x in keys for x in sdb['SOURCE_KEY']]
 
@@ -4914,7 +4894,7 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', source_database=DB_SOURCE
     '''
 
 # check the input catalog
-#    source_db = ascii.read(SPLAT_PATH+DB_FOLDER+SOURCES_DB, delimiter='\t', fill_values='-99.', format='tab')
+#    source_db = ascii.read(DB_FOLDER+SOURCES_DB, delimiter='\t', fill_values='-99.', format='tab')
 #    source_db = fetchDatabase(SOURCES_DB)
     source_db = copy.deepcopy(source_database)
     spectra_db = copy.deepcopy(spectra_database)
@@ -5268,8 +5248,8 @@ def searchLibrary(radius=10., instrument='SPEX-PRISM', source_database=DB_SOURCE
 
 
 # read in spectral database
-#    spectral_db = ascii.read(SPLAT_PATH+DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
-#    spectral_db = fetchDatabase(SPLAT_PATH+DB_FOLDER+SPECTRA_DB)
+#    spectral_db = ascii.read(DB_FOLDER+SPECTRA_DB, delimiter='\t',fill_values='-99.',format='tab')
+#    spectral_db = fetchDatabase(DB_FOLDER+SPECTRA_DB)
 #    spectral_db = copy.deepcopy(DB_SPECTRA)
 
 # merge with source_db selected sources
@@ -5615,7 +5595,7 @@ def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
     from the output of `readSpectrum()`:
 
         >>> d = splat.readSpectrum('asteroid.fits',wave_unit=u.micron,dimensionless=True)
-        >>> sp = splat.Spectrum(d,name='Asteroid',instrument='SPEX-PRISM',flux_label='Reflectance')
+        >>> sp = Spectrum(d,name='Asteroid',instrument='SPEX-PRISM',flux_label='Reflectance')
         >>> sp.info()
 
         IRTF SpeX prism spectrum of Asteroid
@@ -5660,8 +5640,7 @@ def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
 # check inputs and keyword parameters
     # for k in ['file','filename','data_file','datafile']:
     #     if k in list(kwargs.keys()): file = kwargs[k]
-    if file == '':
-        raise NameError('\nNo filename passed to readSpectrum')
+    if file == '': raise NameError('\nNo filename passed to readSpectrum')
     if not(isUnit(wave_unit)):
         if verbose==True: print('Warning: wave_unit {} is not an astropy unit; using default {}'.format(wave_unit,DEFAULT_WAVE_UNIT))
         wave_unit = DEFAULT_WAVE_UNIT
@@ -5670,7 +5649,6 @@ def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
         flux_unit = DEFAULT_FLUX_UNIT
     if dimensionless==True: flux_unit = u.dimensionless_unscaled
 
-
 # if a url, make sure it exists
     if file[:4]=='http':
         if requests.get(file).status_code!=requests.codes.ok:
@@ -5678,9 +5656,25 @@ def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
 
 # if a local file, make sure it exists
     else:
-        if os.path.exists(os.path.normpath(file)) == False: file = folder+os.path.basename(file)
+        f0 = copy.deepcopy(file)
         if os.path.exists(os.path.normpath(file)) == False:
-            raise ValueError('Cannot find {} locally or in folder {}\n\n'.format(file,folder))
+            file = '{}.{}'.format(file,'gz') 
+        if os.path.exists(os.path.normpath(file)) == False:
+            file = os.path.join(folder,os.path.basename(f0))
+        if os.path.exists(os.path.normpath(file)) == False:
+            file = '{}.{}'.format(file,'gz') 
+        if os.path.exists(os.path.normpath(file)) == False:
+            raise ValueError('Cannot find {} locally or in folder {}\n\n'.format(f0,folder))
+
+# determine which type of file
+    file_type = '{} {}'.format(file.split('.')[-1],file_type)
+
+# gzipped file - extract root
+#    for k in ['gz','bz2','zip']:
+    gzflag = False
+    if 'gz' in file_type:
+        file_type = '{} {}'.format((file.replace('.gz','')).split('.')[-1],file_type)
+        gzflag = True
 
 # instrument specific read shortcut - not working?
     readin = False
@@ -5694,14 +5688,6 @@ def readSpectrum(file,folder='',file_type='',wave_unit=DEFAULT_WAVE_UNIT,
 
 # other reads
     if readin==False:
-
-# determine which type of file
-        file_type = '{} {}'.format(file.split('.')[-1],file_type)
-
-# zipped file - extract root
-        for k in ['gz','bz2','zip']:
-            if k in file_type:
-                file_type = '{} {}'.format((file.replace('.'+k,'')).split('.')[-1],file_type)
 
 # fits - can be done with fits.open as local or online and w/ or w/o gzip/bzip2/pkzip
         if 'fit' in file_type:
@@ -8482,8 +8468,8 @@ def addUserData(folders=[],default_info={},verbose=True):
         default_info = {'folder': '', 'name': '', 'citation': '', 'bibcode': '', 'altname': [], 'rawfolder': '', 'default': {'teff': 1500, 'logg': 5.0, 'z': 0.}}
 
 # read in folders specified in .splat_spectral_models
-    if os.path.exists(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE):
-        with open(HOME_FOLDER+'/'+EXTERNAL_SPECTRAL_MODELS_FILE, 'r') as frd: x = frd.read()
+    if os.path.exists(os.path.join(HOME_FOLDER,EXTERNAL_SPECTRAL_MODELS_FILE)):
+        with open(os.path.join(HOME_FOLDER,EXTERNAL_SPECTRAL_MODELS_FILE), 'r') as frd: x = frd.read()
         folders.extend(x.split('\n'))
         if '' in folders: folders.remove('')
 

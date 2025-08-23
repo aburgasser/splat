@@ -43,7 +43,7 @@ def checkFilter(filt,verbose=True):
     return output
 
 
-def filterProfile(filt,filterfolder=SPLAT_PATH+FILTER_FOLDER,plot=False,file='',verbose=False,**kwargs):
+def filterProfile(filt,filterfolder=FILTER_FOLDER,plot=False,file='',verbose=False,**kwargs):
     '''
     Purpose
     -------
@@ -101,7 +101,7 @@ def filterProfile(filt,filterfolder=SPLAT_PATH+FILTER_FOLDER,plot=False,file='',
     .. _`visualizeFilter()` : api.html#splat.photometry.visualizeFilter
     '''
 # keyword parameters
-    if not os.path.exists(filterfolder): filterfolder = SPLAT_PATH+FILTER_FOLDER
+    if not os.path.exists(filterfolder): filterfolder = FILTER_FOLDER
 
 # check that requested filter is in list
     f0 = checkFilterName(filt, verbose=True)
@@ -148,7 +148,7 @@ def filterProfile(filt,filterfolder=SPLAT_PATH+FILTER_FOLDER,plot=False,file='',
 
 
 
-def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,rsr=False,vegafile=VEGAFILE,filterfolder=SPLAT_PATH+FILTER_FOLDER,info=False,verbose=False,**kwargs):
+def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,rsr=False,vegafile=VEGAFILE,filterfolder=FILTER_FOLDER,info=False,verbose=False,**kwargs):
     '''
     Purpose 
     -------
@@ -277,13 +277,20 @@ def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,
 
     result = []
     if computevalue== 'vega':
+# make sure vega file is there
+        if os.path.exists(vegafile)==False:
+            tmp = os.path.exists(filterfolder,vegafile)
+            if os.path.exists(tmp)==False:
+                raise ValueError('Cannot find vega file {} locally or in {}'.format(vegafile,FILTER_FOLDER))
+            vegafile=tmp
+
 # Read in Vega spectrum
-        vwave,vflux = numpy.genfromtxt(os.path.normpath(filterfolder+vegafile), comments='#', unpack=True, \
+        vwave,vflux = numpy.genfromtxt(os.path.normpath(vegafile), comments='#', unpack=True, \
             missing_values = ('NaN','nan'), filling_values = (numpy.nan))
         vwave = vwave[~numpy.isnan(vflux)]*u.micron
         vwave.to(sp.wave.unit)
         vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))
-        vflux.to(sp.flux_unit,equivalencies=u.spectral_density(vwave))
+        vflux.to(sp.flux.unit,equivalencies=u.spectral_density(vwave))
 # interpolate Vega onto filter wavelength function
         v = interp1d(vwave.value,vflux.value,bounds_error=False,fill_value=0.)
         if rsr == True:
@@ -353,7 +360,7 @@ def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,
     return val*outunit,err*outunit
 
 
-def vegaToAB(filt,vegafile=VEGAFILE,filterfolder=SPLAT_PATH+FILTER_FOLDER,custom=False,notch=False,rsr=False,**kwargs):
+def vegaToAB(filt,vegafile=VEGAFILE,filterfolder=FILTER_FOLDER,custom=False,notch=False,rsr=False,**kwargs):
 
 # check that requested filter is in list
     if isinstance(custom,bool) and isinstance(notch,bool):
@@ -362,6 +369,13 @@ def vegaToAB(filt,vegafile=VEGAFILE,filterfolder=SPLAT_PATH+FILTER_FOLDER,custom
             return numpy.nan, numpy.nan
         filt = f0
         rsr = FILTERS[filt]['rsr']
+
+# make sure vega file is there
+    if os.path.exists(vegafile)==False:
+        tmp = os.path.exists(filterfolder,vegafile)
+        if os.path.exists(tmp)==False:
+            raise ValueError('Cannot find vega file {} locally or in {}'.format(vegafile,FILTER_FOLDER))
+        vegafile=tmp
 
 # Read in filter
     if isinstance(custom,bool) and isinstance(notch,bool):
@@ -376,9 +390,8 @@ def vegaToAB(filt,vegafile=VEGAFILE,filterfolder=SPLAT_PATH+FILTER_FOLDER,custom
     else:
         fwave,ftrans = custom[0],custom[1]
 
-
 # Read in Vega spectrum
-    vwave,vflux = numpy.genfromtxt(os.path.normpath(filterfolder+vegafile), comments='#', unpack=True, \
+    vwave,vflux = numpy.genfromtxt(os.path.normpath(vegafile), comments='#', unpack=True, \
         missing_values = ('NaN','nan'), filling_values = (numpy.nan))
     vwave = vwave[~numpy.isnan(vflux)]*u.micron
     vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))
@@ -446,78 +459,6 @@ def filterInfo(fname='',verbose=True,**kwargs):
     # if len(kys) == 1: return output[kys[0]]
     # else: return output
 
-
-# RETIRED
-# def filterProperties(filt,**kwargs):
-#     '''
-#     :Purpose: Returns a dictionary containing key parameters for a particular filter.
-
-#     :param filter: name of filter, must be one of the specifed filters given by splat.FILTERS.keys()
-#     :type filter: required
-#     :param verbose: print out information about filter to screen
-#     :type verbose: optional, default = True
-
-#     :Example:
-#     >>> import splat
-#     >>> data = splat.filterProperties('2MASS J')
-#     Filter 2MASS J: 2MASS J-band
-#     Zeropoint = 1594.0 Jy
-#     Pivot point: = 1.252 micron
-#     FWHM = 0.323 micron
-#     Wavelength range = 1.066 to 1.442 micron
-#     >>> data = splat.filterProperties('2MASS X')
-#     Filter 2MASS X not among the available filters:
-#       2MASS H: 2MASS H-band
-#       2MASS J: 2MASS J-band
-#       2MASS KS: 2MASS Ks-band
-#       BESSEL I: Bessel I-band
-#       FOURSTAR H: FOURSTAR H-band
-#       FOURSTAR H LONG: FOURSTAR H long
-#       FOURSTAR H SHORT: FOURSTAR H short
-#       ...
-#     '''
-#     filterfolder = kwargs.get('filterfolder',SPLAT_PATH+FILTER_FOLDER)
-#     if not os.path.exists(filterfolder):
-#         filterfolder = SPLAT_URL+FILTER_FOLDER
-
-# # check that requested filter is in list
-#     filt = checkFilterName(filt)
-#     if filt == False: return None
-
-#     report = {}
-#     report['name'] = filt
-#     report['description'] = FILTERS[filt]['description']
-#     report['zeropoint'] = FILTERS[filt]['zeropoint']
-#     report['method'] = FILTERS[filt]['method']
-#     report['rsr'] = FILTERS[filt]['rsr']
-#     fwave,ftrans = filterProfile(filt,**kwargs)
-#     try:
-#         fwave = fwave.to(u.micron)
-#     except:
-#         fwave = fwave*u.micron
-#     fw = fwave[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
-#     ft = ftrans[numpy.where(ftrans > 0.01*numpy.nanmax(ftrans))]
-#     fw05 = fwave[numpy.where(ftrans > 0.5*numpy.nanmax(ftrans))]
-# #        print(trapz(ft,fw))
-# #        print(trapz(fw*ft,fw))
-#     report['lambda_mean'] = trapz(ft*fw,fw)/trapz(ft,fw)
-#     report['lambda_pivot'] = numpy.sqrt(trapz(fw*ft,fw)/trapz(ft/fw,fw))
-#     report['lambda_central'] = 0.5*(numpy.max(fw)+numpy.min(fw))
-#     report['lambda_fwhm'] = numpy.max(fw05)-numpy.min(fw05)
-#     report['lambda_min'] = numpy.min(fw)
-#     report['lambda_max'] = numpy.max(fw)
-#     report['wave'] = fwave
-#     report['transmission'] = ftrans
-# # report values out
-#     if kwargs.get('verbose',False):
-#         print('\nFilter '+filt+': '+report['description'])
-#         print('Zeropoint = {} Jy'.format(report['zeropoint']))
-#         print('Pivot point: = {:.3f}'.format(report['lambda_pivot']))
-#         print('FWHM = {:.3f}'.format(report['lambda_fwhm']))
-#         print('Wavelength range = {:.3f} to {:.3f}\n'.format(report['lambda_min'],report['lambda_max']))
-#     return report
-
-
 def magToFlux(mag,filt,**kwargs):
     '''
     :Purpose: Converts a magnitude into an energy, and vice versa.
@@ -535,10 +476,10 @@ def magToFlux(mag,filt,**kwargs):
     '''
 
 # keyword parameters
-    filterfolder = kwargs.get('filterfolder',SPLAT_PATH+FILTER_FOLDER)
+    filterfolder = kwargs.get('filterfolder',FILTER_FOLDER)
     if not os.path.exists(filterfolder):
-        filterfolder = SPLAT_URL+FILTER_FOLDER
-    vegafile = kwargs.get('vegafile','vega_kurucz.txt')
+        raise ValueError('Could not find filter folder {}'.format(filterfolder))
+    vegafile = kwargs.get('vegafile',VEGAFILE)
     vega = kwargs.get('vega',True)
     ab = kwargs.get('ab',not vega)
     rsr = kwargs.get('rsr',False)
@@ -591,8 +532,15 @@ def magToFlux(mag,filt,**kwargs):
     if kwargs.get('reverse',False) == False:
         
         if vega == True:
+    # make sure vega file is there
+            if os.path.exists(vegafile)==False:
+                tmp = os.path.exists(filterfolder,vegafile)
+                if os.path.exists(tmp)==False:
+                    raise ValueError('Cannot find vega file {} locally or in {}'.format(vegafile,FILTER_FOLDER))
+                vegafile=tmp
+
     # Read in Vega spectrum
-            vwave,vflux = numpy.genfromtxt(os.path.normpath(filterfolder+vegafile), comments='#', unpack=True, \
+            vwave,vflux = numpy.genfromtxt(os.path.normpath(vegafile), comments='#', unpack=True, \
                 missing_values = ('NaN','nan'), filling_values = (numpy.nan))
             vwave = vwave[~numpy.isnan(vflux)]*u.micron
             vflux = vflux[~numpy.isnan(vflux)]*(u.erg/(u.cm**2 * u.s * u.micron))
@@ -770,7 +718,7 @@ def visualizeFilter(fprof,spectrum=None,file='',color='k',linestyle='-',fill=Fal
 
 # add a comparison spectrum
     #spectrum = kwargs.get('comparison',spectrum)
-    if isinstance(spectrum,splat.core.Spectrum) == True:
+    if isinstance(spectrum,splat.Spectrum) == True:
         # print(xra)
 #        spectrum.normalize(xra)
         spectrum.scale(numpy.nanmax(ftrans)*kwargs.get('spectrum_scale',0.8))

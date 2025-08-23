@@ -123,7 +123,7 @@ def loadEvolModel(model='baraffe2003',returnpandas=False,verbose=True,*args,**kw
     if kwargs.get('verbose',False): print('You are using evolutionary models from {}'.format(EVOLUTIONARY_MODELS[model]['citation']))
 
 # read in full models
-    dp = pandas.read_csv(os.path.normpath('{}/{}/{}'.format(SPLAT_PATH,EVOLUTIONARY_MODEL_FOLDER,EVOLUTIONARY_MODELS[model]['file'])),comment='#',sep=',',header=0)
+    dp = pandas.read_csv(os.path.join(EVOLUTIONARY_MODEL_FOLDER,EVOLUTIONARY_MODELS[model]['file']),comment='#',sep=',',header=0)
 
 # restrict models if desired
     dpsel = copy.deepcopy(dp)
@@ -178,7 +178,7 @@ def modelInfo(mdl):
         print('Download the original models at {}'.format(EVOLUTIONARY_MODELS[model]['url']))
     print('')
 # read in full models
-    dp = pandas.read_csv(os.path.normpath('{}/{}/{}'.format(SPLAT_PATH,EVOLUTIONARY_MODEL_FOLDER,EVOLUTIONARY_MODELS[model]['file'])),comment='#',sep=',',header=0)
+    dp = pandas.read_csv(os.path.join(EVOLUTIONARY_MODEL_FOLDER,EVOLUTIONARY_MODELS[model]['file']),comment='#',sep=',',header=0)
     for k in list(dp.keys()):
         if k in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
             print('Range in {}: {:.3f} to {:.3f}'.format(k,numpy.nanmin(dp[k])*EVOLUTIONARY_MODEL_PARAMETERS[k]['unit'],numpy.nanmax(dp[k])*EVOLUTIONARY_MODEL_PARAMETERS[k]['unit']))
@@ -272,7 +272,7 @@ def loadEvolModel_old(*model,**kwargs):
     if kwargs.get('verbose',False): print('You are using evolutionary models from {}'.format(EVOLUTIONARY_MODELS[model]['name']))
 
 # read in models
-    files = glob.glob(os.path.normpath(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+model+'/{}*.txt'.format(model)))
+    files = glob.glob(os.path.join(EVOLUTIONARY_MODEL_FOLDER,model,'{}*.txt'.format(model)))
     if model == 'saumon08':
 
 # set metallicity
@@ -309,7 +309,7 @@ def loadEvolModel_old(*model,**kwargs):
         else:
             raise ValueError('\nCould not recognize cloud choice for Saumon model: must be cloud-free, hybrid or f2, not {}\n'.format(cloud))
 
-        files = glob.glob(os.path.normpath(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+model+'/{}_{}_{}*.txt'.format(model,Z,C)))
+        files = glob.glob(os.path.join(EVOLUTIONARY_MODEL_FOLDER,model,'/{}_{}_{}*.txt'.format(model,Z,C)))
 
 # read in parameters
     ages = [(f.split('_')[-1]).replace('.txt','') for f in files]
@@ -319,12 +319,6 @@ def loadEvolModel_old(*model,**kwargs):
     for ep in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
         mparam[ep] = []
 
-#    for i,age in enumerate(ages):
-#        mfile = prefix+'{:05d}.txt'.format(int(float(age)*1000.))
-#        try:
-#            dp=pandas.read_csv(SPLAT_PATH+EVOLUTIONARY_MODEL_FOLDER+mfile,comment='#',sep=',',header=0)
-#            for ep in list(EVOLUTIONARY_MODEL_PARAMETERS.keys()):
-#                mparam[ep].append(dp[ep].values)
 
     for f in files:
         try:

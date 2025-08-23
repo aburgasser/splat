@@ -15,6 +15,7 @@ from numpy.testing import assert_allclose
 import os
 # splat functions and constants
 import splat
+from splat.initialize import *
 #import splat as splat
 
 # things to test
@@ -26,30 +27,30 @@ import splat
 #####################
 
 
-def test_online_access():
-# checkFile
-# checkAccess
-# checkLocal
-# checkOnline
-# checkOnlineFile
-    # assert splat.checkOnline()
-    # assert splat.checkOnlineFile()
-    # assert len(splat.checkOnlineFile('/Reference/SpectralModels/'))>0
-    # assert len(splat.checkOnlineFile('/Reference/Spectra/11221_10235.fits'))>0
-    # assert len(splat.checkOnlineFile('/Reference/Spectra/11220_10166.fits'))>0
-    assert len(splat.checkLocal(splat.FILTER_FOLDER))>0
-    assert len(splat.checkLocal(splat.SPECTRAL_MODEL_FOLDER))>0
-    assert len(splat.checkLocal(splat.EVOLUTIONARY_MODEL_FOLDER))>0
-    assert len(splat.checkLocal(splat.TELLURIC_MODEL_FOLDER))>0
-    assert len(splat.checkLocal(splat.CITATION_RESOURCES_FOLDER))>0
-    assert len(splat.checkLocal(splat.DATA_FOLDER))>0
-    assert len(splat.checkLocal(os.path.join(splat.DATA_FOLDER,splat.DB_SPECTRA_FILE)))>0
-#    assert len(splat.checkLocal(os.path.join(splat.DATA_FOLDER,'SPEX-PRISM',splat.DB_SOURCES_FILE)))>0
-    assert len(splat.checkLocal(os.path.join(splat.DATA_FOLDER,'11221_10235.fits')))>0
-#    assert len(splat.checkLocal(os.path.join(splat.DATA_FOLDER,'11220_10166.fits')))==0
-    assert splat.checkFile('11221_10235.fits')
-#    assert splat.checkFile('11220_10166.fits')
-#    assert splat.checkAccess()
+# def test_files():
+# # checkFile
+# # checkAccess
+# # checkLocal
+# # checkOnline
+# # checkOnlineFile
+#     # assert splat.checkOnline()
+#     # assert splat.checkOnlineFile()
+#     # assert len(splat.checkOnlineFile('/Reference/SpectralModels/'))>0
+#     # assert len(splat.checkOnlineFile('/Reference/Spectra/11221_10235.fits'))>0
+#     # assert len(splat.checkOnlineFile('/Reference/Spectra/11220_10166.fits'))>0
+#     assert len(splat.checkLocal(FILTER_FOLDER))>0
+#     assert len(splat.checkLocal(splat.SPECTRAL_MODEL_FOLDER))>0
+#     assert len(splat.checkLocal(splat.EVOLUTIONARY_MODEL_FOLDER))>0
+#     assert len(splat.checkLocal(splat.TELLURIC_MODEL_FOLDER))>0
+#     assert len(splat.checkLocal(splat.CITATION_RESOURCES_FOLDER))>0
+#     assert len(splat.checkLocal(splat.DATA_FOLDERS))>0
+#     assert len(splat.checkLocal(os.path.join(splat.DATA_FOLDERS,splat.DB_SPECTRA_FILE)))>0
+# #    assert len(splat.checkLocal(os.path.join(splat.DATA_FOLDER,'SPEX-PRISM',splat.DB_SOURCES_FILE)))>0
+#     assert len(splat.checkLocal(os.path.join(splat.DATA_FOLDER,'11221_10235.fits')))>0
+# #    assert len(splat.checkLocal(os.path.join(splat.DATA_FOLDER,'11220_10166.fits')))==0
+#     assert splat.checkFile('11221_10235.fits')
+# #    assert splat.checkFile('11220_10166.fits')
+# #    assert splat.checkAccess()
 
 def test_isnumber():
 # checkKeys

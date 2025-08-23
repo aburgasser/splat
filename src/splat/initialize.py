@@ -10,19 +10,23 @@ import os
 import sys
 import numpy
 from astropy import units as u
+import pandas
 
 
-# program constants
-VERSION = '2025.07.27'
+# reference parameters
+VERSION = '2025.08.23'
 __version__ = VERSION
 SPLAT_URL = 'http://splat.physics.ucsd.edu/splat/'
-DOCUMENTATION_URL = 'http://pono.ucsd.edu/~adam/splat/'
+DOCUMENTATION_URL = 'http://splat.physics.ucsd.edu/splat/'
 GITHUB_URL = 'https://github.com/aburgasser/splat/'
+ZENODO_URL = 'https://github.com/aburgasser/splat/'
+DOI = '10.48550/arXiv.1707.00062'
 BIBCODE = '2017ASInC..14....7B'
 CITATION = 'Burgasser et al. (2017, Astro. Soc. India Conf. Series 14, p. 7)'
 EMAIL = 'aburgasser@gmail.com'
 TMPFILENAME = 'splattmpfile'
 MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+ERROR_CHECKING = False
 
 # SPLAT authors
 AUTHORS = [
@@ -55,45 +59,35 @@ AUTHORS = [
     'Joman Wong',
 ]
 
-# Directory variables
-DB_FOLDER = 'db/'
-DOCS_FOLDER = 'docs/'
-TUTORIAL_FOLDER = 'tutorials/'
-DOCS_INDEX_HTML = 'docs/_build/html/index.html'
-WEB_HTML_BASE = 'docs/_templates/'
+# folders
+CODE_PATH = os.path.dirname(os.path.abspath(__file__))
 HOME_FOLDER = os.path.expanduser('~')
-FILTER_FOLDER = 'resources/Filters/'
-SPECTRAL_MODEL_FOLDER = 'resources/SpectralModels/'
-EVOLUTIONARY_MODEL_FOLDER = 'resources/EvolutionaryModels/'
-TELLURIC_MODEL_FOLDER = 'resources/Telluric/'
-CITATION_RESOURCES_FOLDER = 'resources/Citations/'
-EXTERNAL_DATA_FILE = '.splat_data'
-EXTERNAL_SPECTRAL_MODELS_FILE = '.splat_spectral_models'
-EXTERNAL_EVOLUTIONARY_MODELS_FILE = '.splat_evolutionary_models'
-ACCESS_FILE = '.splat_access'
+RESOURCES_FOLDER = os.path.join(CODE_PATH,'resources/')
+DB_FOLDER = os.path.join(CODE_PATH,'db/')
+#DOCS_FOLDER = os.path.join(CODE_PATH,'../../docs/')
+FILTER_FOLDER = os.path.join(RESOURCES_FOLDER,'Filters/')
+SPECTRAL_DATA_FOLDER = os.path.join(RESOURCES_FOLDER,'Spectra/Public/SPEX-PRISM')
+SPECTRAL_MODEL_FOLDER = os.path.join(RESOURCES_FOLDER,'SpectralModels/')
+EVOLUTIONARY_MODEL_FOLDER = os.path.join(RESOURCES_FOLDER,'EvolutionaryModels/')
+TELLURIC_MODEL_FOLDER = os.path.join(RESOURCES_FOLDER,'Telluric/')
+CITATION_RESOURCES_FOLDER = os.path.join(RESOURCES_FOLDER,'Citations/')
+EXTERNAL_DATA_FILE = os.path.join(HOME_FOLDER,'.splat_data')
+EXTERNAL_SPECTRAL_MODELS_FILE = os.path.join(HOME_FOLDER,'.splat_spectral_models')
+EXTERNAL_EVOLUTIONARY_MODELS_FILE = os.path.join(HOME_FOLDER,'.splat_evolutionary_models')
+#ACCESS_FILE = '.splat_access'
 
-#set the SPLAT PATH, either from set environment variable or from sys.path
-SPLAT_PATH = os.path.dirname(os.path.abspath(__file__))+'/../'
-# SPLAT_PATH = './'
-# if os.environ.get('SPLAT_PATH') != None:
-#     SPLAT_PATH = os.environ['SPLAT_PATH']
-# # get from PYTHONPATH
-# if os.environ.get('PYTHONPATH') != None and SPLAT_PATH == './':
-#     path = os.environ['PYTHONPATH']
-#     for i in path.split(':'):
-#         if 'splat' in i:
-#             SPLAT_PATH = i
-# # get from system path
-# if SPLAT_PATH == './':
-#     checkpath = ['splat' in r for r in sys.path]
-#     if max(checkpath):
-#         SPLAT_PATH = sys.path[checkpath.index(max(checkpath))]
+# set up external files if not present
+for x in [EXTERNAL_DATA_FILE,EXTERNAL_SPECTRAL_MODELS_FILE,EXTERNAL_EVOLUTIONARY_MODELS_FILE]:
+    if os.path.exists(x)==False:
+        try:
+            with open(x, 'w') as fp:
+                pass
+        except: print('Warning: cannot create backup folder {}'.format(x))
 
 #set user SPLAT model path from environmental variable
-SPLAT_USER_MODELS = './'
-if os.environ.get('SPLAT_MODELS') != None:
-    SPLAT_USER_MODELS = os.environ['SPLAT_MODELS']
-
+# SPLAT_USER_MODELS = './'
+# if os.environ.get('SPLAT_MODELS') != None:
+#     SPLAT_USER_MODELS = os.environ['SPLAT_MODELS']
 
 # Unit standards
 DEFAULT_WAVE_UNIT = u.micron
@@ -103,9 +97,13 @@ DEFAULT_CROSSSECTION_UNIT = u.cm**2
 DEFAULT_INSTRUMENT = 'SPEX-PRISM'
 
 # OLD SPECTRAL LIBRARY PARAMETERS
-DATA_FOLDER = 'resources/Spectra/SPEX-PRISM/'
-DB_SPECTRA_FILE = 'spectral_data.txt'
-DB_SOURCES_FILE = 'source_data.txt'
+#DATA_FOLDER = os.path.join(SPECTRAL_DATA_FOLDER,DEFAULT_INSTRUMENT,'')
+#DEFAULT_DATA_FOLDER = os.path.join(SPECTRAL_DATA_FOLDER,/')
+DB_SPECTRA_FILE = os.path.join(DB_FOLDER,'spectral_data.txt')
+DB_SOURCES_FILE = os.path.join(DB_FOLDER,'source_data.txt')
+# read these in
+DB_SOURCES = pandas.read_csv(os.path.normpath(DB_SOURCES_FILE),delimiter='\t')
+DB_SPECTRA = pandas.read_csv(os.path.normpath(DB_SPECTRA_FILE),delimiter='\t')
 
 # NEW SPECTRAL LIBRARY PARAMETERS
 DB_SPECTRA_INPUT_FILE = 'spectra.csv'
@@ -136,9 +134,6 @@ DB_SOURCES_DEFAULT_PARAMETERS = {
     'DEC': {'altname': ['DECLINATION'], 'type': float, 'required': False},
 }
 DB_SOURCES_INPUT_FILE_KEY = 'NAME'
-
-PUBLIC_DATA_FOLDER = SPLAT_PATH+'/resources/Spectra/Public/'
-
 
 # Library constants
 # #LIBRARY_DATA_FOLDERS = [LIBRARY_PUBLIC_FOLDER]
@@ -279,244 +274,252 @@ STDS_INTG_SPEX_KEYS = { \
     'L6.0beta': 10678,  # 0103+1935
     }
 
+# holding arrays
+SPECTRA_READIN = {}
+STDS_DWARF_SPEX = {}
+STDS_SD_SPEX = {}
+STDS_DSD_SPEX = {}
+STDS_ESD_SPEX = {}
+STDS_VLG_SPEX = {}
+STDS_INTG_SPEX = {}
 
 # filters
 # this information is from the SVO filter profile service: http://svo2.cab.inta-csic.es/svo/theory/fps/
 FILTERS = { \
-    '2MASS_J': {'file': 'j_2mass.txt', 'description': '2MASS J-band', 'zeropoint': 1594.0, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    '2MASS_H': {'file': 'h_2mass.txt', 'description': '2MASS H-band', 'zeropoint': 1024.0, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    '2MASS_KS': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega', 'rsr': True, 'altname': ['2MASS_K']}, \
-#    '2MASS_K': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
-#    '2MASS_Ks': {'file': 'ks_2mass.txt', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
-    'BESSEL_U': {'file': 'Bessel_U.txt', 'description': 'Bessel U-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['U']}, \
-    'BESSEL_B': {'file': 'Bessel_B.txt', 'description': 'Bessel B-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['B']}, \
-    'BESSEL_V': {'file': 'Bessel_V.txt', 'description': 'Bessel V-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['V']}, \
-    'BESSEL_R': {'file': 'Bessel_R.txt', 'description': 'Bessel R-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['R']}, \
-    'BESSEL_I': {'file': 'Bessel_I.txt', 'description': 'Bessel I-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['I']}, \
-    'COUSINS_I': {'file': 'i_cousins.txt', 'description': 'Cousins I-band', 'zeropoint': 2405.3, 'method': 'vega', 'rsr': False, 'altname': ['IC']}, \
-    'DECAM_U': {'file': 'DECam_u.txt', 'description': 'DECam u-band', 'zeropoint': 1568.5, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_U','DEC_U']}, \
-    'DECAM_G': {'file': 'DECam_g.txt', 'description': 'DECam g-band', 'zeropoint': 3909.11, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_G','DEC_G']}, \
-    'DECAM_R': {'file': 'DECam_r.txt', 'description': 'DECam r-band', 'zeropoint': 3151.44, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_R','DEC_R']}, \
-    'DECAM_I': {'file': 'DECam_i.txt', 'description': 'DECam i-band', 'zeropoint': 2584.6, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_I','DEC_I']}, \
-    'DECAM_Z': {'file': 'DECam_z.txt', 'description': 'DECam z-band', 'zeropoint': 2273.09, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_Z','DEC_Z']}, \
-    'DECAM_Y': {'file': 'DECam_y.txt', 'description': 'DECam y-band', 'zeropoint': 2205.95, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_Y','DEC_Y']}, \
-    'DECAM_VR': {'file': 'DECam_vr.txt', 'description': 'DECam z-band', 'zeropoint': 4000., 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_VR','DEC_VR']}, \
-    'DES_U': {'file': 'DES_u.txt', 'description': 'DES u-band (filter + atm)', 'zeropoint': 1568.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'DES_G': {'file': 'DES_g.txt', 'description': 'DES g-band (filter + atm)', 'zeropoint': 3909.11, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'DES_R': {'file': 'DES_r.txt', 'description': 'DES r-band (filter + atm)', 'zeropoint': 3151.44, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'DES_I': {'file': 'DES_i.txt', 'description': 'DES i-band (filter + atm)', 'zeropoint': 2584.6, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'DES_Z': {'file': 'DES_z.txt', 'description': 'DES z-band (filter + atm)', 'zeropoint': 2273.09, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'DES_Y': {'file': 'DES_y.txt', 'description': 'DES y-band (filter + atm)', 'zeropoint': 2205.95, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'EUCLID_VIS': {'file': 'Euclid_VIS.txt', 'description': 'Euclid VIS-band', 'zeropoint': 2666.99, 'method': 'ab', 'rsr': False, 'altname': ['EVIS','E_VIS','EUC_VIS']}, \
-    'EUCLID_Y': {'file': 'Euclid_Y.txt', 'description': 'Euclid Y-band', 'zeropoint': 1898.78, 'method': 'ab', 'rsr': False, 'altname': ['EY','E_Y','EUC_Y']}, \
-    'EUCLID_J': {'file': 'Euclid_J.txt', 'description': 'Euclid H-band', 'zeropoint': 1353.80, 'method': 'ab', 'rsr': False, 'altname': ['EJ','E_J','EUC_J']}, \
-    'EUCLID_H': {'file': 'Euclid_H.txt', 'description': 'Euclid K-band', 'zeropoint': 921.81, 'method': 'ab', 'rsr': False, 'altname': ['EH','E_H','EUC_H']}, \
-    'FOURSTAR_J': {'file': 'fourstar-j.txt', 'description': 'FOURSTAR J-band', 'zeropoint': 1581.2, 'method': 'vega', 'rsr': False, 'altname': ['4star j']}, \
-    'FOURSTAR_J1': {'file': 'fourstar-j1.txt', 'description': 'FOURSTAR J1-band', 'zeropoint': 1978.7, 'method': 'vega', 'rsr': False, 'altname': ['4star j1']}, \
-    'FOURSTAR_J2': {'file': 'fourstar-j2.txt', 'description': 'FOURSTAR J2-band', 'zeropoint': 1774.5, 'method': 'vega', 'rsr': False, 'altname': ['4star j2']}, \
-    'FOURSTAR_J3': {'file': 'fourstar-j3.txt', 'description': 'FOURSTAR J3-band', 'zeropoint': 1488.8, 'method': 'vega', 'rsr': False, 'altname': ['4star j3']}, \
-    'FOURSTAR_H': {'file': 'fourstar-h.txt', 'description': 'FOURSTAR H-band', 'zeropoint': 1054.9, 'method': 'vega', 'rsr': False, 'altname': ['4star h']}, \
-    'FOURSTAR_H_SHORT': {'file': 'fourstar-hshort.txt', 'description': 'FOURSTAR H short', 'zeropoint': 1119.1, 'method': 'vega', 'rsr': False, 'altname': ['4star h short','4star h-short','4star hs','fourstar hs','fourstar h1']}, \
-    'FOURSTAR_H_LONG': {'file': 'fourstar-hlong.txt', 'description': 'FOURSTAR H long', 'zeropoint': 980.7, 'method': 'vega', 'rsr': False, 'altname': ['4star h long','4star h-long','4star hl','fourstar hl','fourstar h2']}, \
-    'FOURSTAR_KS': {'file': 'fourstar-ks.txt', 'description': 'FOURSTAR Ks-band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False, 'altname': ['4star k','4star ks','fourstar k']}, \
-    'FOURSTAR_1.18': {'file': 'fourstar-118.txt', 'description': 'FOURSTAR 1.18 micron narrow band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False, 'altname': ['4star 1.18','4star 118','fourstar 118']}, \
-    'FOURSTAR_2.09': {'file': 'fourstar-209.txt', 'description': 'FOURSTAR 2.09 micron narrow band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False, 'altname': ['4star 2.09','4star 209','fourstar 209']}, \
-    'GAIA_G': {'file': 'GAIA_G.txt', 'description': 'GAIA G-band', 'zeropoint': 3534.7, 'method': 'vega', 'rsr': False, 'altname': ['gaia']}, \
-    'GAIA_B': {'file': 'GAIA_Bp.txt', 'description': 'GAIA Bp-band', 'zeropoint': 3296.2, 'method': 'vega', 'rsr': False, 'altname': ['gaia-bp']}, \
-    'GAIA_R': {'file': 'GAIA_Rp.txt', 'description': 'GAIA Rp-band', 'zeropoint': 2620.3, 'method': 'vega', 'rsr': False, 'altname': ['gaia-rp']}, \
-    'HAWK_Y': {'file': 'hawk-y.txt', 'description': 'HAWK Y-band', 'zeropoint': 2092.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'HAWK_J': {'file': 'hawk-j.txt', 'description': 'HAWK J-band', 'zeropoint': 1543.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'HAWK_H': {'file': 'hawk-h.txt', 'description': 'HAWK H-band', 'zeropoint': 1053.6, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'HAWK_H2': {'file': 'hawk-h2.txt', 'description': 'HAWK H2-band', 'zeropoint': 688.8, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'HAWK_CH4': {'file': 'hawk-ch4.txt', 'description': 'HAWK CH4-band', 'zeropoint': 1093.4, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'HAWK_KS': {'file': 'hawk-ks.txt', 'description': 'HAWK Ks-band', 'zeropoint': 675.3, 'method': 'vega', 'rsr': False, 'altname': ['hawk k']}, \
-    'HAWK_BRG': {'file': 'hawk-brg.txt', 'description': 'HAWK Brackett Gamma', 'zeropoint': 638.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'HAWK_NB1060': {'file': 'hawk-nb1060.txt', 'description': 'HAWK Narrow Band 1060', 'zeropoint': 2003.27, 'method': 'vega', 'rsr': False, 'altname': ['hawk 1060']}, \
-    'HAWK_NB1190': {'file': 'hawk-nb1190.txt', 'description': 'HAWK Narrow Band 1190', 'zeropoint': 1697.50, 'method': 'vega', 'rsr': False, 'altname': ['hawk 1190']}, \
-    'HAWK_NB2090': {'file': 'hawk-nb2090.txt', 'description': 'HAWK Narrow Band 2090', 'zeropoint': 706.68, 'method': 'vega', 'rsr': False, 'altname': ['hawk 2090']}, \
-    'ACS_F435W': {'file': 'HST-ACS_F435W.txt', 'description': 'HST ACS WFC F435W', 'zeropoint': 4036.38, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'ACS_F606W': {'file': 'HST-ACS_F606W.txt', 'description': 'HST ACS WFC F606W', 'zeropoint': 3351.09, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'ACS_F814W': {'file': 'HST-ACS_F814W.txt', 'description': 'HST ACS WFC F814W', 'zeropoint': 2440.74, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'IRAC_CH1': {'file': 'irac1.txt', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9, 'method': 'vega', 'rsr': True, 'altname': ['irac 1','irac 3.6','[3.6]']}, \
-    'IRAC_CH2': {'file': 'irac2.txt', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7, 'method': 'vega', 'rsr': True, 'altname': ['irac 2','irac 4.5','[4.5]']}, \
-    'IRAC_CH3': {'file': 'irac3.txt', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0, 'method': 'vega', 'rsr': True, 'altname': ['irac 3','irac 5.8','[5.8]']}, \
-    'IRAC_CH4': {'file': 'irac4.txt', 'description': 'IRAC Channel 4 (8.0 micron)', 'zeropoint': 64.13, 'method': 'vega', 'rsr': True, 'altname': ['irac 4','irac 8.0','[8.0]']}, \
-    'KEPLER': {'file': 'Kepler.txt', 'description': 'Kepler bandpass', 'zeropoint': 3033.1, 'method': 'vega', 'rsr': False, 'altname': ['kep','kepler k','kp']}, \
-    'LSST_U': {'file': 'LSST_u.txt', 'description': 'LSST u', 'zeropoint': 2038.22, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'LSST_G': {'file': 'LSST_g.txt', 'description': 'LSST g', 'zeropoint': 3990.48, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'LSST_R': {'file': 'LSST_r.txt', 'description': 'LSST r', 'zeropoint': 3163.86, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'LSST_I': {'file': 'LSST_i.txt', 'description': 'LSST i', 'zeropoint': 2576.07, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'LSST_Z': {'file': 'LSST_z.txt', 'description': 'LSST z', 'zeropoint': 2261.40, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'LSST_Y': {'file': 'LSST_y.txt', 'description': 'LSST y', 'zeropoint': 2165.23, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F0560W': {'file': 'JWST-MIRI_F560W.txt', 'description': 'JWST MIRI F0560W', 'zeropoint': 115.29, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F0770W': {'file': 'JWST-MIRI_F770W.txt', 'description': 'JWST MIRI F0770W', 'zeropoint': 65.08, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F1000W': {'file': 'JWST-MIRI_F1000W.txt', 'description': 'JWST MIRI F1000W', 'zeropoint': 38.51, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F1065C': {'file': 'JWST-MIRI_F1065C.txt', 'description': 'JWST MIRI F1065C', 'zeropoint': 33.89, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F1130W': {'file': 'JWST-MIRI_F1130W.txt', 'description': 'JWST MIRI F1130W', 'zeropoint': 29.63, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F1140C': {'file': 'JWST-MIRI_F1140C.txt', 'description': 'JWST MIRI F1140C', 'zeropoint': 29.66, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F1280W': {'file': 'JWST-MIRI_F1280W.txt', 'description': 'JWST MIRI F1280W', 'zeropoint': 23.52, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F1500W': {'file': 'JWST-MIRI_F1500W.txt', 'description': 'JWST MIRI F1500W', 'zeropoint': 17.12, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F1550C': {'file': 'JWST-MIRI_F1550C.txt', 'description': 'JWST MIRI F1550C', 'zeropoint': 15.93, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F1800W': {'file': 'JWST-MIRI_F1800W.txt', 'description': 'JWST MIRI F1800W', 'zeropoint': 11.99, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F2100W': {'file': 'JWST-MIRI_F2100W.txt', 'description': 'JWST MIRI F2100W', 'zeropoint': 9.06, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F2300C': {'file': 'JWST-MIRI_F2300C.txt', 'description': 'JWST MIRI F2300C', 'zeropoint': 7.62, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MIRI_F2550W': {'file': 'JWST-MIRI_F2550W.txt', 'description': 'JWST MIRI F2550W', 'zeropoint': 6.07, 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'MKO_J_ATM': {'file': 'j_atm_mko.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'MKO_H_ATM': {'file': 'h_atm_mko.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'MKO_K_ATM': {'file': 'k_atm_mko.txt', 'description': 'MKO K-band + atmosphere', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    '2MASS_J': {'file': 'j_2mass.txt.gz', 'description': '2MASS J-band', 'zeropoint': 1594.0, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    '2MASS_H': {'file': 'h_2mass.txt.gz', 'description': '2MASS H-band', 'zeropoint': 1024.0, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    '2MASS_KS': {'file': 'ks_2mass.txt.gz', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega', 'rsr': True, 'altname': ['2MASS_K']}, \
+#    '2MASS_K': {'file': 'ks_2mass.txt.gz', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
+#    '2MASS_Ks': {'file': 'ks_2mass.txt.gz', 'description': '2MASS Ks-band', 'zeropoint': 666.7, 'method': 'vega'}, \
+    'BESSEL_U': {'file': 'Bessel_U.txt.gz', 'description': 'Bessel U-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['U']}, \
+    'BESSEL_B': {'file': 'Bessel_B.txt.gz', 'description': 'Bessel B-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['B']}, \
+    'BESSEL_V': {'file': 'Bessel_V.txt.gz', 'description': 'Bessel V-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['V']}, \
+    'BESSEL_R': {'file': 'Bessel_R.txt.gz', 'description': 'Bessel R-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['R']}, \
+    'BESSEL_I': {'file': 'Bessel_I.txt.gz', 'description': 'Bessel I-band', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['I']}, \
+    'COUSINS_I': {'file': 'i_cousins.txt.gz', 'description': 'Cousins I-band', 'zeropoint': 2405.3, 'method': 'vega', 'rsr': False, 'altname': ['IC']}, \
+    'DECAM_U': {'file': 'DECam_u.txt.gz', 'description': 'DECam u-band', 'zeropoint': 1568.5, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_U','DEC_U']}, \
+    'DECAM_G': {'file': 'DECam_g.txt.gz', 'description': 'DECam g-band', 'zeropoint': 3909.11, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_G','DEC_G']}, \
+    'DECAM_R': {'file': 'DECam_r.txt.gz', 'description': 'DECam r-band', 'zeropoint': 3151.44, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_R','DEC_R']}, \
+    'DECAM_I': {'file': 'DECam_i.txt.gz', 'description': 'DECam i-band', 'zeropoint': 2584.6, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_I','DEC_I']}, \
+    'DECAM_Z': {'file': 'DECam_z.txt.gz', 'description': 'DECam z-band', 'zeropoint': 2273.09, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_Z','DEC_Z']}, \
+    'DECAM_Y': {'file': 'DECam_y.txt.gz', 'description': 'DECam y-band', 'zeropoint': 2205.95, 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_Y','DEC_Y']}, \
+    'DECAM_VR': {'file': 'DECam_vr.txt.gz', 'description': 'DECam z-band', 'zeropoint': 4000., 'method': 'vega', 'rsr': False, 'altname': ['DECCAM_VR','DEC_VR']}, \
+    'DES_U': {'file': 'DES_u.txt.gz', 'description': 'DES u-band (filter + atm)', 'zeropoint': 1568.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'DES_G': {'file': 'DES_g.txt.gz', 'description': 'DES g-band (filter + atm)', 'zeropoint': 3909.11, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'DES_R': {'file': 'DES_r.txt.gz', 'description': 'DES r-band (filter + atm)', 'zeropoint': 3151.44, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'DES_I': {'file': 'DES_i.txt.gz', 'description': 'DES i-band (filter + atm)', 'zeropoint': 2584.6, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'DES_Z': {'file': 'DES_z.txt.gz', 'description': 'DES z-band (filter + atm)', 'zeropoint': 2273.09, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'DES_Y': {'file': 'DES_y.txt.gz', 'description': 'DES y-band (filter + atm)', 'zeropoint': 2205.95, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'EUCLID_VIS': {'file': 'Euclid_VIS.txt.gz', 'description': 'Euclid VIS-band', 'zeropoint': 2666.99, 'method': 'ab', 'rsr': False, 'altname': ['EVIS','E_VIS','EUC_VIS']}, \
+    'EUCLID_Y': {'file': 'Euclid_Y.txt.gz', 'description': 'Euclid Y-band', 'zeropoint': 1898.78, 'method': 'ab', 'rsr': False, 'altname': ['EY','E_Y','EUC_Y']}, \
+    'EUCLID_J': {'file': 'Euclid_J.txt.gz', 'description': 'Euclid H-band', 'zeropoint': 1353.80, 'method': 'ab', 'rsr': False, 'altname': ['EJ','E_J','EUC_J']}, \
+    'EUCLID_H': {'file': 'Euclid_H.txt.gz', 'description': 'Euclid K-band', 'zeropoint': 921.81, 'method': 'ab', 'rsr': False, 'altname': ['EH','E_H','EUC_H']}, \
+    'FOURSTAR_J': {'file': 'fourstar-j.txt.gz', 'description': 'FOURSTAR J-band', 'zeropoint': 1581.2, 'method': 'vega', 'rsr': False, 'altname': ['4star j']}, \
+    'FOURSTAR_J1': {'file': 'fourstar-j1.txt.gz', 'description': 'FOURSTAR J1-band', 'zeropoint': 1978.7, 'method': 'vega', 'rsr': False, 'altname': ['4star j1']}, \
+    'FOURSTAR_J2': {'file': 'fourstar-j2.txt.gz', 'description': 'FOURSTAR J2-band', 'zeropoint': 1774.5, 'method': 'vega', 'rsr': False, 'altname': ['4star j2']}, \
+    'FOURSTAR_J3': {'file': 'fourstar-j3.txt.gz', 'description': 'FOURSTAR J3-band', 'zeropoint': 1488.8, 'method': 'vega', 'rsr': False, 'altname': ['4star j3']}, \
+    'FOURSTAR_H': {'file': 'fourstar-h.txt.gz', 'description': 'FOURSTAR H-band', 'zeropoint': 1054.9, 'method': 'vega', 'rsr': False, 'altname': ['4star h']}, \
+    'FOURSTAR_H_SHORT': {'file': 'fourstar-hshort.txt.gz', 'description': 'FOURSTAR H short', 'zeropoint': 1119.1, 'method': 'vega', 'rsr': False, 'altname': ['4star h short','4star h-short','4star hs','fourstar hs','fourstar h1']}, \
+    'FOURSTAR_H_LONG': {'file': 'fourstar-hlong.txt.gz', 'description': 'FOURSTAR H long', 'zeropoint': 980.7, 'method': 'vega', 'rsr': False, 'altname': ['4star h long','4star h-long','4star hl','fourstar hl','fourstar h2']}, \
+    'FOURSTAR_KS': {'file': 'fourstar-ks.txt.gz', 'description': 'FOURSTAR Ks-band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False, 'altname': ['4star k','4star ks','fourstar k']}, \
+    'FOURSTAR_1.18': {'file': 'fourstar-118.txt.gz', 'description': 'FOURSTAR 1.18 micron narrow band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False, 'altname': ['4star 1.18','4star 118','fourstar 118']}, \
+    'FOURSTAR_2.09': {'file': 'fourstar-209.txt.gz', 'description': 'FOURSTAR 2.09 micron narrow band', 'zeropoint': 675.7, 'method': 'vega', 'rsr': False, 'altname': ['4star 2.09','4star 209','fourstar 209']}, \
+    'GAIA_G': {'file': 'GAIA_G.txt.gz', 'description': 'GAIA G-band', 'zeropoint': 3534.7, 'method': 'vega', 'rsr': False, 'altname': ['gaia']}, \
+    'GAIA_B': {'file': 'GAIA_Bp.txt.gz', 'description': 'GAIA Bp-band', 'zeropoint': 3296.2, 'method': 'vega', 'rsr': False, 'altname': ['gaia-bp']}, \
+    'GAIA_R': {'file': 'GAIA_Rp.txt.gz', 'description': 'GAIA Rp-band', 'zeropoint': 2620.3, 'method': 'vega', 'rsr': False, 'altname': ['gaia-rp']}, \
+    'HAWK_Y': {'file': 'hawk-y.txt.gz', 'description': 'HAWK Y-band', 'zeropoint': 2092.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'HAWK_J': {'file': 'hawk-j.txt.gz', 'description': 'HAWK J-band', 'zeropoint': 1543.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'HAWK_H': {'file': 'hawk-h.txt.gz', 'description': 'HAWK H-band', 'zeropoint': 1053.6, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'HAWK_H2': {'file': 'hawk-h2.txt.gz', 'description': 'HAWK H2-band', 'zeropoint': 688.8, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'HAWK_CH4': {'file': 'hawk-ch4.txt.gz', 'description': 'HAWK CH4-band', 'zeropoint': 1093.4, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'HAWK_KS': {'file': 'hawk-ks.txt.gz', 'description': 'HAWK Ks-band', 'zeropoint': 675.3, 'method': 'vega', 'rsr': False, 'altname': ['hawk k']}, \
+    'HAWK_BRG': {'file': 'hawk-brg.txt.gz', 'description': 'HAWK Brackett Gamma', 'zeropoint': 638.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'HAWK_NB1060': {'file': 'hawk-nb1060.txt.gz', 'description': 'HAWK Narrow Band 1060', 'zeropoint': 2003.27, 'method': 'vega', 'rsr': False, 'altname': ['hawk 1060']}, \
+    'HAWK_NB1190': {'file': 'hawk-nb1190.txt.gz', 'description': 'HAWK Narrow Band 1190', 'zeropoint': 1697.50, 'method': 'vega', 'rsr': False, 'altname': ['hawk 1190']}, \
+    'HAWK_NB2090': {'file': 'hawk-nb2090.txt.gz', 'description': 'HAWK Narrow Band 2090', 'zeropoint': 706.68, 'method': 'vega', 'rsr': False, 'altname': ['hawk 2090']}, \
+    'ACS_F435W': {'file': 'HST-ACS_F435W.txt.gz', 'description': 'HST ACS WFC F435W', 'zeropoint': 4036.38, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'ACS_F606W': {'file': 'HST-ACS_F606W.txt.gz', 'description': 'HST ACS WFC F606W', 'zeropoint': 3351.09, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'ACS_F814W': {'file': 'HST-ACS_F814W.txt.gz', 'description': 'HST ACS WFC F814W', 'zeropoint': 2440.74, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'IRAC_CH1': {'file': 'irac1.txt.gz', 'description': 'IRAC Channel 1 (3.6 micron)', 'zeropoint': 280.9, 'method': 'vega', 'rsr': True, 'altname': ['irac 1','irac 3.6','[3.6]']}, \
+    'IRAC_CH2': {'file': 'irac2.txt.gz', 'description': 'IRAC Channel 2 (4.5 micron)', 'zeropoint': 179.7, 'method': 'vega', 'rsr': True, 'altname': ['irac 2','irac 4.5','[4.5]']}, \
+    'IRAC_CH3': {'file': 'irac3.txt.gz', 'description': 'IRAC Channel 3 (5.8 micron)', 'zeropoint': 115.0, 'method': 'vega', 'rsr': True, 'altname': ['irac 3','irac 5.8','[5.8]']}, \
+    'IRAC_CH4': {'file': 'irac4.txt.gz', 'description': 'IRAC Channel 4 (8.0 micron)', 'zeropoint': 64.13, 'method': 'vega', 'rsr': True, 'altname': ['irac 4','irac 8.0','[8.0]']}, \
+    'KEPLER': {'file': 'Kepler.txt.gz', 'description': 'Kepler bandpass', 'zeropoint': 3033.1, 'method': 'vega', 'rsr': False, 'altname': ['kep','kepler k','kp']}, \
+    'LSST_U': {'file': 'LSST_u.txt.gz', 'description': 'LSST u', 'zeropoint': 2038.22, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'LSST_G': {'file': 'LSST_g.txt.gz', 'description': 'LSST g', 'zeropoint': 3990.48, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'LSST_R': {'file': 'LSST_r.txt.gz', 'description': 'LSST r', 'zeropoint': 3163.86, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'LSST_I': {'file': 'LSST_i.txt.gz', 'description': 'LSST i', 'zeropoint': 2576.07, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'LSST_Z': {'file': 'LSST_z.txt.gz', 'description': 'LSST z', 'zeropoint': 2261.40, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'LSST_Y': {'file': 'LSST_y.txt.gz', 'description': 'LSST y', 'zeropoint': 2165.23, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F0560W': {'file': 'JWST-MIRI_F560W.txt.gz', 'description': 'JWST MIRI F0560W', 'zeropoint': 115.29, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F0770W': {'file': 'JWST-MIRI_F770W.txt.gz', 'description': 'JWST MIRI F0770W', 'zeropoint': 65.08, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1000W': {'file': 'JWST-MIRI_F1000W.txt.gz', 'description': 'JWST MIRI F1000W', 'zeropoint': 38.51, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1065C': {'file': 'JWST-MIRI_F1065C.txt.gz', 'description': 'JWST MIRI F1065C', 'zeropoint': 33.89, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1130W': {'file': 'JWST-MIRI_F1130W.txt.gz', 'description': 'JWST MIRI F1130W', 'zeropoint': 29.63, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1140C': {'file': 'JWST-MIRI_F1140C.txt.gz', 'description': 'JWST MIRI F1140C', 'zeropoint': 29.66, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1280W': {'file': 'JWST-MIRI_F1280W.txt.gz', 'description': 'JWST MIRI F1280W', 'zeropoint': 23.52, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1500W': {'file': 'JWST-MIRI_F1500W.txt.gz', 'description': 'JWST MIRI F1500W', 'zeropoint': 17.12, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1550C': {'file': 'JWST-MIRI_F1550C.txt.gz', 'description': 'JWST MIRI F1550C', 'zeropoint': 15.93, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F1800W': {'file': 'JWST-MIRI_F1800W.txt.gz', 'description': 'JWST MIRI F1800W', 'zeropoint': 11.99, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F2100W': {'file': 'JWST-MIRI_F2100W.txt.gz', 'description': 'JWST MIRI F2100W', 'zeropoint': 9.06, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F2300C': {'file': 'JWST-MIRI_F2300C.txt.gz', 'description': 'JWST MIRI F2300C', 'zeropoint': 7.62, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MIRI_F2550W': {'file': 'JWST-MIRI_F2550W.txt.gz', 'description': 'JWST MIRI F2550W', 'zeropoint': 6.07, 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'MKO_J_ATM': {'file': 'j_atm_mko.txt.gz', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'MKO_H_ATM': {'file': 'h_atm_mko.txt.gz', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'MKO_K_ATM': {'file': 'k_atm_mko.txt.gz', 'description': 'MKO K-band + atmosphere', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
 # using WFCAM Y for MKO Y
-    'MKO_Y': {'file': 'wfcam-y.txt', 'description': 'MKO Y-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': ['Y']}, \
-    'MKO_J': {'file': 'mko_j.txt', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'MKO_H': {'file': 'mko_h.txt', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'MKO_K': {'file': 'mko_ks.txt', 'description': 'MKO K-band', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'MKO_KP': {'file': 'mko_kp.txt', 'description': 'MKO Kp-band', 'zeropoint': 693.7, 'method': 'vega', 'rsr': False, 'altname': ['mko k prime']}, \
-    'MKO_LP': {'file': 'mko_lp.txt', 'description': 'MKO Lp-band', 'zeropoint': 248.3, 'method': 'vega', 'rsr': False, 'altname': ['mko l','mko l prime']}, \
-    'MKO_MP': {'file': 'mko_mp.txt', 'description': 'MKO Mp-band', 'zeropoint': 164.7, 'method': 'vega', 'rsr': False, 'altname': ['mko m','mko m prime']}, \
-    'NICMOS_F090M': {'file': 'nic1_f090m.txt', 'description': 'NICMOS F090M', 'zeropoint': 2255.0, 'method': 'vega', 'rsr': False, 'altname': ['F090M']}, \
-    'NICMOS_F095N': {'file': 'nic1_f095n.txt', 'description': 'NICMOS F095N', 'zeropoint': 2044.6, 'method': 'vega', 'rsr': False, 'altname': ['F095N']}, \
-    'NICMOS_F097N': {'file': 'nic1_f097n.txt', 'description': 'NICMOS F097N', 'zeropoint': 2275.4, 'method': 'vega', 'rsr': False, 'altname': ['F097N']}, \
-    'NICMOS_F108N': {'file': 'nic1_f108n.txt', 'description': 'NICMOS F108N', 'zeropoint': 1937.3, 'method': 'vega', 'rsr': False, 'altname': ['F108N']}, \
-    'NICMOS_F110M': {'file': 'nic1_f110m.txt', 'description': 'NICMOS F110M', 'zeropoint': 1871.8, 'method': 'vega', 'rsr': False, 'altname': ['F110M']}, \
-    'NICMOS_F110W': {'file': 'nic1_f110w.txt', 'description': 'NICMOS F110W', 'zeropoint': 1768.5, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
-    'NICMOS_F113N': {'file': 'nic1_f113n.txt', 'description': 'NICMOS F113N', 'zeropoint': 1821.0, 'method': 'vega', 'rsr': False, 'altname': ['F113N']}, \
-    'NICMOS_F140W': {'file': 'nic1_f140w.txt', 'description': 'NICMOS F140W', 'zeropoint': 1277.1, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
-    'NICMOS_F145M': {'file': 'nic1_f145m.txt', 'description': 'NICMOS F145M', 'zeropoint': 1242.0, 'method': 'vega', 'rsr': False, 'altname': ['F145M']}, \
-    'NICMOS_F160W': {'file': 'nic1_f160w.txt', 'description': 'NICMOS F160W', 'zeropoint': 1071.7, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
-    'NICMOS_F164N': {'file': 'nic1_f164n.txt', 'description': 'NICMOS F164N', 'zeropoint': 1003.0, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
-    'NICMOS_F165M': {'file': 'nic1_f165m.txt', 'description': 'NICMOS F165M', 'zeropoint': 1023.6, 'method': 'vega', 'rsr': False, 'altname': ['F165M']}, \
-    'NICMOS_F166N': {'file': 'nic1_f166n.txt', 'description': 'NICMOS F166N', 'zeropoint': 1047.7, 'method': 'vega', 'rsr': False, 'altname': ['F166N']}, \
-    'NICMOS_F170M': {'file': 'nic1_f170m.txt', 'description': 'NICMOS F170M', 'zeropoint': 979.1, 'method': 'vega', 'rsr': False, 'altname': ['F170M']}, \
-    'NICMOS_F187N': {'file': 'nic1_f187n.txt', 'description': 'NICMOS F187N', 'zeropoint': 803.7, 'method': 'vega', 'rsr': False, 'altname': ['F187N']}, \
-    'NICMOS_F190N': {'file': 'nic1_f190n.txt', 'description': 'NICMOS F190N', 'zeropoint': 836.5, 'method': 'vega', 'rsr': False, 'altname': ['F190N']}, \
-    'NIRC2_J': {'file': 'nirc2-j.txt', 'description': 'NIRC2 J-band', 'zeropoint': 1562.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'NIRC2_H': {'file': 'nirc2-h.txt', 'description': 'NIRC2 H-band', 'zeropoint': 1075.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'NIRC2_HCONT': {'file': 'nirc2-hcont.txt', 'description': 'NIRC2 H-continuum band', 'zeropoint': 1044.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'NIRC2_K': {'file': 'nirc2-k.txt', 'description': 'NIRC2 K-band', 'zeropoint': 648.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'NIRC2_KP': {'file': 'nirc2-kp.txt', 'description': 'NIRC2 Kp-band', 'zeropoint': 689.3, 'method': 'vega', 'rsr': False, 'altname': ['nirc2 k prime']}, \
-    'NIRC2_KS': {'file': 'nirc2-ks.txt', 'description': 'NIRC2 Ks-band', 'zeropoint': 676.2, 'method': 'vega', 'rsr': False, 'altname': ['nirc2 k short']}, \
-    'NIRC2_KCONT': {'file': 'nirc2-kcont.txt', 'description': 'NIRC2 K continuum-band', 'zeropoint': 605.9, 'method': 'vega', 'rsr': False, 'altname': ['nirc2 k continuum']}, \
-    'NIRC2_FE2': {'file': 'nirc2-fe2.txt', 'description': 'NIRC2 Fe II', 'zeropoint': 1019.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'NIRC2_LP': {'file': 'nirc2-lp.txt', 'description': 'NIRC2 LP', 'zeropoint': 248.0, 'method': 'vega', 'rsr': False, 'altname': ['nirc2 l prime','nirc2 l']}, \
-    'NIRC2_M': {'file': 'nirc2-ms.txt', 'description': 'NIRC2 M', 'zeropoint': 165.8, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'NIRCAM_F070W': {'file': 'JWST-NIRCAM_F070W.txt', 'description': 'JWST NIRCAM F070W (wide 0.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F090W': {'file': 'JWST-NIRCAM_F090W.txt', 'description': 'JWST NIRCAM F090W (wide 0.90 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F115W': {'file': 'JWST-NIRCAM_F115W.txt', 'description': 'JWST NIRCAM F115W (wide 1.15 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F140M': {'file': 'JWST-NIRCAM_F140M.txt', 'description': 'JWST NIRCAM F140M (medium 1.40 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F150W': {'file': 'JWST-NIRCAM_F150W.txt', 'description': 'JWST NIRCAM F150W (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F150W2': {'file': 'JWST-NIRCAM_F150W2.txt', 'description': 'JWST NIRCAM F150W2 (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F162M': {'file': 'JWST-NIRCAM_F162M.txt', 'description': 'JWST NIRCAM F162M (medium 1.62 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F164N': {'file': 'JWST-NIRCAM_F164N.txt', 'description': 'JWST NIRCAM F164N (narrow 1.64 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F182M': {'file': 'JWST-NIRCAM_F182M.txt', 'description': 'JWST NIRCAM F182M (medium 1.82 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F187N': {'file': 'JWST-NIRCAM_F187N.txt', 'description': 'JWST NIRCAM F187N (narrow 1.87 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F200W': {'file': 'JWST-NIRCAM_F200W.txt', 'description': 'JWST NIRCAM F200W (wide 2.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F210M': {'file': 'JWST-NIRCAM_F210M.txt', 'description': 'JWST NIRCAM F210M (medium 2.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F212N': {'file': 'JWST-NIRCAM_F212N.txt', 'description': 'JWST NIRCAM F212N (narrow 2.12 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F250M': {'file': 'JWST-NIRCAM_F250M.txt', 'description': 'JWST NIRCAM F250M (medium 2.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F277W': {'file': 'JWST-NIRCAM_F277W.txt', 'description': 'JWST NIRCAM F277W (wide 2.77 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F300M': {'file': 'JWST-NIRCAM_F300M.txt', 'description': 'JWST NIRCAM F300M (medium 3.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F322W2': {'file': 'JWST-NIRCAM_F322W2.txt', 'description': 'JWST NIRCAM F322W2 (wide 3.22 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F323N': {'file': 'JWST-NIRCAM_F323N.txt', 'description': 'JWST NIRCAM F323N (narrow 3.23 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F335M': {'file': 'JWST-NIRCAM_F335M.txt', 'description': 'JWST NIRCAM F335M (medium 3.35 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F356W': {'file': 'JWST-NIRCAM_F356W.txt', 'description': 'JWST NIRCAM F356W (wide 3.56 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F360M': {'file': 'JWST-NIRCAM_F360M.txt', 'description': 'JWST NIRCAM F360M (medium 3.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F405N': {'file': 'JWST-NIRCAM_F405N.txt', 'description': 'JWST NIRCAM F405N (narrow 4.05 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F410M': {'file': 'JWST-NIRCAM_F410M.txt', 'description': 'JWST NIRCAM F410M (medium 4.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F430M': {'file': 'JWST-NIRCAM_F430M.txt', 'description': 'JWST NIRCAM F430M (medium 4.30 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F444W': {'file': 'JWST-NIRCAM_F444W.txt', 'description': 'JWST NIRCAM F444W (wide 4.44 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': ['F444W']}, \
-    'NIRCAM_F460M': {'file': 'JWST-NIRCAM_F460M.txt', 'description': 'JWST NIRCAM F460M (medium 4.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F466N': {'file': 'JWST-NIRCAM_F466N.txt', 'description': 'JWST NIRCAM F466N (narrow 4.66 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F470N': {'file': 'JWST-NIRCAM_F470N.txt', 'description': 'JWST NIRCAM F470N (narrow 4.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'NIRCAM_F480M': {'file': 'JWST-NIRCAM_F480M.txt', 'description': 'JWST NIRCAM F480M (medium 4.80 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
-    'PANSTARRS_G': {'file': 'panstarrs-g.txt', 'description': 'PANSTARRS g-band', 'zeropoint': 3909.11, 'method': 'ab', 'rsr': False, 'altname': []}, \
-    'PANSTARRS_R': {'file': 'panstarrs-r.txt', 'description': 'PANSTARRS r-band', 'zeropoint': 3151.44, 'method': 'ab', 'rsr': False, 'altname': []}, \
-    'PANSTARRS_W': {'file': 'panstarrs-w.txt', 'description': 'PANSTARRS w-band', 'zeropoint': 3024.76, 'method': 'ab', 'rsr': False, 'altname': []}, \
-    'PANSTARRS_I': {'file': 'panstarrs-i.txt', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6, 'method': 'ab', 'rsr': False, 'altname': []}, \
-    'PANSTARRS_Z': {'file': 'panstarrs-z.txt', 'description': 'PANSTARRS z-band', 'zeropoint': 2273.09, 'method': 'ab', 'rsr': False, 'altname': []}, \
-    'PANSTARRS_Y': {'file': 'panstarrs-y.txt', 'description': 'PANSTARRS y-band', 'zeropoint': 2205.95, 'method': 'ab', 'rsr': False, 'altname': []}, \
-    'ROMAN_F062': {'file': 'Roman-WFI_F062.txt', 'description': 'Roman WFI F062', 'zeropoint': 3174.18, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'ROMAN_F087': {'file': 'Roman-WFI_F087.txt', 'description': 'Roman WFI F087', 'zeropoint': 2294.04, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'ROMAN_F106': {'file': 'Roman-WFI_F106.txt', 'description': 'Roman WFI F106', 'zeropoint': 1967.08, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'ROMAN_F129': {'file': 'Roman-WFI_F129.txt', 'description': 'Roman WFI F129', 'zeropoint': 1483.60, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'ROMAN_F146': {'file': 'Roman-WFI_F146.txt', 'description': 'Roman WFI F146', 'zeropoint': 1683.10, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'ROMAN_F158': {'file': 'Roman-WFI_F158.txt', 'description': 'Roman WFI F158', 'zeropoint': 1355.34, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'ROMAN_F184': {'file': 'Roman-WFI_F184.txt', 'description': 'Roman WFI F184', 'zeropoint': 1396.74, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'ROMAN_F213': {'file': 'Roman-WFI_F213.txt', 'description': 'Roman WFI F213', 'zeropoint': 1091.96, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'ROMAN_GRISM': {'file': 'Roman-WFI_Grism.txt', 'description': 'Roman WFI Grism passband', 'zeropoint': 854.12, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'ROMAN_PRISM': {'file': 'Roman-WFI_Prism.txt', 'description': 'Roman WFI Prism passband', 'zeropoint': 675.72, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'SDSS_U': {'file': 'sdss-u.txt', 'description': 'SDSS u-band', 'zeropoint': 1568.5, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
-    'SDSS_G': {'file': 'sdss-g.txt', 'description': 'SDSS g-band', 'zeropoint': 3965.9, 'method': 'ab', 'rsr': False, 'altname': ['g']}, \
-    'SDSS_R': {'file': 'sdss-r.txt', 'description': 'SDSS r-band', 'zeropoint': 3162.0, 'method': 'ab', 'rsr': False, 'altname': ['r']}, \
-    'SDSS_I': {'file': 'sdss-i.txt', 'description': 'SDSS i-band', 'zeropoint': 2602.0, 'method': 'ab', 'rsr': False, 'altname': ['i']}, \
-    'SDSS_Z': {'file': 'sdss-z.txt', 'description': 'SDSS z-band', 'zeropoint': 2244.7, 'method': 'ab', 'rsr': False, 'altname': ['z']}, \
-    'SKYMAPPER_U': {'file': 'skymapper-u.txt', 'description': 'SkyMapper u-band', 'zeropoint': 1320.1, 'method': 'ab', 'rsr': False, 'altname': ['skymapper u'], 'citation': '2011PASP..123..789B'}, \
-    'SKYMAPPER_V': {'file': 'skymapper-v.txt', 'description': 'SkyMapper v-band', 'zeropoint': 2771.8, 'method': 'ab', 'rsr': False, 'altname': ['skymapper v'], 'citation': '2011PASP..123..789B'}, \
-    'SKYMAPPER_G': {'file': 'skymapper-g.txt', 'description': 'SkyMapper g-band', 'zeropoint': 3728.2, 'method': 'ab', 'rsr': False, 'altname': ['skymapper g'], 'citation': '2011PASP..123..789B'}, \
-    'SKYMAPPER_R': {'file': 'skymapper-r.txt', 'description': 'SkyMapper r-band', 'zeropoint': 3186.0, 'method': 'ab', 'rsr': False, 'altname': ['skymapper r'], 'citation': '2011PASP..123..789B'}, \
-    'SKYMAPPER_I': {'file': 'skymapper-i.txt', 'description': 'SkyMapper i-band', 'zeropoint': 2495.7, 'method': 'ab', 'rsr': False, 'altname': ['skymapper i'], 'citation': '2011PASP..123..789B'}, \
-    'SKYMAPPER_Z': {'file': 'skymapper-z.txt', 'description': 'SkyMapper z-band', 'zeropoint': 2227.6, 'method': 'ab', 'rsr': False, 'altname': ['skymapper z'], 'citation': '2011PASP..123..789B'}, \
-    'SPECULOOS': {'file': 'SPECULOOS_iz.txt', 'description': 'SPECULOOS iz bandpass', 'zeropoint': 2317.40, 'method': 'vega', 'rsr': False, 'altname': ['speculoos_iz','iz']}, \
-    'TESS': {'file': 'TESS.txt', 'description': 'TESS bandpass', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'UKIDSS_Z': {'file': 'ukidss-z.txt', 'description': 'UKIDSS Z-band', 'zeropoint': 2261.4, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'UKIDSS_Y': {'file': 'ukidss-y.txt', 'description': 'UKIDSS Y-band', 'zeropoint': 2057.2, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'UKIDSS_J': {'file': 'ukidss-j.txt', 'description': 'UKIDSS J-band', 'zeropoint': 1556.8, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'UKIDSS_H': {'file': 'ukidss-h.txt', 'description': 'UKIDSS H-band', 'zeropoint': 1038.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'UKIDSS_K': {'file': 'ukidss-k.txt', 'description': 'UKIDSS K-band', 'zeropoint': 644.1, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'VISTA_Z': {'file': 'vista_z.txt', 'description': 'VISTA Z-band', 'zeropoint': 2263.81, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'VISTA_Y': {'file': 'vista_y.txt', 'description': 'VISTA Y-band', 'zeropoint': 2087.32, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'VISTA_J': {'file': 'vista_j.txt', 'description': 'VISTA J-band', 'zeropoint': 1554.03, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'VISTA_H': {'file': 'vista_h.txt', 'description': 'VISTA H-band', 'zeropoint': 1030.40, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'VISTA_KS': {'file': 'vista_ks.txt', 'description': 'VISTA Ks-band', 'zeropoint': 674.83, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'MKO_Y': {'file': 'wfcam-y.txt.gz', 'description': 'MKO Y-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': ['Y']}, \
+    'MKO_J': {'file': 'mko_j.txt.gz', 'description': 'MKO J-band + atmosphere', 'zeropoint': 1562.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'MKO_H': {'file': 'mko_h.txt.gz', 'description': 'MKO H-band + atmosphere', 'zeropoint': 1045.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'MKO_K': {'file': 'mko_ks.txt.gz', 'description': 'MKO K-band', 'zeropoint': 647.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'MKO_KP': {'file': 'mko_kp.txt.gz', 'description': 'MKO Kp-band', 'zeropoint': 693.7, 'method': 'vega', 'rsr': False, 'altname': ['mko k prime']}, \
+    'MKO_LP': {'file': 'mko_lp.txt.gz', 'description': 'MKO Lp-band', 'zeropoint': 248.3, 'method': 'vega', 'rsr': False, 'altname': ['mko l','mko l prime']}, \
+    'MKO_MP': {'file': 'mko_mp.txt.gz', 'description': 'MKO Mp-band', 'zeropoint': 164.7, 'method': 'vega', 'rsr': False, 'altname': ['mko m','mko m prime']}, \
+    'NICMOS_F090M': {'file': 'nic1_f090m.txt.gz', 'description': 'NICMOS F090M', 'zeropoint': 2255.0, 'method': 'vega', 'rsr': False, 'altname': ['F090M']}, \
+    'NICMOS_F095N': {'file': 'nic1_f095n.txt.gz', 'description': 'NICMOS F095N', 'zeropoint': 2044.6, 'method': 'vega', 'rsr': False, 'altname': ['F095N']}, \
+    'NICMOS_F097N': {'file': 'nic1_f097n.txt.gz', 'description': 'NICMOS F097N', 'zeropoint': 2275.4, 'method': 'vega', 'rsr': False, 'altname': ['F097N']}, \
+    'NICMOS_F108N': {'file': 'nic1_f108n.txt.gz', 'description': 'NICMOS F108N', 'zeropoint': 1937.3, 'method': 'vega', 'rsr': False, 'altname': ['F108N']}, \
+    'NICMOS_F110M': {'file': 'nic1_f110m.txt.gz', 'description': 'NICMOS F110M', 'zeropoint': 1871.8, 'method': 'vega', 'rsr': False, 'altname': ['F110M']}, \
+    'NICMOS_F110W': {'file': 'nic1_f110w.txt.gz', 'description': 'NICMOS F110W', 'zeropoint': 1768.5, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
+    'NICMOS_F113N': {'file': 'nic1_f113n.txt.gz', 'description': 'NICMOS F113N', 'zeropoint': 1821.0, 'method': 'vega', 'rsr': False, 'altname': ['F113N']}, \
+    'NICMOS_F140W': {'file': 'nic1_f140w.txt.gz', 'description': 'NICMOS F140W', 'zeropoint': 1277.1, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
+    'NICMOS_F145M': {'file': 'nic1_f145m.txt.gz', 'description': 'NICMOS F145M', 'zeropoint': 1242.0, 'method': 'vega', 'rsr': False, 'altname': ['F145M']}, \
+    'NICMOS_F160W': {'file': 'nic1_f160w.txt.gz', 'description': 'NICMOS F160W', 'zeropoint': 1071.7, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
+    'NICMOS_F164N': {'file': 'nic1_f164n.txt.gz', 'description': 'NICMOS F164N', 'zeropoint': 1003.0, 'method': 'vega', 'rsr': False, 'altname': ['']}, \
+    'NICMOS_F165M': {'file': 'nic1_f165m.txt.gz', 'description': 'NICMOS F165M', 'zeropoint': 1023.6, 'method': 'vega', 'rsr': False, 'altname': ['F165M']}, \
+    'NICMOS_F166N': {'file': 'nic1_f166n.txt.gz', 'description': 'NICMOS F166N', 'zeropoint': 1047.7, 'method': 'vega', 'rsr': False, 'altname': ['F166N']}, \
+    'NICMOS_F170M': {'file': 'nic1_f170m.txt.gz', 'description': 'NICMOS F170M', 'zeropoint': 979.1, 'method': 'vega', 'rsr': False, 'altname': ['F170M']}, \
+    'NICMOS_F187N': {'file': 'nic1_f187n.txt.gz', 'description': 'NICMOS F187N', 'zeropoint': 803.7, 'method': 'vega', 'rsr': False, 'altname': ['F187N']}, \
+    'NICMOS_F190N': {'file': 'nic1_f190n.txt.gz', 'description': 'NICMOS F190N', 'zeropoint': 836.5, 'method': 'vega', 'rsr': False, 'altname': ['F190N']}, \
+    'NIRC2_J': {'file': 'nirc2-j.txt.gz', 'description': 'NIRC2 J-band', 'zeropoint': 1562.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'NIRC2_H': {'file': 'nirc2-h.txt.gz', 'description': 'NIRC2 H-band', 'zeropoint': 1075.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'NIRC2_HCONT': {'file': 'nirc2-hcont.txt.gz', 'description': 'NIRC2 H-continuum band', 'zeropoint': 1044.5, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'NIRC2_K': {'file': 'nirc2-k.txt.gz', 'description': 'NIRC2 K-band', 'zeropoint': 648.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'NIRC2_KP': {'file': 'nirc2-kp.txt.gz', 'description': 'NIRC2 Kp-band', 'zeropoint': 689.3, 'method': 'vega', 'rsr': False, 'altname': ['nirc2 k prime']}, \
+    'NIRC2_KS': {'file': 'nirc2-ks.txt.gz', 'description': 'NIRC2 Ks-band', 'zeropoint': 676.2, 'method': 'vega', 'rsr': False, 'altname': ['nirc2 k short']}, \
+    'NIRC2_KCONT': {'file': 'nirc2-kcont.txt.gz', 'description': 'NIRC2 K continuum-band', 'zeropoint': 605.9, 'method': 'vega', 'rsr': False, 'altname': ['nirc2 k continuum']}, \
+    'NIRC2_FE2': {'file': 'nirc2-fe2.txt.gz', 'description': 'NIRC2 Fe II', 'zeropoint': 1019.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'NIRC2_LP': {'file': 'nirc2-lp.txt.gz', 'description': 'NIRC2 LP', 'zeropoint': 248.0, 'method': 'vega', 'rsr': False, 'altname': ['nirc2 l prime','nirc2 l']}, \
+    'NIRC2_M': {'file': 'nirc2-ms.txt.gz', 'description': 'NIRC2 M', 'zeropoint': 165.8, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'NIRCAM_F070W': {'file': 'JWST-NIRCAM_F070W.txt.gz', 'description': 'JWST NIRCAM F070W (wide 0.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F090W': {'file': 'JWST-NIRCAM_F090W.txt.gz', 'description': 'JWST NIRCAM F090W (wide 0.90 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F115W': {'file': 'JWST-NIRCAM_F115W.txt.gz', 'description': 'JWST NIRCAM F115W (wide 1.15 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F140M': {'file': 'JWST-NIRCAM_F140M.txt.gz', 'description': 'JWST NIRCAM F140M (medium 1.40 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F150W': {'file': 'JWST-NIRCAM_F150W.txt.gz', 'description': 'JWST NIRCAM F150W (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F150W2': {'file': 'JWST-NIRCAM_F150W2.txt.gz', 'description': 'JWST NIRCAM F150W2 (wide 1.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F162M': {'file': 'JWST-NIRCAM_F162M.txt.gz', 'description': 'JWST NIRCAM F162M (medium 1.62 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F164N': {'file': 'JWST-NIRCAM_F164N.txt.gz', 'description': 'JWST NIRCAM F164N (narrow 1.64 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F182M': {'file': 'JWST-NIRCAM_F182M.txt.gz', 'description': 'JWST NIRCAM F182M (medium 1.82 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F187N': {'file': 'JWST-NIRCAM_F187N.txt.gz', 'description': 'JWST NIRCAM F187N (narrow 1.87 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F200W': {'file': 'JWST-NIRCAM_F200W.txt.gz', 'description': 'JWST NIRCAM F200W (wide 2.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F210M': {'file': 'JWST-NIRCAM_F210M.txt.gz', 'description': 'JWST NIRCAM F210M (medium 2.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F212N': {'file': 'JWST-NIRCAM_F212N.txt.gz', 'description': 'JWST NIRCAM F212N (narrow 2.12 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F250M': {'file': 'JWST-NIRCAM_F250M.txt.gz', 'description': 'JWST NIRCAM F250M (medium 2.50 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F277W': {'file': 'JWST-NIRCAM_F277W.txt.gz', 'description': 'JWST NIRCAM F277W (wide 2.77 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F300M': {'file': 'JWST-NIRCAM_F300M.txt.gz', 'description': 'JWST NIRCAM F300M (medium 3.00 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F322W2': {'file': 'JWST-NIRCAM_F322W2.txt.gz', 'description': 'JWST NIRCAM F322W2 (wide 3.22 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F323N': {'file': 'JWST-NIRCAM_F323N.txt.gz', 'description': 'JWST NIRCAM F323N (narrow 3.23 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F335M': {'file': 'JWST-NIRCAM_F335M.txt.gz', 'description': 'JWST NIRCAM F335M (medium 3.35 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F356W': {'file': 'JWST-NIRCAM_F356W.txt.gz', 'description': 'JWST NIRCAM F356W (wide 3.56 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F360M': {'file': 'JWST-NIRCAM_F360M.txt.gz', 'description': 'JWST NIRCAM F360M (medium 3.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F405N': {'file': 'JWST-NIRCAM_F405N.txt.gz', 'description': 'JWST NIRCAM F405N (narrow 4.05 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F410M': {'file': 'JWST-NIRCAM_F410M.txt.gz', 'description': 'JWST NIRCAM F410M (medium 4.10 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F430M': {'file': 'JWST-NIRCAM_F430M.txt.gz', 'description': 'JWST NIRCAM F430M (medium 4.30 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F444W': {'file': 'JWST-NIRCAM_F444W.txt.gz', 'description': 'JWST NIRCAM F444W (wide 4.44 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': ['F444W']}, \
+    'NIRCAM_F460M': {'file': 'JWST-NIRCAM_F460M.txt.gz', 'description': 'JWST NIRCAM F460M (medium 4.60 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F466N': {'file': 'JWST-NIRCAM_F466N.txt.gz', 'description': 'JWST NIRCAM F466N (narrow 4.66 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F470N': {'file': 'JWST-NIRCAM_F470N.txt.gz', 'description': 'JWST NIRCAM F470N (narrow 4.70 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'NIRCAM_F480M': {'file': 'JWST-NIRCAM_F480M.txt.gz', 'description': 'JWST NIRCAM F480M (medium 4.80 micron)', 'zeropoint': 0., 'method': 'vega', 'rsr': True, 'altname': []}, \
+    'PANSTARRS_G': {'file': 'panstarrs-g.txt.gz', 'description': 'PANSTARRS g-band', 'zeropoint': 3909.11, 'method': 'ab', 'rsr': False, 'altname': []}, \
+    'PANSTARRS_R': {'file': 'panstarrs-r.txt.gz', 'description': 'PANSTARRS r-band', 'zeropoint': 3151.44, 'method': 'ab', 'rsr': False, 'altname': []}, \
+    'PANSTARRS_W': {'file': 'panstarrs-w.txt.gz', 'description': 'PANSTARRS w-band', 'zeropoint': 3024.76, 'method': 'ab', 'rsr': False, 'altname': []}, \
+    'PANSTARRS_I': {'file': 'panstarrs-i.txt.gz', 'description': 'PANSTARRS i-band', 'zeropoint': 2584.6, 'method': 'ab', 'rsr': False, 'altname': []}, \
+    'PANSTARRS_Z': {'file': 'panstarrs-z.txt.gz', 'description': 'PANSTARRS z-band', 'zeropoint': 2273.09, 'method': 'ab', 'rsr': False, 'altname': []}, \
+    'PANSTARRS_Y': {'file': 'panstarrs-y.txt.gz', 'description': 'PANSTARRS y-band', 'zeropoint': 2205.95, 'method': 'ab', 'rsr': False, 'altname': []}, \
+    'ROMAN_F062': {'file': 'Roman-WFI_F062.txt.gz', 'description': 'Roman WFI F062', 'zeropoint': 3174.18, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F087': {'file': 'Roman-WFI_F087.txt.gz', 'description': 'Roman WFI F087', 'zeropoint': 2294.04, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F106': {'file': 'Roman-WFI_F106.txt.gz', 'description': 'Roman WFI F106', 'zeropoint': 1967.08, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F129': {'file': 'Roman-WFI_F129.txt.gz', 'description': 'Roman WFI F129', 'zeropoint': 1483.60, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F146': {'file': 'Roman-WFI_F146.txt.gz', 'description': 'Roman WFI F146', 'zeropoint': 1683.10, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F158': {'file': 'Roman-WFI_F158.txt.gz', 'description': 'Roman WFI F158', 'zeropoint': 1355.34, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F184': {'file': 'Roman-WFI_F184.txt.gz', 'description': 'Roman WFI F184', 'zeropoint': 1396.74, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_F213': {'file': 'Roman-WFI_F213.txt.gz', 'description': 'Roman WFI F213', 'zeropoint': 1091.96, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_GRISM': {'file': 'Roman-WFI_Grism.txt.gz', 'description': 'Roman WFI Grism passband', 'zeropoint': 854.12, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'ROMAN_PRISM': {'file': 'Roman-WFI_Prism.txt.gz', 'description': 'Roman WFI Prism passband', 'zeropoint': 675.72, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'SDSS_U': {'file': 'sdss-u.txt.gz', 'description': 'SDSS u-band', 'zeropoint': 1568.5, 'method': 'ab', 'rsr': False, 'altname': ['u']}, \
+    'SDSS_G': {'file': 'sdss-g.txt.gz', 'description': 'SDSS g-band', 'zeropoint': 3965.9, 'method': 'ab', 'rsr': False, 'altname': ['g']}, \
+    'SDSS_R': {'file': 'sdss-r.txt.gz', 'description': 'SDSS r-band', 'zeropoint': 3162.0, 'method': 'ab', 'rsr': False, 'altname': ['r']}, \
+    'SDSS_I': {'file': 'sdss-i.txt.gz', 'description': 'SDSS i-band', 'zeropoint': 2602.0, 'method': 'ab', 'rsr': False, 'altname': ['i']}, \
+    'SDSS_Z': {'file': 'sdss-z.txt.gz', 'description': 'SDSS z-band', 'zeropoint': 2244.7, 'method': 'ab', 'rsr': False, 'altname': ['z']}, \
+    'SKYMAPPER_U': {'file': 'skymapper-u.txt.gz', 'description': 'SkyMapper u-band', 'zeropoint': 1320.1, 'method': 'ab', 'rsr': False, 'altname': ['skymapper u'], 'citation': '2011PASP..123..789B'}, \
+    'SKYMAPPER_V': {'file': 'skymapper-v.txt.gz', 'description': 'SkyMapper v-band', 'zeropoint': 2771.8, 'method': 'ab', 'rsr': False, 'altname': ['skymapper v'], 'citation': '2011PASP..123..789B'}, \
+    'SKYMAPPER_G': {'file': 'skymapper-g.txt.gz', 'description': 'SkyMapper g-band', 'zeropoint': 3728.2, 'method': 'ab', 'rsr': False, 'altname': ['skymapper g'], 'citation': '2011PASP..123..789B'}, \
+    'SKYMAPPER_R': {'file': 'skymapper-r.txt.gz', 'description': 'SkyMapper r-band', 'zeropoint': 3186.0, 'method': 'ab', 'rsr': False, 'altname': ['skymapper r'], 'citation': '2011PASP..123..789B'}, \
+    'SKYMAPPER_I': {'file': 'skymapper-i.txt.gz', 'description': 'SkyMapper i-band', 'zeropoint': 2495.7, 'method': 'ab', 'rsr': False, 'altname': ['skymapper i'], 'citation': '2011PASP..123..789B'}, \
+    'SKYMAPPER_Z': {'file': 'skymapper-z.txt.gz', 'description': 'SkyMapper z-band', 'zeropoint': 2227.6, 'method': 'ab', 'rsr': False, 'altname': ['skymapper z'], 'citation': '2011PASP..123..789B'}, \
+    'SPECULOOS': {'file': 'SPECULOOS_iz.txt.gz', 'description': 'SPECULOOS iz bandpass', 'zeropoint': 2317.40, 'method': 'vega', 'rsr': False, 'altname': ['speculoos_iz','iz']}, \
+    'TESS': {'file': 'TESS.txt.gz', 'description': 'TESS bandpass', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'UKIDSS_Z': {'file': 'ukidss-z.txt.gz', 'description': 'UKIDSS Z-band', 'zeropoint': 2261.4, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'UKIDSS_Y': {'file': 'ukidss-y.txt.gz', 'description': 'UKIDSS Y-band', 'zeropoint': 2057.2, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'UKIDSS_J': {'file': 'ukidss-j.txt.gz', 'description': 'UKIDSS J-band', 'zeropoint': 1556.8, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'UKIDSS_H': {'file': 'ukidss-h.txt.gz', 'description': 'UKIDSS H-band', 'zeropoint': 1038.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'UKIDSS_K': {'file': 'ukidss-k.txt.gz', 'description': 'UKIDSS K-band', 'zeropoint': 644.1, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'VISTA_Z': {'file': 'vista_z.txt.gz', 'description': 'VISTA Z-band', 'zeropoint': 2263.81, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'VISTA_Y': {'file': 'vista_y.txt.gz', 'description': 'VISTA Y-band', 'zeropoint': 2087.32, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'VISTA_J': {'file': 'vista_j.txt.gz', 'description': 'VISTA J-band', 'zeropoint': 1554.03, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'VISTA_H': {'file': 'vista_h.txt.gz', 'description': 'VISTA H-band', 'zeropoint': 1030.40, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'VISTA_KS': {'file': 'vista_ks.txt.gz', 'description': 'VISTA Ks-band', 'zeropoint': 674.83, 'method': 'vega', 'rsr': False, 'altname': []}, \
 # need to add in WFC3 optical filters    
-    'WFC3_F098M': {'file': 'HST-WFC3_F098M.txt', 'description': 'WFC3 F098M', 'zeropoint': 2154.5, 'method': 'vega', 'rsr': False, 'altname': ['F098M']}, \
-    'WFC3_F105W': {'file': 'HST-WFC3_F105W.txt', 'description': 'WFC3 F105W', 'zeropoint': 1975.2, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-Y','F105W']}, \
-    'WFC3_F110W': {'file': 'HST-WFC3_F110W.txt', 'description': 'WFC3 F110W', 'zeropoint': 1738.4, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-YJ','F110W']}, \
-    'WFC3_F125W': {'file': 'HST-WFC3_F125W.txt', 'description': 'WFC3 F125W', 'zeropoint': 1564.3, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-J','F125W']}, \
-    'WFC3_F126N': {'file': 'HST-WFC3_F126N.txt', 'description': 'WFC3 F126N', 'zeropoint': 1552.5, 'method': 'vega', 'rsr': False, 'altname': ['F126N']}, \
-    'WFC3_F127M': {'file': 'HST-WFC3_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 1496.5, 'method': 'vega', 'rsr': False, 'altname': ['F127M']}, \
-    'WFC3_F128N': {'file': 'HST-WFC3_F128N.txt', 'description': 'WFC3 F128N', 'zeropoint': 1392.6, 'method': 'vega', 'rsr': False, 'altname': ['F128N']}, \
-    'WFC3_F130N': {'file': 'HST-WFC3_F130N.txt', 'description': 'WFC3 F130N', 'zeropoint': 1475.9, 'method': 'vega', 'rsr': False, 'altname': ['F130N']}, \
-    'WFC3_F132N': {'file': 'HST-WFC3_F132N.txt', 'description': 'WFC3 F132N', 'zeropoint': 1466.6, 'method': 'vega', 'rsr': False, 'altname': ['F132N']}, \
-    'WFC3_F139M': {'file': 'HST-WFC3_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 1342.8, 'method': 'vega', 'rsr': False, 'altname': ['F139M']}, \
-    'WFC3_F140W': {'file': 'HST-WFC3_F140W.txt', 'description': 'WFC3 F140W', 'zeropoint': 1324.8, 'method': 'vega', 'rsr': False, 'altname': ['F140W']}, \
-    'WFC3_F153M': {'file': 'HST-WFC3_F153M.txt', 'description': 'WFC3 F153M', 'zeropoint': 1142.0, 'method': 'vega', 'rsr': False, 'altname': ['F153M']}, \
-    'WFC3_F160W': {'file': 'HST-WFC3_F160W.txt', 'description': 'WFC3 F160W', 'zeropoint': 1138.1, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-H','F160W']}, \
-    'WFC3_F164N': {'file': 'HST-WFC3_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 1005.5, 'method': 'vega', 'rsr': False, 'altname': ['F164N']}, \
-    'WFC3_F167N': {'file': 'HST-WFC3_F167N.txt', 'description': 'WFC3 F167N', 'zeropoint': 1030.0, 'method': 'vega', 'rsr': False, 'altname': ['F167N']}, \
-    'WFC3_G102': {'file': 'HST-WFC3_G102.txt', 'description': 'WFC3 G102', 'zeropoint': 2074.54, 'method': 'vega', 'rsr': False, 'altname': ['G102']}, \
-    'WFC3_G141': {'file': 'HST-WFC3_G141.txt', 'description': 'WFC3 G141', 'zeropoint': 1355.32, 'method': 'vega', 'rsr': False, 'altname': ['G141']}, \
-#    'WFC3_F127M': {'file': 'wfc3_F127M.txt', 'description': 'WFC3 F127M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
-#    'WFC3_F139M': {'file': 'wfc3_F139M.txt', 'description': 'WFC3 F139M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
-#    'WFC3_F164N': {'file': 'wfc3_F164N.txt', 'description': 'WFC3 F164N', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
-#    'WFC3_F167N': {'file': 'wfc3_F167N.txt', 'description': 'WFC3 F167N', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFCAM_Z': {'file': 'wfcam-z.txt', 'description': 'UKIRT WFCAM Z', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFCAM_Y': {'file': 'wfcam-y.txt', 'description': 'UKIRT WFCAM Y', 'zeropoint': 2040.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFCAM_J': {'file': 'wfcam-j.txt', 'description': 'UKIRT WFCAM J', 'zeropoint': 1548.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFCAM_H': {'file': 'wfcam-h.txt', 'description': 'UKIRT WFCAM H', 'zeropoint': 1027.1, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFCAM_H2': {'file': 'wfcam-h2.txt', 'description': 'UKIRT WFCAM H2', 'zeropoint': 677.1, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WFCAM_BRG': {'file': 'wfcam-brg.txt', 'description': 'UKIRT WFCAM Brackett Gamma', 'zeropoint': 645.5, 'method': 'vega', 'rsr': False, 'altname': ['wfcam brackett gamma']}, \
-    'WFCAM_K': {'file': 'wfcam-k.txt', 'description': 'UKIRT WFCAM K', 'zeropoint': 630.0, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRC_J': {'file': 'wirc_jcont.txt', 'description': 'WIRC J-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRC_H': {'file': 'wirc_hcont.txt', 'description': 'WIRC H-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRC_K': {'file': 'wirc_kcont.txt', 'description': 'WIRC K-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRC_CO': {'file': 'wirc_co.txt', 'description': 'WIRC CO', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRC_CH4S': {'file': 'wirc_ch4s.txt', 'description': 'WIRC CH4S', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRC_CH4L': {'file': 'wirc_ch4l.txt', 'description': 'WIRC CH4L', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRC_FE2': {'file': 'wirc_feii.txt', 'description': 'WIRC Fe II', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRC_BRGAMMA': {'file': 'wirc_brgamma.txt', 'description': 'WIRC H I Brackett Gamma', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['wirc brackett gamma']}, \
-    'WIRC_PABETA': {'file': 'wirc_pabeta.txt', 'description': 'WIRC H I Paschen Beta', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['wirc paschen beta']}, \
-    'WIRCAM_Y': {'file': 'wircam-cfht-y.txt', 'description': 'CFHT WIRCAM Y', 'zeropoint': 2073.32, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRCAM_J': {'file': 'wircam-cfht-j.txt', 'description': 'CFHT WIRCAM J', 'zeropoint': 1551.01, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRCAM_H': {'file': 'wircam-cfht-h.txt', 'description': 'CFHT WIRCAM H', 'zeropoint': 1044.35, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRCAM_KS': {'file': 'wircam-cfht-ks.txt', 'description': 'CFHT WIRCAM Ks', 'zeropoint': 674.62, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRCAM_KCONT': {'file': 'wircam-cfht-kcont.txt', 'description': 'CFHT WIRCAM K-cont', 'zeropoint': 636.17, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRCAM_CH4_OFF': {'file': 'wircam-cfht-ch4s.txt', 'description': 'CFHT WIRCAM CH4-off', 'zeropoint': 987.39, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WIRCAM_CH4_ON': {'file': 'wircam-cfht-ch4l.txt', 'description': 'CFHT WIRCAM CH4-on', 'zeropoint': 1076.31, 'method': 'vega', 'rsr': False, 'altname': []}, \
-    'WISE_W1': {'file': 'wise_w1.txt', 'description': 'WISE W1 (3.5 micron)', 'zeropoint': 309.54, 'method': 'vega', 'rsr': True, 'altname': ['W1']}, \
-    'WISE_W2': {'file': 'wise_w2.txt', 'description': 'WISE W2 (4.6 micron)', 'zeropoint': 171.79, 'method': 'vega', 'rsr': True, 'altname': ['W2']}, \
-    'WISE_W3': {'file': 'wise_w3.txt', 'description': 'WISE W3 (13 micron)', 'zeropoint': 31.67, 'method': 'vega', 'rsr': True, 'altname': ['W3']}, \
-    'WISE_W4': {'file': 'wise_w4.txt', 'description': 'WISE W4 (22 micron)', 'zeropoint': 8.363, 'method': 'vega', 'rsr': True, 'altname': ['W4']} \
+    'WFC3_F098M': {'file': 'HST-WFC3_F098M.txt.gz', 'description': 'WFC3 F098M', 'zeropoint': 2154.5, 'method': 'vega', 'rsr': False, 'altname': ['F098M']}, \
+    'WFC3_F105W': {'file': 'HST-WFC3_F105W.txt.gz', 'description': 'WFC3 F105W', 'zeropoint': 1975.2, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-Y','F105W']}, \
+    'WFC3_F110W': {'file': 'HST-WFC3_F110W.txt.gz', 'description': 'WFC3 F110W', 'zeropoint': 1738.4, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-YJ','F110W']}, \
+    'WFC3_F125W': {'file': 'HST-WFC3_F125W.txt.gz', 'description': 'WFC3 F125W', 'zeropoint': 1564.3, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-J','F125W']}, \
+    'WFC3_F126N': {'file': 'HST-WFC3_F126N.txt.gz', 'description': 'WFC3 F126N', 'zeropoint': 1552.5, 'method': 'vega', 'rsr': False, 'altname': ['F126N']}, \
+    'WFC3_F127M': {'file': 'HST-WFC3_F127M.txt.gz', 'description': 'WFC3 F127M', 'zeropoint': 1496.5, 'method': 'vega', 'rsr': False, 'altname': ['F127M']}, \
+    'WFC3_F128N': {'file': 'HST-WFC3_F128N.txt.gz', 'description': 'WFC3 F128N', 'zeropoint': 1392.6, 'method': 'vega', 'rsr': False, 'altname': ['F128N']}, \
+    'WFC3_F130N': {'file': 'HST-WFC3_F130N.txt.gz', 'description': 'WFC3 F130N', 'zeropoint': 1475.9, 'method': 'vega', 'rsr': False, 'altname': ['F130N']}, \
+    'WFC3_F132N': {'file': 'HST-WFC3_F132N.txt.gz', 'description': 'WFC3 F132N', 'zeropoint': 1466.6, 'method': 'vega', 'rsr': False, 'altname': ['F132N']}, \
+    'WFC3_F139M': {'file': 'HST-WFC3_F139M.txt.gz', 'description': 'WFC3 F139M', 'zeropoint': 1342.8, 'method': 'vega', 'rsr': False, 'altname': ['F139M']}, \
+    'WFC3_F140W': {'file': 'HST-WFC3_F140W.txt.gz', 'description': 'WFC3 F140W', 'zeropoint': 1324.8, 'method': 'vega', 'rsr': False, 'altname': ['F140W']}, \
+    'WFC3_F153M': {'file': 'HST-WFC3_F153M.txt.gz', 'description': 'WFC3 F153M', 'zeropoint': 1142.0, 'method': 'vega', 'rsr': False, 'altname': ['F153M']}, \
+    'WFC3_F160W': {'file': 'HST-WFC3_F160W.txt.gz', 'description': 'WFC3 F160W', 'zeropoint': 1138.1, 'method': 'vega', 'rsr': False, 'altname': ['WFC3-H','F160W']}, \
+    'WFC3_F164N': {'file': 'HST-WFC3_F164N.txt.gz', 'description': 'WFC3 F164N', 'zeropoint': 1005.5, 'method': 'vega', 'rsr': False, 'altname': ['F164N']}, \
+    'WFC3_F167N': {'file': 'HST-WFC3_F167N.txt.gz', 'description': 'WFC3 F167N', 'zeropoint': 1030.0, 'method': 'vega', 'rsr': False, 'altname': ['F167N']}, \
+    'WFC3_G102': {'file': 'HST-WFC3_G102.txt.gz', 'description': 'WFC3 G102', 'zeropoint': 2074.54, 'method': 'vega', 'rsr': False, 'altname': ['G102']}, \
+    'WFC3_G141': {'file': 'HST-WFC3_G141.txt.gz', 'description': 'WFC3 G141', 'zeropoint': 1355.32, 'method': 'vega', 'rsr': False, 'altname': ['G141']}, \
+#    'WFC3_F127M': {'file': 'wfc3_F127M.txt.gz', 'description': 'WFC3 F127M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
+#    'WFC3_F139M': {'file': 'wfc3_F139M.txt.gz', 'description': 'WFC3 F139M', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
+#    'WFC3_F164N': {'file': 'wfc3_F164N.txt.gz', 'description': 'WFC3 F164N', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
+#    'WFC3_F167N': {'file': 'wfc3_F167N.txt.gz', 'description': 'WFC3 F167N', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WFCAM_Z': {'file': 'wfcam-z.txt.gz', 'description': 'UKIRT WFCAM Z', 'zeropoint': 2261.3, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WFCAM_Y': {'file': 'wfcam-y.txt.gz', 'description': 'UKIRT WFCAM Y', 'zeropoint': 2040.9, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WFCAM_J': {'file': 'wfcam-j.txt.gz', 'description': 'UKIRT WFCAM J', 'zeropoint': 1548.7, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WFCAM_H': {'file': 'wfcam-h.txt.gz', 'description': 'UKIRT WFCAM H', 'zeropoint': 1027.1, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WFCAM_H2': {'file': 'wfcam-h2.txt.gz', 'description': 'UKIRT WFCAM H2', 'zeropoint': 677.1, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WFCAM_BRG': {'file': 'wfcam-brg.txt.gz', 'description': 'UKIRT WFCAM Brackett Gamma', 'zeropoint': 645.5, 'method': 'vega', 'rsr': False, 'altname': ['wfcam brackett gamma']}, \
+    'WFCAM_K': {'file': 'wfcam-k.txt.gz', 'description': 'UKIRT WFCAM K', 'zeropoint': 630.0, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRC_J': {'file': 'wirc_jcont.txt.gz', 'description': 'WIRC J-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRC_H': {'file': 'wirc_hcont.txt.gz', 'description': 'WIRC H-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRC_K': {'file': 'wirc_kcont.txt.gz', 'description': 'WIRC K-cont', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRC_CO': {'file': 'wirc_co.txt.gz', 'description': 'WIRC CO', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRC_CH4S': {'file': 'wirc_ch4s.txt.gz', 'description': 'WIRC CH4S', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRC_CH4L': {'file': 'wirc_ch4l.txt.gz', 'description': 'WIRC CH4L', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRC_FE2': {'file': 'wirc_feii.txt.gz', 'description': 'WIRC Fe II', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRC_BRGAMMA': {'file': 'wirc_brgamma.txt.gz', 'description': 'WIRC H I Brackett Gamma', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['wirc brackett gamma']}, \
+    'WIRC_PABETA': {'file': 'wirc_pabeta.txt.gz', 'description': 'WIRC H I Paschen Beta', 'zeropoint': 0., 'method': 'vega', 'rsr': False, 'altname': ['wirc paschen beta']}, \
+    'WIRCAM_Y': {'file': 'wircam-cfht-y.txt.gz', 'description': 'CFHT WIRCAM Y', 'zeropoint': 2073.32, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRCAM_J': {'file': 'wircam-cfht-j.txt.gz', 'description': 'CFHT WIRCAM J', 'zeropoint': 1551.01, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRCAM_H': {'file': 'wircam-cfht-h.txt.gz', 'description': 'CFHT WIRCAM H', 'zeropoint': 1044.35, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRCAM_KS': {'file': 'wircam-cfht-ks.txt.gz', 'description': 'CFHT WIRCAM Ks', 'zeropoint': 674.62, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRCAM_KCONT': {'file': 'wircam-cfht-kcont.txt.gz', 'description': 'CFHT WIRCAM K-cont', 'zeropoint': 636.17, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRCAM_CH4_OFF': {'file': 'wircam-cfht-ch4s.txt.gz', 'description': 'CFHT WIRCAM CH4-off', 'zeropoint': 987.39, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WIRCAM_CH4_ON': {'file': 'wircam-cfht-ch4l.txt.gz', 'description': 'CFHT WIRCAM CH4-on', 'zeropoint': 1076.31, 'method': 'vega', 'rsr': False, 'altname': []}, \
+    'WISE_W1': {'file': 'wise_w1.txt.gz', 'description': 'WISE W1 (3.5 micron)', 'zeropoint': 309.54, 'method': 'vega', 'rsr': True, 'altname': ['W1']}, \
+    'WISE_W2': {'file': 'wise_w2.txt.gz', 'description': 'WISE W2 (4.6 micron)', 'zeropoint': 171.79, 'method': 'vega', 'rsr': True, 'altname': ['W2']}, \
+    'WISE_W3': {'file': 'wise_w3.txt.gz', 'description': 'WISE W3 (13 micron)', 'zeropoint': 31.67, 'method': 'vega', 'rsr': True, 'altname': ['W3']}, \
+    'WISE_W4': {'file': 'wise_w4.txt.gz', 'description': 'WISE W4 (22 micron)', 'zeropoint': 8.363, 'method': 'vega', 'rsr': True, 'altname': ['W4']} \
     }
-VEGAFILE = 'vega_kurucz.txt'
+VEGAFILE = os.path.join(FILTER_FOLDER,'vega_kurucz.txt.gz')
 
 # instrument defaults
 INSTRUMENT_DEFINITION_FILE = 'instrument.txt'
@@ -671,7 +674,7 @@ SPECTRAL_MODEL_PARAMETERS = {\
     'radius': {'name': 'radius', 'prefix': 'rad', 'unit': u.Rsun, 'default': 0., 'title': r'Radius (R$_{\odot}$)', 'type': 'continuous'},\
 }
 SPECTRAL_MODELS = {\
-#    'gaia': {'folder': SPLAT_PATH+SPECTRAL_MODEL_FOLDER+'/gaia/', 'name': 'AMES GAIA', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altname': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'rawfolder': HOME_FOLDER+'/models/phoenix/nextgen/fullres/', 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
+#    'gaia': {'folder': SPECTRAL_MODEL_FOLDER+'/gaia/', 'name': 'AMES GAIA', 'citation': 'Hauschildt et al. (1999)', 'bibcode': '1999ApJ...525..871H', 'altname': ['nextgen,hauschildt,hauschildt99,hauschildt1999'], 'rawfolder': HOME_FOLDER+'/models/phoenix/nextgen/fullres/', 'default': {'teff': 2000., 'logg': 5.0, 'z': 0.0}}, \
 #    'alvarado24': {'instruments': {}, 'name': 'Alvarado 2024', 'citation': 'Alvarado et al. (2024)', 'bibcode': '', 'altname': ['alvarado','alv24','sand','sandy'], 'default': {'teff': 1500., 'logg': 6.0, 'z': 0.10, 'enrich': 0.0}}, \
     'atmo20': {'instruments': {}, 'name': 'ATMO2020', 'citation': 'Phillips et al. (2020)', 'bibcode': '2020A%26A...637A..38P', 'altname': ['atmo','phillips','phi20','atmos2020','atmos20','atmo2020','atmo20'], 'default': {'teff': 1500., 'logg': 5.0, 'z': 0.0,'kzz': 0.0,'cld': 'LC','broad': 'A','ad': 1.0,'logpmin': -8, 'logpmax': 4}}, \
     'atmo20pp': {'instruments': {}, 'name': 'ATMO2020++', 'citation': 'Meisner et al. (2023)', 'bibcode': '2023AJ....166...57M', 'altname': ['atmo++','meisner23','mei23','atmo2020++','atmo20++','atmos2020++','atmos20++'], 'default': {'teff': 1200., 'logg': 5.0, 'z': 0.0,'kzz': 4.0}}, \
@@ -1636,7 +1639,7 @@ TELESCOPES = {
 }
 
 # Bibliography defaults
-BIBFILE = 'splat_bibs.bib'
+BIBFILE = os.path.join(CITATION_RESOURCES_FOLDER,'splat_bibs.bib')
 JOURNALS_LONGNAMES = {\
     'aap': 'Astronomy & Astrophysics',\
     'actaa': 'Acta Astronomica',\
@@ -1656,4 +1659,18 @@ JOURNALS_LONGNAMES = {\
     'solphys': 'Solar Physics',\
 }
 CITATION_URL_BASE = 'https://ui.adsabs.harvard.edu/abs/'
+
+#######################################################
+#######################################################
+###############   DISPLAY ON LOAD IN  #################
+#######################################################
+#######################################################
+
+print('\n\nWelcome to the Spex Prism Library Analysis Toolkit (SPLAT)!')
+print('You are currently using version {}\n'.format(VERSION))
+print('If you make use of any features of this toolkit for your research, please remember to cite the SPLAT paper:')
+print('\n{}; Bibcode: {}\n'.format(CITATION,BIBCODE))
+print('If you make use of any spectra or models in this toolkit, please remember to cite the original source.')
+print('Please report any errors are feature requests to our github page, {}\n\n'.format(GITHUB_URL))
+if ERROR_CHECKING==True: print('Currently running in error checking mode')
 

@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 from splat.initialize import *
 from splat.utilities import *
 from splat.photometry import filterMag
-from splat.core import classifyByIndex, Spectrum
+from splat.core import classifyByIndex
 from splat.citations import shortRef
 
 # Python 2->3 fix for input
@@ -1180,7 +1180,7 @@ def redden(sp, **kwargs):
         absfrac = absfrac/numpy.median(absfrac)
 
 #    print(tau0, min(tau), max(tau), max(absfrac), min(absfrac))
-    spabs = Spectrum(wave=w,flux=absfrac)
+    spabs = splat.Spectrum(wave=w,flux=absfrac)
     return sp*spabs
 
 

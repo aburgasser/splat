@@ -28,7 +28,7 @@ from scipy import ndimage
 # imports: splat
 from splat.initialize import *
 from splat.utilities import *
-import splat.core as splat
+import splat
 
 
 def plotMap(*args,**kwargs):
@@ -912,11 +912,11 @@ def plotBatch(inp,output='spectra_plot.pdf',comparisons=None,classify=False,norm
         >>> files = glob.glob('/home/mydata/*.fits')
         >>> sp = splot.plotBatch(files,classify=True,output='comparison.pdf')
         >>> sp = splot.plotBatch('/home/mydata/*.fits',classify=True,output='comparison.pdf')
-        >>> sp = splot.plotBatch([splat.Spectrum(file=f) for f in files],classify=True,output='comparison.pdf')
+        >>> sp = splot.plotBatch([Spectrum(file=f) for f in files],classify=True,output='comparison.pdf')
 
     .. _`splat.plot.plotSpectrum()` : api.html#splat.plot.plotSpectrum
     .. _`splat.classifyByStandard()` : api.html#splat.classifyByStandard
-    .. _`splat.Spectrum()` : api.html#splat.Spectrum
+    .. _`Spectrum()` : api.html#Spectrum
 
 
 
@@ -952,7 +952,7 @@ def plotBatch(inp,output='spectra_plot.pdf',comparisons=None,classify=False,norm
     elif isinstance(inputlist[0],splat.Spectrum):
         splist = copy.deepcopy(inputlist)
     else:
-        raise ValueError('\nInput should be list of splat.Spectrum objects or filenames')
+        raise ValueError('\nInput should be list of Spectrum objects or filenames')
 
 # normalize if desired
     if normalize==True:
@@ -1141,7 +1141,7 @@ def plotSequence(spec,type_range=2, std_class='dwarf', spt='', output='', verbos
 
     :Outputs: 
 
-        A matplotlib figure object containing the plot  of the spectrum(a) compared to sequence of standards on screen or saved to file
+        A matplotlib figure object containing the plot of the spectrum compared to sequence of standards on screen or saved to file
 
     :Example:
        >>> import splat

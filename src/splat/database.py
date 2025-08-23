@@ -38,6 +38,7 @@ import splat.plot as splot
 from splat.initialize import *
 from splat.utilities import *
 from splat.empirical import estimateDistance, typeToColor
+from splat.core import classifyByStandard, searchLibrary
 #from splat import DB_SOURCES, DB_SPECTRA
 #import splat as spl
 
@@ -69,20 +70,20 @@ def prepDB(db_init,raCol='RA',decCol='DEC',desigCol='DESIGNATION',shortnameCol='
         if desigCol not in list(db.columns):
             raise ValueError('Database must have columns {} and {}, or {}'.format(raCol,decCol,desigCol))
         else:
-            db[coordinateCol] = [splat.designationToCoordinate(d) for d in db[desigCol]]
+            db[coordinateCol] = [designationToCoordinate(d) for d in db[desigCol]]
             if raCol not in list(db.columns) or decCol not in list(db.columns): 
                 db[raCol] = [c.ra.degree for c in db[coordinateCol]]
                 db[decCol] = [c.dec.degree for c in db[coordinateCol]]
     if desigCol not in list(db.columns):
-        db[desigCol] = [splat.coordinateToDesignation([db[raCol].iloc[i],db[decCol].iloc[i]]) for i in range(len(db))]
+        db[desigCol] = [coordinateToDesignation([db[raCol].iloc[i],db[decCol].iloc[i]]) for i in range(len(db))]
     if shortnameCol not in list(db.columns):
-        db[shortnameCol] = [splat.designationToShortName(d) for d in db[desigCol]]
+        db[shortnameCol] = [designationToShortName(d) for d in db[desigCol]]
 # force COORDINATES, RA, DEC if desired
     if force == True:
-        db[coordinateCol] = [splat.designationToCoordinate(d) for d in db[desigCol]]
+        db[coordinateCol] = [designationToCoordinate(d) for d in db[desigCol]]
         db[raCol] = [c.ra.degree for c in db[coordinateCol]]
         db[decCol] = [c.dec.degree for c in db[coordinateCol]]
-        db[shortnameCol] = [splat.designationToShortName(d) for d in db[desigCol]]
+        db[shortnameCol] = [designationToShortName(d) for d in db[desigCol]]
 # remove extra space in designation string
     db[desigCol] = [x.strip() for x in db[desigCol]]
 
@@ -137,7 +138,7 @@ def sourceXMatch(c,dp2,sep=5*u.arcsec,imax = 10000):
     Cross-matches a coordinate with a catalog and returns only those sources within the specified separation 
     '''
     sep = sep.to(u.arcsec)
-    if not isinstance(c,SkyCoord): c = splat.properCoordinates(c)
+    if not isinstance(c,SkyCoord): c = properCoordinates(c)
     dp2p = prepDB(dp2)
     if len(dp2p)>imax: c2 = longCoordList(dp2p)
     else: c2 = SkyCoord(ra=dp2p['RA']*u.degree,dec=dp2p['DEC']*u.degree)
@@ -160,7 +161,7 @@ def fetchDatabase(*args, **kwargs):
         filename = args[0]
     kwargs['filename'] = kwargs.get('filename',filename)
     kwargs['filename'] = kwargs.get('file',kwargs['filename'])
-    kwargs['folder'] = kwargs.get('folder',SPLAT_PATH+DB_FOLDER)
+    kwargs['folder'] = kwargs.get('folder',DB_FOLDER)
     url = kwargs.get('url',SPLAT_URL)+kwargs['folder']
     local = kwargs.get('local',True)
     online = kwargs.get('online',not local and checkOnline())
@@ -203,7 +204,7 @@ def fetchDatabase(*args, **kwargs):
 #        print('Reading local')
         infile = checkLocal(kwargs['filename'])
         if infile=='':
-            infile = checkLocal(kwargs['folder']+'/'+kwargs['filename'])
+            infile = checkLocal(os.path.join(kwargs['folder'],kwargs['filename']))
         if infile=='':
             raise NameError('\nCould not find '+kwargs['filename']+' locally\n\n')
         else:
@@ -220,7 +221,7 @@ def fetchDatabase(*args, **kwargs):
 #        print('Reading online')
         infile = checkOnlineFile(kwargs['filename'])
         if infile=='':
-            infile = checkOnlineFile(kwargs['folder']+'/'+kwargs['filename'])
+            infile = checkOnlineFile(os.path.join(kwargs['folder'],kwargs['filename']))
         if infile=='':
             raise NameError('\nCould not find '+kwargs['filename']+' on the SPLAT website\n\n')
         try:
@@ -279,7 +280,7 @@ def addUserSpectra(folder='./',instrument='SPEX-PRISM',mode='update',repeat='ret
 #        n = 
 
 # check instrument
-    inst = splat.checkInstrument(instrument)
+    inst = checkInstrument(instrument)
     if inst != False: instrument = inst
 
 # check mode and repeat
@@ -307,7 +308,7 @@ def addUserSpectra(folder='./',instrument='SPEX-PRISM',mode='update',repeat='ret
 
 # check if input file is in place; if not, make one
         if input_file not in os.listdir(folder):
-            files = glob.glob(folder+'/'+search_str)
+            files = glob.glob(os.path.join(folder,search_str))
             files = [os.path.basename(f) for f in files]
             for f in [input_file,sources_data_file,spectra_data_file]:
                 if f in files: files.remove(f)
@@ -316,17 +317,17 @@ def addUserSpectra(folder='./',instrument='SPEX-PRISM',mode='update',repeat='ret
             input_db = pandas.DataFrame()
             input_db['DATA_FILE'] = files
             input_db['INSTRUMENT'] = [instrument]*len(files)
-            if '.txt' in input_file: input_db.to_csv(folder+'/'+input_file,sep='\t',index=False)
-            elif '.csv' in input_file: input_db.to_csv(folder+'/'+input_file,sep=',',index=False)
-            elif '.xls' in input_file: input_db.to_excel(folder+'/'+input_file,index=False)
+            if '.txt' in input_file: input_db.to_csv(os.path.join(folder,input_file),sep='\t',index=False)
+            elif '.csv' in input_file: input_db.to_csv(os.path.join(folder,input_file),sep=',',index=False)
+            elif '.xls' in input_file: input_db.to_excel(os.path.join(folder,input_file),index=False)
             else: raise ValueError('\nDo not recognize file format for {}'.format(input_file))
 
 # prompt to continue?
 
 # read in input file and start building spectral database
-        if '.txt' in input_file: input_db = pandas.read_csv(folder+'/'+input_file,delimiter='\t')
-        elif '.csv' in input_file: input_db = pandas.read_csv(folder+'/'+input_file,delimiter=',')
-        elif '.xls' in input_file: input_db = pandas.read_excel(folder+'/'+input_file)
+        if '.txt' in input_file: input_db = pandas.read_csv(os.path.join(folder,input_file),delimiter='\t')
+        elif '.csv' in input_file: input_db = pandas.read_csv(os.path.join(folder,input_file),delimiter=',')
+        elif '.xls' in input_file: input_db = pandas.read_excel(os.path.join(folder,input_file))
         else: raise ValueError('\nDo not recognize file format for input file {}'.format(input_file))
 
 # capitalize all columns
@@ -345,7 +346,7 @@ def addUserSpectra(folder='./',instrument='SPEX-PRISM',mode='update',repeat='ret
         if 'INSTRUMENT' not in list(input_db.columns): 
             input_db['INSTRUMENT'] = [instrument]*len(input_db)
         for i,inst in enumerate(input_db['INSTRUMENT']):
-            inst = splat.checkInstrument(inst)
+            inst = checkInstrument(inst)
             if inst != False: input_db['INSTRUMENT'].iloc[i] = inst
 
         # adjust filename
@@ -381,14 +382,14 @@ def addUserSpectra(folder='./',instrument='SPEX-PRISM',mode='update',repeat='ret
             if c not in optional_spectra_columns and c not in optional_sources_columns and c not in list(spectra_db.columns): spectra_db[c] = input_db[c]
 
 # write out the source and spectra folders
-        if '.txt' in sources_data_file: sources_db.to_csv(folder+'/'+sources_data_file,sep='\t',index=False)
-        elif '.csv' in sources_data_file: sources_db.to_csv(folder+'/'+sources_data_file,sep=',',index=False)
-        elif '.xls' in sources_data_file: sources_db.to_excel(folder+'/'+sources_data_file,index=False)
+        if '.txt' in sources_data_file: sources_db.to_csv(os.path.join(folder,sources_data_file),sep='\t',index=False)
+        elif '.csv' in sources_data_file: sources_db.to_csv(os.path.join(folder,sources_data_file),sep=',',index=False)
+        elif '.xls' in sources_data_file: sources_db.to_excel(os.path.join(folder,sources_data_file),index=False)
         else: raise ValueError('\nDo not recognize file format for {}'.format(sources_data_file))
 
-        if '.txt' in spectra_data_file: spectra_db.to_csv(folder+'/'+spectra_data_file,sep='\t',index=False)
-        elif '.csv' in spectra_data_file: spectra_db.to_csv(folder+'/'+spectra_data_file,sep=',',index=False)
-        elif '.xls' in spectra_data_file: spectra_db.to_excel(folder+'/'+spectra_data_file,index=False)
+        if '.txt' in spectra_data_file: spectra_db.to_csv(os.path.join(folder,spectra_data_file),sep='\t',index=False)
+        elif '.csv' in spectra_data_file: spectra_db.to_csv(os.path.join(folder,spectra_data_file),sep=',',index=False)
+        elif '.xls' in spectra_data_file: spectra_db.to_excel(os.path.join(folder,spectra_data_file),index=False)
         else: raise ValueError('\nDo not recognize file format for {}'.format(spectra_data_file))
 
 # STAGE 1: SET UP A NEW FOLDER OF DATA
@@ -873,7 +874,7 @@ def _querySimbad2(t_src,designation='DESIGNATION',**kwargs):
         return t_src
 
 # if necessary, populate columns that are expected for source database
-    for c in list(splat.DB_SOURCES.keys()):
+    for c in list(DB_SOURCES.keys()):
         if c not in t_src.keys():
             t_src[c] = Column([' '*50 for des in t_src['DESIGNATION']],dtype='str')
 
@@ -1121,7 +1122,7 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
 
 # add RA and DEC if needed
     # if raCol not in list(db.columns) or decCol not in list(db.columns):
-    #     db['COORDINATES'] = [splat.designationToCoordinate(d) for d in db[desigCol]]
+    #     db['COORDINATES'] = [designationToCoordinate(d) for d in db[desigCol]]
     #     db[raCol] = [c.ra.degree for c in db['COORDINATES']]
     #     db[decCol] = [c.dec.degree for c in db['COORDINATES']]
     basecols = [desigCol,raCol,decCol]
@@ -1245,7 +1246,7 @@ def importSpectra(*args,**kwargs):
     '''
 # check user access
     if checkAccess() == False:
-        print('\nSpectra may only be imported into library by designated manager or while online; please email {}'.format(splat.SPLAT_EMAIL))
+        print('\nSpectra may only be imported into library by designated manager or while online; please email {}'.format(SPLAT_EMAIL))
         return
 
 # check online
@@ -1333,20 +1334,20 @@ def importSpectra(*args,**kwargs):
         if 'MODENAME' in list(s.header.keys()):
             instrument+=' {}'.format(s.header['MODENAME'].replace(' ','').upper())
 
-    if instrument.upper().replace(' ','_') in list(splat.INSTRUMENTS.keys()):
-        instrument_info = splat.INSTRUMENTS[instrument.upper().replace(' ','_')]
+    if instrument.upper().replace(' ','_') in list(INSTRUMENTS.keys()):
+        instrument_info = INSTRUMENTS[instrument.upper().replace(' ','_')]
     else:
         instrument_info = {'instrument_name': instrument, 'resolution': 0.*u.arcsec, 'slitwidth': 0.}
 
 # prep tables containing information
     t_spec = Table()
-    for c in list(splat.DB_SPECTRA.keys()):
+    for c in list(DB_SPECTRA.keys()):
         t_spec[c] = Column([' '*200 for f in files],dtype='str')
     t_src = Table()
-    for c in list(splat.DB_SOURCES.keys()):
+    for c in list(DB_SOURCES.keys()):
         t_src[c] = Column([' '*200 for f in files],dtype='str')
-    source_id0 = numpy.max(splat.DB_SOURCES['SOURCE_KEY'])
-    spectrum_id0 = numpy.max(splat.DB_SPECTRA['DATA_KEY'])
+    source_id0 = numpy.max(DB_SOURCES['SOURCE_KEY'])
+    spectrum_id0 = numpy.max(DB_SPECTRA['DATA_KEY'])
 
 # read in files into Spectrum objects
     if verbose: print('\nReading in {} files from {}'.format(len(files),data_folder))
@@ -1366,8 +1367,8 @@ def importSpectra(*args,**kwargs):
     t_spec['PUBLISHED'] = Column(['N' for f in t_spec['DATA_FILE']],dtype='str')
 #  measurements
     t_spec['MEDIAN_SNR'] = Column([sp.computeSN() for sp in t_spec['SPECTRUM']],dtype='float')
-    t_spec['SPEX_TYPE'] = Column([splat.classifyByStandard(sp,string=True,method=kwargs.get('method','kirkpatrick'),mask_telluric=True)[0] for sp in t_spec['SPECTRUM']],dtype='str')
-    t_spec['SPEX_GRAVITY_CLASSIFICATION'] = Column([splat.classifyGravity(sp,string=True) for sp in t_spec['SPECTRUM']],dtype='str')
+    t_spec['SPEX_TYPE'] = Column([classifyByStandard(sp,string=True,method=kwargs.get('method','kirkpatrick'),mask_telluric=True)[0] for sp in t_spec['SPECTRUM']],dtype='str')
+    t_spec['SPEX_GRAVITY_CLASSIFICATION'] = Column([classifyGravity(sp,string=True) for sp in t_spec['SPECTRUM']],dtype='str')
 # populate spectral data table from fits file header
     for i,sp in enumerate(t_spec['SPECTRUM']):
         if 'DATE_OBS' in list(sp.header.keys()):
@@ -1427,7 +1428,7 @@ def importSpectra(*args,**kwargs):
     t_src['SOURCE_KEY'] = t_spec['SOURCE_KEY']
     t_src['GRAVITY_CLASS_NIR'] = t_spec['SPEX_GRAVITY_CLASSIFICATION']
     t_src['GRAVITY_CLASS_NIR_REF'] = Column(['SPL' for sp in t_spec['SPECTRUM']],dtype='str')
-    t_spec['COMPARISON_SPECTRUM'] = [splat.STDS_DWARF_SPEX[spt] for spt in t_spec['SPEX_TYPE']]
+    t_spec['COMPARISON_SPECTRUM'] = [STDS_DWARF_SPEX[spt] for spt in t_spec['SPEX_TYPE']]
     t_spec['COMPARISON_TEXT'] = [' '*200 for spt in t_spec['SPEX_TYPE']]
     for i,spt in enumerate(t_spec['SPEX_TYPE']):
         t_spec['COMPARISON_TEXT'][i] = '{} standard'.format(spt)
@@ -1601,28 +1602,28 @@ def importSpectra(*args,**kwargs):
 
 # check for previous entries
     t_src['SHORTNAME'] = [designationToShortName(d) for d in t_src['DESIGNATION']]
-    if 'SHORTNAME' not in list(splat.DB_SOURCES.keys()):
-        splat.DB_SOURCES['SHORTNAME'] = [designationToShortName(d) for d in splat.DB_SOURCES['DESIGNATION']]
+    if 'SHORTNAME' not in list(DB_SOURCES.keys()):
+        DB_SOURCES['SHORTNAME'] = [designationToShortName(d) for d in DB_SOURCES['DESIGNATION']]
     for i,des in enumerate(t_src['DESIGNATION']):
 
 # check if shortnames line up
-        if t_src['SHORTNAME'][i] in splat.DB_SOURCES['SHORTNAME']:
+        if t_src['SHORTNAME'][i] in DB_SOURCES['SHORTNAME']:
             for c in list(t_src.keys()):
-                t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SHORTNAME'] == t_src['SHORTNAME'][i])][0]
+                t_src[c][i] = DB_SOURCES[c][numpy.where(DB_SOURCES['SHORTNAME'] == t_src['SHORTNAME'][i])][0]
             t_spec['SOURCE_KEY'][i] = t_src['SOURCE_KEY'][i]
 
 # check if SIMBAD names line up
-        elif t_src['SIMBAD_NAME'][i] != '' and t_src['SIMBAD_NAME'][i] in splat.DB_SOURCES['SIMBAD_NAME']:
+        elif t_src['SIMBAD_NAME'][i] != '' and t_src['SIMBAD_NAME'][i] in DB_SOURCES['SIMBAD_NAME']:
             for c in t_src.keys():
                 if t_src[c][i] == '':
-                    t_src[c][i] = splat.DB_SOURCES[c][numpy.where(splat.DB_SOURCES['SIMBAD_NAME'] == t_src['SIMBAD_NAME'][i])][0]
+                    t_src[c][i] = DB_SOURCES[c][numpy.where(DB_SOURCES['SIMBAD_NAME'] == t_src['SIMBAD_NAME'][i])][0]
             t_spec['SOURCE_KEY'][i] = t_src['SOURCE_KEY'][i]
 
         else:
             pass
 
 # check to see if prior spectrum was taken on the same date (possible redundancy)
-        matchlib = splat.searchLibrary(idkey=t_src['SOURCE_KEY'][i],date=t_spec['OBSERVATION_DATE'][i])
+        matchlib = searchLibrary(idkey=t_src['SOURCE_KEY'][i],date=t_spec['OBSERVATION_DATE'][i])
 # previous observation on this date found - retain in case this is a better spectrum
         if len(matchlib) > 0.:
             mkey = matchlib['DATA_KEY'][0]
@@ -1632,7 +1633,7 @@ def importSpectra(*args,**kwargs):
             t_spec['COMPARISON_TEXT'][i] = 'repeat spectrum: {}'.format(mkey)
 # no previous observation on this date - retain the spectrum with the highest S/N
         else:
-            matchlib = splat.searchLibrary(idkey=t_src['SOURCE_KEY'][i])
+            matchlib = searchLibrary(idkey=t_src['SOURCE_KEY'][i])
             if len(matchlib) > 0:
                 matchlib.sort('MEDIAN_SNR')
                 matchlib.reverse()
@@ -1689,9 +1690,9 @@ def importSpectra(*args,**kwargs):
 #        t_src.remove_column('SIMBAD_SEP')
 
 #    for col in t_src.colnames:
-#        tmp = t_src[col].astype(splat.DB_SOURCES[col].dtype)
+#        tmp = t_src[col].astype(DB_SOURCES[col].dtype)
 #        t_src.replace_column(col,tmp)
-#    t_merge = vstack([splat.DB_SOURCES,t_src])
+#    t_merge = vstack([DB_SOURCES,t_src])
 #    t_merge.sort('SOURCE_KEY')
 #    if 'SHORTNAME' in t_merge.keys():
 #        t_merge.remove_column('SHORTNAME')
@@ -1733,9 +1734,9 @@ def importSpectra(*args,**kwargs):
 # merge and export - THIS WASN'T WORKING
 #    for col in t_spec.colnames:
 #        print(col,DB_SPECTRA[col].dtype)
-#        tmp = t_spec[col].astype(splat.DB_SPECTRA[col].dtype)
+#        tmp = t_spec[col].astype(DB_SPECTRA[col].dtype)
 #        t_spec.replace_column(col,tmp)
-#    t_merge = vstack([splat.DB_SPECTRA,t_spec])
+#    t_merge = vstack([DB_SPECTRA,t_spec])
 #    t_merge.sort('DATA_KEY')
 #    if 'SHORTNAME' in t_merge.keys():
 #        t_merge.remove_column('SHORTNAME')
@@ -1745,11 +1746,11 @@ def importSpectra(*args,**kwargs):
 #        t_merge.remove_column('SOURCE_SELECT')
 #    if 'DATEN' in t_merge.keys():
 #        t_merge.remove_column('DATEN')
-#    t_merge.write(review_folder+splat.DB_SPECTRA_FILE,format='ascii.tab')
+#    t_merge.write(review_folder+DB_SPECTRA_FILE,format='ascii.tab')
 
     if verbose:
-        print('\nDatabases updated; be sure to add these to primary databases in {}'.format(SPLAT_PATH+DB_FOLDER))
-        print('and to move spectral files from {}/published and {}/unpublished/ to {}\n'.format(review_folder,review_folder,SPLAT_PATH+DATA_FOLDER))
+        print('\nDatabases updated; be sure to add these to primary databases in {}'.format(DB_FOLDER))
+        print('and to move spectral files from {}/published and {}/unpublished/ to {}\n'.format(review_folder,review_folder,DATA_FOLDER))
 
     return
 

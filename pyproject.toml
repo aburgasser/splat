@@ -1,30 +1,57 @@
 [build-system]
-requires = ["setuptools","setuptools-scm","wheel"]
+requires = ["setuptools","setuptools-scm"]
 build-backend = "setuptools.build_meta"
+
+
 
 [project]
 name = "splat"
+description = "Spex Prism Library Analysis Toolkit for analyzing ultracool dwarf spectra"
+authors = [
+  {name = "Adam Burgasser", email = "aburgasser@ucsd.edu"},
+]
+maintainers = [
+  {name = "Adam Burgasser", email = "aburgasser@ucsd.edu"},
+]
 #version = "1.0"
 readme = "README.md"
 requires-python = ">=3.7"
 #license = {'file' = 'LICENSE'}
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
     "astropy",
     "astroquery",
-    "scipy",
+    "bokeh",
+    "corner",
+    "emcee",
+    "flask",
     "matplotlib",
-    "numpy",
+    "numpy<2.0",
     "pandas",
+    "requests",
+    "scipy",
+    "tables",
+    "statsmodels",
+    "tqdm",
     "importlib_resources; python_version < '3.9'",
 ]
 dynamic = ["version"]
+license-files = ["LICENSE"]
 
 [project.optional-dependencies]
 test = [
-    "pytest"
+    "pytest",
+    "ruff",    
     ]
 
 [tool.setuptools]

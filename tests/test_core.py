@@ -17,6 +17,8 @@ from numpy.testing import assert_allclose
 # splat functions and constants
 import splat
 import splat.model as spmdl
+from splat.initialize import *
+from splat.utilities import directoryTree
 
 
 #####################
@@ -25,7 +27,7 @@ import splat.model as spmdl
 
 def test_read():
 # readSpectrum
-    file = splat.SPLAT_PATH+splat.DATA_FOLDER+'10001_10443.fits'
+    file = os.path.join(directoryTree(SPECTRAL_DATA_FOLDER)[0],'10001_10443.fits')
     dstr = splat.readSpectrum(file)
     assert 'wave' in list(dstr.keys())
     assert 'flux' in list(dstr.keys())
@@ -44,7 +46,7 @@ def test_spectrum_class():
 # info
 # export
 # save
-    ofile = splat.TMPFILENAME+'.fits'
+    ofile = TMPFILENAME+'.fits'
     s = splat.Spectrum(10001)
     s2 = s.copy()
     assert_allclose(s2.flux[0].value,s.flux[0].value)
@@ -180,7 +182,7 @@ def test_spectrum_conversions():
     
 def test_spectrum_plot():
 # plot
-    file = splat.TMPFILENAME+'.png'
+    file = TMPFILENAME+'.png'
     s = splat.Spectrum(10001)
     s.plot(file=file)
     assert os.access(file,os.R_OK)
@@ -268,7 +270,7 @@ def test_indices():
     assert 'CH4-H' in list(ind.keys())
     assert_allclose(ind['CH4-H'][0],1.04,rtol=ind['CH4-H'][1])
 
-    for st in list(splat.INDEX_SETS.keys()):
+    for st in list(INDEX_SETS.keys()):
         ind = splat.measureIndexSet(sp,set=st)
         assert len(ind) > 0
     
@@ -287,29 +289,29 @@ def test_standards():
 # getStandard
 # classifyByStandard
     std = splat.getStandard('M1.0')
-    assert 'M1.0' in list(splat.STDS_DWARF_SPEX.keys())
+    assert 'M1.0' in list(STDS_DWARF_SPEX.keys())
     assert std.name == 'Gl424'
     assert std.spex_type == 'M1.0'
 
     std = splat.getStandard('esdM5.0')
-    assert 'esdM5.0' in list(splat.STDS_ESD_SPEX.keys())
+    assert 'esdM5.0' in list(STDS_ESD_SPEX.keys())
     assert std.name == 'LP 589-7'
     assert std.opt_type == 'esdM5'
 
     std = splat.getStandard(16,sd=True)
-    assert 'sdM6.0' in list(splat.STDS_SD_SPEX.keys())
+    assert 'sdM6.0' in list(STDS_SD_SPEX.keys())
     assert std.name == 'LHS 1074'
     assert std.opt_type == 'sdM6'
 
     splat.initiateStandards()
-    for typ in list(splat.STDS_DWARF_SPEX_KEYS.keys()):
-        assert type(splat.STDS_DWARF_SPEX[typ]) == splat.Spectrum
+    for typ in list(STDS_DWARF_SPEX_KEYS.keys()):
+        assert type(STDS_DWARF_SPEX[typ]) == splat.Spectrum
     splat.initiateStandards(sd=True)
-    for typ in list(splat.STDS_SD_SPEX_KEYS.keys()):
-        assert type(splat.STDS_SD_SPEX[typ]) == splat.Spectrum
+    for typ in list(STDS_SD_SPEX_KEYS.keys()):
+        assert type(STDS_SD_SPEX[typ]) == splat.Spectrum
     splat.initiateStandards(esd=True)
-    for typ in list(splat.STDS_ESD_SPEX_KEYS.keys()):
-        assert type(splat.STDS_ESD_SPEX[typ]) == splat.Spectrum
+    for typ in list(STDS_ESD_SPEX_KEYS.keys()):
+        assert type(STDS_ESD_SPEX[typ]) == splat.Spectrum
 
     sp = splat.Spectrum(10001)
     spt, spt_e = splat.classifyByStandard(sp,method='kirkpatrick',verbose=True)
@@ -323,7 +325,7 @@ def test_standards():
     spt, spt_e = splat.classifyByStandard(sp,esd=True)
     assert spt == 'esdM5.0'
 
-    file = splat.TMPFILENAME+'.png'
+    file = TMPFILENAME+'.png'
     spt, spt_e = splat.classifyByStandard(sp,method='kirkpatrick',plot=True,file=file)
     assert os.access(file,os.R_OK)
     os.remove(file)

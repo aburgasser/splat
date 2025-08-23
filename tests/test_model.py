@@ -19,7 +19,7 @@ from numpy.testing import assert_allclose
 import splat
 import splat.model as spmdl
 import splat.empirical as spemp
-
+from splat.initialize import *
 
 
 #####################

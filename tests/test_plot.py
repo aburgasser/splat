@@ -17,9 +17,11 @@ from numpy.testing import assert_allclose
 
 # splat functions and constants
 import splat
+from splat.initialize import *
 import splat.plot as splot
 
-output_folder = splat.SPLAT_PATH+splat.DOCS_FOLDER+'/_images/'
+output_folder = HOME_FOLDER
+#output_folder = os.path.join(DOCS_FOLDER,'_images/')
 
 
 #####################
@@ -38,11 +40,22 @@ def test_plotBatch():
 def test_plotSequence():
 # plotSequence
 	sp = splat.getSpectrum(lucky=True)[0]
-	splot.plotSequence(sp,output=output_folder+'example_plotsequence_dwarf.png')
+	outfile = os.path.join(output_folder,'example_plotsequence_dwarf.png')
+	splot.plotSequence(sp,output=outfile)
+#	assert(os.path.exists(outfile))
+	if os.path.exists(outfile): os.remove(outfile)
+
 	sp = splat.getSpectrum(subdwarf=True,lucky=True)[0]
-	splot.plotSequence(sp,type='sd',output=output_folder+'example_plotsequence_subdwarf.png')
+	outfile = os.path.join(output_folder,'example_plotsequence_subdwarf.png')
+	splot.plotSequence(sp,type='sd',output=outfile)
+#	assert(os.path.exists(outfile))
+	if os.path.exists(outfile): os.remove(outfile)
+
 	sp = splat.getSpectrum(young=True,lucky=True)[0]
-	splot.plotSequence(sp,type='lowg',output=output_folder+'example_plotsequence_lowg.png')
+	outfile = os.path.join(output_folder,'example_plotsequence_lowg.png')
+	splot.plotSequence(sp,type='lowg',output=outfile)
+#	assert(os.path.exists(outfile))
+	if os.path.exists(outfile): os.remove(outfile)
 	return True
 
 def test_plotIndices():
@@ -57,11 +70,14 @@ def test_plotMap():
 # plotSED
 	s = splat.searchLibrary(young=True)
 	c = [splat.properCoordinates(x) for x in s['DESIGNATION']]
-	splot.plotMap(c,output=output_folder+'example_plotmap_young.png')
+	outfile = os.path.join(output_folder,'example_plotmap_young.png')
+	splot.plotMap(c,output=outfile)
+#	assert(os.path.exists(outfile))
+	if os.path.exists(outfile): os.remove(outfile)
 
 	sm = splat.searchLibrary(spt=['M0','M9.5'],jmag=13)
 	sl = splat.searchLibrary(spt=['L0','L9.5'],jmag=13)
 	cm = [splat.properCoordinates(x) for x in sm['DESIGNATION']]
 	cl = [splat.properCoordinates(x) for x in sl['DESIGNATION']]
-	splot.plotMap(cm,cl,colors=['k','r'],markers=['o','o'],alpha=[0.3,0.9],output=output_folder+'example_plotmap_brightml.png')
+	splot.plotMap(cm,cl,colors=['k','r'],markers=['o','o'],alpha=[0.3,0.9],output=os.path.join(output_folder,'example_plotmap_brightml.png'))
 

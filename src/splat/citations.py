@@ -328,7 +328,7 @@ def processBiblibrary(biblibrary,verbose=False):
     return output
 
 
-def getBibTeX(bibcode, biblibrary=SPLAT_PATH+DB_FOLDER+BIBFILE, online=False, verbose=True):
+def getBibTeX(bibcode, biblibrary=BIBFILE, online=False, verbose=True):
     '''
     Purpose
     -------
@@ -342,7 +342,7 @@ def getBibTeX(bibcode, biblibrary=SPLAT_PATH+DB_FOLDER+BIBFILE, online=False, ve
     bibcode : str
         Bibcode string to look up (e.g., '2014ApJ...787..126L')
 
-    biblibrary = SPLAT_PATH+DB_FOLDER+BIBFILE: str [optional]
+    biblibrary = splat.BIBFILE: str [optional]
         File pointing to a bibtex library file; by default points to internal library
 
     online = False : bool [optional]
@@ -378,7 +378,7 @@ def getBibTeX(bibcode, biblibrary=SPLAT_PATH+DB_FOLDER+BIBFILE, online=False, ve
 # check the file
     if not os.path.exists(os.path.normpath(biblibrary)):
         if verbose == True: print('Could not find bibtex library {}'.format(biblibrary))
-        biblibrary = SPLAT_PATH+DB_FOLDER+BIBFILE
+        biblibrary = os.path.join(CITATION_RESOURCES_FOLDER,BIBFILE)
     if not os.path.exists(os.path.normpath(biblibrary)):
         raise NameError('Could not find SPLAT main bibtext library {}; something is wrong'.format(biblibrary))
 

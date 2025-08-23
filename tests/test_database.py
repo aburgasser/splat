@@ -18,7 +18,7 @@ from numpy.testing import assert_allclose
 # splat functions and constants
 import splat
 import splat.database as spdb
-
+from splat.initialize import *
 
 #####################
 # TESTING FUNCTIONS #
@@ -88,7 +88,7 @@ def test_importSpectra():
 #     t_merge = vstack([DB_SPECTRA,t_spec])
 #     t_merge.sort('DATA_KEY')
 #     t_merge.write(review_folder+DB_SPECTRA_FILE,format='ascii.tab')
-#     print('\nDatabases updated; be sure to move these from {} to {}{}'.format(review_folder,SPLAT_PATH,DB_FOLDER))
+#     print('\nDatabases updated; be sure to move these from {} to {}{}'.format(review_folder,CODE_PATH,DB_FOLDER))
 #     print('and to move spectral files from {}/published and {}/unpublished/\n'.format(review_folder,review_folder))
 
 
