@@ -21,7 +21,7 @@ It is built on common python packages such as
 SPLAT tools allow you to:
 * Search the SpeX Prism Library for spectral data and source information;
 * Access and analyze publically-available spectra contained in it;
-* Analyze your own spectral data from SpeX and other instruments;
+* Analyze your own spectral data from various spectroscopic instruments;
 * Perform basic spectral analyses such as type classification, gravity classification, index measurement, spectrophotometry, reddening, blended light analysis, and basic math operations;
 * Access atmosphere models and perform fits to spectral data;
 * Transform observables to physical parameters using evolutionary models; 
@@ -37,22 +37,20 @@ SPLAT tools allow you to:
 
 ## Installation and Dependencies
 
-The optimal installation method for SPLAT is cloning from the github site https://github.com/aburgasser/splat, which is updated on a (semi-)regular basis. The installations uses a pyproject.toml to install dependencies, so recommended set up is as follows:
+*NEW* SPLAT can now be installed by pip!
 
+Before installing, it is recommended you set up a conda environment.
 
-    conda create -n splat
+    conda create -n splat python=3.10
     conda activate splat
+    pip install splat --upgrade
+
+You can also install through github
+
+    cd _your_python_folder_
     git clone https://github.com/aburgasser/splat.git
     cd splat
     python -m pip install .
-
-
-> Warning: At this time please do not install splat using `pip`, as this is an outdated version of SPLAT that is no longer supported.
-
-Once you've downloaded the code and data, you should add the SPLAT top-level directory to the environment variable `PYTHONPATH`.  See the following links on how to update environment variables:
-
-* bash or zsh (Unix/Mac): https://apple.stackexchange.com/questions/356441/how-to-add-permanent-environment-variable-in-zsh
-* windows: https://www.computerhope.com/issues/ch000549.htm 
 
 
 
@@ -66,8 +64,9 @@ SPLAT has core dependencies on the following packages:
 * [scipy](https://www.scipy.org)
 * [corner](http://corner.readthedocs.io/en/latest)  (for model fitting only)
 * [emcee](http://dan.iel.fm/emcee/current) (for model fitting only)
-* [bokeh](http://bokeh.pydata.org/en/latest) (for SPLAT web interface only)
-* [flask](http://flask.pocoo.org) (for SPLAT web interface only)
+* [bokeh](http://bokeh.pydata.org/en/latest) (for experimental SPLAT web interface only)
+* [flask](http://flask.pocoo.org) (for experimental SPLAT web interface only)
+
 
 ## Using SPLAT
 
@@ -85,10 +84,19 @@ SPLAT is organized into a series of modules based on core functionalities:
 * `splat.utilities`: additional routines for general analysis
 * `splat.web`: SPLAT's web interface (under development)
 
-SPLAT has been tested on both Python 2.7 and 3.0-3.11, and is best used in 
-`ipython` or `jupyter notebook`.
-All of the necessary data is included in the github package, so you don't need to be online to run most programs.
+SPLAT is regularly tested on Python 3.7 and higher, and works well with `ipython` or `jupyter notebook`.
 
+## Data and models
+
+The SPLAT package comes with over 3,000 low-resolution near-infrared spectra from the IRTF/SpeX spectrograph, obtained in its low-dispersion Prism mode; these are contained in the resources/Spectra folder of the package.
+
+In addition, a subset of atmosphere models smoothed to the resolution of the SpeX-Prism data are provided for the following models in the resoures/SpectralModels folder:
+
+* btsettl08: BT-Settl models from [Allard et al. (2012) (https://ui.adsabs.harvard.edu/abs/2012RSPTA.370.2765A/abstract)
+* burrows06: Models from [Burrows et al. (2006)] (https://ui.adsabs.harvard.edu/abs/2006ApJ...640.1063B)
+* dback24: Sonora Diamondback models from [Morley et al. (2024)] (https://ui.adsabs.harvard.edu/abs/2024ApJ...975...59M/abstract)
+
+Additional models can be downloaded from https://spexarchive.coolstarlab.ucsd.edu/splat/ ; see instructions on that page for how to place these in the SPLAT path
 
 ### Reading in Spectra
 
@@ -96,12 +104,15 @@ The best way to read in a spectrum is to use `getSpectrum()`, which takes a numb
 
     import splat
     splist = splat.getSpectrum(shortname='0415-0935')  
+
 > Retrieving 1 file
 
     splist = splat.getSpectrum(name='TWA30A')  
+
 > Retrieving 3 files
 
     splist = splat.getSpectrum(opt_spt=['L2','L5'],jmag=[12,13])
+
 > Retrieving 5 files
 
 In each case, `splist` is a list of `Spectrum` objects, each a container of various aspects of each spectrum and its source properties. For example, selecting the first spectrum,
@@ -247,8 +258,9 @@ There are also codes *still in development* to fit models directly to spectra: `
 
 The outputs of all of these fitting functions is a dictionary or list of dictionaries containing the parameters of the best-fitting models; there are also several diagnostic plots produced depending on the routine. View the model fitting page for more details.
 
-All of these routines have many options worth exploring, and which are (increasingly) documented at https://splat.physics.ucsd.edu/splat. If there are capabilities
-you need, please suggest them to aburgasser@ucsd.edu, or note it in the "Issues" link on our `github site https://github.com/aburgasser/splat.
+All of these routines have many options worth exploring, and which are (increasingly) documented at https://splat.physics.ucsd.edu/splat. 
+
+If there are capabilities you need/desire, please post in the "Issues" link on our [github site] (https://github.com/aburgasser/splat).
 
 ## Citing SPLAT and its data
 
@@ -259,16 +271,18 @@ In addition, if you use data contained in SPLAT or the SpeX Prism Library, pleas
 
     sp = splat.getSpectrum(lucky=True)
     sp.citation().data_reference
+
 > '2016ApJ...817..112S'
 
     import splat.citations as spcite
     spcite.shortRef(sp.data_reference)
+
 > Schneider, A. C. et al. (2016, Astrophysical Journal, 817, 112)
 
 ## Acknowledgements
 
 
-SPLAT is an collaborative project of research students in the [UCSD Cool Star Lab] (http://www.coolstarlab.org), aimed at developing research through the building of spectral analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Joshua Hazlett, Carolina Herrara Hernandez, Elizabeth Moreno Hilario, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Dorsa Majidi, Diego Octavio Talavera Maya, Alex Mendez, Gretel Mercado, Niana Mohammed, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen, and Russell van Linge.
+SPLAT is an collaborative project of research students in the [UCSD Cool Star Lab] (http://www.coolstarlab.org), aimed at developing research through the building of spectral analysis tools.  Contributors to SPLAT have included Christian Aganze, Jessica Birky, Daniella Bardalez Gagliuffi, Adam Burgasser (PI), Caleb Choban, Andrew Davis, Ivanna Escala, Joshua Hazlett, Carolina Herrara Hernandez, Elizabeth Moreno Hilario, Aishwarya Iyer, Yuhui Jin, Mike Lopez, Dorsa Majidi, Diego Octavio Talavera Maya, Alex Mendez, Gretel Mercado, Niana Mohammed, Johnny Parra, Maitrayee Sahi, Adrian Suarez, Melisa Tallis, Tomoki Tamiya, Chris Theissen, Russell van Linge, and Joman Wong.
 
 This project has been supported by the National Aeronautics and Space Administration under Grant No. NNX15AI75G.
 
