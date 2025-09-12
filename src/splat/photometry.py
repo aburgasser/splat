@@ -482,6 +482,7 @@ def magToFlux(mag,filt,**kwargs):
     vegafile = kwargs.get('vegafile',VEGAFILE)
     vega = kwargs.get('vega',True)
     ab = kwargs.get('ab',not vega)
+    ab = kwargs.get('AB',ab)
     rsr = kwargs.get('rsr',False)
     nsamples = kwargs.get('nsamples',100)
     custom = kwargs.get('custom',False)
