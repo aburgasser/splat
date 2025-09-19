@@ -2945,7 +2945,7 @@ def loadModelParameters(modelset,instrument=DEFAULT_INSTRUMENT,instrument_defaul
 
 
 
-def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transmission',source='eso',folder='./',*args):
+def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transmission',source='solar atlas',folder='./',*args):
     '''
     Purpose: 
 
