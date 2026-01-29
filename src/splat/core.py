@@ -235,7 +235,11 @@ class Spectrum(object):
         if kwargs.get('apparent',False) == True: self.flux_label = 'Apparent {}'.format(self.flux_label)
         if kwargs.get('absolute',False) == True: self.flux_label = 'Absolute {}'.format(self.flux_label)
         if kwargs.get('normalized',False) == True: self.flux_label = 'Normalized {}'.format(self.flux_label)
-        if kwargs.get('dimensionless',False)==True: self.flux_unit = u.dimensionless_unscaled
+        for x in ['dimensionless','asteroid','reflectance','transmission']:
+            if kwargs.get(x,False)==True: 
+                self.flux_unit = u.dimensionless_unscaled
+                if x=='transmission': self.flux_label = 'Transmission'
+                else: self.flux_label = 'Reflectance'
 #        self.header = kwargs.get('header',fits.PrimaryHDU())
         self.filename = kwargs.get('file','')
         self.filename = kwargs.get('filename',self.filename)
@@ -1620,6 +1624,7 @@ class Spectrum(object):
             else: self.history.append('Shifted spectrum back to restframe with redshift {}'.format(z))
 
         return
+
         
     def broaden(self,vbroad,kern=None,epsilon=0.6,method='rotation',verbose=False):
         '''

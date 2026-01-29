@@ -3030,15 +3030,19 @@ def loadTelluric(wave_range=None,ndata=None,linear=True,log=False,output='transm
 
 # prep files
         tfiles = glob.glob(os.path.join(folder,'wn*'))
+        tfiles.sort()
         tfiles.reverse()
         tfiles = numpy.array(tfiles)
         tfwv = numpy.array([1.e4/float(f.replace(folder,'').replace('wn','').replace('.gz','')) for f in tfiles])
 # select only those files in the range of wavelengths
 #    tfiles = tfiles[
-        w = numpy.where(numpy.logical_and(tfwv > numpy.min(wave),tfwv < numpy.max(wave)))
-        tfiles_use = tfiles[w]
-        if w[0][0] > 0: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][0]-1])
-        if w[0][0] < len(tfiles)-1: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][-1]+1])
+        w = numpy.where(numpy.logical_and(tfwv > numpy.nanmin(wave),tfwv < numpy.nanmax(wave)))
+        if len(w[0])>0:
+            tfiles_use = tfiles[w]
+            if w[0][0] > 0: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][0]-1])
+            if w[0][0] < len(tfiles)-1: tfiles_use = numpy.append(tfiles_use,tfiles[w[0][-1]+1])
+        else:
+            raise ValueError('Wavelength range {} to {} micron is outside SolAtlas range of {} to {} micron; try source="eso"'.format(numpy.nanmin(wave),numpy.nanmax(wave),numpy.nanmin(tfwv),numpy.nanmax(tfwv)))
 
 # generate raw wavelength and transmission list
         twave = []

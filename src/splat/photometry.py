@@ -148,7 +148,7 @@ def filterProfile(filt,filterfolder=FILTER_FOLDER,plot=False,file='',verbose=Fal
 
 
 
-def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,rsr=False,vegafile=VEGAFILE,filterfolder=FILTER_FOLDER,info=False,verbose=False,**kwargs):
+def filterMag(sp,filt,method='vega',nsamples=100,custom=False,notch=False,rsr=False,vegafile=VEGAFILE,filterfolder=FILTER_FOLDER,info=False,verbose=False,**kwargs):
     '''
     Purpose 
     -------
@@ -168,7 +168,7 @@ def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,
     filter : str
         String giving name of filter, which can either be one of the predefined filters listed in splat.FILTERS.keys() or a custom filter name
     
-    computevalue : str, default = 'vega'
+    method : str, default = 'vega'
         Type of value to compute; must be one of vega, ab, energy, photons; can also be set with vega, ab, energy, and photons keywords
 
     custom : array, default = None
@@ -230,10 +230,10 @@ def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,
 # keyword parameters
     evals = ['vega','ab','photons','energy']
     for x in evals:
-        if kwargs.get(x,False) == True: computevalue = x
-    if computevalue not in evals:
-        if verbose==True: ('WARNING: do not recongize output type {}; using vega'.format(computevalue))
-        computevalue = 'vega'
+        if kwargs.get(x,False) == True: method = x
+    if method not in evals:
+        if verbose==True: ('WARNING: do not recongize output type {}; using vega'.format(method))
+        method = 'vega'
 
 # check that requested filter is in list
     if isinstance(custom,bool) and isinstance(notch,bool):
@@ -242,6 +242,7 @@ def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,
             if verbose==True: print('\nWarning: SPLAT does not have filter {}; print splat.FILTERS.keys() to get list of current filters '.format(filt))
             return numpy.nan, numpy.nan
         fwave,ftrans = filterProfile(f0,**kwargs)
+        if method in ['vega','ab']: method = FILTERS[f0]['method'] 
 # notch filter
     elif isinstance(custom,bool) and isinstance(notch,list):
         dn = (notch[-1]-notch[0])/1000
@@ -276,7 +277,7 @@ def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,
         n = interp1d(sp.wave.value,sp.flux.value*1.e-9,bounds_error=False,fill_value=0.)
 
     result = []
-    if computevalue== 'vega':
+    if method== 'vega':
 # make sure vega file is there
         if os.path.exists(vegafile)==False:
             tmp = os.path.exists(filterfolder,vegafile)
@@ -305,7 +306,7 @@ def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,
                 result.append(-2.5*numpy.log10(trapz(ftrans*numpy.random.normal(d(fwave.value),n(fwave.value)),fwave.value)/trapz(ftrans*v(fwave.value),fwave.value)))
         outunit = 1.
 
-    elif computevalue== 'ab':
+    elif method== 'ab':
         nu = sp.wave.to('Hz',equivalencies=u.spectral())
         fnu = sp.flux.to('Jy',equivalencies=u.spectral_density(sp.wave))
         noisenu = sp.noise.to('Jy',equivalencies=u.spectral_density(sp.wave))
@@ -320,7 +321,7 @@ def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,
             result.append(-2.5*numpy.log10(a/b))
         outunit = 1.
 
-    elif computevalue== 'energy':
+    elif method== 'energy':
         outunit = u.erg/u.s/u.cm**2
         if rsr:
             a = trapz(ftrans*fwave.value*d(fwave.value),fwave.value)*sp.wave.unit*sp.flux.unit
@@ -338,7 +339,7 @@ def filterMag(sp,filt,computevalue='vega',nsamples=100,custom=False,notch=False,
             else:
                 result.append((trapz(ftrans*numpy.random.normal(d(fwave.value),n(fwave.value)),fwave.value)*sp.wave.unit*sp.flux.unit).to(outunit).value)
 
-    elif computevalue== 'photons':
+    elif method== 'photons':
         outunit = 1./u.s/u.cm**2
         nu = sp.wave.to('Hz',equivalencies=u.spectral())
         fnu = sp.flux.to('Jy',equivalencies=u.spectral_density(sp.wave))

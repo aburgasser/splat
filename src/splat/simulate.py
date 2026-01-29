@@ -522,13 +522,13 @@ def volumeCorrection(coordinate,dmax,dmin=0.,model='juric',center='sun',nsamp=10
 	rho = rho.to(unit**(-3)).value
 
 	if len(dmx) == 1:
-		return float(integrate.trapz(rho*(d**2),x=d)/integrate.trapz(d**2,x=d))
+		return float(integrate.trapezoid(rho*(d**2),x=d)/integrate.trapezoid(d**2,x=d))
 	else:
 		rinterp = interp1d(d,rho,bounds_error=False)
 		val = []
 		for dm in dmx:
 			dx = numpy.linspace(dmn,dm,int(nsamp))
-			val.append(float(integrate.trapz(rinterp(dx)*(dx**2),x=dx)/integrate.trapz(dx**2,x=dx)))
+			val.append(float(integrate.trapezoid(rinterp(dx)*(dx**2),x=dx)/integrate.trapezoid(dx**2,x=dx)))
 		return numpy.array(val)
 
 
@@ -590,7 +590,7 @@ def effectiveVolume(coordinate,dmax,dmin=0.,model='juric',area=1.*u.deg**2,cente
     ''' 
 # check inputs
     if not isUnit(unit): unit = u.pc
-    if not splat.isUnit(area): area = area*u.steradian
+    if not splat.isUnit(area): area = area*u.deg**2
     ar = area.to(u.steradian).value
 
 # coordinate - can be a single coordinate or array of coordinates - THIS IS PROVING MESSY SO COMMENTING OUT
@@ -658,13 +658,13 @@ def effectiveVolume(coordinate,dmax,dmin=0.,model='juric',area=1.*u.deg**2,cente
     rho = rho.to(unit**(-3)).value
 
     if len(dmx) == 1:
-        return float(integrate.trapz(rho*(d**2),x=d))*ar*(unit**3)
+        return float(integrate.trapezoid(rho*(d**2),x=d))*ar*(unit**3)
     else:
         rinterp = interp1d(d,rho,bounds_error=False)
         val = []
         for dm in dmx:
             dx = numpy.linspace(dmn,dm,nsamp)
-            val.append(float(integrate.trapz(rinterp(dx)*(dx**2),x=dx)))
+            val.append(float(integrate.trapezoid(rinterp(dx)*(dx**2),x=dx)))
         return numpy.array(val*(unit**3))*ar
 
 
@@ -1645,7 +1645,7 @@ def simulateDistances(num,model='uniform',max_distance=[10.*u.pc],min_distance=[
 	return distances*unit
 
 
-def simulateUVW(num,age,model='aumer2009',param={},verbose=False,unit=u.km/u.s,**kwargs):
+def simulateUVW(age,num=0,model='aumer2009',param={},verbose=False,unit=u.km/u.s,**kwargs):
 	'''
 	:Purpose: 
 
@@ -1654,7 +1654,7 @@ def simulateUVW(num,age,model='aumer2009',param={},verbose=False,unit=u.km/u.s,*
 
 	Required Inputs:
 
-		:param num: number of distances to generate
+		:param num: number of samples to generate
 		:param: age: single or array of ages in units of Gyr
 
 	Optional Inputs:
@@ -1682,9 +1682,10 @@ def simulateUVW(num,age,model='aumer2009',param={},verbose=False,unit=u.km/u.s,*
 	'''
 # check inputs
 	try: ages = list(age)
-	except: ages = age	   
+	except: ages = copy.deepcopy(age)
 	if not isinstance(ages,list): ages = [ages]
-	while len(ages) < num: ages.append(ages[-1])
+	if num>0:
+		while len(ages) < num: ages.append(ages[-1])
 	ages = numpy.array(ages)
 
 	for f in ['ref','reference','set','method','relation','distribution']:
@@ -1709,11 +1710,11 @@ def simulateUVW(num,age,model='aumer2009',param={},verbose=False,unit=u.km/u.s,*
 		uvel = (uvel*u.km/u.s).to(unit)
 # v velocity - first offset then scatter
 		voff = -1.*(sig**2)/param['k_uv']
-		sig = param['v10_u']*((numpy.array(ages)+param['tau1_u'])/(10.+param['tau1_u']))**param['beta_u']
+		sig = param['v10_v']*((numpy.array(ages)+param['tau1_v'])/(10.+param['tau1_v']))**param['beta_v']
 		vvel = numpy.random.normal(voff,sig)
 		vvel = (vvel*u.km/u.s).to(unit)
 # w velocity
-		sig = param['v10_u']*((numpy.array(ages)+param['tau1_u'])/(10.+param['tau1_u']))**param['beta_u']
+		sig = param['v10_w']*((numpy.array(ages)+param['tau1_w'])/(10.+param['tau1_w']))**param['beta_w']
 		wvel = numpy.random.normal(numpy.zeros(len(ages)),sig)
 		wvel = (wvel*u.km/u.s).to(unit)
 	else:

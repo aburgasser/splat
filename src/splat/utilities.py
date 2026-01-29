@@ -2021,8 +2021,14 @@ def integralResample(xh, yh, xl, nsamp=100,method='fast'):
     >>> sp.noise = n_low*sp.noise.unit
     '''
 # check inputs
-    if xl[0] < xh[0] or xl[-1] > xh[-1]: raise ValueError('\nLow resolution x range {} to {} must be within high resolution x range {} to {}'.format(xl[0],xl[-1],xh[0],xh[-1]))
+    if numpy.nanmin(xl) < numpy.nanmin(xh) or numpy.nanmax(xl) > numpy.nanmax(xh): 
+        raise ValueError('\nLow resolution x range {} to {} must be within high resolution x range {} to {}'.format(numpy.nanmin(xl),numpy.nanmax(xl),numpy.nanmin(xh),numpy.nanmax(xh)))
     if len(xl) > len(xh): raise ValueError('\nTarget x-axis must be lower resolution than original x-axis')
+
+# make sure things are sorted correctly
+    yh = [x for _,x in sorted(zip(xh,yh))]
+    xh.sort()
+    xl.sort()
 
 # set up samples
     if method == 'splat':
