@@ -385,7 +385,7 @@ def _modelParametersSingle(orig_model,verbose=False,**kwargs):
             if numpy.nanmin(lmodelpar1) <= P[0][1] <= numpy.nanmax(lmodelpar1) \
                 and numpy.nanmin(lmodelpar2) <= P[1][1] <= numpy.nanmax(lmodelpar2):
                 for j,m in enumerate(lmodelpar1): 
-                    points.append((m,lmodelpar2.ioc[j]))
+                    points.append((m,lmodelpar2.iloc[j]))
                     Ag.append(age)
                 Ma.extend(lmodelmass)
 
