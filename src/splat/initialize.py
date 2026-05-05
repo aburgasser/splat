@@ -808,14 +808,14 @@ EW_SETS = {
     }},
     'mann2013': {'altname': ['mann','mann13','man13'], 'reference': 'Mann et al. (2013)', 'bibcode': '2013AJ....145...52M', 'continuum_fit_order': 1, 'features': {\
         'f09': {'linecenter': 1.1396*u.micron,'width': 0.0013*u.micron, 'recenter': False,'continuum': [1.126,1.13,1.153,1.158]*u.micron},\
-        'f10': {'linecenter': 1.2698*u.micron,'width': 0.0049*u.micron,'recenter': False,'continuum': [1.255,1.2634,1.27,1.273]*u.micron},\
+        'f10': {'linecenter': 1.2698*u.micron,'width': 0.0049*u.micron, 'recenter': False,'continuum': [1.255,1.2634,1.27,1.273]*u.micron},\
         'f11': {'linecenter': 1.2908*u.micron,'width': 0.0010*u.micron, 'recenter': False,'continuum': [1.27,1.273,1.295,1.297]*u.micron},\
         'f12': {'linecenter': 1.3148*u.micron,'width': 0.0025*u.micron, 'recenter': False,'continuum': [1.304,1.307,1.3214,1.327]*u.micron},\
         'f13': {'linecenter': 1.3344*u.micron,'width': 0.00115*u.micron, 'recenter': False,'continuum': [1.3214,1.327,1.409,1.415]*u.micron},\
         'f14': {'linecenter': 1.4766*u.micron,'width': 0.00205*u.micron, 'recenter': False,'continuum': [1.4644,1.471,1.4921,1.4965]*u.micron},\
         'f15': {'linecenter': 1.4836*u.micron,'width': 0.00115*u.micron, 'recenter': False,'continuum': [1.4644,1.471,1.4921,1.4965]*u.micron},\
         'f16': {'linecenter': 1.5172*u.micron,'width': 0.00165*u.micron, 'recenter': False,'continuum': [1.506,1.509,1.519,1.522]*u.micron},\
-        'f17': {'linecenter': 1.6158*u.micron,'width': 0.00125*u.micron, 'recenter': False,'continuum': [1.592,1.596,1.623,1.631]*u.micron},\
+        'f17': {'linecenter': 1.6158*u.micron,'width': 0.00115*u.micron, 'recenter': False,'continuum': [1.592,1.596,1.623,1.631]*u.micron},\
         'f18': {'linecenter': 1.7261*u.micron,'width': 0.0016*u.micron, 'recenter': False,'continuum': [1.6935,1.698,1.753,1.757]*u.micron},\
         'f19': {'linecenter': 2.2079*u.micron,'width': 0.0034*u.micron, 'recenter': False,'continuum': [2.194,2.1985,2.213,2.219]*u.micron},\
         'f20': {'linecenter': 2.3242*u.micron,'width': 0.0019*u.micron, 'recenter': False,'continuum': [2.305,2.3105,2.36,2.364]*u.micron},\
