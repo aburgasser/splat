@@ -815,7 +815,7 @@ EW_SETS = {
         'f14': {'linecenter': 1.4766*u.micron,'width': 0.00205*u.micron, 'recenter': False,'continuum': [1.4644,1.471,1.4921,1.4965]*u.micron},\
         'f15': {'linecenter': 1.4836*u.micron,'width': 0.00115*u.micron, 'recenter': False,'continuum': [1.4644,1.471,1.4921,1.4965]*u.micron},\
         'f16': {'linecenter': 1.5172*u.micron,'width': 0.00165*u.micron, 'recenter': False,'continuum': [1.506,1.509,1.519,1.522]*u.micron},\
-        'f17': {'linecenter': 1.6158*u.micron,'width': 0.00125*u.micron, 'recenter': False,'continuum': [1.592,1.596,1.623,1.631]*u.micron},\
+        'f17': {'linecenter': 1.6158*u.micron,'width': 0.00115*u.micron, 'recenter': False,'continuum': [1.592,1.596,1.623,1.631]*u.micron},\
         'f18': {'linecenter': 1.7261*u.micron,'width': 0.0016*u.micron, 'recenter': False,'continuum': [1.6935,1.698,1.753,1.757]*u.micron},\
         'f19': {'linecenter': 2.2079*u.micron,'width': 0.0034*u.micron, 'recenter': False,'continuum': [2.194,2.1985,2.213,2.219]*u.micron},\
         'f20': {'linecenter': 2.3242*u.micron,'width': 0.0019*u.micron, 'recenter': False,'continuum': [2.305,2.3105,2.36,2.364]*u.micron},\
@@ -1081,8 +1081,8 @@ INDEX_CLASSIFICATION_RELATIONS = {
              'H2O-1': {'fitunc': 1.097, 'range': [14,25], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [28.5982, -80.7404, 39.3513, 12.1927]}, \
              'H2OD': {'fitunc': 0.757, 'range': [20,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [-97.230, 229.884, -202.245, 79.4477]}, \
              'H2O-2': {'fitunc': 0.501, 'range': [14,22], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [37.5013, -97.8144, 55.4580, 10.8822]},\
-             # 'jtype': {'fitunc': 0., 'range': [14,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [37.5013, -97.8144, 55.4580, 10.8822]},\ # NOTE THESE ADDITIONS BROKE THE CODE
-             # 'ktype': {'fitunc': 0., 'range': [14,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [37.5013, -97.8144, 55.4580, 10.8822]},\
+             'jtype': {'fitunc': 0., 'range': [14,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [37.5013, -97.8144, 55.4580, 10.8822]},\
+             'ktype': {'fitunc': 0., 'range': [14,28], 'spt': 0., 'sptunc': 99., 'mask': 1., 'coeff': [37.5013, -97.8144, 55.4580, 10.8822]},\
     }},
 }
 

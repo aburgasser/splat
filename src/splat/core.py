@@ -6273,7 +6273,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
     if param['method']=='polynomial':
         coeffs = {}
         for index in list(param['indices'].keys()):
-#            if index in ['jtype', 'ktype']: continue
+            if index in ['jtype', 'ktype']: continue
             coeffs[index] = {}
             coeffs[index]['spt'] = numpy.nan
             coeffs[index]['sptunc'] = numpy.nan
@@ -6310,23 +6310,23 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
 
 # if Allers method, need to compute the J and K spectral types
 # TEMPORARILY REMOVING THIS AT IT BREAKS THE CODE
-        #print('METHOD', ref.lower())
-        # if ref.lower() in ['allers','all13','allers13','allers2013']:
-        #     coeffs['jtype'] = {}
-        #     coeffs['ktype'] = {}
-        #     # Calculate The J and K spectral types for Allers method
-        #     jtype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.07,1.40]) 
-        #     #print('JType', jtype)
-        #     #print(typeToNum(jtype[0]))
-        #     coeffs['jtype']['spt']    = typeToNum(jtype[0])
-        #     coeffs['jtype']['sptunc'] = 1.
-        #     coeffs['jtype']['mask']   = 1.
-        #     ktype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.90,2.20]) 
-        #     #print('KType', ktype)
-        #     #print(typeToNum(ktype[0]))
-        #     coeffs['ktype']['spt']    = typeToNum(ktype[0])
-        #     coeffs['ktype']['sptunc'] = 1.
-        #     coeffs['ktype']['mask']   = 1.
+        print('METHOD', ref.lower())
+        if ref.lower() in ['allers','all13','allers13','allers2013']:
+            coeffs['jtype'] = {}
+            coeffs['ktype'] = {}
+            # Calculate The J and K spectral types for Allers method
+            jtype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.07,1.40]) 
+            #print('JType', jtype)
+            #print(typeToNum(jtype[0]))
+            coeffs['jtype']['spt']    = typeToNum(jtype[0])
+            coeffs['jtype']['sptunc'] = 1.
+            coeffs['jtype']['mask']   = 1.
+            ktype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.90,2.20]) 
+            #print('KType', ktype)
+            #print(typeToNum(ktype[0]))
+            coeffs['ktype']['spt']    = typeToNum(ktype[0])
+            coeffs['ktype']['sptunc'] = 1.
+            coeffs['ktype']['mask']   = 1.
 
 # computed weighted mean with rejection, iterating to deal with indices outside ranges   
         #print(coeffs)   
@@ -6348,7 +6348,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
             for i in coeffs.keys():
                 flg = ''
                 if coeffs[i]['mask'] == 0.: flg = '*'
-#                if i in ['jtype', 'ktype']: continue
+                if i in ['jtype', 'ktype']: continue
                 print('{}{} = {:.3f}+/-{:.3f} = SpT = {}+/-{:.1f}'.format(flg,i,indices[i][0],indices[i][1],typeToNum(coeffs[i]['spt']),coeffs[i]['sptunc']))
 
 # not enough good values
@@ -6356,7 +6356,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
         mask = [coeffs[index]['mask'] for index in list(coeffs.keys())]
         if numpy.nansum(mask) < param['min_indices']:
             if verbose==True: print('\nNot of enough indices in set {} returned viable values\n'.format(ref))
-            return numpy.nan, numpy.nan
+            return numpy.nan, numpy.nan, numpy.nan
 
 # ranges method - NOT CURRENTLY CONSIDERING UNCERTAINTY
     elif param['method']=='ranges':
@@ -6399,8 +6399,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
         output['result'] = (spt,sptn_e)
         return output
     else:
-#        return spt, sptn_e, (jtype, ktype) # NOT SURE WHERE THIS CAME IN?
-        return spt, sptn_e
+        return spt, sptn_e, (jtype, ktype)
 
 
 
@@ -7136,8 +7135,7 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
 # Determine the object's NIR spectral type and its uncertainty
     sptn = kwargs.get('spt',False)
     if sptn == False:
-#        sptn, spt_e, spts2 = classifyByIndex(sp,string=False,ref='allers2013')
-        sptn, spt_e = classifyByIndex(sp,string=False,ref='allers2013')
+        sptn, spt_e, spts2 = classifyByIndex(sp,string=False,ref='allers2013')
         if numpy.isnan(sptn):
             if verbose==True: print('Spectral type could not be determined from indices; try entering with spt keyword')
             if output=='allmeasures': return gravscore
@@ -7146,8 +7144,8 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
     if isinstance(sptn,str): sptn = typeToNum(sptn)
     Spt = typeToNum(numpy.round(sptn))
     gravscore['spt'] = Spt
-    # if verbose==True: 
-    #     print('\tSpT = {} (J-type = {}; K-type = {})'.format(Spt, spts2[0][0], spts2[1][0]))
+    if verbose==True:
+        print('\tSpT = {} (J-type = {}; K-type = {})'.format(Spt, spts2[0][0], spts2[1][0]))
 
 #Check whether the NIR SpT is within gravity sensitive range values
     if ((sptn < 16.0) or (sptn > 27.0)):
