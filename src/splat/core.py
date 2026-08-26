@@ -6309,7 +6309,6 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
 #             return numpy.nan, numpy.nan
 
 # if Allers method, need to compute the J and K spectral types
-# TEMPORARILY REMOVING THIS AT IT BREAKS THE CODE
         print('METHOD', ref.lower())
         if ref.lower() in ['allers','all13','allers13','allers2013']:
             coeffs['jtype'] = {}
@@ -7463,9 +7462,9 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
     for k in ['fit_ranges','fit_range','fitrange','fitrng','comprange','comprng']:
         if k in list(kwargs.keys()): fit_ranges = kwargs[k]
 
-#    mask_ranges = kwargs.get('mask_ranges',[])
-#    mask_standard = kwargs.get('mask_standard',False)
-#    mask_telluric = kwargs.get('mask_telluric',mask_standard)
+    mask_ranges = kwargs.get('mask_ranges',[])
+    mask_standard = kwargs.get('mask_standard',False)
+    mask_telluric = kwargs.get('mask_telluric',mask_standard)
     var_flag = novar2
     if numpy.isnan(numpy.max(sp2.variance.value)) == True: var_flag = True
     if numpy.isnan(numpy.max(sp1.variance.value)) == True: var_flag = False
@@ -7496,6 +7495,13 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
     reject_mask = numpy.array(kwargs.get('mask',numpy.zeros(len(sp1.wave))))
 # mask flux < 0
     reject_mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
+# mask wavelengths outside the native coverage of sp2; interpolation fills these with flux = 0,
+# which would otherwise contribute a spurious residual instead of being excluded from the fit
+    sp2_wmin,sp2_wmax = numpy.nanmin(sp2.wave.value),numpy.nanmax(sp2.wave.value)
+    reject_mask[numpy.where(numpy.logical_or(sp1.wave.value < sp2_wmin,sp1.wave.value > sp2_wmax))] = 1
+# mask telluric absorption regions and/or any user-specified mask ranges
+    if mask_telluric == True or mask_standard == True or len(mask_ranges) > 0:
+        reject_mask = numpy.clip(reject_mask+generateMask(sp1.wave,mask_ranges=mask_ranges,mask_telluric=mask_telluric,mask_standard=mask_standard),0,1)
     mask = numpy.clip(fit_mask+reject_mask,0,1)
 
 # set the weights
@@ -7523,6 +7529,10 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
         vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
         stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2/vtot)
+# reduce by degrees of freedom: number of unmasked points minus the fitted scale factor
+        npts = numpy.nansum(weights > 0)
+        dof = numpy.nanmax([npts-(1 if scale==True else 0),1])
+        stat = stat/dof
         unit = sp1.flux_unit/sp1.flux_unit
 
 # normalized standard deviation
@@ -7643,9 +7653,9 @@ def compareSpectraCruz(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=
 
     fit_ranges = [[[0.87,1.39]],[[1.41,1.89]],[[1.91,2.39]]]    # as prescribed in Cruz et al. 2018, AJ
 
-#    mask_ranges = kwargs.get('mask_ranges',[])
-#    mask_standard = kwargs.get('mask_standard',False)
-#    mask_telluric = kwargs.get('mask_telluric',mask_standard)
+    mask_ranges = kwargs.get('mask_ranges',[])
+    mask_standard = kwargs.get('mask_standard',False)
+    mask_telluric = kwargs.get('mask_telluric',mask_standard)
     var_flag = novar2
     if numpy.isnan(numpy.max(sp2.variance.value)) == True: var_flag = True
     if numpy.isnan(numpy.max(sp1.variance.value)) == True: var_flag = False
@@ -7680,6 +7690,13 @@ def compareSpectraCruz(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=
     reject_mask = numpy.array(kwargs.get('mask',numpy.zeros(len(sp1.wave))))
 # mask flux < 0
     reject_mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
+# mask wavelengths outside the native coverage of sp2; interpolation fills these with flux = 0,
+# which would otherwise contribute a spurious residual instead of being excluded from the fit
+    sp2_wmin,sp2_wmax = numpy.nanmin(sp2.wave.value),numpy.nanmax(sp2.wave.value)
+    reject_mask[numpy.where(numpy.logical_or(sp1.wave.value < sp2_wmin,sp1.wave.value > sp2_wmax))] = 1
+# mask telluric absorption regions and/or any user-specified mask ranges
+    if mask_telluric == True or mask_standard == True or len(mask_ranges) > 0:
+        reject_mask = numpy.clip(reject_mask+generateMask(sp1.wave,mask_ranges=mask_ranges,mask_telluric=mask_telluric,mask_standard=mask_standard),0,1)
     mask1 = numpy.clip(fit_mask1+reject_mask,0,1)
     mask2 = numpy.clip(fit_mask2+reject_mask,0,1)
     mask3 = numpy.clip(fit_mask3+reject_mask,0,1)
@@ -7723,7 +7740,13 @@ def compareSpectraCruz(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=
         stat1 = numpy.nansum(weights1*(sp1.flux.value-f(sp1.wave.value)*scale_factor1)**2/vtot1)
         stat2 = numpy.nansum(weights2*(sp1.flux.value-f(sp1.wave.value)*scale_factor2)**2/vtot2)
         stat3 = numpy.nansum(weights3*(sp1.flux.value-f(sp1.wave.value)*scale_factor3)**2/vtot3)
-        stat = stat1+stat2+stat3
+# reduce by degrees of freedom: total unmasked points across the three bands minus the
+# three independently fitted scale factors
+        npts1 = numpy.nansum(weights1 > 0)
+        npts2 = numpy.nansum(weights2 > 0)
+        npts3 = numpy.nansum(weights3 > 0)
+        dof = numpy.nanmax([(npts1+npts2+npts3)-(3 if scale==True else 0),1])
+        stat = (stat1+stat2+stat3)/dof
         unit = sp1.flux_unit/sp1.flux_unit
 
 # normalized standard deviation (NEED TO DO ALL OF THESE TOO!)
@@ -8625,3 +8648,4 @@ if __name__ == '__main__':
 #    test_gooddata()
 #    splat.test()
 #    test_info()
+
