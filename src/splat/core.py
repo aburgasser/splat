@@ -6495,26 +6495,44 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
     if dof<0: dof=len(sp.wave)
 
 
-# if you just want to compare to one standard
-    cspt = kwargs.get('compareto',False)
-    if (cspt != False):
-        if (isinstance(cspt,str) == False):
-            cspt = typeToNum(cspt)
-# round off
-        cspt = typeToNum(numpy.round(typeToNum(cspt)))
-        mkwargs = copy.deepcopy(kwargs)
-        mkwargs['compareto'] = False
-        mkwargs['sptrange'] =[cspt,cspt]
-        return classifyByStandard(sp,**mkwargs)
-
-# assign subclasses
+# assign subclasses (do this before handling compareto, so an explicit std_class/sd/esd/etc.
+# kwarg is known and can be told apart from a subclass we auto-detect from a type string below)
     allowed_classes = ['dwarf','sd','esd','dsd','vlg','intg','subdwarf','young','all']
     for a in allowed_classes:
         if kwargs.get(a,False) == True: std_class = a
     std_class = std_class.lower()
+# accept common literature aliases for standard subclasses (e.g. 'd/sd' as commonly
+# written for mild subdwarfs, 'gamma'/'beta' for very-low/intermediate gravity)
+    std_class = {'d/sd':'dsd','gamma':'vlg','beta':'intg'}.get(std_class,std_class)
     if std_class not in allowed_classes:
         if verbose==True: print('\nStandard class {} unknown; defaulting to dwarf'.format(std_class))
         std_class = 'dwarf'
+
+# if you just want to compare to one or more specific standards
+    cspt = kwargs.get('compareto',False)
+    if (cspt != False):
+        cspt_list = cspt if isinstance(cspt,list) else [cspt]
+        results = []
+        for c in cspt_list:
+            c_str = c if isinstance(c,str) else ''
+# auto-detect subclass from the type string itself (mirrors getStandard()'s behavior),
+# unless the caller already specified a standard class explicitly
+            c_class = std_class
+            if std_class == 'dwarf':
+                if 'esd' in c_str: c_class = 'esd'
+                elif 'd/sd' in c_str: c_class = 'dsd'
+                elif 'sd' in c_str: c_class = 'sd'
+                elif 'gamma' in c_str: c_class = 'vlg'
+                elif 'beta' in c_str: c_class = 'intg'
+# round off to the nearest whole subtype
+            cn = numpy.round(typeToNum(c))
+            mkwargs = copy.deepcopy(kwargs)
+            mkwargs['compareto'] = False
+            mkwargs['std_class'] = c_class
+            mkwargs['sptrange'] = [cn,cn]
+            results.append(classifyByStandard(sp,**mkwargs))
+        if len(results) == 1: return results[0]
+        return results
 
     if std_class == 'dwarf':
         initiateStandards()
