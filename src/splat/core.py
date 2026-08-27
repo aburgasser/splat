@@ -6505,7 +6505,7 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
 # written for mild subdwarfs, 'gamma'/'beta' for very-low/intermediate gravity)
     std_class = {'d/sd':'dsd','gamma':'vlg','beta':'intg'}.get(std_class,std_class)
     if std_class not in allowed_classes:
-        if verbose==True: print('\nStandard class {} unknown; defaulting to dwarf'.format(std_class))
+        print('\nWarning: standard class {} unknown; defaulting to dwarf standards'.format(std_class))
         std_class = 'dwarf'
 
 # if you just want to compare to one or more specific standards
