@@ -6314,13 +6314,13 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
             coeffs['jtype'] = {}
             coeffs['ktype'] = {}
             # Calculate The J and K spectral types for Allers method
-            jtype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.07,1.40], statistic='absdev') 
+            jtype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.07,1.40], statistic='chisqr') 
             #print('JType', jtype)
             #print(typeToNum(jtype[0]))
             coeffs['jtype']['spt']    = typeToNum(jtype[0])
             coeffs['jtype']['sptunc'] = 1.
             coeffs['jtype']['mask']   = 1.
-            ktype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.90,2.20], statistic='absdev') 
+            ktype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.90,2.20], statistic='chisqr') 
             #print('KType', ktype)
             #print(typeToNum(ktype[0]))
             coeffs['ktype']['spt']    = typeToNum(ktype[0])
