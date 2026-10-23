@@ -52,6 +52,41 @@ Vizier.TIMEOUT = 60
 Nist.TIMEOUT = 60
 XMatch.TIMEOUT = 180
 
+# pre-defined catalogs
+XMATCH_CATALOGS = {
+    'SIMBAD': {'altname': [],'vref': u'simbad', 'select_columns': ['main_id','ra','dec','main_type','sp_type','plx','pmra','pmdec','radvel','B', 'V', 'R', 'J', 'H', 'K', 'u', 'g', 'r', 'i', 'z']},\
+    '2MASS': {'altname': ['TWOMASS','TMASS'],'vref': u'vizier:II/246/out', 'select_columns': ['2MASS','RAJ2000','DEJ2000','Jmag','e_Jmag','Hmag','e_Hmag','Kmag','e_Kmag','MeasureJD']},\
+    'ALLWISE': {'altname': [],'vref': u'vizier:II/328/allwise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
+    'APOGEE': {'altname': ['APOGEE-DR17'],'vref': u'vizier:III/286/catalog', 'select_columns': []},\
+    'CATWISE': {'altname': ['CAT'],'vref': u'vizier:II/365/catwise', 'select_columns': ['objID','RA_ICRS','DE_ICRS','Name','MJD','pmRA','e_pmRA','pmDE','e_pmDE','W1mproPM','e_W1mproPM','W2mproPM','e_W2mproPM']},\
+    'DES': {'altname': ['DARK-ENERGY-SURVEY'],'vref': u'vizier:II/371/des_dr2', 'select_columns': ['DENIS','RAJ2000','DEJ2000','Imag','e_Imag','Jmag','e_Jmag','Kmag','e_Kmag','Obs.JD']},\
+    'DENIS': {'altname': [],'vref': u'vizier:B/denis/denis', 'select_columns': ['DENIS','RAJ2000','DEJ2000','Imag','e_Imag','Jmag','e_Jmag','Kmag','e_Kmag','Obs.JD']},\
+    'GAIA-DR1': {'altname': ['GAIADR1','GAIA1'],'vref': u'vizier:I/337/gaia', 'select_columns': ['source_id','ra','dec','ref_epoch','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
+    'GAIA-DR2': {'altname': ['GAIADR2','GAIA2'],'vref': u'vizier:I/345/gaia2', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
+    'GAIA-EDR3': {'altname': ['GAIA-EDR3','GAIAEDR3'],'vref': u'vizier:I/350/gaiaedr3', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
+    'GAIA-DR3': {'altname': ['GAIA-DR3','GAIADR3','GAIA3','GAIA'],'vref': u'vizier:I/355/gaiadr3', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
+    'KEPLER-INPUT-CATALOG': {'altname': ['KEPLER','KIC'], 'vref': u'vizier:V/133/kic', 'select_columns': []},
+    'LAMOST-DR1': {'altname': ['LAMOST1','LAM1'], 'vref': u'vizier:V/146/dr1', 'select_columns': []},
+    'LAMOST-DR2': {'altname': ['LAMOST2','LAM2'], 'vref': u'vizier:V/149/dr2', 'select_columns': []},
+    'LAMOST-DR4': {'altname': ['LAMOST4','LAM4'], 'vref': u'vizier:V/153/dr4', 'select_columns': []},
+    'LAMOST-DR5': {'altname': ['LAMOST5','LAM5'], 'vref': u'vizier:V/164/dr5', 'select_columns': []},
+    'LAMOST-DR7-LRS': {'altname': ['LAMOST7','LAM7','LAMOST-DR7','LAMOST'], 'vref': u'vizier:V/156/dr7slrs', 'select_columns': []},
+    'LAMOST-DR7-MRS': {'altname': ['LAMOST7MRS','LAM7MRS'], 'vref': u'vizier:V/156/dr7smrs', 'select_columns': []},
+    'LEHPM': {'altname': ['LEH','POKORNY04'], 'vref': u'vizier:J/A+A/421/763/catalog', 'select_columns': []},
+    'LSPM-NORTH': {'altname': ['LSPM','LSPM-N'], 'vref': u'vizier:I/298/lspm_n', 'select_columns': []},
+    # 'LAMOST-DR11-LRS': {'altname': ['LAMOST-DR11','LAMOST11','LAM11'], 'vref': u'vizier:V/162/dr11l', 'select_columns': []},
+    # 'LAMOST-DR11-MRS': {'altname': ['LAMOST11MRS','LAM11MRS'], 'vref': u'vizier:V/162/dr11m', 'select_columns': []},
+    'PANSTARRS': {'altname': ['PAN-STARRS','PS1'], 'vref': u'vizier:II/349/ps1', 'select_columns': ['objID','RAJ2000','DEJ2000','Epoch','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','ymag','e_ymag']},
+    'SDSS-DR16': {'altname': ['SDSS'],'vref': u'vizier:V/154/sdss16', 'select_columns': ['SDSS16','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spInst','spType','spCl','subCl','MJD']},\
+    'SDSS-DR12': {'altname': ['SDSS12'],'vref': u'vizier:V/147/sdss12', 'select_columns': ['SDSS12','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
+    'SDSS-DR9': {'altname': ['SDSS9'],'vref': u'vizier:V/139/sdss9', 'select_columns': ['SDSS9','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
+    'TIC': {'altname': ['TESS-INPUT-CATALOG','TESS','TIC82'], 'vref': u'vizier:IV/39/tic82', 'select_columns': []},
+    'UKIDSS': {'altname': ['UKIDSS-LAS','UKIDSS-LAS9','UKIDSS-DR9','UKIDSS-LAS-DR9'], 'vref': u'vizier:II/319/las9', 'select_columns': ['JName','RAJ2000','DEJ2000','Epoch','yAperMag3','yAperMag3Err','j_1AperMag3','j_1AperMag3Err','hAperMag3','hAperMag3Err','kAperMag3','kAperMag3Err','mergedClass']},
+    'VIKING': {'altname': ['VISTA-VIKING','VIKING-DR4'], 'vref': u'vizier:II/382/viking4', 'select_columns': []},
+    'VISTA': {'altname': ['VVV','VISTA-DR4'], 'vref': u'vizier:II/376/vvv4', 'select_columns': []},
+    'WISE': {'altname': [],'vref': u'vizier:II/311/wise', 'select_columns': []},\
+    }
+
 
 ##########################################################
 ###########   DATABASE QUERY, ACCESS & TOOLS   ###########
@@ -115,20 +150,26 @@ def catXMatch(dp1,dp2,sep=5*u.arcsec,imax = 10000,merge=False):
     dp1p = prepDB(dp1)
     dp2p = prepDB(dp2)
     if len(dp1p)>imax: c1 = longCoordList(dp1p)
-    else: c1 = SkyCoord(ra=dp1p['RA']*u.degree,dec=dp1p['DEC']*u.degree)
+    else: c1 = SkyCoord(ra=numpy.array(dp1p['RA'])*u.degree,dec=numpy.array(dp1p['DEC'])*u.degree)
     if len(dp2p)>imax: c2 = longCoordList(dp2p)
-    else: c2 = SkyCoord(ra=dp2p['RA']*u.degree,dec=dp2p['DEC']*u.degree)
+    else: c2 = SkyCoord(ra=numpy.array(dp2p['RA'])*u.degree,dec=numpy.array(dp2p['DEC'])*u.degree)
     idx, sep2d, sep3d = match_coordinates_sky(c1,c2)
+    print(idx, type(idx))
+    # raise
     dp1p['separation'] = [s.to(u.arcsec).value for s in sep2d]
+    for k in dp2p:
+        newcol = k
+        if k in list(dp1p.columns): newcol = k+'_2'
+        dp1p[newcol] = [dp2p.loc[i,k] for i in idx]
     dp1pc = dp1p[dp1p['separation']<sep.value]
-    idx, sep2d, sep3d = match_coordinates_sky(c2,c1)
-    dp2p['separation'] = [s.to(u.arcsec).value for s in sep2d]
-    dp2pc = dp2p[dp2p['separation']<sep.value]
+    # idx, sep2d, sep3d = match_coordinates_sky(c2,c1)
+    # dp2p['separation'] = [s.to(u.arcsec).value for s in sep2d]
+    # dp2pc = dp2p[dp2p['separation']<sep.value]
 
     dp1pc.reset_index(inplace=True,drop=True)
-    dp2pc.reset_index(inplace=True,drop=True)
+    # dp2pc.reset_index(inplace=True,drop=True)
     
-    return dp1pc,dp2pc
+    return dp1pc
 
 def sourceXMatch(c,dp2,sep=5*u.arcsec,imax = 10000):
     '''
@@ -1064,35 +1105,6 @@ def queryXMatch(db,radius=30.*u.arcsec,catalog='2MASS',file='',desigCol='DESIGNA
     '''
     callloop = 5
 
-# pre-defined catalogs
-    XMATCH_CATALOGS = {
-        'SIMBAD': {'altname': [],'vref': u'simbad', 'select_columns': ['main_id','ra','dec','main_type','sp_type','plx','pmra','pmdec','radvel','B', 'V', 'R', 'J', 'H', 'K', 'u', 'g', 'r', 'i', 'z']},\
-        '2MASS': {'altname': [],'vref': u'vizier:II/246/out', 'select_columns': ['2MASS','RAJ2000','DEJ2000','Jmag','e_Jmag','Hmag','e_Hmag','Kmag','e_Kmag','MeasureJD']},\
-        'DENIS': {'altname': [],'vref': u'vizier:B/denis/denis', 'select_columns': ['DENIS','RAJ2000','DEJ2000','Imag','e_Imag','Jmag','e_Jmag','Kmag','e_Kmag','Obs.JD']},\
-        'SDSS': {'altname': ['SDSS16'],'vref': u'vizier:V/154/sdss16', 'select_columns': ['SDSS16','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spInst','spType','spCl','subCl','MJD']},\
-        'SDSS12': {'altname': ['SDSS12'],'vref': u'vizier:V/147/sdss12', 'select_columns': ['SDSS12','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
-        'SDSS9': {'altname': [],'vref': u'vizier:V/139/sdss9', 'select_columns': ['SDSS9','RAdeg','DEdeg','umag','e_umag','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','pmRA','e_pmRA','pmDE','e_pmDE','ObsDate','objID','SpObjID','spType','spCl']},\
-#        'CATWISE': {'altname': ['CAT'],'vref': u'vizier:II/365/catwise', 'select_columns': ['objID','RA_ICRS','DE_ICRS','Name','MJD','pmRA','e_pmRA','pmDE','e_pmDE','W1mproPM','e_W1mproPM','W2mproPM','e_W2mproPM']},\
-        'ALLWISE': {'altname': [],'vref': u'vizier:II/328/allwise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-        'GAIA-DR1': {'altname': ['GAIADR1','GAIA1'],'vref': u'vizier:I/337/gaia', 'select_columns': ['source_id','ra','dec','ref_epoch','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
-        'GAIA-DR2': {'altname': ['GAIADR2','GAIA2'],'vref': u'vizier:I/345/gaia2', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
-        'GAIA-EDR3': {'altname': ['GAIA-DR3','GAIAEDR3','GAIA3','GAIA'],'vref': u'vizier:I/350/gaiaedr3', 'select_columns': ['source_id','ra','dec','phot_g_mean_mag','phot_g_mean_flux','phot_g_mean_flux_error','parallax','parallax_error','pmra','pmra_error','pmdec','pmdec_error']},\
-        'PANSTARRS': {'altname': ['PAN-STARRS','PS1'], 'vref': u'vizier:II/349/ps1', 'select_columns': ['objID','RAJ2000','DEJ2000','Epoch','gmag','e_gmag','rmag','e_rmag','imag','e_imag','zmag','e_zmag','ymag','e_ymag']},
-        'UKIDSS': {'altname': ['UKIDSS-LAS','UKIDSS-LAS9','UKIDSS-DR9','UKIDSS-LAS-DR9'], 'vref': u'vizier:II/319/las9', 'select_columns': ['JName','RAJ2000','DEJ2000','Epoch','yAperMag3','yAperMag3Err','j_1AperMag3','j_1AperMag3Err','hAperMag3','hAperMag3Err','kAperMag3','kAperMag3Err','mergedClass']},
-# not yet integrated
-#        'WISE': {'altname': ['WISE'],'vref': u'vizier:II/311/wise', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-#        'UCAC': {'altname': ['UCAC'],'vref': u'vizier:II/322A/las9', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-#        'MOVERS': {'altname': ['MOVERS'],'vref': u'vizier:J/AJ/151/41/movers', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-#        'LATEMOVERS': {'altname': ['LATEMOVERS','LATE-MOVERS'],'vref': u'vizier:J/AJ/153/92/lmovers', 'select_columns': ['AllWISE','RAJ2000','DEJ2000','W1mag','e_W1mag','W2mag','e_W2mag','W3mag','e_W3mag','W4mag','e_W4mag','pmRA','e_pmRA','pmDE','e_pmDE','ID']},\
-#        'WISE': {'vref': u'II/311', 'select_columns': 
-#        'VISTA': {'vref': u'II/329', 'select_columns': 
-#        'CFHT': {'vref': u'II/317', 'select_columns': 
-#        'LEHPM': {'vref': u'J/A+A/421/763', 'select_columns': 
-#        'SIPS': {'vref': u'J/A+A/435/363', 'select_columns': 
-#        'UCAC': {'vref': u'I/340/ucac5', 'select_columns': 
-#        'USNO': {'vref': u'I/284', 'select_columns': 
-#        'LSPM': {'vref': u'I/298', 'select_columns': 
-        }
 
 # give a summary of the built-in catalogs
     if info==True:

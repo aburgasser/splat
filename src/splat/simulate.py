@@ -144,8 +144,8 @@ def galacticDensityJuric_old(rc,zc,rho0 = 1./(u.pc**3),report='total',center='su
 	rho = rhod+rhotd+rhoh
 
 	if report=='halo': return rhoh
-	elif report=='disk' or report=='thin disk': return rhod
-	elif report=='thick disk': return rhotd
+	elif report=='disk' or report=='thin disk' or report=='thin': return rhod
+	elif report=='thick disk' or report=='thick' : return rhotd
 	elif report=='each': return rhod,rhotd,rhoh
 	else: return rho
 

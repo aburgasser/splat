@@ -697,6 +697,7 @@ SPECTRAL_MODELS = {\
     'elfowl24-ph3': {'instruments': {}, 'name': 'Sonora Elfowl with PH3', 'citation': 'Beiler et al. (2024)', 'bibcode': '2024ApJ...973...60B', 'altname': ['ph3','elfowl24-ph3','beiler','beiler24','bei24'], 'default': {'teff': 500., 'logg': 5.0, 'z': 0., 'co': 1, 'kzz': 2.0}}, \
     'elfowl25': {'instruments': {}, 'name': 'Sonora Elfowl 2025', 'citation': 'Wogan et al. (2025)', 'bibcode': '2025RNAAS...9..108W', 'altname': ['elfowl2','elfowl-v2','elfowl-co2','sonora-elfowl-co2','wog25'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'co': 1, 'kzz': 2.0}}, \
     'exorem21': {'instruments': {}, 'name': 'Exo-REM 2021', 'citation': 'Blain et al. (2021)', 'bibcode': '2021A&A...646A..15B,', 'altname': ['exorem','exorem2021','exo-rem','blain2021','blain21','bla21'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'co': 0.45, 'cld': 'SIMPLE'}}, \
+    'flameskimmer26': {'instruments': {}, 'name': 'Sonora Flameskimmer', 'citation': 'Mang et al. (2026)', 'bibcode': '2026ApJ..1008..254M', 'altname': ['mang26','man26','flame','flameskimmer','fskimmer','fskim','fskim26'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'co': 1.0, 'kzz':2.}}, \
     'karalidi21': {'instruments': {}, 'name': 'Sonora Cholla', 'citation': 'Karalidi et al. (2021)', 'bibcode': '2021ApJ...923..269K', 'altname': ['karalidi2021','karalidi','sonora-cholla','cholla'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': 4.0}}, \
     'lacy23': {'instruments': {}, 'name': 'Lacy & Burrows (2023)', 'citation': 'Lacy & Burrows (2023)', 'bibcode': '2023ApJ...950....8L', 'altname': ['lacy2023','lac23','lacy'], 'default': {'teff': 400., 'logg': 4.0, 'z': 0., 'cld': 'nc', 'kzz': 0.}}, \
     'lowz': {'instruments': {}, 'name': 'LowZ models', 'citation': 'Meisner et al. (2021)', 'bibcode': '2021ApJ...915..120M', 'altname': ['meisner2021','mei21','line21','line2021'], 'default': {'teff': 1000., 'logg': 5.0, 'z': 0., 'kzz': 2.0, 'co': 0.85}}, \
@@ -757,7 +758,7 @@ EVOLUTIONARY_MODELS = {\
     'burrows2001': {'file': 'burrows2001.csv','citation': 'Burrows et al. (2001)', 'bibcode': '2001RvMP...73..719B', 'altname': ['burrows','bur01','burrows01'], 'default': {}},\
     'chabrier1997': {'file': 'chabrier1997.csv','citation': 'Chabrier & Baraffe (1997)', 'bibcode': '1997A&A...328...83C', 'altname': ['chabrier','cha97','chabrier97'], 'default': {'metallicity': 0., 'y': 0.275}},\
     'chabrier2000': {'file': 'chabrier2000.csv','citation': 'Chabrier et al. (2000)', 'bibcode': '2000ApJ...542..464C', 'altname': ['dusty','cha0','chabrier00','dusty00','dusty2000'], 'default': {'metallicity': 0.}},\
-    'sandee2024': {'file': 'sandee2024.csv','citation': 'Gerasimov et al. (2024)', 'bibcode': '2024ApJ...971...65G', 'altname': ['gerasimov','sandee','sandee24','gerasimov2024','gerasimov24','ger24'], 'default': {'metallicity': 0.1, 'enrichment': 0}},\
+    'sandee2024': {'file': 'sandee2024.csv','citation': 'Gerasimov et al. (2024)', 'bibcode': '2024ApJ...971...65G', 'altname': ['gerasimov','sandee','sandee24','gerasimov2024','gerasimov24','ger24','sand','sand24'], 'default': {'metallicity': 0.1, 'enrichment': 0}},\
     'saumon2008': {'file': 'saumon2008.csv','citation': 'Saumon et al. (2008)', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','sau08','saumon08'], 'default': {'metallicity': 0., 'cloud': 'hybrid'}},\
     'saumon2008-nc': {'file': 'saumon2008-nc.csv','citation': 'Saumon et al. (2008) no clouds', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','sau08','saumon08'], 'default': {'metallicity': 0., 'cloud': 'nc'}},\
     'saumon2008-hybrid': {'file': 'saumon2008-hybrid.csv','citation': 'Saumon et al. (2008) hybrid', 'bibcode': '2008ApJ...689.1327S', 'altname': ['saumon','sau08','saumon08'], 'default': {'metallicity': 0., 'cloud': 'hybrid'}},\
@@ -865,11 +866,24 @@ INDEX_SETS = {
         'Silicate': {'ranges': ([7.2,7.8]*u.micron,[11.2,11.8]*u.micron,[8.7,9.3]*u.micron), 'method': 'fitnum', 'sample': 'average', 'fitorder': 1,'original':''},\
         'NH3-10.6': {'ranges': ([9.6,10.2]*u.micron,[10.3,10.9]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
     }},
-        'H2O': {'ranges': ([6.1,6.4]*u.micron,[5.65,5.95]*u.micron,[6.6,6.9]*u.micron), 'weights':[1,0.562,0.474],'method': 'sumdenom', 'sample': 'average','original':''},\
-        'CH4': {'ranges': ([9.7,10.3]*u.micron,[7.35,7.95]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'NH3': {'ranges': ([9.7,10.3]*u.micron,[10.5,11.1]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'Silicate': {'ranges': ([7.2,7.8]*u.micron,[11.2,11.8]*u.micron,[8.7,9.3]*u.micron), 'method': 'fitnum', 'sample': 'average', 'fitorder': 1,'original':''},\
-
+        # 'H2O': {'ranges': ([6.1,6.4]*u.micron,[5.65,5.95]*u.micron,[6.6,6.9]*u.micron), 'weights':[1,0.562,0.474],'method': 'sumdenom', 'sample': 'average','original':''},\
+        # 'CH4': {'ranges': ([9.7,10.3]*u.micron,[7.35,7.95]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        # 'NH3': {'ranges': ([9.7,10.3]*u.micron,[10.5,11.1]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        # 'Silicate': {'ranges': ([7.2,7.8]*u.micron,[11.2,11.8]*u.micron,[8.7,9.3]*u.micron), 'method': 'fitnum', 'sample': 'average', 'fitorder': 1,'original':''},\
+    'burgasser2002': {'altname': ['burgasser02','bur02'], 'bibcode': '2002ApJ...564..421B', 'indices': {\
+        'H2O-A': {'ranges': ([1.12,1.17]*u.micron,[1.25,1.28]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'H2O-B': {'ranges': ([1.505,1.525]*u.micron,[1.575,1.595]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'H2O-C': {'ranges': ([2.00,2.04]*u.micron,[2.09,2.13]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'CH4-A': {'ranges': ([1.295,1.325]*u.micron,[1.25,1.28]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'CH4-B': {'ranges': ([1.64,1.70]*u.micron,[1.575,1.595]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'CH4-C': {'ranges': ([2.225,2.275]*u.micron,[2.09,2.13]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'H/J': {'ranges': ([1.50,1.75]*u.micron,[1.20,1.325]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'K/J': {'ranges': ([2.00,2.30]*u.micron,[1.20,1.325]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'K/H': {'ranges': ([2.00,2.30]*u.micron,[1.50,1.75]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'CO': {'ranges': ([2.325,2.375]*u.micron,[2.09,2.13]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        '2.11/2.07': {'ranges': ([2.10,2.12]*u.micron,[2.06,2.08]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'K-shape': {'ranges': ([2.12,2.13]*u.micron,[2.15,2.16]*u.micron,[2.17,2.18]*u.micron,[2.19,2.20]*u.micron), 'method': 'doubleratio', 'sample': 'average','original':''},\
+    }},
     'burgasser2006': {'altname': ['burgasser','burgasser06','bur06'], 'bibcode': '2006ApJ...637.1067B', 'indices': {\
         'CH4-J': {'ranges': ([1.315,1.335]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate','original':''},\
         'CH4-H': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'integrate','original':''},\
@@ -880,43 +894,53 @@ INDEX_SETS = {
         'K/J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'integrate','original':''},\
         'H-dip': {'ranges': ([1.61,1.64]*u.micron,[1.56,1.59]*u.micron,[1.66,1.69]*u.micron), 'method': 'inverse_line', 'sample': 'integrate','original':''},\
     }},
-    'burgasser2023': {'altname': ['burgasser23','bur23'], 'bibcode': '', 'indices': {\
-        'CH4-J': {'ranges': ([1.315,1.335]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'CH4-H': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'CH4-K': {'ranges': ([2.215,2.255]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'H2O-H': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'H2O-K': {'ranges': ([1.975,1.995]*u.micron,[2.08,2.10]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
+    'burgasser2025': {'altname': ['burgasser25','bur25'], 'bibcode': '', 'indices': {\
+        'CH4-J': {'ranges': ([1.315,1.335]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006'},\
+        'CH4-H': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006'},\
+        'CH4-K': {'ranges': ([2.215,2.255]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006'},\
+        'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006'},\
+        'H2O-H': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006'},\
+        'H2O-K': {'ranges': ([1.975,1.995]*u.micron,[2.08,2.10]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006'},\
         'Y/J': {'ranges': ([1.005,1.045]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'K/J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
+        'K/J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006'},\
         'K/H': {'ranges': ([2.06,2.10]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
         'H-dip': {'ranges': ([1.61,1.64]*u.micron,[1.56,1.59]*u.micron,[1.66,1.69]*u.micron), 'method': 'inverse_line', 'sample': 'median','original':''},\
     }},
     'burgasser2026': {'altname': ['burgasser26','bur26'], 'bibcode': '', 'indices': {\
-        'CH4-1.3': {'ranges': ([1.315,1.340]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'CH4-1.6': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'CH4-2.2': {'ranges': ([2.215,2.255]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'CH4-3.3': {'ranges': ([3.22,3.42]*u.micron,[3.93,4.13]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'CO-2.3': {'ranges': ([2.33,2.37]*u.micron,[2.12,2.16]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'CO-4.6': {'ranges': ([4.5,4.6]*u.micron,[4.33,4.43]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'CO2-4.2': {'ranges': ([4.22,4.32]*u.micron,[4.05,4.15]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'H2O-1.2': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'H2O-1.5': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'H2O-2.0': {'ranges': ([1.975,1.995]*u.micron,[2.08,2.10]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'H2O-5.8': {'ranges': ([5.65,5.95]*u.micron,[6.6,6.9]*u.micron,[6.1,6.4]*u.micron), 'weights':[1,0.562,0.474],'method': 'sumnum', 'sample': 'average','original':''},\
-        'CH4-7.6': {'ranges': ([7.35,7.95]*u.micron,[9.7,10.3]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'NH3-11': {'ranges': ([10.5,11.1]*u.micron,[9.7,10.3]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'PH3': {'ranges': ([4.285,4.335]*u.micron,[4.22,4.27]*u.micron,[4.36,4.41]*u.micron), 'method': 'avegdenom', 'sample': 'average','original':''},
-        'SIH4-4.6': {'ranges': ([4.55,4.65]*u.micron,[4.36,4.]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},
-        'SO2-4.0': {'ranges': ([3.95,4.05]*u.micron,[3.8,3.9]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},
-#        'Silicate': {'ranges': ([8.7,9.3]*u.micron,[7.2,7.8]*u.micron,[11.2,11.8]*u.micron), 'method': 'fitdenom', 'sample': 'average', 'fitorder': 1},\
-        'Y/J': {'ranges': ([1.005,1.045]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'K/J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'K/H': {'ranges': ([2.06,2.10]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':''},\
-        'M/J': {'ranges': ([4.1,4.15]*u.micron,[1.24,1.29]*u.micron,), 'method': 'ratio', 'sample': 'average','original':''},
-        'M/K': {'ranges': ([4.1,4.15]*u.micron,[2.06,2.11]*u.micron,), 'method': 'ratio', 'sample': 'average','original':''},
-        'M/L': {'ranges': ([4.1,4.15]*u.micron,[3,3.05]*u.micron,), 'method': 'ratio', 'sample': 'average','original':''},
-        'H-dip': {'ranges': ([1.61,1.64]*u.micron,[1.56,1.59]*u.micron,[1.66,1.69]*u.micron), 'method': 'inverse_line', 'sample': 'median','original':''},\
+        'CH4-1.3': {'ranges': ([1.315,1.340]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006','modify':False},\
+        'CH4-1.6': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006','modify':False},\
+        'CH4-2.2': {'ranges': ([2.215,2.255]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006','modify':False},\
+        'CH4-3.3': {'ranges': ([3.2,3.4]*u.micron,[2.95,3.15]*u.micron,[3.8,4.]*u.micron), 'method': 'avegdenom', 'sample': 'median','original':'lodieu2026','modify':True},\
+        'CH4-7.6': {'ranges': ([7.6,7.9]*u.micron,[6.8,7.1]*u.micron,[8.5,8.8]*u.micron), 'method': 'avegdenom', 'sample': 'median','original':'suarez2022','modify':True},\
+        'CO-2.3': {'ranges': ([2.33,2.37]*u.micron,[2.21,2.25]*u.micron), 'method': 'ratio', 'sample': 'median','original':'','modify':False},\
+        'CO-4.6': {'ranges': ([4.5,4.6]*u.micron,[4.33,4.43]*u.micron,[4.66,4.69]*u.micron), 'method': 'avegdenom', 'sample': 'median','original':'','modify':False},\
+        'CO2-4.2': {'ranges': ([4.21,4.31]*u.micron,[4.05,4.15]*u.micron,[4.35,4.45]*u.micron), 'method': 'avegdenom', 'sample': 'median','original':'lodieu2026','modify':True},\
+        'FeH-1.0': {'ranges': ([0.98,1.02]*u.micron,[0.94,0.98]*u.micron,[1.02,1.06]*u.micron), 'method': 'avedenom', 'sample': 'median','original':'','modify':False},\
+        'H2O-1.2-Y': {'ranges': ([1.14,1.17]*u.micron,[1.04,1.07]*u.micron), 'method': 'ratio', 'sample': 'median','original':'bardalez2014','modify':False},\
+        'H2O-1.2-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006','modify':False},\
+        'H2O-1.4': {'ranges': ([1.36,1.4]*u.micron,[1.26,1.3]*u.micron,[1.56,1.60]*u.micron), 'method': 'avedenom', 'sample': 'median','original':'','modify':False},\
+        'H2O-1.5': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006','modify':False},\
+        'H2O-1.8': {'ranges': ([1.82,1.86]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006','modify':True},\
+        'H2O-2.0': {'ranges': ([1.975,1.995]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006','modify':False},\
+        'H2O-2.7-K': {'ranges': ([2.53,2.57]*u.micron,[2.71,2.75]*u.micron,[2.08,2.12]*u.micron), 'method': 'avenum', 'sample': 'median','original':'','modify':False},\
+        'H2O-2.7-L': {'ranges': ([2.65,2.75]*u.micron,[3,3.1]*u.micron), 'method': 'ratio', 'sample': 'median','original':'','modify':False},\
+        'H2O-6.5': {'ranges': ([6.4,6.7]*u.micron,[5.7,6.0]*u.micron,[6.1,6.4]*u.micron), 'method': 'avenum', 'sample': 'median','original':'cushing2006','modify':True},\
+        'NH3-11': {'ranges': ([10.4,11.]*u.micron,[9.7,10.3]*u.micron), 'method': 'ratio', 'sample': 'median','original':'cushing2006','modify':True},\
+        'PH3-4.3': {'ranges': ([4.285,4.335]*u.micron,[4.22,4.27]*u.micron,[4.36,4.41]*u.micron), 'method': 'avedenom', 'sample': 'median','original':'','modify':False},\
+        'SIH4-4.6': {'ranges': ([4.56,4.59]*u.micron,[4.5,4.53]*u.micron,[4.62,4.65]*u.micron), 'method': 'avedenom', 'sample': 'median','original':'','modify':False},\
+        'Silicate': {'ranges': ([8.7,9.3]*u.micron,[7.2,7.8]*u.micron,[11.2,11.8]*u.micron), 'method': 'fitdenom', 'sample': 'median', 'fitorder': 1,'original':'suarez2022','modify':True},\
+        'CIA-H2-K': {'ranges': ([2.05,2.10]*u.micron,[1.55,1.65]*u.micron,[4.05,4.15]*u.micron), 'method': 'avedenom', 'sample': 'median','original':'','modify': False},\
+        'CIA-H2-MIR': {'ranges': ([3.9,4.1]*u.micron,[11.7,11.9]*u.micron), 'method': 'ratio', 'sample': 'median','original':'lodieu2026','modify':False},\
+        'Z/Y': {'ranges': ([0.84,0.88]*u.micron,[1.005,1.045]*u.micron), 'method': 'ratio', 'sample': 'median','original':'','modify':False},\
+        'Y/J': {'ranges': ([1.005,1.045]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median','original':'','modify':False},\
+        'H/J': {'ranges': ([1.56,1.60]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006','modify':False},\
+        'K/J': {'ranges': ([2.06,2.10]*u.micron,[1.25,1.29]*u.micron), 'method': 'ratio', 'sample': 'median','original':'burgasser2006','modify':False},\
+        'K/H': {'ranges': ([2.06,2.10]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'median','original':'','modify':False},\
+        'L/K': {'ranges': ([3,3.05]*u.micron,[2.06,2.11]*u.micron), 'method': 'ratio', 'sample': 'median','original':'','modify':False},\
+        'M/J': {'ranges': ([4.1,4.15]*u.micron,[1.24,1.29]*u.micron), 'method': 'ratio', 'sample': 'median','original':'','modify':False},\
+        'K/M': {'ranges': ([2.06,2.11]*u.micron,[4.1,4.15]*u.micron), 'method': 'ratio', 'sample': 'median','original':'','modify':False},\
+        'L/M': {'ranges': ([3,3.05]*u.micron,[4.1,4.15]*u.micron), 'method': 'ratio', 'sample': 'median','original':'','modify':False},\
+        'N/M': {'ranges': ([9.1,9.15]*u.micron,[4.1,4.15]*u.micron), 'method': 'ratio', 'sample': 'median','original':'','modify':False},
     }},
     'bardalez2014': {'altname': ['bardalez','bardalez14','bar14'], 'bibcode': '2014ApJ...794..143B', 'indices': {\
         'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'integrate','original':''},\
@@ -975,19 +999,19 @@ INDEX_SETS = {
         'Color-d': {'ranges': ([.9675,.9850]*u.micron,[.7350,.7550]*u.micron), 'method': 'ratio', 'sample': 'sum','original':''},\
     }},
     'lodieu2026': {'altname': ['lodieu25','lod26'], 'bibcode': '', 'indices': {\
-        'CH4-J': {'ranges': ([1.315,1.340]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'CH4-H': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'average','original':'burgasser2006'},\
+        'CH4-J': {'ranges': ([1.315,1.340]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'average','original':'burgasser2006'},\
+        'H2O-H': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'average','original':'burgasser2006'},\
+        'NH3-H': {'ranges': ([1.53,1.56]*u.micron,[1.6,1.65]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'CH4-H': {'ranges': ([1.635,1.675]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'average','original':'burgasser2006'},\
+        'CIA-H2-K': {'ranges': ([2.2,2.3]*u.micron,[2.1,2.2]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
         'CH4-K': {'ranges': ([2.215,2.255]*u.micron,[2.08,2.12]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
         'CH4-3.3': {'ranges': ([3.2,3.4]*u.micron,[3.1,3.2]*u.micron,[3.4,3.5]*u.micron), 'method': 'avegdenom', 'sample': 'average','original':''},
-        'CH4-6.3': {'ranges': ([6.1,6.5]*u.micron,[5.9,6.1]*u.micron,[6.5,6.6]*u.micron), 'method': 'avegdenom', 'sample': 'average','original':''},
-        'CO-4.7': {'ranges': ([4.5,4.9]*u.micron,[4.4,4.5]*u.micron,[4.9,5.0]*u.micron), 'method': 'avegdenom', 'sample': 'average','original':''},
         'CO2-4.2': {'ranges': ([4.2,4.35]*u.micron,[4.05,4.2]*u.micron,[4.35,4.5]*u.micron), 'method': 'avegdenom', 'sample': 'average','original':''},
-        'H2O-J': {'ranges': ([1.14,1.165]*u.micron,[1.26,1.285]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'H2O-H': {'ranges': ([1.48,1.52]*u.micron,[1.56,1.60]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'H2O-5.8': {'ranges': ([5.1,6.25]*u.micron,[4.9,5.1]*u.micron,[6.2,6.3]*u.micron), 'method': 'avegdenom', 'sample': 'average','original':''},
-        'NH3-H': {'ranges': ([1.53,1.56]*u.micron,[1.61,1.64]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'NH3-10.5': {'ranges': ([10.3,10.5]*u.micron,[9.9,10.2]*u.micron,[10.7,11.0]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
-        'CIA-H2-K': {'ranges': ([2.2,2.3]*u.micron,[2.1,2.2]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
+        'CO-4.7': {'ranges': ([4.5,4.9]*u.micron,[4.4,4.5]*u.micron,[4.9,5.0]*u.micron), 'method': 'avegdenom', 'sample': 'average','original':''},
+        'H2O-5.8': {'ranges': ([5.1,6.25]*u.micron,[4.9,5.1]*u.micron,[6.2,6.3]*u.micron), 'method': 'avegdenom', 'sample': 'average','original':'cushing2006'},
+        'CH4-6.3': {'ranges': ([6.1,6.5]*u.micron,[5.9,6.1]*u.micron,[6.5,6.6]*u.micron), 'method': 'avegdenom', 'sample': 'average','original':''},
+        'NH3-10.5': {'ranges': ([10.3,10.5]*u.micron,[9.9,10.2]*u.micron,[10.7,11.0]*u.micron), 'method': 'ratio', 'sample': 'average','original':'cushing2006'},\
         'CIA-H2-MIR': {'ranges': ([4.5,4.7]*u.micron,[11.7,11.9]*u.micron), 'method': 'ratio', 'sample': 'average','original':''},\
     }},
     'mann2013': {'altname': ['mann','mann13','man13'], 'bibcode': '2013AJ....145...52M', 'indices': {\

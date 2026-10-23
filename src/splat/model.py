@@ -332,16 +332,13 @@ def _initializeModels(verbose=ERROR_CHECKING,reset=False):
 
 # go through each model folder and check model names
     for i,f in enumerate(mfolders):
-        mnames = os.listdir(f)
-        rm = []
-        for m in mnames:
-            if os.path.isdir(os.path.join(f,m))==False: rm.append(m)
-        if len(rm) > 0:
-            for m in rm: mnames.remove(m)
+        tmp = os.listdir(f)
+        mnames = []
+        for m in tmp:
+            if os.path.isdir(os.path.join(f,m))==True: mnames.append(m)
         if len(mnames) > 0:
             for nm in mnames: 
                 fnm = os.path.join(f,nm)
-                instruments = os.listdir(fnm)
                 name = checkSpectralModelName(nm)
 # new model name, add to global variable
 # using info.txt data if available                    
@@ -349,7 +346,7 @@ def _initializeModels(verbose=ERROR_CHECKING,reset=False):
                     name = nm
                     adddict = copy.deepcopy(default_info)
                     adddict['name'] = name
-                    if 'info.txt' in instruments:
+                    if os.path.exists(os.path.join(fnm,'info.txt'))==True:
                         with open(os.path.join(fnm,'info.txt'), 'r') as frd: x = frd.read()
                         lines = x.split('\n')
                         if '' in lines: lines.remove('')
@@ -376,11 +373,12 @@ def _initializeModels(verbose=ERROR_CHECKING,reset=False):
                     if verbose==True: print('\n\tAdded a new model set {}'.format(name))
                     del adddict
 # go through instruments                
-                rm = []
-                for m in instruments:
-                    if os.path.isdir(os.path.join(fnm,m))==False: rm.append(m)
-                if len(rm) > 0:
-                    for m in rm: instruments.remove(m)
+                tmp = os.listdir(fnm)
+                instruments = []
+                for m in tmp:
+                    if os.path.isdir(os.path.join(fnm,m))==True: instruments.append(m)
+                for x in ['ORIGINAL']:
+                    if x in instruments: instruments.remove(x)
                 if len(instruments) > 0:
                     for inst in instruments:
 # make sure there are files in this folder

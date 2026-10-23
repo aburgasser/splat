@@ -916,7 +916,7 @@ class Spectrum(object):
         '''
         if isinstance(rng,int)==True or isinstance(rng,float)==True: rng = [rng]
         if len(rng)==0:
-            w = numpy.where(self.flux.value > numpy.median(self.flux.value))
+            w = numpy.where(self.flux.value > numpy.nanmedian(self.flux.value))
         if len(rng) == 1:
             rng = [rng[0]-offset,rng[0]+offset]
         if len(rng) >= 2:
@@ -2267,7 +2267,7 @@ class Spectrum(object):
         return
 
 
-    def maskSN(self,limit,apply=True,**kwargs):
+    def maskSN(self,limit,apply=True,verbose=False,**kwargs):
         '''
         Purpose
         -------
@@ -8252,21 +8252,24 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',weights=[],fitorder
     elif (method == 'ratio'):
         val = (weights[0]*value[0])/(weights[1]*value[1])
         vals = (weights[0]*value_sim[0,:])/(weights[1]*value_sim[1,:])
-    elif (method == 'line'):
+    elif (method == 'line' or method == 'avenum'):
         val = 0.5*(weights[0]*value[0]+weights[1]*value[1])/(weights[2]*value[2])
         vals = 0.5*(weights[0]*value_sim[0,:]+weights[1]*value_sim[1,:])/(weights[2]*value_sim[2,:])
-    elif (method == 'inverse_line'):
+    elif (method == 'inverse_line' or method == 'avedenom'):
         val = 2.*weights[0]*value[0]/(weights[1]*value[1]+weights[2]*value[2])
         vals = 2.*weights[0]*value_sim[0,:]/(weights[1]*value_sim[1,:]+weights[2]*value_sim[2,:])
-    elif (method == 'change'):
-        val = 2.*(weights[0]*value[0]-weights[1]*value[1])/(weights[0]*value[0]+weights[1]*value[1])
-        vals = 2.*(weights[0]*value_sim[0,:]-weights[1]*value_sim[1,:])/(weights[0]*value_sim[0,:]+weights[1]*value_sim[1,:])
     elif (method == 'sumnum'):
         val = (weights[0]*value[0]+weights[1]*value[1])/(weights[2]*value[2])
         vals = (weights[0]*value_sim[0,:]+weights[1]*value_sim[1,:])/(weights[2]*value_sim[2,:])
     elif (method == 'sumdenom'):
         val = weights[0]*value[0]/(weights[1]*value[1]+weights[2]*value[2])
         vals = weights[0]*value_sim[0,:]/(weights[1]*value_sim[1,:]+weights[2]*value_sim[2,:])
+    elif (method == 'change'):
+        val = 2.*(weights[0]*value[0]-weights[1]*value[1])/(weights[0]*value[0]+weights[1]*value[1])
+        vals = 2.*(weights[0]*value_sim[0,:]-weights[1]*value_sim[1,:])/(weights[0]*value_sim[0,:]+weights[1]*value_sim[1,:])
+    elif (method == 'diffratio'):
+        val = (weights[0]*value[0]-weights[1]*value[1])/(weights[2]*value[2]-weights[3]*value[3])
+        vals =(weights[0]*value_sim[0,:]-weights[1]*value_sim[1,:])/(weights[2]*value_sim[2,:]-weights[3]*value_sim[3,:])
 # continuum fitting methods
     elif (method == 'fitnum'):
         cfit = numpy.polyfit(numpy.array([xNums[0],xNums[1]]).ravel(),numpy.array([yNums[0],yNums[1]]).ravel(),fitorder)
@@ -8280,7 +8283,7 @@ def measureIndex(sp,ranges,method='ratio',sample='integrate',weights=[],fitorder
                 vals.append(weights[0]*numpy.polyval(cfit,numpy.nanmean(xNums[-1]))/(weights[-1]*value_sim[-1,j]))
     elif (method == 'fitdenom'):
         cfit = numpy.polyfit(numpy.array([xNums[1],xNums[2]]).ravel(),numpy.array([yNums[1],yNums[2]]).ravel(),fitorder)
-        val = weights[0]*value[0]/(weights[-1]*numpy.polyval(cfit,xNums[-1]))
+        val = weights[0]*value[0]/(weights[-1]*numpy.polyval(cfit,numpy.nanmean(xNums[-1])))
         if noiseFlag == False: 
             vals = []
             for j in numpy.arange(0,nsamples):
