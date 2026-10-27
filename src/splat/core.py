@@ -6241,7 +6241,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
     tmp = checkDict(ref,INDEX_CLASSIFICATION_RELATIONS)
     if tmp==False and len(param) == 0: 
         print('Error: input citation {} is not one of the predefined classification sets: {}'.format(ref,list(INDEX_CLASSIFICATION_RELATIONS.keys())))
-        return numpy.nan, numpy.nan
+        return numpy.nan, numpy.nan, (None, None)
     elif len(param) == 0: 
         param = INDEX_CLASSIFICATION_RELATIONS[tmp]
         if verbose: print('Using {} index classification method'.format(tmp))
@@ -6338,9 +6338,9 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
             wts = numpy.array([coeffs[index]['mask']/coeffs[index]['sptunc']**2 for index in list(coeffs.keys())])
             vals = numpy.array([coeffs[index]['mask']*coeffs[index]['spt']/coeffs[index]['sptunc']**2 for index in list(coeffs.keys())])
             w = numpy.where(numpy.isfinite(wts+vals))
-            if len(w) == 0:
+            if len(w[0]) == 0:
                 if verbose==True: print('\nNone of the indices in set {} returned viable values\n'.format(ref))
-                return numpy.nan, numpy.nan
+                return numpy.nan, numpy.nan, (None, None)
             sptn = numpy.nansum(vals[w])/numpy.nansum(wts[w])
             sptn_e = 1./numpy.nansum(wts[w])**0.5
             for index in coeffs.keys():
@@ -6398,6 +6398,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
     if allmeasures == True and param['method'] == 'polynomial':
         output = {}
         for k in coeffs.keys():
+            if k in ['jtype', 'ktype']: continue
             output[k] = {'spt': coeffs[k]['spt'], 'spt_e': coeffs[k]['sptunc'], 'index': indices[k][0], 'index_e': indices[k][1]}
         output['result'] = (spt,sptn_e)
         return output
@@ -6652,7 +6653,10 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
         if verbose==True: print('Type {}: statistic = {}, scale = {}'.format(t, chisq, scale))
 
 # list of sorted standard files and spectral types
-    sorted_stdsptnum = [x for (y,x) in sorted(zip(stat,sspt))]
+# NaN-safe ordering: sorted() on tuples does not order NaN statistics reliably
+    stat_arr = numpy.array([getattr(st0,'value',st0) for st0 in stat],dtype=float)
+    order = numpy.argsort(numpy.where(numpy.isfinite(stat_arr),stat_arr,numpy.inf))
+    sorted_stdsptnum = [sspt[i] for i in order]
 
 # select either best match or an ftest-weighted average
     if (best_flag or len(stat) == 1):
@@ -6673,7 +6677,7 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
             sptn = numpy.round(mean*2)*0.5
         else:
             sptn = numpy.round(mean)
-        sptn_e = (unc_sys**2+var**2)**0.5
+        sptn_e = (unc_sys**2+var)**0.5
         spt = typeToNum(sptn,uncertainty=sptn_e,subclass=subclass)
 
 # string or not?
@@ -6710,7 +6714,6 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
             kwargs['labels'] = [sp.name,'{} Standard'.format(sorted_stdsptnum[0]),'Difference']
         from .plot import plotSpectrum
         if kwargs.get('difference',True):
-            kwargs['labels'].append('Difference')
             pl = plotSpectrum([sp,spstd,sp-spstd],**kwargs)
         else:
             pl = plotSpectrum([sp,spstd],**kwargs)
@@ -7181,27 +7184,26 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
 # values we want to compare our indices with.
     for k in grav.keys():
         val = 0.0
-        if k == 'VO-z' or k=='H-cont':
-            if numpy.isnan(grav[k][Spt][0]):
-                val = numpy.nan
+# no score if the index could not be measured or is not calibrated at this SpT
+# (previously a NaN index fell through every comparison and scored 0 = field gravity)
+        if numpy.isnan(ind[k][0]) or numpy.isnan(grav[k][Spt][0]):
+            val = numpy.nan
+        elif k == 'VO-z' or k=='H-cont':
             if ind[k][0] >= grav[k][Spt][0]:
                 val = 1.0
             if ind[k][0] >= grav[k][Spt][1]:
                 val = 2.0
-            if verbose==True: print('\t{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
-        if k == 'FeH-z' or k=='KI-J':
-            if numpy.isnan(grav[k][Spt][0]):
-                val = numpy.nan
+        elif k == 'FeH-z' or k=='KI-J':
             if ind[k][0] <= grav[k][Spt][0]:
                 val = 1.0
             if ind[k][0] <= grav[k][Spt][1]:
                 val = 2.0
-            if verbose==True: print('\t{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
+        if verbose==True: print('\t{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
         gravscore[k] = val
         medgrav.append(val)
 
 # determine median score, or mean if even
-    if (len(numpy.where(numpy.isnan(medgrav) == False))%2 == 0):
+    if (numpy.sum(numpy.isfinite(medgrav))%2 == 0):
         gravscore['score'] = numpy.nanmean(medgrav)
     else:
         gravscore['score'] = numpy.nanmedian(medgrav)
@@ -7328,7 +7330,7 @@ def classifySB(sp,ref='burgasser2010',output='classification',spt='',indices=Non
                 if verbose==True: print('\nClassified spectrum by standards: result = {}'.format(spt))
             if classify.lower() in ['index','indices','ind']: 
                 if len(classify_parameters.keys())==0: classify_parameters['ref']='burgasser2007'
-                spt,spt_e = classifyByIndex(sp,**classify_parameters)
+                spt,spt_e = classifyByIndex(sp,**classify_parameters)[:2]
                 if verbose==True: print('\nClassified spectrum by indices: result = {}'.format(spt))
             if spt=='' : 
                 if verbose==True: print('classify parameter {} is not one of the allowed values; classifying by indices'.format(classify))
