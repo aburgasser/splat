@@ -6247,6 +6247,10 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
         if verbose: print('Using {} index classification method'.format(tmp))
     else: pass
 
+# J- and K-band standard types are only computed for the Allers & Liu (2013) set;
+# define them here so the return statement works for every reference
+    jtype, ktype = None, None
+
 # check parameter dictionary has correct keys
     for k in ['indices','method','sets']:
         if k not in list(param.keys()): raise ValueError('Index classification parameter set must include the parameter {}; contains {}'.format(k,list(param.keys())))
@@ -6309,7 +6313,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
 #             return numpy.nan, numpy.nan
 
 # if Allers method, need to compute the J and K spectral types
-        print('METHOD', ref.lower())
+        #print('METHOD', ref.lower())
         if ref.lower() in ['allers','all13','allers13','allers2013']:
             coeffs['jtype'] = {}
             coeffs['ktype'] = {}
@@ -6391,7 +6395,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
     if string_flag==True: spt = typeToNum(sptn,uncertainty=sptn_e)
     else: spt = sptn
 
-    if 'allmeasures' == True and param['method'] == 'polynomial':
+    if allmeasures == True and param['method'] == 'polynomial':
         output = {}
         for k in coeffs.keys():
             output[k] = {'spt': coeffs[k]['spt'], 'spt_e': coeffs[k]['sptunc'], 'index': indices[k][0], 'index_e': indices[k][1]}
