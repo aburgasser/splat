@@ -6107,7 +6107,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
     :param set: named set of indices to measure and compute spectral type
 
         - *'burgasser'*: H2O-J, CH4-J, H2O-H, CH4-H, CH4-K from `Burgasser (2007) <http://adsabs.harvard.edu/abs/2007ApJ...659..655B>`_, applicable for types  (default)
-        - *'allers'*: H2O from `Allers et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJ...657..511A>`_
+        - *'allers'*: H2O, H2OD, H2O-1, H2O-2 indices plus J- and K-band standard types from `Allers & Liu (2013) <http://adsabs.harvard.edu/abs/2013ApJ...772...79A>`_ (supersedes the H2O relation of Allers et al. 2007)
         - *'reid'*:H2O-A and H2O-B from `Reid et al. (2001) <http://adsabs.harvard.edu/abs/2001AJ....121.1710R>`_
         - *'testi'*: sHJ, sKJ, sH2O_J, sH2O_H1, sH2O_H2, sH2O_K from `Testi et al. (2001) <http://adsabs.harvard.edu/abs/2001ApJ...552L.147T>`_
 
@@ -6257,6 +6257,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
     if 'decimal' not in list(param.keys()): param['decimal'] = False
     if 'sptoffset' not in list(param.keys()): param['sptoffset'] = 0
     if 'min_indices' not in list(param.keys()): param['min_indices'] = 1
+    if 'round_step' not in list(param.keys()): param['round_step'] = 0.5   # subtypes; 1 for allers2013
 
 # check coefficient index names are present in indices input; if not remeasure
     for i in list(param['indices'].keys()):
@@ -6318,13 +6319,13 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
             coeffs['jtype'] = {}
             coeffs['ktype'] = {}
             # Calculate The J and K spectral types for Allers method
-            jtype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.07,1.40], statistic='chisqr') 
+            jtype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.07,1.40], statistic='chisqr', reduced=True)
             #print('JType', jtype)
             #print(typeToNum(jtype[0]))
             coeffs['jtype']['spt']    = typeToNum(jtype[0])
             coeffs['jtype']['sptunc'] = 1.
             coeffs['jtype']['mask']   = 1.
-            ktype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.90,2.20], statistic='chisqr') 
+            ktype = classifyByStandard(sp, std_class='dwarf', fit_ranges=[1.90,2.20], statistic='chisqr', reduced=True)
             #print('KType', ktype)
             #print(typeToNum(ktype[0]))
             coeffs['ktype']['spt']    = typeToNum(ktype[0])
@@ -6389,7 +6390,7 @@ def classifyByIndex(sp,ref='burgasser',string_flag=True,round_flag=False,remeasu
     else: raise ValueError('Do not recognize index classification method {}'.format(param['method']))
 
 # round off to nearest 0.5 subtypes if desired
-    if round_flag==True: sptn = 0.5*numpy.around(sptn*2.)
+    if round_flag==True: sptn = param['round_step']*numpy.around(sptn/param['round_step'])
 
 # change to string if desired
     if string_flag==True: spt = typeToNum(sptn,uncertainty=sptn_e)
@@ -6647,7 +6648,7 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
         if (kwargs.get('method','').lower() == 'cruz'):
             chisq,scale = compareSpectraCruz(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True,verbose=verbose)
         else: 
-            chisq,scale = compareSpectra(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True,verbose=verbose)
+            chisq,scale = compareSpectra(sp,stds[t],fit_ranges=fit_ranges,statistic=statistic,novar2=True,verbose=verbose,mask_coverage=kwargs.get('mask_coverage',False),reduced=kwargs.get('reduced',False))
         stat.append(chisq)
         sspt.append(t)
         if verbose==True: print('Type {}: statistic = {}, scale = {}'.format(t, chisq, scale))
@@ -6706,7 +6707,7 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
                                     ( (spstd.wave.value < numpy.min(fit_ranges[2])) | (spstd.wave.value > numpy.max(fit_ranges[2])) ) 
                                    )] = numpy.nan
         else:
-            chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
+            chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose,mask_coverage=kwargs.get('mask_coverage',False),reduced=kwargs.get('reduced',False))
             spstd.scale(scale)
         if kwargs.get('colors',False) == False:
             kwargs['colors'] = ['k','r','b']
@@ -6725,7 +6726,7 @@ def classifyByStandard(sp, std_class='dwarf',dof=-1, verbose=False,**kwargs):
         if (kwargs.get('method','').lower() == 'cruz'):
             chisq,scale = compareSpectraCruz(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
         else:
-            chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose)
+            chisq,scale = compareSpectra(sp,spstd,fit_ranges=fit_ranges,statistic=statistic,verbose=verbose,mask_coverage=kwargs.get('mask_coverage',False),reduced=kwargs.get('reduced',False))
         spstd.scale(scale)
         return spstd
     elif kwargs.get('return_statistic',False) == True: 
@@ -7158,6 +7159,7 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
 
 # Determine the object's NIR spectral type and its uncertainty
     sptn = kwargs.get('spt',False)
+    spts2 = ((None,), (None,))      # J- and K-band types; only computed when spt is not supplied
     if sptn == False:
         sptn, spt_e, spts2 = classifyByIndex(sp,string=False,ref='allers2013')
         if numpy.isnan(sptn):
@@ -7171,13 +7173,13 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
     if verbose==True:
         print('\tSpT = {} (J-type = {}; K-type = {})'.format(Spt, spts2[0][0], spts2[1][0]))
 
-#Check whether the NIR SpT is within gravity sensitive range values
-    if ((sptn < 16.0) or (sptn > 27.0)):
+# Check whether the NIR SpT is within the gravity-sensitive range: M6-L5 (Allers & Liu 2013)
+    if ((numpy.round(sptn) < 16.0) or (numpy.round(sptn) > 25.0)):
         if verbose==True: print('Spectral type '+typeToNum(sptn)+' outside range for gravity classification')
         if output=='allmeasures': return gravscore
         else: return gravscore['gravity_class']
 
-#Creates an empty array with dimensions 4x1 to fill in later with 5 gravscore values
+# Creates an empty array with dimensions 4x1 to fill in later with 5 gravscore values
     medgrav = []
 
 # Use the spt to pick the column that contains the
@@ -7186,27 +7188,28 @@ def classifyGravity(sp, output='classification',verbose=ERROR_CHECKING, **kwargs
         val = 0.0
 # no score if the index could not be measured or is not calibrated at this SpT
 # (previously a NaN index fell through every comparison and scored 0 = field gravity)
-        if numpy.isnan(ind[k][0]) or numpy.isnan(grav[k][Spt][0]):
-            val = numpy.nan
-        elif k == 'VO-z' or k=='H-cont':
-            if ind[k][0] >= grav[k][Spt][0]:
-                val = 1.0
-            if ind[k][0] >= grav[k][Spt][1]:
-                val = 2.0
-        elif k == 'FeH-z' or k=='KI-J':
-            if ind[k][0] <= grav[k][Spt][0]:
-                val = 1.0
-            if ind[k][0] <= grav[k][Spt][1]:
-                val = 2.0
+        v, e = ind[k][0], ind[k][1]
+        e = e if numpy.isfinite(e) else 0.
+        t1, t2 = grav[k][Spt]
+        low = k in ['FeH-z', 'KI-J']                   # small values indicate low gravity
+        past = (lambda x, t: x <= t) if low else (lambda x, t: x >= t)
+        if numpy.isnan(v) or numpy.isnan(t1):
+            val = numpy.nan                            # 'n'
+        elif past(v, t2):
+            val = 2.0
+        elif past(v + (e if low else -e), t1):
+            val = 1.0                                  # past threshold by > 1 sigma
+        elif past(v, t1):
+            val = numpy.nan                            # '?': error bars overlap
+        else:
+            val = 0.0
         if verbose==True: print('\t{}: {:.3f}+/-{:.3f} => {}'.format(k,ind[k][0], ind[k][1], val))
         gravscore[k] = val
         medgrav.append(val)
 
-# determine median score, or mean if even
-    if (numpy.sum(numpy.isfinite(medgrav))%2 == 0):
-        gravscore['score'] = numpy.nanmean(medgrav)
-    else:
-        gravscore['score'] = numpy.nanmedian(medgrav)
+# overall score = median of the scores, ignoring 'n' and '?' (NaN); for an even number of
+# scores numpy's median averages the two middle values, as in Allers & Liu (2013, Sec. 4.3)
+    gravscore['score'] = numpy.nanmedian(medgrav)
 
     if gravscore['score'] <= 0.5:
        gravscore['gravity_class'] = 'FLD-G'
@@ -7494,6 +7497,8 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
     if numpy.isnan(numpy.max(sp1.variance.value)) == True: var_flag = False
     statistic = kwargs.get('stat',statistic)
     minreturn = 1.e-60
+    mask_coverage = kwargs.get('mask_coverage',False)   # mask pixels outside the standard's coverage
+    reduced = kwargs.get('reduced',False)               # divide chi^2 by degrees of freedom
     scale_factor = 1.
 
 # create interpolation function for second spectrum
@@ -7519,10 +7524,11 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
     reject_mask = numpy.array(kwargs.get('mask',numpy.zeros(len(sp1.wave))))
 # mask flux < 0
     reject_mask[numpy.where(numpy.logical_or(sp1.flux < 0,f(sp1.wave) < 0))] = 1
-# mask wavelengths outside the native coverage of sp2; interpolation fills these with flux = 0,
-# which would otherwise contribute a spurious residual instead of being excluded from the fit
-    sp2_wmin,sp2_wmax = numpy.nanmin(sp2.wave.value),numpy.nanmax(sp2.wave.value)
-    reject_mask[numpy.where(numpy.logical_or(sp1.wave.value < sp2_wmin,sp1.wave.value > sp2_wmax))] = 1
+# optionally mask wavelengths outside the native coverage of sp2 (default off = upstream SPLAT,
+# where those pixels are compared against zero flux)
+    if mask_coverage == True:
+        sp2_wmin,sp2_wmax = numpy.nanmin(sp2.wave.value),numpy.nanmax(sp2.wave.value)
+        reject_mask[numpy.where(numpy.logical_or(sp1.wave.value < sp2_wmin,sp1.wave.value > sp2_wmax))] = 1
 # mask telluric absorption regions and/or any user-specified mask ranges
     if mask_telluric == True or mask_standard == True or len(mask_ranges) > 0:
         reject_mask = numpy.clip(reject_mask+generateMask(sp1.wave,mask_ranges=mask_ranges,mask_telluric=mask_telluric,mask_standard=mask_standard),0,1)
@@ -7553,10 +7559,11 @@ def compareSpectra(s1, s2, statistic='chisqr',scale=True, novar2=True, plot=Fals
         vtot = numpy.nanmax([sp1.variance.value,v(sp1.wave.value)*(scale_factor**2)],axis=0)
         vtot[numpy.isnan(vtot)==True] = numpy.nanmedian(vtot)
         stat = numpy.nansum(weights*(sp1.flux.value-f(sp1.wave.value)*scale_factor)**2/vtot)
-# reduce by degrees of freedom: number of unmasked points minus the fitted scale factor
-        npts = numpy.nansum(weights > 0)
-        dof = numpy.nanmax([npts-(1 if scale==True else 0),1])
-        stat = stat/dof
+# reduced chi^2 (divide by degrees of freedom) only when requested, e.g. Allers & Liu (2013) J/K fits
+        if reduced == True:
+            npts = numpy.nansum(weights > 0)
+            dof = numpy.nanmax([npts-(1 if scale==True else 0),1])
+            stat = stat/dof
         unit = sp1.flux_unit/sp1.flux_unit
 
 # normalized standard deviation
